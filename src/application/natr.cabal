@@ -1,0 +1,63 @@
+Name:           nikki-and-the-robots
+version:        0.2
+Author:         Florian Hofer, Sönke Hahn
+Category:       Game
+
+Build-Type:     Simple
+Cabal-Version:  >= 1.6
+
+Executable            natr
+    main-is:          Editor.hs
+
+    ghc-options:
+        -O2
+
+--        -threaded
+--        -eventlog
+--        -prof -auto-all
+
+        -Werror
+        -fwarn-missing-fields
+        -fwarn-dodgy-imports
+        -fwarn-missing-methods
+--        -fwarn-unused-do-bind
+
+--        -Wwarn
+        -fno-warn-overlapping-patterns
+        -fno-warn-missing-signatures
+        -fno-warn-unused-imports
+
+
+    hs-source-dirs: ., ../qtRendering
+    build-depends:
+          base >= 4
+        , mtl
+        , containers
+        , haskell98
+        , Hipmunk >= 5.0.0
+        , random
+        , directory
+        , filepath
+        , binary
+        , zlib
+        , bytestring
+        , syb
+        , SDL
+
+    if os(linux)
+        extra-libraries:
+            qtwrapper, QtOpenGL, csfml-audio, csfml-system
+        extra-lib-dirs:
+            ../qtRendering/cpp/dist
+
+    -- * windows linking :(
+    if os(mingw32)
+        ghc-options:
+            -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
+        extra-libraries:
+            qtwrapper, QtOpenGL4, QtGui4, QtCore4, stdc++
+        extra-lib-dirs:
+            ../qtRendering,
+            C:/Qt/2010.02.1/qt/lib
+
+

@@ -1,0 +1,13 @@
+
+This directory contains all source file for Nikki and the Robots.
+External dependencies are:
+
+* csfml
+* qt
+* lots of haskell stuff from hackage
+
+There is a custom build script: build.hs. It needs imports from buildSystem and common.
+For example, do this:
+
+ghc -ibuildSystem -icommon --make build.hs
+./build.hs build_application
