@@ -126,7 +126,7 @@ renderWithState events painter = do
             return ()
         Just stateRef -> do
             -- level testing using natr
-            liftIO $ Natr.renderCallback Nothing stateRef events painter
+            liftIO $ Natr.renderCallback stateRef events painter
 
 debugScene :: MM ()
 debugScene = do

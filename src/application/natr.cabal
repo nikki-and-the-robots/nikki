@@ -28,25 +28,24 @@ Executable            natr
         -fno-warn-unused-imports
 
 
-    hs-source-dirs: ., ../qtRendering
+    hs-source-dirs: ., ../common, ../qtRendering
     build-depends:
           base >= 4
-        , mtl
-        , containers
         , haskell98
-        , Hipmunk >= 5.0.0
-        , random
+        , binary
+        , syb
+        , containers
         , directory
         , filepath
-        , binary
+        , mtl
+        , process
         , zlib
-        , bytestring
-        , syb
-        , SDL
+        , Hipmunk
+        , sfml-audio
 
     if os(linux)
         extra-libraries:
-            qtwrapper, QtOpenGL, csfml-audio, csfml-system
+            qtwrapper, QtOpenGL
         extra-lib-dirs:
             ../qtRendering/cpp/dist
 

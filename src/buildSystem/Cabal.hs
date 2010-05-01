@@ -2,6 +2,12 @@
 module Cabal where
 
 
+import Control.Monad
+
+import System.Directory
+import System.FilePath
+
+
 import Utils
 
 import Build
@@ -15,7 +21,9 @@ cabalTargets postfix path =
     configure =
         Target confName [] $
             withCurrentDirectory path $ do
-                trySystem "cabal configure"
+                needsConfiguring_ <- needsConfiguring
+                when needsConfiguring_ $
+                    trySystem "cabal configure"
     build =
         Target buildName [configure] $
             withCurrentDirectory path $ do
@@ -23,5 +31,21 @@ cabalTargets postfix path =
 
     confName = "configure_" ++ postfix
     buildName = "build_" ++ postfix
+
+
+-- | returns if the cabal build in the current directory needs (re-)configuring.
+needsConfiguring :: IO Bool
+needsConfiguring = do
+    files <- getDirectoryContents "."
+    if not ("dist" `elem` files) then
+        return True
+      else do
+        let cabalFile =
+                files
+                |> filter (\ f -> ".cabal" == takeExtension f)
+                |> head
+        cabalMT <- getModificationTime cabalFile
+        distMT <- getModificationTime "dist"
+        return (distMT < cabalMT)
 
 
