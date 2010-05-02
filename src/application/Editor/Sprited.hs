@@ -211,7 +211,15 @@ loaded2UnloadedSprited s = UnloadedSprited (loadedSpritedName s) (loadedSpritedD
 lookupObjects :: IO (SelectTree UnloadedSprited)
 lookupObjects = do
     children <- mapM lookupSpriteds $ map (pngDir </>)
-                    ["nikki", "robots", "terminals", "tiles", "multilayers", "backgrounds", "objects"]
+                    [
+                        "nikki", 
+--                         "robots", 
+--                         "terminals", 
+                        "tiles"
+--                         "multilayers", 
+--                         "backgrounds", 
+--                         "objects"
+                    ]
     let tree = Node pngDir (I.fromList children) 0
         mResult = selectFirstElement isNikki tree
     return $ case mResult of

@@ -100,7 +100,7 @@ checkNormalized i =
 
 
 levelNameToFilePath :: String -> FilePath
-levelNameToFilePath x = normalise ("data/levels" </> x <.> "nl")
+levelNameToFilePath x = normalise ("levels" </> x <.> "nl")
 
 
 
