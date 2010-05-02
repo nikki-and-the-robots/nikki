@@ -75,7 +75,7 @@ initChipmunk space nikki@(Nikki s pos Nothing Nothing jt state) = do
     chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes baryCenterOffset
     let feetShape = head $ shapes chip
 
-    jumpingSound <- newPolySound (soundDir </> "nikkiJump.wav") 4
+    jumpingSound <- newPolySound (soundDir </> "nikki/jump.wav") 4
 
     return $ Nikki s chip (Just feetShape) (Just jumpingSound) jt state
 
