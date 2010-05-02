@@ -130,8 +130,7 @@ initSpace = do
     setContactPersistence 0 -- default: 3 (number of frames)
 
     -- Amount of allowed penetration. Used to reduce vibrating contacts.
-    setCollisionSlop 0.0 -- default: 0.1
-    error "cds"
+    setCollisionSlop 0.1 -- default: 0.1
 
     -- Determines how fast penetrations resolve themselves.
     let bc = 0.1
