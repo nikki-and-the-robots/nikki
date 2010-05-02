@@ -1,0 +1,59 @@
+
+module Editor.Scene.Rendering.Helpers where
+
+
+import Utils
+
+import Data.Color
+import Data.Abelian
+
+import Graphics.Qt
+
+import Editor.Sprited
+import Editor.Scene.Types
+
+
+-- | clears the whole screen
+clearScreen :: Ptr QPainter -> IO ()
+clearScreen ptr = do
+    resetMatrix ptr
+    windowSize <- sizeQPainter ptr
+    eraseRect ptr zero windowSize (QtColor 0 0 0 255)
+
+
+-- draw a box at the given position with the given size
+drawBox :: Ptr QPainter -> Position Double -> Size Double -> Double -> IO ()
+drawBox ptr (Position x y) (Size w h) 0 = return ()
+drawBox ptr (Position x y) (Size w h) thickness = do
+    resetMatrix ptr
+    let t = thickness - 1
+    drawRect ptr (Position (x - t) (y - t)) (Size ((w - 1) + t * 2) ((h - 1) + t * 2))
+    drawBox ptr (Position x y) (Size w h) (thickness - 1)
+
+-- | same as $drawBox$, but with color
+drawColoredBox :: Ptr QPainter -> Position Double -> Size Double -> Double -> RGBA -> IO ()
+drawColoredBox ptr position size thickness (RGBA r g b a) = do
+    setPenColor ptr (tb r) (tb g) (tb b) 127
+    drawBox ptr position size thickness
+  where
+    tb :: Double -> QtInt
+    tb x | x < 0 || x > 1 = es "tb in drawCursorBox" x
+    tb x = truncate (x * 255)
+
+-- | renders the given object (with the given Transformation)
+renderEObject :: Ptr QPainter -> Offset ->  EObject -> IO ()
+renderEObject ptr offset o = do
+    let sprited = eObjectSprited o
+        pos = eObjectPosition o
+        pix = defaultPixmap sprited
+    renderAvailableObject ptr (offset +~ pos) sprited
+
+-- | Renders the given Sprited to the given position
+renderAvailableObject :: Ptr QPainter -> Position Double -> Sprited -> IO ()
+renderAvailableObject ptr pos sprited = do
+    let pix = defaultPixmap sprited
+    resetMatrix ptr
+    translate ptr pos
+    drawPixmap ptr zero pix
+
+
