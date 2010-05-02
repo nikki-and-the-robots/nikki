@@ -36,16 +36,17 @@ cabalTargets postfix path =
 -- | returns if the cabal build in the current directory needs (re-)configuring.
 needsConfiguring :: IO Bool
 needsConfiguring = do
-    files <- getDirectoryContents "."
-    if not ("dist" `elem` files) then
+    exists <- doesFileExist "dist/setup-config"
+    if not exists then
         return True
       else do
+        files <- getDirectoryContents "."
         let cabalFile =
                 files
                 |> filter (\ f -> ".cabal" == takeExtension f)
                 |> head
         cabalMT <- getModificationTime cabalFile
-        distMT <- getModificationTime "dist"
+        distMT <- getModificationTime "dist/setup-config"
         return (distMT < cabalMT)
 
 
