@@ -6,8 +6,8 @@ Category:       Game
 Build-Type:     Simple
 Cabal-Version:  >= 1.6
 
-Executable            natr
-    main-is:          Editor.hs
+Executable            nikki
+    main-is:          Main.hs
 
     ghc-options:
         -O2

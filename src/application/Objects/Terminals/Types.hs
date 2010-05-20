@@ -1,5 +1,5 @@
 
-module Game.Objects.Terminals.Types where
+module Objects.Terminals.Types where
 
 
 import Utils

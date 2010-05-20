@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns, ViewPatterns #-}
 
-module Game.Objects.Robots.Laser where
+module Objects.Robots.Laser where
 
 
 import Utils
@@ -10,6 +10,7 @@ import Data.Map (Map, (!))
 import Data.List
 import qualified Data.Indexable as I
 import Data.Abelian
+import Data.Directions
 
 import Control.Applicative ((<$>))
 import Control.Monad hiding ((>=>))
@@ -21,11 +22,9 @@ import Graphics.Qt as Qt
 
 import Editor.Sprited
 
-import Game.Objects
-import Game.Objects.Types
-import Game.Objects.Helper
-import Game.Objects.Robots.Types
-import Game.Objects.Robots.Handler(RobotHandler(RobotHandler))
+import Objects.Types
+import Objects.Robots.Types
+import Objects.Robots.Handler(RobotHandler(RobotHandler))
 
 import Game.Scene.Types
 import Game.Scene.Grounds

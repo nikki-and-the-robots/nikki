@@ -1,7 +1,7 @@
 {-# language NamedFieldPuns, ViewPatterns #-}
 
-module Game.Objects.Nikki (
-    Game.Objects.Nikki.initChipmunk,
+module Objects.Nikki (
+    Objects.Nikki.initChipmunk,
     initAnimation,
     render,
     update,
@@ -25,9 +25,8 @@ import Sound.SFML
 
 import Physics.Chipmunk as CM
 
-import Game.Objects.Helper
-import Game.Objects
-import Game.Objects.Nikki.Types as NikkiTypes
+import Objects.Types
+import Objects.Nikki.Types as NikkiTypes
 import Game.Scene.Types
 import Game.Events
 import Game.Collisions

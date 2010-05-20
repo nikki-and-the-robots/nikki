@@ -1,15 +1,13 @@
 {-# language NamedFieldPuns, ViewPatterns #-}
 
-module Game.Objects.Robots.Jetpack (initialState, jetpackRobotHandler) where
+module Objects.Robots.Jetpack (initialState, jetpackRobotHandler) where
 
 
 import Prelude hiding (lookup)
 
-import Utils
-import Constants
-
 import Data.Abelian
 import Data.Maybe
+import Data.Directions
 
 import Control.Monad.Compose
 
@@ -17,15 +15,16 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
+
+import Utils
+import Constants
+
 import Game.Events
 import Game.Collisions
 import Game.Animation
-import Game.Objects
-import Game.Objects.Types
-import Game.Objects.Helper
-import Game.Objects.Robots.Types
-import Game.Objects.Robots.Handler
--- import Game.Objects.Robots
+import Objects.Types
+import Objects.Robots.Types
+import Objects.Robots.Handler
 import Game.Scene.Types
 
 import Editor.Sprited
@@ -35,10 +34,10 @@ import Editor.Sprited
 
 jetpackRobotHandler :: RobotHandler
 jetpackRobotHandler = RobotHandler
-    Game.Objects.Robots.Jetpack.initialisation
+    Objects.Robots.Jetpack.initialisation
     id
-    Game.Objects.Robots.Jetpack.update
-    Game.Objects.Robots.Jetpack.rendering
+    Objects.Robots.Jetpack.update
+    Objects.Robots.Jetpack.rendering
 
 initialisation :: UninitializedScene -> Space -> UninitializedObject -> IO Object
 initialisation _ space robot@(Robot s p typ) = do

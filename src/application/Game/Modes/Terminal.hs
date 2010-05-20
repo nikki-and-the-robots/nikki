@@ -13,8 +13,8 @@ import Control.Applicative
 
 import Graphics.Qt
 
-import Game.Objects
-import Game.Objects.Terminals.Types
+import Objects.Types
+import Objects.Terminals.Types
 import Game.Scene.Types
 
 import Editor.Sprited

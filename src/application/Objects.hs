@@ -6,7 +6,7 @@
 --  - chipmunk stepping
 --  - rendering
 
-module Game.Objects.General where
+module Objects where
 
 
 import Utils
@@ -19,13 +19,13 @@ import Game.Collisions
 import Game.Events
 import Game.Animation
 
-import Game.Objects
-import qualified Game.Objects.Nikki as Nikki
-import qualified Game.Objects.Robots as Robots
-import qualified Game.Objects.Tiles as Tiles
-import qualified Game.Objects.Terminals as Terminals
-import qualified Game.Objects.MilkMachine as MilkMachine
-import qualified Game.Objects.Box as Box
+import Objects.Types
+import qualified Objects.Nikki as Nikki
+import qualified Objects.Robots as Robots
+import qualified Objects.Tiles as Tiles
+import qualified Objects.Terminals as Terminals
+import qualified Objects.MilkMachine as MilkMachine
+import qualified Objects.Box as Box
 
 import Game.Scene.Types
 

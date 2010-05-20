@@ -1,34 +1,37 @@
 {-# language ViewPatterns, NamedFieldPuns #-}
 
-module Game.Objects.Robots (
+module Objects.Robots (
     convertObject,
-    Game.Objects.Robots.initChipmunk,
-    Game.Objects.Robots.initAnimation,
+    Objects.Robots.initChipmunk,
+    Objects.Robots.initAnimation,
     update,
     render,
   ) where
 
+
 import Prelude hiding (lookup)
 
-import Utils
+import Data.Directions
 
 import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
+
+import Utils
+
 import Game.Events
 import Game.Collisions
 import Game.Animation
-import Game.Objects
-import Game.Objects.Types
+import Objects.Types
 import Game.Scene.Types
 
-import Game.Objects.Robots.Types as RobotTypes
-import Game.Objects.Robots.Handler as Handler
+import Objects.Robots.Types as RobotTypes
+import Objects.Robots.Handler as Handler
 
-import qualified Game.Objects.Robots.Jetpack as Jetpack
-import qualified Game.Objects.Robots.Laser as Laser
-import qualified Game.Objects.Robots.TestRobot as TestRobot
+import qualified Objects.Robots.Jetpack as Jetpack
+import qualified Objects.Robots.Laser as Laser
+import qualified Objects.Robots.TestRobot as TestRobot
 
 import Editor.Scene hiding (ControlData)
 import Editor.Sprited

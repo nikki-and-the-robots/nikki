@@ -164,4 +164,43 @@ mkRect (Qt.Position x y) (Qt.Size width height) =
     bottom = y + height
 
 
+-- * chipmunk initialisation
+
+mkStandardPolys :: Qt.Size Double -> ([ShapeType], Vector)
+mkStandardPolys (Qt.Size w h) =
+     ([rect], baryCenterOffset)
+  where
+    rect =
+        Polygon [
+            Vector (- wh) (- hh),
+            Vector (- wh) hh,
+            Vector wh hh,
+            Vector wh (- hh)
+          ]
+    wh = w / 2
+    hh = h / 2
+    baryCenterOffset = Vector wh hh
+
+
+-- * rendering
+
+renderChipmunk :: Ptr QPainter -> Qt.Position Double -> Ptr Qt.QPixmap -> Chipmunk -> IO ()
+renderChipmunk painter worldOffset p chipmunk = do
+    Qt.resetMatrix painter
+    translate painter worldOffset
+
+    (position, rad) <- getRenderPosition chipmunk
+
+    translateVector painter position
+    Qt.rotate painter (rad2deg rad)
+
+    Qt.drawPixmap painter zero p
+
+translateSpriteToCenter :: Ptr QPainter -> Qt.Size Int -> IO ()
+translateSpriteToCenter ptr (Qt.Size width height) = do
+    let wh = fromIntegral width / 2
+        hh = fromIntegral height / 2
+    translate ptr (Qt.Position (- wh) (- hh))
+
+
 

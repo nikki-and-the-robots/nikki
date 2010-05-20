@@ -1,16 +1,16 @@
 
-module Game.Objects.Box where
+module Objects.Box where
 
 
 import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
+
 import Utils
 import Constants
 
-import Game.Objects
-import Game.Objects.Helper
+import Objects.Types
 
 import Editor.Sprited
 

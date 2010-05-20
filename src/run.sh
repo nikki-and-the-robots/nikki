@@ -11,5 +11,5 @@ trap error ERR
 ./compile.sh
 
 cd ..
-src/application/dist/build/natr/natr
+src/application/dist/build/nikki/nikki default
 

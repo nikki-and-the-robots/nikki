@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns #-}
 
-module Game.Objects.MilkMachine where
+module Objects.MilkMachine where
 
 
 import Utils
@@ -11,7 +11,7 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk
 
-import Game.Objects
+import Objects.Types
 import Game.Animation
 
 import Editor.Sprited

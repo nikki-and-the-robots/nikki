@@ -31,7 +31,7 @@ import Data.Maybe
 
 import Physics.Chipmunk hiding (Callback)
 
-import Game.Objects hiding ()
+import Objects.Types
 
 
 data Collisions

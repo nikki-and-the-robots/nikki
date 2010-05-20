@@ -1,12 +1,12 @@
 
-module Game.Objects.Robots.Handler where
+module Objects.Robots.Handler where
 
 
 import Physics.Chipmunk
 
 import Graphics.Qt as Qt
 
-import Game.Objects
+import Objects.Types
 import Game.Scene.Types
 import Game.Animation
 import Game.Events

@@ -28,9 +28,9 @@ import Graphics.Qt as Qt
 import Physics.Chipmunk as CM
 
 import Game.Events
-import Game.Objects
-import Game.Objects.General
-import qualified Game.Objects.Terminals as Terminals
+import Objects
+import Objects.Types
+import qualified Objects.Terminals as Terminals
 import Game.Collisions
 import Game.Animation
 

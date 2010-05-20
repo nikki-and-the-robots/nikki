@@ -1,6 +1,6 @@
 {-# language FlexibleInstances, NamedFieldPuns #-}
 
-module Game.Objects (
+module Objects.Types (
     UninitializedObject,
     UnloadedObject,
     Object,
@@ -48,9 +48,9 @@ import Graphics.Qt as Qt
 import Sound.SFML
 
 import Game.Animation
-import Game.Objects.Robots.Types
-import qualified Game.Objects.Nikki.Types as Nikki
-import Game.Objects.Terminals.Types as Terminals
+import Objects.Robots.Types
+import qualified Objects.Nikki.Types as Nikki
+import Objects.Terminals.Types as Terminals
 
 import Editor.Sprited
 

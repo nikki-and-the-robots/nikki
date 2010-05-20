@@ -1,11 +1,12 @@
 
-module Game.Objects.Robots.TestRobot where
+module Objects.Robots.TestRobot where
 
 
 import Utils
 import Constants
 
 import Data.Abelian
+import Data.Directions
 
 import Control.Monad
 import Control.Monad.Compose
@@ -17,12 +18,9 @@ import Physics.Chipmunk as CM
 import Game.Events
 import Game.Collisions
 import Game.Animation
-import Game.Objects
-import Game.Objects.Types
-import Game.Objects.Helper
-import Game.Objects.Robots.Types
-import Game.Objects.Robots.Handler
--- import Game.Objects.Robots
+import Objects.Types
+import Objects.Robots.Types
+import Objects.Robots.Handler
 import Game.Scene.Types
 
 import Editor.Sprited
@@ -31,10 +29,10 @@ import Editor.Sprited
 
 handler :: RobotHandler
 handler = RobotHandler
-    Game.Objects.Robots.TestRobot.initialisation
+    Objects.Robots.TestRobot.initialisation
     id
-    Game.Objects.Robots.TestRobot.update
-    Game.Objects.Robots.TestRobot.render
+    Objects.Robots.TestRobot.update
+    Objects.Robots.TestRobot.render
 
 
 initialisation :: UninitializedScene -> Space -> UninitializedObject -> IO Object

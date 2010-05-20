@@ -25,6 +25,8 @@ module Physics.Chipmunk (
     modifyAngVel,
     normalizeAngle,
 
+    renderChipmunk,
+    mkStandardPolys,
     debugChipmunk,
 
     -- re-exports from submodules

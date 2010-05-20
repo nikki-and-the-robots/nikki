@@ -13,7 +13,7 @@ import Graphics.Qt
 
 import Game.Scene
 import Game.Scene.Grounds
-import Game.Objects
+import Objects.Types
 
 import Editor.Sprited
 

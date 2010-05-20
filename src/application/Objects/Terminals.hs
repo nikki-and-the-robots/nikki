@@ -1,13 +1,13 @@
 {-# language NamedFieldPuns #-}
 
-module Game.Objects.Terminals (
+module Objects.Terminals (
     initialTerminal,
-    Game.Objects.Terminals.initChipmunk,
+    Objects.Terminals.initChipmunk,
     initAnimation,
     update,
     render,
 
-    module Game.Objects.Terminals.Types,
+    module Objects.Terminals.Types,
   ) where
 
 
@@ -27,8 +27,8 @@ import Physics.Chipmunk as CM
 import Graphics.Qt as Qt
 
 import Game.Collisions
-import Game.Objects
-import Game.Objects.Terminals.Types
+import Objects.Types
+import Objects.Terminals.Types
 import Game.Animation
 import Game.Events
 import Game.Scene.Types

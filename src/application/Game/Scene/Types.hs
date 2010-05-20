@@ -8,7 +8,7 @@ import Utils
 import Data.Indexable
 import Data.Map
 
-import Game.Objects
+import Objects.Types
 import Game.Animation
 import Game.Collisions
 import Game.Scene.Grounds

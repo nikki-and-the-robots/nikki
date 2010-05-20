@@ -1,12 +1,13 @@
 
-module Game.Objects.Robots.Types where
+module Objects.Robots.Types where
 
 
 import Utils
 
+import Data.Directions
+
 import Physics.Chipmunk
 
-import Game.Objects.Types
 import Game.Animation
 
 

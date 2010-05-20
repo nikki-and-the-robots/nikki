@@ -42,8 +42,8 @@ import Game.FPSState
 import Game.Events
 import Game.Scene
 import Game.Scene.Grounds
-import Game.Objects
-import Game.Objects.General
+import Objects
+import Objects.Types
 import Game.OptimizeChipmunks
 
 import Editor.Conversions

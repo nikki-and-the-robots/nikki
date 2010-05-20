@@ -24,7 +24,7 @@ import qualified System.IO as IO
 import Game.Scene
 import Game.Scene.Camera
 import Game.Scene.Grounds
-import Game.Objects as Objects
+import Objects.Types as Objects
 import Game.Collisions
 import Game.Modes.Terminal
 

@@ -1,9 +1,9 @@
 {-# language NamedFieldPuns #-}
 
-module Game.Objects.Tiles (
-    Game.Objects.Tiles.initChipmunk,
+module Objects.Tiles (
+    Objects.Tiles.initChipmunk,
     initAnimation,
-    Game.Objects.Tiles.update,
+    Objects.Tiles.update,
     render,
   ) where
 
@@ -17,7 +17,7 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Game.Objects
+import Objects.Types
 import Game.Collisions
 import Game.Animation
 

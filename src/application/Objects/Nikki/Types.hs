@@ -1,5 +1,5 @@
 
-module Game.Objects.Nikki.Types where
+module Objects.Nikki.Types where
 
 
 import Game.Animation

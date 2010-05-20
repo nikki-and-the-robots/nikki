@@ -12,7 +12,7 @@ import Data.Abelian
 
 import Physics.Chipmunk as CM
 
-import Game.Objects
+import Objects.Types
 
 
 data CameraState

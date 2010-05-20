@@ -1,5 +1,5 @@
 
-module Game.Objects.Types where
+module Data.Directions where
 
 
 data HorizontalDirection = HLeft | HRight
