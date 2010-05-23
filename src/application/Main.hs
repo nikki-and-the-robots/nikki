@@ -2,24 +2,34 @@
 
 
 import Utils
-import GlobalCatcher
 
 import Data.IORef
 import Data.Set (Set, empty, insert, delete, toList)
 
-import Control.Monad.State
+import Control.Monad.State hiding ((>=>))
 import Control.Applicative ((<$>))
+import Control.Monad.Compose
 
 import System.IO
 import System.Exit
 
+import Physics.Chipmunk
+
 import Graphics.Qt
 
-import qualified Game.MainLoop as Natr
-import Game.Scene.Grounds
+
+import Base.Grounds
+import Base.GlobalCatcher
+
+import Objects
+
+import Game.MainLoop as Game
+import Game.Scene (Scene, sceneInitChipmunks, sceneInitCollisions)
+import Game.OptimizeChipmunks
 
 import Editor.Scene
-import Editor.Conversions
+
+import Top.Conversions
 
 
 type MM o = StateT AppState IO o
@@ -29,7 +39,7 @@ data AppState = AppState {
     qWidget :: Ptr AppWidget,
     keyState :: Set Key,
     scene :: EditorScene,
-    levelTesting :: Maybe (IORef Natr.AppState)
+    levelTesting :: Maybe (IORef GameAppState)
   }
 
 
@@ -37,7 +47,7 @@ setKeyState :: AppState -> Set Key -> AppState
 setKeyState (AppState a b _ d e) c = AppState a b c d e
 setScene :: AppState -> EditorScene -> AppState
 setScene    (AppState a b c _ e) d = AppState a b c d e
-setLevelTesting :: AppState -> Maybe (IORef Natr.AppState) -> AppState
+setLevelTesting :: AppState -> Maybe (IORef GameAppState) -> AppState
 setLevelTesting  (AppState a b c d _) e = AppState a b c d e
 
 initialStateRef :: Ptr QApplication -> Ptr AppWidget -> Maybe (String, Grounds UnloadedEObject) -> IO (IORef AppState)
@@ -49,7 +59,7 @@ initialState app widget mObjects = do
     return $ AppState app widget empty is Nothing
 
 main :: IO ()
-main = globalCatcherEditor $ do
+main = globalCatcher $ do
     putStrLn "\neditor started..."
     hSetBuffering stdout NoBuffering
 
@@ -63,8 +73,8 @@ main = globalCatcherEditor $ do
     mObjects <- load Nothing
 
     -- render loop
-    isr <- initialStateRef app window mObjects
-    ec <- qtRendering app window "QT_P_O_C" Natr.initialSize (renderCallback isr) globalCatcherEditor
+    isr <- Main.initialStateRef app window mObjects
+    ec <- qtRendering app window "QT_P_O_C" Game.initialSize (Main.renderCallback isr) globalCatcher
     hideAppWidget window
 
     -- saving
@@ -107,8 +117,8 @@ renderWithState events painter = do
                 s <- gets scene
                 case s of
                     EditorScene{} -> do
-                        ref <- liftIO $ Natr.initialStateRef app widget
-                            (flip Natr.initSceneFromEditor $ objects s)
+                        ref <- liftIO $ Game.initialStateRef app widget
+                            (flip initSceneFromEditor $ objects s)
                         puts setLevelTesting (Just ref)
                     _ -> return ()
             Just _ -> puts setLevelTesting Nothing
@@ -126,7 +136,7 @@ renderWithState events painter = do
             return ()
         Just stateRef -> do
             -- level testing using natr
-            liftIO $ Natr.renderCallback stateRef events painter
+            liftIO $ Game.renderCallback stateRef events painter
 
 debugScene :: MM ()
 debugScene = do
@@ -134,3 +144,54 @@ debugScene = do
     liftIO $ mapM_ printDebug (reverse $ debugMsgs $ scene s)
     put s{scene = (scene s){debugMsgs = []}}
 
+
+
+
+initSceneFromEditor :: Space -> Grounds EObject -> IO Scene
+initSceneFromEditor space =
+    pure (fmap eObject2Object) >=>
+    mkScene >=>
+    optimizeChipmunks >=>
+    sceneInitChipmunks space >=>
+    sceneInitCollisions space
+
+
+-- not used as we have only one executable now.
+
+-- initScene :: Space -> Grounds UnloadedEObject -> IO Scene
+-- initScene space =
+--     pure (fmap eObject2Object) >=>
+--     loadSpriteds >=>
+--     mkScene >=>
+--     optimizeChipmunks >=>
+--     sceneInitChipmunks space >=>
+--     sceneInitCollisions space
+
+-- not used as we have only one executable now.
+-- gameMain :: IO ()
+-- gameMain = do
+--     putStrLn "\ngame started..."
+--     hSetBuffering stdout NoBuffering
+-- 
+--     app <- newQApplication
+--     window <- newAppWidget 1
+-- 
+--     debugQtVersion
+-- 
+--     debugNumberOfHecs
+-- 
+--     when (fullscreen Configuration.development) $
+--         setFullscreenAppWidget window True
+-- 
+--     directRendered <- directRenderingAppWidget window
+--     when (not directRendered) $
+--         warn "No direct rendering available :("
+--     paintEngineType <- paintEngineTypeAppWidget window
+--     warn ("paintEngine: " ++ show paintEngineType)
+-- 
+--     (Just (levelname, eobjects)) <- load (Just "default")
+--     isr <- initialStateRef app window (flip initScene eobjects)
+--     ec <- qtRendering app window "QT_P_O_C" initialSize (renderCallback isr) globalCatcher
+-- 
+--     readIORef isr >>= (fpsState >>> terminateFpsState)
+--     exitWith ec

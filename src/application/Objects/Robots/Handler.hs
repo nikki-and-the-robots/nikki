@@ -6,11 +6,13 @@ import Physics.Chipmunk
 
 import Graphics.Qt as Qt
 
-import Objects.Types
+import Base.Events
+
 import Game.Scene.Types
-import Game.Animation
-import Game.Events
-import Game.Collisions
+
+import Objects.Animation
+import Objects.Collisions
+import Objects.Types
 
 
 data RobotHandler =

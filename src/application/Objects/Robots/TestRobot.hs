@@ -3,28 +3,24 @@ module Objects.Robots.TestRobot where
 
 
 import Utils
-import Constants
 
 import Data.Abelian
-import Data.Directions
 
-import Control.Monad
 import Control.Monad.Compose
 
 import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Game.Events
-import Game.Collisions
-import Game.Animation
-import Objects.Types
-import Objects.Robots.Types
-import Objects.Robots.Handler
+import Base.Events
+import Base.Sprited
+
 import Game.Scene.Types
 
-import Editor.Sprited
-
+import Objects.Collisions
+import Objects.Animation
+import Objects.Types
+import Objects.Robots.Handler
 
 
 handler :: RobotHandler

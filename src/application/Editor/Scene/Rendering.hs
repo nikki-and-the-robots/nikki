@@ -13,9 +13,11 @@ import Control.Applicative ((<$>))
 
 import Graphics.Qt
 
-import Game.Scene.Grounds
+import Base.Grounds
 
-import Editor.Sprited
+import Base.Sprited
+import Base.PickleObject
+
 import Editor.Scene.Types
 import Editor.Scene.Menu as Menu
 import Editor.Scene.Rendering.Helpers

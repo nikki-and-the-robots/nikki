@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns, DeriveDataTypeable, FlexibleInstances #-}
+{-# language NamedFieldPuns, FlexibleInstances #-}
 
 module Editor.Scene.Types where
 
@@ -9,7 +9,6 @@ import Data.Map hiding (map, filter)
 import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
-import Data.Generics
 import Data.Menu hiding (selected)
 
 import Control.Monad.State
@@ -17,8 +16,11 @@ import Control.Exception
 
 import Graphics.Qt
 
-import Game.Scene.Grounds
-import Editor.Sprited
+import Base.PickleObject
+
+import Base.Sprited
+
+import Base.Grounds
 
 
 data EditorScene
@@ -84,37 +86,6 @@ data ControlData = ControlData [QtEvent] [Key]
 type SceneMonad = StateT EditorScene IO
 
 
-type EObject = EObject_ Sprited
-
-type UnloadedEObject = EObject_ UnloadedSprited
-
-data EObject_ sprited
-    = ENikki {eObjectPosition :: (Position Double), eObjectSprited :: sprited}
-    | ETerminal {eObjectPosition :: (Position Double), eObjectSprited :: sprited, associatedRobots :: [Index]}
-    | ERobot {eObjectPosition :: (Position Double), eObjectSprited :: sprited}
-    | EMilkMachine {eObjectPosition :: (Position Double), eObjectSprited :: sprited}
-    | ETile {eObjectPosition :: (Position Double), eObjectSprited :: sprited}
-    | EBox {eObjectPosition :: (Position Double), eObjectSprited :: sprited}
-  deriving (Show, Read, Eq, Data, Typeable)
-
-type Offset = Position Double
-
-
--- * instances
-
-instance Functor EObject_ where
-    fmap f eo = eo{eObjectSprited = f (eObjectSprited eo)}
-
-
--- * discriminators
-
-isETerminal :: EObject_ a -> Bool
-isETerminal ETerminal{} = True
-isETerminal _ = False
-
-isERobot :: EObject -> Bool
-isERobot ERobot{} = True
-isERobot _ = False
 
 
 -- * getters
@@ -152,8 +123,6 @@ getTerminalMRobot scene@TerminalScene{} =
 setPixmaps :: EditorScene -> Map String (Ptr QPixmap) -> EditorScene
 setPixmaps s x = s{pixmaps = x}
 
-setAssociatedRobots :: EObject -> [Index] -> EObject
-setAssociatedRobots (ETerminal p s _) x = ETerminal p s x
 
 addDebugMsg :: String -> EditorScene -> EditorScene
 addDebugMsg msg s =

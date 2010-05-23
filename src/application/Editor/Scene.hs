@@ -20,7 +20,7 @@ module Editor.Scene (
   ) where
 
 import Utils
-import Constants
+import Base.Constants
 
 import Data.Maybe
 import Data.Map hiding (map, filter, mapMaybe)
@@ -38,9 +38,11 @@ import Graphics.Qt
 
 import System.FilePath
 
-import Game.Scene.Grounds
+import Base.Grounds
 
-import Editor.Sprited
+import Base.Sprited
+import Base.PickleObject
+
 import Editor.Scene.Types
 import Editor.Scene.Menu as Menu
 import Editor.Scene.Rendering

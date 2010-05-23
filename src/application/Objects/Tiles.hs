@@ -17,11 +17,11 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Objects.Types
-import Game.Collisions
-import Game.Animation
+import Base.Sprited
 
-import Editor.Sprited
+import Objects.Types
+import Objects.Collisions
+import Objects.Animation
 
 
 initChipmunk :: Space -> UninitializedObject -> IO Object

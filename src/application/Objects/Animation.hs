@@ -1,6 +1,6 @@
 {-# language FlexibleInstances, NamedFieldPuns #-}
 
-module Game.Animation (
+module Objects.Animation (
     Seconds,
     Animation(UninitializedAnimation, SingleFrameAnimation, animationType, frameNumber),
     AnimationPhases(..),
@@ -15,7 +15,7 @@ import Utils
 
 import Graphics.Qt
 
-import Editor.Sprited
+import Base.Sprited
 
 
 type Seconds = Double

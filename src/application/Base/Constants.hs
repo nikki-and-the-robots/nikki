@@ -1,21 +1,15 @@
 
-module Constants where
+module Base.Constants where
 
 
-import Configuration
-
+-- * Application
 
 windowWidth :: Int
 windowWidth = 1000
 windowHeight :: Int
 windowHeight = 650
 
-
-gravity :: Double
-gravity = 1700
-robotFriction :: Double
-robotFriction = 1.0
-
+-- * Graphics
 
 -- | converts uberpixels to pixels
 fromUber :: Num n => n -> n
@@ -33,10 +27,12 @@ fromKachel = (* 16) . fromUber
 toKachel :: Fractional n => n -> n
 toKachel = (/ 16) . toUber
 
+-- * Physics
 
+gravity :: Double
+gravity = 1700
 
-
--- file directories
+-- * file directories
 
 soundDir = "data/sounds"
 

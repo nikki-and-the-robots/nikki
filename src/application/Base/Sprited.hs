@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables, DeriveDataTypeable #-}
 
-module Editor.Sprited (
+module Base.Sprited (
     PixMap,
     Name(..),
     SpritedClass(..),

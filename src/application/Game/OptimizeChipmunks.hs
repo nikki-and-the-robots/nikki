@@ -12,10 +12,10 @@ import Physics.Chipmunk
 import Graphics.Qt
 
 import Game.Scene
-import Game.Scene.Grounds
+import Base.Grounds
 import Objects.Types
 
-import Editor.Sprited
+import Base.Sprited
 
 
 optimizeChipmunks :: UninitializedScene -> IO UninitializedScene

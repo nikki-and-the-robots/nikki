@@ -10,7 +10,7 @@ module Objects.Nikki (
 
 
 import Utils
-import Constants
+import Base.Constants
 
 import Data.Abelian
 
@@ -25,15 +25,17 @@ import Sound.SFML
 
 import Physics.Chipmunk as CM
 
+import Base.Sprited
+import Base.PickleObject (EObject_(..))
+import Base.Events
+
+import Game.Scene.Types
+
 import Objects.Types
 import Objects.Nikki.Types as NikkiTypes
-import Game.Scene.Types
-import Game.Events
-import Game.Collisions
-import Game.Animation
+import Objects.Collisions
+import Objects.Animation
 
-import Editor.Sprited
-import Editor.Scene (EObject_(..))
 
 
 convertObject :: (Show s, SpritedClass s) => EObject_ s -> Object_ s Vector

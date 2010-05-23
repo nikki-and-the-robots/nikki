@@ -17,7 +17,7 @@ import Objects.Types
 import Objects.Terminals.Types
 import Game.Scene.Types
 
-import Editor.Sprited
+import Base.Sprited
 
 
 initialOsdSpriteds :: IO (Map String UninitializedObject)

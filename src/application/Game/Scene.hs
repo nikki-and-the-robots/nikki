@@ -14,7 +14,6 @@ module Game.Scene (
 
 
 import Utils
-import Configuration
 
 import Data.Indexable (Index, (!!!), fmapMWithIndex)
 import Control.Monad.FunctorM
@@ -27,17 +26,18 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Game.Events
+import Base.Events
+import Base.Grounds
+import Base.Configuration as Configuration
+
 import Objects
 import Objects.Types
 import qualified Objects.Terminals as Terminals
-import Game.Collisions
-import Game.Animation
+import Objects.Collisions
+import Objects.Animation
 
 import Game.Scene.Types
 import Game.Scene.Camera
-import Game.Scene.Grounds
-
 import qualified Game.Modes.Terminal as TerminalMode
 
 

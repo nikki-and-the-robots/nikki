@@ -6,7 +6,7 @@ import Data.Binary
 
 import Control.Applicative ((<$>), (<*>))
 
-import Editor.Sprited
+import Base.Sprited
 import Editor.Scene
 
 

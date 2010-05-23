@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables, NamedFieldPuns #-}
 
-module Editor.Conversions where
+module Top.Conversions where
 
 
 import Prelude hiding (readFile, writeFile)
@@ -23,12 +23,12 @@ import qualified System.IO as IO
 
 import Game.Scene
 import Game.Scene.Camera
-import Game.Scene.Grounds
+import Base.Grounds
 import Objects.Types as Objects
-import Game.Collisions
+import Objects.Collisions
 import Game.Modes.Terminal
 
-import Editor.Sprited
+import Base.Sprited
 import Editor.Scene as ES
 import Editor.Binary ()
 

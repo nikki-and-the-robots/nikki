@@ -13,9 +13,11 @@ import Control.Monad
 
 import Graphics.Qt
 
-import Game.Scene.Grounds
+import Base.Grounds
 
-import Editor.Sprited
+import Base.Sprited
+import Base.PickleObject
+
 import Editor.Scene.Types hiding (selected)
 
 import System.IO.Unsafe

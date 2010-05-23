@@ -2,9 +2,9 @@
 module Objects.Nikki.Types where
 
 
-import Game.Animation
+import Objects.Animation
 
-import Editor.Sprited
+import Base.Sprited
 
 
 data State = State {

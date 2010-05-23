@@ -6,7 +6,7 @@ import Utils
 
 import qualified Data.Indexable as I
 
-import Game.Animation
+import Objects.Animation
 
 
 data State = State {

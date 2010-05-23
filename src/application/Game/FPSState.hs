@@ -11,8 +11,6 @@ module Game.FPSState (
 
 
 import Prelude hiding ((.))
-import Utils
-import qualified Strict
 
 import Control.Category
 
@@ -20,7 +18,7 @@ import System.IO
 
 import Graphics.Qt
 
-import Configuration
+import Base.Configuration as Configuration
 
 
 
@@ -29,8 +27,8 @@ import Configuration
 data FpsState
     = FpsState {
         counter :: !Int,
-        averageSpan :: !(Strict.Maybe Double),
-        time :: Strict.Maybe (Ptr QTime),
+        averageSpan :: !(Maybe Double),
+        time :: Maybe (Ptr QTime),
         logHandle :: !Handle
     }
     | NotActivated
@@ -46,32 +44,32 @@ initialFPSState :: IO FpsState
 initialFPSState =
     if profiling Configuration.development then do
         logHandle <- openFile logFile WriteMode
-        return $ FpsState 0 Strict.Nothing Strict.Nothing logHandle
+        return $ FpsState 0 Nothing Nothing logHandle
       else
         return NotActivated
 
 -- does the actual work. Must be called for every frame
 tickFPS :: FpsState -> IO FpsState
-tickFPS (FpsState counter avg Strict.Nothing logHandle) = do
+tickFPS (FpsState counter avg Nothing logHandle) = do
     -- first time: QTime has to be constructed
     ptr <- newQTime
     startQTime ptr
-    return $ FpsState counter avg (Strict.Just ptr) logHandle
-tickFPS (FpsState counter avg (Strict.Just qtime) logHandle) = do
+    return $ FpsState counter avg (Just ptr) logHandle
+tickFPS (FpsState counter avg (Just qtime) logHandle) = do
         elapsed <- restartQTime qtime
         log elapsed
         let avg' = calcAvg counter avg elapsed
-        handle (FpsState (counter + 1) (Strict.Just avg') (Strict.Just qtime) logHandle)
+        handle (FpsState (counter + 1) (Just avg') (Just qtime) logHandle)
   where
-    handle x@(FpsState 100 (Strict.Just avg) qtime lf) = do
+    handle x@(FpsState 100 (Just avg) qtime lf) = do
         putStrLn ("(FPS: " ++ show (1000 / avg) ++ ") | ")
 --         putStrLn "terminating application for profiling purposes." >> quitQApplication
-        return $ FpsState 0 Strict.Nothing qtime lf
+        return $ FpsState 0 Nothing qtime lf
     handle x = return x
 
-    calcAvg :: Int -> Strict.Maybe Double -> QtInt -> Double
-    calcAvg 0 Strict.Nothing newValue = fromIntegral newValue
-    calcAvg len (Strict.Just avg) newValue =
+    calcAvg :: Int -> Maybe Double -> QtInt -> Double
+    calcAvg 0 Nothing newValue = fromIntegral newValue
+    calcAvg len (Just avg) newValue =
         (lenF * avg + fromIntegral newValue) / (lenF + 1)
       where lenF = fromIntegral len
 

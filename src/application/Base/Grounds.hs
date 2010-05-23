@@ -1,6 +1,6 @@
 {-# language DeriveDataTypeable, NamedFieldPuns, ViewPatterns #-}
 
-module Game.Scene.Grounds where
+module Base.Grounds where
 
 
 import Utils

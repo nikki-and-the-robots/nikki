@@ -1,5 +1,5 @@
 
-module Game.Events where
+module Base.Events where
 
 
 import Data.Map (Map, fromList, member, (!))

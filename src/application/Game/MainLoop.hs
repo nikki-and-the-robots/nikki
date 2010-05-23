@@ -3,20 +3,15 @@
 
 module Game.MainLoop (
     initialSize,
-    gameMain,
     renderCallback,
-    AppState,
+    GameAppState,
     initialStateRef,
-    initScene,
-    initSceneFromEditor,
   ) where
 
 -- my utils
 
 import Utils
-import GlobalCatcher
-import Constants
-import Configuration
+import Base.Constants
 
 -- normal haskell stuff
 
@@ -24,11 +19,6 @@ import Data.Set as Set (Set, empty, insert, delete, toList)
 import Data.IORef
 
 import Control.Monad.State hiding ((>=>))
-import Control.Monad.Compose
-import Control.Category ((>>>))
-
-import System.IO
-import System.Exit
 
 import GHC.Conc
 
@@ -38,49 +28,16 @@ import Graphics.Qt
 
 import Physics.Chipmunk as CM
 
-import Game.FPSState
-import Game.Events
-import Game.Scene
-import Game.Scene.Grounds
-import Objects
-import Objects.Types
-import Game.OptimizeChipmunks
+import Base.Events
 
-import Editor.Conversions
-import Editor.Scene (EObject, UnloadedEObject)
+import Game.FPSState
+import Game.Scene
+
 
 
 initialSize :: Size Int
 initialSize = Size windowWidth windowHeight
 
-
-gameMain :: IO ()
-gameMain = do
-    putStrLn "\ngame started..."
-    hSetBuffering stdout NoBuffering
-
-    app <- newQApplication
-    window <- newAppWidget 1
-
-    debugQtVersion
-
-    debugNumberOfHecs
-
-    when (fullscreen Configuration.development) $
-        setFullscreenAppWidget window True
-
-    directRendered <- directRenderingAppWidget window
-    when (not directRendered) $
-        warn "No direct rendering available :("
-    paintEngineType <- paintEngineTypeAppWidget window
-    warn ("paintEngine: " ++ show paintEngineType)
-
-    (Just (levelname, eobjects)) <- load (Just "default")
-    isr <- initialStateRef app window (flip initScene eobjects)
-    ec <- qtRendering app window "QT_P_O_C" initialSize (renderCallback isr) globalCatcherGame
-
-    readIORef isr >>= (fpsState >>> terminateFpsState)
-    exitWith ec
 
 -- prints the version number of qt and exits
 debugQtVersion :: IO ()
@@ -94,28 +51,9 @@ debugNumberOfHecs =
     putStrLn ("Number of HECs: " ++ show numCapabilities)
 
 
-initScene :: Space -> Grounds UnloadedEObject -> IO Scene
-initScene space =
-    pure (fmap eObject2Object) >=>
-    loadSpriteds >=>
-    mkScene >=>
-    optimizeChipmunks >=>
-    sceneInitChipmunks space >=>
-    sceneInitCollisions space
-
-
--- * used by the editor
-initSceneFromEditor :: Space -> Grounds EObject -> IO Scene
-initSceneFromEditor space =
-    pure (fmap eObject2Object) >=>
-    mkScene >=>
-    optimizeChipmunks >=>
-    sceneInitChipmunks space >=>
-    sceneInitCollisions space
-
 
 -- * running the state monad inside the render IO command
-renderCallback :: IORef AppState -> [QtEvent] -> Ptr QPainter -> IO ()
+renderCallback :: IORef GameAppState -> [QtEvent] -> Ptr QPainter -> IO ()
 renderCallback stateRef qtEvents painter = do
     let allEvents = toEitherList qtEvents []
 
@@ -125,9 +63,9 @@ renderCallback stateRef qtEvents painter = do
 
 -- Application Monad and State
 
-type AppMonad o = StateT AppState IO o
+type AppMonad o = StateT GameAppState IO o
 
-data AppState = AppState {
+data GameAppState = GameAppState {
     qApplication :: Ptr QApplication,
     qWidget :: Ptr AppWidget,
     keyState :: Set AppButton,
@@ -137,26 +75,26 @@ data AppState = AppState {
     timer :: Ptr QTime
   }
 
-setKeyState :: AppState -> Set AppButton -> AppState
-setKeyState (AppState a b _ d e f g) c = AppState a b c d e f g
-setFpsState :: AppState -> FpsState -> AppState
-setFpsState (AppState a b c _ e f g) d = AppState a b c d e f g
-setScene :: AppState -> Scene -> AppState
-setScene    (AppState a b c d e _ g) f = AppState a b c d e f g
+setKeyState :: GameAppState -> Set AppButton -> GameAppState
+setKeyState (GameAppState a b _ d e f g) c = GameAppState a b c d e f g
+setFpsState :: GameAppState -> FpsState -> GameAppState
+setFpsState (GameAppState a b c _ e f g) d = GameAppState a b c d e f g
+setScene :: GameAppState -> Scene -> GameAppState
+setScene    (GameAppState a b c d e _ g) f = GameAppState a b c d e f g
 
 
 initialStateRef :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO Scene)
-    -> IO (IORef AppState)
+    -> IO (IORef GameAppState)
 initialStateRef app widget scene = initialState app widget scene >>= newIORef
 
-initialState :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO Scene) -> IO AppState
+initialState :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO Scene) -> IO GameAppState
 initialState app widget startScene = do
     fps <- initialFPSState
-    cmSpace <- initSpace
+    cmSpace <- initSpace gravity
     scene <- startScene cmSpace
     qtime <- newQTime
     startQTime qtime
-    return $ AppState app widget Set.empty fps cmSpace scene qtime
+    return $ GameAppState app widget Set.empty fps cmSpace scene qtime
 
 
 
@@ -191,7 +129,7 @@ getSecs = do
     return (fromIntegral time / 10 ^ 3)
 
 
-actualizeFPS :: StateT AppState IO ()
+actualizeFPS :: StateT GameAppState IO ()
 actualizeFPS = modifiesT fpsState setFpsState tickFPS
 
 actualizeKeyState :: [AppEvent] -> AppMonad [AppButton]

@@ -1,5 +1,5 @@
 
-module Configuration where
+module Base.Configuration where
 
 
 -- | developing configuration

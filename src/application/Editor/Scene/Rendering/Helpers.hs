@@ -9,8 +9,8 @@ import Data.Abelian
 
 import Graphics.Qt
 
-import Editor.Sprited
-import Editor.Scene.Types
+import Base.Sprited
+import Base.PickleObject
 
 
 -- | clears the whole screen

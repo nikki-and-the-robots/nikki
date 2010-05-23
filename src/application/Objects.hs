@@ -15,11 +15,16 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Game.Collisions
-import Game.Events
-import Game.Animation
+import Base.Events
+import Base.Sprited
+import Base.PickleObject
 
+import Game.Scene.Types
+
+import Objects.Collisions
+import Objects.Animation
 import Objects.Types
+
 import qualified Objects.Nikki as Nikki
 import qualified Objects.Robots as Robots
 import qualified Objects.Tiles as Tiles
@@ -27,10 +32,6 @@ import qualified Objects.Terminals as Terminals
 import qualified Objects.MilkMachine as MilkMachine
 import qualified Objects.Box as Box
 
-import Game.Scene.Types
-
-import Editor.Sprited
-import Editor.Scene (EObject_(..))
 
 
 -- * conversions from EditorObject

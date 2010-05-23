@@ -20,21 +20,22 @@ import Physics.Chipmunk as CM
 
 import Utils
 
-import Game.Events
-import Game.Collisions
-import Game.Animation
-import Objects.Types
+import Base.Events
+import Base.Sprited
+import Base.PickleObject
+
 import Game.Scene.Types
 
 import Objects.Robots.Types as RobotTypes
 import Objects.Robots.Handler as Handler
+import Objects.Collisions
+import Objects.Animation
+import Objects.Types
 
 import qualified Objects.Robots.Jetpack as Jetpack
 import qualified Objects.Robots.Laser as Laser
 import qualified Objects.Robots.TestRobot as TestRobot
 
-import Editor.Scene hiding (ControlData)
-import Editor.Sprited
 
 
 -- * glue code for Game.Objects.General

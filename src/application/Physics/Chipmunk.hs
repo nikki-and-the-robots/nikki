@@ -90,7 +90,6 @@ module Physics.Chipmunk (
 
 
 import Utils
-import Constants
 
 import Data.Abelian
 
@@ -107,8 +106,8 @@ import Physics.Chipmunk.DebugGrid
 
 -- * Initial values
 
-initSpace :: IO Space
-initSpace = do
+initSpace :: CpFloat -> IO Space
+initSpace gravity = do
     Physics.Hipmunk.initChipmunk
     space <- newSpace
 

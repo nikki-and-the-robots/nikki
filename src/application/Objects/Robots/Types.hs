@@ -8,7 +8,7 @@ import Data.Directions
 
 import Physics.Chipmunk
 
-import Game.Animation
+import Objects.Animation
 
 
 data RobotState

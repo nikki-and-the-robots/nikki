@@ -4,7 +4,7 @@ module Objects.Robots.Laser where
 
 
 import Utils
-import Constants
+import Base.Constants
 
 import Data.Map (Map, (!))
 import Data.List
@@ -20,20 +20,17 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt as Qt
 
-import Editor.Sprited
+import Base.Sprited
+import Base.Grounds
+import Base.Events
 
+import Game.Scene.Types
+
+import Objects.Collisions
+import Objects.Animation
 import Objects.Types
 import Objects.Robots.Types
 import Objects.Robots.Handler(RobotHandler(RobotHandler))
-
-import Game.Scene.Types
-import Game.Scene.Grounds
-
-import Game.Events
-
-import Game.Collisions
-
-import Game.Animation
 
 
 laserRobotHandler :: RobotHandler

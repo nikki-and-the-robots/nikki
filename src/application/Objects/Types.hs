@@ -1,6 +1,8 @@
 {-# language FlexibleInstances, NamedFieldPuns #-}
 
 module Objects.Types (
+    robotFriction,
+
     UninitializedObject,
     UnloadedObject,
     Object,
@@ -47,12 +49,18 @@ import Graphics.Qt as Qt
 
 import Sound.SFML
 
-import Game.Animation
+import Objects.Animation
 import Objects.Robots.Types
 import qualified Objects.Nikki.Types as Nikki
 import Objects.Terminals.Types as Terminals
 
-import Editor.Sprited
+import Base.Sprited
+
+
+-- * Constants
+
+robotFriction :: Double
+robotFriction = 1.0
 
 
 -- * Types

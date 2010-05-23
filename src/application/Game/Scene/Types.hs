@@ -8,10 +8,12 @@ import Utils
 import Data.Indexable
 import Data.Map
 
+import Base.Grounds
+
 import Objects.Types
-import Game.Animation
-import Game.Collisions
-import Game.Scene.Grounds
+import Objects.Animation
+import Objects.Collisions
+
 import Game.Scene.Camera
 
 

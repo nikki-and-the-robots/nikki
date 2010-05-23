@@ -12,10 +12,10 @@ import Graphics.Qt as Qt
 import Physics.Chipmunk
 
 import Objects.Types
-import Game.Animation
+import Objects.Animation
 
-import Editor.Sprited
-import Editor.Scene
+import Base.Sprited
+import Base.PickleObject
 
 
 convertObject :: (Show s, SpritedClass s) => EObject_ s -> Object_ s Vector

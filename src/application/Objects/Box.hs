@@ -8,11 +8,11 @@ import Graphics.Qt
 
 
 import Utils
-import Constants
+import Base.Constants
 
 import Objects.Types
 
-import Editor.Sprited
+import Base.Sprited
 
 
 

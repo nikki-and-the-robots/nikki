@@ -17,17 +17,18 @@ import Physics.Chipmunk as CM
 
 
 import Utils
-import Constants
+import Base.Constants
 
-import Game.Events
-import Game.Collisions
-import Game.Animation
+import Base.Events
+import Base.Sprited
+
+import Game.Scene.Types
+
+import Objects.Collisions
+import Objects.Animation
 import Objects.Types
 import Objects.Robots.Types
 import Objects.Robots.Handler
-import Game.Scene.Types
-
-import Editor.Sprited
 
 
 -- jetpack robot

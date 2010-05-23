@@ -12,7 +12,7 @@ module Objects.Terminals (
 
 
 import Utils
-import Constants
+import Base.Constants
 
 import Data.Map (Map, (!), fromList)
 import Data.List
@@ -26,14 +26,16 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt as Qt
 
-import Game.Collisions
+import Base.Events
+
+import Objects.Collisions
 import Objects.Types
 import Objects.Terminals.Types
-import Game.Animation
-import Game.Events
+import Objects.Animation
+
 import Game.Scene.Types
 
-import Editor.Sprited
+import Base.Sprited
 
 initialTerminal :: Qt.Position Double -> a -> [Index] -> Object_ a Vector
 initialTerminal p s i =

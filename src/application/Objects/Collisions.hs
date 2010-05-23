@@ -2,7 +2,7 @@
 
 -- | module for the detection and saving of collisions while chipmunk simulation
 
-module Game.Collisions (
+module Objects.Collisions (
     Collisions,
 
     toCollisionType,
