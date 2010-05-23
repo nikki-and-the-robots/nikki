@@ -8,7 +8,7 @@ exit 1
 }
 trap error ERR
 
-./compile.sh
+bash ./compile.sh
 
 cd ..
 src/application/dist/build/nikki/nikki default
