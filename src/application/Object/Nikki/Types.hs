@@ -1,8 +1,8 @@
 
-module Objects.Nikki.Types where
+module Object.Nikki.Types where
 
 
-import Objects.Animation
+import Object.Animation
 
 import Base.Sprited
 

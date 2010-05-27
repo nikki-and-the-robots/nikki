@@ -9,6 +9,7 @@ import Data.Set (Set, empty, insert, delete, toList)
 import Control.Monad.State hiding ((>=>))
 import Control.Applicative ((<$>))
 import Control.Monad.Compose
+import Control.Monad.FunctorM
 
 import System.IO
 import System.Exit
@@ -21,15 +22,16 @@ import Graphics.Qt
 import Base.Grounds
 import Base.GlobalCatcher
 
-import Objects
+-- import Object
+import Object.Types
 
 import Game.MainLoop as Game
-import Game.Scene (Scene, sceneInitChipmunks, sceneInitCollisions)
+import Game.Scene (Scene, sceneInitCollisions)
 import Game.OptimizeChipmunks
 
 import Editor.Scene
 
-import Top.Conversions
+import Top.Pickle
 
 
 type MM o = StateT AppState IO o
@@ -50,10 +52,11 @@ setScene    (AppState a b c _ e) d = AppState a b c d e
 setLevelTesting :: AppState -> Maybe (IORef GameAppState) -> AppState
 setLevelTesting  (AppState a b c d _) e = AppState a b c d e
 
-initialStateRef :: Ptr QApplication -> Ptr AppWidget -> Maybe (String, Grounds UnloadedEObject) -> IO (IORef AppState)
+-- initialStateRef :: Ptr QApplication -> Ptr AppWidget -> Maybe (String, Grounds UnloadedEditorObject) -> IO (IORef AppState)
 initialStateRef app widget mObjects = initialState app widget mObjects >>= newIORef
 
-initialState :: Ptr QApplication -> Ptr AppWidget -> Maybe (String, Grounds UnloadedEObject) -> IO AppState
+-- initialState :: Ptr QApplication -> Ptr AppWidget -> Maybe (String, Grounds UnloadedEditorObject)
+--     -> IO AppState
 initialState app widget mObjects = do
     is <- initScene mObjects
     return $ AppState app widget empty is Nothing
@@ -147,18 +150,17 @@ debugScene = do
 
 
 
-initSceneFromEditor :: Space -> Grounds EObject -> IO Scene
+initSceneFromEditor :: Space -> Grounds EditorObject -> IO Scene
 initSceneFromEditor space =
-    pure (fmap eObject2Object) >=>
+    fmapM (eObject2Object space) >=>
     mkScene >=>
     optimizeChipmunks >=>
-    sceneInitChipmunks space >=>
     sceneInitCollisions space
 
 
 -- not used as we have only one executable now.
 
--- initScene :: Space -> Grounds UnloadedEObject -> IO Scene
+-- initScene :: Space -> Grounds UnloadedEditorObject -> IO Scene
 -- initScene space =
 --     pure (fmap eObject2Object) >=>
 --     loadSpriteds >=>

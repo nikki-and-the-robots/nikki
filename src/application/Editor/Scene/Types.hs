@@ -5,36 +5,33 @@ module Editor.Scene.Types where
 
 import Utils
 
-import Data.Map hiding (map, filter)
+-- import Data.Map hiding (map, filter)
 import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
 import Data.Menu hiding (selected)
 
 import Control.Monad.State
-import Control.Exception
+-- import Control.Exception
 
 import Graphics.Qt
 
-import Base.PickleObject
-
-import Base.Sprited
-
+-- import Base.Sprited
 import Base.Grounds
+
+import Object.Types
 
 
 data EditorScene
     = EditorScene {
         levelName :: Maybe String,
 
-        cursor :: Position Double,
-        cursorStep :: EditorScene -> Position Double,
+        cursor :: EditorPosition,
+        cursorStep :: EditorScene -> EditorPosition,
 
-        availables :: SelectTree Sprited,
-        availableBackgrounds :: SelectTree Sprited,
-        pixmaps :: Map String (Ptr QPixmap),
+        sorts :: SelectTree Sort_,
 
-        objects :: Grounds EObject,
+        objects :: Grounds EditorObject,
         selectedLayer :: GroundsIndex,
         selected :: Maybe Index,
             -- index of the object that is in the scene and currently under the cursor
@@ -63,8 +60,8 @@ data EditorScene
       }
   deriving Show
 
-instance Show (EditorScene -> Position Double) where
-    show _ = "<EditorScene -> Position Double>"
+instance Show (EditorScene -> EditorPosition) where
+    show _ = "<EditorScene -> EditorPosition>"
 
 
 getLevelName :: EditorScene -> Maybe String
@@ -74,10 +71,10 @@ getLevelName TerminalScene{} =
 getLevelName MenuScene{mainScene} = levelName mainScene
 getLevelName FinalState{mainScene} = levelName mainScene
 
-getCursorStep :: EditorScene -> Position Double
+getCursorStep :: EditorScene -> EditorPosition
 getCursorStep s = cursorStep s s
 
-data MenuLabel = MenuLabel (Maybe Sprited) String
+data MenuLabel = MenuLabel (Maybe Sort_) String
   deriving (Show)
 
 data ControlData = ControlData [QtEvent] [Key]
@@ -86,12 +83,10 @@ data ControlData = ControlData [QtEvent] [Key]
 type SceneMonad = StateT EditorScene IO
 
 
-
-
 -- * getters
 
 -- | get the object that is actually selected by the cursor
-getSelectedObject :: EditorScene -> Maybe EObject
+getSelectedObject :: EditorScene -> Maybe EditorObject
 getSelectedObject EditorScene{selected = Just i, objects, selectedLayer} =
     Just (content (objects !|| selectedLayer) !!! i)
 getSelectedObject EditorScene{selected = Nothing} = Nothing
@@ -99,19 +94,19 @@ getSelectedObject EditorScene{selected = Nothing} = Nothing
 -- | returns all Indices (to the mainLayer) for robots
 getRobotIndices :: EditorScene -> [Index]
 getRobotIndices EditorScene{objects} =
-    I.findIndices isERobot $ content $ mainLayer objects
+    I.findIndices (isRobot . snd) $ content $ mainLayer objects
 
-getCursorSize :: EditorScene -> (Size Double)
+getCursorSize :: EditorScene -> (Size Int)
 getCursorSize s@EditorScene{} =
-    defaultPixmapSize $ getSelected $ availables s
+    size_ $ getSelected $ sorts s
 getCursorSize s@TerminalScene{} = getCursorSize $ mainScene s
 
-getObject :: EditorScene -> Index -> EObject
+getObject :: EditorScene -> Index -> EditorObject
 getObject scene@TerminalScene{} i = os !!! i
   where
     os = mainLayerIndexable $ objects $ mainScene scene
 
-getTerminalMRobot :: EditorScene -> Maybe EObject
+getTerminalMRobot :: EditorScene -> Maybe EditorObject
 getTerminalMRobot scene@TerminalScene{} =
     case tmAvailableRobots scene of
         (i : _) -> Just (getObject scene i)
@@ -119,9 +114,6 @@ getTerminalMRobot scene@TerminalScene{} =
 
 
 -- * Setters
-
-setPixmaps :: EditorScene -> Map String (Ptr QPixmap) -> EditorScene
-setPixmaps s x = s{pixmaps = x}
 
 
 addDebugMsg :: String -> EditorScene -> EditorScene
@@ -145,27 +137,9 @@ addDefaultForeground s@EditorScene{objects = (Grounds backgrounds mainLayer fore
 
 -- * modification
 
-modifyObjects :: (Grounds EObject -> Grounds EObject) -> EditorScene -> EditorScene
+modifyObjects :: (Grounds EditorObject -> Grounds EditorObject) -> EditorScene -> EditorScene
 modifyObjects f s@EditorScene{objects} = s{objects = f objects}
 
-modifyAvailables :: (SelectTree Sprited -> SelectTree Sprited)
-    -> EditorScene -> EditorScene
-modifyAvailables f s@EditorScene{availables} =
-    s{availables = f availables}
-
-
--- * position conversion
-
-leftLower2leftUpper :: Sprited -> Position Double -> Position Double
-leftLower2leftUpper s (Position x y) =
-    let (Size w h) = defaultPixmapSize s
-        leftUpper = Position x (y - h)
-    in leftUpper
-
-leftUpper2leftLower :: Sprited -> Position Double -> Position Double
-leftUpper2leftLower s (Position x y) =
-    let leftLower = Position x (y + h)
-        (Size w h) = defaultPixmapSize s
-        inverse = leftLower2leftUpper s leftLower == Position x y
-    in assert inverse leftLower
+modifySorts :: (SelectTree Sort_ -> SelectTree Sort_) -> EditorScene -> EditorScene
+modifySorts f scene@EditorScene{sorts} = scene{sorts = f sorts}
 

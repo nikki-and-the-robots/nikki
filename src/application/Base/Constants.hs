@@ -2,6 +2,9 @@
 module Base.Constants where
 
 
+import System.FilePath
+
+
 -- * Application
 
 windowWidth :: Int
@@ -34,5 +37,9 @@ gravity = 1700
 
 -- * file directories
 
-soundDir = "data/sounds"
+soundDir = "data" </> "sounds"
 
+pngDir :: FilePath
+pngDir = "data" </> "png"
+
+levelDir = "levels"

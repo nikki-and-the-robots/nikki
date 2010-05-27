@@ -10,7 +10,7 @@ Executable            nikki
     main-is:          Main.hs
 
     ghc-options:
-        -O2
+        -O0
 
 --        -threaded
 --        -eventlog
@@ -19,13 +19,13 @@ Executable            nikki
         -Werror
         -fwarn-missing-fields
         -fwarn-dodgy-imports
-        -fwarn-missing-methods
+        -fno-warn-missing-methods
 --        -fwarn-unused-do-bind
 
 --        -Wwarn
         -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
-        -fno-warn-unused-imports
+        -fwarn-unused-imports
 
 
     hs-source-dirs: ., ../common, ../qtRendering
@@ -42,6 +42,7 @@ Executable            nikki
         , zlib
         , Hipmunk
         , sfml-audio
+        , uniplate
 
     if os(linux)
         extra-libraries:

@@ -14,9 +14,9 @@ import Control.Applicative ((<$>))
 import Graphics.Qt
 
 import Base.Grounds
+-- import Base.Sprited
 
-import Base.Sprited
-import Base.PickleObject
+import Object.Types
 
 import Editor.Scene.Types
 import Editor.Scene.Menu as Menu
@@ -52,26 +52,26 @@ renderInnerScene ptr offset s@EditorScene{} = do
     -- OSD
     renderCursor' ptr offset s
 
-    renderSelectedIcon ptr (getSelected $ availables s)
+    renderSelectedIcon ptr (getSelected $ sorts s)
     renderCursorPositionOSD ptr $ cursor s
     renderCursorStepSize ptr $ getCursorStep s
     renderLayerOSD ptr $ selectedLayer s
     whenMaybe (getSelectedObject s) $ \ o ->
-        renderSelectedObject ptr (eObjectSprited o)
+        renderSelectedObject ptr $ snd o
 
 
-renderLayer :: Ptr QPainter -> Size Double -> Offset -> Layer EObject -> IO ()
+renderLayer :: Ptr QPainter -> Size Double -> Offset -> Layer EditorObject -> IO ()
 renderLayer ptr size offset layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
-    fmapM_ (renderEObject ptr modifiedOffset) (content layer)
+    fmapM_ (renderEditorObject ptr modifiedOffset) (content layer)
 
 -- | renders the pink cursor box
 renderCursor' :: Ptr QPainter -> Offset -> EditorScene -> IO ()
-renderCursor' ptr offset s = do
-    let cursorPos = cursor s
-        sprited = getSelected $ availables s
-        size = fmap (+ 2) (defaultPixmapSize sprited)
-        pos = offset +~ leftLower2leftUpper sprited cursorPos
+renderCursor' ptr offset scene = do
+    let cursorPos = cursor scene
+        sort = getSelected $ sorts scene
+        size = size_ sort
+        pos = offset +~ editorPosition2QtPosition_ sort cursorPos
     resetMatrix ptr
     drawColoredBox ptr pos size 5 pink{alphaC = 0.5}
 
@@ -86,31 +86,33 @@ calculateRenderTransformation ptr s@EditorScene{} = do
 
     transformation ptr cursorPos cursorSize
 
-transformation :: Ptr QPainter -> Position Double -> Size Double -> IO (Position Double)
-transformation ptr pos (Size cw ch) = do
+transformation :: Ptr QPainter -> EditorPosition -> Size Int -> IO (Position Double)
+transformation ptr (EditorPosition x y) (fmap fromIntegral -> Size cw ch) = do
     (Size vw vh) <- fmap fromIntegral <$> sizeQPainter ptr
     let viewMiddle = Position (vw / 2) (vh / 2)
         halfCursor = Position (- (cw / 2)) (ch / 2)
+        pos = Position x y
 
     return $ fmap (fromIntegral . truncate)
         (viewMiddle +~ negateAbelian pos +~ halfCursor)
 
 -- draws the icon of the selected object (lower left corner of the screen)
-renderSelectedIcon :: Ptr QPainter -> Sprited -> IO ()
+renderSelectedIcon :: Ptr QPainter -> Sort_ -> IO ()
 renderSelectedIcon ptr co = do
-    (Size _ height) <- fmap fromIntegral <$> sizeQPainter ptr
-    let y = height - 64
-    drawSqueezedPixmap ptr (Position 0 y) (Size 64 64) (defaultPixmap co)
+    screenSize <- fmap fromIntegral <$> sizeQPainter ptr
+--     drawSqueezedPixmap ptr (Position 0 y) (Size 64 64) (defaultPixmap co)
+    sortRender_ co ptr zero (EditorPosition 0 (height screenSize))
 
 -- | renders the selected object (if any) in the right lower corner
-renderSelectedObject :: Ptr QPainter -> Sprited -> IO ()
-renderSelectedObject ptr sprited = do
-    windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-    let position = sizeToPosition windowSize -~ sizeToPosition boxSize
-        boxSize = Size 64 64
+renderSelectedObject :: Ptr QPainter ->  Sort_ -> IO ()
+renderSelectedObject ptr sort = do
+    screenSize <- fmap fromIntegral <$> sizeQPainter ptr
+    let position = EditorPosition screenWidth screenHeight -~ EditorPosition boxWidth 0
+        Size screenWidth screenHeight = screenSize
+        Size boxWidth boxHeight = Size 64 64
 
-    drawSqueezedPixmap ptr position boxSize (defaultPixmap sprited)
-
+--     drawSqueezedPixmap ptr position boxSize (defaultPixmap sprited)
+    sortRender_ sort ptr zero position
 
 -- | renders the currently selected Layer in the right lower corner
 renderLayerOSD :: Ptr QPainter -> GroundsIndex -> IO ()
@@ -120,14 +122,14 @@ renderLayerOSD ptr i = do
     drawText ptr (Position 80 (h - 20)) False ("Layer: " ++ show i)
 
 -- | renders the cursor Position
-renderCursorPositionOSD :: Ptr QPainter -> Position Double -> IO ()
-renderCursorPositionOSD ptr (fmap truncate -> (Position x y)) = do
+renderCursorPositionOSD :: Ptr QPainter -> EditorPosition -> IO ()
+renderCursorPositionOSD ptr (EditorPosition x y) = do
     resetMatrix ptr
     (Size w h) <- fmap fromIntegral <$> sizeQPainter ptr
-    drawText ptr (Position 300 (h - 20)) False ("Cursor: " ++ show (x, y))
+    drawText ptr (Position 300 (h - 20)) False ("Cursor: " ++ show (fmap truncate (x, y)))
 
-renderCursorStepSize :: Ptr QPainter -> Position Double -> IO ()
-renderCursorStepSize ptr (Position x y) = do
+renderCursorStepSize :: Ptr QPainter -> EditorPosition -> IO ()
+renderCursorStepSize ptr (EditorPosition x y) = do
     resetMatrix ptr
     (Size w h) <- fmap fromIntegral <$> sizeQPainter ptr
     drawText ptr (Position 500 (h - 20)) False ("Step: " ++ show (x, y))
@@ -140,22 +142,23 @@ calculateRenderTransformationTerminal ptr scene@TerminalScene{mainScene} =
     (pos, size) = case getTerminalMRobot scene of
         -- use the terminal
         Nothing -> (cursor mainScene, getCursorSize scene)
-        Just (ERobot (Position x y) sprited) ->
-            (Position x (y + height size), size)
-          where
-            size = defaultPixmapSize sprited
+--         Just (ERobot (Position x y) sprited) ->
+--             error "            (EditorPosition x (y + height size), size)"
+--           where
+--             size = defaultPixmapSize sprited
 
 renderTerminalRobotOSDs :: Ptr QPainter -> Position Double -> EditorScene -> IO ()
 renderTerminalRobotOSDs ptr offset s = do
-    whenMaybe (getTerminalMRobot s) $
-        \ a -> renderRobotBox a orange{alphaC = 0.5}
-    mapM_ (flip renderRobotBox yellow{alphaC = 0.3}) $ map (getObject s) $
-        tmSelectedRobots s
-  where
-    renderRobotBox :: EObject -> RGBA -> IO ()
-    renderRobotBox robot color = do
-        let pos = eObjectPosition robot
-            sprited = eObjectSprited robot
-            size = defaultPixmapSize sprited
-        drawColoredBox ptr (pos +~ offset) size 4 color
+    fail "renderTerminalRobotOSDs"
+--     whenMaybe (getTerminalMRobot s) $
+--         \ a -> renderRobotBox a orange{alphaC = 0.5}
+--     mapM_ (flip renderRobotBox yellow{alphaC = 0.3}) $ map (getObject s) $
+--         tmSelectedRobots s
+--   where
+--     renderRobotBox :: EditorObject -> RGBA -> IO ()
+--     renderRobotBox robot color = do
+--         let pos = eObjectPosition robot
+--             sprited = eObjectSprited robot
+--             size = defaultPixmapSize sprited
+--         drawColoredBox ptr (pos +~ offset) size 4 color
 

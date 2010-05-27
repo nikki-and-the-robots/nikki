@@ -361,6 +361,9 @@ withView view operator a b = operator (view a) (view b)
 (|>) :: a -> (a -> b) -> b
 a |> f = f a
 
+(.>) :: (a -> b) -> (b -> c) -> (a -> c)
+(.>) = flip (.)
+
 swapOrdering :: Ordering -> Ordering
 swapOrdering LT = GT
 swapOrdering GT = LT

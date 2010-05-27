@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables, NamedFieldPuns #-}
 
-module Top.Conversions where
+module Top.Pickle where
 
 
 import Prelude hiding (readFile, writeFile)
@@ -15,34 +15,37 @@ import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
 -- import Codec.Compression.Zlib
 
 import Control.Monad
-import Control.Applicative ((<$>))
+-- import Control.Applicative ((<$>))
 
 import System
 import System.FilePath
 import qualified System.IO as IO
 
-import Game.Scene
-import Game.Scene.Camera
+-- import Base.Sprited
 import Base.Grounds
-import Objects.Types as Objects
-import Objects.Collisions
+import Base.Constants
+
+import Object.Types as Object
+import Object.Collisions
+
+import Game.Scene
+import Game.Scene.Types
+import Game.Scene.Camera
 import Game.Modes.Terminal
 
-import Base.Sprited
 import Editor.Scene as ES
-import Editor.Binary ()
 
 
-mkScene :: Grounds UninitializedObject -> IO UninitializedScene
+mkScene :: Grounds Object_ -> IO Scene
 mkScene objects = do
-    let nikki = single "savedToScene" $ I.findIndices isNikki $ mainLayerIndexable objects
+    let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
     osdSpriteds <- initialOsdSpriteds
     return $ Scene 0 0 objects nikki initialCameraState nikki emptyCollisions Nothing osdSpriteds
 
 
 -- * IO stuff
 
-type SaveType = Grounds UnloadedEObject
+type SaveType = Grounds PickleObject
 
 -- type FileFormat = ByteString.ByteString
 type FileFormat = String
@@ -73,24 +76,24 @@ writeSaved file level = writeFile file (saveToFile level :: FileFormat)
 
 -- * loading
 
-load :: Maybe String -> IO (Maybe (String, Grounds UnloadedEObject))
+load :: Maybe String -> IO (Maybe (String, Grounds PickleObject))
 load mDefault = do
     args <- getArgs
     case (args, mDefault) of
-        ([name], _) -> Just <$> loadByName name
-        ([], Just name) -> Just <$> loadByName name
+        ([name], _) -> inner name
+        ([], Just name) -> inner name
         ([], Nothing) -> return Nothing
+  where
+    inner name = do
+        objects <- loadByName name
+        return $ Just (name, objects)
 
-loadByName :: String -> IO (String, Grounds UnloadedEObject)
+loadByName :: String -> IO (Grounds PickleObject)
 loadByName name = do
-    level <- readSaved (levelNameToFilePath name)
---     let level :: SaveType = read c
---     test level
-    let (Just grounds@(Grounds backgrounds mainLayer foregrounds)) = level
-    mapM_ checkNormalized [backgrounds, foregrounds]
-    mapM_ (checkNormalized . content) (I.toList backgrounds ++ [mainLayer] ++ I.toList foregrounds)
-
-    return (name, grounds)
+    mR <- readSaved (levelNameToFilePath name)
+    return $ case mR of
+        Just x -> x
+        Nothing -> error ("level not readable: " ++ name)
 
 -- | checks, if the given (Indexable a) is normalized
 checkNormalized :: Indexable a -> IO ()
@@ -100,7 +103,7 @@ checkNormalized i =
 
 
 levelNameToFilePath :: String -> FilePath
-levelNameToFilePath x = normalise ("levels" </> x <.> "nl")
+levelNameToFilePath x = normalise (levelDir </> x <.> "nl")
 
 
 
@@ -116,7 +119,7 @@ save scene = do
             name <- askWithDefault "level name" (getLevelName scene)
             assertIO (not $ null name) "filename not empty"
             putStr ("saving as " ++ show name ++ "...")
-            innerSave (levelNameToFilePath name) scene
+            writeObjectsToDisk (levelNameToFilePath name) (ES.objects scene)
             putStrLn "done"
 
 wantsToSave :: IO Bool
@@ -157,32 +160,9 @@ askWithDefault prompt vorauswahl =
         getLine
 
 
-innerSave :: FilePath -> EditorScene -> IO ()
-innerSave file scene = do
-    let level = toSavableLevel scene
-    writeSaved file level
-
--- | converts to UnloadedSpriteds and normalizes the (Indexable a)s.
-toSavableLevel :: EditorScene -> Grounds UnloadedEObject
-toSavableLevel scene =
-    let Grounds backgrounds mainLayer@Layer{content} foregrounds =
-            fmap (fmap loaded2UnloadedSprited) (ES.objects scene)
-        (content', fun) = normalize content
-        backgrounds' = normalizeLayersDisregardingFunction backgrounds
-        foregrounds' = normalizeLayersDisregardingFunction foregrounds
-    in fun $ Grounds backgrounds' mainLayer{content = content'} foregrounds'
-        -- attention: not all indices point to the main layer
-        -- (currently yes, but this may change)
-
--- | normalizes every (Indexable a) in the Layers (both hierarchy levels), but disregards the resulting
--- (index changing) functions
-normalizeLayersDisregardingFunction :: Indexable (Layer a) -> Indexable (Layer a)
-normalizeLayersDisregardingFunction ixs =
-    myFst $ normalize $ fmap (modifyContent (myFst . normalize)) ixs
-  where
-    -- needed for polymorphic return result of myFst (syb stuff)
-    myFst :: (a, () -> ()) -> a
-    myFst = fst
+writeObjectsToDisk :: FilePath -> (Grounds EditorObject) -> IO ()
+writeObjectsToDisk file objects = do
+    writeSaved file $ fmap editorObject2PickleObject objects
 
 
 

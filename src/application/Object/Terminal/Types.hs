@@ -1,12 +1,12 @@
 
-module Objects.Terminals.Types where
+module Object.Terminal.Types where
 
 
 import Utils
 
 import qualified Data.Indexable as I
 
-import Objects.Animation
+import Object.Animation
 
 
 data State = State {

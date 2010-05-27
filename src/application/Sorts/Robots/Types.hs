@@ -1,5 +1,5 @@
 
-module Objects.Robots.Types where
+module Object.Robots.Types where
 
 
 import Utils
@@ -8,7 +8,7 @@ import Data.Directions
 
 import Physics.Chipmunk
 
-import Objects.Animation
+import Object.Animation
 
 
 data RobotState

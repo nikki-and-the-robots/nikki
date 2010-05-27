@@ -1,21 +1,17 @@
-{-# language NamedFieldPuns, ViewPatterns #-}
+{-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses #-}
 
-module Objects.Nikki (
-    Objects.Nikki.initChipmunk,
-    initAnimation,
-    render,
-    update,
-    convertObject,
-  ) where
+module Sorts.Nikki (sorts) where
 
 
 import Utils
 import Base.Constants
 
 import Data.Abelian
+import Data.Map hiding (map, size)
 
 import Control.Monad hiding ((>=>))
-import Control.Monad.Compose
+-- import Control.Monad.Compose
+import Control.Arrow
 
 import System.FilePath
 
@@ -23,30 +19,114 @@ import Graphics.Qt as Qt
 
 import Sound.SFML
 
-import Physics.Chipmunk as CM
+import qualified Physics.Chipmunk as CM
+import Physics.Chipmunk hiding (position, Position)
 
-import Base.Sprited
-import Base.PickleObject (EObject_(..))
+-- import Base.Sprited
 import Base.Events
 
 import Game.Scene.Types
 
-import Objects.Types
-import Objects.Nikki.Types as NikkiTypes
-import Objects.Collisions
-import Objects.Animation
+import Object.Types
+-- import Object.Nikki.Types as NikkiTypes
+import Object.Collisions
+import Object.Animation
+
+
+sorts :: IO [NSort]
+sorts = do
+    pixmaps <- loadPixmaps
+    size <- sizeQPixmap (pixmaps ! Wait)
+    let r = NSort pixmaps size
+    return [r]
+
+loadPixmaps :: IO (Map State (Ptr QPixmap))
+loadPixmaps = do
+    pixmaps <- mapM (newQPixmap . snd) statePixmaps
+    return $ fromList $ zip (map fst statePixmaps) pixmaps
+
+statePixmaps :: [(State, FilePath)]
+statePixmaps = map (second ((nikkiPngDir </>) . (<.> "png"))) [
+    (Wait, "nikki_wait_right_00")
+  ]
+
+nikkiPngDir = pngDir </> "nikki"
+
+data NSort = NSort {
+    pixmapsS :: Map State (Ptr QPixmap),
+    nsize :: Size Int
+  }
+
+data Nikki
+    = Nikki {
+        pixmaps :: Map State (Ptr QPixmap),
+        nchipmunk :: Chipmunk,
+        feetShape :: Shape,
+        jumpSound :: PolySound,
+        jumpTime :: Seconds
+--         direction :: FrameSetDirection,
+--         animation :: Animation
+      }
+
+data State
+    = Wait
+    | Walk
+    | Happy
+    | Jump
+    | Angry
+    | Sad
+    | Confused
+    | UsingTerminal
+  deriving (Eq, Ord)
+
+instance Sort NSort Nikki where
+
+    sortId _ = SortId "nikki"
+
+    size = nsize
+
+    sortRender sort ptr offset position = do
+        resetMatrix ptr
+        translate ptr offset
+        translate ptr (editorPosition2QtPosition sort position)
+        drawPixmap ptr zero (pixmapsS sort ! Wait)
+
+    initialize sort space (EditorPosition x y) = do
+        let (nikkiShapes, baryCenterOffset) = mkPolys $ fmap fromIntegral $ size sort
+            pos = Vector x y
+
+        chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes baryCenterOffset
+        let feetShape = head $ shapes chip
+
+        jumpingSound <- newPolySound (soundDir </> "nikki/jump.wav") 4
+
+        return $ Nikki
+            (pixmapsS sort) 
+            chip 
+            feetShape
+            jumpingSound
+            0
+--             ToRight
+--             UninitializedAnimation
+
+    chipmunk = nchipmunk
+
+    update nikki seconds collisions cd =
+        updateNikki (e "scene") seconds collisions cd nikki
+
+--     render :: Object -> Ptr QPainter -> Offset -> IO ()
+    render nikki ptr offset  =
+        renderChipmunk ptr offset (pixmaps nikki ! Wait) (chipmunk nikki)
 
 
 
-convertObject :: (Show s, SpritedClass s) => EObject_ s -> Object_ s Vector
-convertObject (ENikki pos sprited) =
-    Nikki sprited (positionToVector pos) Nothing Nothing 0 NikkiTypes.initialState
+
 
 -- * initialisation
 
 bodyAttributes :: CM.Position -> BodyAttributes
 bodyAttributes pos = BodyAttributes{
-    position            = pos,
+    CM.position            = pos,
     mass                = nikkiMass,
     inertia             = infinity
   }
@@ -56,7 +136,7 @@ feetShapeAttributes :: ShapeAttributes
 feetShapeAttributes = ShapeAttributes{
     elasticity          = 0.0,
     friction            = nikkiFeetFriction,
-    collisionType       = NikkiFeetCT
+    CM.collisionType       = NikkiFeetCT
   }
 
 -- Attributes for nikkis body (not to be confused with chipmunk bodies, it's a chipmunk shape)
@@ -64,28 +144,14 @@ bodyShapeAttributes :: ShapeAttributes
 bodyShapeAttributes = ShapeAttributes {
     elasticity    = 0,
     friction      = 0,
-    collisionType = NikkiBodyCT
+    CM.collisionType = NikkiBodyCT
   }
 
-initChipmunk :: Space -> UninitializedObject -> IO Object
-initChipmunk space nikki@(Nikki s pos Nothing Nothing jt state) = do
-    let nikkiSize = defaultPixmapSize s
-
-        (nikkiShapes, baryCenterOffset) = mkPolys nikkiSize
-
-    chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes baryCenterOffset
-    let feetShape = head $ shapes chip
-
-    jumpingSound <- newPolySound (soundDir </> "nikki/jump.wav") 4
-
-    return $ Nikki s chip (Just feetShape) (Just jumpingSound) jt state
-
-
-initAnimation :: Object -> Object
-initAnimation (Nikki sprited fs chip js jt state) =
-    Nikki sprited fs chip js jt (NikkiTypes.setAnimation state animation)
-  where
-    animation = initialAnimation (DirectedFrameSetType Wait ToRight) 0
+-- initAnimation :: Object -> Object
+-- initAnimation (Nikki sprited fs chip js jt state) =
+--     Nikki sprited fs chip js jt (NikkiTypes.setAnimation state animation)
+--   where
+--     animation = initialAnimation (DirectedFrameSetType Wait ToRight) 0
 
 
 mkPolys :: Size Double -> ([(ShapeAttributes, ShapeType)], Vector)
@@ -156,15 +222,15 @@ mkPolys (Size w h) =
 -- nikki gets controlled and then the animations get updated.
 -- This is special (because Nikki is not a robot)
 
-update :: Scene -> Seconds -> Collisions -> (Bool, ControlData)
-    -> Object -> IO Object
-update scene now collisions control =
-    controlBody now collisions control >=>
-    updateAnimation
-  where
-    updateAnimation (Nikki sprited chipmunk fs js jt state) = do
-        let state' = updateState scene now collisions (snd control) state
-        return $ Nikki sprited chipmunk fs js jt state'
+updateNikki :: Scene -> Seconds -> Collisions Object_ -> (Bool, ControlData)
+    -> Nikki -> IO Nikki
+updateNikki scene now collisions control =
+    controlBody now collisions control
+--     >=> updateAnimation
+--   where
+--     updateAnimation (Nikki sprited chipmunk fs js jt state) = do
+--         let state' = updateState scene now collisions (snd control) state
+--         return $ Nikki sprited chipmunk fs js jt state'
 
 
 -- * nikki control
@@ -190,15 +256,15 @@ maximalJumpingHeight = fromKachel 4.0
 
 -- * Control logic
 
-controlBody :: Seconds -> Collisions -> (Bool, ControlData)
-    -> Object -> IO Object
+controlBody :: Seconds -> Collisions Object_ -> (Bool, ControlData)
+    -> Nikki -> IO Nikki
 controlBody _ _ (False, _) nikki = do
-    let ss = shapes $ chipmunk nikki
+    let ss = shapes $ nchipmunk nikki
     setSurfaceVel (head ss) zero
     return nikki
 controlBody now collisions (True, cd)
-    nikki@(Nikki sprites
-      chip@(Chipmunk space body shapes shapeTypes co) (Just feetShape) (Just jumpingSound) jumpStartTime animation) = do
+    nikki@(Nikki pixmaps
+      chip@(Chipmunk space body shapes shapeTypes co) feetShape jumpingSound jumpStartTime) = do
         -- buttons
         let bothHeld = leftHeld && rightHeld
             leftHeld = LeftButton `elem` held cd
@@ -337,62 +403,54 @@ debugChipGraph now body = do
 
 
 
-updateState :: Scene -> Seconds -> Collisions -> ControlData
-    -> State -> State
-updateState scene now collisions cd (State oldDirection animation) =
-    State newDirection animation'
-  where
-    animation' = updateAnimation now at animation
-
-    newDirection =
-        if bothHeld then
-            oldDirection
-          else if rightHeld then
-            ToRight
-          else if leftHeld then
-            ToLeft
-          else oldDirection
-
-    at = if usingTerminal then
-            UndirectedFrameSetType UsingTerminal
-          else if airBorne then
-            DirectedFrameSetType Jump newDirection
-          else if bothHeld then
-            DirectedFrameSetType Wait newDirection
-          else if leftHeld || rightHeld then
-            DirectedFrameSetType Walk newDirection
-          else
-            DirectedFrameSetType Wait newDirection
-
-    bothHeld = leftHeld && rightHeld
-    rightHeld = RightButton `elem` held cd
-    leftHeld = LeftButton `elem` held cd
-    usingTerminal = isTerminalMode scene || isRobotMode scene
-    airBorne = not $ nikkiTouchesGround collisions
-
-
-initialAnimation :: FrameSetType -> Seconds -> Animation
-initialAnimation typ = mkAnimation typ inner
-  where
-    inner :: FrameSetType -> AnimationPhases
-    inner (frameSetAction -> Wait) = AnimationPhases $ zip
-        (0 : cycle [1, 2, 1, 2, 1, 2, 1])
-        (1 : cycle [1.5, 0.15, 3, 0.15, 0.1, 0.15, 1])
-    inner (frameSetAction -> Jump) = AnimationPhases $ zip
-        (0 : repeat 1)
-        (0.6 : repeat 10)
-    inner (frameSetAction -> Walk) = AnimationPhases $ zip
-        (cycle [0..3])
-        (repeat 0.15)
-    inner (UndirectedFrameSetType UsingTerminal) = StillFrame 0
-    inner x = es "initialAnimation: Nikki" x
-
-
--- * Rendering
-
-render :: Ptr QPainter -> Qt.Position Double -> Object -> IO ()
-render ptr offset (Nikki s chipmunk _ _ _ state) =
-    renderChipmunk ptr offset (animationPixmap (NikkiTypes.animation state) s) chipmunk
-
-
-
+-- updateState :: Scene -> Seconds -> Collisions -> ControlData
+--     -> State -> State
+-- updateState scene now collisions cd (State oldDirection animation) =
+--     State newDirection animation'
+--   where
+--     animation' = updateAnimation now at animation
+-- 
+--     newDirection =
+--         if bothHeld then
+--             oldDirection
+--           else if rightHeld then
+--             ToRight
+--           else if leftHeld then
+--             ToLeft
+--           else oldDirection
+-- 
+--     at = if usingTerminal then
+--             UndirectedFrameSetType UsingTerminal
+--           else if airBorne then
+--             DirectedFrameSetType Jump newDirection
+--           else if bothHeld then
+--             DirectedFrameSetType Wait newDirection
+--           else if leftHeld || rightHeld then
+--             DirectedFrameSetType Walk newDirection
+--           else
+--             DirectedFrameSetType Wait newDirection
+-- 
+--     bothHeld = leftHeld && rightHeld
+--     rightHeld = RightButton `elem` held cd
+--     leftHeld = LeftButton `elem` held cd
+--     usingTerminal = isTerminalMode scene || isRobotMode scene
+--     airBorne = not $ nikkiTouchesGround collisions
+-- 
+-- 
+-- initialAnimation :: FrameSetType -> Seconds -> Animation
+-- initialAnimation typ = mkAnimation typ inner
+--   where
+--     inner :: FrameSetType -> AnimationPhases
+--     inner (frameSetAction -> Wait) = AnimationPhases $ zip
+--         (0 : cycle [1, 2, 1, 2, 1, 2, 1])
+--         (1 : cycle [1.5, 0.15, 3, 0.15, 0.1, 0.15, 1])
+--     inner (frameSetAction -> Jump) = AnimationPhases $ zip
+--         (0 : repeat 1)
+--         (0.6 : repeat 10)
+--     inner (frameSetAction -> Walk) = AnimationPhases $ zip
+--         (cycle [0..3])
+--         (repeat 0.15)
+--     inner (UndirectedFrameSetType UsingTerminal) = StillFrame 0
+--     inner x = es "initialAnimation: Nikki" x
+-- 
+-- 

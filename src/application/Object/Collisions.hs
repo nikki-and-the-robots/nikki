@@ -2,10 +2,8 @@
 
 -- | module for the detection and saving of collisions while chipmunk simulation
 
-module Objects.Collisions (
+module Object.Collisions (
     Collisions,
-
-    toCollisionType,
 
     nikkiTouchesGround,
     nikkiTouchesLaser,
@@ -25,18 +23,15 @@ import Utils
 import Data.IORef
 import Data.Map (Map, empty, insert, elems, toList)
 import qualified Data.Map as Map
-import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
 import Data.Maybe
 
-import Physics.Chipmunk hiding (Callback)
-
-import Objects.Types
+import Physics.Chipmunk hiding (Callback, position)
 
 
-data Collisions
+data Collisions object
     = Collisions {
-        watched :: ![CollisionRef],
+        watched :: ![CollisionRef object],
         nikkiTouchesGround :: !Bool,
         nikkiTouchesLaser :: !Bool,
         nikkiTouchesMilkMachine :: !Bool,
@@ -44,65 +39,55 @@ data Collisions
       }
   deriving Show
 
-data CollisionRef =
+data CollisionRef object =
     forall a . CollisionRef
         (IORef (Maybe a))
-        (Indexable Object -> Collisions -> a -> IO Collisions)
+        (Indexable object -> Collisions object -> a -> IO (Collisions object))
 
-instance Show CollisionRef where
+instance Show (CollisionRef object) where
     show = const "<CollisionRef>"
 
 
 -- * constructors
 
 -- empty in the sense that nothing collides
-emptyCollisions :: Collisions
+emptyCollisions :: Collisions object
 emptyCollisions = Collisions [] False False False empty
 
-mkEmpty :: Collisions -> Collisions
+mkEmpty :: Collisions o -> Collisions o
 mkEmpty (Collisions watched _ _ _ terminals) =
     Collisions watched False False False (Map.map (const False) terminals)
 
 
 -- * setter (boolean to True)
 
-setNikkiTouchesGround :: Collisions -> Collisions
+setNikkiTouchesGround :: Collisions o -> Collisions o
 setNikkiTouchesGround c = c{nikkiTouchesGround = True}
 
-setNikkiTouchesLaser :: Collisions -> Collisions
+setNikkiTouchesLaser :: Collisions o -> Collisions o
 setNikkiTouchesLaser c = c{nikkiTouchesLaser = True}
 
-setNikkiTouchesMilkMachine :: Collisions -> Collisions
+setNikkiTouchesMilkMachine :: Collisions o -> Collisions o
 setNikkiTouchesMilkMachine c = c{nikkiTouchesMilkMachine = True}
 
--- * conversions
-
-toCollisionType :: (Show a, Show b) => Object_ a b -> MyCollisionType
-toCollisionType Tile{}          = TileCT
-toCollisionType MergedTile{}    = TileCT
-toCollisionType Terminal{}      = ActionCT
-toCollisionType Robot{}         = RobotCT
-toCollisionType MilkMachine{}   = MilkMachineCT
-
-toCollisionType x               = es "toCollisionType" x
 
 -- initialisation
 
-data Callback
+data Callback object
     = Callback
-        Watcher
+        (Watcher object)
         Permeability
 
-data Watcher
+data Watcher object
     = Watch
         MyCollisionType
         MyCollisionType
-        (Collisions -> Collisions)
+        (Collisions object -> Collisions object)
     | forall a . WatchWrite
         MyCollisionType
         MyCollisionType
         (Shape -> Shape -> a)
-        (Indexable Object -> Collisions -> a -> IO Collisions)
+        (Indexable object -> Collisions object -> a -> IO (Collisions object))
     | DontWatch MyCollisionType MyCollisionType
 
 data Permeability = Permeable | Solid
@@ -111,13 +96,13 @@ isSolid :: Permeability -> Bool
 isSolid Solid = True
 isSolid _ = False
 
-initCollisions :: Space -> Indexable Object -> Collisions -> IO Collisions
+initCollisions :: Space -> Indexable o -> Collisions o -> IO (Collisions o)
 initCollisions space objects cs = do
     refs <- mapM (initRef space) (watchedCollisions objects)
     return $ mkEmpty $ cs{watched = catMaybes refs}
 
 
-watchedCollisions :: Indexable Object -> [Callback]
+watchedCollisions :: Indexable o -> [Callback o]
 watchedCollisions objects = [
     Callback (Watch TileCT NikkiFeetCT setNikkiTouchesGround) Solid,
     Callback (Watch RobotCT NikkiFeetCT setNikkiTouchesGround) Solid,
@@ -138,7 +123,7 @@ watchedCollisions objects = [
 
 
 
-initRef :: Space -> Callback -> IO (Maybe CollisionRef)
+initRef :: Space -> Callback o -> IO (Maybe (CollisionRef o))
 initRef space (Callback (Watch act bct setter) permeability) = do
     ref <- newIORef Nothing
     addMyCallback space (act, bct) $
@@ -162,11 +147,11 @@ initRef space (Callback (WatchWrite act bct writer setter) permeability) = do
 
 -- updating
 
-updateCollisions :: Indexable Object -> Collisions -> IO Collisions
+updateCollisions :: Indexable o -> Collisions o -> IO (Collisions o)
 updateCollisions objects cs@Collisions{watched} =
     chainAppM (updateCollisionRef objects) watched (mkEmpty cs)
 
-updateCollisionRef :: Indexable Object -> CollisionRef -> Collisions -> IO Collisions
+updateCollisionRef :: Indexable o -> CollisionRef o -> Collisions o -> IO (Collisions o)
 updateCollisionRef objects (CollisionRef ref setter) collisions = do
     hasContact <- readIORef ref
     writeIORef ref Nothing
@@ -180,10 +165,10 @@ updateCollisionRef objects (CollisionRef ref setter) collisions = do
 
 -- external getters
 
-nikkiTouchesTerminal :: Collisions -> Bool
+nikkiTouchesTerminal :: Collisions o -> Bool
 nikkiTouchesTerminal = or . elems . terminals
 
-whichTerminalCollides :: Collisions -> Index
+whichTerminalCollides :: Collisions o -> Index
 whichTerminalCollides collisions =
     let colls = filter snd $ toList $ terminals collisions
     in case colls of
@@ -195,14 +180,16 @@ whichTerminalCollides collisions =
 whichTerminal :: Shape -> Shape -> Shape
 whichTerminal terminalShape _ = terminalShape
 
-activateTerminal :: Indexable Object -> Collisions -> Shape -> IO Collisions
+activateTerminal :: Indexable object -> Collisions o -> Shape -> IO (Collisions o)
 activateTerminal objects collisions terminalShape = do
-    let terminalBody = getBody terminalShape
-    let terminal = single "activatTerminal" $ I.findIndices pred objects
-        pred object = isTerminal object && (terminalBody == body (chipmunk object))
-    return $ setTerminalActive collisions terminal
+    e "activateTerminal"
+--     let terminalBody = getBody terminalShape
+--     let terminal = single "activatTerminal" $ I.findIndices pred objects
+--         pred :: object -> Bool
+--         pred object = isTerminal (sort_ object) && (terminalBody == body (chipmunk_ object))
+--     return $ setTerminalActive collisions terminal
 
-setTerminalActive :: Collisions -> Index -> Collisions
+setTerminalActive :: Collisions o -> Index -> Collisions o
 setTerminalActive collisions@Collisions{terminals} i =
     collisions{terminals = insert i True terminals}
 

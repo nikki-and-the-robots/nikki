@@ -1,6 +1,6 @@
 {-# language FlexibleInstances, NamedFieldPuns #-}
 
-module Objects.Animation (
+module Object.Animation (
     Seconds,
     Animation(UninitializedAnimation, SingleFrameAnimation, animationType, frameNumber),
     AnimationPhases(..),

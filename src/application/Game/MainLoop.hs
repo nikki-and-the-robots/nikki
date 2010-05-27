@@ -32,7 +32,7 @@ import Base.Events
 
 import Game.FPSState
 import Game.Scene
-
+import Game.Scene.Types
 
 
 initialSize :: Size Int

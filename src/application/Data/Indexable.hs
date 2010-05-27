@@ -5,7 +5,7 @@
 
 module Data.Indexable (
     Indexable,
-    Index(Index),
+    Index,
 
     Data.Indexable.length,
     toList,
@@ -24,7 +24,7 @@ module Data.Indexable (
     Data.Indexable.deleteByIndex,
     isNormalized,
     normalize,
-    toBack,
+    toHead,
     isIndexOf,
 
     optimizeMerge,
@@ -215,9 +215,9 @@ normalize (Indexable ll) =
 -- | puts the indexed element at the front
 -- and returns a correction function for indices
 -- pointing to the indexable
-toBack :: Data d => Index -> Indexable a -> (Indexable a, d -> d)
-toBack (Index i) (Indexable list) =
-    (Indexable list', fun)
+toHead :: Index -> Indexable a -> (Indexable a, d -> d)
+toHead (Index i) (Indexable list) =
+    (Indexable list', error "fun (toBack)")
   where
     list' = list !! i : (take i list ++ drop (i + 1) list)
 

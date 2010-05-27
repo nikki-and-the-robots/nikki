@@ -8,19 +8,21 @@ import Utils
 import Data.Menu
 import Data.SelectTree
 import qualified Data.Indexable as I
+import Data.Abelian
 
 import Control.Monad
+
+import System.IO.Unsafe
 
 import Graphics.Qt
 
 import Base.Grounds
+-- import Base.Sprited
 
-import Base.Sprited
-import Base.PickleObject
+import Object.Types
 
 import Editor.Scene.Types hiding (selected)
 
-import System.IO.Unsafe
 
 
 -- | creates a menu label without an icon
@@ -37,29 +39,29 @@ quit = Right $ Action (mkLabel "quit")
 
 
 tileSelection :: EditorScene -> MenuItem MenuLabel EditorScene
-tileSelection s = browseTree "select used tile" setSelectedTile (availables s)
+tileSelection s = browseTree "select used sort" setSelectedTile (sorts s)
 
-setSelectedTile :: EditorScene -> Sprited -> Either String EditorScene
-setSelectedTile scene sprited =
-    let mAvailables' = selectFirstElement (== sprited) (availables scene)
-    in case mAvailables' of
-        (Just avs) -> Right scene{availables = avs}
+setSelectedTile :: EditorScene -> Sort_ -> Either String EditorScene
+setSelectedTile scene sort =
+    let mSorts' = selectFirstElement (== sort) (sorts scene)
+    in case mSorts' of
+        (Just x) -> Right scene{sorts = x}
 
 
 
 -- * menus for SelectTree Sprited
 
-browseTree :: String -> (EditorScene -> Sprited -> Either String EditorScene)
-    -> SelectTree Sprited -> MenuItem MenuLabel EditorScene
+browseTree :: String -> (EditorScene -> Sort_ -> Either String EditorScene)
+    -> SelectTree Sort_ -> MenuItem MenuLabel EditorScene
 browseTree menuHint f (Node label children _) =
     Left $ mkMenu (mkLabel menuTitle) menuEntries
   where
     menuTitle = menuHint ++ ": " ++ label
     menuEntries = map (browseTree menuHint f) (I.toList children)
-browseTree menuHint f (Leaf sprited) =
-    Right $ Action label (flip f sprited)
+browseTree menuHint f (Leaf sort) =
+    Right $ Action label (flip f sort)
   where
-    label = MenuLabel (Just sprited) (getName $ spritedName sprited)
+    label = MenuLabel (Just sort) (show sort)
 
 
 -- * Layer menu
@@ -88,7 +90,7 @@ addLayerMenus = map Right [
 
 
 layerAttributeMenu :: Read x =>
-    String -> (Layer EObject -> x) -> (Layer EObject -> x -> Layer EObject)
+    String -> (Layer EditorObject -> x) -> (Layer EditorObject -> x -> Layer EditorObject)
     -> Action MenuLabel EditorScene
 layerAttributeMenu question getter setter =
     Action (mkLabel question) $ \ scene -> unsafePerformIO $ do
@@ -98,7 +100,7 @@ layerAttributeMenu question getter setter =
         return $ Right $
             modifyObjects (modifySelectedLayer (selectedLayer scene) (inner line)) scene
   where
-    inner :: String -> Layer EObject -> Layer EObject
+    inner :: String -> Layer EditorObject -> Layer EditorObject
     inner answer layer =
         setter layer (read answer)
 
@@ -139,14 +141,15 @@ render ptr menu = do
 
     unstrip x = " " ++ x ++ " "
 
-    writeIcon :: Double -> Sprited -> IO ()
-    writeIcon scriptY sprited = do
+    writeIcon :: Double -> Sort_ -> IO ()
+    writeIcon scriptY sort = do
         let scriptHeight = 8
             x = divider - 10 - thumbnailHeight
             y = scriptY - (thumbnailHeight / 2) - (scriptHeight / 2)
-            position = Position x y
+            position = EditorPosition x y
             iconSize = Size (thumbnailHeight - 2) (thumbnailHeight - 2)
-        drawSqueezedPixmap ptr position iconSize $ defaultPixmap sprited
+--         drawSqueezedPixmap ptr position iconSize $ defaultPixmap sprited
+        sortRender_ sort ptr zero position
 
 --         resetMatrix ptr
 --         translate ptr $ Position x y

@@ -37,11 +37,8 @@ import System.Directory
 
 import Graphics.Qt
 
+import Base.Constants
 
--- * Constants
-
-pngDir :: FilePath
-pngDir = "data/png"
 
 
 -- * Types
@@ -369,4 +366,6 @@ loadImage file = do
   where
     sizeMod x = fromIntegral (x - 2)  -- removing padding pixels
 
+loadSprite_ :: FilePath -> IO (Ptr QPixmap)
+loadSprite_ = e "loadSprite"
 

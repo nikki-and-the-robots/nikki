@@ -75,7 +75,7 @@ data Chipmunk
     | DummyChipmunk {
         renderPosition :: Vector
       }
-  deriving Show
+  deriving (Show)
 
 instance Show Space where
     show _ = "<Space>"

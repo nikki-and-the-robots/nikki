@@ -2,12 +2,9 @@
 
 module Game.Scene (
     Scene,
-    UnloadedScene,
-    UninitializedScene,
-    Scene_(..),
 
     sceneInitCollisions,
-    sceneInitChipmunks,
+--     sceneInitChipmunks,
 
     stepScene,
   ) where
@@ -15,7 +12,7 @@ module Game.Scene (
 
 import Utils
 
-import Data.Indexable (Index, (!!!), fmapMWithIndex)
+import Data.Indexable (Index, fmapMWithIndex)
 import Control.Monad.FunctorM
 import Data.Abelian
 
@@ -30,11 +27,11 @@ import Base.Events
 import Base.Grounds
 import Base.Configuration as Configuration
 
-import Objects
-import Objects.Types
-import qualified Objects.Terminals as Terminals
-import Objects.Collisions
-import Objects.Animation
+import Object
+import Object.Types
+-- import qualified Object.Terminal as Terminal
+import Object.Collisions
+import Object.Animation
 
 import Game.Scene.Types
 import Game.Scene.Camera
@@ -52,18 +49,19 @@ sceneInitCollisions space s@Scene{objects, collisions} = do
     return s{collisions = cs'}
 
 -- | initializes all chipmunk objects in the MainLayer and all Animations
-sceneInitChipmunks :: Space -> UninitializedScene -> IO Scene
-sceneInitChipmunks space scene@Scene{objects, osdSpriteds} = do
-    let Grounds bgs mainLayer fgs = objects
-
-    mainLayer' <- fmapM (pure objectInitAnimation <=< objectInitChipmunk scene space) mainLayer
-
-    let initDummy = objectInitAnimation . initDummyChipmunk
-        bgs' = fmap (fmap initDummy) bgs
-        fgs' = fmap (fmap initDummy) fgs
-        objects' = Grounds bgs' mainLayer' fgs'
-        osdSpriteds' = fmap initDummy osdSpriteds
-    return $ scene{objects = objects', osdSpriteds = osdSpriteds'}
+-- sceneInitChipmunks :: Space -> Scene -> IO Scene
+-- sceneInitChipmunks space scene@Scene{objects, osdSpriteds} = do
+--     e "sceneInitChipmunks"
+--     let Grounds bgs mainLayer fgs = objects
+-- 
+--     mainLayer' <- fmapM (pure objectInitAnimation <=< objectInitChipmunk scene space) mainLayer
+-- 
+--     let initDummy = objectInitAnimation . initDummyChipmunk
+--         bgs' = fmap (fmap initDummy) bgs
+--         fgs' = fmap (fmap initDummy) fgs
+--         objects' = Grounds bgs' mainLayer' fgs'
+--         osdSpriteds' = fmap initDummy osdSpriteds
+--     return $ scene{objects = objects', osdSpriteds = osdSpriteds'}
 
 
 
@@ -111,30 +109,30 @@ transition scene (ControlData pushed _) = runHandler [
 
 -- | converts the Scene to TerminalMode, if appropriate
 nikkiToTerminal :: Scene -> [AppEvent] -> (Maybe Scene)
-nikkiToTerminal scene@Scene{controlled} pushed
-  | bPressed && isNikkiMode scene && beforeTerminal =
-    Just $ TerminalMode scene{controlled = terminal} terminal robots
-  where
-    bPressed = Press BButton `elem` pushed
-    beforeTerminal = nikkiTouchesTerminal $ collisions scene
+-- nikkiToTerminal scene@Scene{controlled} pushed
+--   | bPressed && isNikkiMode scene && beforeTerminal
+--     = Just $ TerminalMode scene{controlled = terminal} terminal robots
+--   where
+--     bPressed = Press BButton `elem` pushed
+--     beforeTerminal = nikkiTouchesTerminal $ collisions scene
 
-    terminal = whichTerminalCollides $ collisions scene
-    robots = Terminals.terminalRobots $ terminalState
-                (mainLayerIndexable (objects scene) !!! terminal)
+--     terminal = whichTerminalCollides $ collisions scene
+--     robots = Terminal.terminalRobots $ terminalState
+--                 (mainLayerIndexable (objects scene) !!! terminal)
 nikkiToTerminal _ _ = Nothing
 
 terminalToNikki :: Scene -> [AppEvent] -> (Maybe Scene)
-terminalToNikki scene@TerminalMode{} pushed
+{-terminalToNikki scene@TerminalMode{} pushed
     | bReleased && nikkiSelected =
     Just $ innerScene'{controlled = nikki innerScene', mTerminal = Nothing}
   where
     bReleased = Release BButton `elem` pushed
     nikkiSelected = not $ Terminals.isRobotSelected $ terminalState $ getControlled scene
-    innerScene' = innerScene scene
+    innerScene' = innerScene scene-}
 terminalToNikki _ _ = Nothing
 
 terminalToRobots :: Scene -> [AppEvent] -> (Maybe Scene)
-terminalToRobots scene@TerminalMode{innerScene, robots, terminal} pushed
+{-terminalToRobots scene@TerminalMode{innerScene, robots, terminal} pushed
     | bReleased && robotSelected =
     Just innerScene{controlled = robotIndex, mTerminal = Just terminal}
   where
@@ -142,12 +140,12 @@ terminalToRobots scene@TerminalMode{innerScene, robots, terminal} pushed
     robotSelected = Terminals.isRobotSelected $ terminalState $ getControlled scene
     robotIndex =
         robots !!
-            (Terminals.terminalSelected (terminalState (sceneGetMainObject innerScene terminal)))
+            (Terminals.terminalSelected (terminalState (sceneGetMainObject innerScene terminal)))-}
 terminalToRobots _ _ = Nothing
 
 -- | converts from RobotMode to TerminalMode, if appropriate
 robotsToTerminal :: Scene -> [AppEvent] -> (Maybe Scene)
-robotsToTerminal scene@Scene{mTerminal = Just terminal} pushed
+{-robotsToTerminal scene@Scene{mTerminal = Just terminal} pushed
   | bPressed && isRobotMode scene =
     Just $ initTheLights $
       modifyControlled (modifyTerminalState (Terminals.modifyIsRobotSelected (const False))) $
@@ -159,7 +157,7 @@ robotsToTerminal scene@Scene{mTerminal = Just terminal} pushed
                 (mainLayerIndexable (objects scene) !!! terminal)
 
     -- | switch TerminalLights to initialLights
-    initTheLights = modifySelectedTerminal initialTerminalLights
+    initTheLights = modifySelectedTerminal initialTerminalLights-}
 robotsToTerminal _ _ = Nothing
 
 gameOver :: Scene -> Maybe Scene
@@ -214,16 +212,16 @@ updateScene cd scene@TerminalMode{innerScene} = do
 
 
 -- | updates all objects
-sceneUpdateObjects :: Collisions -> Seconds -> ControlData -> Index -> Scene
-    -> Grounds Object -> IO (Grounds Object)
+sceneUpdateObjects :: Collisions Object_ -> Seconds -> ControlData -> Index -> Scene
+    -> Grounds Object_ -> IO (Grounds Object_)
 sceneUpdateObjects collisions now cd controlled scene grounds = do
     let (Grounds backgrounds mainLayer foregrounds) = grounds
 
         -- update function for all objects in the mainLayer
-        updateMainObjects :: Index -> Object -> IO Object
+        updateMainObjects :: Index -> Object_ -> IO Object_
         updateMainObjects i o = updateObject scene now collisions (i == controlled, cd) o
         -- update function for updates outside the mainLayer
-        updateMultiLayerObjects :: Object -> IO Object
+        updateMultiLayerObjects :: Object_ -> IO Object_
         updateMultiLayerObjects o = updateObject scene now collisions (False, cd) o
 
     backgrounds' <- fmapM (fmapM updateMultiLayerObjects) backgrounds
@@ -245,7 +243,8 @@ renderScene ptr scene@Scene{} = do
     windowSize <- sizeQPainter ptr
     eraseRect ptr zero windowSize (QtColor 0 0 0 255)
 
-    (center, cameraState') <- getCenter (getControlled scene) (cameraState scene)
+    controlledPosition <- getPosition $ body $ chipmunk_ $ getControlled scene
+    (center, cameraState') <- getCenter controlledPosition (cameraState scene)
 
     intSize@(Size width height) <- sizeQPainter ptr
     let size = fmap fromIntegral intSize
@@ -277,10 +276,10 @@ renderScene ptr scene@TerminalMode{innerScene} = do
 
 -- | renders the different Layers.
 -- makes sure, everything is rendered ok.
-renderLayer :: Ptr QPainter -> Size Double -> Qt.Position Double -> Scene -> Layer Object -> IO ()
+renderLayer :: Ptr QPainter -> Size Double -> Qt.Position Double -> Scene -> Layer Object_ -> IO ()
 renderLayer ptr size offset scene layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
-    fmapM_ (render ptr modifiedOffset scene) (content layer)
+    fmapM_ (Object.render ptr modifiedOffset scene) (content layer)
 
 
 -- * debugging
@@ -304,21 +303,11 @@ debugDrawCoordinateSystem ptr (Vector x y) = do
     scalePositions = map (* 64) [-100 .. 100]
 
 
-debugScene :: Scene -> IO ()
-debugScene s = do
-    let os = objects s
-    fmapM_ inner os
-  where
-    inner o = do
-        p <- getObjectPosition o
-        print (p, take 10 (show o))
-
-renderObjectGrid :: Ptr QPainter -> Qt.Position Double -> Object -> IO ()
-
+renderObjectGrid :: Ptr QPainter -> Qt.Position Double -> Object_ -> IO ()
 renderObjectGrid ptr offset object = do
     resetMatrix ptr
     translate ptr offset
-    renderGrid ptr (chipmunk object)
+    e "    renderGrid ptr (Object.Types.position object)"
 
 -- renderObjectGrid ptr offset o = es "renderGrid" o
 

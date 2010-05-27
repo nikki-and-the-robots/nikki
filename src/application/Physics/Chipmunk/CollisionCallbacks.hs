@@ -1,9 +1,12 @@
+{-# language DeriveDataTypeable #-}
 
 module Physics.Chipmunk.CollisionCallbacks (
     MyCollisionType(..),
     addMyCallback,
     setMyCollisionType,
   ) where
+
+import Data.Generics
 
 import Physics.Hipmunk
 
@@ -16,7 +19,7 @@ data MyCollisionType
     | LaserCT
     | RobotCT
     | MilkMachineCT
-  deriving (Enum, Eq, Show)
+  deriving (Enum, Eq, Show, Typeable, Data)
 
 toNumber :: MyCollisionType -> CollisionType
 toNumber = toEnum . fromEnum
