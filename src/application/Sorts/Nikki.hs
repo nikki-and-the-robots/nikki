@@ -316,7 +316,7 @@ controlBody now collisions (True, cd)
         modifyApplyOnlyForce chip (Vector airborneForce jumpingAntiGravity)
 
         -- jumping sound
-        when doesJumpStartNow $ triggerPolySound jumpingSound
+--         when doesJumpStartNow $ triggerPolySound jumpingSound
 
 --         debugChipGraph now body
 

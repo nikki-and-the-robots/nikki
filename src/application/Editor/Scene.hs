@@ -192,8 +192,8 @@ keyPress Y scene@EditorScene{} =
 
 -- put selected object to the back
 keyPress B scene@EditorScene{objects, selected = Just i} =
-    let (mainLayer', f) = I.toBack i (mainLayerIndexable objects)
-    in scene{objects = f objects{mainLayer = mkMainLayer mainLayer'}}
+    let mainLayer' = I.toHead i (mainLayerIndexable objects)
+    in scene{objects = objects{mainLayer = mkMainLayer mainLayer'}}
 
 
 -- * Layers

@@ -95,12 +95,6 @@ loadByName name = do
         Just x -> x
         Nothing -> error ("level not readable: " ++ name)
 
--- | checks, if the given (Indexable a) is normalized
-checkNormalized :: Indexable a -> IO ()
-checkNormalized i =
-    when (not (isNormalized i)) $
-        error "please normalize levels when saving"
-
 
 levelNameToFilePath :: String -> FilePath
 levelNameToFilePath x = normalise (levelDir </> x <.> "nl")

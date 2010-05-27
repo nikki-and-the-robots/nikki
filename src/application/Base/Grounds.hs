@@ -67,34 +67,6 @@ instance FunctorM Layer where
     fmapM_ f Layer{content} = fmapM_ f content
 
 
-instance Binary a => Binary (Grounds a) where
-    put (Grounds a b c) = do
-        put a
-        put b
-        put c
-    get = do
-        backgrounds <- get
-        mainLayer <- get
-        foregrounds <- get
-        return Grounds{backgrounds, mainLayer, foregrounds}
-
-instance Binary a => Binary (Layer a) where
-    put (Layer a b c d e f) = do
-        put a
-        put b
-        put c
-        put d
-        put e
-        put f
-    get = do
-        a <- get
-        b <- get
-        c <- get
-        d <- get
-        e <- get
-        f <- get
-        return $ Layer a b c d e f
-
 instance Functor Grounds where
     fmap f (Grounds a b c) = Grounds (fmap (fmap f) a) (fmap f b) (fmap (fmap f) c)
 
@@ -204,9 +176,7 @@ modifySelectedLayer (ForeGrounds i) f (Grounds backgrounds mainLayer foregrounds
 -- | modifies the GroundIndex according to the given function
 modifyGroundsIndex :: Grounds a -> (Int -> Int) -> GroundsIndex -> GroundsIndex
 modifyGroundsIndex gs f i =
-    assert (isNormalized (backgrounds gs) && isNormalized (foregrounds gs)) result
-  where
-    result = fromInt gs (f (toInt gs i))
+    fromInt gs (f (toInt gs i))
 
 -- | modifies the content of one Layer
 modifyContent :: (Indexable a -> Indexable b) -> Layer a -> Layer b
