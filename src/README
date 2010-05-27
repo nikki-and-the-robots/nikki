@@ -2,12 +2,25 @@
 This directory contains all source file for Nikki and the Robots.
 External dependencies are:
 
-* csfml
+* csfml (and sfml)
+    Tested with the svn version (of sfml 2)
+    get it: svn co https://sfml.svn.sourceforge.net/svnroot/sfml/trunk sfml2-svn
+    how to compile it: http://www.sfml-dev.org/tutorials/1.6/start-linux.php
+    Do something like:
+        make
+        sudo make install
+        cd CSFML
+        make
+        sudo make install
+    Don't forget to install sfml before trying to build csfml.
 * qt
-* lots of haskell stuff from hackage
+    (tested with 4.6.2)
+* lots of haskell stuff from hackage:
+    sfml-audio (from darcs.joyridelabs.de/sfml-audio)
+    hipmunk
+    uniplate
+    zlib
 
-There is a custom build script: build.hs. It needs imports from buildSystem and common.
-For example, do this:
+There is a custom build system and a script to use it:
+./compile.sh
 
-ghc -ibuildSystem -icommon --make build.hs
-./build.hs build_application
