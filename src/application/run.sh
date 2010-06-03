@@ -18,5 +18,5 @@ else
 fi
 
 cd ../..
-src/application/dist/build/nikki/nikki default
+src/application/dist/build/nikki/nikki $1
 

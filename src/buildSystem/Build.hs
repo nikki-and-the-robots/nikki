@@ -55,3 +55,10 @@ execute t = do
 
 
 
+-- * specific Types
+
+data CabalOptions = CabalOptions {
+    cabalOptions :: String,
+    ghcOptions :: String
+  }
+    deriving Show

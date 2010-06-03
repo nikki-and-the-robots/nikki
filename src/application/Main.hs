@@ -21,6 +21,7 @@ import Graphics.Qt
 
 import Base.Grounds
 import Base.GlobalCatcher
+import qualified Base.Configuration as Conf
 
 -- import Object
 import Object.Types
@@ -70,7 +71,7 @@ main = globalCatcher $ do
     app <- newQApplication
     window <- newAppWidget 1
 
-    setFullscreenAppWidget window False
+    setFullscreenAppWidget window (Conf.fullscreen Conf.development)
 
     -- level loading
     mObjects <- load Nothing

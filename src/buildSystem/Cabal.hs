@@ -14,16 +14,17 @@ import Build
 
 
 -- | creates targets for cabal builds
-cabalTargets :: String -> FilePath -> [Target]
-cabalTargets postfix path =
+cabalTargets :: String -> FilePath -> CabalOptions -> [Target]
+cabalTargets postfix path opts =
     [configure, build]
   where
     configure =
         Target confName [] $
             withCurrentDirectory path $ do
                 needsConfiguring_ <- needsConfiguring
-                when needsConfiguring_ $
-                    trySystem "cabal configure"
+                when True $ -- needsConfiguring_ $
+                    trySystem ("cabal configure " ++ cabalOptions opts ++ 
+                        " --ghc-options=\"" ++ ghcOptions opts ++ "\"")
     build =
         Target buildName [configure] $
             withCurrentDirectory path $ do
