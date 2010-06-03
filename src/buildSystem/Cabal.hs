@@ -22,7 +22,7 @@ cabalTargets postfix path opts =
         Target confName [] $
             withCurrentDirectory path $ do
                 needsConfiguring_ <- needsConfiguring
-                when True $ -- needsConfiguring_ $
+                when needsConfiguring_ $
                     trySystem ("cabal configure " ++ cabalOptions opts ++ 
                         " --ghc-options=\"" ++ ghcOptions opts ++ "\"")
     build =
