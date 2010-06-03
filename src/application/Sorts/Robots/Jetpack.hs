@@ -55,11 +55,8 @@ instance Sort RSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
     size = rsize
     collisionType = const RobotCT
-    sortRender sort ptr offset position = do
-        resetMatrix ptr
-        translate ptr offset
-        translate ptr $ editorPosition2QtPosition sort position
-        drawPixmap ptr zero $ pixmapS sort
+    sortRender sort =
+        sortRenderSinglePixmap (pixmapS sort) sort
 
     initialize sort space ep = do
         let (Qt.Position x y) = editorPosition2QtPosition sort ep

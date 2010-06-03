@@ -260,6 +260,8 @@ renderScene ptr scene@Scene{} = do
         fmapM_ (renderLayer ptr size multiLayerOffset scene) $ foregrounds os
 --             layerMapM_ (renderLayer ptr size offset scene) $ objects scene
 
+    debugDrawCoordinateSystem ptr offset
+
     when (showGrid Configuration.development) $ do
 --             renderLayer ptr size offset scene $ mainLayer $ objects scene
         fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
@@ -284,10 +286,11 @@ renderLayer ptr size offset scene layer = do
 
 -- * debugging
 
-debugDrawCoordinateSystem :: Ptr QPainter -> CM.Position -> IO ()
-debugDrawCoordinateSystem ptr (Vector x y) = do
+debugDrawCoordinateSystem :: Ptr QPainter -> Offset -> IO ()
+debugDrawCoordinateSystem ptr offset = do
     resetMatrix ptr
-    translate ptr (Position x y)
+    translate ptr offset
+    setPenColor ptr 255 0 0 255
     mapM_ inner lines
   where
     inner (a, b, c, d) =
@@ -307,7 +310,8 @@ renderObjectGrid :: Ptr QPainter -> Qt.Position Double -> Object_ -> IO ()
 renderObjectGrid ptr offset object = do
     resetMatrix ptr
     translate ptr offset
-    e "    renderGrid ptr (Object.Types.position object)"
+    let chip = chipmunk_ object
+    renderGrid ptr chip
 
 -- renderObjectGrid ptr offset o = es "renderGrid" o
 

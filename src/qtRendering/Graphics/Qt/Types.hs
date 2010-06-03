@@ -51,7 +51,7 @@ data Color = QtColor QtInt QtInt QtInt QtInt
 
 -- | calculates a factor. Transform the second given size
 -- by this factor and it will fit into the first given.
--- The seconds returned value is the offset of the inner box
+-- The second returned value is the offset of the inner box
 -- from the outer box.
 squeezeScaling :: Size QtReal -> Size QtReal -> (QtReal, Position QtReal)
 squeezeScaling limits box =

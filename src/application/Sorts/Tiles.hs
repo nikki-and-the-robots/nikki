@@ -50,23 +50,25 @@ data Tile = Tile (Ptr QPixmap) Chipmunk
 instance Sort TSort Tile where
     sortId sort = SortId $ dropExtension $ path sort
 
-    size (TSort _ _ size) = size
+    size (TSort _ _ size) = fmap (subtract 2) size
 
-    sortRender sort ptr offset position = do
-        resetMatrix ptr
-        translate ptr offset
-        translate ptr $ editorPosition2QtPosition sort position
-        drawPixmap ptr zero $ pixmap sort
+    sortRender sort =
+        sortRenderSinglePixmap (pixmap sort) sort
 
     collisionType = const TileCT
 
-    initialize sort space (EditorPosition x y) = do
+    initialize sort space editorPosition = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             collisionType_ = OT.collisionType sort
-            shapesWithAttributes = map (tuple (shapeAttributes collisionType_)) shapes
-            pos = Vector x y +~ baryCenterOffset
-        chip <- initStaticChipmunk space (bodyAttributes pos) shapesWithAttributes baryCenterOffset
+            shapesWithAttributes =
+                map (tuple (shapeAttributes collisionType_)) shapes
+            pos :: Vector
+            pos = positionToVector (editorPosition2QtPosition sort editorPosition)
+        chip <- initStaticChipmunk space (bodyAttributes pos)
+                    shapesWithAttributes baryCenterOffset
         return $ Tile (pixmap sort) chip
+
+    chipmunk (Tile _ c) = c
 
     update tile _ _ _ = return tile
 
@@ -74,7 +76,7 @@ instance Sort TSort Tile where
         resetMatrix ptr
         translate ptr offset
         pos <- getRenderPosition chip
-        translateVector ptr (fst pos)
+        translate ptr (fst pos -~ Position 1 1)
 --         let pixmap = animationPixmap animation s
         drawPixmap ptr zero pixmap
 --     render ptr globalOffset (MergedTile mergeds chipmunk) = do

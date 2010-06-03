@@ -29,9 +29,8 @@ drawBox :: Ptr QPainter -> Position Double -> Size Double -> Double -> IO ()
 drawBox ptr (Position x y) (Size w h) 0 = return ()
 drawBox ptr (Position x y) (Size w h) thickness = do
     resetMatrix ptr
-    let t = thickness - 1
-    drawRect ptr (Position (x - t) (y - t)) (Size ((w - 1) + t * 2) ((h - 1) + t * 2))
-    drawBox ptr (Position x y) (Size w h) (thickness - 1)
+    drawRect ptr (Position (x - 1) (y - 1)) (Size (w + 1) (h + 1))
+    drawBox ptr (Position (x - 1) (y - 1)) (Size (w + 2) (h + 2)) (thickness - 1)
 
 -- | same as $drawBox$, but with color
 drawColoredBox :: Ptr QPainter -> Position Double -> Size Int -> Double -> RGBA -> IO ()
@@ -50,6 +49,9 @@ renderEditorObject ptr offset (position, sort) = do
 --         pos = eObjectPosition o
 --         pix = defaultPixmap sprited
 --     renderAvailableObject ptr (offset +~ pos) sprited
-    sortRender_ sort ptr offset position
+    sortRender_ sort ptr offset position Nothing
+
+
+
 
 

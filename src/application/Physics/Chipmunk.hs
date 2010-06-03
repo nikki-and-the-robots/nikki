@@ -145,9 +145,8 @@ initSpace gravity = do
 
 initStaticChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)] -> Vector
     -> IO Chipmunk
-initStaticChipmunk space as@StaticBodyAttributes{position = positionWithPadding} shapeTypes baryCenterOffset = do
+initStaticChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenterOffset = do
     let normalAttrs = static2normalAttributes as
-        position = positionWithPadding - Vector 1 1
     body <- mkBody normalAttrs baryCenterOffset
     let chip = StaticChipmunk space body [] position baryCenterOffset
     fst <$> addInitShape chip shapeTypes

@@ -9,7 +9,7 @@ import Utils
 import Data.Abelian
 -- import Data.Indexable (Index)
 
--- import Control.Applicative ((<$>))
+import Control.Applicative ((<$>))
 -- import Control.Monad.Compose
 
 import System.FilePath
@@ -36,7 +36,7 @@ sorts = do
         "terminal-main_02",
         "terminal-main_03"
       ]
-    size <- sizeQPixmap $ head blinkenLights
+    size <- fmap (subtract 2) <$> sizeQPixmap (head blinkenLights)
     let r = TSort (Pixmaps blinkenLights size)
     return [r]
 
@@ -56,12 +56,8 @@ data Terminal = Terminal
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
     size = pixmapsS .> tsize
-    sortRender sort ptr offset position = do
-        resetMatrix ptr
-        translate ptr offset
-        translate ptr $ editorPosition2QtPosition sort position
-        drawPixmap ptr zero $ head $ blinkenLights $ pixmapsS sort
-
+    sortRender sort =
+        sortRenderSinglePixmap (head $ blinkenLights $ pixmapsS sort) sort
 
 
 -- initialTerminal :: Qt.Position Double -> a -> [Index] -> Object_ a Vector

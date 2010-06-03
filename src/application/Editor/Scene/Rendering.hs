@@ -101,18 +101,20 @@ renderSelectedIcon :: Ptr QPainter -> Sort_ -> IO ()
 renderSelectedIcon ptr co = do
     screenSize <- fmap fromIntegral <$> sizeQPainter ptr
 --     drawSqueezedPixmap ptr (Position 0 y) (Size 64 64) (defaultPixmap co)
-    sortRender_ co ptr zero (EditorPosition 0 (height screenSize))
+    sortRender_ co ptr zero
+        (EditorPosition 0 (height screenSize)) (Just $ Size 64 64)
 
 -- | renders the selected object (if any) in the right lower corner
 renderSelectedObject :: Ptr QPainter ->  Sort_ -> IO ()
 renderSelectedObject ptr sort = do
     screenSize <- fmap fromIntegral <$> sizeQPainter ptr
-    let position = EditorPosition screenWidth screenHeight -~ EditorPosition boxWidth 0
+    let position =
+            EditorPosition screenWidth screenHeight -~ EditorPosition boxWidth 0
         Size screenWidth screenHeight = screenSize
-        Size boxWidth boxHeight = Size 64 64
+        boxSize@(Size boxWidth _) = Size 64 64
 
 --     drawSqueezedPixmap ptr position boxSize (defaultPixmap sprited)
-    sortRender_ sort ptr zero position
+    sortRender_ sort ptr zero position (Just boxSize)
 
 -- | renders the currently selected Layer in the right lower corner
 renderLayerOSD :: Ptr QPainter -> GroundsIndex -> IO ()

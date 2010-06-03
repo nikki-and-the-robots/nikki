@@ -145,11 +145,11 @@ render ptr menu = do
     writeIcon scriptY sort = do
         let scriptHeight = 8
             x = divider - 10 - thumbnailHeight
-            y = scriptY - (thumbnailHeight / 2) - (scriptHeight / 2)
+            y = scriptY + (thumbnailHeight / 2)
             position = EditorPosition x y
-            iconSize = Size (thumbnailHeight - 2) (thumbnailHeight - 2)
+            iconSize = Size thumbnailHeight thumbnailHeight
 --         drawSqueezedPixmap ptr position iconSize $ defaultPixmap sprited
-        sortRender_ sort ptr zero position
+        sortRender_ sort ptr zero position (Just iconSize)
 
 --         resetMatrix ptr
 --         translate ptr $ Position x y

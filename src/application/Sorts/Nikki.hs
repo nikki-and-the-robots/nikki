@@ -83,13 +83,10 @@ instance Sort NSort Nikki where
 
     sortId _ = SortId "nikki"
 
-    size = nsize
+    size = fmap (subtract 2) . nsize
 
-    sortRender sort ptr offset position = do
-        resetMatrix ptr
-        translate ptr offset
-        translate ptr (editorPosition2QtPosition sort position)
-        drawPixmap ptr zero (pixmapsS sort ! Wait)
+    sortRender sort =
+        sortRenderSinglePixmap (pixmapsS sort ! Wait) sort
 
     initialize sort space (EditorPosition x y) = do
         let (nikkiShapes, baryCenterOffset) = mkPolys $ fmap fromIntegral $ size sort

@@ -46,7 +46,8 @@ class Sort sort object | sort -> object, object -> sort where
     sortId :: sort -> SortId
     size :: sort -> Size Int
     collisionType :: sort -> MyCollisionType
-    sortRender :: sort -> Ptr QPainter -> Offset -> EditorPosition -> IO () -- more arguments
+    sortRender :: sort -> Ptr QPainter -> Offset
+        -> EditorPosition -> Maybe (Size Double) -> IO ()
     editorPosition2QtPosition :: sort -> EditorPosition -> Position Double
     editorPosition2QtPosition sort (EditorPosition x y) =
         Position x (y - height)
@@ -67,7 +68,8 @@ data Sort_
         sortId_ :: SortId,
         size_ :: Size Int,
         collisionType_ :: MyCollisionType,
-        sortRender_ :: Ptr QPainter -> Offset -> EditorPosition -> IO (),
+        sortRender_ :: Ptr QPainter -> Offset
+            -> EditorPosition -> Maybe (Size Double) -> IO (),
         editorPosition2QtPosition_ :: EditorPosition -> Position Double,
 
         initialize_ :: Space -> EditorPosition -> IO Object_
@@ -156,6 +158,24 @@ pickleObject2EditorObject allSorts (PickleObject id position) =
 
 
 
+sortRenderSinglePixmap :: Sort sort object =>
+    Ptr QPixmap -> sort -> Ptr QPainter -> Offset
+    -> EditorPosition -> Maybe (Size Double) -> IO ()
+sortRenderSinglePixmap pixmap sort ptr offset (EditorPosition x y) scaling = do
+    resetMatrix ptr
+    translate ptr offset
+    let (Size width height) = fmap fromIntegral $ size sort
+        (factor, innerOffset) = case scaling of
+            Just x ->
+                squeezeScaling x (fmap fromIntegral (size sort))
+            Nothing -> (1, zero)
+
+        p = Position (x - 1) (y - 1 - height * factor) +~ innerOffset
+
+    translate ptr p
+    Qt.scale ptr factor factor
+
+    drawPixmap ptr zero pixmap
 
 
 

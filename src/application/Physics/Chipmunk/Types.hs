@@ -83,18 +83,17 @@ instance Show Space where
 
 -- * getters
 
--- returns the angle and the position of the (rotated) left upper corner of the default pixmap.
-getRenderPosition :: Chipmunk -> IO (Position, Angle)
+-- returns the angle and the position of the (rotated) left upper corner of the object.
+getRenderPosition :: Chipmunk -> IO (Qt.Position Double, Angle)
 getRenderPosition Chipmunk{body, baryCenterOffset} = do
     pos <- getPosition body
     angle <- getAngle body
-    let rotatedOffset = rotateVector angle (baryCenterOffset + Vector 1 1)
-    return (pos - rotatedOffset, angle)
-getRenderPosition StaticChipmunk{renderPosition} =
-    return (renderPosition, angle)
-  where
-    angle = 0
-getRenderPosition (DummyChipmunk pos) = return (pos, 0)
+    let rotatedOffset = rotateVector angle baryCenterOffset
+        (Vector x y) = pos - rotatedOffset
+    return (Qt.Position x y, angle)
+getRenderPosition StaticChipmunk{renderPosition = Vector x y} =
+    return (Qt.Position x y, 0)
+-- getRenderPosition (DummyChipmunk pos) = return (pos, 0)
 
 getChipmunkPosition :: Chipmunk -> IO (Position, Angle)
 getChipmunkPosition Chipmunk{body} = do
@@ -191,7 +190,7 @@ renderChipmunk painter worldOffset p chipmunk = do
 
     (position, rad) <- getRenderPosition chipmunk
 
-    translateVector painter position
+    translate painter position
     Qt.rotate painter (rad2deg rad)
 
     Qt.drawPixmap painter zero p
