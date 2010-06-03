@@ -23,5 +23,5 @@ ENDIF(UNIX)
 
 add_custom_command(TARGET qtwrapper POST_BUILD
                    COMMAND touch
-                   ../../../application/Editor.hs)
+                   ../../../application/Main.hs)
 
