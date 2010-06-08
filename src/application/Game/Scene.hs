@@ -249,7 +249,7 @@ renderScene ptr scene@Scene{} = do
     intSize@(Size width height) <- sizeQPainter ptr
     let size = fmap fromIntegral intSize
         offsetVector = - (center - Vector (fromIntegral width / 2) (fromIntegral height / 2))
-        offset = fmap (fromIntegral . truncate) $ vectorToPosition offsetVector
+        offset = fmap (fromIntegral . truncate) $ vectorToQtPosition offsetVector
 
     when (showScene Configuration.development) $ do
         -- TODO: this is a workaround for padding errors!!!

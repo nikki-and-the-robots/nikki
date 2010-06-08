@@ -25,7 +25,6 @@ module Physics.Chipmunk (
     modifyAngVel,
     normalizeAngle,
 
-    renderChipmunk,
     mkStandardPolys,
     debugChipmunk,
 
@@ -33,8 +32,8 @@ module Physics.Chipmunk (
     translateVector,
     renderGrid,
     rotateVector,
-    positionToVector,
-    vectorToPosition,
+    qtPositionToVector,
+    vectorToQtPosition,
     mapVectors,
     vmap,
     mkRect,
@@ -143,11 +142,11 @@ initSpace gravity = do
 --     todo : freeSpace
 
 
-initStaticChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)] -> Vector
-    -> IO Chipmunk
+initStaticChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)]
+    -> Vector -> IO Chipmunk
 initStaticChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenterOffset = do
     let normalAttrs = static2normalAttributes as
-    body <- mkBody normalAttrs baryCenterOffset
+    body <- mkBody normalAttrs
     let chip = StaticChipmunk space body [] position baryCenterOffset
     fst <$> addInitShape chip shapeTypes
 initStaticChipmunk space x y bc = nm "initStaticChipmunk" (x, y)
@@ -156,7 +155,7 @@ initStaticChipmunk space x y bc = nm "initStaticChipmunk" (x, y)
 initChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)] -> Vector
     -> IO Chipmunk
 initChipmunk space as@BodyAttributes{} shapeTypes baryCenterOffset = do
-    body <- mkBody as baryCenterOffset
+    body <- mkBody as
     spaceAdd space body
     let chip = Chipmunk space body [] [] baryCenterOffset
     fst <$> addInitShape chip shapeTypes
@@ -194,10 +193,10 @@ vectorY :: Vector -> Double
 vectorY (Vector x y) = y
 
 
-mkBody :: BodyAttributes -> Vector -> IO Body
-mkBody BodyAttributes{position, mass, inertia} baryCenterOffset = do
+mkBody :: BodyAttributes -> IO Body
+mkBody BodyAttributes{position, mass, inertia} = do
     body <- newBody mass inertia
-    setPosition body (position + baryCenterOffset)
+    setPosition body position
     return body
 
 mkShape :: Body -> ShapeAttributes -> ShapeType -> IO Shape

@@ -63,7 +63,8 @@ instance Sort TSort Tile where
             shapesWithAttributes =
                 map (tuple (shapeAttributes collisionType_)) shapes
             pos :: Vector
-            pos = positionToVector (editorPosition2QtPosition sort editorPosition)
+            pos = qtPositionToVector (editorPosition2QtPosition sort editorPosition)
+                    +~ baryCenterOffset
         chip <- initStaticChipmunk space (bodyAttributes pos)
                     shapesWithAttributes baryCenterOffset
         return $ Tile (pixmap sort) chip
@@ -73,12 +74,13 @@ instance Sort TSort Tile where
     update tile _ _ _ = return tile
 
     render (Tile pixmap chip) ptr offset = do
-        resetMatrix ptr
-        translate ptr offset
-        pos <- getRenderPosition chip
-        translate ptr (fst pos -~ Position 1 1)
---         let pixmap = animationPixmap animation s
-        drawPixmap ptr zero pixmap
+        renderChipmunk ptr offset pixmap chip
+--         resetMatrix ptr
+--         translate ptr offset
+--         pos <- getRenderPosition chip
+--         translate ptr (fst pos -~ Position 1 1)
+-- --         let pixmap = animationPixmap animation s
+--         drawPixmap ptr zero pixmap
 --     render ptr globalOffset (MergedTile mergeds chipmunk) = do
 --         pos <- getRenderPosition chipmunk
 --         mapM_ (inner (fst pos)) mergeds

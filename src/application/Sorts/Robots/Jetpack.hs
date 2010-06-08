@@ -59,9 +59,10 @@ instance Sort RSort Jetpack where
         sortRenderSinglePixmap (pixmapS sort) sort
 
     initialize sort space ep = do
-        let (Qt.Position x y) = editorPosition2QtPosition sort ep
-            p = Vector x y -~ baryCenterOffset
-            bodyAttributes = bodyAttributesConstant{CM.position = p}
+        let 
+            pos = qtPositionToVector (editorPosition2QtPosition sort ep)
+                    +~ baryCenterOffset
+            bodyAttributes = bodyAttributesConstant{CM.position = pos}
             shapeAttributes = ShapeAttributes{
                 elasticity = 0.8,
                 friction = 0.5,
@@ -72,6 +73,8 @@ instance Sort RSort Jetpack where
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
         return $ Jetpack (pixmapS sort) chip False Nothing
+
+    chipmunk = jchipmunk
 
     update object now _ (isControlled, cd) = inner object
       where

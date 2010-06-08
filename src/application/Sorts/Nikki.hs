@@ -88,18 +88,21 @@ instance Sort NSort Nikki where
     sortRender sort =
         sortRenderSinglePixmap (pixmapsS sort ! Wait) sort
 
-    initialize sort space (EditorPosition x y) = do
+    initialize sort space editorPosition = do
         let (nikkiShapes, baryCenterOffset) = mkPolys $ fmap fromIntegral $ size sort
-            pos = Vector x y
+            pos = qtPositionToVector (editorPosition2QtPosition sort editorPosition)
+                    +~ baryCenterOffset
+--         es "nikk" (size sort, editorPosition, baryCenterOffset, pos)
 
-        chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes baryCenterOffset
+        chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes
+                    baryCenterOffset
         let feetShape = head $ shapes chip
 
         jumpingSound <- newPolySound (soundDir </> "nikki/jump.wav") 4
 
         return $ Nikki
-            (pixmapsS sort) 
-            chip 
+            (pixmapsS sort)
+            chip
             feetShape
             jumpingSound
             0

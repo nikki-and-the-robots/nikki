@@ -4,13 +4,16 @@ module Physics.Chipmunk.DebugGrid (
     renderGrid,
   ) where
 
-import Utils
+
+import Data.Abelian
 
 import Graphics.Qt as Qt
 
 import Physics.Hipmunk
 
 import Physics.Chipmunk.Types
+
+import Utils
 
 
 renderGrid :: Ptr QPainter -> Chipmunk -> IO ()

@@ -178,4 +178,16 @@ sortRenderSinglePixmap pixmap sort ptr offset (EditorPosition x y) scaling = do
     drawPixmap ptr zero pixmap
 
 
+renderChipmunk :: Ptr QPainter -> Qt.Position Double -> Ptr Qt.QPixmap -> Chipmunk -> IO ()
+renderChipmunk painter worldOffset p chipmunk = do
+    Qt.resetMatrix painter
+    translate painter worldOffset
+
+    (position, rad) <- getRenderPosition chipmunk
+
+    translate painter position
+    Qt.rotate painter (rad2deg rad)
+
+    Qt.drawPixmap painter zero p
+
 

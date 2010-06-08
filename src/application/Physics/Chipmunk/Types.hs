@@ -89,9 +89,10 @@ getRenderPosition Chipmunk{body, baryCenterOffset} = do
     pos <- getPosition body
     angle <- getAngle body
     let rotatedOffset = rotateVector angle baryCenterOffset
-        (Vector x y) = pos - rotatedOffset
+        (Vector x y) = pos -~ rotatedOffset
     return (Qt.Position x y, angle)
-getRenderPosition StaticChipmunk{renderPosition = Vector x y} =
+getRenderPosition StaticChipmunk{renderPosition, baryCenterOffset} = do
+    let (Vector x y) = renderPosition -~ baryCenterOffset
     return (Qt.Position x y, 0)
 -- getRenderPosition (DummyChipmunk pos) = return (pos, 0)
 
@@ -104,7 +105,7 @@ getChipmunkPosition StaticChipmunk{renderPosition, baryCenterOffset} =
     return (chipmunkPosition, angle)
   where
     angle = 0
-    chipmunkPosition = renderPosition + baryCenterOffset
+    chipmunkPosition = renderPosition
 
 
 -- * conversion
@@ -117,11 +118,11 @@ static2normalAttributes (StaticBodyAttributes position) =
     inertia = infinity
 static2normalAttributes x = nm "static2normalAttributes" x
 
-positionToVector :: Qt.Position Double -> Vector
-positionToVector (Qt.Position x y) = Vector x y
+qtPositionToVector :: Qt.Position Double -> Vector
+qtPositionToVector (Qt.Position x y) = Vector x y
 
-vectorToPosition :: Vector -> Qt.Position Double
-vectorToPosition (Vector x y) = Qt.Position x y
+vectorToQtPosition :: Vector -> Qt.Position Double
+vectorToQtPosition (Vector x y) = Qt.Position x y
 
 
 -- * missing
@@ -183,17 +184,6 @@ mkStandardPolys (Qt.Size w h) =
 
 -- * rendering
 
-renderChipmunk :: Ptr QPainter -> Qt.Position Double -> Ptr Qt.QPixmap -> Chipmunk -> IO ()
-renderChipmunk painter worldOffset p chipmunk = do
-    Qt.resetMatrix painter
-    translate painter worldOffset
-
-    (position, rad) <- getRenderPosition chipmunk
-
-    translate painter position
-    Qt.rotate painter (rad2deg rad)
-
-    Qt.drawPixmap painter zero p
 
 translateSpriteToCenter :: Ptr QPainter -> Qt.Size Int -> IO ()
 translateSpriteToCenter ptr (Qt.Size width height) = do
