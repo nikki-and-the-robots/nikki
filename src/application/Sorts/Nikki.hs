@@ -126,23 +126,24 @@ instance Sort NSort Nikki where
 
 bodyAttributes :: CM.Position -> BodyAttributes
 bodyAttributes pos = BodyAttributes{
-    CM.position            = pos,
+    CM.position         = pos,
     mass                = nikkiMass,
     inertia             = infinity
   }
 
+elasticity_ = 0.0
 
 feetShapeAttributes :: ShapeAttributes
 feetShapeAttributes = ShapeAttributes{
-    elasticity          = 0.0,
+    elasticity          = elasticity_,
     friction            = nikkiFeetFriction,
-    CM.collisionType       = NikkiFeetCT
+    CM.collisionType    = NikkiFeetCT
   }
 
 -- Attributes for nikkis body (not to be confused with chipmunk bodies, it's a chipmunk shape)
 bodyShapeAttributes :: ShapeAttributes
 bodyShapeAttributes = ShapeAttributes {
-    elasticity    = 0,
+    elasticity    = elasticity_,
     friction      = 0,
     CM.collisionType = NikkiBodyCT
   }

@@ -37,7 +37,7 @@ data FpsState
 
 
 
-logFile = "profiling/fps.dat"
+logFile = "fps.dat"
 
 -- creates the initial FpsState
 initialFPSState :: IO FpsState

@@ -22,7 +22,8 @@ import Game.Scene.Camera
 data Scene
     = Scene {
         now :: Seconds,
-        passedTime :: Seconds,
+        oldNow :: Seconds,
+--         passedTime :: Seconds,
         objects :: Grounds Object_,
         controlled :: Index, -- points to the controlled object (in the main Layer)
         cameraState :: CameraState,

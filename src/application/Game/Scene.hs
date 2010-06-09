@@ -10,18 +10,19 @@ module Game.Scene (
   ) where
 
 
-import Utils
-
 import Data.Indexable (Index, fmapMWithIndex)
-import Control.Monad.FunctorM
 import Data.Abelian
 
 import Control.Monad.State hiding ((>=>), (<=<))
 import Control.Monad.Compose
+import Control.Concurrent
+import Control.Monad.FunctorM
 
 import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
+
+import Utils
 
 import Base.Events
 import Base.Grounds
@@ -75,7 +76,7 @@ sceneInitCollisions space s@Scene{objects, collisions} = do
 
 stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene -> IO Scene
 stepScene now space controlData ptr =
-    updatePassedTime now >=>
+    pure (updateNow now) >=>
     updateScene controlData >=>
     passThrough (stepSpace space) >=>
     renderScene ptr >=>
@@ -86,13 +87,12 @@ stepScene now space controlData ptr =
 -- | updates the passedTime variable
 -- time passes in normal Game mode
 -- time does NOT pass in Terminal mode
-updatePassedTime :: Seconds -> Scene -> IO Scene
-updatePassedTime now scene@Scene{now = oldNow} = do
-    let passedTime = now - oldNow
-    return scene{now = now, passedTime = passedTime}
-updatePassedTime now scene@TerminalMode{innerScene} = do
-    let innerScene' = innerScene{now = now, passedTime = 0}
-    return scene{innerScene = innerScene'}
+updateNow :: Seconds -> Scene -> Scene
+updateNow now' scene@Scene{now} =
+    scene{now = now', oldNow = now}
+-- updatePassedTime now scene@TerminalMode{innerScene} = do
+--     let innerScene' = innerScene{now = now, passedTime = 0}
+--     return scene{innerScene = innerScene'}
 
 
 -- * State automaton stuff
@@ -175,17 +175,15 @@ levelPassed _ = Nothing
 
 stepSpace :: Space -> Scene -> IO ()
 
-stepSpace space s@Scene{passedTime} = do
-    when (passedTime < 0.1) $ -- TODO: dirty hack
-        CM.step space (passedTime) -- <<? "passedTime")
+stepSpace space s@Scene{now, oldNow} = do
+    forM_ [0..n] $ const $
+        CM.step space stepQuantum
+  where
+    n :: Int = stepQuantums now - stepQuantums oldNow
+    stepQuantum :: Double = 0.002
+    stepQuantums :: Seconds -> Int
+    stepQuantums t = truncate (t / stepQuantum)
 
-stepSpace space s@Scene{passedTime} = do
-    -- in order for step times to be of equal length, we invoke CM.step multiple times
-    -- with a "time quantum" (singleStepTime)
-    -- this (hoefully) increases chipmunk performance
-    let nos :: Int = truncate (passedTime / singleStepTime)
-    forM_ [0..nos] $ const $
-        CM.step space singleStepTime
 stepSpace _ s@TerminalMode{} = return ()
 
 singleStepTime :: Fractional n => n

@@ -7,6 +7,8 @@ import Utils
 import Data.Complex
 import Data.Abelian
 
+import Control.Applicative
+
 import Graphics.Qt (Ptr, QPainter, translate)
 import qualified Graphics.Qt as Qt
 
@@ -79,6 +81,66 @@ data Chipmunk
 
 instance Show Space where
     show _ = "<Space>"
+
+
+-- * creation
+
+initStaticChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)]
+    -> Vector -> IO Chipmunk
+initStaticChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenterOffset = do
+    let normalAttrs = static2normalAttributes as
+    body <- mkBody normalAttrs
+    let chip = StaticChipmunk space body [] position baryCenterOffset
+    fst <$> addInitShape chip shapeTypes
+initStaticChipmunk space x y bc = nm "initStaticChipmunk" (x, y)
+
+
+initChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)] -> Vector
+    -> IO Chipmunk
+initChipmunk space as@BodyAttributes{} shapeTypes baryCenterOffset = do
+    body <- mkBody as
+    spaceAdd space body
+    let chip = Chipmunk space body [] [] baryCenterOffset
+    fst <$> addInitShape chip shapeTypes
+
+
+initChipmunk s x ss bco = nm "initChipmunk" x
+
+
+mkBody :: BodyAttributes -> IO Body
+mkBody BodyAttributes{position, mass, inertia} = do
+    body <- newBody mass inertia
+    setPosition body position
+    return body
+
+mkShape :: Body -> ShapeAttributes -> ShapeType -> IO Shape
+mkShape body ShapeAttributes{elasticity, friction, collisionType} shapeType = do
+    shape <- newShape body shapeType zero
+    setElasticity shape elasticity
+    setFriction shape friction
+    setMyCollisionType shape collisionType
+    return shape
+
+-- | initially adds shapes to a Chipmunk
+addInitShape :: Chipmunk -> [(ShapeAttributes, ShapeType)] -> IO (Chipmunk, [Shape])
+addInitShape (Chipmunk space body shapes shapeTypes baryCenterOffset) newShapeTypes = do
+    newShapes <- mapM (uncurry (mkShape body)) newShapeTypes
+    mapM_ (spaceAdd space) newShapes
+
+    let chip = Chipmunk
+            space body
+            (shapes ++ newShapes)
+            (shapeTypes ++ (map snd newShapeTypes))
+            baryCenterOffset
+    return (chip, newShapes)
+
+addInitShape (StaticChipmunk space body shapeTypes position baryCenterOffset) newShapeTypes = do
+    newShapes <- mapM (uncurry (mkShape body)) newShapeTypes
+    mapM_ (spaceAdd space . Static) newShapes
+    let chip =
+            StaticChipmunk space body (shapeTypes ++ map snd newShapeTypes) position baryCenterOffset
+    return (chip, newShapes)
+
 
 
 -- * getters
