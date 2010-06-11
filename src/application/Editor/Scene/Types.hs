@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns, FlexibleInstances #-}
+{-# language NamedFieldPuns, FlexibleInstances, DeriveDataTypeable #-}
 
 module Editor.Scene.Types where
 
@@ -10,6 +10,7 @@ import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
 import Data.Menu hiding (selected)
+import Data.Generics
 
 import Control.Monad.State
 -- import Control.Exception
@@ -36,17 +37,18 @@ data EditorScene
         selected :: Maybe Index,
             -- index of the object that is in the scene and currently under the cursor
             -- (in the selected layer)
+        objectEditModeIndex :: Maybe Index,
 
         debugMsgs :: [String]
     }
-    | TerminalScene {
-        mainScene :: EditorScene,
-        tmAvailableRobots :: [Index],
-        tmTerminalIndex :: Index,
-        tmSelectedRobots :: [Index],
-
-        debugMsgs :: [String]
-    }
+--     | TerminalScene {
+--         mainScene :: EditorScene,
+--         tmAvailableRobots :: [Index],
+--         tmTerminalIndex :: Index,
+--         tmSelectedRobots :: [Index],
+-- 
+--         debugMsgs :: [String]
+--     }
     | MenuScene {
         mainScene :: EditorScene,
         menu :: Menu MenuLabel EditorScene,
@@ -58,7 +60,7 @@ data EditorScene
 
         debugMsgs :: [String]
       }
-  deriving Show
+  deriving (Show, Typeable)
 
 instance Show (EditorScene -> EditorPosition) where
     show _ = "<EditorScene -> EditorPosition>"
@@ -66,8 +68,6 @@ instance Show (EditorScene -> EditorPosition) where
 
 getLevelName :: EditorScene -> Maybe String
 getLevelName EditorScene{levelName} = levelName
-getLevelName TerminalScene{} =
-    e "saving from TerminalScene NYI. Note: is the mainScene already changed?"
 getLevelName MenuScene{mainScene} = levelName mainScene
 getLevelName FinalState{mainScene} = levelName mainScene
 
@@ -94,23 +94,23 @@ getSelectedObject EditorScene{selected = Nothing} = Nothing
 -- | returns all Indices (to the mainLayer) for robots
 getRobotIndices :: EditorScene -> [Index]
 getRobotIndices EditorScene{objects} =
-    I.findIndices (isRobot . snd) $ content $ mainLayer objects
+    I.findIndices (isRobot . editorSort) $ content $ mainLayer objects
 
 getCursorSize :: EditorScene -> (Size Int)
 getCursorSize s@EditorScene{} =
     size_ $ getSelected $ sorts s
-getCursorSize s@TerminalScene{} = getCursorSize $ mainScene s
 
-getObject :: EditorScene -> Index -> EditorObject
-getObject scene@TerminalScene{} i = os !!! i
+-- | returns an object from the main layer
+getMainObject :: EditorScene -> Index -> EditorObject
+getMainObject scene i = os !!! i
   where
-    os = mainLayerIndexable $ objects $ mainScene scene
+    os = mainLayerIndexable $ objects scene
 
-getTerminalMRobot :: EditorScene -> Maybe EditorObject
-getTerminalMRobot scene@TerminalScene{} =
-    case tmAvailableRobots scene of
-        (i : _) -> Just (getObject scene i)
-        [] -> Nothing
+-- getTerminalMRobot :: EditorScene -> Maybe EditorObject
+-- getTerminalMRobot scene@TerminalScene{} =
+--     case tmAvailableRobots scene of
+--         (i : _) -> Just (getObject scene i)
+--         [] -> Nothing
 
 
 -- * Setters

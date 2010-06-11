@@ -6,14 +6,15 @@ module Game.Scene.Types where
 import Utils
 
 import Data.Indexable
-import Data.Map
+
+import Physics.Chipmunk
 
 import Base.Grounds
-import Base.Sprited
+import Base.Constants
 
 import Object.Types
-import Object.Animation
-import Object.Collisions
+-- import Object.Animation
+import Object.Contacts
 
 import Game.Scene.Camera
 
@@ -23,25 +24,32 @@ data Scene
     = Scene {
         now :: Seconds,
         oldNow :: Seconds,
---         passedTime :: Seconds,
         objects :: Grounds Object_,
-        controlled :: Index, -- points to the controlled object (in the main Layer)
         cameraState :: CameraState,
-        nikki :: Index, -- points to nikki (in the main layer)
-        collisions :: Collisions Object_,
-        mTerminal :: Maybe Index,   -- if in robot mode
-        osdSpriteds :: Map String Sprited
+        contacts :: !(ContactRef Contacts, Contacts),
+        mode :: Mode
       }
-    | TerminalMode {
-        innerScene :: Scene,
-        terminal :: Index,
-        robots :: [Index]
-      }
-    | FinalState Success
   deriving Show
 
-data Success = PassedLevel | FailedLevel
+data Mode
+    = NikkiMode {
+        nikki :: Index
+      }
+    | TerminalMode {
+        nikki :: Index,
+        terminal :: Index
+      }
+    | RobotMode{
+        nikki :: Index,
+        terminal :: Index,
+        robot :: Index
+      }
+    | LevelFinished LevelResult
   deriving Show
+
+data LevelResult = Passed | Failed
+  deriving Show
+
 
 -- * getter
 
@@ -50,63 +58,59 @@ getPassedTime x = es "getPassedTime" x
 
 -- | returns the object currently controlled by the gamepad
 getControlled :: Scene -> Object_
-getControlled Scene{objects, controlled} = mainLayerIndexable objects !!! controlled
-getControlled TerminalMode{innerScene} = getControlled innerScene
+getControlled s = s |> getControlledIndex |> getMainObject s
+
+getControlledIndex :: Scene -> Index
+getControlledIndex Scene{mode} =
+    case mode of
+        NikkiMode{nikki} -> nikki
+        TerminalMode{terminal} -> terminal
+        RobotMode{robot} -> robot
 
 -- | returns an object from the mainLayer
-sceneGetMainObject :: Scene -> Index -> Object_
-sceneGetMainObject s@Scene{objects} i = mainLayerIndexable objects !!! i
-
--- * setter
-
-setControlled :: Scene -> Object_ -> Scene
-setControlled scene@Scene{controlled} c' =
-    modifyObjects (modifyMainLayer (modifyByIndex (const c') controlled)) scene
-setControlled scene@TerminalMode{innerScene} c' =
-    scene{innerScene = setControlled innerScene c'}
+getMainObject :: Scene -> Index -> Object_
+getMainObject s@Scene{objects} i = mainLayerIndexable objects !!! i
 
 -- | returns, if Nikki is controlled currently
-isNikkiMode :: Scene -> Bool
-isNikkiMode Scene{mTerminal = Nothing} = True
-isNikkiMode _ = False
+isNikkiMode :: Mode -> Bool
+isNikkiMode NikkiMode{} = True
 
 -- | returns, if a robot is controlled currently
-isRobotMode :: Scene -> Bool
-isRobotMode Scene{mTerminal = Just _} = True
+isRobotMode :: Mode -> Bool
+isRobotMode RobotMode{} = True
 isRobotMode _ = False
 
-isTerminalMode :: Scene -> Bool
+isTerminalMode :: Mode -> Bool
 isTerminalMode TerminalMode{} = True
 isTerminalMode _ = False
 
 -- * modifications
 
-modifySelectedTerminal :: (Object_ -> Object_) -> Scene -> Scene
-modifySelectedTerminal f s@TerminalMode{terminal} =
-    modifyInnerScene (modifyObjects (modifyMainLayer (modifyByIndex f terminal))) s
-
-modifyInnerScene :: (Scene -> Scene) -> Scene -> Scene
-modifyInnerScene f s@TerminalMode{innerScene} =
-    s{innerScene = f innerScene}
+modifyMainByIndex :: (Object_ -> Object_) -> Index -> Scene -> Scene
+modifyMainByIndex f i =
+    modifyObjects (modifyMainLayer (modifyByIndex f i))
 
 modifyObjects :: (Grounds Object_ -> Grounds Object_) -> Scene -> Scene
 modifyObjects f s@Scene{objects} =
     s{objects = f objects}
+-- 
+-- modifyObjectsM :: Monad m => (Grounds Object_ -> m (Grounds Object_)) -> Scene -> m Scene
+-- modifyObjectsM f scene@Scene{objects} = do
+--     objects' <- f objects
+--     return scene{objects = objects'}
 
-modifyObjectsM :: Monad m => (Grounds Object_ -> m (Grounds Object_)) -> Scene -> m Scene
-modifyObjectsM f scene@Scene{objects} = do
-    objects' <- f objects
-    return scene{objects = objects'}
+modifyMode :: (Mode -> Mode) -> Scene -> Scene
+modifyMode f s@Scene{mode} = s{mode = f mode}
 
 
-modifyControlled :: (Object_ -> Object_)
-    -> Scene -> Scene
-modifyControlled f s = setControlled s (f (getControlled s))
+-- modifyControlled :: (Object_ -> Object_)
+--     -> Scene -> Scene
+-- modifyControlled f s = setControlled s (f (getControlled s))
 
-modifyControlledM :: Monad m => (Object_ -> m Object_) -> Scene -> m Scene
-modifyControlledM f scene = do
-    c' <- f $ getControlled scene
-    return $ setControlled scene c'
+-- modifyControlledM :: Monad m => (Object_ -> m Object_) -> Scene -> m Scene
+-- modifyControlledM f scene = do
+--     c' <- f $ getControlled scene
+--     return $ setControlled scene c'
 
 
 

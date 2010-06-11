@@ -1,10 +1,13 @@
-{-# language MultiParamTypeClasses, FunctionalDependencies, NamedFieldPuns #-}
+{-# language MultiParamTypeClasses, FunctionalDependencies, NamedFieldPuns,
+     ViewPatterns #-}
 
 module Object.Types where
 
 import Utils
 
 import Data.Abelian
+import Data.Dynamic
+import Data.List
 
 import Control.Applicative ((<$>))
 
@@ -13,9 +16,10 @@ import Graphics.Qt as Qt
 import Physics.Chipmunk hiding (Position, collisionType)
 
 import Base.Events
+import Base.Constants
+import Base.Grounds
 
-import Object.Animation
-import Object.Collisions
+import Object.Contacts
 
 
 -- * Constants
@@ -42,10 +46,13 @@ newtype SortId = SortId FilePath
 
 -- * Sort class
 
-class Sort sort object | sort -> object, object -> sort where
+class (Typeable sort, Typeable object) =>
+  Sort sort object | sort -> object, object -> sort where
     sortId :: sort -> SortId
     size :: sort -> Size Int
     collisionType :: sort -> MyCollisionType
+    objectEditMode :: sort -> Maybe ObjectEditMode
+    objectEditMode _ = Nothing
     sortRender :: sort -> Ptr QPainter -> Offset
         -> EditorPosition -> Maybe (Size Double) -> IO ()
     editorPosition2QtPosition :: sort -> EditorPosition -> Position Double
@@ -54,25 +61,29 @@ class Sort sort object | sort -> object, object -> sort where
       where
         Size _ height = fmap fromIntegral $ size sort
 
-    initialize :: sort -> Space -> EditorPosition -> IO object
+    initialize :: sort -> Space -> EditorPosition -> Maybe String -> IO object
 
     chipmunk :: object -> Chipmunk
-    update :: object -> Seconds -> Collisions Object_ -> (Bool, ControlData) -> IO object
-    render :: object -> Ptr QPainter -> Offset -> IO () -- more args
+    startControl :: object -> object
+    startControl = id
+    update :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
+    render :: object -> sort -> Ptr QPainter -> Offset -> IO ()
 
 
 -- * Sort class wrappers
 
 data Sort_
     = Sort_ {
+        unwrapSort :: Dynamic,
         sortId_ :: SortId,
         size_ :: Size Int,
         collisionType_ :: MyCollisionType,
+        objectEditMode_ :: Maybe ObjectEditMode,
         sortRender_ :: Ptr QPainter -> Offset
             -> EditorPosition -> Maybe (Size Double) -> IO (),
         editorPosition2QtPosition_ :: EditorPosition -> Position Double,
 
-        initialize_ :: Space -> EditorPosition -> IO Object_
+        initialize_ :: Space -> EditorPosition -> Maybe String -> IO Object_
       }
 --   deriving ()
 
@@ -85,21 +96,25 @@ mkSort_ :: Sort sort object => sort -> Sort_
 mkSort_ sort = result
   where
     result = Sort_ {
+        unwrapSort = toDyn sort,
         sortId_ = sortId sort,
         size_ = size sort,
         collisionType_ = collisionType sort,
+        objectEditMode_ = objectEditMode sort,
         sortRender_ = sortRender sort,
         editorPosition2QtPosition_ = editorPosition2QtPosition sort,
 
-        initialize_ = \ space position ->
-            mkObject_ result <$> initialize sort space position
+        initialize_ = \ space position state ->
+            mkObject_ result <$> initialize sort space position state
       }
 
 data Object_
     = Object_ {
+        unwrapObject :: Dynamic,
         sort_ :: Sort_,
         chipmunk_ :: Chipmunk,
-        update_ :: Seconds -> Collisions Object_ -> (Bool, ControlData) -> IO Object_,
+        startControl_ :: Object_,
+        update_ :: Seconds -> Contacts -> (Bool, ControlData) -> IO Object_,
         render_ :: Ptr QPainter -> Offset -> IO ()
       }
 
@@ -109,20 +124,24 @@ instance Show Object_ where
 mkObject_ :: Sort sort object => Sort_ -> object -> Object_
 mkObject_ sort_ object =
     Object_ {
+        unwrapObject = toDyn object,
         sort_ = sort_,
         chipmunk_ = chipmunk object,
-        update_ = \ seconds collisions cd -> mkObject_ sort_ <$> update object seconds collisions cd,
-        render_ = render object
+        startControl_ = mkObject_ sort_ (startControl object),
+        update_ = \ seconds collisions cd ->
+            mkObject_ sort_ <$> update object seconds collisions cd,
+        render_ = case fromDynamic (unwrapSort sort_) of
+                     Just sort -> render object sort
       }
 
 
 -- * Discriminators
 
 isTerminal :: Sort_ -> Bool
-isTerminal = e "isTerminal"
+isTerminal sort = SortId "terminal" == sortId_ sort
 
 isRobot :: Sort_ -> Bool
-isRobot = e "isRobot"
+isRobot (sortId_ -> (SortId s)) = "robots/" `isPrefixOf` s
 
 isNikki :: Sort_ -> Bool
 isNikki s = (SortId "nikki" == sortId_ s)
@@ -130,29 +149,45 @@ isNikki s = (SortId "nikki" == sortId_ s)
 
 -- * Editor objects
 
-type EditorObject = (EditorPosition, Sort_)
+data EditorObject
+    = EditorObject {
+        editorSort :: Sort_,
+        editorPosition :: EditorPosition,
+        editorOEMState :: Maybe OEMState
+      }
+  deriving Show
+
+mkEditorObject :: Sort_ -> EditorPosition -> EditorObject
+mkEditorObject sort pos = EditorObject sort pos (mkOEMState sort)
 
 eObject2Object :: Space -> EditorObject -> IO Object_
-eObject2Object space (position, sort) = initialize_ sort space position
+eObject2Object space (EditorObject sort pos state) =
+    initialize_ sort space pos (fmap oemState state)
+
+modifyOEMState :: (OEMState -> OEMState) -> EditorObject -> EditorObject
+modifyOEMState f eo =
+    case editorOEMState eo of
+         Just x -> eo{editorOEMState = Just $ f x}
 
 
 -- * pickelable object
 
 data PickleObject = PickleObject {
     pickleSortId :: SortId,
-    picklePosition :: EditorPosition
+    picklePosition :: EditorPosition,
+    pickleOEMState :: Maybe String
   }
     deriving (Read, Show)
 
 editorObject2PickleObject :: EditorObject -> PickleObject
-editorObject2PickleObject (position, sort) =
-    PickleObject (sortId_ sort) position
+editorObject2PickleObject (EditorObject sort p oemState) =
+    PickleObject (sortId_ sort) p (fmap pickleOEM oemState)
 
 -- | converts pickled objects to editor objects
 -- needs all available sorts
 pickleObject2EditorObject :: [Sort_] -> PickleObject -> EditorObject
-pickleObject2EditorObject allSorts (PickleObject id position) =
-    (position, sort)
+pickleObject2EditorObject allSorts (PickleObject id position oemState) =
+    EditorObject sort position (fmap (unpickleOEM sort) oemState)
   where
     (sort : _) = filter ((== id) . sortId_) allSorts
 
@@ -189,5 +224,58 @@ renderChipmunk painter worldOffset p chipmunk = do
     Qt.rotate painter (rad2deg rad)
 
     Qt.drawPixmap painter zero p
+
+
+
+
+-- * ObjectEditMode
+
+data ObjectEditMode
+    = ObjectEditMode {
+        oemInitialState :: String,
+        oemEnterMode :: Dynamic -> String -> String,
+        oemUpdate :: Dynamic -> Key -> String -> String,
+        oemRender :: Ptr QPainter -> Dynamic -> String -> IO () -- more args
+      }
+
+instance Show ObjectEditMode where
+    show = const "<ObjectEditMode>"
+
+data OEMState
+    = OEMState {
+        oem :: ObjectEditMode,
+        oemState :: String
+      }
+  deriving Show
+
+mkOEMState :: Sort_ -> Maybe OEMState
+mkOEMState sort =
+    case objectEditMode_ sort of
+        Nothing -> Nothing
+        Just oem -> Just $ OEMState oem (oemInitialState oem)
+
+enterModeOEM :: Dynamic -> OEMState -> OEMState
+enterModeOEM scene (OEMState oem state) =
+    OEMState oem (oemEnterMode oem scene state)
+
+updateOEM :: Dynamic -> Key -> OEMState -> OEMState
+updateOEM scene k (OEMState oem state) =
+    OEMState oem (oemUpdate oem scene k state)
+
+renderOEM :: Ptr QPainter -> Dynamic -> OEMState -> IO ()
+renderOEM ptr scene (OEMState oem state) =
+    oemRender oem ptr scene state
+
+pickleOEM :: OEMState -> String
+pickleOEM (OEMState _ state) = state
+
+unpickleOEM :: Sort_ -> String -> OEMState
+unpickleOEM sort state =
+    case objectEditMode_ sort of
+        Just x -> OEMState x state
+
+
+
+
 
 

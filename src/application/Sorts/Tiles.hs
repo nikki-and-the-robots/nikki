@@ -1,4 +1,5 @@
-{-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances #-}
+{-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances,
+     DeriveDataTypeable #-}
 
 module Sorts.Tiles (
     sorts
@@ -9,6 +10,7 @@ import Utils
 
 -- import Data.Map hiding (map, filter, size)
 import Data.Abelian
+import Data.Generics
 
 import Control.Applicative ((<$>))
 
@@ -22,7 +24,7 @@ import Physics.Chipmunk as CM
 import Base.Sprited
 
 import Object.Types as OT
--- import Object.Collisions
+import Object.Contacts
 -- import Object.Animation
 
 
@@ -44,8 +46,10 @@ data TSort = TSort {
     pixmap :: Ptr QPixmap,
     tsize :: (Size Int)
   }
+    deriving Typeable
 
 data Tile = Tile (Ptr QPixmap) Chipmunk
+    deriving Typeable
 
 instance Sort TSort Tile where
     sortId sort = SortId $ dropExtension $ path sort
@@ -57,7 +61,7 @@ instance Sort TSort Tile where
 
     collisionType = const TileCT
 
-    initialize sort space editorPosition = do
+    initialize sort space editorPosition Nothing = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             collisionType_ = OT.collisionType sort
             shapesWithAttributes =
@@ -73,7 +77,7 @@ instance Sort TSort Tile where
 
     update tile _ _ _ = return tile
 
-    render (Tile pixmap chip) ptr offset = do
+    render (Tile pixmap chip) sort ptr offset = do
         renderChipmunk ptr offset pixmap chip
 --         resetMatrix ptr
 --         translate ptr offset

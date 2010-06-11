@@ -9,32 +9,20 @@
 module Object where
 
 
--- import Utils
-
 import Graphics.Qt as Qt
 
--- import Physics.Chipmunk as CM
-
 import Base.Events
--- import Base.Sprited
+import Base.Constants
 
 import Game.Scene.Types
 
-import Object.Collisions
-import Object.Animation
 import Object.Types
-
--- import qualified Object.Nikki as Nikki
--- import qualified Object.Robots as Robots
--- import qualified Object.Tiles as Tiles
--- import qualified Object.Terminal as Terminals
--- import qualified Object.MilkMachine as MilkMachine
--- import qualified Object.Box as Box
+import Object.Contacts
 
 
 -- * updating
 
-updateObject :: Scene -> Seconds -> Collisions Object_ -> (Bool, ControlData)
+updateObject :: Scene -> Seconds -> Contacts -> (Bool, ControlData)
     -> Object_ -> IO Object_
 updateObject scene seconds collisions cd object =
     update_ object seconds collisions cd

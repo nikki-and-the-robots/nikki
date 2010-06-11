@@ -16,36 +16,31 @@ module Editor.Scene (
     renderScene,
   ) where
 
-import Utils
-import Base.Constants
-
 import Data.Maybe
 import Data.Map hiding (map, filter, mapMaybe)
 import Data.List
 import Data.SelectTree
 import qualified Data.Indexable as I
-import Data.Indexable (Index, (>:))
+import Data.Indexable (Index, (>:), modifyByIndex)
 import Control.Monad.FunctorM
 import Data.Menu hiding (selected)
 import Data.Abelian
--- import Data.Generics.Uniplate.Data
+import Data.Dynamic
 
 import Control.Monad.State
 import Control.Applicative ((<$>))
 
-import Graphics.Qt
-
 import System.FilePath
 
-import Base.Grounds
+import Graphics.Qt
 
-import Base.Sprited
+import Utils
+
+import Base.Constants
+import Base.Grounds
+-- import Base.Sprited
 
 import Object.Types
-import qualified Sorts.Nikki
-import qualified Sorts.Terminal
-import qualified Sorts.Tiles
-import qualified Sorts.Robots.Jetpack
 
 import Editor.Scene.Types
 import Editor.Scene.Menu as Menu
@@ -58,7 +53,7 @@ searchSelectedObject :: EditorScene -> Maybe Index
 searchSelectedObject s@EditorScene{selectedLayer} =
     let indices = I.findIndices isSelected (content (objects s !|| selectedLayer))
         isSelected o = lowerCorner o == cursor s
-        lowerCorner o = fst o
+        lowerCorner o = editorPosition o
     in case indices of
         [] -> Nothing
         ll -> Just $ last ll
@@ -71,40 +66,21 @@ normSelected x = x
 
 -- * constructors
 
--- constructs initial objects out of sprites and the cursor position
-mkEditorObject :: Position Double -> Sprited -> EditorObject
-{-mkEditorObject p s | spritedIsSomething s "terminals" (Name "terminal-main") =
-    ETerminal (leftLower2leftUpper s p) s []
-mkEditorObject p s | spritedIsSomething s "nikki" (Name "nikki") =
-    ENikki (leftLower2leftUpper s p) s
-mkEditorObject p s | spritedInDirectory s "robots" =
-    ERobot (leftLower2leftUpper s p) s
-mkEditorObject p s | spritedIsSomething s "tiles/architecture" (Name "milky") =
-    EMilkMachine (leftLower2leftUpper s p) s
-mkEditorObject p s | any (spritedInDirectory s) ["tiles", "backgrounds", "multilayers"] =
-    ETile (leftLower2leftUpper s p) s
-mkEditorObject p s | spritedInDirectory s "objects" =
-    EBox (leftLower2leftUpper s p) s-}
-mkEditorObject p s = es "mkEditorObject" s
-
 -- returns if a Sprited comes from the given directory (relative to pngDir)
-spritedInDirectory :: Sprited -> FilePath -> Bool
-spritedInDirectory s path = (pngDir </> path) `isPrefixOf` loadedSpritedDir s
+-- spritedInDirectory :: Sprited -> FilePath -> Bool
+-- spritedInDirectory s path = (pngDir </> path) `isPrefixOf` loadedSpritedDir s
 
 -- returns if a sprited corresponds to a given path (from pngDir) and Name.
-spritedIsSomething :: Sprited -> FilePath -> Name -> Bool
-spritedIsSomething s path name =
-    spritedInDirectory s path &&
-    name == loadedSpritedName s
+-- spritedIsSomething :: Sprited -> FilePath -> Name -> Bool
+-- spritedIsSomething s path name =
+--     spritedInDirectory s path &&
+--     name == loadedSpritedName s
 
 -- | the initial editor scene
-initScene :: Maybe (String, Grounds PickleObject) -> IO EditorScene
-initScene mObjects = flip evalStateT empty $ do
+initScene :: [IO [Sort_]] -> Maybe (String, Grounds PickleObject) -> IO EditorScene
+initScene sortLoaders mObjects = flip evalStateT empty $ do
 
-    availables <- liftIO lookupObjects >>= fmapM loadSprited
-    availableBackgrounds <- liftIO lookupBackgrounds >>= fmapM loadSprited
-
-    sorts <- liftIO $ getAllSorts
+    sorts <- liftIO $ getAllSorts sortLoaders
 
     let (name, objects :: Grounds EditorObject) = case mObjects of
                 Nothing -> (Nothing, emptyGrounds)
@@ -120,21 +96,15 @@ initScene mObjects = flip evalStateT empty $ do
         objects = objects,
         selectedLayer = MainLayer,
         selected = Nothing,
+        objectEditModeIndex = Nothing,
         debugMsgs = []
       }
 
-getAllSorts :: IO (SelectTree Sort_)
-getAllSorts = do
+getAllSorts :: [IO [Sort_]] -> IO (SelectTree Sort_)
+getAllSorts sortLoaders = do
     sorts <- concat <$> mapM id sortLoaders
     return $ Node "editor-Tiles" (I.fromList $ map Leaf sorts) 0
 
-sortLoaders :: [IO [Sort_]]
-sortLoaders = [
-    map mkSort_ <$> Sorts.Nikki.sorts,
-    map mkSort_ <$> Sorts.Terminal.sorts,
-    map mkSort_ <$> Sorts.Robots.Jetpack.sorts,
-    map mkSort_ <$> Sorts.Tiles.sorts
-  ]
 
 
 -- * manipulating
@@ -153,6 +123,27 @@ updateScene (ControlData events held) scene =
 keyPress :: Key -> EditorScene -> EditorScene
 
 -- * Main Editor mode
+
+-- * object edit mode
+keyPress Escape s@EditorScene{objectEditModeIndex = Just i} =
+    s{objectEditModeIndex = Nothing}
+keyPress x s@EditorScene{objectEditModeIndex = Just i} =
+    s{objects = objects'}
+  where
+    objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ objects s
+    mod :: OEMState -> OEMState
+    mod = updateOEM (toDyn s) x
+
+keyPress Enter s@EditorScene{} =
+    case selected s of
+        Nothing -> s
+        Just i -> case mkOEMState $ editorSort $ getMainObject s i of
+            Nothing -> s
+            Just _ -> s{objectEditModeIndex = Just i, objects = objects'}
+              where
+                objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ objects s
+                mod :: OEMState -> OEMState
+                mod = enterModeOEM (toDyn s)
 
 -- arrow keys
 keyPress LeftArrow scene@EditorScene{cursor = (EditorPosition x y)} =
@@ -173,7 +164,7 @@ keyPress Space scene@EditorScene{cursor, selectedLayer} =
     scene{objects = objects'}
   where
     objects' = modifySelectedLayer selectedLayer (modifyContent (>: new)) (objects scene)
-    new = (cursor, selectedSort)
+    new = mkEditorObject selectedSort cursor
     selectedSort = getSelected $ sorts scene
 
 -- delete selected object
@@ -203,38 +194,6 @@ keyPress Plus s@EditorScene{objects, selectedLayer} =
 keyPress Minus s@EditorScene{objects, selectedLayer} =
     s{selectedLayer = modifyGroundsIndex objects (subtract 1) selectedLayer}
 
-
-
--- * TerminalScene
-
--- mode changing
-keyPress Enter s@EditorScene{} = e "Enter"
--- | Just (ETerminal _ _ associated) <- getSelectedObject s =
---     TerminalScene s (getRobotIndices s) (fromJust $ selected s) associated []
-keyPress Escape s@TerminalScene{} =
-    e "TerminalScene"
---     (mainScene s){objects = newObjects}
---   where
---     newObjects = modifyMainLayer setTerminal oldObjects
---     setTerminal = modifyByIndex
---         (flip setAssociatedRobots (tmSelectedRobots s))
---         (tmTerminalIndex s)
---     oldObjects = objects $ mainScene s
-
-keyPress RightArrow s@TerminalScene{tmAvailableRobots = rs} =
-   s{tmAvailableRobots = Utils.rotate rs}
-keyPress LeftArrow s@TerminalScene{tmAvailableRobots = rs} =
-   s{tmAvailableRobots = Utils.rotateBack rs}
-keyPress Space s@TerminalScene{tmAvailableRobots = (new : rrs)} =
-    s{tmSelectedRobots = switchElement new oldList}
-  where
-    oldList = tmSelectedRobots s
-    switchElement :: Eq a => a -> [a] -> [a]
-    switchElement needle hay =
-        if needle `elem` hay then
-            filter (/= needle) hay
-          else
-            hay +: needle
 
 -- * Menus
 

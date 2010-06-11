@@ -8,39 +8,35 @@ import Prelude hiding (readFile, writeFile)
 import Utils
 
 import qualified Data.Indexable as I
-import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
+-- import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
 -- import Data.Binary
 -- import qualified Data.ByteString.Lazy as ByteString (ByteString, writeFile, readFile)
 
 -- import Codec.Compression.Zlib
 
-import Control.Monad
+-- import Control.Monad
 -- import Control.Applicative ((<$>))
 
 import System
 import System.FilePath
 import qualified System.IO as IO
 
+import Physics.Chipmunk
+
 -- import Base.Sprited
 import Base.Grounds
 import Base.Constants
 
 import Object.Types as Object
-import Object.Collisions
 
 import Game.Scene
 import Game.Scene.Types
 import Game.Scene.Camera
-import Game.Modes.Terminal
+-- import Game.Modes.Terminal
 
 import Editor.Scene as ES
 
-
-mkScene :: Grounds Object_ -> IO Scene
-mkScene objects = do
-    let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
-    osdSpriteds <- initialOsdSpriteds
-    return $ Scene 0 0 objects nikki initialCameraState nikki emptyCollisions Nothing osdSpriteds
+import Object.Contacts
 
 
 -- * IO stuff

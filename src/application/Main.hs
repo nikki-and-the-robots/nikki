@@ -27,12 +27,13 @@ import qualified Base.Configuration as Conf
 import Object.Types
 
 import Game.MainLoop as Game
-import Game.Scene (Scene, sceneInitCollisions)
+import Game.Scene (Scene)
 import Game.OptimizeChipmunks
 
 import Editor.Scene
 
 import Top.Pickle
+import Top.Initialisation
 
 
 type MM o = StateT AppState IO o
@@ -56,10 +57,11 @@ setLevelTesting  (AppState a b c d _) e = AppState a b c d e
 -- initialStateRef :: Ptr QApplication -> Ptr AppWidget -> Maybe (String, Grounds UnloadedEditorObject) -> IO (IORef AppState)
 initialStateRef app widget mObjects = initialState app widget mObjects >>= newIORef
 
--- initialState :: Ptr QApplication -> Ptr AppWidget -> Maybe (String, Grounds UnloadedEditorObject)
---     -> IO AppState
+initialState :: Ptr QApplication -> Ptr AppWidget
+    -> Maybe (String, Grounds PickleObject)
+    -> IO AppState
 initialState app widget mObjects = do
-    is <- initScene mObjects
+    is <- initScene sortLoaders mObjects
     return $ AppState app widget empty is Nothing
 
 main :: IO ()
@@ -92,6 +94,7 @@ main = globalCatcher $ do
     exitWith ec
 
 
+
 renderCallback :: IORef AppState -> [QtEvent] -> Ptr QPainter -> IO ()
 renderCallback stateRef qtEvents painter = do
     state <- readIORef stateRef
@@ -111,7 +114,7 @@ actualizeKeyState events = do
 renderWithState :: [QtEvent] -> Ptr QPainter -> MM ()
 renderWithState events painter = do
 
-    -- * switch to testing mode
+    -- switch to testing mode
     when (KeyPress T `elem` events) $ do
         lt <- gets levelTesting
         case lt of
@@ -154,9 +157,8 @@ debugScene = do
 initSceneFromEditor :: Space -> Grounds EditorObject -> IO Scene
 initSceneFromEditor space =
     fmapM (eObject2Object space) >=>
-    mkScene >=>
-    optimizeChipmunks >=>
-    sceneInitCollisions space
+    mkScene space >=>
+    optimizeChipmunks
 
 
 -- not used as we have only one executable now.

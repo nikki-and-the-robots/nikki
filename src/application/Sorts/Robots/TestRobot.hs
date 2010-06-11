@@ -17,7 +17,7 @@ module Object.Robots.TestRobot where
 -- 
 -- import Game.Scene.Types
 -- 
--- import Object.Collisions
+-- import Object.ContactRef
 -- import Object.Animation
 -- import Object.Types as Object
 

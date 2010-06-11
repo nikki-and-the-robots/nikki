@@ -5,8 +5,6 @@ module Physics.Chipmunk.DebugGrid (
   ) where
 
 
-import Data.Abelian
-
 import Graphics.Qt as Qt
 
 import Physics.Hipmunk

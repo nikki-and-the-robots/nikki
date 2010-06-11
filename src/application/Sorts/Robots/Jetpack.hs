@@ -1,4 +1,5 @@
-{-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses #-}
+{-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
+     DeriveDataTypeable #-}
 
 module Sorts.Robots.Jetpack (sorts) where
 
@@ -8,6 +9,7 @@ module Sorts.Robots.Jetpack (sorts) where
 import Data.Abelian
 import Data.Maybe
 import Data.Directions
+import Data.Generics
 
 import Control.Monad.Compose
 
@@ -25,6 +27,7 @@ import Base.Events
 -- 
 -- import Object.Animation
 import Object.Types as OT
+import Object.Contacts
 -- import Object.Robots.Types
 
 
@@ -41,6 +44,7 @@ data RSort = RSort {
     pixmapS :: Ptr QPixmap,
     rsize :: Size Int
   }
+    deriving Typeable
 
 data Jetpack = Jetpack {
     pixmap :: Ptr QPixmap,
@@ -49,6 +53,7 @@ data Jetpack = Jetpack {
     direction :: Maybe HorizontalDirection
 --         robotAnimation :: Animation
   }
+    deriving Typeable
 
 
 instance Sort RSort Jetpack where
@@ -58,7 +63,7 @@ instance Sort RSort Jetpack where
     sortRender sort =
         sortRenderSinglePixmap (pixmapS sort) sort
 
-    initialize sort space ep = do
+    initialize sort space ep Nothing = do
         let 
             pos = qtPositionToVector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
@@ -83,7 +88,7 @@ instance Sort RSort Jetpack where
     --         pure (modifyRobotState (updateAnimationState now isControlled)) >=>
             controlToChipmunk
 
-    render jetpack ptr offset = do
+    render jetpack sort ptr offset = do
 --         let pixmap = animationPixmap animation sprited
         renderChipmunk ptr offset (pixmap jetpack) (jchipmunk jetpack)
 
@@ -148,22 +153,22 @@ mkPolys (Size w h) =
 jupdate :: (Bool, ControlData) -> Jetpack -> Jetpack
 jupdate (False, _) (Jetpack pixmap chip _ _)  =
     Jetpack pixmap chip False Nothing -- robotAnimation
--- updateState (True, (ControlData _ held)) (JetpackState _ _ animation) =
---     JetpackState boost direction animation
---   where
---     boost = aButton
---     direction =
---         if left then
---             if right then Nothing else Just HLeft
---           else if right then
---             Just HRight
---           else
---             Nothing
--- 
---     aButton = AButton `elem` held
---     left = LeftButton `elem` held
---     right = RightButton `elem` held
--- 
+jupdate (True, (ControlData _ held)) (Jetpack pix chip _ _) =
+    Jetpack pix chip boost direction
+  where
+    boost = aButton
+    direction =
+        if left then
+            if right then Nothing else Just HLeft
+          else if right then
+            Just HRight
+          else
+            Nothing
+
+    aButton = AButton `elem` held
+    left = LeftButton `elem` held
+    right = RightButton `elem` held
+
 -- -- * Animation update
 -- 
 -- updateAnimationState :: Seconds -> Bool -> RobotState -> RobotState

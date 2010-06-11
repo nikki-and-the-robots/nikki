@@ -67,6 +67,8 @@ key2button = fromList [
 
     , (LeftArrow, LeftButton)
     , (RightArrow, RightButton)
+    , (UpArrow, UpButton)
+    , (DownArrow, DownButton)
   ]
 
 

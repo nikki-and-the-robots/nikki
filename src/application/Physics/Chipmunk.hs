@@ -37,6 +37,7 @@ module Physics.Chipmunk (
     mapVectors,
     vmap,
     mkRect,
+    module Physics.Chipmunk.ContactRef,
 
     -- re-exports from Physics.Hipmunk
     infinity,
@@ -80,11 +81,6 @@ module Physics.Chipmunk (
 
     setSurfaceVel,
 
-    -- collisions
-    MyCollisionType(..),
-    addMyCallback,
-    Callback(..),
-
   ) where
 
 
@@ -97,8 +93,8 @@ import Control.Applicative ((<$>))
 import Physics.Hipmunk
 
 import Physics.Chipmunk.Types
-import Physics.Chipmunk.CollisionCallbacks
 import Physics.Chipmunk.DebugGrid
+import Physics.Chipmunk.ContactRef
 
 
 
@@ -127,7 +123,7 @@ initSpace gravity = do
     -- global constants
 
     -- Number of frames that contact information should persist.
-    setContactPersistence 0 -- default: 3 (number of frames)
+    setContactPersistence 3 -- default: 3 (number of frames)
 
     -- Amount of allowed penetration. Used to reduce vibrating contacts.
     setCollisionSlop 0.1 -- default: 0.1

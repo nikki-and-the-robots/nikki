@@ -5,6 +5,10 @@ module Base.Constants where
 import System.FilePath
 
 
+-- * Types
+
+type Seconds = Double
+
 -- * Application
 
 windowWidth :: Int
@@ -33,7 +37,11 @@ toKachel = (/ 16) . toUber
 -- * Physics
 
 gravity :: Double
-gravity = 1700
+gravity = 1700 * time
+
+-- how fast the physic works (all forces and accelerations times time)
+time :: Double
+time = 1
 
 -- * file directories
 
@@ -43,3 +51,6 @@ pngDir :: FilePath
 pngDir = "data" </> "png"
 
 levelDir = "levels"
+
+
+

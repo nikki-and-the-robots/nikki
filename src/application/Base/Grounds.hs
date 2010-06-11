@@ -6,12 +6,10 @@ module Base.Grounds where
 import Utils
 
 import Data.Indexable as I
-import Control.Monad.FunctorM
-import Data.Binary
 import Data.Generics
 import Data.List
 
-import Control.Exception
+import Control.Monad.FunctorM
 
 import Graphics.Qt
 

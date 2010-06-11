@@ -1,16 +1,15 @@
-{-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses #-}
+{-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
+     DeriveDataTypeable #-}
 
 module Sorts.Nikki (sorts) where
 
 
-import Utils
-import Base.Constants
-
 import Data.Abelian
 import Data.Map hiding (map, size)
+import Data.Generics
 
 import Control.Monad hiding ((>=>))
--- import Control.Monad.Compose
+import Control.Monad.Compose
 import Control.Arrow
 
 import System.FilePath
@@ -22,15 +21,18 @@ import Sound.SFML
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
 
+import Utils
+
+import Base.Constants
 -- import Base.Sprited
 import Base.Events
 
-import Game.Scene.Types
+-- import Game.Scene.Types
 
 import Object.Types
 -- import Object.Nikki.Types as NikkiTypes
-import Object.Collisions
-import Object.Animation
+-- import Object.Animation
+import Object.Contacts
 
 
 sorts :: IO [NSort]
@@ -56,6 +58,7 @@ data NSort = NSort {
     pixmapsS :: Map State (Ptr QPixmap),
     nsize :: Size Int
   }
+    deriving Typeable
 
 data Nikki
     = Nikki {
@@ -67,6 +70,7 @@ data Nikki
 --         direction :: FrameSetDirection,
 --         animation :: Animation
       }
+  deriving Typeable
 
 data State
     = Wait
@@ -83,12 +87,12 @@ instance Sort NSort Nikki where
 
     sortId _ = SortId "nikki"
 
-    size = fmap (subtract 2) . nsize
+    size = nsize .> fmap (subtract 2)
 
     sortRender sort =
         sortRenderSinglePixmap (pixmapsS sort ! Wait) sort
 
-    initialize sort space editorPosition = do
+    initialize sort space editorPosition Nothing = do
         let (nikkiShapes, baryCenterOffset) = mkPolys $ fmap fromIntegral $ size sort
             pos = qtPositionToVector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
@@ -112,10 +116,9 @@ instance Sort NSort Nikki where
     chipmunk = nchipmunk
 
     update nikki seconds collisions cd =
-        updateNikki (e "scene") seconds collisions cd nikki
+        updateNikki seconds collisions cd nikki
 
---     render :: Object -> Ptr QPainter -> Offset -> IO ()
-    render nikki ptr offset  =
+    render nikki sort ptr offset  =
         renderChipmunk ptr offset (pixmaps nikki ! Wait) (chipmunk nikki)
 
 
@@ -223,10 +226,10 @@ mkPolys (Size w h) =
 -- nikki gets controlled and then the animations get updated.
 -- This is special (because Nikki is not a robot)
 
-updateNikki :: Scene -> Seconds -> Collisions Object_ -> (Bool, ControlData)
+updateNikki :: Seconds -> Contacts -> (Bool, ControlData)
     -> Nikki -> IO Nikki
-updateNikki scene now collisions control =
-    controlBody now collisions control
+updateNikki now contacts control =
+    controlBody now contacts control
 --     >=> updateAnimation
 --   where
 --     updateAnimation (Nikki sprited chipmunk fs js jt state) = do
@@ -257,7 +260,7 @@ maximalJumpingHeight = fromKachel 4.0
 
 -- * Control logic
 
-controlBody :: Seconds -> Collisions Object_ -> (Bool, ControlData)
+controlBody :: Seconds -> Contacts -> (Bool, ControlData)
     -> Nikki -> IO Nikki
 controlBody _ _ (False, _) nikki = do
     let ss = shapes $ nchipmunk nikki

@@ -220,9 +220,7 @@ repeatList :: Int -> [a] -> [a]
 repeatList 0 _ = []
 repeatList n list = list ++ repeatList (n - 1) list
 
-type Mod a = a -> a
-
-applyAll :: [Mod a] -> a -> a
+applyAll :: [a -> a] -> a -> a
 applyAll fs a = foldl (.) id fs a
 
 
@@ -262,11 +260,6 @@ whenMaybe mx cmd =
     case mx of
         Just x -> cmd x
         Nothing -> return ()
-
-runHandler :: [Maybe a] -> Maybe a
-runHandler (Just x : _) = Just x
-runHandler (Nothing : r) = runHandler r
-runHandler [] = Nothing
 
 maybeId :: (a -> Maybe a) -> (a -> a)
 maybeId fun a =

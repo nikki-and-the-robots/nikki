@@ -42,7 +42,7 @@ Executable            nikki
         , zlib
         , Hipmunk
         , sfml-audio
-        , uniplate
+        , safe
 
     if os(linux)
         extra-libraries:

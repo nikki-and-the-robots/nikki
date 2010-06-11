@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns, DeriveDataTypeable, ScopedTypeVariables, ViewPatterns #-}
 
-module Editor.Scene.Rendering (renderScene) where
+module Editor.Scene.Rendering (renderScene, renderObjectScene, transformation) where
 
 import Utils
 
@@ -8,6 +8,7 @@ import Data.SelectTree
 import Data.Color
 import Control.Monad.FunctorM
 import Data.Abelian
+import Data.Dynamic
 
 import Control.Applicative ((<$>))
 
@@ -26,21 +27,21 @@ import Editor.Scene.Rendering.Helpers
 renderScene :: Ptr QPainter -> EditorScene -> IO ()
 renderScene ptr (FinalState _ _) =
     quitQApplication
+renderScene ptr scene@EditorScene{objectEditModeIndex = Just i} =
+    renderOEM ptr (toDyn scene) oemState
+  where
+    Just oemState = editorOEMState $ getMainObject scene i
 renderScene ptr s@EditorScene{} = do
     offset <- calculateRenderTransformation ptr s
-    renderInnerScene ptr offset s
-renderScene ptr s@TerminalScene{} = do
-    offset <- calculateRenderTransformationTerminal ptr s
-
-    renderInnerScene ptr offset $ mainScene s
-    renderTerminalRobotOSDs ptr offset s
+    renderObjectScene ptr offset s
+    renderGUI ptr offset s
 
 renderScene ptr s@MenuScene{mainScene, menu} = do
     renderScene ptr mainScene
     Menu.render ptr menu
 
-renderInnerScene :: Ptr QPainter -> Offset -> EditorScene -> IO ()
-renderInnerScene ptr offset s@EditorScene{} = do
+
+renderObjectScene ptr offset s = do
     size <- fmap fromIntegral <$> sizeQPainter ptr
     clearScreen ptr
     let -- the layers behind the currently selected Layer
@@ -49,7 +50,7 @@ renderInnerScene ptr offset s@EditorScene{} = do
     mapM_ (renderLayer ptr size offset . correctDistances currentLayer)
         (currentBackgrounds +: currentLayer)
 
-    -- OSD
+renderGUI ptr offset s = do
     renderCursor' ptr offset s
 
     renderSelectedIcon ptr (getSelected $ sorts s)
@@ -57,7 +58,7 @@ renderInnerScene ptr offset s@EditorScene{} = do
     renderCursorStepSize ptr $ getCursorStep s
     renderLayerOSD ptr $ selectedLayer s
     whenMaybe (getSelectedObject s) $ \ o ->
-        renderSelectedObject ptr $ snd o
+        renderSelectedObject ptr $ editorSort o
 
 
 renderLayer :: Ptr QPainter -> Size Double -> Offset -> Layer EditorObject -> IO ()
@@ -78,8 +79,8 @@ renderCursor' ptr offset scene = do
 
 -- calculates the rendering position for all objects (does the clipping, etc.)
 calculateRenderTransformation :: Ptr QPainter -> EditorScene -> IO Offset
-calculateRenderTransformation ptr s@TerminalScene{} =
-    calculateRenderTransformation ptr (mainScene s)
+-- calculateRenderTransformation ptr s@TerminalScene{} =
+--     calculateRenderTransformation ptr (mainScene s)
 calculateRenderTransformation ptr s@EditorScene{} = do
     let cursorPos = cursor s
         cursorSize = getCursorSize s
@@ -137,30 +138,4 @@ renderCursorStepSize ptr (EditorPosition x y) = do
     drawText ptr (Position 500 (h - 20)) False ("Step: " ++ show (x, y))
 
 
-calculateRenderTransformationTerminal :: Ptr QPainter -> EditorScene -> IO (Position Double)
-calculateRenderTransformationTerminal ptr scene@TerminalScene{mainScene} =
-    transformation ptr pos size
-  where
-    (pos, size) = case getTerminalMRobot scene of
-        -- use the terminal
-        Nothing -> (cursor mainScene, getCursorSize scene)
---         Just (ERobot (Position x y) sprited) ->
---             error "            (EditorPosition x (y + height size), size)"
---           where
---             size = defaultPixmapSize sprited
-
-renderTerminalRobotOSDs :: Ptr QPainter -> Position Double -> EditorScene -> IO ()
-renderTerminalRobotOSDs ptr offset s = do
-    fail "renderTerminalRobotOSDs"
---     whenMaybe (getTerminalMRobot s) $
---         \ a -> renderRobotBox a orange{alphaC = 0.5}
---     mapM_ (flip renderRobotBox yellow{alphaC = 0.3}) $ map (getObject s) $
---         tmSelectedRobots s
---   where
---     renderRobotBox :: EditorObject -> RGBA -> IO ()
---     renderRobotBox robot color = do
---         let pos = eObjectPosition robot
---             sprited = eObjectSprited robot
---             size = defaultPixmapSize sprited
---         drawColoredBox ptr (pos +~ offset) size 4 color
 

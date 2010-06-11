@@ -38,11 +38,9 @@ import Utils
 import qualified Data.Map as Map
 import Data.Map ((!))
 import Data.List as List
-import Control.Monad.FunctorM
 import Data.Generics
-import Data.Binary
 
-import Control.Applicative ((<$>))
+import Control.Monad.FunctorM
 
 
 newtype Index = Index Int
@@ -95,6 +93,7 @@ toList x = map ((values x) !) $ keys x
 Indexable{values} !!! i =
     case Map.lookup i values of
         Just x -> x
+        Nothing -> error ("!!!: Index not found")
 
 -- | returns the list if indices for which the corresponding
 -- values fullfill a given predicate.

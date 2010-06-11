@@ -44,12 +44,12 @@ drawColoredBox ptr position size thickness (RGBA r g b a) = do
 
 -- | renders the given object (with the given Transformation)
 renderEditorObject :: Ptr QPainter -> Offset -> EditorObject -> IO ()
-renderEditorObject ptr offset (position, sort) = do
+renderEditorObject ptr offset eo = do
 --     let sprited = eObjectSprited o
 --         pos = eObjectPosition o
 --         pix = defaultPixmap sprited
 --     renderAvailableObject ptr (offset +~ pos) sprited
-    sortRender_ sort ptr offset position Nothing
+    sortRender_ (editorSort eo) ptr offset (editorPosition eo) Nothing
 
 
 

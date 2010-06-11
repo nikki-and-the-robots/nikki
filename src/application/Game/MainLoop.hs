@@ -32,7 +32,7 @@ import Base.Events
 
 import Game.FPSState
 import Game.Scene
-import Game.Scene.Types
+-- import Game.Scene.Types
 
 
 initialSize :: Size Int
@@ -117,9 +117,9 @@ renderWithState events painter = do
     actualizeFPS
 
     puts setScene sc'
-    case sc' of
-        FinalState x -> liftIO (print x) >> sendQuit
-        _ -> return ()
+--     case sc' of
+--         FinalState x -> liftIO (print x) >> sendQuit
+--         _ -> return ()
 
 -- | returns the time passed since program start
 getSecs :: AppMonad Double

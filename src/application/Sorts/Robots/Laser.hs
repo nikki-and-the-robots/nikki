@@ -26,7 +26,7 @@ module Object.Robots.Laser where
 -- 
 -- import Game.Scene.Types
 -- 
--- import Object.Collisions
+-- import Object.ContactRef
 -- import Object.Animation
 -- import Object.Types as Object
 -- import Object.Robots.Types

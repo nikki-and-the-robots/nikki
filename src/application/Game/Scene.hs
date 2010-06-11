@@ -1,21 +1,18 @@
-{-# language NamedFieldPuns, ScopedTypeVariables #-}
+{-# language NamedFieldPuns, ScopedTypeVariables, ViewPatterns #-}
 
 module Game.Scene (
     Scene,
-
-    sceneInitCollisions,
---     sceneInitChipmunks,
-
     stepScene,
   ) where
 
 
-import Data.Indexable (Index, fmapMWithIndex)
+import Data.Indexable (Indexable, Index, fmapMWithIndex, findIndices)
 import Data.Abelian
+import Data.Dynamic
+import qualified Data.Set as Set
 
 import Control.Monad.State hiding ((>=>), (<=<))
 import Control.Monad.Compose
-import Control.Concurrent
 import Control.Monad.FunctorM
 
 import Graphics.Qt as Qt
@@ -27,29 +24,26 @@ import Utils
 import Base.Events
 import Base.Grounds
 import Base.Configuration as Configuration
+import Base.Constants
 
 import Object
 import Object.Types
 -- import qualified Object.Terminal as Terminal
-import Object.Collisions
-import Object.Animation
+-- import Object.Animation
+import Object.Contacts
 
 import Game.Scene.Types
 import Game.Scene.Camera
-import qualified Game.Modes.Terminal as TerminalMode
+-- import qualified Game.Modes.Terminal as TerminalMode
 
-
+import Sorts.Terminal
 
 
 -- * Initialisation
 
--- | initializes the collisions logick
-sceneInitCollisions :: Space -> Scene -> IO Scene
-sceneInitCollisions space s@Scene{objects, collisions} = do
-    cs' <- initCollisions space (mainLayerIndexable objects) collisions
-    return s{collisions = cs'}
 
--- | initializes all chipmunk objects in the MainLayer and all Animations
+
+-- initializes all chipmunk objects in the MainLayer and all Animations
 -- sceneInitChipmunks :: Space -> Scene -> IO Scene
 -- sceneInitChipmunks space scene@Scene{objects, osdSpriteds} = do
 --     e "sceneInitChipmunks"
@@ -84,15 +78,10 @@ stepScene now space controlData ptr =
 
 -- * step time measurement
 
--- | updates the passedTime variable
--- time passes in normal Game mode
--- time does NOT pass in Terminal mode
+-- | updates the fields now and oldNow
 updateNow :: Seconds -> Scene -> Scene
 updateNow now' scene@Scene{now} =
     scene{now = now', oldNow = now}
--- updatePassedTime now scene@TerminalMode{innerScene} = do
---     let innerScene' = innerScene{now = now, passedTime = 0}
---     return scene{innerScene = innerScene'}
 
 
 -- * State automaton stuff
@@ -100,74 +89,82 @@ updateNow now' scene@Scene{now} =
 transition :: Scene -> ControlData -> (Maybe Scene)
 transition scene (ControlData pushed _) = runHandler [
     nikkiToTerminal scene pushed,
-    terminalToNikki scene pushed,
-    terminalToRobots scene pushed,
-    robotsToTerminal scene pushed,
+    terminalExit scene,
+    robotToTerminal scene pushed,
     gameOver scene,
     levelPassed scene
   ]
 
+runHandler :: [Maybe Scene] -> Maybe Scene
+runHandler (Just scene : _) = Just $ sendStartControl scene
+  where
+    sendStartControl :: Scene -> Scene
+    sendStartControl scene = 
+        modifyMainByIndex startControl_ (getControlledIndex scene) scene
+runHandler (Nothing : r) = runHandler r
+runHandler [] = Nothing
+
+
 -- | converts the Scene to TerminalMode, if appropriate
 nikkiToTerminal :: Scene -> [AppEvent] -> (Maybe Scene)
--- nikkiToTerminal scene@Scene{controlled} pushed
---   | bPressed && isNikkiMode scene && beforeTerminal
---     = Just $ TerminalMode scene{controlled = terminal} terminal robots
---   where
---     bPressed = Press BButton `elem` pushed
---     beforeTerminal = nikkiTouchesTerminal $ collisions scene
-
---     terminal = whichTerminalCollides $ collisions scene
---     robots = Terminal.terminalRobots $ terminalState
---                 (mainLayerIndexable (objects scene) !!! terminal)
-nikkiToTerminal _ _ = Nothing
-
-terminalToNikki :: Scene -> [AppEvent] -> (Maybe Scene)
-{-terminalToNikki scene@TerminalMode{} pushed
-    | bReleased && nikkiSelected =
-    Just $ innerScene'{controlled = nikki innerScene', mTerminal = Nothing}
-  where
-    bReleased = Release BButton `elem` pushed
-    nikkiSelected = not $ Terminals.isRobotSelected $ terminalState $ getControlled scene
-    innerScene' = innerScene scene-}
-terminalToNikki _ _ = Nothing
-
-terminalToRobots :: Scene -> [AppEvent] -> (Maybe Scene)
-{-terminalToRobots scene@TerminalMode{innerScene, robots, terminal} pushed
-    | bReleased && robotSelected =
-    Just innerScene{controlled = robotIndex, mTerminal = Just terminal}
-  where
-    bReleased = Release BButton `elem` pushed
-    robotSelected = Terminals.isRobotSelected $ terminalState $ getControlled scene
-    robotIndex =
-        robots !!
-            (Terminals.terminalSelected (terminalState (sceneGetMainObject innerScene terminal)))-}
-terminalToRobots _ _ = Nothing
-
--- | converts from RobotMode to TerminalMode, if appropriate
-robotsToTerminal :: Scene -> [AppEvent] -> (Maybe Scene)
-{-robotsToTerminal scene@Scene{mTerminal = Just terminal} pushed
-  | bPressed && isRobotMode scene =
-    Just $ initTheLights $
-      modifyControlled (modifyTerminalState (Terminals.modifyIsRobotSelected (const False))) $
-        TerminalMode scene{controlled = terminal} terminal robots
+nikkiToTerminal scene@Scene{mode = (NikkiMode nikki)} pushed
+    | bPressed && beforeTerminal
+        = Just $ scene {mode = mode'}
   where
     bPressed = Press BButton `elem` pushed
+    beforeTerminal = nikkiTouchesTerminal $ (snd (contacts scene) <<? "contacts")
 
-    robots = Terminals.terminalRobots $ terminalState
-                (mainLayerIndexable (objects scene) !!! terminal)
+    mode' = TerminalMode nikki terminal
+    terminal = whichTerminalCollides scene
+nikkiToTerminal _ _ = Nothing
 
-    -- | switch TerminalLights to initialLights
-    initTheLights = modifySelectedTerminal initialTerminalLights-}
-robotsToTerminal _ _ = Nothing
+
+whichTerminalCollides :: Scene -> Index
+whichTerminalCollides Scene{objects, contacts} =
+    case findIndices p allTerminals of
+        (a : _) -> a
+  where
+    allTerminals :: Indexable (Maybe Terminal)
+    allTerminals = fmap dynamicToTerminal $ content $ mainLayer objects
+
+    p :: Maybe Terminal -> Bool
+    p Nothing = False
+    p (Just t) = any (\ shape -> hasTerminalShape t shape) collidingShapes
+    collidingShapes :: [Shape]
+    collidingShapes = contacts |> snd |> terminals |> Set.toList
+
+dynamicToTerminal :: Object_ -> Maybe Terminal
+dynamicToTerminal = unwrapObject .> fromDynamic
+
+terminalExit :: Scene -> (Maybe Scene)
+terminalExit scene@Scene{mode = TerminalMode{nikki, terminal}} =
+    case dynamicToTerminal $ getMainObject scene terminal of
+        Just t -> case exitMode t of
+            DontExit -> Nothing
+            ExitToNikki ->
+                Just scene{mode = NikkiMode nikki}
+            ExitToRobot robot ->
+                Just scene{mode = RobotMode nikki terminal robot}
+terminalExit _ = Nothing
+
+
+-- | converts from RobotMode to TerminalMode, if appropriate
+robotToTerminal :: Scene -> [AppEvent] -> (Maybe Scene)
+robotToTerminal scene@Scene{mode = RobotMode{nikki, terminal}} pushed
+  | bPress =
+    Just $ scene{mode = TerminalMode nikki terminal}
+  where
+    bPress = Press BButton `elem` pushed
+robotToTerminal _ _ = Nothing
 
 gameOver :: Scene -> Maybe Scene
-gameOver scene@Scene{collisions} | nikkiTouchesLaser collisions =
-    Just $ FinalState FailedLevel
+gameOver scene | nikkiTouchesLaser $ snd $ contacts scene =
+    Just $ modifyMode (const $ LevelFinished Failed) scene
 gameOver _ = Nothing
 
 levelPassed :: Scene -> Maybe Scene
-levelPassed scene@Scene{collisions} | nikkiTouchesMilkMachine collisions =
-    Just $ FinalState PassedLevel
+levelPassed scene | nikkiTouchesMilkMachine $ snd $ contacts scene =
+    Just $ modifyMode (const $ LevelFinished Passed) scene
 levelPassed _ = Nothing
 
 
@@ -184,8 +181,6 @@ stepSpace space s@Scene{now, oldNow} = do
     stepQuantums :: Seconds -> Int
     stepQuantums t = truncate (t / stepQuantum)
 
-stepSpace _ s@TerminalMode{} = return ()
-
 singleStepTime :: Fractional n => n
 singleStepTime = 0.1
 
@@ -193,24 +188,16 @@ singleStepTime = 0.1
 
 -- | updates every object
 updateScene :: ControlData -> Scene -> IO Scene
-updateScene cd scene@Scene{now, objects, controlled, collisions} = do
+updateScene cd scene@Scene{now, objects, contacts = (contactRef, contacts)} = do
     -- TODO: which order?
-    collisions' <- updateCollisions (mainLayerIndexable objects) collisions
-    objects' <- sceneUpdateObjects collisions' now cd controlled scene objects
-    return $ scene{objects = objects', collisions = collisions'}
-
-updateScene cd scene@TerminalMode{innerScene} = do
-    let Scene{now, objects, controlled, collisions} = innerScene
-    -- TODO: which order?
-    collisions' <- updateCollisions (mainLayerIndexable objects) collisions
-    objects' <- sceneUpdateObjects collisions' now cd controlled scene objects
-    let innerScene' = innerScene{objects = objects', collisions = collisions'}
-
-    return scene{innerScene = innerScene'}
+    let controlledIndex = getControlledIndex scene
+    contacts' <- peekContacts contactRef
+    objects' <- sceneUpdateObjects contacts' now cd controlledIndex scene objects
+    return $ scene{objects = objects', contacts = (contactRef, contacts')}
 
 
 -- | updates all objects
-sceneUpdateObjects :: Collisions Object_ -> Seconds -> ControlData -> Index -> Scene
+sceneUpdateObjects :: Contacts -> Seconds -> ControlData -> Index -> Scene
     -> Grounds Object_ -> IO (Grounds Object_)
 sceneUpdateObjects collisions now cd controlled scene grounds = do
     let (Grounds backgrounds mainLayer foregrounds) = grounds
@@ -268,11 +255,11 @@ renderScene ptr scene@Scene{} = do
 
     return scene{cameraState = cameraState'}
 
-renderScene ptr scene@TerminalMode{innerScene} = do
-    innerScene' <- renderScene ptr innerScene
-    let scene' = scene{innerScene = innerScene'}
-    TerminalMode.renderOSD ptr scene'
-    return scene'
+-- renderScene ptr scene@TerminalMode{innerScene} = do
+--     innerScene' <- renderScene ptr innerScene
+--     let scene' = scene{innerScene = innerScene'}
+--     TerminalMode.renderOSD ptr scene'
+--     return scene'
 
 -- | renders the different Layers.
 -- makes sure, everything is rendered ok.
