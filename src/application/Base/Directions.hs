@@ -1,5 +1,5 @@
 
-module Data.Directions where
+module Base.Directions where
 
 
 data HorizontalDirection = HLeft | HRight

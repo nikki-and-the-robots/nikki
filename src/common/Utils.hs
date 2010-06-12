@@ -80,13 +80,6 @@ toDebug :: Show s => String -> s -> String
 toDebug msg s = msg ++ ": " ++ show s
 
 
-
-
--- * useful instances
-
--- instance Show (IORef Bool) where
---     show _ = "<IORef Bool>"
-
 -- * scripting stuff
 
 -- | executes a unix command on the shell and exits if it does not succeed.
@@ -284,6 +277,11 @@ a ~= b = distance a b < epsilon
 epsilon :: Fractional n => n
 epsilon = 0.001
 
+divide :: Double -> Double -> (Int, Double)
+divide a b = (n, f * b)
+  where
+    (n, f) = properFraction (a / b) 
+
 -- | folds the given number to the given range
 -- range is including lower bound and excluding upper bound
 -- TODO: is O(a), could be constant (using properFraction)
@@ -363,6 +361,10 @@ swapOrdering LT = GT
 swapOrdering GT = LT
 swapOrdering EQ = EQ
 
+xor :: Bool -> Bool -> Bool
+xor True True = False
+xor a b = a || b
+
 
 -- * Pretty Printing
 
@@ -407,15 +409,6 @@ assertDirectoryExists path = do
     assertIO exists (canonicalPath ++ " is not a directory")
 
 
--- Binary test
-testB :: (B.Binary a, Show a) => a -> IO ()
-testB x = do
-    print x
-    print $ compress $ B.encode x
-    let got = asTypeOf (B.decode $ decompress $ compress $ B.encode x) x
-    print got
-    print (show x == show got)
-    error "yay"
 
 
 

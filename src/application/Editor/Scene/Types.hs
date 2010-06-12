@@ -91,7 +91,7 @@ getRobotIndices :: EditorScene -> [Index]
 getRobotIndices EditorScene{objects} =
     I.findIndices (isRobot . editorSort) $ content $ mainLayer objects
 
-getCursorSize :: EditorScene -> (Size Int)
+getCursorSize :: EditorScene -> (Size Double)
 getCursorSize s@EditorScene{} =
     size_ $ getSelected $ sorts s
 

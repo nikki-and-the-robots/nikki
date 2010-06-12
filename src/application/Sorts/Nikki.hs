@@ -1,5 +1,7 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
-     DeriveDataTypeable #-}
+     DeriveDataTypeable, FlexibleInstances #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
+
 
 module Sorts.Nikki (sorts) where
 
@@ -7,9 +9,13 @@ module Sorts.Nikki (sorts) where
 import Data.Abelian
 import Data.Map hiding (map, size)
 import Data.Generics
+import Data.Initial
 
 import Control.Monad hiding ((>=>))
+import Control.Monad.Compose
+import Control.Monad.FunctorM
 import Control.Arrow
+import Control.Applicative
 
 import System.FilePath
 
@@ -23,64 +29,129 @@ import Physics.Chipmunk hiding (position, Position)
 import Utils
 
 import Base.Constants
--- import Base.Sprited
 import Base.Events
-
--- import Game.Scene.Types
+import Base.Directions
+import Base.Animation
 
 import Object.Types
--- import Object.Nikki.Types as NikkiTypes
--- import Object.Animation
 import Object.Contacts
+
+-- * Configuration
+
+-- physic
+
+elasticity_ = 0.0
+
+-- there are some values to fine tune the behaviour of nikki. The aim is to keep the number
+-- of fine tuners small.
+
+nikkiMass = 2.5
+
+-- friction for nikkis feet. The higher the friction,
+-- the faster nikki will gain maximum walking speed.
+nikkiFeetFriction = 0.5
+
+-- maximum walking speed (pixel per second)
+walkingVelocity = fromUber 90
+
+-- minimal jumping height (for calculating the impulse strength)
+minimalJumpingHeight = fromKachel 0.7
+
+-- maximal jumping height (created with decreased gravity (aka anti-gravity force))
+maximalJumpingHeight = fromKachel 4.0
+
+
+-- animation times 
+
+frameTimesMap :: Map RenderState [(Int, Seconds)]
+frameTimesMap = fromList [
+    (Wait HLeft, wait),
+    (Wait HRight, wait),
+    (Walk HLeft,  walk),
+    (Walk HRight, walk),
+    (Jump HLeft,  jump),
+    (Jump HRight, jump),
+    (UsingTerminal HLeft, terminal),
+    (UsingTerminal HRight, terminal)
+      ]
+  where
+    wait = zip
+        (0 : cycle [1, 2, 1, 2, 1, 2, 1])
+        (1 : cycle [1.5, 0.15, 3, 0.15, 0.1, 0.15, 1])
+    walk = zip
+        (cycle [0..3])
+        (repeat 0.15)
+    jump = zip
+       (0 : repeat 1)
+       (0.6 : repeat 10)
+    terminal = repeat (0, 10)
 
 
 sorts :: IO [NSort]
 sorts = do
     pixmaps <- loadPixmaps
-    size <- sizeQPixmap (pixmaps ! Wait)
+    size <- fmap fromIntegral <$> sizeQPixmap (defaultPixmap pixmaps)
     let r = NSort pixmaps size
     return [r]
 
-loadPixmaps :: IO (Map State (Ptr QPixmap))
+loadPixmaps :: IO (Map RenderState [Ptr QPixmap])
 loadPixmaps = do
-    pixmaps <- mapM (newQPixmap . snd) statePixmaps
-    return $ fromList $ zip (map fst statePixmaps) pixmaps
+    fmapM load statePixmaps
+  where
+    load :: (String, Int) -> IO [Ptr QPixmap]
+    load (name, n) = mapM newQPixmap $ map (mkPngPath name) [0..n]
 
-statePixmaps :: [(State, FilePath)]
-statePixmaps = map (second ((nikkiPngDir </>) . (<.> "png"))) [
-    (Wait, "nikki_wait_right_00")
-  ]
+mkPngPath name n = nikkiPngDir </> name ++ "_0" ++ show n <.> "png"
 
 nikkiPngDir = pngDir </> "nikki"
 
+statePixmaps :: Map RenderState (String, Int)
+statePixmaps = fromList [
+    (Wait HLeft,  ("wait_left", 2)),
+    (Wait HRight, ("wait_right", 2)),
+    (Walk HLeft,  ("walk_left", 3)),
+    (Walk HRight, ("walk_right", 3)),
+    (Jump HLeft,  ("jump_left", 1)),
+    (Jump HRight, ("jump_right", 1)),
+    (UsingTerminal HLeft, ("terminal", 0)),
+    (UsingTerminal HRight, ("terminal", 0))
+  ]
+
+defaultPixmap :: Map RenderState [Ptr QPixmap] -> Ptr QPixmap
+defaultPixmap pixmaps = head (pixmaps ! Wait HLeft)
+
 data NSort = NSort {
-    pixmapsS :: Map State (Ptr QPixmap),
-    nsize :: Size Int
+    pixmaps :: Map RenderState [Ptr QPixmap],
+    nsize :: Size Double
   }
     deriving Typeable
 
 data Nikki
     = Nikki {
-        pixmaps :: Map State (Ptr QPixmap),
         nchipmunk :: Chipmunk,
         feetShape :: Shape,
-        jumpSound :: PolySound,
-        jumpTime :: Seconds
---         direction :: FrameSetDirection,
---         animation :: Animation
+        jumpStartTime :: Seconds,
+        renderState :: RenderState,
+        startTime :: Seconds,
+        jumpSound :: PolySound
       }
   deriving Typeable
 
-data State
-    = Wait
-    | Walk
-    | Happy
-    | Jump
-    | Angry
-    | Sad
-    | Confused
-    | UsingTerminal
-  deriving (Eq, Ord)
+data RenderState
+    = Wait          {direction :: HorizontalDirection}
+    | Walk          {direction :: HorizontalDirection}
+    | Jump          {direction :: HorizontalDirection}
+    | UsingTerminal {direction :: HorizontalDirection}
+
+--     | Happy
+--     | Angry
+--     | Sad
+--     | Confused
+  deriving (Eq, Ord, Show)
+
+instance Initial RenderState where
+    initial = Wait HLeft
+
 
 instance Sort NSort Nikki where
 
@@ -89,39 +160,36 @@ instance Sort NSort Nikki where
     size = nsize .> fmap (subtract 2)
 
     sortRender sort =
-        sortRenderSinglePixmap (pixmapsS sort ! Wait) sort
+        sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
 
     initialize sort space editorPosition Nothing = do
-        let (nikkiShapes, baryCenterOffset) = mkPolys $ fmap fromIntegral $ size sort
+        let (nikkiShapes, baryCenterOffset) = mkPolys $ size sort
             pos = qtPositionToVector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
---         es "nikk" (size sort, editorPosition, baryCenterOffset, pos)
 
         chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes
                     baryCenterOffset
         let feetShape = head $ shapes chip
 
-        jumpingSound <- newPolySound (soundDir </> "nikki/jump.wav") 4
+        jumpSound <- newPolySound (soundDir </> "nikki/jump.wav") 4
 
         return $ Nikki
-            (pixmapsS sort)
             chip
             feetShape
-            jumpingSound
             0
---             ToRight
---             UninitializedAnimation
+            initial
+            0
+            jumpSound
 
     chipmunk = nchipmunk
 
-    update nikki seconds collisions cd =
-        updateNikki seconds collisions cd nikki
+    update nikki now contacts cd =
+        (updateStartTimes now (renderState nikki)) <$>
+            controlBody now contacts cd nikki
 
-    render nikki sort ptr offset seconds =
-        renderChipmunk ptr offset (pixmaps nikki ! Wait) (chipmunk nikki)
-
-
-
+    render nikki sort ptr offset now = do
+        let pixmap = pickPixmap now sort nikki
+        renderChipmunk ptr offset pixmap (chipmunk nikki)
 
 
 -- * initialisation
@@ -133,7 +201,6 @@ bodyAttributes pos = BodyAttributes{
     inertia             = infinity
   }
 
-elasticity_ = 0.0
 
 feetShapeAttributes :: ShapeAttributes
 feetShapeAttributes = ShapeAttributes{
@@ -149,12 +216,6 @@ bodyShapeAttributes = ShapeAttributes {
     friction      = 0,
     CM.collisionType = NikkiBodyCT
   }
-
--- initAnimation :: Object -> Object
--- initAnimation (Nikki sprited fs chip js jt state) =
---     Nikki sprited fs chip js jt (NikkiTypes.setAnimation state animation)
---   where
---     animation = initialAnimation (DirectedFrameSetType Wait ToRight) 0
 
 
 mkPolys :: Size Double -> ([(ShapeAttributes, ShapeType)], Vector)
@@ -220,43 +281,6 @@ mkPolys (Size w h) =
       ]
 
 
--- * updating
-
--- nikki gets controlled and then the animations get updated.
--- This is special (because Nikki is not a robot)
-
-updateNikki :: Seconds -> Contacts -> (Bool, ControlData)
-    -> Nikki -> IO Nikki
-updateNikki now contacts control =
-    controlBody now contacts control
---     >=> updateAnimation
---   where
---     updateAnimation (Nikki sprited chipmunk fs js jt state) = do
---         let state' = updateState scene now collisions (snd control) state
---         return $ Nikki sprited chipmunk fs js jt state'
-
-
--- * nikki control
-
--- there are some values to fine tune the behaviour of nikki. The aim is to keep the number
--- of fine tuners small.
-
-nikkiMass = 2.5
-
--- friction for nikkis feet. The higher the friction,
--- the faster nikki will gain maximum walking speed.
-nikkiFeetFriction = 0.5
-
--- maximum walking speed (pixel per second)
-walkingVelocity = fromUber 90
-
--- minimal jumping height (for calculating the impulse strength)
-minimalJumpingHeight = fromKachel 0.7
-
--- maximal jumping height (created with decreased gravity (aka anti-gravity force))
-maximalJumpingHeight = fromKachel 4.0
-
-
 -- * Control logic
 
 controlBody :: Seconds -> Contacts -> (Bool, ControlData)
@@ -264,12 +288,12 @@ controlBody :: Seconds -> Contacts -> (Bool, ControlData)
 controlBody _ _ (False, _) nikki = do
     let ss = shapes $ nchipmunk nikki
     setSurfaceVel (head ss) zero
-    return nikki
+    return nikki{renderState = UsingTerminal $ direction $ renderState nikki}
 controlBody now collisions (True, cd)
-    nikki@(Nikki pixmaps
-      chip@(Chipmunk space body shapes shapeTypes co) feetShape jumpingSound jumpStartTime) = do
+    nikki@(Nikki chip feetShape jumpStartTime _ _ jumpSound) = do
+        let Chipmunk space body shapes shapeTypes co = chip
         -- buttons
-        let bothHeld = leftHeld && rightHeld
+            bothHeld = leftHeld && rightHeld
             leftHeld = LeftButton `elem` held cd
             rightHeld = RightButton `elem` held cd
             aPushed = Press AButton `elem` pushed cd
@@ -319,14 +343,18 @@ controlBody now collisions (True, cd)
         modifyApplyOnlyForce chip (Vector airborneForce jumpingAntiGravity)
 
         -- jumping sound
---         when doesJumpStartNow $ triggerPolySound jumpingSound
+--         when doesJumpStartNow $ triggerPolySound jumpSound
 
 --         debugChipGraph now body
 
+        -- renderState updating
+        let state = pickRenderState (renderState nikki) ifNikkiTouchesGround
+                        (leftHeld, rightHeld) xVelocity
+
         return $ if doesJumpStartNow then
-                    nikki{jumpTime = now}
-                else
-                    nikki
+            nikki{renderState = state, jumpStartTime = now}
+          else
+            nikki{renderState = state}
 
 walking (leftHeld, rightHeld, bothHeld) = Vector xSurfaceVelocity 0
   where
@@ -405,55 +433,32 @@ debugChipGraph now body = do
         putStrLn valuesString
 
 
+updateStartTimes :: Seconds -> RenderState -> Nikki -> Nikki
+updateStartTimes now oldRenderState nikki@Nikki{renderState = newRenderState} =
+    if oldRenderState == newRenderState then
+        nikki
+      else
+        nikki{startTime = now}
 
--- updateState :: Scene -> Seconds -> Collisions -> ControlData
---     -> State -> State
--- updateState scene now collisions cd (State oldDirection animation) =
---     State newDirection animation'
---   where
---     animation' = updateAnimation now at animation
--- 
---     newDirection =
---         if bothHeld then
---             oldDirection
---           else if rightHeld then
---             ToRight
---           else if leftHeld then
---             ToLeft
---           else oldDirection
--- 
---     at = if usingTerminal then
---             UndirectedFrameSetType UsingTerminal
---           else if airBorne then
---             DirectedFrameSetType Jump newDirection
---           else if bothHeld then
---             DirectedFrameSetType Wait newDirection
---           else if leftHeld || rightHeld then
---             DirectedFrameSetType Walk newDirection
---           else
---             DirectedFrameSetType Wait newDirection
--- 
---     bothHeld = leftHeld && rightHeld
---     rightHeld = RightButton `elem` held cd
---     leftHeld = LeftButton `elem` held cd
---     usingTerminal = isTerminalMode scene || isRobotMode scene
---     airBorne = not $ nikkiTouchesGround collisions
--- 
--- 
--- initialAnimation :: FrameSetType -> Seconds -> Animation
--- initialAnimation typ = mkAnimation typ inner
---   where
---     inner :: FrameSetType -> AnimationPhases
---     inner (frameSetAction -> Wait) = AnimationPhases $ zip
---         (0 : cycle [1, 2, 1, 2, 1, 2, 1])
---         (1 : cycle [1.5, 0.15, 3, 0.15, 0.1, 0.15, 1])
---     inner (frameSetAction -> Jump) = AnimationPhases $ zip
---         (0 : repeat 1)
---         (0.6 : repeat 10)
---     inner (frameSetAction -> Walk) = AnimationPhases $ zip
---         (cycle [0..3])
---         (repeat 0.15)
---     inner (UndirectedFrameSetType UsingTerminal) = StillFrame 0
---     inner x = es "initialAnimation: Nikki" x
--- 
--- 
+pickRenderState oldRenderState touchesGround (leftHeld, rightHeld) xVelocity =
+    if not touchesGround then
+        Jump dir
+      else if leftHeld `xor` rightHeld then
+        Walk dir
+      else
+        Wait dir
+  where
+    dir = if abs xVelocity < epsilon then
+        direction oldRenderState
+      else if xVelocity < 0 then
+        HLeft
+      else
+        HRight
+
+pickPixmap :: Seconds -> NSort -> Nikki -> Ptr QPixmap
+pickPixmap now sort nikki = 
+    pickAnimationFrameNonLooping
+        (pixmaps sort ! renderState nikki)
+        (frameTimesMap ! renderState nikki)
+        (now - startTime nikki)
+

@@ -20,13 +20,15 @@ pickAnimationFrame list frameTimes now =
 
     -- this is an optimization
     -- timeInList used instead of now
-    (n, timeInList) = now `rest` sum frameTimes
+    (n, timeInList) = now `divide` sum frameTimes
 
     toDrop = (n * length frameTimes) `mod` length list
 
-
-rest :: Double -> Double -> (Int, Double)
-rest a b = properFraction (a / b) |> second (* b)
-
-
-
+-- | picks animation frames from infinite lists
+-- has O(now) :(
+pickAnimationFrameNonLooping :: [a] -> [(Int, Seconds)] -> Seconds -> a
+pickAnimationFrameNonLooping list ((i, secs) : r) now =
+    if now >= secs then
+        pickAnimationFrameNonLooping list r (now - secs)
+      else
+        cycle list !! i

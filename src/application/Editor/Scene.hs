@@ -248,7 +248,7 @@ cursorStepShortCuts = fromList (
   where
     fromSelectedPixmap :: EditorScene -> EditorPosition
     fromSelectedPixmap EditorScene{sorts} =
-        let (Size x y) = fmap fromIntegral $ size_ $ getSelected sorts
+        let (Size x y) = size_ $ getSelected sorts
         in EditorPosition x y
     -- | shortcuts that put cursorStep to a constant square
     constSquareShortcuts :: [(Key, Double)]

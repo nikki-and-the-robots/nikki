@@ -1,12 +1,13 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
      DeriveDataTypeable, FlexibleInstances #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
+
 
 module Sorts.Robots.Jetpack (sorts) where
 
 
 import Data.Abelian
 import Data.Maybe
-import Data.Directions
 import Data.Generics
 import Data.Map hiding (size, map)
 import Data.Initial
@@ -22,6 +23,7 @@ import Physics.Chipmunk as CM
 
 import Utils
 
+import Base.Directions
 import Base.Constants
 import Base.Events
 import Base.Animation
@@ -45,7 +47,7 @@ animationFrameTimesMap = fromList [
 sorts :: IO [JSort]
 sorts = do
     pixmaps <- fmapM (fmapM (newQPixmap . mkJetpackPng)) pngMap
-    size <- sizeQPixmap $ defaultPixmap pixmaps
+    size <- fmap fromIntegral <$> sizeQPixmap (defaultPixmap pixmaps)
     let r = JSort pixmaps size
     return [r]
 
@@ -66,7 +68,7 @@ data RenderState
 
 data JSort = JSort {
     pixmaps :: Map RenderState [(Ptr QPixmap)],
-    rsize :: Size Int
+    rsize :: Size Double
   }
     deriving Typeable
 
@@ -78,17 +80,13 @@ data Jetpack = Jetpack {
     boost :: Bool,
     direction :: Maybe HorizontalDirection,
     renderState :: RenderState,
-    startTimes :: Map RenderState Seconds
+    startTime :: Seconds
   }
     deriving Typeable
-
-instance Initial (Map RenderState Seconds) where
-    initial = fromList [(Idle, 0)]
 
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
     size = rsize
-    collisionType = const RobotCT
     sortRender sort =
         sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
 
@@ -100,13 +98,13 @@ instance Sort JSort Jetpack where
             shapeAttributes = ShapeAttributes{
                 elasticity = 0.8,
                 friction = 0.5,
-                CM.collisionType = OT.collisionType sort
+                CM.collisionType = RobotCT
               }
-            (polys, baryCenterOffset) = mkPolys $ fmap fromIntegral $ size sort
+            (polys, baryCenterOffset) = mkPolys $ size sort
             shapesAndPolys = map (tuple shapeAttributes) polys
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
-        return $ Jetpack chip False Nothing Idle initial
+        return $ Jetpack chip False Nothing Idle 0
 
     chipmunk = jchipmunk
 
@@ -180,7 +178,7 @@ updateRenderState now controlled j =
     if renderState j /= newRenderState then
         j{
             renderState = newRenderState,
-            startTimes = insert newRenderState now (startTimes j)
+            startTime = 0
           }
       else
         j
@@ -200,10 +198,9 @@ renderJetpack j sort ptr offset now = do
 
 pickPixmap :: Seconds -> Jetpack -> JSort -> Ptr QPixmap
 pickPixmap now j sort =
-    pickAnimationFrame pixmapList animationFrameTimes (now - startTime)
+    pickAnimationFrame pixmapList animationFrameTimes (now - startTime j)
   where
     pixmapList = pixmaps sort ! renderState j
-    startTime = startTimes j ! renderState j
     animationFrameTimes = animationFrameTimesMap ! renderState j
 
 

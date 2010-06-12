@@ -87,8 +87,8 @@ calculateRenderTransformation ptr s@EditorScene{} = do
 
     transformation ptr cursorPos cursorSize
 
-transformation :: Ptr QPainter -> EditorPosition -> Size Int -> IO (Position Double)
-transformation ptr (EditorPosition x y) (fmap fromIntegral -> Size cw ch) = do
+transformation :: Ptr QPainter -> EditorPosition -> Size Double -> IO (Position Double)
+transformation ptr (EditorPosition x y) (Size cw ch) = do
     (Size vw vh) <- fmap fromIntegral <$> sizeQPainter ptr
     let viewMiddle = Position (vw / 2) (vh / 2)
         halfCursor = Position (- (cw / 2)) (ch / 2)

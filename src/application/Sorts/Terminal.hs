@@ -123,7 +123,7 @@ isNikkiSelected (Right _) = False
 
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
-    size = pixmaps .> pixmapsSize .> fmap (subtract 2)
+    size = pixmaps .> pixmapsSize .> fmap (subtract 2) .> fmap fromIntegral
     sortRender sort =
         sortRenderSinglePixmap (head $ blinkenLights $ pixmaps sort) sort
 
@@ -146,7 +146,7 @@ instance Sort TSort Terminal where
                 friction = 2,
                 CM.collisionType = TerminalCT
               }
-            (polys, baryCenterOffset) = mkPolys $ fmap fromIntegral $ size sort
+            (polys, baryCenterOffset) = mkPolys $ size sort
             polysAndAttributes = map (tuple shapeAttributes) polys
         chip <- initStaticChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
         return $ Terminal chip attached (Left 0) DontExit

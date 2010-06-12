@@ -36,6 +36,8 @@ data EditorPosition = EditorPosition Double Double
 
 instance Abelian EditorPosition where
     zero = EditorPosition 0 0
+    (EditorPosition a b) +~ (EditorPosition x y) =
+        EditorPosition (a + x) (b + y)
     (EditorPosition a b) -~ (EditorPosition x y) =
         EditorPosition (a - x) (b - y)
 
@@ -48,8 +50,7 @@ newtype SortId = SortId FilePath
 class (Typeable sort, Typeable object) =>
   Sort sort object | sort -> object, object -> sort where
     sortId :: sort -> SortId
-    size :: sort -> Size Int
-    collisionType :: sort -> MyCollisionType
+    size :: sort -> Size Double
     objectEditMode :: sort -> Maybe ObjectEditMode
     objectEditMode _ = Nothing
     sortRender :: sort -> Ptr QPainter -> Offset
@@ -58,7 +59,7 @@ class (Typeable sort, Typeable object) =>
     editorPosition2QtPosition sort (EditorPosition x y) =
         Position x (y - height)
       where
-        Size _ height = fmap fromIntegral $ size sort
+        Size _ height = size sort
 
     initialize :: sort -> Space -> EditorPosition -> Maybe String -> IO object
 
@@ -75,8 +76,7 @@ data Sort_
     = Sort_ {
         unwrapSort :: Dynamic,
         sortId_ :: SortId,
-        size_ :: Size Int,
-        collisionType_ :: MyCollisionType,
+        size_ :: Size Double,
         objectEditMode_ :: Maybe ObjectEditMode,
         sortRender_ :: Ptr QPainter -> Offset
             -> EditorPosition -> Maybe (Size Double) -> IO (),
@@ -98,7 +98,6 @@ mkSort_ sort = result
         unwrapSort = toDyn sort,
         sortId_ = sortId sort,
         size_ = size sort,
-        collisionType_ = collisionType sort,
         objectEditMode_ = objectEditMode sort,
         sortRender_ = sortRender sort,
         editorPosition2QtPosition_ = editorPosition2QtPosition sort,
@@ -198,10 +197,10 @@ sortRenderSinglePixmap :: Sort sort object =>
 sortRenderSinglePixmap pixmap sort ptr offset (EditorPosition x y) scaling = do
     resetMatrix ptr
     translate ptr offset
-    let (Size width height) = fmap fromIntegral $ size sort
+    let (Size width height) = size sort
         (factor, innerOffset) = case scaling of
             Just x ->
-                squeezeScaling x (fmap fromIntegral (size sort))
+                squeezeScaling x $ size sort
             Nothing -> (1, zero)
 
         p = Position (x - 1) (y - 1 - height * factor) +~ innerOffset

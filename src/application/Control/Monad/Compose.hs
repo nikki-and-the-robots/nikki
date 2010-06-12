@@ -6,7 +6,13 @@ module Control.Monad.Compose (
 
     pure,
     passThrough,
+
+    -- re-exports
+    (<$>),
   ) where
+
+
+import Control.Applicative ((<$>))
 
 
 (>=>) :: Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)

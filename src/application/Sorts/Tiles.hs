@@ -1,5 +1,7 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances,
      DeriveDataTypeable #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
+
 
 module Sorts.Tiles (
     sorts
@@ -21,11 +23,10 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Base.Sprited
+import Base.Constants
 
-import Object.Types as OT
+import Object.Types
 import Object.Contacts
--- import Object.Animation
 
 
 sorts :: IO [TSort]
@@ -38,17 +39,19 @@ editorTileDir = pngDir </> "tiles" </> "editor"
 mkSort :: FilePath -> IO TSort
 mkSort png = do
     pixmap <- newQPixmap png
-    size <- sizeQPixmap pixmap
+    size <- fmap fromIntegral <$> sizeQPixmap pixmap
     return $ TSort png pixmap size
 
 data TSort = TSort {
     path :: FilePath,
     pixmap :: Ptr QPixmap,
-    tsize :: (Size Int)
+    tsize :: Size Double
   }
     deriving Typeable
 
-data Tile = Tile (Ptr QPixmap) Chipmunk
+data Tile = Tile {
+    tchipmunk :: Chipmunk
+  }
     deriving Typeable
 
 instance Sort TSort Tile where
@@ -59,11 +62,9 @@ instance Sort TSort Tile where
     sortRender sort =
         sortRenderSinglePixmap (pixmap sort) sort
 
-    collisionType = const TileCT
-
     initialize sort space editorPosition Nothing = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
-            collisionType_ = OT.collisionType sort
+            collisionType_ = TileCT
             shapesWithAttributes =
                 map (tuple (shapeAttributes collisionType_)) shapes
             pos :: Vector
@@ -71,14 +72,15 @@ instance Sort TSort Tile where
                     +~ baryCenterOffset
         chip <- initStaticChipmunk space (bodyAttributes pos)
                     shapesWithAttributes baryCenterOffset
-        return $ Tile (pixmap sort) chip
+        return $ Tile chip
 
-    chipmunk (Tile _ c) = c
+    chipmunk (Tile c) = c
 
     update tile _ _ _ = return tile
 
-    render (Tile pixmap chip) sort ptr offset seconds = do
-        renderChipmunk ptr offset pixmap chip
+    render t sort ptr offset seconds = do
+        let pixmap = pickPixmap sort t
+        renderChipmunk ptr offset pixmap (tchipmunk t)
 --         resetMatrix ptr
 --         translate ptr offset
 --         pos <- getRenderPosition chip
@@ -156,8 +158,8 @@ class AnchoredBox ab where
     boxSize :: ab -> Size Double
     boxOffset :: ab -> Qt.Position Double
 
-instance AnchoredBox (Size Int) where
-    boxSize = fmap fromIntegral
+instance AnchoredBox (Size Double) where
+    boxSize = id
     boxOffset = const zero
 
 {-instance AnchoredBox Sprited where
@@ -168,8 +170,8 @@ instance AnchoredBox (Size Int) where
 --     boxSize (MergedSprited sprited _ _) = defaultPixmapSize sprited
 --     boxOffset (MergedSprited sprited offset animation) = offset
 
-mkShapes :: Size Int -> ([ShapeType], Vector)
-mkShapes size =
+mkShapes :: Size Double -> ([ShapeType], Vector)
+mkShapes size@(Size w h) =
     (lines, baryCenterOffset)
   where
     lines =
@@ -181,7 +183,6 @@ mkShapes size =
     baryCenterOffset = Vector wh hh
     wh = w / 2
     hh = h / 2
-    (Size w h) = fmap fromIntegral size
 
 -- mkTileAnimation :: Sprited -> Animation
 -- mkTileAnimation sprited =
@@ -283,3 +284,8 @@ shortenLine padding x = es "shortenLine" x
 --     inner = AnimationPhases $ zip 
 --         (cycle [0..length (frames frameSet) - 1])
 --         (repeat 0.3)
+
+pickPixmap :: TSort -> Tile -> Ptr QPixmap
+pickPixmap sort t = pixmap sort
+
+

@@ -1,6 +1,8 @@
 {-# language NamedFieldPuns #-}
 
 
+module Main where
+
 import Utils
 
 import Data.IORef

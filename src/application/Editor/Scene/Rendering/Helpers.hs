@@ -33,10 +33,10 @@ drawBox ptr (Position x y) (Size w h) thickness = do
     drawBox ptr (Position (x - 1) (y - 1)) (Size (w + 2) (h + 2)) (thickness - 1)
 
 -- | same as $drawBox$, but with color
-drawColoredBox :: Ptr QPainter -> Position Double -> Size Int -> Double -> RGBA -> IO ()
+drawColoredBox :: Ptr QPainter -> Position Double -> Size Double -> Double -> RGBA -> IO ()
 drawColoredBox ptr position size thickness (RGBA r g b a) = do
     setPenColor ptr (tb r) (tb g) (tb b) 127
-    drawBox ptr position (fmap fromIntegral size) thickness
+    drawBox ptr position size thickness
   where
     tb :: Double -> QtInt
     tb x | x < 0 || x > 1 = es "tb in drawCursorBox" x
