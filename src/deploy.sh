@@ -12,7 +12,7 @@ echo This is a script to facilitate deployment.
 echo It tries to compile Nikki and copy all needed files into a directory called "nikki",
 echo and zips this folder.
 echo You should specify the environment variable SFML_DIR.
-echo $SFML_DIR should contain the \(built\) svn version of sfml2.
+echo SFML_DIR should contain the \(built\) svn version of sfml2.
 echo
 echo ======================
 echo TESTED ONLY ON WINDOWS
@@ -29,7 +29,7 @@ echo cleaning...
 echo ======================
 if [ -d nikki ]
 then
-    rm -rf nikki
+    rm -rf nikki/*
 fi
 
 echo ======================

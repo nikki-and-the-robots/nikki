@@ -19,13 +19,11 @@ Executable            nikki
         -Werror
         -fwarn-missing-fields
         -fwarn-dodgy-imports
-        -fno-warn-missing-methods
---        -fwarn-unused-do-bind
-
---        -Wwarn
+        -fwarn-missing-methods
         -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
-        -fwarn-unused-imports
+        -fno-warn-unused-imports
+--        -fwarn-unused-do-bind -- does not work with ghc 6.10
 
 
     hs-source-dirs: ., ../common, ../qtRendering
