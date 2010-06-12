@@ -26,15 +26,11 @@ import Base.Grounds
 import Base.Configuration as Configuration
 import Base.Constants
 
-import Object
 import Object.Types
--- import qualified Object.Terminal as Terminal
--- import Object.Animation
 import Object.Contacts
 
 import Game.Scene.Types
 import Game.Scene.Camera
--- import qualified Game.Modes.Terminal as TerminalMode
 
 import Sorts.Terminal
 
@@ -73,7 +69,7 @@ stepScene now space controlData ptr =
     pure (updateNow now) >=>
     updateScene controlData >=>
     passThrough (stepSpace space) >=>
-    renderScene ptr >=>
+    renderScene ptr now >=>
     pure (maybeId (flip transition controlData))
 
 -- * step time measurement
@@ -172,6 +168,8 @@ levelPassed _ = Nothing
 
 stepSpace :: Space -> Scene -> IO ()
 
+stepSpace _space Scene{mode = TerminalMode{}} = return ()
+
 stepSpace space s@Scene{now, oldNow} = do
     forM_ [0..n] $ const $
         CM.step space stepQuantum
@@ -204,10 +202,10 @@ sceneUpdateObjects collisions now cd controlled scene grounds = do
 
         -- update function for all objects in the mainLayer
         updateMainObjects :: Index -> Object_ -> IO Object_
-        updateMainObjects i o = updateObject scene now collisions (i == controlled, cd) o
+        updateMainObjects i o = update_ o now collisions (i == controlled, cd)
         -- update function for updates outside the mainLayer
         updateMultiLayerObjects :: Object_ -> IO Object_
-        updateMultiLayerObjects o = updateObject scene now collisions (False, cd) o
+        updateMultiLayerObjects o = update_ o now collisions (False, cd)
 
     backgrounds' <- fmapM (fmapM updateMultiLayerObjects) backgrounds
     -- each object has to know, if it's controlled
@@ -221,8 +219,8 @@ sceneUpdateObjects collisions now cd controlled scene grounds = do
 -- * rendering
 
 -- | well, renders the scene to the screen (to the max :)
-renderScene :: Ptr QPainter -> Scene -> IO Scene
-renderScene ptr scene@Scene{} = do
+renderScene :: Ptr QPainter -> Seconds -> Scene -> IO Scene
+renderScene ptr now scene@Scene{} = do
 
     resetMatrix ptr
     windowSize <- sizeQPainter ptr
@@ -240,14 +238,14 @@ renderScene ptr scene@Scene{} = do
         -- TODO: this is a workaround for padding errors!!!
         let os = objects scene
             multiLayerOffset = offset -~ Position 1 1
-        fmapM_ (renderLayer ptr size multiLayerOffset scene) $ backgrounds os
-        renderLayer ptr size offset scene $ mainLayer os
-        fmapM_ (renderLayer ptr size multiLayerOffset scene) $ foregrounds os
+        fmapM_ (renderLayer ptr size multiLayerOffset now) $ backgrounds os
+        renderLayer ptr size offset now $ mainLayer os
+        fmapM_ (renderLayer ptr size multiLayerOffset now) $ foregrounds os
 --             layerMapM_ (renderLayer ptr size offset scene) $ objects scene
 
-    debugDrawCoordinateSystem ptr offset
 
     when (showGrid Configuration.development) $ do
+        debugDrawCoordinateSystem ptr offset
 --             renderLayer ptr size offset scene $ mainLayer $ objects scene
         fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
 
@@ -263,10 +261,11 @@ renderScene ptr scene@Scene{} = do
 
 -- | renders the different Layers.
 -- makes sure, everything is rendered ok.
-renderLayer :: Ptr QPainter -> Size Double -> Qt.Position Double -> Scene -> Layer Object_ -> IO ()
-renderLayer ptr size offset scene layer = do
+renderLayer :: Ptr QPainter -> Size Double -> Offset -> Seconds
+    -> Layer Object_ -> IO ()
+renderLayer ptr size offset now layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
-    fmapM_ (Object.render ptr modifiedOffset scene) (content layer)
+    fmapM_ (\ o -> render_ o ptr modifiedOffset now) (content layer)
 
 
 -- * debugging

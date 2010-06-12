@@ -1,17 +1,18 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
-     DeriveDataTypeable #-}
+     DeriveDataTypeable, FlexibleInstances #-}
 
 module Sorts.Robots.Jetpack (sorts) where
 
-
--- import Prelude hiding (lookup)
 
 import Data.Abelian
 import Data.Maybe
 import Data.Directions
 import Data.Generics
+import Data.Map hiding (size, map)
+import Data.Initial
 
 import Control.Monad.Compose
+import Control.Monad.FunctorM
 
 import System.FilePath
 
@@ -23,45 +24,73 @@ import Utils
 
 import Base.Constants
 import Base.Events
--- import Base.Sprited
--- 
--- import Object.Animation
+import Base.Animation
+
 import Object.Types as OT
 import Object.Contacts
--- import Object.Robots.Types
 
 
-sorts :: IO [RSort]
+-- * Configuration
+
+animationFrameTimesMap :: Map RenderState [Seconds]
+animationFrameTimesMap = fromList [
+    (Idle, [robotIdleEyeTime]),
+    (Wait, [3, 0.15, 0.1, 0.15]),
+    (Boost, [0.08])
+  ]
+
+
+-- * loading
+
+sorts :: IO [JSort]
 sorts = do
-    pixmap <- newQPixmap $ mkRobotPng "robot-jetpack_wait_00"
-    size <- sizeQPixmap pixmap
-    let r = RSort pixmap size
+    pixmaps <- fmapM (fmapM (newQPixmap . mkJetpackPng)) pngMap
+    size <- sizeQPixmap $ defaultPixmap pixmaps
+    let r = JSort pixmaps size
     return [r]
 
-mkRobotPng name = pngDir </> "robots" </> name <.> "png"
+pngMap :: Map RenderState [String]
+pngMap = fromList [
+    (Wait, ["wait_00", "wait_01"]),
+    (Boost, ["boost_00", "boost_01"]),
+    (Idle, ["idle_00", "idle_01", "idle_02", "idle_03"])
+  ]
 
-data RSort = RSort {
-    pixmapS :: Ptr QPixmap,
+mkJetpackPng name = pngDir </> "robots" </> "jetpack" </> name <.> "png"
+
+data RenderState
+    = Wait
+    | Boost
+    | Idle
+  deriving (Eq, Ord)
+
+data JSort = JSort {
+    pixmaps :: Map RenderState [(Ptr QPixmap)],
     rsize :: Size Int
   }
     deriving Typeable
 
+defaultPixmap :: Map RenderState [(Ptr QPixmap)] -> Ptr QPixmap
+defaultPixmap m = head (m ! Wait)
+
 data Jetpack = Jetpack {
-    pixmap :: Ptr QPixmap,
     jchipmunk :: Chipmunk,
     boost :: Bool,
-    direction :: Maybe HorizontalDirection
---         robotAnimation :: Animation
+    direction :: Maybe HorizontalDirection,
+    renderState :: RenderState,
+    startTimes :: Map RenderState Seconds
   }
     deriving Typeable
 
+instance Initial (Map RenderState Seconds) where
+    initial = fromList [(Idle, 0)]
 
-instance Sort RSort Jetpack where
+instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
     size = rsize
     collisionType = const RobotCT
     sortRender sort =
-        sortRenderSinglePixmap (pixmapS sort) sort
+        sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
 
     initialize sort space ep Nothing = do
         let 
@@ -77,7 +106,7 @@ instance Sort RSort Jetpack where
             shapesAndPolys = map (tuple shapeAttributes) polys
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
-        return $ Jetpack (pixmapS sort) chip False Nothing
+        return $ Jetpack chip False Nothing Idle initial
 
     chipmunk = jchipmunk
 
@@ -85,12 +114,10 @@ instance Sort RSort Jetpack where
       where
         inner =
             pure (jupdate (isControlled, cd)) >=>
-    --         pure (modifyRobotState (updateAnimationState now isControlled)) >=>
+            pure (updateRenderState now isControlled) >=>
             controlToChipmunk
 
-    render jetpack sort ptr offset = do
---         let pixmap = animationPixmap animation sprited
-        renderChipmunk ptr offset (pixmap jetpack) (jchipmunk jetpack)
+    render = renderJetpack
 
 
 
@@ -126,35 +153,13 @@ mkPolys (Size w h) =
     baryCenterOffset = Vector wh hh
 
 
-
-
-
--- initialState :: RobotState
--- initialState = JetpackState False Nothing initialAnimation
--- 
--- initialAnimation :: Animation
--- initialAnimation = mkAnimation (UndirectedFrameSetType Idle) inner 0
---   where
---     inner :: FrameSetType -> AnimationPhases
---     inner (frameSetAction -> Idle) = AnimationPhases $ zip
---         (cycle [0 .. 3]) -- frame numbers
---         (repeat robotIdleEyeTime) -- seconds per frame
---         -- repeat x == cycle [x]
---     inner (frameSetAction -> Boost) = AnimationPhases $ zip
---         (cycle [0, 1])
---         (repeat 0.08)
---     inner (frameSetAction -> Wait) = robotWaitAnimation
---     inner x = es "inner (Anim)" x
-
-
-
 -- * logick
 
 jupdate :: (Bool, ControlData) -> Jetpack -> Jetpack
-jupdate (False, _) (Jetpack pixmap chip _ _)  =
-    Jetpack pixmap chip False Nothing -- robotAnimation
-jupdate (True, (ControlData _ held)) (Jetpack pix chip _ _) =
-    Jetpack pix chip boost direction
+jupdate (False, _) (Jetpack chip _ _ renderState times)  =
+    Jetpack chip False Nothing renderState times
+jupdate (True, (ControlData _ held)) (Jetpack chip _ _ renderState times) =
+    Jetpack chip boost direction renderState times
   where
     boost = aButton
     direction =
@@ -169,19 +174,37 @@ jupdate (True, (ControlData _ held)) (Jetpack pix chip _ _) =
     left = LeftButton `elem` held
     right = RightButton `elem` held
 
--- -- * Animation update
--- 
--- updateAnimationState :: Seconds -> Bool -> RobotState -> RobotState
--- updateAnimationState seconds isControlled (JetpackState boost direction animation) =
---     JetpackState boost direction animation'
---   where
---     idle = not isControlled
---     animationType' = UndirectedFrameSetType $
---         if idle then
---             Idle
---           else
---             if boost then Boost else Wait
---     animation' = updateAnimation seconds animationType' animation
+
+updateRenderState :: Seconds -> Bool -> Jetpack -> Jetpack
+updateRenderState now controlled j =
+    if renderState j /= newRenderState then
+        j{
+            renderState = newRenderState,
+            startTimes = insert newRenderState now (startTimes j)
+          }
+      else
+        j
+  where
+    newRenderState =
+        if not controlled then
+            Idle
+          else if boost j then
+            Boost
+          else
+            Wait
+
+
+renderJetpack j sort ptr offset now = do
+    let pixmap = pickPixmap now j sort
+    renderChipmunk ptr offset pixmap (jchipmunk j)
+
+pickPixmap :: Seconds -> Jetpack -> JSort -> Ptr QPixmap
+pickPixmap now j sort =
+    pickAnimationFrame pixmapList animationFrameTimes (now - startTime)
+  where
+    pixmapList = pixmaps sort ! renderState j
+    startTime = startTimes j ! renderState j
+    animationFrameTimes = animationFrameTimesMap ! renderState j
 
 
 -- * chipmunk control

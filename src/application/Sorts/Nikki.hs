@@ -9,7 +9,6 @@ import Data.Map hiding (map, size)
 import Data.Generics
 
 import Control.Monad hiding ((>=>))
-import Control.Monad.Compose
 import Control.Arrow
 
 import System.FilePath
@@ -118,7 +117,7 @@ instance Sort NSort Nikki where
     update nikki seconds collisions cd =
         updateNikki seconds collisions cd nikki
 
-    render nikki sort ptr offset  =
+    render nikki sort ptr offset seconds =
         renderChipmunk ptr offset (pixmaps nikki ! Wait) (chipmunk nikki)
 
 

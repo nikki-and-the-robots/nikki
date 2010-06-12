@@ -77,7 +77,7 @@ instance Sort TSort Tile where
 
     update tile _ _ _ = return tile
 
-    render (Tile pixmap chip) sort ptr offset = do
+    render (Tile pixmap chip) sort ptr offset seconds = do
         renderChipmunk ptr offset pixmap chip
 --         resetMatrix ptr
 --         translate ptr offset

@@ -18,19 +18,15 @@ module Editor.Scene (
 
 import Data.Maybe
 import Data.Map hiding (map, filter, mapMaybe)
-import Data.List
 import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable (Index, (>:), modifyByIndex)
-import Control.Monad.FunctorM
 import Data.Menu hiding (selected)
 import Data.Abelian
 import Data.Dynamic
 
 import Control.Monad.State
 import Control.Applicative ((<$>))
-
-import System.FilePath
 
 import Graphics.Qt
 

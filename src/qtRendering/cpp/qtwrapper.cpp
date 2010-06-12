@@ -16,6 +16,7 @@ AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
     keyCallback = NULL;
 
     this->setAutoFillBackground(false);
+    this->setCursor(Qt::BlankCursor);
 
     QTimer* timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -105,10 +106,8 @@ extern "C" void setFullscreenAppWidget(AppWidget* ptr, bool fullscreen) {
     // flags are low level but easy: Just think!
     if (fullscreen) {
         ptr->setWindowState(ptr->windowState() | Qt::WindowFullScreen);
-        ptr->setCursor(Qt::BlankCursor);
     } else {
         ptr->setWindowState(ptr->windowState() & ~Qt::WindowFullScreen);
-        ptr->setCursor(Qt::ForbiddenCursor);
     };
 };
 

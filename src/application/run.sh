@@ -11,7 +11,7 @@ trap error ERR
 echo This is a script that facilitates development and is NOT part of the normal build system.
 
 if (which hate)
-then 
+then
     cabal build 2>&1 | hate
 else
     cabal build

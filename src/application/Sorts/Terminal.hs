@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, ScopedTypeVariables,
-     ViewPatterns, DeriveDataTypeable, Rank2Types #-}
+     ViewPatterns, DeriveDataTypeable, Rank2Types, FlexibleInstances #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 module Sorts.Terminal (
@@ -21,6 +21,7 @@ import Data.Initial
 import Data.Color
 
 import Control.Applicative ((<$>))
+import Control.Monad
 -- import Control.Monad.Compose
 
 import System.FilePath
@@ -33,7 +34,7 @@ import Utils
 
 import Base.Events
 import Base.Constants
--- import Base.Sprited
+import Base.Animation
 
 import Object.Types hiding (OEMState)
 import Object.Contacts
@@ -42,6 +43,15 @@ import Object.Contacts
 import Editor.Scene.Types hiding (sorts, ControlData, selected)
 import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
+
+
+-- * terminal configuration
+
+blinkenLightSpeed :: Seconds
+blinkenLightSpeed = 0.5
+
+blinkSelectedLightSpeed :: Seconds
+blinkSelectedLightSpeed = 0.2
 
 
 sorts :: IO [TSort]
@@ -70,16 +80,22 @@ data ColorLights a = ColorLights {
   }
     deriving Show
 
+colorLightList :: ColorLights a -> [a]
+colorLightList (ColorLights a b c d) = [a, b, c, d]
+
+mkColorLights :: [a] -> ColorLights a
+mkColorLights [a, b, c, d] = ColorLights a b c d
+
 readColorLights :: (String -> FilePath) -> IO (ColorLights (Ptr QPixmap))
 readColorLights f = do
     [r, b, g, y] <- mapM (newQPixmap . f) ["red", "blue", "green", "yellow"]
     return $ ColorLights r b g y
 
-initialLightState :: [Index] -> ColorLights Bool
-initialLightState list =
-    ColorLights (l > 0) (l > 1) (l > 2) (l > 3)
-  where
-    l = length list
+instance PP (ColorLights Bool) where
+    pp cl = map inner $ colorLightList cl
+      where
+        inner True = '|'
+        inner False = 'o'
 
 data ExitMode
     = DontExit
@@ -97,9 +113,13 @@ data Terminal = Terminal {
     robots :: [Index],
     selected :: Either Int Int, -- Left -> nikki selected ; Right -> robot selected
     exitMode :: ExitMode,
-    lightState :: ColorLights Bool
+    lightState :: ColorLights Bool,
+    selectedChangedTime :: Seconds
   }
     deriving (Show, Typeable)
+
+isNikkiSelected (Left _) = True
+isNikkiSelected (Right _) = False
 
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
@@ -111,7 +131,10 @@ instance Sort TSort Terminal where
 
     initialize sort space editorPosition (Just state_) = do
         let pixmap = head $ blinkenLights $ pixmaps sort
-            Robots _ _ attached = readNote "Terminal.initialize" state_
+            oemState = readNote "Terminal.initialize" state_
+            attached = case oemState of
+                NoRobots -> []
+                Robots _ _ x -> x
             pos = qtPositionToVector
                 (editorPosition2QtPosition sort editorPosition)
                 +~ baryCenterOffset
@@ -127,22 +150,24 @@ instance Sort TSort Terminal where
             polysAndAttributes = map (tuple shapeAttributes) polys
         chip <- initStaticChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
         return $ Terminal chip attached (Left 0) DontExit
-                    (initialLightState attached)
+                    (mkColorLights $ map (< length attached) [0..3])
+                    0
 
     chipmunk = tchipmunk
 
     startControl t = t{exitMode = DontExit}
 
-    update terminal seconds collisions (False, cd) =
-        return terminal
-    update terminal seconds collisions (True, cd) = do
-        print cd
-        let terminal' = controlTerminal cd terminal
-        print $ exitMode terminal'
-        return terminal'
+    update terminal now collisions (False, cd) =
+        return $ blinkSelectedColorLight now terminal
+    update terminal now collisions (True, cd) = do
+        let cls = pp $ lightState terminal
+        case selected terminal of
+            Left _ -> putStrLn ("[Nikki]\n " ++ cls)
+            Right _ -> putStrLn (" Nikki\n[" ++ cls ++ "]")
+        return $ blinkSelectedColorLight now $ controlTerminal now cd terminal
 
-    render terminal sort ptr offset =
-        renderTerminal ptr offset terminal sort
+    render terminal sort ptr offset seconds =
+        renderTerminal ptr offset seconds terminal sort
 
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
@@ -163,29 +188,50 @@ mkPolys (Size w h) =
 
 -- * controlling
 
-controlTerminal :: ControlData -> Terminal -> Terminal
-controlTerminal cd t | Press BButton `elem` pushed cd || 
-    Press AButton `elem` pushed cd =
+controlTerminal :: Seconds -> ControlData -> Terminal -> Terminal
+controlTerminal now cd t | Press BButton `elem` pushed cd =
+--     || Press AButton `elem` pushed cd =
         case selected t of
             Left i -> t{exitMode = ExitToNikki}
             Right i -> t{exitMode = ExitToRobot (robots t !! i)}
-controlTerminal cd t | Press RightButton `elem` pushed cd =
-    modifySelected t (+ 1)
-controlTerminal cd t | Press LeftButton `elem` pushed cd =
-    modifySelected t (subtract 1)
-controlTerminal cd t@Terminal{selected = Left i}
-    | Press DownButton `elem` pushed cd =
-        t{selected = Right i}
-controlTerminal cd t@Terminal{selected = Right i}
+controlTerminal now cd t | Press RightButton `elem` pushed cd =
+    modifySelected now t (+ 1)
+controlTerminal now cd t | Press LeftButton `elem` pushed cd =
+    modifySelected now t (subtract 1)
+controlTerminal now cd t@Terminal{selected = Left i, robots}
+    | Press DownButton `elem` pushed cd
+      && not (null robots) =
+        t{selected = Right i, selectedChangedTime = now}
+controlTerminal now cd t@Terminal{selected = Right i}
     | Press UpButton `elem` pushed cd =
         t{selected = Left i}
-controlTerminal _ t = t
+controlTerminal _ _ t = t
 
-modifySelected :: Terminal -> (Int -> Int) -> Terminal
-modifySelected t f =
+-- | changes the selected robot (if applicable)
+-- and updates the selectedChangedTime (also if applicable)
+modifySelected :: Seconds -> Terminal -> (Int -> Int) -> Terminal
+modifySelected now t f =
     case selected t of
         Left i -> t
-        Right i -> t{selected = Right (clip (0, length (robots t) - 1) (f i))}
+        Right i -> t{
+            selected = Right (clip (0, length (robots t) - 1) (f i)),
+            selectedChangedTime = now
+          }
+
+blinkSelectedColorLight :: Seconds -> Terminal -> Terminal
+blinkSelectedColorLight now t =
+    t{lightState = lightState'}
+  where
+    lightState' = mkColorLights $ map p [0..3]
+    p n = n < length (robots t)
+        && (isNikkiSelected (selected t)
+            || selectedRobot /= n
+            || isBlinkTime)
+    isBlinkTime =
+        pickAnimationFrame [False, True] [blinkSelectedLightSpeed] now
+    selectedRobot = case selected t of
+        Left i -> i
+        Right i -> i
 
 -- initialTerminal :: Qt.Position Double -> a -> [Index] -> Object_ a Vector
 -- initialTerminal p s i =
@@ -269,29 +315,33 @@ modifySelected t f =
 
 -- * game rendering
 
-renderTerminal :: Ptr QPainter -> Offset -> Terminal -> TSort -> IO ()
-renderTerminal ptr offset t sort = do
-    let pixmap = head $ blinkenLights $ pixmaps $ sort
+renderTerminal :: Ptr QPainter -> Offset -> Seconds -> Terminal -> TSort -> IO ()
+renderTerminal ptr offset seconds t sort = do
+    renderTerminalBackground ptr offset seconds t sort
+    renderLittleColorLights ptr offset t sort
+
+renderTerminalBackground ptr offset now t sort = do
+    let pixmap =
+            pickAnimationFrame (blinkenLights $ pixmaps sort)
+                [blinkenLightSpeed] now
     renderChipmunk ptr offset pixmap (tchipmunk t)
+
+
+renderLittleColorLights ptr offset t sort = do
     pos <- fst <$> getRenderPosition (tchipmunk t)
     mapM_ (renderLight ptr (offset +~ pos) t (littleColorLights $ pixmaps sort))
         [red_, blue_, green_, yellow_]
-    putStrLn (" - " ++ show (selected t))
 
 renderLight :: Ptr QPainter -> Offset -> Terminal -> ColorLights (Ptr QPixmap)
     -> (forall a . (ColorLights a -> a)) -> IO ()
-renderLight ptr offset t pixmaps color = do
-    if color $ lightState t then do
-        putStr "|"
+renderLight ptr offset t pixmaps color =
+    when (color $ lightState t) $ do
         let lightOffset = color littleLightOffsets
             pixmap = color pixmaps
         resetMatrix ptr
         translate ptr offset
         translate ptr lightOffset
         drawPixmap ptr zero pixmap
-      else
-        putStr "o"
-
 
 littleLightOffsets :: ColorLights Offset
 littleLightOffsets = ColorLights {

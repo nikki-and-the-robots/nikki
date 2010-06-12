@@ -11,6 +11,6 @@ trap error ERR
 bash ./compile.sh
 
 cd ..
-src/application/dist/build/nikki/nikki
+src/application/dist/build/nikki/nikki $1
 # default
 

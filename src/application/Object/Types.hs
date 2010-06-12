@@ -17,7 +17,6 @@ import Physics.Chipmunk hiding (Position, collisionType)
 
 import Base.Events
 import Base.Constants
-import Base.Grounds
 
 import Object.Contacts
 
@@ -67,7 +66,7 @@ class (Typeable sort, Typeable object) =>
     startControl :: object -> object
     startControl = id
     update :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
-    render :: object -> sort -> Ptr QPainter -> Offset -> IO ()
+    render :: object -> sort -> Ptr QPainter -> Offset -> Seconds -> IO ()
 
 
 -- * Sort class wrappers
@@ -115,7 +114,7 @@ data Object_
         chipmunk_ :: Chipmunk,
         startControl_ :: Object_,
         update_ :: Seconds -> Contacts -> (Bool, ControlData) -> IO Object_,
-        render_ :: Ptr QPainter -> Offset -> IO ()
+        render_ :: Ptr QPainter -> Offset -> Seconds -> IO ()
       }
 
 instance Show Object_ where

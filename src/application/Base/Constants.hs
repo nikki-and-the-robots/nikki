@@ -34,6 +34,11 @@ fromKachel = (* 16) . fromUber
 toKachel :: Fractional n => n -> n
 toKachel = (/ 16) . toUber
 
+-- * animation speeds
+
+robotIdleEyeTime :: Double
+robotIdleEyeTime = 0.4
+
 -- * Physics
 
 gravity :: Double

@@ -25,7 +25,7 @@ Executable            nikki
 --        -Wwarn
         -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
-        -fno-warn-unused-imports
+        -fwarn-unused-imports
 
 
     hs-source-dirs: ., ../common, ../qtRendering

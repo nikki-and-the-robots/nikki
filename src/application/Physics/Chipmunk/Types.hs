@@ -7,8 +7,6 @@ import Utils
 import Data.Complex
 import Data.Abelian
 
-import Control.Applicative
-
 import Graphics.Qt (Ptr, QPainter, translate)
 import qualified Graphics.Qt as Qt
 

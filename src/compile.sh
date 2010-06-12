@@ -22,5 +22,11 @@ fi
 cd buildSystem
 ghc --make -i../common Main.hs -o build $GHC_OPTIONS
 cd ..
-buildSystem/build build_application
+BUILD_COMMAND="buildSystem/build build_application"
+if (which hate)
+then
+    $BUILD_COMMAND 2>&1 | hate application
+else
+    $BUILD_COMMAND
+fi
 

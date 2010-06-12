@@ -3,9 +3,6 @@
 module Editor.Scene.Types where
 
 
-import Utils
-
--- import Data.Map hiding (map, filter)
 import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
@@ -13,11 +10,9 @@ import Data.Menu hiding (selected)
 import Data.Generics
 
 import Control.Monad.State
--- import Control.Exception
 
 import Graphics.Qt
 
--- import Base.Sprited
 import Base.Grounds
 
 import Object.Types

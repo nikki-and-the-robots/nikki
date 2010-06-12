@@ -5,38 +5,18 @@ module Top.Pickle where
 
 import Prelude hiding (readFile, writeFile)
 
-import Utils
-
-import qualified Data.Indexable as I
--- import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
--- import Data.Binary
--- import qualified Data.ByteString.Lazy as ByteString (ByteString, writeFile, readFile)
-
--- import Codec.Compression.Zlib
-
--- import Control.Monad
--- import Control.Applicative ((<$>))
-
 import System
 import System.FilePath
 import qualified System.IO as IO
 
-import Physics.Chipmunk
+import Utils
 
--- import Base.Sprited
 import Base.Grounds
 import Base.Constants
 
 import Object.Types as Object
 
-import Game.Scene
-import Game.Scene.Types
-import Game.Scene.Camera
--- import Game.Modes.Terminal
-
 import Editor.Scene as ES
-
-import Object.Contacts
 
 
 -- * IO stuff
@@ -141,8 +121,6 @@ askWithDefault prompt vorauswahl =
         askWithDefault prompt vorauswahl
     myreturn "" (Just x) = return x
     myreturn name _ = return name
---     myreturn a b = do
---         es "myreturn" (a, b)
 
     promptForInput :: String -> IO String
     promptForInput p = do
