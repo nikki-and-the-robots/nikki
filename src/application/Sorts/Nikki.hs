@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
-     DeriveDataTypeable, FlexibleInstances #-}
+    FlexibleInstances, DeriveDataTypeable #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 
@@ -14,8 +14,6 @@ import Data.Initial
 import Control.Monad hiding ((>=>))
 import Control.Monad.Compose
 import Control.Monad.FunctorM
-import Control.Arrow
-import Control.Applicative
 
 import System.FilePath
 
@@ -87,12 +85,12 @@ frameTimesMap = fromList [
     terminal = repeat (0, 10)
 
 
-sorts :: IO [NSort]
+sorts :: IO [Sort_]
 sorts = do
     pixmaps <- loadPixmaps
     size <- fmap fromIntegral <$> sizeQPixmap (defaultPixmap pixmaps)
     let r = NSort pixmaps size
-    return [r]
+    return [Sort_ r]
 
 loadPixmaps :: IO (Map RenderState [Ptr QPixmap])
 loadPixmaps = do
@@ -124,7 +122,7 @@ data NSort = NSort {
     pixmaps :: Map RenderState [Ptr QPixmap],
     nsize :: Size Double
   }
-    deriving Typeable
+    deriving Show -- Typeable
 
 data Nikki
     = Nikki {
@@ -135,7 +133,7 @@ data Nikki
         startTime :: Seconds,
         jumpSound :: PolySound
       }
-  deriving Typeable
+  deriving (Show, Typeable)
 
 data RenderState
     = Wait          {direction :: HorizontalDirection}

@@ -96,7 +96,7 @@ runHandler (Just scene : _) = Just $ sendStartControl scene
   where
     sendStartControl :: Scene -> Scene
     sendStartControl scene = 
-        modifyMainByIndex startControl_ (getControlledIndex scene) scene
+        modifyMainByIndex startControl (getControlledIndex scene) scene
 runHandler (Nothing : r) = runHandler r
 runHandler [] = Nothing
 
@@ -121,7 +121,7 @@ whichTerminalCollides Scene{objects, contacts} =
         (a : _) -> a
   where
     allTerminals :: Indexable (Maybe Terminal)
-    allTerminals = fmap dynamicToTerminal $ content $ mainLayer objects
+    allTerminals = fmap unwrapTerminal $ content $ mainLayer objects
 
     p :: Maybe Terminal -> Bool
     p Nothing = False
@@ -129,12 +129,12 @@ whichTerminalCollides Scene{objects, contacts} =
     collidingShapes :: [Shape]
     collidingShapes = contacts |> snd |> terminals |> Set.toList
 
-dynamicToTerminal :: Object_ -> Maybe Terminal
-dynamicToTerminal = unwrapObject .> fromDynamic
+unwrapTerminal :: Object_ -> Maybe Terminal
+unwrapTerminal (Object_ sort o) = cast o
 
 terminalExit :: Scene -> (Maybe Scene)
 terminalExit scene@Scene{mode = TerminalMode{nikki, terminal}} =
-    case dynamicToTerminal $ getMainObject scene terminal of
+    case unwrapTerminal $ getMainObject scene terminal of
         Just t -> case exitMode t of
             DontExit -> Nothing
             ExitToNikki ->
@@ -202,10 +202,10 @@ sceneUpdateObjects collisions now cd controlled scene grounds = do
 
         -- update function for all objects in the mainLayer
         updateMainObjects :: Index -> Object_ -> IO Object_
-        updateMainObjects i o = update_ o now collisions (i == controlled, cd)
+        updateMainObjects i o = update o now collisions (i == controlled, cd)
         -- update function for updates outside the mainLayer
         updateMultiLayerObjects :: Object_ -> IO Object_
-        updateMultiLayerObjects o = update_ o now collisions (False, cd)
+        updateMultiLayerObjects o = update o now collisions (False, cd)
 
     backgrounds' <- fmapM (fmapM updateMultiLayerObjects) backgrounds
     -- each object has to know, if it's controlled
@@ -226,7 +226,7 @@ renderScene ptr now scene@Scene{} = do
     windowSize <- sizeQPainter ptr
     eraseRect ptr zero windowSize (QtColor 0 0 0 255)
 
-    controlledPosition <- getPosition $ body $ chipmunk_ $ getControlled scene
+    controlledPosition <- getPosition $ body $ chipmunk $ getControlled scene
     (center, cameraState') <- getCenter controlledPosition (cameraState scene)
 
     intSize@(Size width height) <- sizeQPainter ptr
@@ -294,7 +294,7 @@ renderObjectGrid :: Ptr QPainter -> Qt.Position Double -> Object_ -> IO ()
 renderObjectGrid ptr offset object = do
     resetMatrix ptr
     translate ptr offset
-    let chip = chipmunk_ object
+    let chip = chipmunk object
     renderGrid ptr chip
 
 -- renderObjectGrid ptr offset o = es "renderGrid" o

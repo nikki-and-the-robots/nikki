@@ -9,7 +9,6 @@ import Data.IORef
 import Data.Set (Set, empty, insert, delete, toList)
 
 import Control.Monad.State hiding ((>=>))
-import Control.Applicative ((<$>))
 import Control.Monad.Compose
 import Control.Monad.FunctorM
 

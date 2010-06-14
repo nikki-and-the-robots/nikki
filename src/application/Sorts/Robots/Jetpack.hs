@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
-     DeriveDataTypeable, FlexibleInstances #-}
+     FlexibleInstances, DeriveDataTypeable #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 
@@ -10,7 +10,6 @@ import Data.Abelian
 import Data.Maybe
 import Data.Generics
 import Data.Map hiding (size, map)
-import Data.Initial
 
 import Control.Monad.Compose
 import Control.Monad.FunctorM
@@ -44,12 +43,12 @@ animationFrameTimesMap = fromList [
 
 -- * loading
 
-sorts :: IO [JSort]
+sorts :: IO [Sort_]
 sorts = do
     pixmaps <- fmapM (fmapM (newQPixmap . mkJetpackPng)) pngMap
     size <- fmap fromIntegral <$> sizeQPixmap (defaultPixmap pixmaps)
     let r = JSort pixmaps size
-    return [r]
+    return $ map Sort_ [r]
 
 pngMap :: Map RenderState [String]
 pngMap = fromList [
@@ -64,13 +63,13 @@ data RenderState
     = Wait
     | Boost
     | Idle
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Show)
 
 data JSort = JSort {
     pixmaps :: Map RenderState [(Ptr QPixmap)],
     rsize :: Size Double
   }
-    deriving Typeable
+    deriving Show -- Typeable
 
 defaultPixmap :: Map RenderState [(Ptr QPixmap)] -> Ptr QPixmap
 defaultPixmap m = head (m ! Wait)
@@ -82,7 +81,7 @@ data Jetpack = Jetpack {
     renderState :: RenderState,
     startTime :: Seconds
   }
-    deriving Typeable
+    deriving (Show, Typeable)
 
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"

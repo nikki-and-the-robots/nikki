@@ -7,9 +7,6 @@ module Utils where
 import Data.Char
 import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault)
-import qualified Data.Binary as B
-
-import Codec.Compression.Zlib
 
 import Control.Applicative ((<$>))
 import Control.Monad.State hiding ((>=>))

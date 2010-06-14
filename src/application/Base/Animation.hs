@@ -4,8 +4,6 @@ module Base.Animation where
 
 import Utils
 
-import Control.Arrow
-
 import Base.Constants
 
 

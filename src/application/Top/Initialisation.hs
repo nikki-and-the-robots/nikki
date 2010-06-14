@@ -4,8 +4,6 @@ module Top.Initialisation where
 
 import Data.Indexable as I
 
-import Control.Applicative
-
 import Physics.Chipmunk
 
 import Utils
@@ -26,10 +24,10 @@ import qualified Sorts.Robots.Jetpack
 
 sortLoaders :: [IO [Sort_]]
 sortLoaders = [
-    map mkSort_ <$> Sorts.Nikki.sorts,
-    map mkSort_ <$> Sorts.Terminal.sorts,
-    map mkSort_ <$> Sorts.Robots.Jetpack.sorts,
-    map mkSort_ <$> Sorts.Tiles.sorts
+    Sorts.Nikki.sorts,
+    Sorts.Terminal.sorts,
+    Sorts.Robots.Jetpack.sorts,
+    Sorts.Tiles.sorts
   ]
 
 mkScene :: Space -> Grounds Object_ -> IO Scene

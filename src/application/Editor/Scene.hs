@@ -17,7 +17,7 @@ module Editor.Scene (
   ) where
 
 import Data.Maybe
-import Data.Map hiding (map, filter, mapMaybe)
+import Data.Map hiding (map, filter, mapMaybe, size)
 import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable (Index, (>:), modifyByIndex)
@@ -248,7 +248,7 @@ cursorStepShortCuts = fromList (
   where
     fromSelectedPixmap :: EditorScene -> EditorPosition
     fromSelectedPixmap EditorScene{sorts} =
-        let (Size x y) = size_ $ getSelected sorts
+        let (Size x y) = size $ getSelected sorts
         in EditorPosition x y
     -- | shortcuts that put cursorStep to a constant square
     constSquareShortcuts :: [(Key, Double)]

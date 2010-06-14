@@ -49,7 +49,7 @@ renderEditorObject ptr offset eo = do
 --         pos = eObjectPosition o
 --         pix = defaultPixmap sprited
 --     renderAvailableObject ptr (offset +~ pos) sprited
-    sortRender_ (editorSort eo) ptr offset (editorPosition eo) Nothing
+    sortRender (editorSort eo) ptr offset (editorPosition eo) Nothing
 
 
 

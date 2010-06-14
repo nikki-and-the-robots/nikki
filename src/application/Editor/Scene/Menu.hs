@@ -149,7 +149,7 @@ render ptr menu = do
             position = EditorPosition x y
             iconSize = Size thumbnailHeight thumbnailHeight
 --         drawSqueezedPixmap ptr position iconSize $ defaultPixmap sprited
-        sortRender_ sort ptr zero position (Just iconSize)
+        sortRender sort ptr zero position (Just iconSize)
 
 --         resetMatrix ptr
 --         translate ptr $ Position x y

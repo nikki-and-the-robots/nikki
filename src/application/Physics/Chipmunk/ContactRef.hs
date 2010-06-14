@@ -64,7 +64,7 @@ initContactRef :: Enum collisionType =>
      Space -> x -> [Callback collisionType x] -> IO (ContactRef x)
 initContactRef space empty callbacks = do
     ref <- newIORef id
-    mapM (installCallback ref) callbacks
+    mapM_ (installCallback ref) callbacks
     return $ ContactRef empty ref
   where
     installCallback ref (Callback (Watch a b f) permeability) = do

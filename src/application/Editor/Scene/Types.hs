@@ -93,7 +93,7 @@ getRobotIndices EditorScene{objects} =
 
 getCursorSize :: EditorScene -> (Size Double)
 getCursorSize s@EditorScene{} =
-    size_ $ getSelected $ sorts s
+    size $ getSelected $ sorts s
 
 -- | returns an object from the main layer
 getMainObject :: EditorScene -> Index -> EditorObject

@@ -71,10 +71,10 @@ renderCursor' :: Ptr QPainter -> Offset -> EditorScene -> IO ()
 renderCursor' ptr offset scene = do
     let cursorPos = cursor scene
         sort = getSelected $ sorts scene
-        size = size_ sort
-        pos = offset +~ editorPosition2QtPosition_ sort cursorPos
+        size_ = size sort
+        pos = offset +~ editorPosition2QtPosition sort cursorPos
     resetMatrix ptr
-    drawColoredBox ptr pos size 5 pink{alphaC = 0.5}
+    drawColoredBox ptr pos size_ 5 pink{alphaC = 0.5}
 
 
 -- calculates the rendering position for all objects (does the clipping, etc.)
@@ -102,7 +102,7 @@ renderSelectedIcon :: Ptr QPainter -> Sort_ -> IO ()
 renderSelectedIcon ptr co = do
     screenSize <- fmap fromIntegral <$> sizeQPainter ptr
 --     drawSqueezedPixmap ptr (Position 0 y) (Size 64 64) (defaultPixmap co)
-    sortRender_ co ptr zero
+    sortRender co ptr zero
         (EditorPosition 0 (height screenSize)) (Just $ Size 64 64)
 
 -- | renders the selected object (if any) in the right lower corner
@@ -115,7 +115,7 @@ renderSelectedObject ptr sort = do
         boxSize@(Size boxWidth _) = Size 64 64
 
 --     drawSqueezedPixmap ptr position boxSize (defaultPixmap sprited)
-    sortRender_ sort ptr zero position (Just boxSize)
+    sortRender sort ptr zero position (Just boxSize)
 
 -- | renders the currently selected Layer in the right lower corner
 renderLayerOSD :: Ptr QPainter -> GroundsIndex -> IO ()

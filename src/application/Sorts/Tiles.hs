@@ -1,5 +1,4 @@
-{-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances,
-     DeriveDataTypeable #-}
+{-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances, DeriveDataTypeable #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 
@@ -29,30 +28,30 @@ import Object.Types
 import Object.Contacts
 
 
-sorts :: IO [TSort]
+sorts :: IO [Sort_]
 sorts = do
     pngs <- filter ((== ".png") . takeExtension) <$> getDirectoryContents editorTileDir
     mapM mkSort $ map (editorTileDir </>) pngs
 
 editorTileDir = pngDir </> "tiles" </> "editor"
 
-mkSort :: FilePath -> IO TSort
+mkSort :: FilePath -> IO Sort_
 mkSort png = do
     pixmap <- newQPixmap png
     size <- fmap fromIntegral <$> sizeQPixmap pixmap
-    return $ TSort png pixmap size
+    return $ Sort_ $ TSort png pixmap size
 
 data TSort = TSort {
     path :: FilePath,
     pixmap :: Ptr QPixmap,
     tsize :: Size Double
   }
-    deriving Typeable
+    deriving Show -- Typeable
 
 data Tile = Tile {
     tchipmunk :: Chipmunk
   }
-    deriving Typeable
+    deriving (Show, Typeable)
 
 instance Sort TSort Tile where
     sortId sort = SortId $ dropExtension $ path sort

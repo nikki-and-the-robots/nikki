@@ -1,5 +1,5 @@
 {-# language MultiParamTypeClasses, FunctionalDependencies, NamedFieldPuns,
-     ViewPatterns #-}
+     ViewPatterns, ExistentialQuantification, DeriveDataTypeable #-}
 
 module Object.Types where
 
@@ -47,8 +47,7 @@ newtype SortId = SortId FilePath
 
 -- * Sort class
 
-class (Typeable sort, Typeable object) =>
-  Sort sort object | sort -> object, object -> sort where
+class (Show object, Typeable object) => Sort sort object | sort -> object, object -> sort where
     sortId :: sort -> SortId
     size :: sort -> Size Double
     objectEditMode :: sort -> Maybe ObjectEditMode
@@ -73,76 +72,55 @@ class (Typeable sort, Typeable object) =>
 -- * Sort class wrappers
 
 data Sort_
-    = Sort_ {
-        unwrapSort :: Dynamic,
-        sortId_ :: SortId,
-        size_ :: Size Double,
-        objectEditMode_ :: Maybe ObjectEditMode,
-        sortRender_ :: Ptr QPainter -> Offset
-            -> EditorPosition -> Maybe (Size Double) -> IO (),
-        editorPosition2QtPosition_ :: EditorPosition -> Position Double,
-
-        initialize_ :: Space -> EditorPosition -> Maybe String -> IO Object_
-      }
---   deriving ()
+    = forall sort object .
+        (Sort sort object, Show sort) =>
+            Sort_ sort
 
 instance Show Sort_ where
-    show s = "<Sort_ " ++ show (sortId_ s) ++ ">"
+    show (Sort_ s) = "Sort_ (" ++ show s ++ ")"
 
 instance Eq Sort_ where
-
-mkSort_ :: Sort sort object => sort -> Sort_
-mkSort_ sort = result
-  where
-    result = Sort_ {
-        unwrapSort = toDyn sort,
-        sortId_ = sortId sort,
-        size_ = size sort,
-        objectEditMode_ = objectEditMode sort,
-        sortRender_ = sortRender sort,
-        editorPosition2QtPosition_ = editorPosition2QtPosition sort,
-
-        initialize_ = \ space position state ->
-            mkObject_ result <$> initialize sort space position state
-      }
+    a == b = sortId a == sortId b
 
 data Object_
-    = Object_ {
-        unwrapObject :: Dynamic,
-        sort_ :: Sort_,
-        chipmunk_ :: Chipmunk,
-        startControl_ :: Object_,
-        update_ :: Seconds -> Contacts -> (Bool, ControlData) -> IO Object_,
-        render_ :: Ptr QPainter -> Offset -> Seconds -> IO ()
-      }
+    = forall sort object .
+        (Sort sort object, Show sort, Show object, Typeable object) =>
+            Object_ sort object
+  deriving Typeable
 
 instance Show Object_ where
-    show Object_{sort_} = "<Object_ of sort " ++ show sort_ ++ ">"
+    show (Object_ s o) = "Object_ (" ++ show o ++ ")"
 
-mkObject_ :: Sort sort object => Sort_ -> object -> Object_
-mkObject_ sort_ object =
-    Object_ {
-        unwrapObject = toDyn object,
-        sort_ = sort_,
-        chipmunk_ = chipmunk object,
-        startControl_ = mkObject_ sort_ (startControl object),
-        update_ = \ seconds collisions cd ->
-            mkObject_ sort_ <$> update object seconds collisions cd,
-        render_ = case fromDynamic (unwrapSort sort_) of
-                     Just sort -> render object sort
-      }
+instance Sort Sort_ Object_ where
+    sortId (Sort_ s) = sortId s
+    size (Sort_ s) = size s
+    objectEditMode (Sort_ s) = objectEditMode s
+    sortRender (Sort_ s) = sortRender s
+    editorPosition2QtPosition (Sort_ s) = editorPosition2QtPosition s
+    initialize (Sort_ sort) space editorPosition state =
+        Object_ sort <$> initialize sort space editorPosition state
+    chipmunk (Object_ _ o) = chipmunk o
+    startControl (Object_ sort o) = Object_ sort $ startControl o
+    update (Object_ sort o) now contacts cd =
+        Object_ sort <$> update o now contacts cd
+    render = error "Don't use this function, use render_ instead (that't type safe)"
 
+sort_ :: Object_ -> Sort_
+sort_ (Object_ sort _) = Sort_ sort
+
+render_ :: Object_ -> Ptr QPainter -> Offset -> Seconds -> IO ()
+render_ (Object_ sort o) = render o sort
 
 -- * Discriminators
 
 isTerminal :: Sort_ -> Bool
-isTerminal sort = SortId "terminal" == sortId_ sort
+isTerminal sort = SortId "terminal" == sortId sort
 
 isRobot :: Sort_ -> Bool
-isRobot (sortId_ -> (SortId s)) = "robots/" `isPrefixOf` s
+isRobot (sortId -> (SortId s)) = "robots/" `isPrefixOf` s
 
 isNikki :: Sort_ -> Bool
-isNikki s = (SortId "nikki" == sortId_ s)
+isNikki s = (SortId "nikki" == sortId s)
 
 
 -- * Editor objects
@@ -160,7 +138,7 @@ mkEditorObject sort pos = EditorObject sort pos (mkOEMState sort)
 
 eObject2Object :: Space -> EditorObject -> IO Object_
 eObject2Object space (EditorObject sort pos state) =
-    initialize_ sort space pos (fmap oemState state)
+    initialize sort space pos (fmap oemState state)
 
 modifyOEMState :: (OEMState -> OEMState) -> EditorObject -> EditorObject
 modifyOEMState f eo =
@@ -179,7 +157,7 @@ data PickleObject = PickleObject {
 
 editorObject2PickleObject :: EditorObject -> PickleObject
 editorObject2PickleObject (EditorObject sort p oemState) =
-    PickleObject (sortId_ sort) p (fmap pickleOEM oemState)
+    PickleObject (sortId sort) p (fmap pickleOEM oemState)
 
 -- | converts pickled objects to editor objects
 -- needs all available sorts
@@ -187,7 +165,7 @@ pickleObject2EditorObject :: [Sort_] -> PickleObject -> EditorObject
 pickleObject2EditorObject allSorts (PickleObject id position oemState) =
     EditorObject sort position (fmap (unpickleOEM sort) oemState)
   where
-    (sort : _) = filter ((== id) . sortId_) allSorts
+    (sort : _) = filter ((== id) . sortId) allSorts
 
 
 
@@ -248,7 +226,7 @@ data OEMState
 
 mkOEMState :: Sort_ -> Maybe OEMState
 mkOEMState sort =
-    case objectEditMode_ sort of
+    case objectEditMode sort of
         Nothing -> Nothing
         Just oem -> Just $ OEMState oem (oemInitialState oem)
 
@@ -269,7 +247,7 @@ pickleOEM (OEMState _ state) = state
 
 unpickleOEM :: Sort_ -> String -> OEMState
 unpickleOEM sort state =
-    case objectEditMode_ sort of
+    case objectEditMode sort of
         Just x -> OEMState x state
 
 

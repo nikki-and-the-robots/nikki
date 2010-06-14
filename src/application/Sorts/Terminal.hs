@@ -54,7 +54,7 @@ blinkSelectedLightSpeed :: Seconds
 blinkSelectedLightSpeed = 0.2
 
 
-sorts :: IO [TSort]
+sorts :: IO [Sort_]
 sorts = do
     blinkenLights <- mapM (newQPixmap . toPngPath) [
         "terminal-main_00",
@@ -65,7 +65,7 @@ sorts = do
     size <- fmap (subtract 2) <$> sizeQPixmap (head blinkenLights)
     littleColors <- readColorLights (\ color -> toPngPath ("terminal-" ++ color))
     let r = TSort (Pixmaps blinkenLights size littleColors)
-    return [r]
+    return [Sort_ r]
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
@@ -74,6 +74,7 @@ data Pixmaps = Pixmaps {
     pixmapsSize :: Size Int,
     littleColorLights :: ColorLights (Ptr QPixmap)
   }
+    deriving Show
 
 data ColorLights a = ColorLights {
     red_, blue_, green_, yellow_ :: a
@@ -106,7 +107,7 @@ data ExitMode
 data TSort = TSort {
     pixmaps :: Pixmaps
   }
-    deriving Typeable
+    deriving Show -- Typeable
 
 data Terminal = Terminal {
     tchipmunk :: Chipmunk,
@@ -517,9 +518,9 @@ renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
     renderRobotBox :: RGBA -> EditorObject -> IO ()
     renderRobotBox color robot = do
         let sort = editorSort robot
-            pos = editorPosition2QtPosition_ sort $ editorPosition robot
-            size = size_ sort
-        drawColoredBox ptr (pos +~ offset) size 4 color
+            pos = editorPosition2QtPosition sort $ editorPosition robot
+            size_ = size sort
+        drawColoredBox ptr (pos +~ offset) size_ 4 color
 
 -- calculateRenderTransformationTerminal :: Ptr QPainter -> EditorScene -> IO (Position Double)
 -- calculateRenderTransformationTerminal ptr scene@TerminalScene{mainScene} =
