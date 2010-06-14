@@ -6,8 +6,6 @@ module Game.Scene.Camera (
   ) where
 
 
--- import Control.Applicative ((<$>))
-
 import Data.Abelian
 
 import qualified Physics.Chipmunk as CM

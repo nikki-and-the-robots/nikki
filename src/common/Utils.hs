@@ -1,6 +1,9 @@
 {-# language EmptyDataDecls, FlexibleInstances #-}
 
-module Utils where
+module Utils (
+    (<$>),
+    module Utils,
+  ) where
 
 -- imports
 
@@ -77,6 +80,32 @@ toDebug :: Show s => String -> s -> String
 toDebug msg s = msg ++ ": " ++ show s
 
 
+-- * function and monad composition stuff
+
+(|>) :: a -> (a -> b) -> b
+a |> f = f a
+
+(.>) :: (a -> b) -> (b -> c) -> (a -> c)
+(.>) = flip (.)
+
+(.>>) :: Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)
+x .>> y = \ a -> x a >>= y
+
+(|>>) :: Monad m => m a -> (a -> b) -> m b
+a |>> b = a >>= (return . b)
+
+
+-- lifter stuff
+
+pure :: Monad m => (a -> b) -> (a -> m b)
+pure = (return .)
+
+passThrough :: Monad m => (a -> m ()) -> (a -> m a)
+passThrough cmd a = cmd a >> return a
+
+
+
+
 -- * scripting stuff
 
 -- | executes a unix command on the shell and exits if it does not succeed.
@@ -126,9 +155,6 @@ chainAppM cmd (b : r) a = do
     a' <- cmd b a
     chainAppM cmd r a'
 chainAppM _ [] a = return a
-
-(~>) :: Monad m => m a -> (a -> b) -> m b
-a ~> b = a >>= (return . b)
 
 
 -- * list stuff
@@ -346,12 +372,6 @@ uncurry4 f (a, b, c, d) = f a b c d
 
 withView :: (a -> b) -> (b -> b -> c) -> a -> a -> c
 withView view operator a b = operator (view a) (view b)
-
-(|>) :: a -> (a -> b) -> b
-a |> f = f a
-
-(.>) :: (a -> b) -> (b -> c) -> (a -> c)
-(.>) = flip (.)
 
 swapOrdering :: Ordering -> Ordering
 swapOrdering LT = GT

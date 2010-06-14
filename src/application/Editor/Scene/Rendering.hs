@@ -10,12 +10,9 @@ import Control.Monad.FunctorM
 import Data.Abelian
 import Data.Dynamic
 
-import Control.Applicative ((<$>))
-
 import Graphics.Qt
 
 import Base.Grounds
--- import Base.Sprited
 
 import Object.Types
 

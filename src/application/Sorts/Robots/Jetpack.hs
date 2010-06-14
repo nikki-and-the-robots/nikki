@@ -11,7 +11,6 @@ import Data.Maybe
 import Data.Generics
 import Data.Map hiding (size, map)
 
-import Control.Monad.Compose
 import Control.Monad.FunctorM
 
 import System.FilePath
@@ -89,7 +88,7 @@ instance Sort JSort Jetpack where
     sortRender sort =
         sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
 
-    initialize sort space ep Nothing = do
+    initialize sort (Just space) ep Nothing = do
         let 
             pos = qtPositionToVector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
@@ -110,8 +109,8 @@ instance Sort JSort Jetpack where
     update object now _ (isControlled, cd) = inner object
       where
         inner =
-            pure (jupdate (isControlled, cd)) >=>
-            pure (updateRenderState now isControlled) >=>
+            pure (jupdate (isControlled, cd)) .>>
+            pure (updateRenderState now isControlled) .>>
             controlToChipmunk
 
     render = renderJetpack

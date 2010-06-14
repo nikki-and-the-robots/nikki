@@ -9,8 +9,6 @@ import Data.Abelian
 import Data.Dynamic
 import Data.List
 
-import Control.Applicative ((<$>))
-
 import Graphics.Qt as Qt
 
 import Physics.Chipmunk hiding (Position, collisionType)
@@ -60,7 +58,9 @@ class (Show object, Typeable object) => Sort sort object | sort -> object, objec
       where
         Size _ height = size sort
 
-    initialize :: sort -> Space -> EditorPosition -> Maybe String -> IO object
+    -- if Nothing is passed as space, this should be an object 
+    -- that is not added to the chipmunk space (i.e. background tiles)
+    initialize :: sort -> Maybe Space -> EditorPosition -> Maybe String -> IO object
 
     chipmunk :: object -> Chipmunk
     startControl :: object -> object
@@ -136,9 +136,9 @@ data EditorObject
 mkEditorObject :: Sort_ -> EditorPosition -> EditorObject
 mkEditorObject sort pos = EditorObject sort pos (mkOEMState sort)
 
-eObject2Object :: Space -> EditorObject -> IO Object_
-eObject2Object space (EditorObject sort pos state) =
-    initialize sort space pos (fmap oemState state)
+editorObject2Object :: Maybe Space -> EditorObject -> IO Object_
+editorObject2Object mspace (EditorObject sort pos state) =
+    initialize sort mspace pos (fmap oemState state)
 
 modifyOEMState :: (OEMState -> OEMState) -> EditorObject -> EditorObject
 modifyOEMState f eo =

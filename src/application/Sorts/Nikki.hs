@@ -12,7 +12,6 @@ import Data.Generics
 import Data.Initial
 
 import Control.Monad hiding ((>=>))
-import Control.Monad.Compose
 import Control.Monad.FunctorM
 
 import System.FilePath
@@ -160,7 +159,7 @@ instance Sort NSort Nikki where
     sortRender sort =
         sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
 
-    initialize sort space editorPosition Nothing = do
+    initialize sort (Just space) editorPosition Nothing = do
         let (nikkiShapes, baryCenterOffset) = mkPolys $ size sort
             pos = qtPositionToVector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
@@ -187,7 +186,7 @@ instance Sort NSort Nikki where
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
-        renderChipmunk ptr offset pixmap (chipmunk nikki)
+        renderChipmunk ptr offset pixmap (nchipmunk nikki)
 
 
 -- * initialisation

@@ -9,7 +9,6 @@ import Data.IORef
 import Data.Set (Set, empty, insert, delete, toList)
 
 import Control.Monad.State hiding ((>=>))
-import Control.Monad.Compose
 import Control.Monad.FunctorM
 
 import System.IO
@@ -29,7 +28,6 @@ import Object.Types
 
 import Game.MainLoop as Game
 import Game.Scene (Scene)
-import Game.OptimizeChipmunks
 
 import Editor.Scene
 
@@ -153,51 +151,3 @@ debugScene = do
     put s{scene = (scene s){debugMsgs = []}}
 
 
-
-
-initSceneFromEditor :: Space -> Grounds EditorObject -> IO Scene
-initSceneFromEditor space =
-    fmapM (eObject2Object space) >=>
-    mkScene space >=>
-    optimizeChipmunks
-
-
--- not used as we have only one executable now.
-
--- initScene :: Space -> Grounds UnloadedEditorObject -> IO Scene
--- initScene space =
---     pure (fmap eObject2Object) >=>
---     loadSpriteds >=>
---     mkScene >=>
---     optimizeChipmunks >=>
---     sceneInitChipmunks space >=>
---     sceneInitCollisions space
-
--- not used as we have only one executable now.
--- gameMain :: IO ()
--- gameMain = do
---     putStrLn "\ngame started..."
---     hSetBuffering stdout NoBuffering
--- 
---     app <- newQApplication
---     window <- newAppWidget 1
--- 
---     debugQtVersion
--- 
---     debugNumberOfHecs
--- 
---     when (fullscreen Configuration.development) $
---         setFullscreenAppWidget window True
--- 
---     directRendered <- directRenderingAppWidget window
---     when (not directRendered) $
---         warn "No direct rendering available :("
---     paintEngineType <- paintEngineTypeAppWidget window
---     warn ("paintEngine: " ++ show paintEngineType)
--- 
---     (Just (levelname, eobjects)) <- load (Just "default")
---     isr <- initialStateRef app window (flip initScene eobjects)
---     ec <- qtRendering app window "QT_P_O_C" initialSize (renderCallback isr) globalCatcher
--- 
---     readIORef isr >>= (fpsState >>> terminateFpsState)
---     exitWith ec

@@ -20,9 +20,7 @@ import Data.Dynamic
 import Data.Initial
 import Data.Color
 
-import Control.Applicative ((<$>))
 import Control.Monad
--- import Control.Monad.Compose
 
 import System.FilePath
 
@@ -38,7 +36,6 @@ import Base.Animation
 
 import Object.Types hiding (OEMState)
 import Object.Contacts
--- import Object.Animation
 
 import Editor.Scene.Types hiding (sorts, ControlData, selected)
 import Editor.Scene.Rendering
@@ -107,20 +104,28 @@ data ExitMode
 data TSort = TSort {
     pixmaps :: Pixmaps
   }
-    deriving Show -- Typeable
+    deriving Show
 
 data Terminal = Terminal {
     tchipmunk :: Chipmunk,
     robots :: [Index],
-    selected :: Either Int Int, -- Left -> nikki selected ; Right -> robot selected
+    selected :: Selected,
     exitMode :: ExitMode,
     lightState :: ColorLights Bool,
     selectedChangedTime :: Seconds
   }
     deriving (Show, Typeable)
 
-isNikkiSelected (Left _) = True
-isNikkiSelected (Right _) = False
+data Selected
+    = NikkiSelected {selectedRobotIndex :: Int}
+    | RobotSelected {selectedRobotIndex :: Int}
+  deriving Show
+
+isNikkiSelected :: Selected -> Bool
+isNikkiSelected (NikkiSelected _) = True
+isNikkiSelected (RobotSelected _) = False
+
+
 
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
@@ -130,7 +135,7 @@ instance Sort TSort Terminal where
 
     objectEditMode _ = Just editMode
 
-    initialize sort space editorPosition (Just state_) = do
+    initialize sort (Just space) editorPosition (Just state_) = do
         let pixmap = head $ blinkenLights $ pixmaps sort
             oemState = readNote "Terminal.initialize" state_
             attached = case oemState of
@@ -150,7 +155,7 @@ instance Sort TSort Terminal where
             (polys, baryCenterOffset) = mkPolys $ size sort
             polysAndAttributes = map (tuple shapeAttributes) polys
         chip <- initStaticChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
-        return $ Terminal chip attached (Left 0) DontExit
+        return $ Terminal chip attached (NikkiSelected 0) DontExit
                     (mkColorLights $ map (< length attached) [0..3])
                     0
 
@@ -163,8 +168,8 @@ instance Sort TSort Terminal where
     update terminal now collisions (True, cd) = do
         let cls = pp $ lightState terminal
         case selected terminal of
-            Left _ -> putStrLn ("[Nikki]\n " ++ cls)
-            Right _ -> putStrLn (" Nikki\n[" ++ cls ++ "]")
+            NikkiSelected _ -> putStrLn ("[Nikki]\n " ++ cls)
+            RobotSelected _ -> putStrLn (" Nikki\n[" ++ cls ++ "]")
         return $ blinkSelectedColorLight now $ controlTerminal now cd terminal
 
     render terminal sort ptr offset seconds =
@@ -193,19 +198,19 @@ controlTerminal :: Seconds -> ControlData -> Terminal -> Terminal
 controlTerminal now cd t | Press BButton `elem` pushed cd =
 --     || Press AButton `elem` pushed cd =
         case selected t of
-            Left i -> t{exitMode = ExitToNikki}
-            Right i -> t{exitMode = ExitToRobot (robots t !! i)}
+            NikkiSelected _ -> t{exitMode = ExitToNikki}
+            RobotSelected i -> t{exitMode = ExitToRobot (robots t !! i)}
 controlTerminal now cd t | Press RightButton `elem` pushed cd =
     modifySelected now t (+ 1)
 controlTerminal now cd t | Press LeftButton `elem` pushed cd =
     modifySelected now t (subtract 1)
-controlTerminal now cd t@Terminal{selected = Left i, robots}
+controlTerminal now cd t@Terminal{selected = NikkiSelected i, robots}
     | Press DownButton `elem` pushed cd
       && not (null robots) =
-        t{selected = Right i, selectedChangedTime = now}
-controlTerminal now cd t@Terminal{selected = Right i}
+        t{selected = RobotSelected i, selectedChangedTime = now}
+controlTerminal now cd t@Terminal{selected = RobotSelected i}
     | Press UpButton `elem` pushed cd =
-        t{selected = Left i}
+        t{selected = NikkiSelected i}
 controlTerminal _ _ t = t
 
 -- | changes the selected robot (if applicable)
@@ -213,9 +218,9 @@ controlTerminal _ _ t = t
 modifySelected :: Seconds -> Terminal -> (Int -> Int) -> Terminal
 modifySelected now t f =
     case selected t of
-        Left i -> t
-        Right i -> t{
-            selected = Right (clip (0, length (robots t) - 1) (f i)),
+        NikkiSelected i -> t
+        RobotSelected i -> t{
+            selected = RobotSelected (clip (0, length (robots t) - 1) (f i)),
             selectedChangedTime = now
           }
 
@@ -226,13 +231,10 @@ blinkSelectedColorLight now t =
     lightState' = mkColorLights $ map p [0..3]
     p n = n < length (robots t)
         && (isNikkiSelected (selected t)
-            || selectedRobot /= n
+            || selectedRobotIndex (selected t) /= n
             || isBlinkTime)
     isBlinkTime =
         pickAnimationFrame [False, True] [blinkSelectedLightSpeed] now
-    selectedRobot = case selected t of
-        Left i -> i
-        Right i -> i
 
 -- initialTerminal :: Qt.Position Double -> a -> [Index] -> Object_ a Vector
 -- initialTerminal p s i =

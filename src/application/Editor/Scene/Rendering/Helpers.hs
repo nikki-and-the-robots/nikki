@@ -9,8 +9,6 @@ import Data.Abelian
 
 import Graphics.Qt
 
--- import Base.Sprited
-
 import Object.Types
 
 -- import Editor.Scene.Types

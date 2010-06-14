@@ -75,12 +75,12 @@ data Chipmunk
         body :: Body,
         shapes :: [Shape],
         shapeTypes :: [ShapeType],
-        renderPosition :: Vector,
+        renderPosition :: Qt.Position Double,
         chipmunkPosition :: Vector  -- saves the distance from the left upper corner to the body position
       }
---     | DummyChipmunk {
---         renderPosition :: Vector
---       }
+    | DummyChipmunk { -- used for objects that aren't added to any space
+        renderPosition :: Qt.Position Double
+      }
   deriving (Show)
 
 instance Show Space where
@@ -95,7 +95,7 @@ initStaticChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenter
     let normalAttrs = static2normalAttributes as
     body <- mkBody normalAttrs
     let chip = StaticChipmunk space body [] []
-                (position -~ baryCenterOffset) position
+                (vectorToQtPosition (position -~ baryCenterOffset)) position
     addInitShape chip shapeTypes
 initStaticChipmunk space x y bc = nm "initStaticChipmunk" (x, y)
 
@@ -159,9 +159,8 @@ getRenderPosition Chipmunk{body, baryCenterOffset} = do
         (Vector x y) = pos -~ rotatedOffset
     return (Qt.Position x y, angle)
 getRenderPosition StaticChipmunk{renderPosition} = do
-    let (Vector x y) = renderPosition
-    return (Qt.Position x y, 0)
--- getRenderPosition (DummyChipmunk pos) = return (pos, 0)
+    return (renderPosition, 0)
+getRenderPosition (DummyChipmunk pos) = return (pos, 0)
 
 getChipmunkPosition :: Chipmunk -> IO (Position, Angle)
 getChipmunkPosition Chipmunk{body} = do

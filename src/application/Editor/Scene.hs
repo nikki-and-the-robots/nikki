@@ -26,7 +26,6 @@ import Data.Abelian
 import Data.Dynamic
 
 import Control.Monad.State
-import Control.Applicative ((<$>))
 
 import Graphics.Qt
 
@@ -34,7 +33,6 @@ import Utils
 
 import Base.Constants
 import Base.Grounds
--- import Base.Sprited
 
 import Object.Types
 
@@ -61,16 +59,6 @@ normSelected s@EditorScene{} = s{selected = searchSelectedObject s}
 normSelected x = x
 
 -- * constructors
-
--- returns if a Sprited comes from the given directory (relative to pngDir)
--- spritedInDirectory :: Sprited -> FilePath -> Bool
--- spritedInDirectory s path = (pngDir </> path) `isPrefixOf` loadedSpritedDir s
-
--- returns if a sprited corresponds to a given path (from pngDir) and Name.
--- spritedIsSomething :: Sprited -> FilePath -> Name -> Bool
--- spritedIsSomething s path name =
---     spritedInDirectory s path &&
---     name == loadedSpritedName s
 
 -- | the initial editor scene
 initScene :: [IO [Sort_]] -> Maybe (String, Grounds PickleObject) -> IO EditorScene

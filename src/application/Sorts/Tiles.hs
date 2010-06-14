@@ -13,8 +13,6 @@ import Utils
 import Data.Abelian
 import Data.Generics
 
-import Control.Applicative ((<$>))
-
 import System.FilePath
 import System.Directory
 
@@ -61,7 +59,11 @@ instance Sort TSort Tile where
     sortRender sort =
         sortRenderSinglePixmap (pixmap sort) sort
 
-    initialize sort space editorPosition Nothing = do
+    initialize sort Nothing editorPosition Nothing = do
+        let -- baryCenterOffset = fmap (/ 2) $ size sort
+            pos = editorPosition2QtPosition sort editorPosition
+        return $ Tile $ DummyChipmunk{renderPosition = pos}
+    initialize sort (Just space) editorPosition Nothing = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             collisionType_ = TileCT
             shapesWithAttributes =

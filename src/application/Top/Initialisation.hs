@@ -4,6 +4,8 @@ module Top.Initialisation where
 
 import Data.Indexable as I
 
+import Control.Monad.FunctorM
+
 import Physics.Chipmunk
 
 import Utils
@@ -15,6 +17,7 @@ import Object.Contacts
 
 import Game.Scene.Types
 import Game.Scene.Camera
+import Game.OptimizeChipmunks
 
 import qualified Sorts.Nikki
 import qualified Sorts.Terminal
@@ -29,6 +32,22 @@ sortLoaders = [
     Sorts.Robots.Jetpack.sorts,
     Sorts.Tiles.sorts
   ]
+
+
+initSceneFromEditor :: Space -> Grounds EditorObject -> IO Scene
+initSceneFromEditor space =
+    initializeObjects space .>>
+    mkScene space .>>
+    optimizeChipmunks
+
+initializeObjects :: Space -> Grounds EditorObject -> IO (Grounds Object_)
+initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
+    bgs' <- fmapM (fmapM (editorObject2Object Nothing)) backgrounds
+    ml' <- fmapM (editorObject2Object (Just space)) mainLayer
+    fgs' <- fmapM (fmapM (editorObject2Object Nothing)) foregrounds
+    return $ Grounds bgs' ml' fgs'
+
+
 
 mkScene :: Space -> Grounds Object_ -> IO Scene
 mkScene space objects = do

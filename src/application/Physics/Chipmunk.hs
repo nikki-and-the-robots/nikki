@@ -88,8 +88,6 @@ import Utils
 
 import Data.Abelian
 
-import Control.Applicative ((<$>))
-
 import Physics.Hipmunk
 
 import Physics.Chipmunk.Types
