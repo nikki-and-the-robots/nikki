@@ -91,9 +91,6 @@ a |> f = f a
 (.>>) :: Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)
 x .>> y = \ a -> x a >>= y
 
-(|>>) :: Monad m => m a -> (a -> b) -> m b
-a |>> b = a >>= (return . b)
-
 
 -- lifter stuff
 

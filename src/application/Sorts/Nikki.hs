@@ -346,7 +346,7 @@ controlBody now collisions (True, cd)
 
         -- renderState updating
         let state = pickRenderState (renderState nikki) ifNikkiTouchesGround
-                        (leftHeld, rightHeld) xVelocity
+                        (bothHeld, leftHeld, rightHeld)
 
         return $ if doesJumpStartNow then
             nikki{renderState = state, jumpStartTime = now}
@@ -437,7 +437,7 @@ updateStartTimes now oldRenderState nikki@Nikki{renderState = newRenderState} =
       else
         nikki{startTime = now}
 
-pickRenderState oldRenderState touchesGround (leftHeld, rightHeld) xVelocity =
+pickRenderState oldRenderState touchesGround (bothHeld, leftHeld, rightHeld) =
     if not touchesGround then
         Jump dir
       else if leftHeld `xor` rightHeld then
@@ -445,12 +445,14 @@ pickRenderState oldRenderState touchesGround (leftHeld, rightHeld) xVelocity =
       else
         Wait dir
   where
-    dir = if abs xVelocity < epsilon then
+    dir = if bothHeld then
         direction oldRenderState
-      else if xVelocity < 0 then
+      else if leftHeld then
         HLeft
-      else
+      else if rightHeld then
         HRight
+      else
+        direction oldRenderState
 
 pickPixmap :: Seconds -> NSort -> Nikki -> Ptr QPixmap
 pickPixmap now sort nikki = 

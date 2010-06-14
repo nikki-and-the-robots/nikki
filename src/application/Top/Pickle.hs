@@ -44,7 +44,7 @@ writeFile = IO.writeFile
 
 
 readSaved :: FilePath -> IO (Maybe SaveType)
-readSaved file = (readFile file :: IO FileFormat) |>> fileToSave
+readSaved file = (readFile file :: IO FileFormat) >>= pure fileToSave
 
 writeSaved :: FilePath -> SaveType -> IO ()
 writeSaved file level = writeFile file (saveToFile level :: FileFormat)

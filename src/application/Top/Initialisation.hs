@@ -22,12 +22,15 @@ import Game.OptimizeChipmunks
 import qualified Sorts.Nikki
 import qualified Sorts.Terminal
 import qualified Sorts.Tiles
+import qualified Sorts.Box
+
 import qualified Sorts.Robots.Jetpack
 
 
 sortLoaders :: [IO [Sort_]]
 sortLoaders = [
     Sorts.Nikki.sorts,
+    Sorts.Box.sorts,
     Sorts.Terminal.sorts,
     Sorts.Robots.Jetpack.sorts,
     Sorts.Tiles.sorts
