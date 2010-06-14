@@ -20,7 +20,15 @@ else
 fi
 
 cd buildSystem
-ghc --make -i../common Main.hs -o build $GHC_OPTIONS
+if [ -d dist ]
+then
+    echo
+else
+    cabal configure --ghc-options="$GHC_OPTIONS"
+fi
+cabal build
+# ghc --make -i../common Main.hs -o build $GHC_OPTIONS
+
 cd ..
 BUILD_COMMAND="buildSystem/build build_application"
 if (which hate)
