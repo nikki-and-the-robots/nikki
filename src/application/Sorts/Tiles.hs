@@ -34,28 +34,40 @@ import Object
 
 sorts :: IO [Sort_]
 sorts = do
-    names <- map dropExtension <$>
-             filter ((== ".png") . takeExtension) <$> 
-             getDirectoryContents editorTileDir
-    mapM mkSort names
+--     names <- map dropExtension <$>
+--              filter ((== ".png") . takeExtension) <$> 
+--              getDirectoryContents editorTileDir
+    mapM (\ (a, b, c) -> mkSort a b c) names
 
-editorTileDir = pngDir </> "tiles" </> "editor"
+names :: [(String, Offset, Size Double)]
+names = [
+    ("editor" </> "standardTile", (Position (- 32) (- 32)), Size 64 64)
+  ]
 
-mkSort :: String -> IO Sort_
-mkSort name = do
-    let path = editorTileDir </> name <.> "png"
+tileDir = pngDir </> "tiles"
+
+mkSort :: String -> Offset -> Size Double -> IO Sort_
+mkSort name offset size = do
+    let path = tileDir </> name <.> "png"
     pixmap <- newQPixmap path
-    size <- fmap fromIntegral <$> sizeQPixmap pixmap
-    return $ Sort_ $ TSort ("editor" </> name) pixmap size
+--     size <- fmap fromIntegral <$> sizeQPixmap pixmap
+    return $ Sort_ $ TSort name (Pixmap pixmap offset) size
 
 data TSort
     = TSort {
         name :: String,
-        pixmap :: Ptr QPixmap,
+        pixmap :: Pixmap,
         tsize :: Size Double
       }
     | MergedSort
     deriving (Show, Typeable)
+
+data Pixmap = Pixmap (Ptr QPixmap) Offset
+    deriving Show
+
+pixmapPosition (Pixmap _ offset) x = x +~ offset
+
+pixmapPixmap (Pixmap pixmap _) = pixmap
 
 data Tile
     = Tile {
@@ -63,7 +75,7 @@ data Tile
       }
     | Merged {
         tchipmunk :: Chipmunk,
-        tiles :: [(Offset, Ptr QPixmap)]
+        tiles :: [(Offset, Pixmap)]
       }
   deriving (Show, Typeable)
 
@@ -78,10 +90,30 @@ instance Sort TSort Tile where
     sortId TSort{name} = SortId ("tiles" </> name)
     sortId MergedSort = SortId ("tiles" </> "merged")
 
-    size (TSort _ _ size) = fmap (subtract 2) size
+    size (TSort _ _ size) = size
 
-    sortRender sort@TSort{} =
-        sortRenderSinglePixmap (pixmap sort) sort
+--         sort -> Ptr QPainter -> Offset
+--              -> EditorPosition -> Maybe (Size Double) -> IO ()
+
+--     Ptr QPixmap -> sort -> Ptr QPainter -> Offset
+--     -> EditorPosition -> Maybe (Size Double) -> IO ()
+
+    sortRender sort@TSort{pixmap} ptr offset ep scaling = do
+        resetMatrix ptr
+        translate ptr offset
+        let 
+            (Size width height) = size sort
+            (factor, innerOffset) = case scaling of
+                Just x ->
+                    squeezeScaling x $ size sort
+                Nothing -> (1, zero)
+            p = editorPosition2QtPosition sort ep +~ innerOffset
+
+        translate ptr (pixmapPosition pixmap p)
+        Qt.scale ptr factor factor
+
+        drawPixmap ptr zero (pixmapPixmap pixmap)
+
 
     initialize sort@TSort{} Nothing editorPosition Nothing = do
         let -- baryCenterOffset = fmap (/ 2) $ size sort
@@ -97,9 +129,17 @@ instance Sort TSort Tile where
     update t@Tile{} _ _ _ = return t
     update t@Merged{} _ _ _ = return t
 
-    render t@Tile{} sort ptr offset seconds = do
-        let pixmap = pickPixmap sort t
-        renderChipmunk ptr offset pixmap (tchipmunk t)
+    render t@Tile{} sort@TSort{pixmap} ptr offset seconds = do
+        Qt.resetMatrix ptr
+        translate ptr offset
+
+        (position, rad) <- getRenderPosition $ tchipmunk t
+
+        translate ptr (pixmapPosition pixmap position)
+        Qt.rotate ptr (rad2deg rad)
+
+        Qt.drawPixmap ptr zero (pixmapPixmap pixmap)
+
     render (Merged chip tiles) _ ptr worldOffset seconds = do
         Qt.resetMatrix ptr
         translate ptr worldOffset
@@ -108,9 +148,10 @@ instance Sort TSort Tile where
         translate ptr position
 
         forM_ tiles $ \ (offset, pixmap) -> do
-            translate ptr offset
-            Qt.drawPixmap ptr zero pixmap
-            translate ptr (negateAbelian offset)
+            let pixmapOffset = pixmapPosition pixmap offset
+            translate ptr pixmapOffset
+            Qt.drawPixmap ptr zero (pixmapPixmap pixmap)
+            translate ptr (negateAbelian pixmapOffset)
 
 
 --         resetMatrix ptr
@@ -335,8 +376,8 @@ shortenLine padding x = es "shortenLine" x
 --         (cycle [0..length (frames frameSet) - 1])
 --         (repeat 0.3)
 
-pickPixmap :: TSort -> Tile -> Ptr QPixmap
-pickPixmap sort t = pixmap sort
+-- pickPixmap :: TSort -> Tile -> Ptr QPixmap
+-- pickPixmap sort t = pixmap sort
 
 
 

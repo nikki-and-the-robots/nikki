@@ -45,6 +45,8 @@ instance Abelian EditorPosition where
 newtype SortId = SortId FilePath
   deriving (Show, Read, Eq)
 
+getSortId (SortId x) = x
+
 
 -- * Sort class
 
@@ -172,7 +174,9 @@ pickleObject2EditorObject :: [Sort_] -> PickleObject -> EditorObject
 pickleObject2EditorObject allSorts (PickleObject id position oemState) =
     EditorObject sort position (fmap (unpickleOEM sort) oemState)
   where
-    (sort : _) = filter ((== id) . sortId) allSorts
+    sort = case filter ((== id) . sortId) allSorts of
+        [x] -> x
+        [] -> error ("Sort not found: " ++ getSortId id)
 
 
 
