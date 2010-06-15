@@ -3,6 +3,7 @@ module Top.Initialisation where
 
 
 import Data.Indexable as I
+import Data.Initial
 
 import Control.Monad.FunctorM
 
@@ -12,11 +13,9 @@ import Utils
 
 import Base.Grounds
 
-import Object.Types
-import Object.Contacts
+import Object
 
 import Game.Scene.Types
-import Game.Scene.Camera
 import Game.OptimizeChipmunks
 
 import qualified Sorts.Nikki
@@ -39,9 +38,9 @@ sortLoaders = [
 
 initSceneFromEditor :: Space -> Grounds EditorObject -> IO Scene
 initSceneFromEditor space =
+    pure groundsOptimizeChipmunks .>>
     initializeObjects space .>>
-    mkScene space .>>
-    optimizeChipmunks
+    mkScene space
 
 initializeObjects :: Space -> Grounds EditorObject -> IO (Grounds Object_)
 initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
@@ -50,6 +49,12 @@ initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
     fgs' <- fmapM (fmapM (editorObject2Object Nothing)) foregrounds
     return $ Grounds bgs' ml' fgs'
 
+editorObject2Object :: Maybe Space -> EditorObject -> IO Object_
+editorObject2Object mspace (EditorObject sort pos state) =
+    initialize sort mspace pos (fmap oemState state)
+editorObject2Object (Just space) (MergedTilesEditorObject merged) =
+    Sorts.Tiles.initializeMerged space merged
+
 
 
 mkScene :: Space -> Grounds Object_ -> IO Scene
@@ -57,5 +62,12 @@ mkScene space objects = do
     let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
     contactRef <- initContactRef space emptyContacts watchedContacts
     let contacts = (contactRef, emptyContacts)
-    return $ Scene 0 0 objects initialCameraState contacts (NikkiMode nikki)
+    return $ Scene 0 0 objects initial contacts (NikkiMode nikki)
+
+groundsOptimizeChipmunks :: Grounds EditorObject -> Grounds EditorObject
+groundsOptimizeChipmunks =
+    modifyMainLayer optimizeEditorObjects
+
+
+
 

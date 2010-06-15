@@ -28,7 +28,7 @@ module Object.Robots.Laser where
 -- 
 -- import Object.ContactRef
 -- import Object.Animation
--- import Object.Types as Object
+-- import Object as Object
 -- import Object.Robots.Types
 
 

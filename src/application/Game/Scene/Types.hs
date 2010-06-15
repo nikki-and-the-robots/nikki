@@ -12,9 +12,7 @@ import Physics.Chipmunk
 import Base.Grounds
 import Base.Constants
 
-import Object.Types
--- import Object.Animation
-import Object.Contacts
+import Object
 
 import Game.Scene.Camera
 

@@ -19,7 +19,7 @@ import Graphics.Qt
 import Base.Grounds
 -- import Base.Sprited
 
-import Object.Types
+import Object
 
 import Editor.Scene.Types hiding (selected)
 

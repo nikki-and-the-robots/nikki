@@ -13,7 +13,7 @@ module Object.MilkMachine where
 -- 
 -- import Base.Sprited
 -- 
--- import Object.Types
+-- import Object
 -- import Object.Animation
 
 

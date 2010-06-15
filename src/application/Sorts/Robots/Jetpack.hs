@@ -26,8 +26,7 @@ import Base.Constants
 import Base.Events
 import Base.Animation
 
-import Object.Types as OT
-import Object.Contacts
+import Object
 
 
 -- * Configuration
@@ -68,7 +67,7 @@ data JSort = JSort {
     pixmaps :: Map RenderState [(Ptr QPixmap)],
     rsize :: Size Double
   }
-    deriving Show -- Typeable
+    deriving (Show, Typeable)
 
 defaultPixmap :: Map RenderState [(Ptr QPixmap)] -> Ptr QPixmap
 defaultPixmap m = head (m ! Wait)

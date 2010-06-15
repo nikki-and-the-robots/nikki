@@ -4,6 +4,7 @@
 
 module Sorts.Terminal (
     sorts,
+    unwrapTerminal,
     Terminal(exitMode),
     hasTerminalShape,
     ExitMode(..),
@@ -34,8 +35,7 @@ import Base.Events
 import Base.Constants
 import Base.Animation
 
-import Object.Types hiding (OEMState)
-import Object.Contacts
+import Object hiding (OEMState)
 
 import Editor.Scene.Types hiding (sorts, ControlData, selected)
 import Editor.Scene.Rendering
@@ -104,7 +104,7 @@ data ExitMode
 data TSort = TSort {
     pixmaps :: Pixmaps
   }
-    deriving Show
+    deriving (Show, Typeable)
 
 data Terminal = Terminal {
     tchipmunk :: Chipmunk,
@@ -125,6 +125,8 @@ isNikkiSelected :: Selected -> Bool
 isNikkiSelected (NikkiSelected _) = True
 isNikkiSelected (RobotSelected _) = False
 
+unwrapTerminal :: Object_ -> Maybe Terminal
+unwrapTerminal (Object_ sort o) = cast o
 
 
 instance Sort TSort Terminal where

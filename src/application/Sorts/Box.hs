@@ -16,8 +16,7 @@ import Utils
 
 import Base.Constants
 
-import Object.Types
-import Object.Contacts
+import Object
 
 
 -- Configuration
@@ -45,7 +44,7 @@ data BSort
         pixmap :: (Ptr QPixmap),
         size_ :: Size Double
       }
-  deriving Show
+  deriving (Show, Typeable)
 
 data Box = Box {chipmunk_ :: Chipmunk}
     deriving (Show, Typeable)

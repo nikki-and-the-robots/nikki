@@ -1,25 +1,25 @@
 
 module Game.Scene.Camera (
     CameraState,
-    initialCameraState,
     getCenter,
   ) where
 
 
 import Data.Abelian
+import Data.Initial
 
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
 
--- import Object.Types
+-- import Object
 
 
 data CameraState
     = CS Vector
   deriving Show
 
-initialCameraState :: CameraState
-initialCameraState = CS zero
+instance Initial CameraState where
+    initial = CS zero
 
 
 -- returns the position the camera looks at

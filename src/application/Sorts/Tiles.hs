@@ -3,15 +3,22 @@
 
 
 module Sorts.Tiles (
-    sorts
+    sorts,
+    Tile,
+    unwrapTile,
+    unwrapTileSort,
+    canBeMerged,
+    initializeMerged
   ) where
 
 
 import Utils
 
--- import Data.Map hiding (map, filter, size)
 import Data.Abelian
 import Data.Generics
+
+import Control.Arrow
+import Control.Monad
 
 import System.FilePath
 import System.Directory
@@ -22,66 +29,90 @@ import Physics.Chipmunk as CM
 
 import Base.Constants
 
-import Object.Types
-import Object.Contacts
+import Object
 
 
 sorts :: IO [Sort_]
 sorts = do
-    pngs <- filter ((== ".png") . takeExtension) <$> getDirectoryContents editorTileDir
-    mapM mkSort $ map (editorTileDir </>) pngs
+    names <- map dropExtension <$>
+             filter ((== ".png") . takeExtension) <$> 
+             getDirectoryContents editorTileDir
+    mapM mkSort names
 
 editorTileDir = pngDir </> "tiles" </> "editor"
 
-mkSort :: FilePath -> IO Sort_
-mkSort png = do
-    pixmap <- newQPixmap png
+mkSort :: String -> IO Sort_
+mkSort name = do
+    let path = editorTileDir </> name <.> "png"
+    pixmap <- newQPixmap path
     size <- fmap fromIntegral <$> sizeQPixmap pixmap
-    return $ Sort_ $ TSort png pixmap size
+    return $ Sort_ $ TSort ("editor" </> name) pixmap size
 
-data TSort = TSort {
-    path :: FilePath,
-    pixmap :: Ptr QPixmap,
-    tsize :: Size Double
-  }
-    deriving Show -- Typeable
-
-data Tile = Tile {
-    tchipmunk :: Chipmunk
-  }
+data TSort
+    = TSort {
+        name :: String,
+        pixmap :: Ptr QPixmap,
+        tsize :: Size Double
+      }
+    | MergedSort
     deriving (Show, Typeable)
 
+data Tile
+    = Tile {
+        tchipmunk :: Chipmunk
+      }
+    | Merged {
+        tchipmunk :: Chipmunk,
+        tiles :: [(Offset, Ptr QPixmap)]
+      }
+  deriving (Show, Typeable)
+
+unwrapTile :: Object_ -> Maybe Tile
+unwrapTile (Object_ sort o) = cast o
+
+unwrapTileSort :: Sort_ -> Maybe TSort
+unwrapTileSort (Sort_ s) = cast s
+
+
 instance Sort TSort Tile where
-    sortId sort = SortId $ dropExtension $ path sort
+    sortId TSort{name} = SortId ("tiles" </> name)
+    sortId MergedSort = SortId ("tiles" </> "merged")
 
     size (TSort _ _ size) = fmap (subtract 2) size
 
-    sortRender sort =
+    sortRender sort@TSort{} =
         sortRenderSinglePixmap (pixmap sort) sort
 
-    initialize sort Nothing editorPosition Nothing = do
+    initialize sort@TSort{} Nothing editorPosition Nothing = do
         let -- baryCenterOffset = fmap (/ 2) $ size sort
             pos = editorPosition2QtPosition sort editorPosition
         return $ Tile $ DummyChipmunk{renderPosition = pos}
-    initialize sort (Just space) editorPosition Nothing = do
-        let (shapes, baryCenterOffset) = mkShapes $ size sort
-            collisionType_ = TileCT
-            shapesWithAttributes =
-                map (tuple (shapeAttributes collisionType_)) shapes
-            pos :: Vector
-            pos = qtPositionToVector (editorPosition2QtPosition sort editorPosition)
-                    +~ baryCenterOffset
-        chip <- initStaticChipmunk space (bodyAttributes pos)
-                    shapesWithAttributes baryCenterOffset
-        return $ Tile chip
+    initialize sort@TSort{} (Just space) editorPosition Nothing =
+        Tile <$>
+        initializeBoxes space [(Nothing, size sort)] (sort, editorPosition)
 
     chipmunk (Tile c) = c
+    chipmunk (Merged c _) = c
 
-    update tile _ _ _ = return tile
+    update t@Tile{} _ _ _ = return t
+    update t@Merged{} _ _ _ = return t
 
-    render t sort ptr offset seconds = do
+    render t@Tile{} sort ptr offset seconds = do
         let pixmap = pickPixmap sort t
         renderChipmunk ptr offset pixmap (tchipmunk t)
+    render (Merged chip tiles) _ ptr worldOffset seconds = do
+        Qt.resetMatrix ptr
+        translate ptr worldOffset
+        (position, _) <- getRenderPosition chip
+
+        translate ptr position
+
+        forM_ tiles $ \ (offset, pixmap) -> do
+            translate ptr offset
+            Qt.drawPixmap ptr zero pixmap
+            translate ptr (negateAbelian offset)
+
+
 --         resetMatrix ptr
 --         translate ptr offset
 --         pos <- getRenderPosition chip
@@ -117,9 +148,25 @@ instance Sort TSort Tile where
 --     editorModify = Nothing
 --   }
 -- 
--- data Tile_ = Sort (Ptr QPixmap) (Size Double)
+-- data Tile = Sort (Ptr QPixmap) (Size Double)
 -- 
 -- 
+
+type Box = (Maybe Offset, Size Double)
+
+initializeBoxes :: Space -> [Box] -> (TSort, EditorPosition) -> IO Chipmunk
+initializeBoxes space boxes position = do
+    let (shapes, baryCenterOffset) = mkShapes boxes
+        shapesWithAttributes =
+            map (tuple (shapeAttributes TileCT)) shapes
+        pos :: Vector
+        pos = qtPositionToVector (uncurry editorPosition2QtPosition position)
+                +~ baryCenterOffset
+    chip <- initStaticChipmunk space (bodyAttributes pos)
+                shapesWithAttributes baryCenterOffset
+    return $ chip
+
+
 -- 
 -- 
 -- initChipmunk :: Space -> UninitializedObject -> IO Object
@@ -155,13 +202,13 @@ shapeAttributes collisionType =
       }
 
 
-class AnchoredBox ab where
-    boxSize :: ab -> Size Double
-    boxOffset :: ab -> Qt.Position Double
-
-instance AnchoredBox (Size Double) where
-    boxSize = id
-    boxOffset = const zero
+-- class AnchoredBox ab where
+--     boxSize :: ab -> Size Double
+--     boxOffset :: ab -> Qt.Position Double
+-- 
+-- instance AnchoredBox (Size Double) where
+--     boxSize = id
+--     boxOffset = const zero
 
 {-instance AnchoredBox Sprited where
     boxSize = defaultPixmapSize
@@ -171,19 +218,20 @@ instance AnchoredBox (Size Double) where
 --     boxSize (MergedSprited sprited _ _) = defaultPixmapSize sprited
 --     boxOffset (MergedSprited sprited offset animation) = offset
 
-mkShapes :: Size Double -> ([ShapeType], Vector)
-mkShapes size@(Size w h) =
+mkShapes :: [Box] -> ([ShapeType], Vector)
+mkShapes boxes =
     (lines, baryCenterOffset)
   where
     lines =
         map (shortenLine 1) $
         mergeProlongingLines $
         removeInnerLines $
-        concatMap mkBoxLines [size]
+        concatMap (uncurry mkBoxLines) boxes
     -- not the real barycenter (works for now, because tiles are static)
     baryCenterOffset = Vector wh hh
     wh = w / 2
     hh = h / 2
+    (Size w h) = snd $ head boxes
 
 -- mkTileAnimation :: Sprited -> Animation
 -- mkTileAnimation sprited =
@@ -197,11 +245,13 @@ mkShapes size@(Size w h) =
 -- * line stuff
 
 -- | create lines around a box
-mkBoxLines :: AnchoredBox b => b -> [ShapeType]
-mkBoxLines box =
+mkBoxLines :: Maybe Offset -> Size Double -> [ShapeType]
+mkBoxLines mOffset (Size w h) =
     map (mapVectors (+ vectorOffset)) lines
   where
-    vectorOffset = Vector (positionX (boxOffset box)) (positionY (boxOffset box))
+    vectorOffset = case mOffset of
+        Nothing -> zero
+        Just (Qt.Position x y) -> Vector x y
     lines = [
         LineSegment upperLeft upperRight thickness,
         LineSegment upperRight lowerRight thickness,
@@ -210,7 +260,6 @@ mkBoxLines box =
 --         LineSegment lowerLeft upperMiddle thickness
 --         LineSegment upperLeft (upperRight + Vector 0 20) thickness
       ]
-    (Size w h) = boxSize box
     wh = w / 2
     hh = h / 2
 
@@ -288,5 +337,73 @@ shortenLine padding x = es "shortenLine" x
 
 pickPixmap :: TSort -> Tile -> Ptr QPixmap
 pickPixmap sort t = pixmap sort
+
+
+
+
+
+-- * Chipmunk optimisation
+
+-- | looks, if two Tiles can be merged (actually just horizontally adjacent)
+canBeMerged :: EditorObject -> EditorObject -> Bool
+canBeMerged a b =
+    horizontallyAdjacent || verticallyAdjacent
+  where
+    horizontallyAdjacent = sameHeight && sameY && xAdjacent
+    sameHeight = withView (height . size . editorSort) (==) a b
+    sameY = withView (editorY . editorPosition) (==) a b
+    xAdjacent = xDist == searchedXDist
+    xDist = withView (editorX . editorPosition) distance a b
+    searchedXDist = withView ((/ 2) . width . size . editorSort) (+) a b
+
+    verticallyAdjacent = sameWidth && sameX && yAdjacent
+    sameWidth = withView (width . size . editorSort) (==) a b
+    sameX = withView (editorX . editorPosition) (==) a b
+    yAdjacent = yDist == searchedYDist
+    yDist = withView (editorY . editorPosition) distance a b
+    searchedYDist = withView ((/ 2) . height . size . editorSort) (+) a b
+
+
+initializeMerged :: Space -> [EditorObject] -> IO Object_
+initializeMerged space objects@(a : _) = do
+    chip <- initializeBoxes space (map (first Just) boxes) position
+    return $ Object_ MergedSort $
+         Merged chip (zip offsets (map pixmap sorts))
+  where
+    toBox :: EditorObject -> (Offset, Size Double)
+    toBox EditorObject{editorSort, editorPosition} =
+        (pos -~ anchor, size editorSort)
+      where
+        pos :: Qt.Position Double
+        pos = editorPosition2QtPosition editorSort editorPosition
+
+    boxes :: [(Offset, Size Double)]
+    boxes = map toBox objects
+    offsets :: [Offset]
+    offsets = map fst boxes
+    sorts :: [TSort]
+    sorts = map (unwrap . editorSort) objects
+    unwrap x = case unwrapTileSort x of
+        Just x -> x
+
+    position :: (TSort, EditorPosition)
+    position = (unwrap $ editorSort a, editorPosition a)
+    anchor :: Qt.Position Double
+    anchor = uncurry editorPosition2QtPosition position
+
+
+-- mkTempTile :: Vector -> MergedSprited -> UninitializedObject
+-- mkTempTile anchor (MergedSprited sprited offset animation) =
+--     Tile sprited (anchor + positionToVector offset) animation
+-- 
+-- -- | makes a MergedSprited to a given offset
+-- mkMergedSprited :: Vector -> UninitializedObject -> MergedSprited
+-- mkMergedSprited anchor o =
+--     MergedSprited (sprited o) offset (animation o)
+--   where
+--     offset = vectorToPosition (Object.position o - anchor)
+-- 
+-- 
+
 
 

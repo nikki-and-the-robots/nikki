@@ -32,6 +32,9 @@ type Offset = Position Double
 data EditorPosition = EditorPosition Double Double
   deriving (Show, Read, Eq)
 
+editorX (EditorPosition x _) = x
+editorY (EditorPosition _ y) = y
+
 instance Abelian EditorPosition where
     zero = EditorPosition 0 0
     (EditorPosition a b) +~ (EditorPosition x y) =
@@ -73,7 +76,7 @@ class (Show object, Typeable object) => Sort sort object | sort -> object, objec
 
 data Sort_
     = forall sort object .
-        (Sort sort object, Show sort) =>
+        (Sort sort object, Show sort, Typeable sort) =>
             Sort_ sort
 
 instance Show Sort_ where
@@ -84,8 +87,10 @@ instance Eq Sort_ where
 
 data Object_
     = forall sort object .
-        (Sort sort object, Show sort, Show object, Typeable object) =>
-            Object_ sort object
+        (Sort sort object,
+            Show sort, Typeable sort, 
+            Show object, Typeable object) =>
+                Object_ sort object
   deriving Typeable
 
 instance Show Object_ where
@@ -122,6 +127,9 @@ isRobot (sortId -> (SortId s)) = "robots/" `isPrefixOf` s
 isNikki :: Sort_ -> Bool
 isNikki s = (SortId "nikki" == sortId s)
 
+isTile :: Sort_ -> Bool
+isTile (sortId -> (SortId s)) = "tiles/" `isPrefixOf` s
+
 
 -- * Editor objects
 
@@ -131,14 +139,13 @@ data EditorObject
         editorPosition :: EditorPosition,
         editorOEMState :: Maybe OEMState
       }
+    | MergedTilesEditorObject {
+        editorMergedObjects :: [EditorObject]
+      }
   deriving Show
 
 mkEditorObject :: Sort_ -> EditorPosition -> EditorObject
 mkEditorObject sort pos = EditorObject sort pos (mkOEMState sort)
-
-editorObject2Object :: Maybe Space -> EditorObject -> IO Object_
-editorObject2Object mspace (EditorObject sort pos state) =
-    initialize sort mspace pos (fmap oemState state)
 
 modifyOEMState :: (OEMState -> OEMState) -> EditorObject -> EditorObject
 modifyOEMState f eo =

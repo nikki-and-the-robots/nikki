@@ -7,14 +7,16 @@ data Development = Development {
     profiling :: Bool,
     fullscreen :: Bool,
     showScene :: Bool,
-    showGrid :: Bool
+    showXYCross :: Bool,
+    showChipmunkObjects :: Bool
   }
 
 development = Development {
     profiling = False,
     fullscreen = True,
     showScene = True,
-    showGrid = False
+    showXYCross = False,
+    showChipmunkObjects = False
   }
 
 

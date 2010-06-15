@@ -34,7 +34,7 @@ import Utils
 import Base.Constants
 import Base.Grounds
 
-import Object.Types
+import Object
 
 import Editor.Scene.Types
 import Editor.Scene.Menu as Menu

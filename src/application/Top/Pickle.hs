@@ -14,7 +14,7 @@ import Utils
 import Base.Grounds
 import Base.Constants
 
-import Object.Types as Object
+import Object as Object
 
 import Editor.Scene as ES
 

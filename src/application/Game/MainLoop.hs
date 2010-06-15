@@ -29,8 +29,8 @@ import Graphics.Qt
 import Physics.Chipmunk as CM
 
 import Base.Events
+import Base.FPSState
 
-import Game.FPSState
 import Game.Scene
 -- import Game.Scene.Types
 

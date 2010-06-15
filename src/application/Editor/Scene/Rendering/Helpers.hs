@@ -9,7 +9,7 @@ import Data.Abelian
 
 import Graphics.Qt
 
-import Object.Types
+import Object
 
 -- import Editor.Scene.Types
 

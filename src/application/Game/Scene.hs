@@ -25,8 +25,7 @@ import Base.Grounds
 import Base.Configuration as Configuration
 import Base.Constants
 
-import Object.Types
-import Object.Contacts
+import Object
 
 import Game.Scene.Types
 import Game.Scene.Camera
@@ -127,9 +126,6 @@ whichTerminalCollides Scene{objects, contacts} =
     p (Just t) = any (\ shape -> hasTerminalShape t shape) collidingShapes
     collidingShapes :: [Shape]
     collidingShapes = contacts |> snd |> terminals |> Set.toList
-
-unwrapTerminal :: Object_ -> Maybe Terminal
-unwrapTerminal (Object_ sort o) = cast o
 
 terminalExit :: Scene -> (Maybe Scene)
 terminalExit scene@Scene{mode = TerminalMode{nikki, terminal}} =
@@ -243,9 +239,10 @@ renderScene ptr now scene@Scene{} = do
 --             layerMapM_ (renderLayer ptr size offset scene) $ objects scene
 
 
-    when (showGrid Configuration.development) $ do
+    when (showXYCross Configuration.development) $
         debugDrawCoordinateSystem ptr offset
 --             renderLayer ptr size offset scene $ mainLayer $ objects scene
+    when (showChipmunkObjects Configuration.development) $
         fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
 
 

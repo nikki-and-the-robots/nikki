@@ -15,7 +15,7 @@ import Graphics.Qt
 
 import Base.Grounds
 
-import Object.Types
+import Object
 
 
 data EditorScene

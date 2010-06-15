@@ -2,7 +2,7 @@
 
 -- module to analyse the performance (FPS == Frames Per Second)
 
-module Game.FPSState (
+module Base.FPSState (
     FpsState,
     initialFPSState,
     tickFPS,

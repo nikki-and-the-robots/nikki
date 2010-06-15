@@ -12,10 +12,10 @@ module Data.Indexable (
     Indexable,
     Index(..),
 
-    Data.Indexable.length,
+    length,
     toList,
     (!!!),
-    Data.Indexable.findIndices,
+    findIndices,
 
     fromList,
     empty,
@@ -26,19 +26,22 @@ module Data.Indexable (
 
     modifyByIndex,
 --     modifyByIndexM,
-    Data.Indexable.deleteByIndex,
+    deleteByIndex,
     toHead,
     isIndexOf,
 
---     optimizeMerge,
+    optimizeMerge,
   ) where
 
-import Utils
+import Utils hiding (deleteByIndex)
+
+import Prelude hiding (length)
 
 import qualified Data.Map as Map
 import Data.Map ((!))
-import Data.List as List
+import qualified Data.List as List
 import Data.Generics
+import Data.Either
 
 import Control.Monad.FunctorM
 
@@ -159,14 +162,55 @@ toHead i (Indexable values keys) | i `elem` keys =
     Indexable values (i : filter (/= i) keys)
 
 
--- -- | optimizes an Indexable with merging.
--- -- calls the given function for every pair in the Indexable.
--- -- the given function returns Nothing, if nothing can be optimized and
--- -- returns the replacement for the optimized pair.
--- -- The old pair will be replaced with dummy elements.
--- -- This function is idempotent. (if that's an english word)
--- optimizeMerge :: Show a => (a -> a -> Maybe a) -> Indexable a -> Indexable a
--- optimizeMerge f ix@(Indexable list) =
+-- | optimizes an Indexable with merging.
+-- calls the given function for every pair in the Indexable.
+-- the given function returns Nothing, if nothing can be optimized and
+-- returns the replacement for the optimized pair.
+-- The old pair will be replaced with dummy elements.
+-- This function is idempotent. (if that's an english word)
+-- Note, that indices of optimized items are going to be invalidated.
+optimizeMerge :: Show a => (a -> a -> Maybe a) -> Indexable a -> Indexable a
+optimizeMerge p ix =
+    let r = mergeIndexableOnce p ix
+    in if length r == length ix then ix else optimizeMerge p r
+
+mergeIndexableOnce :: Show a => (a -> a -> Maybe a) -> Indexable a -> Indexable a
+mergeIndexableOnce p =
+    convertToList .> mergeListOnce p .> convertToIndexable
+  where
+    convertToList :: Indexable a -> [Either (Index, a) a] -- left unmerged, right merged
+    convertToList ix = map (\ i -> Left (i, values ix ! i)) (keys ix)
+    convertToIndexable :: [Either (Index, a) a] -> Indexable a
+    convertToIndexable list =
+        Indexable (Map.fromList newValues) (map fst newValues)
+      where
+        newValues = zipWith inner list newIndices
+        newIndices = [maximum allIndices + 1..]
+        allIndices = map fst $ lefts list
+        inner (Left x) _ = x
+        inner (Right x) i = (i, x)
+
+    mergeListOnce :: Show a => (a -> a -> Maybe a)
+        -> [(Either (Index, a) a)] -> [(Either (Index, a) a)]
+    mergeListOnce p (a : r) =
+        case mergeOnce p a ([], r) of
+            Just (merged, r') -> Right merged : r'
+            Nothing -> a : mergeListOnce p r
+    mergeListOnce _ [] = []
+
+    mergeOnce :: Show a => (a -> a -> Maybe a)
+        -> Either (Index, a) a
+        -> ([(Either (Index, a) a)], [(Either (Index, a) a)])
+        -> Maybe (a, [(Either (Index, a) a)])
+    mergeOnce p a_@(Left (_, a)) (before, (b_@(Left (_, b)) : r)) =
+        case p a b of
+            Just x -> Just (x, before ++ r)
+            Nothing -> mergeOnce p a_ (before +: b_, r)
+    mergeOnce _ _ (_, []) = Nothing
+    mergeOnce p a b = es "help" (a, b)
+
+
+
 --     if howManyIndexables ix /= howManyIndexables result then
 --         optimizeMerge f result
 --       else

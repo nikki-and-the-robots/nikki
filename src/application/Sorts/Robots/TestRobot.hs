@@ -19,7 +19,7 @@ module Object.Robots.TestRobot where
 -- 
 -- import Object.ContactRef
 -- import Object.Animation
--- import Object.Types as Object
+-- import Object as Object
 
 
 -- handler :: RobotHandler

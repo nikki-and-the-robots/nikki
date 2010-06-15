@@ -30,8 +30,7 @@ import Base.Events
 import Base.Directions
 import Base.Animation
 
-import Object.Types
-import Object.Contacts
+import Object
 
 -- * Configuration
 
@@ -121,7 +120,7 @@ data NSort = NSort {
     pixmaps :: Map RenderState [Ptr QPixmap],
     nsize :: Size Double
   }
-    deriving Show -- Typeable
+    deriving (Show, Typeable)
 
 data Nikki
     = Nikki {
