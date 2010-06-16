@@ -28,9 +28,9 @@ else
 fi
 cabal build
 # ghc --make -i../common Main.hs -o build $GHC_OPTIONS
-
 cd ..
-BUILD_COMMAND="buildSystem/build build_application"
+
+BUILD_COMMAND="buildSystem/dist/build/build/build build_application"
 if (which hate)
 then
     $BUILD_COMMAND 2>&1 | hate application
