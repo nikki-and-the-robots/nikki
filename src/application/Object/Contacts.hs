@@ -23,6 +23,7 @@ data MyCollisionType
     | LaserCT
     | RobotCT
     | MilkMachineCT
+    | BatteryCT
   deriving (Enum, Eq, Show)
 
 
@@ -31,13 +32,14 @@ data Contacts
         nikkiTouchesGround :: !Bool,
         nikkiTouchesLaser :: !Bool,
         nikkiTouchesMilkMachine :: !Bool,
-        terminals :: Set Shape
+        terminals :: Set Shape,
+        batteries :: Set Shape
       }
   deriving Show
 
 -- empty in the sense that nothing collides
 emptyContacts :: Contacts
-emptyContacts = Contacts False False False empty
+emptyContacts = Contacts False False False empty empty
 
 
 -- * setter (boolean to True)
@@ -63,6 +65,9 @@ watchedContacts = [
     Callback (DontWatch RobotCT TerminalCT) Permeable,
     Callback (DontWatch TileCT TerminalCT) Permeable,
 
+    batteryCallback NikkiBodyCT,
+    batteryCallback NikkiFeetCT,
+
     Callback (Watch NikkiBodyCT LaserCT (\ _ _ -> setNikkiTouchesLaser)) Permeable,
     Callback (Watch NikkiFeetCT LaserCT (\ _ _ -> setNikkiTouchesLaser)) Permeable,
     Callback (DontWatch RobotCT LaserCT) Permeable,
@@ -71,6 +76,10 @@ watchedContacts = [
     Callback (DontWatch NikkiFeetCT MilkMachineCT) Permeable,
     Callback (DontWatch RobotCT MilkMachineCT) Permeable
   ]
+ where
+    batteryCallback nikkiCT =
+        Callback (Watch nikkiCT BatteryCT addBattery) Permeable
+
 
 
 addTerminal :: Shape -> Shape -> Contacts -> Contacts
@@ -80,5 +89,12 @@ addTerminal _ terminalShape c@Contacts{terminals} =
 
 nikkiTouchesTerminal :: Contacts -> Bool
 nikkiTouchesTerminal = not . Set.null . terminals
+
+
+
+
+addBattery :: Shape -> Shape -> Contacts -> Contacts
+addBattery _ batteryShape c =
+    c{batteries = insert batteryShape (batteries c)}
 
 

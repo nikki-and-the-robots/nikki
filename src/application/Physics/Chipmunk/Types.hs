@@ -95,7 +95,7 @@ initStaticChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenter
     let normalAttrs = static2normalAttributes as
     body <- mkBody normalAttrs
     let chip = StaticChipmunk space body [] []
-                (vectorToQtPosition (position -~ baryCenterOffset)) position
+                (vector2QtPosition (position -~ baryCenterOffset)) position
     addInitShape chip shapeTypes
 initStaticChipmunk space x y bc = nm "initStaticChipmunk" (x, y)
 
@@ -147,6 +147,14 @@ addInitShape (StaticChipmunk space body [] shapeTypes position baryCenterOffset)
     return chip
 
 
+-- * removing
+
+-- | removes a physical object entirely from the given space
+removeChipmunk :: Chipmunk -> IO ()
+removeChipmunk c@Chipmunk{} = do
+    mapM_ (spaceRemove (space c)) (shapes c)
+    spaceRemove (space c) (body c)
+
 
 -- * getters
 
@@ -181,11 +189,11 @@ static2normalAttributes (StaticBodyAttributes position) =
     inertia = infinity
 static2normalAttributes x = nm "static2normalAttributes" x
 
-qtPositionToVector :: Qt.Position Double -> Vector
-qtPositionToVector (Qt.Position x y) = Vector x y
+qtPosition2Vector :: Qt.Position Double -> Vector
+qtPosition2Vector (Qt.Position x y) = Vector x y
 
-vectorToQtPosition :: Vector -> Qt.Position Double
-vectorToQtPosition (Vector x y) = Qt.Position x y
+vector2QtPosition :: Vector -> Qt.Position Double
+vector2QtPosition (Vector x y) = Qt.Position x y
 
 
 -- * missing

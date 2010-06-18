@@ -3,7 +3,7 @@
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 
-module Sorts.Nikki (sorts) where
+module Sorts.Nikki (sorts, addBatteryPower) where
 
 
 import Data.Abelian
@@ -29,6 +29,7 @@ import Base.Constants
 import Base.Events
 import Base.Directions
 import Base.Animation
+import Base.Pixmap
 
 import Object
 
@@ -86,16 +87,16 @@ frameTimesMap = fromList [
 sorts :: IO [Sort_]
 sorts = do
     pixmaps <- loadPixmaps
-    size <- fmap fromIntegral <$> sizeQPixmap (defaultPixmap pixmaps)
-    let r = NSort pixmaps size
+    psize <- fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
+    let r = NSort pixmaps
     return [Sort_ r]
 
-loadPixmaps :: IO (Map RenderState [Ptr QPixmap])
+loadPixmaps :: IO (Map RenderState [Pixmap])
 loadPixmaps = do
     fmapM load statePixmaps
   where
-    load :: (String, Int) -> IO [Ptr QPixmap]
-    load (name, n) = mapM newQPixmap $ map (mkPngPath name) [0..n]
+    load :: (String, Int) -> IO [Pixmap]
+    load (name, n) = mapM (loadPixmap 1) $ map (mkPngPath name) [0..n]
 
 mkPngPath name n = nikkiPngDir </> name ++ "_0" ++ show n <.> "png"
 
@@ -113,12 +114,11 @@ statePixmaps = fromList [
     (UsingTerminal HRight, ("terminal", 0))
   ]
 
-defaultPixmap :: Map RenderState [Ptr QPixmap] -> Ptr QPixmap
+defaultPixmap :: Map RenderState [Pixmap] -> Pixmap
 defaultPixmap pixmaps = head (pixmaps ! Wait HLeft)
 
 data NSort = NSort {
-    pixmaps :: Map RenderState [Ptr QPixmap],
-    nsize :: Size Double
+    pixmaps :: Map RenderState [Pixmap]
   }
     deriving (Show, Typeable)
 
@@ -129,9 +129,13 @@ data Nikki
         jumpStartTime :: Seconds,
         renderState :: RenderState,
         startTime :: Seconds,
-        jumpSound :: PolySound
+        jumpSound :: PolySound,
+        batteryPower :: Integer -- makes it possible to have REALLY BIG amounts of power :)
       }
   deriving (Show, Typeable)
+
+addBatteryPower :: Nikki -> Nikki
+addBatteryPower n = n{batteryPower = batteryPower n + 1}
 
 data RenderState
     = Wait          {direction :: HorizontalDirection}
@@ -153,14 +157,14 @@ instance Sort NSort Nikki where
 
     sortId _ = SortId "nikki"
 
-    size = nsize .> fmap (subtract 2)
+    size sort = pixmapSize $ defaultPixmap $ pixmaps sort
 
     sortRender sort =
         sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
 
     initialize sort (Just space) editorPosition Nothing = do
         let (nikkiShapes, baryCenterOffset) = mkPolys $ size sort
-            pos = qtPositionToVector (editorPosition2QtPosition sort editorPosition)
+            pos = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
 
         chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes
@@ -176,6 +180,7 @@ instance Sort NSort Nikki where
             initial
             0
             jumpSound
+            0
 
     chipmunk = nchipmunk
 
@@ -184,6 +189,7 @@ instance Sort NSort Nikki where
             controlBody now contacts cd nikki
 
     render nikki sort ptr offset now = do
+        print $ batteryPower nikki
         let pixmap = pickPixmap now sort nikki
         renderChipmunk ptr offset pixmap (nchipmunk nikki)
 
@@ -286,9 +292,9 @@ controlBody _ _ (False, _) nikki = do
     setSurfaceVel (head ss) zero
     return nikki{renderState = UsingTerminal $ direction $ renderState nikki}
 controlBody now collisions (True, cd)
-    nikki@(Nikki chip feetShape jumpStartTime _ _ jumpSound) = do
+    nikki@(Nikki chip feetShape jumpStartTime _ _ jumpSound _) = do
         let Chipmunk space body shapes shapeTypes co = chip
-        -- buttons
+            -- buttons
             bothHeld = leftHeld && rightHeld
             leftHeld = LeftButton `elem` held cd
             rightHeld = RightButton `elem` held cd
@@ -453,7 +459,7 @@ pickRenderState oldRenderState touchesGround (bothHeld, leftHeld, rightHeld) =
       else
         direction oldRenderState
 
-pickPixmap :: Seconds -> NSort -> Nikki -> Ptr QPixmap
+pickPixmap :: Seconds -> NSort -> Nikki -> Pixmap
 pickPixmap now sort nikki = 
     pickAnimationFrameNonLooping
         (pixmaps sort ! renderState nikki)

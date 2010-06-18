@@ -15,13 +15,14 @@ import Graphics.Qt
 import Utils
 
 import Base.Constants
+import Base.Pixmap
 
 import Object
 
 
 -- Configuration
 
-names = ["box-wood-large", "box-wood-small"]
+names = ["box-wood-small", "box-wood-large"]
 
 -- loading
 
@@ -31,9 +32,8 @@ sorts =
   where
     mkSortId name = SortId ("objects" </> name)
     mkSort_ name = do
-        pix <- newQPixmap $ mkPath name
-        size <- fmap fromIntegral <$> sizeQPixmap pix
-        return $ Sort_ $ BSort (mkSortId name) pix size
+        pix <- loadPixmap 1 $ mkPath name
+        return $ Sort_ $ BSort (mkSortId name) pix
 
 mkPath :: String -> FilePath
 mkPath name = pngDir </> "objects" </> name <.> "png"
@@ -41,35 +41,34 @@ mkPath name = pngDir </> "objects" </> name <.> "png"
 data BSort
     = BSort {
         sortId_ :: SortId,
-        pixmap :: (Ptr QPixmap),
-        size_ :: Size Double
+        boxPixmap :: Pixmap
       }
   deriving (Show, Typeable)
 
-data Box = Box {chipmunk_ :: Chipmunk}
+data Box = Box {bchip :: Chipmunk}
     deriving (Show, Typeable)
 
 instance Sort BSort Box where
     sortId = sortId_
-    size = size_
+    size = pixmapSize . boxPixmap
     sortRender sort =
-        sortRenderSinglePixmap (pixmap sort) sort
+        sortRenderSinglePixmap (boxPixmap sort) sort
     initialize sort (Just space) editorPosition Nothing = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             shapesWithAttributes = map (tuple shapeAttributes) shapes
-            position = qtPositionToVector (editorPosition2QtPosition sort editorPosition)
+            position = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
                             +~ baryCenterOffset
-        chip <- CM.initChipmunk space (bodyAttributes position (size sort)) shapesWithAttributes baryCenterOffset
+        chip <- CM.initChipmunk space (bodyAttributes position (size sort)) 
+                    shapesWithAttributes baryCenterOffset
         return $ Box chip
-    chipmunk = chipmunk_
-    update o _ _ _ = return o
-    render o sort ptr offset now = do
-        renderChipmunk ptr offset (pixmap sort) (chipmunk_ o)
+    chipmunk = bchip
+    render o sort ptr offset now =
+        renderChipmunk ptr offset (boxPixmap sort) (bchip o)
 
 
 bodyAttributes :: CM.Position -> Size QtReal -> BodyAttributes
 bodyAttributes pos (Size a b) = BodyAttributes{
-    CM.position            = pos,
+    CM.position         = pos,
     mass                = (1 * (toKachel a) * (toKachel b)),
     inertia             = 6000
   }

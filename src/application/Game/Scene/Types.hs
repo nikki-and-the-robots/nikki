@@ -29,6 +29,7 @@ data Scene
       }
   deriving Show
 
+-- * mode for the game scene
 data Mode
     = NikkiMode {
         nikki :: Index
@@ -44,6 +45,7 @@ data Mode
       }
     | LevelFinished LevelResult
   deriving Show
+
 
 data LevelResult = Passed | Failed
   deriving Show

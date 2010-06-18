@@ -184,10 +184,6 @@ wordsBy seps ll = inner [] ll
           else
             inner (a : akk) r
 
-rotate :: [a] -> [a]
-rotate [] = []
-rotate (a : r) = r +: a
-
 rotateBack :: [a] -> [a]
 rotateBack [] = []
 rotateBack ll = last ll : init ll

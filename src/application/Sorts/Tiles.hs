@@ -28,6 +28,7 @@ import Graphics.Qt as Qt
 import Physics.Chipmunk as CM
 
 import Base.Constants
+import Base.Pixmap
 
 import Object
 
@@ -39,35 +40,28 @@ sorts = do
 --              getDirectoryContents editorTileDir
     mapM (\ (a, b, c) -> mkSort a b c) names
 
-names :: [(String, Offset, Size Double)]
+names :: [(String, Qt.Position Int, Size Double)]
 names = [
-    ("editor" </> "standardTile", (Position (- 32) (- 32)), Size 64 64)
+    ("editor" </> "standardTile", (Position (- 33) (- 33)), Size 64 64)
   ]
 
 tileDir = pngDir </> "tiles"
 
-mkSort :: String -> Offset -> Size Double -> IO Sort_
+mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do
     let path = tileDir </> name <.> "png"
     pixmap <- newQPixmap path
 --     size <- fmap fromIntegral <$> sizeQPixmap pixmap
-    return $ Sort_ $ TSort name (Pixmap pixmap offset) size
+    return $ Sort_ $ TSort name (Pixmap pixmap size offset)
 
 data TSort
     = TSort {
         name :: String,
-        pixmap :: Pixmap,
-        tsize :: Size Double
+        tilePixmap :: Pixmap
       }
     | MergedSort
     deriving (Show, Typeable)
 
-data Pixmap = Pixmap (Ptr QPixmap) Offset
-    deriving Show
-
-pixmapPosition (Pixmap _ offset) x = x +~ offset
-
-pixmapPixmap (Pixmap pixmap _) = pixmap
 
 data Tile
     = Tile {
@@ -75,7 +69,7 @@ data Tile
       }
     | Merged {
         tchipmunk :: Chipmunk,
-        tiles :: [(Offset, Pixmap)]
+        tiles :: [(Offset Double, Pixmap)]
       }
   deriving (Show, Typeable)
 
@@ -90,30 +84,10 @@ instance Sort TSort Tile where
     sortId TSort{name} = SortId ("tiles" </> name)
     sortId MergedSort = SortId ("tiles" </> "merged")
 
-    size (TSort _ _ size) = size
+    size (TSort _ pix) = pixmapSize pix
 
---         sort -> Ptr QPainter -> Offset
---              -> EditorPosition -> Maybe (Size Double) -> IO ()
-
---     Ptr QPixmap -> sort -> Ptr QPainter -> Offset
---     -> EditorPosition -> Maybe (Size Double) -> IO ()
-
-    sortRender sort@TSort{pixmap} ptr offset ep scaling = do
-        resetMatrix ptr
-        translate ptr offset
-        let 
-            (Size width height) = size sort
-            (factor, innerOffset) = case scaling of
-                Just x ->
-                    squeezeScaling x $ size sort
-                Nothing -> (1, zero)
-            p = editorPosition2QtPosition sort ep +~ innerOffset
-
-        translate ptr (pixmapPosition pixmap p)
-        Qt.scale ptr factor factor
-
-        drawPixmap ptr zero (pixmapPixmap pixmap)
-
+    sortRender sort@TSort{tilePixmap} =
+        sortRenderSinglePixmap tilePixmap sort
 
     initialize sort@TSort{} Nothing editorPosition Nothing = do
         let -- baryCenterOffset = fmap (/ 2) $ size sort
@@ -126,19 +100,9 @@ instance Sort TSort Tile where
     chipmunk (Tile c) = c
     chipmunk (Merged c _) = c
 
-    update t@Tile{} _ _ _ = return t
-    update t@Merged{} _ _ _ = return t
-
-    render t@Tile{} sort@TSort{pixmap} ptr offset seconds = do
-        Qt.resetMatrix ptr
-        translate ptr offset
-
+    render t@Tile{} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPosition $ tchipmunk t
-
-        translate ptr (pixmapPosition pixmap position)
-        Qt.rotate ptr (rad2deg rad)
-
-        Qt.drawPixmap ptr zero (pixmapPixmap pixmap)
+        renderPixmap ptr offset position (Just rad) tilePixmap
 
     render (Merged chip tiles) _ ptr worldOffset seconds = do
         Qt.resetMatrix ptr
@@ -147,10 +111,10 @@ instance Sort TSort Tile where
 
         translate ptr position
 
-        forM_ tiles $ \ (offset, pixmap) -> do
-            let pixmapOffset = pixmapPosition pixmap offset
+        forM_ tiles $ \ (offset, (Pixmap pix _ pixOffset)) -> do
+            let pixmapOffset = offset +~ fmap fromIntegral pixOffset
             translate ptr pixmapOffset
-            Qt.drawPixmap ptr zero (pixmapPixmap pixmap)
+            Qt.drawPixmap ptr zero pix
             translate ptr (negateAbelian pixmapOffset)
 
 
@@ -193,7 +157,7 @@ instance Sort TSort Tile where
 -- 
 -- 
 
-type Box = (Maybe Offset, Size Double)
+type Box = (Maybe (Offset Double), Size Double)
 
 initializeBoxes :: Space -> [Box] -> (TSort, EditorPosition) -> IO Chipmunk
 initializeBoxes space boxes position = do
@@ -201,7 +165,7 @@ initializeBoxes space boxes position = do
         shapesWithAttributes =
             map (tuple (shapeAttributes TileCT)) shapes
         pos :: Vector
-        pos = qtPositionToVector (uncurry editorPosition2QtPosition position)
+        pos = qtPosition2Vector (uncurry editorPosition2QtPosition position)
                 +~ baryCenterOffset
     chip <- initStaticChipmunk space (bodyAttributes pos)
                 shapesWithAttributes baryCenterOffset
@@ -286,7 +250,7 @@ mkShapes boxes =
 -- * line stuff
 
 -- | create lines around a box
-mkBoxLines :: Maybe Offset -> Size Double -> [ShapeType]
+mkBoxLines :: Maybe (Offset  Double) -> Size Double -> [ShapeType]
 mkBoxLines mOffset (Size w h) =
     map (mapVectors (+ vectorOffset)) lines
   where
@@ -409,18 +373,18 @@ initializeMerged :: Space -> [EditorObject] -> IO Object_
 initializeMerged space objects@(a : _) = do
     chip <- initializeBoxes space (map (first Just) boxes) position
     return $ Object_ MergedSort $
-         Merged chip (zip offsets (map pixmap sorts))
+         Merged chip (zip offsets (map tilePixmap sorts))
   where
-    toBox :: EditorObject -> (Offset, Size Double)
+    toBox :: EditorObject -> (Offset Double, Size Double)
     toBox EditorObject{editorSort, editorPosition} =
         (pos -~ anchor, size editorSort)
       where
         pos :: Qt.Position Double
         pos = editorPosition2QtPosition editorSort editorPosition
 
-    boxes :: [(Offset, Size Double)]
+    boxes :: [(Offset Double, Size Double)]
     boxes = map toBox objects
-    offsets :: [Offset]
+    offsets :: [Offset Double]
     offsets = map fst boxes
     sorts :: [TSort]
     sorts = map (unwrap . editorSort) objects

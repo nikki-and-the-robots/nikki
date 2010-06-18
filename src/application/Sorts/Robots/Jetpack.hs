@@ -25,6 +25,7 @@ import Base.Directions
 import Base.Constants
 import Base.Events
 import Base.Animation
+import Base.Pixmap
 
 import Object
 
@@ -43,9 +44,8 @@ animationFrameTimesMap = fromList [
 
 sorts :: IO [Sort_]
 sorts = do
-    pixmaps <- fmapM (fmapM (newQPixmap . mkJetpackPng)) pngMap
-    size <- fmap fromIntegral <$> sizeQPixmap (defaultPixmap pixmaps)
-    let r = JSort pixmaps size
+    pixmaps <- fmapM (fmapM (loadPixmap 1 . mkJetpackPngPath)) pngMap
+    let r = JSort pixmaps
     return $ map Sort_ [r]
 
 pngMap :: Map RenderState [String]
@@ -55,7 +55,7 @@ pngMap = fromList [
     (Idle, ["idle_00", "idle_01", "idle_02", "idle_03"])
   ]
 
-mkJetpackPng name = pngDir </> "robots" </> "jetpack" </> name <.> "png"
+mkJetpackPngPath name = pngDir </> "robots" </> "jetpack" </> name <.> "png"
 
 data RenderState
     = Wait
@@ -64,12 +64,11 @@ data RenderState
   deriving (Eq, Ord, Show)
 
 data JSort = JSort {
-    pixmaps :: Map RenderState [(Ptr QPixmap)],
-    rsize :: Size Double
+    pixmaps :: Map RenderState [Pixmap]
   }
     deriving (Show, Typeable)
 
-defaultPixmap :: Map RenderState [(Ptr QPixmap)] -> Ptr QPixmap
+defaultPixmap :: Map RenderState [Pixmap] -> Pixmap
 defaultPixmap m = head (m ! Wait)
 
 data Jetpack = Jetpack {
@@ -83,13 +82,13 @@ data Jetpack = Jetpack {
 
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
-    size = rsize
+    size = pixmapSize . defaultPixmap . pixmaps
     sortRender sort =
         sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
 
     initialize sort (Just space) ep Nothing = do
         let 
-            pos = qtPositionToVector (editorPosition2QtPosition sort ep)
+            pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
             bodyAttributes = bodyAttributesConstant{CM.position = pos}
             shapeAttributes = ShapeAttributes{
@@ -193,7 +192,7 @@ renderJetpack j sort ptr offset now = do
     let pixmap = pickPixmap now j sort
     renderChipmunk ptr offset pixmap (jchipmunk j)
 
-pickPixmap :: Seconds -> Jetpack -> JSort -> Ptr QPixmap
+pickPixmap :: Seconds -> Jetpack -> JSort -> Pixmap
 pickPixmap now j sort =
     pickAnimationFrame pixmapList animationFrameTimes (now - startTime j)
   where

@@ -6,7 +6,7 @@ module Game.Scene (
   ) where
 
 
-import Data.Indexable (Indexable, Index, fmapMWithIndex, findIndices)
+import Data.Indexable (Indexable, Index, fmapMWithIndex, findIndices, toList)
 import Data.Abelian
 import Data.Dynamic
 import qualified Data.Set as Set
@@ -33,27 +33,6 @@ import Game.Scene.Camera
 import Sorts.Terminal
 
 
--- * Initialisation
-
-
-
--- initializes all chipmunk objects in the MainLayer and all Animations
--- sceneInitChipmunks :: Space -> Scene -> IO Scene
--- sceneInitChipmunks space scene@Scene{objects, osdSpriteds} = do
---     e "sceneInitChipmunks"
---     let Grounds bgs mainLayer fgs = objects
--- 
---     mainLayer' <- fmapM (pure objectInitAnimation <=< objectInitChipmunk scene space) mainLayer
--- 
---     let initDummy = objectInitAnimation . initDummyChipmunk
---         bgs' = fmap (fmap initDummy) bgs
---         fgs' = fmap (fmap initDummy) fgs
---         objects' = Grounds bgs' mainLayer' fgs'
---         osdSpriteds' = fmap initDummy osdSpriteds
---     return $ scene{objects = objects', osdSpriteds = osdSpriteds'}
-
-
-
 -- * entry
 
 -- order of one frame step is this:
@@ -65,6 +44,7 @@ import Sorts.Terminal
 stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene -> IO Scene
 stepScene now space controlData ptr =
     pure (updateNow now) .>>
+    updateContacts .>>
     updateScene controlData .>>
     passThrough (stepSpace space) .>>
     renderScene ptr now .>>
@@ -76,6 +56,13 @@ stepScene now space controlData ptr =
 updateNow :: Seconds -> Scene -> Scene
 updateNow now' scene@Scene{now} =
     scene{now = now', oldNow = now}
+
+-- | updates the existing contacts
+updateContacts :: Scene -> IO Scene
+updateContacts scene = do
+    let contactRef = fst $ contacts scene
+    contacts' <- peekContacts contactRef
+    return $ scene{contacts = (contactRef, contacts')}
 
 
 -- * State automaton stuff
@@ -106,7 +93,7 @@ nikkiToTerminal scene@Scene{mode = (NikkiMode nikki)} pushed
         = Just $ scene {mode = mode'}
   where
     bPressed = Press BButton `elem` pushed
-    beforeTerminal = nikkiTouchesTerminal $ (snd (contacts scene) <<? "contacts")
+    beforeTerminal = nikkiTouchesTerminal $ snd (contacts scene)
 
     mode' = TerminalMode nikki terminal
     terminal = whichTerminalCollides scene
@@ -181,34 +168,29 @@ singleStepTime = 0.1
 
 -- | updates every object
 updateScene :: ControlData -> Scene -> IO Scene
-updateScene cd scene@Scene{now, objects, contacts = (contactRef, contacts)} = do
-    -- TODO: which order?
-    let controlledIndex = getControlledIndex scene
-    contacts' <- peekContacts contactRef
-    objects' <- sceneUpdateObjects contacts' now cd controlledIndex scene objects
-    return $ scene{objects = objects', contacts = (contactRef, contacts')}
-
-
--- | updates all objects
-sceneUpdateObjects :: Contacts -> Seconds -> ControlData -> Index -> Scene
-    -> Grounds Object_ -> IO (Grounds Object_)
-sceneUpdateObjects collisions now cd controlled scene grounds = do
-    let (Grounds backgrounds mainLayer foregrounds) = grounds
-
-        -- update function for all objects in the mainLayer
-        updateMainObjects :: Index -> Object_ -> IO Object_
-        updateMainObjects i o = update o now collisions (i == controlled, cd)
-        -- update function for updates outside the mainLayer
-        updateMultiLayerObjects :: Object_ -> IO Object_
-        updateMultiLayerObjects o = update o now collisions (False, cd)
-
+updateScene cd scene@Scene{now, objects, contacts, mode} = do
     backgrounds' <- fmapM (fmapM updateMultiLayerObjects) backgrounds
-    -- each object has to know, if it's controlled
-    mainLayer' <- modifyContentM (fmapMWithIndex updateMainObjects) mainLayer
+    mainLayer' <- modifyContentM updateMainObjects mainLayer
     foregrounds' <- fmapM (fmapM updateMultiLayerObjects) foregrounds
+    return $ scene{objects = Grounds backgrounds' mainLayer' foregrounds'}
+  where
+    controlled = getControlledIndex scene
+    (Grounds backgrounds mainLayer foregrounds) = objects
 
-    return $ Grounds backgrounds' mainLayer' foregrounds'
+    -- update function for all objects in the mainLayer
+    updateMainObjects :: Indexable Object_ -> IO (Indexable Object_)
+    -- each object has to know, if it's controlled
+    updateMainObjects ix = do
+        ix' <- fmapMWithIndex (\ i o ->
+                updateSceneChange o now (snd contacts) (i == controlled, cd)) ix
+        let changes = map snd $ toList ix'
+            ix'' = fmap fst ix'
+        return $ performSceneChanges changes (nikki mode) ix''
 
+    -- update function for updates outside the mainLayer
+    -- NOTE: SceneChanges currently only affect the main layer
+    updateMultiLayerObjects :: Object_ -> IO Object_
+    updateMultiLayerObjects o = update o now (snd contacts) (False, cd)
 
 
 -- * rendering
@@ -227,21 +209,18 @@ renderScene ptr now scene@Scene{} = do
     intSize@(Size width height) <- sizeQPainter ptr
     let size = fmap fromIntegral intSize
         offsetVector = - (center - Vector (fromIntegral width / 2) (fromIntegral height / 2))
-        offset = fmap (fromIntegral . truncate) $ vectorToQtPosition offsetVector
+        offset = fmap (fromIntegral . truncate) $ vector2QtPosition offsetVector
 
     when (showScene Configuration.development) $ do
-        -- TODO: this is a workaround for padding errors!!!
         let os = objects scene
-            multiLayerOffset = offset -~ Position 1 1
-        fmapM_ (renderLayer ptr size multiLayerOffset now) $ backgrounds os
+        fmapM_ (renderLayer ptr size offset now) $ backgrounds os
         renderLayer ptr size offset now $ mainLayer os
-        fmapM_ (renderLayer ptr size multiLayerOffset now) $ foregrounds os
---             layerMapM_ (renderLayer ptr size offset scene) $ objects scene
+        fmapM_ (renderLayer ptr size offset now) $ foregrounds os
 
 
+-- debugging
     when (showXYCross Configuration.development) $
         debugDrawCoordinateSystem ptr offset
---             renderLayer ptr size offset scene $ mainLayer $ objects scene
     when (showChipmunkObjects Configuration.development) $
         fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
 
@@ -249,15 +228,10 @@ renderScene ptr now scene@Scene{} = do
 
     return scene{cameraState = cameraState'}
 
--- renderScene ptr scene@TerminalMode{innerScene} = do
---     innerScene' <- renderScene ptr innerScene
---     let scene' = scene{innerScene = innerScene'}
---     TerminalMode.renderOSD ptr scene'
---     return scene'
 
 -- | renders the different Layers.
 -- makes sure, everything is rendered ok.
-renderLayer :: Ptr QPainter -> Size Double -> Offset -> Seconds
+renderLayer :: Ptr QPainter -> Size Double -> Offset Double -> Seconds
     -> Layer Object_ -> IO ()
 renderLayer ptr size offset now layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
@@ -266,7 +240,7 @@ renderLayer ptr size offset now layer = do
 
 -- * debugging
 
-debugDrawCoordinateSystem :: Ptr QPainter -> Offset -> IO ()
+debugDrawCoordinateSystem :: Ptr QPainter -> Offset Double -> IO ()
 debugDrawCoordinateSystem ptr offset = do
     resetMatrix ptr
     translate ptr offset

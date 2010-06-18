@@ -8,6 +8,10 @@ import Utils
 import Data.Abelian
 import Data.Dynamic
 import Data.List
+import qualified Data.Indexable as I
+import Data.Indexable (Index, Indexable, modifyByIndex)
+
+import Control.Monad
 
 import Graphics.Qt as Qt
 
@@ -15,6 +19,7 @@ import Physics.Chipmunk hiding (Position, collisionType)
 
 import Base.Events
 import Base.Constants
+import Base.Pixmap
 
 import Object.Contacts
 
@@ -26,8 +31,6 @@ robotFriction = 1.0
 
 
 -- * misc
-
-type Offset = Position Double
 
 data EditorPosition = EditorPosition Double Double
   deriving (Show, Read, Eq)
@@ -50,12 +53,15 @@ getSortId (SortId x) = x
 
 -- * Sort class
 
-class (Show object, Typeable object) => Sort sort object | sort -> object, object -> sort where
+class (Show sort, Typeable sort, Show object, Typeable object) =>
+    Sort sort object |
+        sort -> object, object -> sort where
+
     sortId :: sort -> SortId
     size :: sort -> Size Double
     objectEditMode :: sort -> Maybe ObjectEditMode
     objectEditMode _ = Nothing
-    sortRender :: sort -> Ptr QPainter -> Offset
+    sortRender :: sort -> Ptr QPainter -> Offset Double
         -> EditorPosition -> Maybe (Size Double) -> IO ()
     editorPosition2QtPosition :: sort -> EditorPosition -> Position Double
     editorPosition2QtPosition sort (EditorPosition x y) =
@@ -68,10 +74,21 @@ class (Show object, Typeable object) => Sort sort object | sort -> object, objec
     initialize :: sort -> Maybe Space -> EditorPosition -> Maybe String -> IO object
 
     chipmunk :: object -> Chipmunk
+
     startControl :: object -> object
     startControl = id
+
+    updateSceneChange :: object -> Seconds -> Contacts -> (Bool, ControlData)
+        -> IO (object, SceneChange)
+        -- default implementstion leaves the scene unchanged
+    updateSceneChange o now contacts cd = do
+        x <- update o now contacts cd
+        return (x, NoChange)
+
     update :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
-    render :: object -> sort -> Ptr QPainter -> Offset -> Seconds -> IO ()
+    update o _ _ _ = return o
+
+    render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
 
 
 -- * Sort class wrappers
@@ -80,6 +97,7 @@ data Sort_
     = forall sort object .
         (Sort sort object, Show sort, Typeable sort) =>
             Sort_ sort
+  deriving Typeable
 
 instance Show Sort_ where
     show (Sort_ s) = "Sort_ (" ++ show s ++ ")"
@@ -108,6 +126,9 @@ instance Sort Sort_ Object_ where
         Object_ sort <$> initialize sort space editorPosition state
     chipmunk (Object_ _ o) = chipmunk o
     startControl (Object_ sort o) = Object_ sort $ startControl o
+    updateSceneChange (Object_ sort o) now contacts cd = do
+        (o', change) <- updateSceneChange o now contacts cd
+        return (Object_ sort o', change)
     update (Object_ sort o) now contacts cd =
         Object_ sort <$> update o now contacts cd
     render = error "Don't use this function, use render_ instead (that't type safe)"
@@ -115,8 +136,13 @@ instance Sort Sort_ Object_ where
 sort_ :: Object_ -> Sort_
 sort_ (Object_ sort _) = Sort_ sort
 
-render_ :: Object_ -> Ptr QPainter -> Offset -> Seconds -> IO ()
+render_ :: Object_ -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
 render_ (Object_ sort o) = render o sort
+
+wrapObjectModifier :: Sort s o => (o -> o) -> Object_ -> Object_
+wrapObjectModifier f (Object_ s o) =
+    case (cast s, cast o) of
+        (Just s_, Just o_) -> Object_ s_ (f o_)
 
 -- * Discriminators
 
@@ -181,38 +207,29 @@ pickleObject2EditorObject allSorts (PickleObject id position oemState) =
 
 
 sortRenderSinglePixmap :: Sort sort object =>
-    Ptr QPixmap -> sort -> Ptr QPainter -> Offset
+    Pixmap -> sort -> Ptr QPainter -> Offset Double
     -> EditorPosition -> Maybe (Size Double) -> IO ()
-sortRenderSinglePixmap pixmap sort ptr offset (EditorPosition x y) scaling = do
+sortRenderSinglePixmap pix sort ptr offset ep scaling = do
     resetMatrix ptr
     translate ptr offset
-    let (Size width height) = size sort
-        (factor, innerOffset) = case scaling of
+    let
+        (Size width height) = size sort
+        (factor, scalingOffset) = case scaling of
             Just x ->
                 squeezeScaling x $ size sort
             Nothing -> (1, zero)
+        p = editorPosition2QtPosition sort ep +~ scalingOffset
 
-        p = Position (x - 1) (y - 1 - height * factor) +~ innerOffset
-
-    translate ptr p
+    translate ptr (p +~ fmap fromIntegral (pixmapOffset pix))
     Qt.scale ptr factor factor
 
-    drawPixmap ptr zero pixmap
+    drawPixmap ptr zero (pixmap pix)
 
 
-renderChipmunk :: Ptr QPainter -> Qt.Position Double -> Ptr Qt.QPixmap -> Chipmunk -> IO ()
+renderChipmunk :: Ptr QPainter -> Offset Double -> Pixmap -> Chipmunk -> IO ()
 renderChipmunk painter worldOffset p chipmunk = do
-    Qt.resetMatrix painter
-    translate painter worldOffset
-
-    (position, rad) <- getRenderPosition chipmunk
-
-    translate painter position
-    Qt.rotate painter (rad2deg rad)
-
-    Qt.drawPixmap painter zero p
-
-
+    (position, angle) <- getRenderPosition chipmunk
+    renderPixmap painter worldOffset position (Just angle) p
 
 
 -- * ObjectEditMode
@@ -261,6 +278,24 @@ unpickleOEM sort state =
     case objectEditMode sort of
         Just x -> OEMState x state
 
+
+-- * SceneChanges
+
+data SceneChange
+    = NoChange
+    | ChangeNikki (Object_ -> Object_)
+
+performSceneChanges :: [SceneChange] -> Index
+    -> Indexable Object_ -> Indexable Object_
+performSceneChanges (a : r) nikki ix =
+    performSceneChanges r nikki (performSceneChange a nikki ix)
+performSceneChanges [] _ ix = ix
+
+performSceneChange :: SceneChange -> Index
+    -> Indexable Object_ -> Indexable Object_
+performSceneChange NoChange _ ix = ix
+performSceneChange (ChangeNikki f) nikki ix =
+    modifyByIndex f nikki ix
 
 
 

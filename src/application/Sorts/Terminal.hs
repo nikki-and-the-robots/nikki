@@ -34,6 +34,7 @@ import Utils
 import Base.Events
 import Base.Constants
 import Base.Animation
+import Base.Pixmap
 
 import Object hiding (OEMState)
 
@@ -53,23 +54,21 @@ blinkSelectedLightSpeed = 0.2
 
 sorts :: IO [Sort_]
 sorts = do
-    blinkenLights <- mapM (newQPixmap . toPngPath) [
+    blinkenLights <- mapM (loadPixmap 1 . toPngPath) [
         "terminal-main_00",
         "terminal-main_01",
         "terminal-main_02",
         "terminal-main_03"
       ]
-    size <- fmap (subtract 2) <$> sizeQPixmap (head blinkenLights)
     littleColors <- readColorLights (\ color -> toPngPath ("terminal-" ++ color))
-    let r = TSort (Pixmaps blinkenLights size littleColors)
+    let r = TSort (Pixmaps blinkenLights littleColors)
     return [Sort_ r]
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
 data Pixmaps = Pixmaps {
-    blinkenLights :: [Ptr QPixmap],
-    pixmapsSize :: Size Int,
-    littleColorLights :: ColorLights (Ptr QPixmap)
+    blinkenLights :: [Pixmap],
+    littleColorLights :: ColorLights Pixmap
   }
     deriving Show
 
@@ -84,9 +83,9 @@ colorLightList (ColorLights a b c d) = [a, b, c, d]
 mkColorLights :: [a] -> ColorLights a
 mkColorLights [a, b, c, d] = ColorLights a b c d
 
-readColorLights :: (String -> FilePath) -> IO (ColorLights (Ptr QPixmap))
+readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
 readColorLights f = do
-    [r, b, g, y] <- mapM (newQPixmap . f) ["red", "blue", "green", "yellow"]
+    [r, b, g, y] <- mapM (loadPixmap 1 . f) ["red", "blue", "green", "yellow"]
     return $ ColorLights r b g y
 
 instance PP (ColorLights Bool) where
@@ -131,7 +130,7 @@ unwrapTerminal (Object_ sort o) = cast o
 
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
-    size = pixmaps .> pixmapsSize .> fmap (subtract 2) .> fmap fromIntegral
+    size = pixmaps .> blinkenLights .> head .> pixmapSize
     sortRender sort =
         sortRenderSinglePixmap (head $ blinkenLights $ pixmaps sort) sort
 
@@ -143,7 +142,7 @@ instance Sort TSort Terminal where
             attached = case oemState of
                 NoRobots -> []
                 Robots _ _ x -> x
-            pos = qtPositionToVector
+            pos = qtPosition2Vector
                 (editorPosition2QtPosition sort editorPosition)
                 +~ baryCenterOffset
             bodyAttributes = StaticBodyAttributes{
@@ -320,7 +319,8 @@ blinkSelectedColorLight now t =
 
 -- * game rendering
 
-renderTerminal :: Ptr QPainter -> Offset -> Seconds -> Terminal -> TSort -> IO ()
+renderTerminal :: Ptr QPainter -> Offset Double -> Seconds -> Terminal
+    -> TSort -> IO ()
 renderTerminal ptr offset seconds t sort = do
     renderTerminalBackground ptr offset seconds t sort
     renderLittleColorLights ptr offset t sort
@@ -337,18 +337,19 @@ renderLittleColorLights ptr offset t sort = do
     mapM_ (renderLight ptr (offset +~ pos) t (littleColorLights $ pixmaps sort))
         [red_, blue_, green_, yellow_]
 
-renderLight :: Ptr QPainter -> Offset -> Terminal -> ColorLights (Ptr QPixmap)
+renderLight :: Ptr QPainter -> Offset Double -> Terminal -> ColorLights Pixmap
     -> (forall a . (ColorLights a -> a)) -> IO ()
 renderLight ptr offset t pixmaps color =
     when (color $ lightState t) $ do
         let lightOffset = color littleLightOffsets
             pixmap = color pixmaps
-        resetMatrix ptr
-        translate ptr offset
-        translate ptr lightOffset
-        drawPixmap ptr zero pixmap
+        renderPixmap ptr offset lightOffset Nothing pixmap
+--         resetMatrix ptr
+--         translate ptr offset
+--         translate ptr lightOffset
+--         drawPixmap ptr zero pixmap
 
-littleLightOffsets :: ColorLights Offset
+littleLightOffsets :: ColorLights (Offset Double)
 littleLightOffsets = ColorLights {
     red_ = Position redX lightsY,
     blue_ = Position blueX lightsY,
@@ -512,7 +513,7 @@ oemRender_ ptr scene state = do
     renderObjectScene ptr offset scene
     renderOEMOSDs ptr offset scene state
 
-renderOEMOSDs :: Ptr QPainter -> Offset -> EditorScene -> OEMState -> IO ()
+renderOEMOSDs :: Ptr QPainter -> Offset Double -> EditorScene -> OEMState -> IO ()
 renderOEMOSDs ptr offset scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
     renderRobotBox orange{alphaC = 0.5} (getMainObject scene selected)

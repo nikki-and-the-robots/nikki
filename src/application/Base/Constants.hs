@@ -4,10 +4,14 @@ module Base.Constants where
 
 import System.FilePath
 
+import Graphics.Qt
+
 
 -- * Types
 
 type Seconds = Double
+
+type Offset a = Position a
 
 -- * Application
 

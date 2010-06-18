@@ -6,13 +6,15 @@ import Utils
 
 import Data.SelectTree
 import Data.Color
-import Control.Monad.FunctorM
 import Data.Abelian
 import Data.Dynamic
+
+import Control.Monad.FunctorM
 
 import Graphics.Qt
 
 import Base.Grounds
+import Base.Constants
 
 import Object
 
@@ -58,13 +60,14 @@ renderGUI ptr offset s = do
         renderSelectedObject ptr $ editorSort o
 
 
-renderLayer :: Ptr QPainter -> Size Double -> Offset -> Layer EditorObject -> IO ()
+renderLayer :: Ptr QPainter -> Size Double -> Offset Double 
+    -> Layer EditorObject -> IO ()
 renderLayer ptr size offset layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
     fmapM_ (renderEditorObject ptr modifiedOffset) (content layer)
 
 -- | renders the pink cursor box
-renderCursor' :: Ptr QPainter -> Offset -> EditorScene -> IO ()
+renderCursor' :: Ptr QPainter -> Offset Double -> EditorScene -> IO ()
 renderCursor' ptr offset scene = do
     let cursorPos = cursor scene
         sort = getSelected $ sorts scene
@@ -75,7 +78,7 @@ renderCursor' ptr offset scene = do
 
 
 -- calculates the rendering position for all objects (does the clipping, etc.)
-calculateRenderTransformation :: Ptr QPainter -> EditorScene -> IO Offset
+calculateRenderTransformation :: Ptr QPainter -> EditorScene -> IO (Offset Double)
 -- calculateRenderTransformation ptr s@TerminalScene{} =
 --     calculateRenderTransformation ptr (mainScene s)
 calculateRenderTransformation ptr s@EditorScene{} = do
