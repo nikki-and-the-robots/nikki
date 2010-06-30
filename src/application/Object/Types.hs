@@ -32,11 +32,11 @@ robotFriction = 1.0
 
 -- * misc
 
-data EditorPosition = EditorPosition Double Double
+data EditorPosition = EditorPosition {
+    editorX :: Double,
+    editorY :: Double
+  }
   deriving (Show, Read, Eq)
-
-editorX (EditorPosition x _) = x
-editorY (EditorPosition _ y) = y
 
 instance Abelian EditorPosition where
     zero = EditorPosition 0 0
@@ -45,10 +45,8 @@ instance Abelian EditorPosition where
     (EditorPosition a b) -~ (EditorPosition x y) =
         EditorPosition (a - x) (b - y)
 
-newtype SortId = SortId FilePath
+newtype SortId = SortId {getSortId :: FilePath}
   deriving (Show, Read, Eq)
-
-getSortId (SortId x) = x
 
 
 -- * Sort class

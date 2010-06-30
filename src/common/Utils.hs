@@ -184,10 +184,6 @@ wordsBy seps ll = inner [] ll
           else
             inner (a : akk) r
 
-rotateBack :: [a] -> [a]
-rotateBack [] = []
-rotateBack ll = last ll : init ll
-
 adjacentCyclic :: [a] -> [(a, a)]
 adjacentCyclic [] = []
 adjacentCyclic [a] = []

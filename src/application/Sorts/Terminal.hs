@@ -8,6 +8,7 @@ module Sorts.Terminal (
     Terminal(exitMode),
     hasTerminalShape,
     ExitMode(..),
+    OEMState(..),
   ) where
 
 
@@ -155,7 +156,7 @@ instance Sort TSort Terminal where
               }
             (polys, baryCenterOffset) = mkPolys $ size sort
             polysAndAttributes = map (tuple shapeAttributes) polys
-        chip <- initStaticChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
+        chip <- initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
         return $ Terminal chip attached (NikkiSelected 0) DontExit
                     (mkColorLights $ map (< length attached) [0..3])
                     0

@@ -89,19 +89,15 @@ instance Show Space where
 
 -- * creation
 
-initStaticChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)]
+initChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)]
     -> Vector -> IO Chipmunk
-initStaticChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenterOffset = do
+initChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenterOffset = do
     let normalAttrs = static2normalAttributes as
     body <- mkBody normalAttrs
     let chip = StaticChipmunk space body [] []
                 (vector2QtPosition (position -~ baryCenterOffset)) position
     addInitShape chip shapeTypes
-initStaticChipmunk space x y bc = nm "initStaticChipmunk" (x, y)
 
-
-initChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)]
-    -> Vector -> IO Chipmunk
 initChipmunk space as@BodyAttributes{} shapeTypes baryCenterOffset = do
     body <- mkBody as
     spaceAdd space body

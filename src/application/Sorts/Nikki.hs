@@ -189,7 +189,7 @@ instance Sort NSort Nikki where
             controlBody now contacts cd nikki
 
     render nikki sort ptr offset now = do
-        print $ batteryPower nikki
+--         print $ batteryPower nikki
         let pixmap = pickPixmap now sort nikki
         renderChipmunk ptr offset pixmap (nchipmunk nikki)
 

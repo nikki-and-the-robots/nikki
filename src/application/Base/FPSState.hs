@@ -18,6 +18,8 @@ import System.IO
 
 import Graphics.Qt
 
+import Utils
+
 import Base.Configuration as Configuration
 
 
@@ -29,7 +31,7 @@ data FpsState
         counter :: !Int,
         averageSpan :: !(Maybe Double),
         time :: Maybe (Ptr QTime),
-        logHandle :: !Handle
+        logHandle :: Maybe Handle
     }
     | NotActivated
   deriving Show
@@ -44,7 +46,8 @@ initialFPSState :: IO FpsState
 initialFPSState =
     if profiling Configuration.development then do
         logHandle <- openFile logFile WriteMode
-        return $ FpsState 0 Nothing Nothing logHandle
+--         return $ FpsState 0 Nothing Nothing logHandle
+        return $ FpsState 0 Nothing Nothing Nothing
       else
         return NotActivated
 
@@ -61,7 +64,7 @@ tickFPS (FpsState counter avg (Just qtime) logHandle) = do
         let avg' = calcAvg counter avg elapsed
         handle (FpsState (counter + 1) (Just avg') (Just qtime) logHandle)
   where
-    handle x@(FpsState 100 (Just avg) qtime lf) = do
+    handle x@(FpsState 10 (Just avg) qtime lf) = do
         putStrLn ("(FPS: " ++ show (1000 / avg) ++ ") | ")
 --         putStrLn "terminating application for profiling purposes." >> quitQApplication
         return $ FpsState 0 Nothing qtime lf
@@ -73,13 +76,14 @@ tickFPS (FpsState counter avg (Just qtime) logHandle) = do
         (lenF * avg + fromIntegral newValue) / (lenF + 1)
       where lenF = fromIntegral len
 
-    log elapsed = hPutStrLn logHandle (show elapsed)
+    log elapsed = whenMaybe logHandle $ \ h -> 
+                    hPutStrLn h (show elapsed)
 -- no FPS activated (NotActivated)
 tickFPS x = return x
 
 terminateFpsState :: FpsState -> IO ()
-terminateFpsState FpsState{logHandle} = do
-    hClose logHandle
+terminateFpsState FpsState{logHandle = Just h} = do
+    hClose h
     writeDistribution logFile "profiling/distribution.dat"
 -- NotActivated
 terminateFpsState _ = return ()

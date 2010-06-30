@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Base.Constants where
 
@@ -15,10 +16,8 @@ type Offset a = Position a
 
 -- * Application
 
-windowWidth :: Int
-windowWidth = 1000
-windowHeight :: Int
-windowHeight = 650
+windowWidth :: Int = 1000
+windowHeight :: Int = 650
 
 -- * Graphics
 
@@ -40,26 +39,24 @@ toKachel = (/ 16) . toUber
 
 -- * animation speeds
 
-robotIdleEyeTime :: Double
-robotIdleEyeTime = 0.4
+robotIdleEyeTime :: Double = 0.4
 
 -- * Physics
 
-gravity :: Double
-gravity = 1700 * time
+gravity :: Double = 1700 * time
 
 -- how fast the physic works (all forces and accelerations times time)
-time :: Double
-time = 1
+time :: Double = 1
+
+stepQuantum :: Double = 0.002
 
 -- * file directories
 
-soundDir = "data" </> "sounds"
+soundDir :: FilePath = "data" </> "sounds"
 
-pngDir :: FilePath
-pngDir = "data" </> "png"
+pngDir :: FilePath = "data" </> "png"
 
-levelDir = "levels"
+levelDir :: FilePath = "levels"
 
 
 

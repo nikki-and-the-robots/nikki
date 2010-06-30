@@ -167,7 +167,7 @@ initializeBoxes space boxes position = do
         pos :: Vector
         pos = qtPosition2Vector (uncurry editorPosition2QtPosition position)
                 +~ baryCenterOffset
-    chip <- initStaticChipmunk space (bodyAttributes pos)
+    chip <- initChipmunk space (bodyAttributes pos)
                 shapesWithAttributes baryCenterOffset
     return $ chip
 

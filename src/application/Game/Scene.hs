@@ -157,7 +157,6 @@ stepSpace space s@Scene{now, oldNow} = do
         CM.step space stepQuantum
   where
     n :: Int = stepQuantums now - stepQuantums oldNow
-    stepQuantum :: Double = 0.002
     stepQuantums :: Seconds -> Int
     stepQuantums t = truncate (t / stepQuantum)
 

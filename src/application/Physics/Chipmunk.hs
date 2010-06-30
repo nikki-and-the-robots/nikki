@@ -10,7 +10,6 @@ module Physics.Chipmunk (
 
     initSpace,
     Physics.Chipmunk.Types.initChipmunk,
-    initStaticChipmunk,
 --     addInitShape,
     removeChipmunk,
 

@@ -30,10 +30,7 @@ data Grounds a = Grounds {
 data Layer a = Layer {
     content :: (Indexable a),
     xDistance :: Double,
-    yDistance :: Double,
-    xVelocity :: Double,
-    yVelocity :: Double,
-    wrapped :: Bool
+    yDistance :: Double
   }
   deriving (Show, Read, Data, Typeable)
 
@@ -77,7 +74,7 @@ emptyGrounds :: Grounds a
 emptyGrounds = Grounds I.empty initialLayer I.empty
 
 initialLayer :: Layer a
-initialLayer = Layer I.empty 1 1 0 0 False
+initialLayer = Layer I.empty 1 1
 
 mkMainLayer :: Indexable a -> Layer a
 mkMainLayer content = initialLayer{content}

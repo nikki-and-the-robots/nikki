@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables, NamedFieldPuns #-}
+{-# language ScopedTypeVariables, NamedFieldPuns, ViewPatterns #-}
 
 module Top.Pickle where
 
@@ -18,17 +18,11 @@ import Object as Object
 
 import Editor.Scene as ES
 
+import Top.Pickle.Types
+import qualified Top.Pickle.Old1 as Old1
+
 
 -- * IO stuff
-
-type SaveType = Grounds PickleObject
-
--- type FileFormat = ByteString.ByteString
-type FileFormat = String
-
-
-fileToSave :: FileFormat -> Maybe SaveType
-fileToSave = readM
 
 saveToFile :: SaveType -> FileFormat
 -- saveToFile = compress . encode
@@ -43,11 +37,25 @@ writeFile :: FilePath -> FileFormat -> IO ()
 writeFile = IO.writeFile
 
 
-readSaved :: FilePath -> IO (Maybe SaveType)
-readSaved file = (readFile file :: IO FileFormat) >>= pure fileToSave
+parseSaved :: FilePath -> IO (Maybe SaveType)
+parseSaved file = (readFile file :: IO FileFormat) >>= pure parse
 
 writeSaved :: FilePath -> SaveType -> IO ()
 writeSaved file level = writeFile file (saveToFile level :: FileFormat)
+
+
+-- * parsing
+
+parse :: FileFormat -> Maybe SaveType
+parse (readM -> Just x :: Maybe SaveType) = Just x
+parse (readM -> Just x :: Maybe Old1.SaveType) = Just $ Old1.convert x
+
+-- | converts an older file format to the newest version
+convertToNewest :: String -> String
+convertToNewest s = case parse s of
+    Just x -> show x
+    Nothing -> error "convertToNewest"
+
 
 
 -- * loading
@@ -66,7 +74,7 @@ load mDefault = do
 
 loadByName :: String -> IO (Grounds PickleObject)
 loadByName name = do
-    mR <- readSaved (levelNameToFilePath name)
+    mR <- parseSaved (levelNameToFilePath name)
     return $ case mR of
         Just x -> x
         Nothing -> error ("level not readable: " ++ name)
