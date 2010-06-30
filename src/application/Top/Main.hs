@@ -69,7 +69,7 @@ main = globalCatcher $ do
 
     -- qt initialisation
     app <- newQApplication
-    window <- newAppWidget 1
+    window <- newAppWidget 0
 
     setFullscreenAppWidget window (Conf.fullscreen Conf.development)
 
