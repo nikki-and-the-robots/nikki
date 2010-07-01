@@ -246,7 +246,10 @@ cursorStepShortCuts = fromList (
         (K3, fromUber 4),
         (K4, fromUber 8),  -- 32
         (K5, fromUber 16), -- 64
-        (K6, fromUber 32)  -- 128
+        (K6, fromUber 32), -- 128
+        (K7, fromUber 64),
+        (K8, fromUber 128),
+        (K9, fromUber 256)
       ]
 
 
