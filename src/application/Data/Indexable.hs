@@ -40,9 +40,12 @@ import Data.IntMap ((!))
 import qualified Data.List as List
 import Data.Generics
 import Data.Either
+import Data.Traversable (Traversable, traverse)
+import Data.Foldable (Foldable, foldMap)
+import Data.Monoid
 
+import Control.Applicative ((<*>), Applicative, pure)
 import Control.Arrow
-import Control.Monad.FunctorM
 
 import Utils hiding (deleteByIndex)
 
@@ -66,12 +69,27 @@ data Indexable a = Indexable {
 instance Functor Indexable where
     fmap f (Indexable values keys) = Indexable (fmap f values) keys
 
-instance FunctorM Indexable where
-    fmapM cmd (Indexable values keys) = do
-        newValues <- fmapM (cmd . (values !) . index) keys
-        return $ Indexable (Map.fromList $ zip (map index keys) newValues) keys
-    fmapM_ cmd (Indexable values keys) =
-        mapM_ (cmd . (values !) . index) keys
+instance Foldable Indexable where
+    foldMap f (Indexable values keys) =
+        inner keys
+      where
+        inner (k : r) = f (values ! index k) `mappend` inner r
+        inner [] = mempty
+
+instance Traversable Indexable where
+    traverse cmd (Indexable values keys) = Indexable <$> (inner cmd values keys) <*> pure keys
+      where
+        inner :: (Applicative f) => (a -> f b) -> Map.IntMap a -> [Index] -> f (Map.IntMap b)
+        inner cmd values (k : r) = 
+            Map.insert (index k) <$> cmd (values ! index k) <*> inner cmd values r
+        inner cmd values [] = pure Map.empty
+
+-- instance FunctorM Indexable where
+--     fmapM cmd (Indexable values keys) = do
+--         newValues <- fmapM (cmd . (values !) . index) keys
+--         return $ Indexable (Map.fromList $ zip (map index keys) newValues) keys
+--     fmapM_ cmd (Indexable values keys) =
+--         mapM_ (cmd . (values !) . index) keys
 
 fmapMWithIndex :: Monad m => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)

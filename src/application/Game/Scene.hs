@@ -11,7 +11,6 @@ import Data.Abelian
 import qualified Data.Set as Set
 
 import Control.Monad.State hiding ((>=>), (<=<))
-import Control.Monad.FunctorM
 
 import Graphics.Qt as Qt
 
@@ -42,12 +41,12 @@ import Sorts.Terminal
 
 stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene -> IO Scene
 stepScene now space controlData ptr =
-    pure (updateNow now) .>>
+    fromPure (updateNow now) .>>
     updateContacts .>>
     updateScene controlData .>>
     passThrough (stepSpace space) .>>
     renderScene ptr now .>>
-    pure (maybeId (flip transition controlData))
+    fromPure (maybeId (flip transition controlData))
 
 -- * step time measurement
 

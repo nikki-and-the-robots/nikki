@@ -8,8 +8,10 @@ import Utils
 import Data.Indexable as I
 import Data.Generics
 import Data.List
+import Data.Foldable (Foldable, foldMap)
+import Data.Traversable (Traversable, traverse)
 
-import Control.Monad.FunctorM
+import Control.Applicative ((<*>), pure)
 
 import Graphics.Qt
 
@@ -44,29 +46,18 @@ data GroundsIndex
 
 -- useful instances
 
-instance FunctorM Grounds where
-    fmapM f (Grounds a b c) = do
-        a' <- fmapM (fmapM f) a
-        b' <- fmapM f b
-        c' <- fmapM (fmapM f) c
-        return $ Grounds a' b' c'
-    fmapM_ f (Grounds a b c) = do
-        _ <- fmapM_ (fmapM_ f) a
-        _ <- fmapM_ f b
-        fmapM_ (fmapM_ f) c
-
-instance FunctorM Layer where
-    fmapM f l@Layer{content} = do
-        content' <- fmapM f content
-        return $ l{content= content'}
-    fmapM_ f Layer{content} = fmapM_ f content
-
-
 instance Functor Grounds where
     fmap f (Grounds a b c) = Grounds (fmap (fmap f) a) (fmap f b) (fmap (fmap f) c)
 
 instance Functor Layer where
     fmap f l@Layer{content} = l{content = fmap f content}
+
+instance Foldable Layer where
+    foldMap f l = foldMap f (content l)
+
+instance Traversable Layer where
+    traverse cmd (Layer content x y) = Layer <$> traverse cmd content <*> pure x <*> pure y
+
 
 -- * construction
 

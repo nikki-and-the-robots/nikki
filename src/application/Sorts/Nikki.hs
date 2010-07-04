@@ -12,7 +12,6 @@ import Data.Generics
 import Data.Initial
 
 import Control.Monad hiding ((>=>))
-import Control.Monad.FunctorM
 
 import System.FilePath
 

@@ -11,8 +11,6 @@ import Data.Maybe
 import Data.Generics
 import Data.Map hiding (size, map)
 
-import Control.Monad.FunctorM
-
 import System.FilePath
 
 import Graphics.Qt as Qt
@@ -107,8 +105,8 @@ instance Sort JSort Jetpack where
     update object now _ (isControlled, cd) = inner object
       where
         inner =
-            pure (jupdate (isControlled, cd)) .>>
-            pure (updateRenderState now isControlled) .>>
+            fromPure (jupdate (isControlled, cd)) .>>
+            fromPure (updateRenderState now isControlled) .>>
             controlToChipmunk
 
     render = renderJetpack

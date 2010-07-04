@@ -12,7 +12,6 @@ module Data.SelectTree (
 
 import Utils
 
-import Control.Monad.FunctorM
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
 import qualified Data.Tree as T
@@ -28,13 +27,6 @@ data SelectTree a
 instance Functor SelectTree where
     fmap f (Node label children index) = Node label (fmap (fmap f) children) index
     fmap f (Leaf a) = Leaf $ f a
-
-instance FunctorM SelectTree where
-    fmapM fun (Node sn cs i) = do
-        cs' <- fmapM (fmapM fun) cs
-        return $ Node sn cs' i
-    fmapM fun (Leaf a) = fun a >>= return . Leaf
-    fmapM_ = e "fmapM_ SelectTree"
 
 instance Show a => PP (SelectTree a) where
     pp = T.drawTree . fmap show . toTree

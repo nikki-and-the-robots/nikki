@@ -10,6 +10,8 @@ module Utils (
 import Data.Char
 import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault)
+import qualified Data.Foldable
+import qualified Data.Traversable
 
 import Control.Applicative ((<$>))
 import Control.Monad.State hiding ((>=>))
@@ -80,6 +82,15 @@ toDebug :: Show s => String -> s -> String
 toDebug msg s = msg ++ ": " ++ show s
 
 
+-- * re-named re-exports
+
+fmapM :: (Data.Traversable.Traversable t, Monad m) => (a -> m b) -> t a -> m (t b)
+fmapM = Data.Traversable.mapM
+
+fmapM_ :: (Monad m, Data.Foldable.Foldable t) => (a -> m b) -> t a -> m ()
+fmapM_ = Data.Foldable.mapM_
+
+
 -- * function and monad composition stuff
 
 (|>) :: a -> (a -> b) -> b
@@ -94,12 +105,11 @@ x .>> y = \ a -> x a >>= y
 
 -- lifter stuff
 
-pure :: Monad m => (a -> b) -> (a -> m b)
-pure = (return .)
-
 passThrough :: Monad m => (a -> m ()) -> (a -> m a)
 passThrough cmd a = cmd a >> return a
 
+fromPure :: Monad m => (a -> b) -> (a -> m b)
+fromPure = (return .)
 
 
 

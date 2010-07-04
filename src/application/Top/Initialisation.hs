@@ -5,8 +5,6 @@ module Top.Initialisation where
 import Data.Indexable as I
 import Data.Initial
 
-import Control.Monad.FunctorM
-
 import Physics.Chipmunk
 
 import Utils
@@ -42,7 +40,7 @@ sortLoaders = [
 
 initSceneFromEditor :: Space -> Grounds EditorObject -> IO Scene
 initSceneFromEditor space =
-    pure groundsOptimizeChipmunks .>>
+    fromPure groundsOptimizeChipmunks .>>
     initializeObjects space .>>
     mkScene space
 

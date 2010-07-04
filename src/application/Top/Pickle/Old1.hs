@@ -1,4 +1,5 @@
 {-# language MultiParamTypeClasses, FlexibleInstances #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
 
 -- | version of the save type from 2010-06-24
 

@@ -9,8 +9,6 @@ import Data.Color
 import Data.Abelian
 import Data.Dynamic
 
-import Control.Monad.FunctorM
-
 import Graphics.Qt
 
 import Base.Grounds
