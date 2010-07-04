@@ -33,8 +33,6 @@ module Data.Indexable (
     optimizeMerge,
   ) where
 
-import Utils hiding (deleteByIndex)
-
 import Prelude hiding (length)
 
 import qualified Data.IntMap as Map
@@ -45,6 +43,8 @@ import Data.Either
 
 import Control.Arrow
 import Control.Monad.FunctorM
+
+import Utils hiding (deleteByIndex)
 
 
 newtype Index = Index {index :: Int}
@@ -73,7 +73,8 @@ instance FunctorM Indexable where
     fmapM_ cmd (Indexable values keys) =
         mapM_ (cmd . (values !) . index) keys
 
-fmapMWithIndex :: (Index -> a -> IO b) -> Indexable a -> IO (Indexable b)
+fmapMWithIndex :: Monad m => (Index -> a -> m b)
+    -> Indexable a -> m (Indexable b)
 fmapMWithIndex cmd (Indexable values keys) = do
     newValues <- mapM (\ k -> cmd k (values ! (index k))) keys
     return $ Indexable (Map.fromList $ zip (map index keys) newValues) keys
@@ -129,7 +130,8 @@ a <: (Indexable values keys) =
     i = newIndex keys
 
 fromList :: [a] -> Indexable a
-fromList list = Indexable (Map.fromList pairs) $ map (Index . fst) pairs
+fromList list =
+    Indexable (Map.fromList pairs) (map (Index . fst) pairs)
   where
     pairs = zip [0..] list
 

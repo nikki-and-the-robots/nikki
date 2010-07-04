@@ -8,7 +8,6 @@ module Game.Scene (
 
 import Data.Indexable (Indexable, Index, fmapMWithIndex, findIndices, toList)
 import Data.Abelian
-import Data.Dynamic
 import qualified Data.Set as Set
 
 import Control.Monad.State hiding ((>=>), (<=<))

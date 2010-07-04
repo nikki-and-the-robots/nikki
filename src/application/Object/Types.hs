@@ -8,10 +8,7 @@ import Utils
 import Data.Abelian
 import Data.Dynamic
 import Data.List
-import qualified Data.Indexable as I
 import Data.Indexable (Index, Indexable, modifyByIndex)
-
-import Control.Monad
 
 import Graphics.Qt as Qt
 

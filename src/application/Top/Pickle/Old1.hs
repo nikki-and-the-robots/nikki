@@ -12,7 +12,7 @@ import Data.Convertable
 import Data.Map as Map (Map, toList)
 import Data.IntMap as IntMap (IntMap, fromList)
 
-import Control.Arrow
+-- import Control.Arrow
 
 import Utils
 

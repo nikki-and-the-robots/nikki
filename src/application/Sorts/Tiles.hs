@@ -21,7 +21,6 @@ import Control.Arrow
 import Control.Monad
 
 import System.FilePath
-import System.Directory
 
 import Graphics.Qt as Qt
 

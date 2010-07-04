@@ -9,12 +9,9 @@ import Data.IORef
 import Data.Set (Set, empty, insert, delete, toList)
 
 import Control.Monad.State hiding ((>=>))
-import Control.Monad.FunctorM
 
 import System.IO
 import System.Exit
-
-import Physics.Chipmunk
 
 import Graphics.Qt
 
@@ -26,7 +23,6 @@ import qualified Base.Configuration as Conf
 import Object
 
 import Game.MainLoop as Game
-import Game.Scene (Scene)
 
 import Editor.Scene
 
