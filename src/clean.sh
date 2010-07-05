@@ -11,3 +11,5 @@ trap error ERR
 rm -rfv buildSystem/dist
 rm -rfv qtRendering/cpp/dist
 rm -rfv application/dist
+rm -rfv nikki
+
