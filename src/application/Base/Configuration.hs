@@ -13,7 +13,7 @@ data Development = Development {
 
 development = Development {
     profiling = False,
-    fullscreen = True,
+    fullscreen = False,
     showScene = True,
     showXYCross = False,
     showChipmunkObjects = False
