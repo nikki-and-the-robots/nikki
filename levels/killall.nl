@@ -1,1 +1,0 @@
-Grounds {backgrounds = Indexable {values = fromList [], keys = []}, mainLayer = Layer {content = Indexable {values = fromList [], keys = []}, xDistance = 1.0, yDistance = 1.0}, foregrounds = Indexable {values = fromList [], keys = []}}
