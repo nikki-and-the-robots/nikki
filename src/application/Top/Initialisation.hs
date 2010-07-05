@@ -10,10 +10,10 @@ import Physics.Chipmunk
 import Utils
 
 import Base.Grounds
+import Base.Types
 
 import Object
 
-import Game.Scene.Types
 import Game.OptimizeChipmunks
 
 import qualified Sorts.Nikki
@@ -38,10 +38,10 @@ sortLoaders = [
   ]
 
 
-initSceneFromEditor :: Space -> Grounds EditorObject -> IO Scene
+initSceneFromEditor :: Space -> Grounds EditorObject -> IO (Scene Object_)
 initSceneFromEditor space =
-    fromPure groundsOptimizeChipmunks .>>
-    initializeObjects space .>>
+    fromPure groundsOptimizeChipmunks >>>>
+    initializeObjects space >>>>
     mkScene space
 
 initializeObjects :: Space -> Grounds EditorObject -> IO (Grounds Object_)
@@ -59,12 +59,11 @@ editorObject2Object (Just space) (MergedTilesEditorObject merged) =
 
 
 
-mkScene :: Space -> Grounds Object_ -> IO Scene
+mkScene :: Space -> Grounds Object_ -> IO (Scene Object_)
 mkScene space objects = do
     let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
     contactRef <- initContactRef space emptyContacts watchedContacts
-    let contacts = (contactRef, emptyContacts)
-    return $ Scene 0 0 objects initial contacts (NikkiMode nikki)
+    return $ Scene 0 0 objects initial contactRef emptyContacts (NikkiMode nikki)
 
 groundsOptimizeChipmunks :: Grounds EditorObject -> Grounds EditorObject
 groundsOptimizeChipmunks =

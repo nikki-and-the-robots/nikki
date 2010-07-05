@@ -31,6 +31,8 @@ import Physics.Chipmunk as CM
 import Base.Events
 import Base.FPSState
 
+import Object
+
 import Game.Scene
 -- import Game.Scene.Types
 
@@ -71,7 +73,7 @@ data GameAppState = GameAppState {
     keyState :: Set AppButton,
     fpsState :: FpsState,
     cmSpace :: CM.Space,
-    scene :: Scene,
+    scene :: Scene Object_,
     timer :: Ptr QTime
   }
 
@@ -79,15 +81,15 @@ setKeyState :: GameAppState -> Set AppButton -> GameAppState
 setKeyState (GameAppState a b _ d e f g) c = GameAppState a b c d e f g
 setFpsState :: GameAppState -> FpsState -> GameAppState
 setFpsState (GameAppState a b c _ e f g) d = GameAppState a b c d e f g
-setScene :: GameAppState -> Scene -> GameAppState
+setScene :: GameAppState -> Scene Object_ -> GameAppState
 setScene    (GameAppState a b c d e _ g) f = GameAppState a b c d e f g
 
 
-initialStateRef :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO Scene)
+initialStateRef :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO (Scene Object_))
     -> IO (IORef GameAppState)
 initialStateRef app widget scene = initialState app widget scene >>= newIORef
 
-initialState :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO Scene) -> IO GameAppState
+initialState :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO (Scene Object_)) -> IO GameAppState
 initialState app widget startScene = do
     fps <- initialFPSState
     cmSpace <- initSpace gravity

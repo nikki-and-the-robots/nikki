@@ -24,6 +24,7 @@ import Base.Constants
 import Base.Events
 import Base.Animation
 import Base.Pixmap
+import Base.Types
 
 import Object
 
@@ -102,11 +103,11 @@ instance Sort JSort Jetpack where
 
     chipmunk = jchipmunk
 
-    update object now _ (isControlled, cd) = inner object
+    updateNoSceneChange object now contacts (isControlled, cd) = inner object
       where
         inner =
-            fromPure (jupdate (isControlled, cd)) .>>
-            fromPure (updateRenderState now isControlled) .>>
+            fromPure (jupdate (isControlled, cd)) >>>>
+            fromPure (updateRenderState now isControlled) >>>>
             controlToChipmunk
 
     render = renderJetpack

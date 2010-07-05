@@ -47,7 +47,7 @@ import Data.Monoid
 import Control.Applicative ((<*>), Applicative, pure)
 import Control.Arrow
 
-import Utils hiding (deleteByIndex)
+import Utils
 
 
 newtype Index = Index {index :: Int}
@@ -77,19 +77,12 @@ instance Foldable Indexable where
         inner [] = mempty
 
 instance Traversable Indexable where
-    traverse cmd (Indexable values keys) = Indexable <$> (inner cmd values keys) <*> pure keys
+    traverse cmd (Indexable values keys) = Indexable <$> inner keys <*> pure keys
       where
-        inner :: (Applicative f) => (a -> f b) -> Map.IntMap a -> [Index] -> f (Map.IntMap b)
-        inner cmd values (k : r) = 
-            Map.insert (index k) <$> cmd (values ! index k) <*> inner cmd values r
-        inner cmd values [] = pure Map.empty
+        inner (k : r) = 
+            Map.insert (index k) <$> cmd (values ! index k) <*> inner r
+        inner [] = pure Map.empty
 
--- instance FunctorM Indexable where
---     fmapM cmd (Indexable values keys) = do
---         newValues <- fmapM (cmd . (values !) . index) keys
---         return $ Indexable (Map.fromList $ zip (map index keys) newValues) keys
---     fmapM_ cmd (Indexable values keys) =
---         mapM_ (cmd . (values !) . index) keys
 
 fmapMWithIndex :: Monad m => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)
@@ -155,8 +148,8 @@ fromList list =
 
 -- * mods
 
-deleteByIndex :: Indexable a -> Index -> Indexable a
-deleteByIndex (Indexable values keys) i =
+deleteByIndex :: Index -> Indexable a -> Indexable a
+deleteByIndex i (Indexable values keys) =
     Indexable (Map.delete (index i) values) (filter (/= i) keys)
 
 modifyByIndex :: (a -> a) -> Index -> Indexable a -> Indexable a
@@ -196,7 +189,7 @@ optimizeMerge p ix =
 
 mergeIndexableOnce :: Show a => (a -> a -> Maybe a) -> Indexable a -> Indexable a
 mergeIndexableOnce p =
-    convertToList .> mergeListOnce p .> convertToIndexable
+    convertToList >>> mergeListOnce p >>> convertToIndexable
   where
     convertToList :: Indexable a -> [Either (Index, a) a] -- left unmerged, right merged
     convertToList ix = map (\ i -> Left (i, values ix ! index i)) (keys ix)

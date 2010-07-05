@@ -102,7 +102,7 @@ save scene = do
 
 wantsToSave :: IO Bool
 wantsToSave = do
-    putStr "Do you want to save this level? (Y/n): "
+    putStrLn "Do you want to save this level? (Y/n):"
     c <- getChar
     putStrLn ""
     if c `elem` "\nYy" then
@@ -132,7 +132,7 @@ askWithDefault prompt vorauswahl =
 
     promptForInput :: String -> IO String
     promptForInput p = do
-        putStr p
+        putStrLn p
         getLine
 
 

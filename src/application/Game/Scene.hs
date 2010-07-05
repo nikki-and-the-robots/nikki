@@ -5,10 +5,12 @@ module Game.Scene (
     stepScene,
   ) where
 
+import Prelude hiding (foldr)
 
-import Data.Indexable (Indexable, Index, fmapMWithIndex, findIndices, toList)
+import Data.Indexable (Indexable, Index, findIndices, fmapMWithIndex)
 import Data.Abelian
 import qualified Data.Set as Set
+import Data.Foldable (foldr)
 
 import Control.Monad.State hiding ((>=>), (<=<))
 
@@ -22,10 +24,10 @@ import Base.Events
 import Base.Grounds
 import Base.Configuration as Configuration
 import Base.Constants
+import Base.Types
 
 import Object
 
-import Game.Scene.Types
 import Game.Scene.Camera
 
 import Sorts.Terminal
@@ -39,33 +41,32 @@ import Sorts.Terminal
 -- updating the objects
 -- rendering
 
-stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene -> IO Scene
+stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene Object_ -> IO (Scene Object_)
 stepScene now space controlData ptr =
-    fromPure (updateNow now) .>>
-    updateContacts .>>
-    updateScene controlData .>>
-    passThrough (stepSpace space) .>>
-    renderScene ptr now .>>
+    fromPure (updateNow now) >>>>
+    updateContacts >>>>
+    updateScene controlData >>>>
+    passThrough (stepSpace space) >>>>
+    renderScene ptr now >>>>
     fromPure (maybeId (flip transition controlData))
 
 -- * step time measurement
 
 -- | updates the fields now and oldNow
-updateNow :: Seconds -> Scene -> Scene
+updateNow :: Seconds -> Scene o -> Scene o
 updateNow now' scene@Scene{now} =
     scene{now = now', oldNow = now}
 
 -- | updates the existing contacts
-updateContacts :: Scene -> IO Scene
+updateContacts :: Scene o -> IO (Scene o)
 updateContacts scene = do
-    let contactRef = fst $ contacts scene
-    contacts' <- peekContacts contactRef
-    return $ scene{contacts = (contactRef, contacts')}
+    contacts' <- peekContacts $ contactRef scene
+    return $ scene{contacts = contacts'}
 
 
 -- * State automaton stuff
 
-transition :: Scene -> ControlData -> (Maybe Scene)
+transition :: Scene Object_ -> ControlData -> Maybe (Scene Object_)
 transition scene (ControlData pushed _) = runHandler [
     nikkiToTerminal scene pushed,
     terminalExit scene,
@@ -74,31 +75,31 @@ transition scene (ControlData pushed _) = runHandler [
     levelPassed scene
   ]
 
-runHandler :: [Maybe Scene] -> Maybe Scene
+runHandler :: Sort s o => [Maybe (Scene o)] -> Maybe (Scene o)
 runHandler (Just scene : _) = Just $ sendStartControl scene
   where
-    sendStartControl :: Scene -> Scene
+    sendStartControl :: Sort s o => Scene o -> Scene o
     sendStartControl scene = 
-        modifyMainByIndex startControl (getControlledIndex scene) scene
+        modifyMainlayerObjectByIndex startControl (getControlledIndex scene) scene
 runHandler (Nothing : r) = runHandler r
 runHandler [] = Nothing
 
 
 -- | converts the Scene to TerminalMode, if appropriate
-nikkiToTerminal :: Scene -> [AppEvent] -> (Maybe Scene)
+nikkiToTerminal :: Scene Object_ -> [AppEvent] -> Maybe (Scene Object_)
 nikkiToTerminal scene@Scene{mode = (NikkiMode nikki)} pushed
     | bPressed && beforeTerminal
         = Just $ scene {mode = mode'}
   where
     bPressed = Press BButton `elem` pushed
-    beforeTerminal = nikkiTouchesTerminal $ snd (contacts scene)
+    beforeTerminal = nikkiTouchesTerminal $ contacts scene
 
     mode' = TerminalMode nikki terminal
     terminal = whichTerminalCollides scene
 nikkiToTerminal _ _ = Nothing
 
 
-whichTerminalCollides :: Scene -> Index
+whichTerminalCollides :: Scene Object_ -> Index
 whichTerminalCollides Scene{objects, contacts} =
     case findIndices p allTerminals of
         (a : _) -> a
@@ -110,11 +111,11 @@ whichTerminalCollides Scene{objects, contacts} =
     p Nothing = False
     p (Just t) = any (\ shape -> hasTerminalShape t shape) collidingShapes
     collidingShapes :: [Shape]
-    collidingShapes = contacts |> snd |> terminals |> Set.toList
+    collidingShapes = contacts |> terminals |> Set.toList
 
-terminalExit :: Scene -> (Maybe Scene)
+terminalExit :: Scene Object_ -> Maybe (Scene Object_)
 terminalExit scene@Scene{mode = TerminalMode{nikki, terminal}} =
-    case unwrapTerminal $ getMainObject scene terminal of
+    case unwrapTerminal $ getMainlayerObject scene terminal of
         Just t -> case exitMode t of
             DontExit -> Nothing
             ExitToNikki ->
@@ -125,7 +126,7 @@ terminalExit _ = Nothing
 
 
 -- | converts from RobotMode to TerminalMode, if appropriate
-robotToTerminal :: Scene -> [AppEvent] -> (Maybe Scene)
+robotToTerminal :: Scene Object_ -> [AppEvent] -> Maybe (Scene Object_)
 robotToTerminal scene@Scene{mode = RobotMode{nikki, terminal}} pushed
   | bPress =
     Just $ scene{mode = TerminalMode nikki terminal}
@@ -133,20 +134,20 @@ robotToTerminal scene@Scene{mode = RobotMode{nikki, terminal}} pushed
     bPress = Press BButton `elem` pushed
 robotToTerminal _ _ = Nothing
 
-gameOver :: Scene -> Maybe Scene
-gameOver scene | nikkiTouchesLaser $ snd $ contacts scene =
+gameOver :: Scene Object_ -> Maybe (Scene Object_)
+gameOver scene | nikkiTouchesLaser $ contacts scene =
     Just $ modifyMode (const $ LevelFinished Failed) scene
 gameOver _ = Nothing
 
-levelPassed :: Scene -> Maybe Scene
-levelPassed scene | nikkiTouchesMilkMachine $ snd $ contacts scene =
+levelPassed :: Scene Object_ -> Maybe (Scene Object_)
+levelPassed scene | nikkiTouchesMilkMachine $ contacts scene =
     Just $ modifyMode (const $ LevelFinished Passed) scene
 levelPassed _ = Nothing
 
 
 -- * chipmunk stepping
 
-stepSpace :: Space -> Scene -> IO ()
+stepSpace :: Space -> Scene Object_ -> IO ()
 
 stepSpace _space Scene{mode = TerminalMode{}} = return ()
 
@@ -164,36 +165,36 @@ singleStepTime = 0.1
 -- * object updating
 
 -- | updates every object
-updateScene :: ControlData -> Scene -> IO Scene
+updateScene :: ControlData -> Scene Object_ -> IO (Scene Object_)
 updateScene cd scene@Scene{now, objects, contacts, mode} = do
-    backgrounds' <- fmapM (fmapM updateMultiLayerObjects) backgrounds
-    mainLayer' <- modifyContentM updateMainObjects mainLayer
-    foregrounds' <- fmapM (fmapM updateMultiLayerObjects) foregrounds
-    return $ scene{objects = Grounds backgrounds' mainLayer' foregrounds'}
+    backgrounds' <- fmapM (modifyContentM (fmapMWithIndex updateMultiLayerObjects)) backgrounds
+    (sceneChange, mainLayer') <- updateMainLayer mainLayer
+    foregrounds' <- fmapM (modifyContentM (fmapMWithIndex updateMultiLayerObjects)) foregrounds
+    return $ sceneChange $ scene{objects = Grounds backgrounds' mainLayer' foregrounds'}
   where
     controlled = getControlledIndex scene
     (Grounds backgrounds mainLayer foregrounds) = objects
 
     -- update function for all objects in the mainLayer
-    updateMainObjects :: Indexable Object_ -> IO (Indexable Object_)
+    updateMainLayer :: Layer Object_ -> IO (Scene Object_ -> Scene Object_, Layer Object_)
     -- each object has to know, if it's controlled
-    updateMainObjects ix = do
+    updateMainLayer layer@Layer{content = ix} = do
         ix' <- fmapMWithIndex (\ i o ->
-                updateSceneChange o now (snd contacts) (i == controlled, cd)) ix
-        let changes = map snd $ toList ix'
-            ix'' = fmap fst ix'
-        return $ performSceneChanges changes (nikki mode) ix''
+                update o i now contacts (i == controlled, cd)) ix
+        let changes = foldr (.) id $ fmap fst ix'
+            ix'' = fmap snd ix'
+        return $ (changes, layer{content = ix''})
 
     -- update function for updates outside the mainLayer
     -- NOTE: SceneChanges currently only affect the main layer
-    updateMultiLayerObjects :: Object_ -> IO Object_
-    updateMultiLayerObjects o = update o now (snd contacts) (False, cd)
+    updateMultiLayerObjects :: Index -> Object_ -> IO Object_
+    updateMultiLayerObjects i o = update o i now contacts (False, cd) >>= fromPure snd
 
 
 -- * rendering
 
 -- | well, renders the scene to the screen (to the max :)
-renderScene :: Ptr QPainter -> Seconds -> Scene -> IO Scene
+renderScene :: Ptr QPainter -> Seconds -> Scene Object_ -> IO (Scene Object_)
 renderScene ptr now scene@Scene{} = do
 
     resetMatrix ptr

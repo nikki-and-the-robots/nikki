@@ -8,7 +8,7 @@ import Utils
 import Data.Abelian
 import Data.Dynamic
 import Data.List
-import Data.Indexable (Index, Indexable, modifyByIndex)
+import Data.Indexable (Index)
 
 import Graphics.Qt as Qt
 
@@ -17,8 +17,7 @@ import Physics.Chipmunk hiding (Position, collisionType)
 import Base.Events
 import Base.Constants
 import Base.Pixmap
-
-import Object.Contacts
+import Base.Types
 
 
 -- * Constants
@@ -73,15 +72,13 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     startControl :: object -> object
     startControl = id
 
-    updateSceneChange :: object -> Seconds -> Contacts -> (Bool, ControlData)
-        -> IO (object, SceneChange)
-        -- default implementstion leaves the scene unchanged
-    updateSceneChange o now contacts cd = do
-        x <- update o now contacts cd
-        return (x, NoChange)
-
-    update :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
-    update o _ _ _ = return o
+    update :: object -> Index -> Seconds -> Contacts -> (Bool, ControlData) -> IO (Scene Object_ -> Scene Object_, object)
+    update o i now contacts cd = do
+        o' <- updateNoSceneChange o now contacts cd
+        return (id, o')
+    
+    updateNoSceneChange :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
+    updateNoSceneChange o _ _ _ = return o
 
     render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
 
@@ -121,11 +118,10 @@ instance Sort Sort_ Object_ where
         Object_ sort <$> initialize sort space editorPosition state
     chipmunk (Object_ _ o) = chipmunk o
     startControl (Object_ sort o) = Object_ sort $ startControl o
-    updateSceneChange (Object_ sort o) now contacts cd = do
-        (o', change) <- updateSceneChange o now contacts cd
-        return (Object_ sort o', change)
-    update (Object_ sort o) now contacts cd =
-        Object_ sort <$> update o now contacts cd
+    update (Object_ sort o) i now contacts cd = do
+        (f, o') <- update o i now contacts cd
+        return (f, Object_ sort o')
+    updateNoSceneChange (Object_ sort o) now contacts cd = Object_ sort <$> updateNoSceneChange o now contacts cd
     render = error "Don't use this function, use render_ instead (that't type safe)"
 
 sort_ :: Object_ -> Sort_
@@ -274,23 +270,6 @@ unpickleOEM sort state =
         Just x -> OEMState x state
 
 
--- * SceneChanges
-
-data SceneChange
-    = NoChange
-    | ChangeNikki (Object_ -> Object_)
-
-performSceneChanges :: [SceneChange] -> Index
-    -> Indexable Object_ -> Indexable Object_
-performSceneChanges (a : r) nikki ix =
-    performSceneChanges r nikki (performSceneChange a nikki ix)
-performSceneChanges [] _ ix = ix
-
-performSceneChange :: SceneChange -> Index
-    -> Indexable Object_ -> Indexable Object_
-performSceneChange NoChange _ ix = ix
-performSceneChange (ChangeNikki f) nikki ix =
-    modifyByIndex f nikki ix
 
 
 

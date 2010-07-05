@@ -20,12 +20,13 @@ import Data.Maybe
 import Data.Map hiding (map, filter, mapMaybe, size)
 import Data.SelectTree
 import qualified Data.Indexable as I
-import Data.Indexable (Index, (>:), modifyByIndex)
+import Data.Indexable (Index, (>:), modifyByIndex, deleteByIndex)
 import Data.Menu hiding (selected)
 import Data.Abelian
 import Data.Dynamic
 
 import Control.Monad.State
+import Control.Arrow
 
 import Graphics.Qt
 
@@ -156,7 +157,7 @@ keyPress Delete scene@EditorScene{selectedLayer} =
     case selected scene of
         Nothing -> scene
         (Just i) ->
-            let newObjects = modifySelectedLayer selectedLayer (modifyContent (flip I.deleteByIndex i)) (objects scene)
+            let newObjects = modifySelectedLayer selectedLayer (modifyContent (deleteByIndex i)) (objects scene)
             in scene{objects = newObjects}
 
 -- skip through available objects
@@ -232,7 +233,7 @@ keyPress _ s = s
 cursorStepShortCuts :: Map Key (EditorScene -> EditorPosition)
 cursorStepShortCuts = fromList (
     (K0, fromSelectedPixmap) -- like the selected object
-    : map (modifySnd (\ x -> const $ EditorPosition x x)) constSquareShortcuts)
+    : map (second (\ x -> const $ EditorPosition x x)) constSquareShortcuts)
   where
     fromSelectedPixmap :: EditorScene -> EditorPosition
     fromSelectedPixmap EditorScene{sorts} =

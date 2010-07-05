@@ -3,7 +3,7 @@
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 
-module Sorts.Nikki (sorts, addBatteryPower) where
+module Sorts.Nikki (sorts, addBatteryPower, modifyNikki) where
 
 
 import Data.Abelian
@@ -29,6 +29,7 @@ import Base.Events
 import Base.Directions
 import Base.Animation
 import Base.Pixmap
+import Base.Types
 
 import Object
 
@@ -136,6 +137,20 @@ data Nikki
 addBatteryPower :: Nikki -> Nikki
 addBatteryPower n = n{batteryPower = batteryPower n + 1}
 
+
+modifyNikki :: (Nikki -> Nikki) -> Scene Object_ -> Scene Object_
+modifyNikki f scene =
+    modifyMainlayerObjectByIndex inner (nikki (mode scene)) scene
+  where
+    inner :: Object_ -> Object_
+    inner (Object_ s o) =
+        Object_ s' o'
+      where
+        Just s' = cast s
+        Just castO = cast o
+        o' = f castO
+
+
 data RenderState
     = Wait          {direction :: HorizontalDirection}
     | Walk          {direction :: HorizontalDirection}
@@ -183,8 +198,8 @@ instance Sort NSort Nikki where
 
     chipmunk = nchipmunk
 
-    update nikki now contacts cd =
-        (updateStartTimes now (renderState nikki)) <$>
+    updateNoSceneChange nikki now contacts cd =
+        updateStartTimes now (renderState nikki) <$>
             controlBody now contacts cd nikki
 
     render nikki sort ptr offset now = do

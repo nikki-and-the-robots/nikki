@@ -36,6 +36,7 @@ import Base.Events
 import Base.Constants
 import Base.Animation
 import Base.Pixmap
+import Base.Types
 
 import Object hiding (OEMState)
 
@@ -131,7 +132,7 @@ unwrapTerminal (Object_ sort o) = cast o
 
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
-    size = pixmaps .> blinkenLights .> head .> pixmapSize
+    size = pixmaps >>> blinkenLights >>> head >>> pixmapSize
     sortRender sort =
         sortRenderSinglePixmap (head $ blinkenLights $ pixmaps sort) sort
 
@@ -165,9 +166,9 @@ instance Sort TSort Terminal where
 
     startControl t = t{exitMode = DontExit}
 
-    update terminal now collisions (False, cd) =
+    updateNoSceneChange terminal now contacts (False, cd) =
         return $ blinkSelectedColorLight now terminal
-    update terminal now collisions (True, cd) = do
+    updateNoSceneChange terminal now contacts (True, cd) = do
         let cls = pp $ lightState terminal
         case selected terminal of
             NikkiSelected _ -> putStrLn ("[Nikki]\n " ++ cls)
@@ -451,7 +452,7 @@ editMode = ObjectEditMode {
     oemUpdate = \ scene_ key ->
         case fromDynamic scene_ of
             Just scene ->
-                readNote "Terminal.editMode.oemUpdate" .> editorUpdate scene key .> show,
+                readNote "Terminal.editMode.oemUpdate" >>> editorUpdate scene key >>> show,
     oemRender = \ ptr scene_ 
         (readNote  "Terminal.editMode.oemRender" -> state :: OEMState) ->
             case fromDynamic scene_ of

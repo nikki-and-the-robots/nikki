@@ -60,8 +60,8 @@ initialState app widget mObjects = do
 
 main :: IO ()
 main = globalCatcher $ do
-    putStrLn "\neditor started..."
     hSetBuffering stdout NoBuffering
+    putStrLn "\neditor started..."
 
     -- qt initialisation
     app <- newQApplication

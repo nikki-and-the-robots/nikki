@@ -2,6 +2,7 @@
 
 module Utils (
     (<$>),
+    (>>>),
     module Utils,
   ) where
 
@@ -15,6 +16,7 @@ import qualified Data.Traversable
 
 import Control.Applicative ((<$>))
 import Control.Monad.State hiding ((>=>))
+import Control.Arrow ((>>>))
 
 import System
 import System.Directory
@@ -91,19 +93,15 @@ fmapM_ :: (Monad m, Data.Foldable.Foldable t) => (a -> m b) -> t a -> m ()
 fmapM_ = Data.Foldable.mapM_
 
 
--- * function and monad composition stuff
+-- * function composition stuff
 
 (|>) :: a -> (a -> b) -> b
 a |> f = f a
 
-(.>) :: (a -> b) -> (b -> c) -> (a -> c)
-(.>) = flip (.)
+-- fake kleisli stuff
 
-(.>>) :: Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)
-x .>> y = \ a -> x a >>= y
-
-
--- lifter stuff
+(>>>>) :: Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)
+x >>>> y = \ a -> x a >>= y
 
 passThrough :: Monad m => (a -> m ()) -> (a -> m a)
 passThrough cmd a = cmd a >> return a
@@ -225,18 +223,7 @@ mergePairs f (a : r) =
     inner a [] = Nothing
 mergePairs f [] = []
 
--- | deletes an element by the given index
-deleteByIndex :: Int -> [a] -> [a]
-deleteByIndex 0 (_ : r) = r
-deleteByIndex n (a : r) = a : deleteByIndex (n - 1) r
-deleteByIndex n [] = e ("deleteByIndex " ++ show n ++ " []")
 
-repeatList :: Int -> [a] -> [a]
-repeatList 0 _ = []
-repeatList n list = list ++ repeatList (n - 1) list
-
-applyAll :: [a -> a] -> a -> a
-applyAll fs a = foldl (.) id fs a
 
 
 -- * String stuff
@@ -337,12 +324,6 @@ clip (_, upper) x | x > upper = upper
 
 tuple :: a -> b -> (a, b)
 tuple a b = (a, b)
-
-swapTuple :: (a, b) -> (b, a)
-swapTuple (a, b) = (b, a)
-
-modifySnd :: (a -> b) -> (x, a) -> (x, b)
-modifySnd f (x, a) = (x, f a)
 
 
 -- * misc

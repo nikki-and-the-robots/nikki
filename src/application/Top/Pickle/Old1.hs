@@ -84,7 +84,7 @@ instance Convertable a b => Convertable (Indexable a) (Newest.Indexable b) where
 
 instance Convertable a b => Convertable (Map Index a) (IntMap b) where
     convert =
-        Map.toList .> map (\ (Index i, a) -> (i, convert a)) .> IntMap.fromList
+        Map.toList >>> map (\ (Index i, a) -> (i, convert a)) >>> IntMap.fromList
 
 newtype Index = Index Int
   deriving (Show, Read, Eq, Ord)

@@ -14,6 +14,8 @@ import Data.Set as Set
 
 import Physics.Chipmunk hiding (position)
 
+import Base.Types
+
 
 data MyCollisionType
     = TileCT
@@ -26,16 +28,6 @@ data MyCollisionType
     | BatteryCT
   deriving (Enum, Eq, Show)
 
-
-data Contacts
-    = Contacts {
-        nikkiTouchesGround :: !Bool,
-        nikkiTouchesLaser :: !Bool,
-        nikkiTouchesMilkMachine :: !Bool,
-        terminals :: Set Shape,
-        batteries :: Set Shape
-      }
-  deriving Show
 
 -- empty in the sense that nothing collides
 emptyContacts :: Contacts

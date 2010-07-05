@@ -1,4 +1,4 @@
-{-# language DeriveDataTypeable, MultiParamTypeClasses #-}
+{-# language DeriveDataTypeable, MultiParamTypeClasses, NamedFieldPuns #-}
 
 module Sorts.Battery where
 
@@ -6,6 +6,7 @@ module Sorts.Battery where
 import Data.Data
 import Data.Abelian
 import Data.Set
+import Data.Indexable as I
 
 import System.FilePath
 
@@ -13,12 +14,17 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
+import Utils
+
 import Base.Constants
 import Base.Pixmap
+import Base.Types
+import Base.Grounds
 
 import Object
 
-import Sorts.Nikki
+import Sorts.Nikki (addBatteryPower, modifyNikki)
+
 
 -- * battery config
 
@@ -72,14 +78,14 @@ instance Sort BSort Battery where
 
     chipmunk = bchip
 
-    updateSceneChange o now contacts cd
+    update o i now contacts cd
         | any (`member` batteries contacts) (shapes $ bchip o) = do
-            -- the battery is consumed by nikki
+            -- the battery is consumed by nikki (TODO: delete battery)
             removeChipmunk $ bchip o
-            return (Consumed $ bchip o,
-                ChangeNikki $ wrapObjectModifier addBatteryPower)
-    updateSceneChange o _ _ _ =
-        return (o, NoChange)
+            let sceneChange = modifyNikki addBatteryPower . removeBattery
+                removeBattery = modifyObjects (modifyMainLayer (deleteByIndex i))
+            return (sceneChange, Consumed $ bchip o)
+    update o i now contacts cd = return (id, o) -- no change
 
     render o@Battery{} sort ptr offset now =
         renderChipmunk ptr offset (batteryPixmap sort) (bchip o)
@@ -89,7 +95,7 @@ instance Sort BSort Battery where
 
 shapeAttributes :: ShapeAttributes
 shapeAttributes = ShapeAttributes {
-    elasticity    = 0.5,
+    elasticity    = 0.1,
     friction      = 0.5,
     collisionType = BatteryCT
   }

@@ -70,7 +70,7 @@ initContactRef space empty callbacks = do
     installCallback ref (Callback (Watch a b f) permeability) = do
         addCallback space (toNumber a, toNumber b) $
             Basic $ \ shapeA shapeB -> do
-                modifyIORef ref (.> f shapeA shapeB)
+                modifyIORef ref (>>> f shapeA shapeB)
                 return (isSolid permeability)
     installCallback _ref (Callback (DontWatch a b) permeability) = do
         addCallback space (toNumber a, toNumber b) $ Basic $ \ _ _ ->
