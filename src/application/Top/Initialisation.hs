@@ -28,13 +28,14 @@ import qualified Sorts.Robots.Jetpack
 sortLoaders :: [IO [Sort_]]
 sortLoaders = [
     Sorts.Nikki.sorts,
+    Sorts.Tiles.sorts,
+
     Sorts.Terminal.sorts,
     Sorts.Battery.sorts,
 
     Sorts.Robots.Jetpack.sorts,
 
-    Sorts.Box.sorts,
-    Sorts.Tiles.sorts
+    Sorts.Box.sorts
   ]
 
 

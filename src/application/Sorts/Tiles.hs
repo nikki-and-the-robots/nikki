@@ -32,6 +32,21 @@ import Base.Pixmap
 import Object
 
 
+-- * Tile configuration
+
+-- all loaded tiles with offset and size
+names :: [(String, Qt.Position Int, Size Double)]
+names = [
+    ("tiles" </> "tile-standard-white", (Position (- 33) (- 33)), Size 64 64),
+    ("tiles" </> "tile-standard-black", (Position (- 1) (- 1)), Size 64 64),
+    ("multilayers" </> "grid-white", (Position (- 1) (- 1)), Size 512 512),
+    ("backgrounds" </> "trailer-01", (Position (- 0) (- 0)), Size 640 480)
+  ]
+
+
+-- * Tile loading
+
+
 sorts :: IO [Sort_]
 sorts = do
 --     names <- map dropExtension <$>
@@ -39,16 +54,9 @@ sorts = do
 --              getDirectoryContents editorTileDir
     mapM (\ (a, b, c) -> mkSort a b c) names
 
-names :: [(String, Qt.Position Int, Size Double)]
-names = [
-    ("editor" </> "standardTile", (Position (- 33) (- 33)), Size 64 64)
-  ]
-
-tileDir = pngDir </> "tiles"
-
 mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do
-    let path = tileDir </> name <.> "png"
+    let path = pngDir </> name <.> "png"
     pixmap <- newQPixmap path
 --     size <- fmap fromIntegral <$> sizeQPixmap pixmap
     return $ Sort_ $ TSort name (Pixmap pixmap size offset)
@@ -80,8 +88,8 @@ unwrapTileSort (Sort_ s) = cast s
 
 
 instance Sort TSort Tile where
-    sortId TSort{name} = SortId ("tiles" </> name)
-    sortId MergedSort = SortId ("tiles" </> "merged")
+    sortId TSort{name} = SortId name
+    sortId MergedSort = SortId "merged"
 
     size (TSort _ pix) = pixmapSize pix
 
