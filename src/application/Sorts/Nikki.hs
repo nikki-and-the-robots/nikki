@@ -49,7 +49,7 @@ nikkiMass = 2.5
 nikkiFeetFriction = 0.5
 
 -- maximum walking speed (pixel per second)
-walkingVelocity = fromUber 90
+walkingVelocity = fromUber 100.8
 
 -- minimal jumping height (for calculating the impulse strength)
 minimalJumpingHeight = fromKachel 0.7

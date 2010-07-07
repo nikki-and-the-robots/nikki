@@ -44,10 +44,11 @@ import Sorts.Terminal
 stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene Object_ -> IO (Scene Object_)
 stepScene now space controlData ptr =
     fromPure (updateNow now) >>>>
-    updateContacts >>>>
+
     updateScene controlData >>>>
-    passThrough (stepSpace space) >>>>
+    stepSpace space >>>>
     renderScene ptr now >>>>
+
     fromPure (maybeId (flip transition controlData))
 
 -- * step time measurement
@@ -56,13 +57,6 @@ stepScene now space controlData ptr =
 updateNow :: Seconds -> Scene o -> Scene o
 updateNow now' scene@Scene{now} =
     scene{now = now', oldNow = now}
-
--- | updates the existing contacts
-updateContacts :: Scene o -> IO (Scene o)
-updateContacts scene = do
-    contacts' <- peekContacts $ contactRef scene
-    return $ scene{contacts = contacts'}
-
 
 -- * State automaton stuff
 
@@ -147,20 +141,27 @@ levelPassed _ = Nothing
 
 -- * chipmunk stepping
 
-stepSpace :: Space -> Scene Object_ -> IO ()
+-- | run steps in the physics simulation and update the contacts
+-- leaves contacts untouched, if no simulation steps are being done
 
-stepSpace _space Scene{mode = TerminalMode{}} = return ()
+stepSpace :: Space -> Scene Object_ -> IO (Scene Object_)
 
-stepSpace space s@Scene{now, oldNow} = do
-    forM_ [0..n] $ const $
-        CM.step space stepQuantum
+stepSpace _space s@Scene{mode = TerminalMode{}} = return s
+
+stepSpace space s@Scene{now, oldNow, contactRef} =
+    if n > 0 then do
+        resetContactRef contactRef
+        forM_ [1..n] $ const $
+            CM.step space stepQuantum
+        contacts' <- readContactRef contactRef
+        return s{contacts = contacts'}
+      else
+        return s
   where
     n :: Int = stepQuantums now - stepQuantums oldNow
     stepQuantums :: Seconds -> Int
     stepQuantums t = truncate (t / stepQuantum)
 
-singleStepTime :: Fractional n => n
-singleStepTime = 0.1
 
 -- * object updating
 

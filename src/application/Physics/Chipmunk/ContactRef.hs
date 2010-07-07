@@ -10,7 +10,8 @@ module Physics.Chipmunk.ContactRef (
     Watcher(..),
     Permeability(..),
     initContactRef,
-    peekContacts,
+    resetContactRef,
+    readContactRef
   ) where
 
 
@@ -33,7 +34,7 @@ setMyCollisionType s ct = setCollisionType s (toNumber ct)
 -- * contact ref stuff
 
 data ContactRef x =
-    ContactRef x (IORef (x -> x))
+    ContactRef {empty :: x, modifier :: (IORef (x -> x))}
 
 instance Show (ContactRef object) where
     show = const "<CollisionRef>"
@@ -46,11 +47,6 @@ data Watcher collisionType x
         collisionType
         collisionType
         (Shape -> Shape -> x -> x)
---     | forall a . WatchWrite
---         MyCollisionType
---         MyCollisionType
---         (Shape -> Shape -> a)
---         (Indexable object -> Collisions object -> a -> IO (Collisions object))
     | DontWatch collisionType collisionType
 
 data Permeability = Permeable | Solid
@@ -77,54 +73,19 @@ initContactRef space empty callbacks = do
             return $ isSolid permeability
 
 
-
-
-
--- initRef :: Space -> Callback o -> IO (Maybe (CollisionRef o))
--- initRef space (Callback (Watch act bct setter) permeability) = do
---     ref <- newIORef Nothing
---     addMyCallback space (act, bct) $
---         Basic $ \ a b -> do
---             writeIORef ref (Just ())
---             return (isSolid permeability)
---     return $ Just $ CollisionRef ref
---         (\ objects collisions () -> return $ setter collisions)
--- initRef space (Callback (DontWatch act bct) permeability) = do
---     addMyCallback space (act, bct) $ Basic $ \ _ _ ->
---         return $ isSolid permeability
---     return Nothing
--- initRef space (Callback (WatchWrite act bct writer setter) permeability) = do
---     ref <- newIORef Nothing
---     addMyCallback space (act, bct) $
---         Basic $ \ a b -> do
---             writeIORef ref (Just (writer a b))
---             return (isSolid permeability)
---     return $ Just $ CollisionRef ref setter
-
-
 -- updating
 
--- | updates the contacts and resets the contactRef
-peekContacts :: ContactRef x -> IO x
-peekContacts (ContactRef empty ref) = do
-    f <- readIORef ref
+-- | resets the ContactRef
+resetContactRef :: ContactRef x -> IO ()
+resetContactRef (ContactRef empty ref) = do
     writeIORef ref id
+
+
+-- | returns the actual state of the contacts
+readContactRef :: ContactRef x -> IO x
+readContactRef (ContactRef empty ref) = do
+    f <- readIORef ref
     return $ f empty
--- updateCollisions objects cs@Collisions{watched} =
---     chainAppM (updateCollisionRef objects) watched (mkEmpty cs)
 
--- updateCollisionRef :: Indexable o -> CollisionRef o -> Collisions o -> IO (Collisions o)
--- updateCollisionRef objects (CollisionRef ref setter) collisions = do
---     hasContact <- readIORef ref
---     writeIORef ref Nothing
---     case hasContact of
---         Nothing -> return collisions
---         (Just x) -> setter objects collisions x
-
-
--- * terminals
-
-
--- external getters
 
 
