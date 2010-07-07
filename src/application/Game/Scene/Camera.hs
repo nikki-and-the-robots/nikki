@@ -16,7 +16,7 @@ import Base.Types
 getCenter :: CM.Position -> CameraState -> IO (CM.Position, CameraState)
 getCenter position (CS camPos) = do
     let distance = camPos - position
-        xLimit = 200
+        xLimit = 0
         yLimit = 100
         newPos = Vector newX newY
         newX = if abs (vectorX distance) < xLimit then
