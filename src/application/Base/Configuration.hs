@@ -16,7 +16,7 @@ development = Development {
     fullscreen = False,
     showScene = True,
     showXYCross = False,
-    showChipmunkObjects = True
+    showChipmunkObjects = False
   }
 
 
