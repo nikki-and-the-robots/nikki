@@ -59,6 +59,7 @@ watchedContacts = [
 
     batteryCallback NikkiBodyCT,
     batteryCallback NikkiFeetCT,
+    Callback (DontWatch BatteryCT TerminalCT) Permeable,
 
     Callback (Watch NikkiBodyCT LaserCT (\ _ _ -> setNikkiTouchesLaser)) Permeable,
     Callback (Watch NikkiFeetCT LaserCT (\ _ _ -> setNikkiTouchesLaser)) Permeable,
