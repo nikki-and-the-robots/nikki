@@ -45,8 +45,8 @@ stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene Object_ ->
 stepScene now space controlData ptr =
     fromPure (updateNow now) >>>>
 
-    updateScene controlData >>>>
     stepSpace space >>>>
+    updateScene controlData >>>>
     renderScene ptr now >>>>
 
     fromPure (maybeId (flip transition controlData))
