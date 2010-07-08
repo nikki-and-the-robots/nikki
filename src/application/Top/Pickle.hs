@@ -102,12 +102,10 @@ save scene = do
 
 wantsToSave :: IO Bool
 wantsToSave = do
-    putStrLn "Do you want to save this level? (Y/n):"
-    c <- getChar
-    putStrLn ""
-    if c `elem` "\nYy" then
+    c <- promptForInput "Do you want to save this level? (Y/n):"
+    if c `elem` ["", "Y", "y"] then
         return True
-      else if c `elem` "nN" then
+      else if c `elem` ["n", "N"] then
         return False
       else do
         putStrLn "Wrong answer"
@@ -130,10 +128,10 @@ askWithDefault prompt vorauswahl =
     myreturn "" (Just x) = return x
     myreturn name _ = return name
 
-    promptForInput :: String -> IO String
-    promptForInput p = do
-        putStrLn p
-        getLine
+promptForInput :: String -> IO String
+promptForInput p = do
+    putStrLn p
+    getLine
 
 
 writeObjectsToDisk :: FilePath -> (Grounds EditorObject) -> IO ()

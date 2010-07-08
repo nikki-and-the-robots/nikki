@@ -30,7 +30,7 @@ sorts :: IO [Sort_]
 sorts =
     mapM mkSort_ names
   where
-    mkSortId name = SortId ("objects" </> name)
+    mkSortId name = SortId ("objects/" ++ name)
     mkSort_ name = do
         pix <- loadPixmap 1 $ mkPath name
         return $ Sort_ $ BSort (mkSortId name) pix

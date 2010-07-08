@@ -37,11 +37,11 @@ import Object
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
 names = [
-    ("tiles" </> "tile-standard-white", (Position (- 33) (- 33)), Size 64 64),
-    ("tiles" </> "tile-standard-black", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles" </> "terminal-frame-editor", (Position (- 1) (- 1)), Size 192 192),
-    ("multilayers" </> "grid-white", (Position (- 1) (- 1)), Size 512 512),
-    ("backgrounds" </> "trailer-01", (Position (- 0) (- 0)), Size 640 480)
+    ("tiles/tile-standard-white", (Position (- 33) (- 33)), Size 64 64),
+    ("tiles/tile-standard-black", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/terminal-frame-editor", (Position (- 1) (- 1)), Size 192 192),
+    ("multilayers/grid-white", (Position (- 1) (- 1)), Size 512 512),
+    ("backgrounds/trailer-01", (Position (- 0) (- 0)), Size 640 480)
   ]
 
 
@@ -57,8 +57,7 @@ sorts = do
 
 mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do
-    let path = pngDir </> name <.> "png"
-    pixmap <- newQPixmap path
+    pixmap <- newQPixmap (pngDir </> name <.> "png")
 --     size <- fmap fromIntegral <$> sizeQPixmap pixmap
     return $ Sort_ $ TSort name (Pixmap pixmap size offset)
 

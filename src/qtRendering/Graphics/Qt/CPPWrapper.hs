@@ -200,8 +200,10 @@ foreign import ccall heightQPainter :: Ptr QPainter -> IO QtInt
 data QPixmap
   deriving (Typeable)
 
+-- | loads a new pixmap. Canonicalizes the path first.
 newQPixmap :: FilePath -> IO (Ptr QPixmap)
-newQPixmap file = do
+newQPixmap file_ = do
+    file <- canonicalizePath file_
     exists <- doesFileExist file
     when (not exists) $
         error ("file does not exist: " ++ file)
