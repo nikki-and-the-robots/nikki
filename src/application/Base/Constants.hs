@@ -14,11 +14,6 @@ type Seconds = Double
 
 type Offset a = Position a
 
--- * Application
-
-windowWidth :: Int = 1000
-windowHeight :: Int = 650
-
 -- * Graphics
 
 -- | converts uberpixels to pixels

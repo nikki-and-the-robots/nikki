@@ -28,13 +28,13 @@ import System.Exit
 qtRendering :: Ptr QApplication
     -> Ptr AppWidget
     -> String
-    -> Size QtInt
+    -> WindowSize
     -> ([QtEvent] -> Ptr QPainter -> IO ())
     -> (IO () -> IO ())
     -> IO ExitCode
-qtRendering app window title (Size width height) renderCmd catcher = do
+qtRendering app window title windowSize renderCmd catcher = do
     setWindowTitle window title
-    resizeAppWidget window width height
+    setWindowSize window windowSize
     keyPoller <- newKeyPoller window
 
     let loop qPainter = catcher $ do
@@ -50,8 +50,15 @@ qtRendering app window title (Size width height) renderCmd catcher = do
         0 -> ExitSuccess
         c -> ExitFailure c
 
---     setKeyCallbackAppWidget window send
---             forkIO $ keyHandler window
+
+data WindowSize = Windowed (Size QtInt) | FullScreen
+
+setWindowSize :: Ptr AppWidget -> WindowSize -> IO ()
+setWindowSize win (Windowed (Size width height)) =
+    resizeAppWidget win width height
+setWindowSize win FullScreen =
+    setFullscreenAppWidget win True
+
 
 -- * Key Polling
 

@@ -2,7 +2,6 @@
 -- | The (real) main (that is, entry-) module for the game
 
 module Game.MainLoop (
-    initialSize,
     renderCallback,
     GameAppState,
     initialStateRef,
@@ -34,11 +33,6 @@ import Base.FPSState
 import Object
 
 import Game.Scene
--- import Game.Scene.Types
-
-
-initialSize :: Size Int
-initialSize = Size windowWidth windowHeight
 
 
 -- prints the version number of qt and exits

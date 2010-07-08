@@ -67,14 +67,12 @@ main = globalCatcher $ do
     app <- newQApplication
     window <- newAppWidget 0
 
-    setFullscreenAppWidget window (Conf.fullscreen Conf.development)
-
     -- level loading
     mObjects <- load Nothing
 
     -- render loop
     isr <- Top.Main.initialStateRef app window mObjects
-    ec <- qtRendering app window "QT_P_O_C" Game.initialSize (Top.Main.renderCallback isr) globalCatcher
+    ec <- qtRendering app window "QT_P_O_C" (Conf.windowSize Conf.development) (Top.Main.renderCallback isr) globalCatcher
     hideAppWidget window
 
     -- saving
