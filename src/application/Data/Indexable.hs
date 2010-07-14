@@ -28,6 +28,7 @@ module Data.Indexable (
 --     modifyByIndexM,
     deleteByIndex,
     toHead,
+    toLast,
     isIndexOf,
 
     optimizeMerge,
@@ -167,12 +168,15 @@ modifyByIndex f i (Indexable values keys) | i `elem` keys =
 --     inner f n (a : r) =
 --         inner f (n - 1) r ~> (a :)
 
--- | puts the indexed element at the front
--- and returns a correction function for indices
--- pointing to the indexable
+-- | puts the indexed element first
 toHead :: Index -> Indexable a -> Indexable a
 toHead i (Indexable values keys) | i `elem` keys =
     Indexable values (i : filter (/= i) keys)
+
+-- | puts the indexed element last
+toLast :: Index -> Indexable a -> Indexable a 
+toLast i (Indexable values keys) | i `elem` keys =
+    Indexable values (filter (/= i) keys +: i)
 
 
 -- | optimizes an Indexable with merging.

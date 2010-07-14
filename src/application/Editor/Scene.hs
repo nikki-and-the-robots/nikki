@@ -170,7 +170,10 @@ keyPress Y scene@EditorScene{} =
 keyPress B scene@EditorScene{objects, selected = Just i} =
     let mainLayer' = I.toHead i (mainLayerIndexable objects)
     in scene{objects = objects{mainLayer = mkMainLayer mainLayer'}}
-
+-- put selected object to the front
+keyPress F scene@EditorScene{objects, selected = Just i} =
+    let mainLayer' = I.toLast i (mainLayerIndexable objects)
+    in scene{objects = objects{mainLayer = mkMainLayer mainLayer'}}
 
 -- * Layers
 
