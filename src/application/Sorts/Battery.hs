@@ -14,8 +14,6 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
-import Utils
-
 import Base.Constants
 import Base.Pixmap
 import Base.Types

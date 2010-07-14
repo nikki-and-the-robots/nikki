@@ -63,8 +63,8 @@ editorObject2Object (Just space) (MergedTilesEditorObject merged) =
 mkScene :: Space -> Grounds Object_ -> IO (Scene Object_)
 mkScene space objects = do
     let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
-    contactRef <- initContactRef space emptyContacts watchedContacts
-    return $ Scene 0 0 objects initial contactRef emptyContacts (NikkiMode nikki)
+    contactRef <- initContactRef space initial watchedContacts
+    return $ Scene 0 0 objects initial contactRef initial (NikkiMode nikki)
 
 groundsOptimizeChipmunks :: Grounds EditorObject -> Grounds EditorObject
 groundsOptimizeChipmunks =

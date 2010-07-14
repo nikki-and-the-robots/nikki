@@ -5,12 +5,13 @@ module Object.Contacts (
     watchedContacts,
 
     Contacts(..),
-    emptyContacts,
     nikkiTouchesTerminal,
   ) where
 
 
-import Data.Set as Set
+import Data.Set as Set hiding (map)
+import Data.Array.Storable
+import Data.Initial
 
 import Physics.Chipmunk hiding (position)
 
@@ -29,15 +30,16 @@ data MyCollisionType
   deriving (Enum, Eq, Show)
 
 
--- empty in the sense that nothing collides
-emptyContacts :: Contacts
-emptyContacts = Contacts False False False empty empty
+-- initial in the sense that nothing collides
+instance Initial Contacts where
+    initial = Contacts [] False False empty empty
 
 
 -- * setter (boolean to True)
 
-setNikkiTouchesGround :: Contacts -> Contacts
-setNikkiTouchesGround c = c{nikkiTouchesGround = True}
+addNikkiContacts :: StorableArray Int Contact -> Double -> Contacts -> Contacts
+addNikkiContacts contactArray coefficient c =
+    c{nikkiContacts = ((contactArray, coefficient) : nikkiContacts c)}
 
 setNikkiTouchesLaser :: Contacts -> Contacts
 setNikkiTouchesLaser c = c{nikkiTouchesLaser = True}
@@ -49,8 +51,8 @@ setNikkiTouchesMilkMachine c = c{nikkiTouchesMilkMachine = True}
 
 watchedContacts :: [Callback MyCollisionType Contacts]
 watchedContacts = [
-    Callback (Watch TileCT NikkiFeetCT (\ _ _ -> setNikkiTouchesGround)) Solid,
-    Callback (Watch RobotCT NikkiFeetCT (\ _ _ -> setNikkiTouchesGround)) Solid,
+    Callback (FullWatch TileCT NikkiFeetCT (\ _ _ -> addNikkiContacts)) Solid,
+    Callback (FullWatch RobotCT NikkiFeetCT (\ _ _ -> addNikkiContacts)) Solid,
 
     Callback (Watch NikkiBodyCT TerminalCT addTerminal) Permeable,
     Callback (DontWatch TerminalCT NikkiFeetCT) Permeable,

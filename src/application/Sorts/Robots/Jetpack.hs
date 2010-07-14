@@ -24,7 +24,6 @@ import Base.Constants
 import Base.Events
 import Base.Animation
 import Base.Pixmap
-import Base.Types
 
 import Object
 

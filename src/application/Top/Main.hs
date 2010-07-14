@@ -19,6 +19,7 @@ import Graphics.Qt
 import Base.Grounds
 import Base.GlobalCatcher
 import qualified Base.Configuration as Conf
+import Base.Constants
 
 import Object
 
@@ -72,7 +73,7 @@ main = globalCatcher $ do
 
     -- render loop
     isr <- Top.Main.initialStateRef app window mObjects
-    ec <- qtRendering app window "QT_P_O_C" (Conf.windowSize Conf.development) (Top.Main.renderCallback isr) globalCatcher
+    ec <- qtRendering app window windowTitle (Conf.windowSize Conf.development) (Top.Main.renderCallback isr) globalCatcher
     hideAppWidget window
 
     -- saving

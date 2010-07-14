@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns #-}
+{-# language NamedFieldPuns, FlexibleInstances #-}
 
 
 -- module for often used types (in one Base module, to avoid module import cycles.)
@@ -10,6 +10,7 @@ import Data.Set
 import Data.Indexable
 import Data.Initial
 import Data.Abelian
+import Data.Array.Storable
 
 import Physics.Chipmunk
 
@@ -74,13 +75,16 @@ instance Initial CameraState where
 
 data Contacts
     = Contacts {
-        nikkiTouchesGround :: !Bool,
+        nikkiContacts :: [(StorableArray Int Contact, Double)],
         nikkiTouchesLaser :: !Bool,
         nikkiTouchesMilkMachine :: !Bool,
         terminals :: Set Shape,
         batteries :: Set Shape
       }
   deriving Show
+
+instance Show (StorableArray Int Contact) where
+    show = const "<StorableArray>"
 
 
 -- * mode for the game scene

@@ -45,8 +45,8 @@ stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene Object_ ->
 stepScene now space controlData ptr =
     fromPure (updateNow now) >>>>
 
-    stepSpace space >>>>
     updateScene controlData >>>>
+    stepSpace space >>>>
     renderScene ptr now >>>>
 
     fromPure (maybeId (flip transition controlData))
@@ -150,8 +150,8 @@ stepSpace _space s@Scene{mode = TerminalMode{}} = return s
 
 stepSpace space s@Scene{now, oldNow, contactRef} =
     if n > 0 then do
-        resetContactRef contactRef
-        forM_ [1..n] $ const $
+        forM_ [1..n] $ const $ do
+            resetContactRef contactRef
             CM.step space stepQuantum
         contacts' <- readContactRef contactRef
         return s{contacts = contacts'}

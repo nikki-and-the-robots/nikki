@@ -36,7 +36,6 @@ import Base.Events
 import Base.Constants
 import Base.Animation
 import Base.Pixmap
-import Base.Types
 
 import Object hiding (OEMState)
 

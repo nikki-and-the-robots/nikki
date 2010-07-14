@@ -41,6 +41,7 @@ Executable            nikki
         , Hipmunk
         , sfml-audio
         , safe
+        , array
 
     if os(linux)
         extra-libraries:

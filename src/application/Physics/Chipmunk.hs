@@ -24,6 +24,7 @@ module Physics.Chipmunk (
     modifyAngle,
     modifyAngVel,
     normalizeAngle,
+    foldAngle,
 
     mkStandardPolys,
     debugChipmunk,
@@ -47,6 +48,8 @@ module Physics.Chipmunk (
     normalize,
     scale,
     toAngle,
+    fromAngle,
+    rotate,
 
     Body,
     Shape,
@@ -57,6 +60,7 @@ module Physics.Chipmunk (
     step,
     spaceAdd,
     spaceRemove,
+    Contact(..),
 
     -- physics (and modification thereof)
     Position,

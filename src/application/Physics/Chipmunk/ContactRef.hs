@@ -16,10 +16,9 @@ module Physics.Chipmunk.ContactRef (
 
 
 import Data.IORef
+import Data.Array.Storable
 
 import Physics.Hipmunk hiding (Callback)
-
-import Utils
 
 
 -- * collisionTypes
@@ -34,7 +33,7 @@ setMyCollisionType s ct = setCollisionType s (toNumber ct)
 -- * contact ref stuff
 
 data ContactRef x =
-    ContactRef {empty :: x, modifier :: (IORef (x -> x))}
+    ContactRef {empty :: x, modifier :: IORef x}
 
 instance Show (ContactRef object) where
     show = const "<CollisionRef>"
@@ -43,11 +42,15 @@ data Callback collisionType x
     = Callback (Watcher collisionType x) Permeability
 
 data Watcher collisionType x
-    = Watch
+    = DontWatch collisionType collisionType
+    | Watch
         collisionType
         collisionType
         (Shape -> Shape -> x -> x)
-    | DontWatch collisionType collisionType
+    | FullWatch
+        collisionType
+        collisionType
+        (Shape -> Shape -> StorableArray Int Contact -> CpFloat -> x -> x)
 
 data Permeability = Permeable | Solid
 
@@ -59,18 +62,23 @@ isSolid _ = False
 initContactRef :: Enum collisionType =>
      Space -> x -> [Callback collisionType x] -> IO (ContactRef x)
 initContactRef space empty callbacks = do
-    ref <- newIORef id
+    ref <- newIORef empty
     mapM_ (installCallback ref) callbacks
     return $ ContactRef empty ref
   where
+    installCallback _ref (Callback (DontWatch a b) permeability) = do
+        addCallback space (toNumber a, toNumber b) $ Basic $ \ _ _ -> -- TODO: could be Constant, but it's buggy
+            return $ isSolid permeability
     installCallback ref (Callback (Watch a b f) permeability) = do
         addCallback space (toNumber a, toNumber b) $
             Basic $ \ shapeA shapeB -> do
-                modifyIORef ref (>>> f shapeA shapeB)
+                modifyIORef ref (f shapeA shapeB)
                 return (isSolid permeability)
-    installCallback _ref (Callback (DontWatch a b) permeability) = do
-        addCallback space (toNumber a, toNumber b) $ Basic $ \ _ _ ->
-            return $ isSolid permeability
+    installCallback ref (Callback (FullWatch a b f) permeability) = do
+        addCallback space (toNumber a, toNumber b) $
+            Full $ \ shapeA shapeB contacts coefficient -> do
+                modifyIORef ref (f shapeA shapeB contacts coefficient)
+                return (isSolid permeability)
 
 
 -- updating
@@ -78,14 +86,13 @@ initContactRef space empty callbacks = do
 -- | resets the ContactRef
 resetContactRef :: ContactRef x -> IO ()
 resetContactRef (ContactRef empty ref) = do
-    writeIORef ref id
+    writeIORef ref empty
 
 
 -- | returns the actual state of the contacts
 readContactRef :: ContactRef x -> IO x
-readContactRef (ContactRef empty ref) = do
-    f <- readIORef ref
-    return $ f empty
+readContactRef (ContactRef empty ref) =
+    readIORef ref
 
 
 

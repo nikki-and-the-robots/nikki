@@ -4,6 +4,7 @@ module Graphics.Qt.CPPWrapper where
 
 
 import Data.Generics
+import Data.Abelian
 
 import Control.Monad
 
@@ -163,8 +164,8 @@ foreign import ccall cppTranslate :: Ptr QPainter -> QtReal -> QtReal -> IO ()
 foreign import ccall scale :: Ptr QPainter -> QtReal -> QtReal -> IO ()
 
 drawPixmap :: Ptr QPainter -> Position QtInt -> Ptr QPixmap -> IO ()
-drawPixmap ptr (Position x y) =
-    cppDrawPixmap ptr x y
+drawPixmap ptr (Position x y) pix = do
+   cppDrawPixmap ptr x y pix
 foreign import ccall cppDrawPixmap :: Ptr QPainter -> QtInt -> QtInt -> Ptr QPixmap -> IO ()
 
 foreign import ccall setPenColor :: Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
@@ -177,6 +178,20 @@ drawLine :: Ptr QPainter -> Position QtReal -> Position QtReal -> IO ()
 drawLine ptr (Position a b) (Position x y) =
     cppDrawLine ptr a b x y
 foreign import ccall cppDrawLine :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()
+
+-- | draws a circle using drawEllipse
+drawCircle :: Ptr QPainter -> Position QtReal -> QtReal -> IO ()
+drawCircle ptr center radius =
+    drawEllipse ptr p s
+  where
+    p = center -~ Position radius radius
+    s = fmap (* 2) $ Size radius radius
+
+drawEllipse :: Ptr QPainter -> Position QtReal -> Size QtReal -> IO ()
+drawEllipse ptr (Position x y) (Size w h) =
+    cppDrawEllipse ptr x y w h
+
+foreign import ccall cppDrawEllipse :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()
 
 drawText :: Ptr QPainter -> Position QtReal -> Bool -> String -> IO ()
 drawText ptr (Position x y) highlighted s =

@@ -54,4 +54,7 @@ pngDir :: FilePath = "data" </> "png"
 levelDir :: FilePath = "levels"
 
 
+-- * misc
+
+windowTitle = "Nikki and the Robots"
 

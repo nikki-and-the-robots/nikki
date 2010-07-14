@@ -7,15 +7,16 @@ module Sorts.Nikki (sorts, addBatteryPower, modifyNikki) where
 
 
 import Data.Abelian
-import Data.Map hiding (map, size)
+import Data.Map hiding (map, size, filter)
 import Data.Generics
 import Data.Initial
-
-import Control.Monad hiding ((>=>))
+import Data.Array.Storable
+import Data.List
+import Data.Maybe
 
 import System.FilePath
 
-import Graphics.Qt as Qt
+import Graphics.Qt as Qt hiding (rotate, scale)
 
 import Sound.SFML
 
@@ -44,18 +45,23 @@ elasticity_ = 0.0
 
 nikkiMass = 2.5
 
--- friction for nikkis feet. The higher the friction,
+-- | friction for nikkis feet. The higher the friction,
 -- the faster nikki will gain maximum walking speed.
 nikkiFeetFriction = 0.5
 
--- maximum walking speed (pixel per second)
+-- | maximum walking speed (pixel per second)
 walkingVelocity = fromUber 100.8
 
--- minimal jumping height (for calculating the impulse strength)
+-- | minimal jumping height (for calculating the impulse strength)
 minimalJumpingHeight = fromKachel 0.7
 
--- maximal jumping height (created with decreased gravity (aka anti-gravity force))
+-- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
 maximalJumpingHeight = fromKachel 4.0
+
+-- | This determines, how much the current velocity gets decreased when walljumping
+-- 1 - Current velocity is set to zero
+-- 0 - Current velocity is untouched
+maximalVelocityJumpCorrectionFactor = 0.4
 
 
 -- animation times 
@@ -199,11 +205,11 @@ instance Sort NSort Nikki where
     chipmunk = nchipmunk
 
     updateNoSceneChange nikki now contacts cd =
-        updateStartTimes now (renderState nikki) <$>
-            controlBody now contacts cd nikki
+        (controlBody now contacts cd >>>>
+        fromPure (updateStartTimes now (renderState nikki))) nikki
+
 
     render nikki sort ptr offset now = do
---         print $ batteryPower nikki
         let pixmap = pickPixmap now sort nikki
         renderChipmunk ptr offset pixmap (nchipmunk nikki)
 
@@ -230,7 +236,7 @@ bodyShapeAttributes :: ShapeAttributes
 bodyShapeAttributes = ShapeAttributes {
     elasticity    = elasticity_,
     friction      = 0,
-    CM.collisionType = NikkiBodyCT
+    CM.collisionType = NikkiFeetCT
   }
 
 
@@ -299,13 +305,46 @@ mkPolys (Size w h) =
 
 -- * Control logic
 
-controlBody :: Seconds -> Contacts -> (Bool, ControlData)
-    -> Nikki -> IO Nikki
+-- | a chipmunk angles of 0 points east. We need to use angles that point north.
+toUpAngle :: Vector -> Angle
+toUpAngle = toAngle >>> (+ (pi / 2))
+
+fromUpAngle :: Angle -> Vector
+fromUpAngle = (subtract (pi / 2)) >>> fromAngle
+
+
+-- | updates the possible jumping angle from the contacts
+readContactNormals :: Contacts -> IO [Angle]
+
+readContactNormals contacts = do
+    concat <$> mapM getCorrectedAngles (nikkiContacts contacts)
+  where
+    -- apply the coefficient to get the corrected angle (see hipmunk docs)
+    getCorrectedAngles :: (StorableArray Int Contact, Double) -> IO [Angle]
+    getCorrectedAngles (array, coefficient) = do
+        x <- getElems array
+        return $ map (foldAngle . toUpAngle) $ map (\ v -> Physics.Chipmunk.scale v coefficient) $ map ctNormal x
+
+-- | calculates the angle a possible jump is to be performed in
+jumpAngle :: [Angle] -> Maybe Angle
+jumpAngle angles =
+    let relevantAngles = filter (\ x -> abs x <= 0.5 * pi) $ sortBy (withView abs compare) angles
+    in case relevantAngles of
+        [] -> Nothing
+        list@(a : _) ->
+            if any (< 0) list && any (> 0) list then
+                -- if nikki's contacts are on both sides of pointing up
+                Just 0
+              else
+                Just a
+    
+
+controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
 controlBody _ _ (False, _) nikki = do
     let ss = shapes $ nchipmunk nikki
     setSurfaceVel (head ss) zero
     return nikki{renderState = UsingTerminal $ direction $ renderState nikki}
-controlBody now collisions (True, cd)
+controlBody now contacts (True, cd)
     nikki@(Nikki chip feetShape jumpStartTime _ _ jumpSound _) = do
         let Chipmunk space body shapes shapeTypes co = chip
             -- buttons
@@ -315,14 +354,7 @@ controlBody now collisions (True, cd)
             aPushed = Press AButton `elem` pushed cd
             aHeld = AButton `elem` held cd
 
-            ifNikkiTouchesGround = nikkiTouchesGround collisions
-
-            doesJumpStartNow = aPushed && ifNikkiTouchesGround
-            isLongJump = aHeld
-
-            timeInJump = if doesJumpStartNow then 0 else now - jumpStartTime
-
-        Vector xVelocity _ <- getVelocity body
+        velocity@(Vector xVelocity _) <- getVelocity body
 
         -- walking
         let surfaceVelocity = walking (leftHeld, rightHeld, bothHeld)
@@ -346,13 +378,25 @@ controlBody now collisions (True, cd)
         -- There is documentation about this in /docs/physics
 
         -- initial impulse
-        when doesJumpStartNow $
-            modifyApplyImpulse chip (Vector 0 (- jumpingImpulse))
+        contactNormal <- jumpAngle <$> readContactNormals contacts
+        doesJumpStartNow <- case (contactNormal, aPushed) of 
+            (Just contactAngle, True) -> do
+                let   -- has to be fromAngle (instead of fromUpAngle) cause rotate uses the chipnunk angle convention.
+                    impulse = rotate (Vector 0 (- jumpingImpulse)) (fromAngle (contactAngle / 2))
+                    velocityCorrection = velocityJumpCorrection contactAngle velocity
 
-        let jumpingAntiGravity = if isLongJump then longJumpAntiGravity timeInJump else 0
+                modifyApplyImpulse chip (impulse +~ velocityCorrection)
+                return True
+            (Nothing, _) -> return False
+            (_, False) -> return False
+        
+        let isLongJump = aHeld
+            timeInJump = if doesJumpStartNow then 0 else now - jumpStartTime
+            jumpingAntiGravity = if isLongJump then longJumpAntiGravity timeInJump else 0
 
         -- horizontal moving while airborne
-        let airborneForce =
+        let ifNikkiTouchesGround = isJust contactNormal
+            airborneForce =
                 airborne rightHeld leftHeld bothHeld ifNikkiTouchesGround xVelocity
 
         -- Apply airborne forces (for longer jumps and vertical movement)
@@ -372,6 +416,7 @@ controlBody now collisions (True, cd)
           else
             nikki{renderState = state}
 
+-- | calculates the surface velocity for walking
 walking (leftHeld, rightHeld, bothHeld) = Vector xSurfaceVelocity 0
   where
     xSurfaceVelocity =
@@ -384,12 +429,36 @@ walking (leftHeld, rightHeld, bothHeld) = Vector xSurfaceVelocity 0
           else
             0
 
+-- | calculates the force of the initial jumping impulse
+jumpingImpulse :: Double
 jumpingImpulse =
     c_v * nikkiMass
   where
     c_v =  sqrt (2 * minimalJumpingHeight * gravity)
 
+-- | calculates a manipulation of the velocity (slowing it down) orthogonal to the contact normal.
+-- This should be zero for a contact normal pointing exactly up
+-- and maximal for a contact normal pointing exactly left or right.
+velocityJumpCorrection :: Angle -> Vector -> Vector
+velocityJumpCorrection normalAngle v_v =
+    scale (negateAbelian v_v') nikkiMass
+  where
+    v_v' = x_v +~ o_v'
+    o_v' = scale o_v (contactNormalWeight normalAngle)
+    x_v = scale n_v x
+    o_v = v_v -~ x_v
+    n_v = fromUpAngle normalAngle
+    x = len v_v * cos alpha
+    alpha = v_angle - normalAngle
+    v_angle = toUpAngle v_v
 
+    -- calculates how much the actual velocity should be decreased
+    contactNormalWeight :: Angle -> Double
+    contactNormalWeight angle = (maximalVelocityJumpCorrectionFactor * 2 / pi) * abs angle
+
+
+
+longJumpAntiGravity :: Seconds -> Double
 longJumpAntiGravity t = (- (gravity + f t)) * nikkiMass
   where
     f t =

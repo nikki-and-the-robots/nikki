@@ -191,6 +191,11 @@ extern "C" void cppDrawLine(QPainter* painter, qreal x1, qreal y1, qreal x2, qre
     painter->drawLine(p1, p2);
 };
 
+extern "C" void cppDrawEllipse(QPainter* painter, qreal x, qreal y, qreal w, qreal h) {
+    QRectF rect = QRectF(x, y, w, h);
+    painter->drawEllipse(rect);
+};
+
 extern "C" void cppDrawText(QPainter* painter, qreal x, qreal y, bool highlighted, char* text) {
     painter->setBackgroundMode(Qt::OpaqueMode);
 
