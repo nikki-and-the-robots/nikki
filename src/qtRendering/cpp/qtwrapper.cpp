@@ -59,13 +59,18 @@ extern "C" const char* cppQVersion() {
 // * QApplication
 
 extern "C" QApplication* newQApplication(char* progName) {
-    int* argc = (int*) malloc(sizeof(int));
-    *argc = 1;
-    char** argv = (char**) malloc(sizeof(char) * 2);
+    // Using *argcPtr makes sure it is a real C++-like reference
+    // and does not get deleted.
+    int* argcPtr = (int*) malloc(sizeof(int));
+    *argcPtr = 1;
+
+    char** argv = (char**) malloc(sizeof(char*) * 2);
     argv[0] = progName;
+    // this null ending is probably not necessary, 
+    // but iirc the c-runtime honours this convention in its arguments to main.
     argv[1] = NULL;
 
-    return new QApplication(*argc, argv, true);
+    return new QApplication(*argcPtr, argv, true);
 };
 
 extern "C" int execQApplication(QApplication* ptr) {
