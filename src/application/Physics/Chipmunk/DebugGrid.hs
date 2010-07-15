@@ -32,6 +32,6 @@ renderShapeType ptr st = nm "renderShape" st
 
 renderVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
 renderVectorLine ptr (Vector x1 y1) (Vector x2 y2) = do
-    setPenColor ptr 255 0 0 128
+    setPenColor ptr 255 255 255 128
     drawLine ptr (Position x1 y1) (Position x2 y2)
 

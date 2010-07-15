@@ -56,12 +56,18 @@ walkingVelocity = fromUber 100.8
 minimalJumpingHeight = fromKachel 0.7
 
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
-maximalJumpingHeight = fromKachel 4.0
+maximalJumpingHeight = fromKachel 3.5
 
 -- | This determines, how much the current velocity gets decreased when walljumping
 -- 1 - Current velocity is set to zero
 -- 0 - Current velocity is untouched
-maximalVelocityJumpCorrectionFactor = 0.4
+maximalVelocityJumpCorrectionFactor = 0.8
+
+-- | defines how much the contactNormal weighs when calculating the jumping impulse
+-- 1 - maximally orthogonal to the surface
+-- 0 - always exactly up
+-- (as there is also the jumping anti-gravity applied, there will always be a slight upward motion.)
+contactNormalWeight = 0.6
 
 
 -- animation times 
@@ -225,7 +231,7 @@ bodyAttributes pos = BodyAttributes{
 
 
 feetShapeAttributes :: ShapeAttributes
-feetShapeAttributes = ShapeAttributes{
+feetShapeAttributes = ShapeAttributes {
     elasticity          = elasticity_,
     friction            = nikkiFeetFriction,
     CM.collisionType    = NikkiFeetCT
@@ -382,7 +388,7 @@ controlBody now contacts (True, cd)
         doesJumpStartNow <- case (contactNormal, aPushed) of 
             (Just contactAngle, True) -> do
                 let   -- has to be fromAngle (instead of fromUpAngle) cause rotate uses the chipnunk angle convention.
-                    impulse = rotate (Vector 0 (- jumpingImpulse)) (fromAngle (contactAngle / 2))
+                    impulse = rotate (Vector 0 (- jumpingImpulse)) (fromAngle (contactAngle * contactNormalWeight))
                     velocityCorrection = velocityJumpCorrection contactAngle velocity
 
                 modifyApplyImpulse chip (impulse +~ velocityCorrection)
@@ -441,10 +447,9 @@ jumpingImpulse =
 -- and maximal for a contact normal pointing exactly left or right.
 velocityJumpCorrection :: Angle -> Vector -> Vector
 velocityJumpCorrection normalAngle v_v =
-    scale (negateAbelian v_v') nikkiMass
+    scale o_v' nikkiMass
   where
-    v_v' = x_v +~ o_v'
-    o_v' = scale o_v (contactNormalWeight normalAngle)
+    o_v' = negateAbelian $ scale o_v (contactNormalWeight normalAngle)
     x_v = scale n_v x
     o_v = v_v -~ x_v
     n_v = fromUpAngle normalAngle
