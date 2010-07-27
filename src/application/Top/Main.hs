@@ -3,8 +3,6 @@
 
 module Top.Main where
 
-import Utils
-
 import Data.IORef
 import Data.Set (Set, empty, insert, delete, toList)
 
@@ -15,6 +13,8 @@ import System.Exit
 
 import Graphics.Qt
 
+
+import Utils
 
 import Base.Grounds
 import Base.GlobalCatcher
@@ -61,6 +61,7 @@ initialState app widget mObjects = do
 
 main :: IO ()
 main = globalCatcher $ do
+
     hSetBuffering stdout NoBuffering
     putStrLn "\neditor started..."
 

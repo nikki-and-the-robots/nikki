@@ -12,6 +12,7 @@ module Sorts.Tiles (
   ) where
 
 
+import Paths
 import Utils
 
 import Data.Abelian
@@ -58,7 +59,8 @@ sorts = do
 
 mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do
-    pixmap <- newQPixmap (pngDir </> name <.> "png")
+    pngFile <- getDataFileName (pngDir </> name <.> "png")
+    pixmap <- newQPixmap pngFile
 --     size <- fmap fromIntegral <$> sizeQPixmap pixmap
     return $ Sort_ $ TSort name (Pixmap pixmap size offset)
 

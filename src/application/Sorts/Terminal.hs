@@ -30,6 +30,7 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt as Qt
 
+import Paths
 import Utils
 
 import Base.Events
@@ -55,7 +56,7 @@ blinkSelectedLightSpeed = 0.2
 
 sorts :: IO [Sort_]
 sorts = do
-    blinkenLights <- mapM (loadPixmap 1 . toPngPath) [
+    blinkenLights <- mapM (fromPure toPngPath >>>> getDataFileName >>>> loadPixmap 1) [
         "terminal-main_00",
         "terminal-main_01",
         "terminal-main_02",
@@ -86,7 +87,11 @@ mkColorLights [a, b, c, d] = ColorLights a b c d
 
 readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
 readColorLights f = do
-    [r, b, g, y] <- mapM (loadPixmap 1 . f) ["red", "blue", "green", "yellow"]
+    [r, b, g, y] <- mapM (
+        fromPure f >>>> 
+        getDataFileName >>>>
+        loadPixmap 1
+      ) ["red", "blue", "green", "yellow"]
     return $ ColorLights r b g y
 
 instance PP (ColorLights Bool) where

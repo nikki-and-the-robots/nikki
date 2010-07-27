@@ -8,6 +8,7 @@ exit 1
 }
 trap error ERR
 
+echo ========================================================================
 echo This is a script to facilitate deployment.
 echo It tries to compile Nikki and copy all needed files into a directory called "nikki",
 echo and zips this folder.
@@ -18,6 +19,8 @@ echo
 echo ======================
 echo TESTED ONLY ON WINDOWS
 echo ======================
+echo
+echo ========================================================================
 echo
 
 if [ -z "$QT_DIR" ]

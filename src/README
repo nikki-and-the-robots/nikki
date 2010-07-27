@@ -1,6 +1,37 @@
 
 This directory contains all source file for Nikki and the Robots.
-External dependencies are:
+
+1. Available Scripts
+====================
+
+./installWithCabal.sh
+Should install nikki (with cabal install, so probably in $HOME/.cabal)
+
+./compile.sh
+Compiles everything in place.
+
+./clean.sh
+removes every compiling product
+
+./runInPlace.sh
+Runs the game in place. Does recompile some (but NOT all) of the sources.
+Works not on windows.
+
+./deploy.sh
+Creates a distributable application. Works only on windows
+
+
+2. External dependencies
+========================
+
+* cmake (tested with 2.8.0)
+
+* qt (tested with 4.6.2)
+
+* ghc (tested with 6.10 and 6.12)
+
+* cabal-install (tested with 0.8.2)
+    http://haskell.org/cabal/download.html
 
 * csfml (and sfml)
     Tested with the svn version (of sfml 2)
@@ -13,14 +44,20 @@ External dependencies are:
         make
         sudo make install
     Don't forget to install sfml before trying to build csfml.
-* qt
-    (tested with 4.6.2)
-* lots of haskell stuff from hackage:
+
+* homegrown haskell bindings for sfml-audio
     sfml-audio (from darcs.joyridelabs.de/sfml-audio)
+
+* lots of haskell stuff from hackage:
     hipmunk
     uniplate
     zlib
 
-There is a custom build system and a script to use it:
-./compile.sh
+
+3. Feedback
+===========
+
+If you have any questions or comments regarding compiling and installation, mail me.
+
+Contact: shahn@joyridelabs.de
 

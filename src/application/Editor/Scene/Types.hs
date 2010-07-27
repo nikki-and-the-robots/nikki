@@ -20,7 +20,7 @@ import Object
 
 data EditorScene
     = EditorScene {
-        levelName :: Maybe String,
+        levelPath :: Maybe FilePath,
 
         cursor :: EditorPosition,
         cursorStep :: EditorScene -> EditorPosition,
@@ -61,10 +61,10 @@ instance Show (EditorScene -> EditorPosition) where
     show _ = "<EditorScene -> EditorPosition>"
 
 
-getLevelName :: EditorScene -> Maybe String
-getLevelName EditorScene{levelName} = levelName
-getLevelName MenuScene{mainScene} = levelName mainScene
-getLevelName FinalState{mainScene} = levelName mainScene
+getLevelPath :: EditorScene -> Maybe FilePath
+getLevelPath EditorScene{levelPath} = levelPath
+getLevelPath MenuScene{mainScene} = levelPath mainScene
+getLevelPath FinalState{mainScene} = levelPath mainScene
 
 getCursorStep :: EditorScene -> EditorPosition
 getCursorStep s = cursorStep s s

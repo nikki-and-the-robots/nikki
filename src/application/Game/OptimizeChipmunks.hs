@@ -62,4 +62,4 @@ merge canBeMerged (MergedTilesEditorObject aa) (MergedTilesEditorObject bb) =
 -- 
 -- 
 
-merge _ a b = es "merge" (a, b)
+-- merge _ a b = es "merge" (a, b)

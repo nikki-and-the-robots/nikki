@@ -14,6 +14,8 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
+import Paths
+
 import Base.Constants
 import Base.Pixmap
 import Base.Types
@@ -42,7 +44,8 @@ contactWidth = fromUber 3
 
 sorts :: IO [Sort_]
 sorts = do
-    ptr <- newQPixmap (pngDir </> "battery/standard.png")
+    pngFile <- getDataFileName (pngDir </> "battery/standard.png")
+    ptr <- newQPixmap pngFile
     return $ return $ Sort_ $ BSort $ Pixmap ptr batterySize batteryOffset
 
 data BSort

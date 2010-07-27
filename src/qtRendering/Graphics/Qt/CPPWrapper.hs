@@ -44,6 +44,13 @@ foreign import ccall execQApplication :: Ptr QApplication -> IO QtInt
 
 foreign import ccall quitQApplication :: IO ()
 
+applicationFilePath :: IO FilePath
+applicationFilePath = do
+    cs <- cppApplicationFilePath
+    peekCString cs -- TODO: free pointer?
+
+foreign import ccall "applicationFilePath" cppApplicationFilePath :: IO CString
+
 foreign import ccall processEventsQApplication :: Ptr QApplication -> IO ()
 
 setApplicationName :: Ptr QApplication -> String -> IO ()

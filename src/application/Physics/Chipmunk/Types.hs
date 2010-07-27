@@ -105,9 +105,6 @@ initChipmunk space as@BodyAttributes{} shapeTypes baryCenterOffset = do
     addInitShape chip shapeTypes
 
 
-initChipmunk s x ss bco = nm "initChipmunk" x
-
-
 mkBody :: BodyAttributes -> IO Body
 mkBody BodyAttributes{position, mass, inertia} = do
     body <- newBody mass inertia

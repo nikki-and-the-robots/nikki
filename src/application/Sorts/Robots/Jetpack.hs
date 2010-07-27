@@ -17,6 +17,7 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
+import Paths
 import Utils
 
 import Base.Directions
@@ -42,7 +43,11 @@ animationFrameTimesMap = fromList [
 
 sorts :: IO [Sort_]
 sorts = do
-    pixmaps <- fmapM (fmapM (loadPixmap 1 . mkJetpackPngPath)) pngMap
+    pixmaps <- fmapM (fmapM (
+                    fromPure mkJetpackPngPath >>>> 
+                    getDataFileName >>>>
+                    loadPixmap 1
+                )) pngMap
     let r = JSort pixmaps
     return $ map Sort_ [r]
 

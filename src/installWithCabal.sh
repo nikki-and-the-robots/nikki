@@ -8,9 +8,8 @@ exit 1
 }
 trap error ERR
 
-bash ./compile.sh
+./compile.sh
 
-cd ..
-src/application/dist/build/nikki/nikki $1
-# default
+cd application
+cabal install
 

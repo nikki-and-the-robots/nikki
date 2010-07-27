@@ -9,7 +9,7 @@
 
 module Editor.Scene (
     EditorScene(..),
-    getLevelName,
+    getLevelPath,
     ControlData(..),
     initScene,
     updateScene,
@@ -67,14 +67,14 @@ initScene sortLoaders mObjects = flip evalStateT empty $ do
 
     sorts <- liftIO $ getAllSorts sortLoaders
 
-    let (name, objects :: Grounds EditorObject) = case mObjects of
+    let (path, objects :: Grounds EditorObject) = case mObjects of
                 Nothing -> (Nothing, emptyGrounds)
-                Just (n, os) ->
+                Just (p, os) ->
                     let objects = fmap (pickleObject2EditorObject $ leafs sorts) os
-                    in (Just n, objects)
+                    in (Just p, objects)
     pixmap <- get
     return $ normSelected EditorScene{
-        levelName = name,
+        levelPath = path,
         cursor = zero,
         cursorStep = const (EditorPosition 64 64),
         sorts = sorts,

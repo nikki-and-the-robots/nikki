@@ -74,13 +74,22 @@ extern "C" QApplication* newQApplication(char* progName) {
 };
 
 extern "C" int execQApplication(QApplication* ptr) {
-    qDebug() << "libraryPaths: " << ptr->libraryPaths();
-    qDebug() << "path to executable: " << QCoreApplication::applicationFilePath();
+//     qDebug() << "libraryPaths: " << ptr->libraryPaths();
     return ptr->exec();
 }
 
 extern "C" void quitQApplication() {
     qApp->quit();
+};
+
+extern "C" char* applicationFilePath() {
+    QString path = QCoreApplication::applicationFilePath();
+    char* arr = (char*) malloc(sizeof(char) * (path.size() + 1));
+    for (int i = 0; i < path.size(); i++) {
+        arr[i] = path.at(i).toAscii();
+    }
+    arr[path.size()] = 0;
+    return arr;
 };
 
 extern "C" void processEventsQApplication() {

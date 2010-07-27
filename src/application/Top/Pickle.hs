@@ -5,14 +5,15 @@ module Top.Pickle where
 
 import Prelude hiding (readFile, writeFile)
 
+import Control.Monad
+
 import System
-import System.FilePath
 import qualified System.IO as IO
+import System.Directory
 
 import Utils
 
 import Base.Grounds
-import Base.Constants
 
 import Object as Object
 
@@ -49,6 +50,7 @@ writeSaved file level = writeFile file (saveToFile level :: FileFormat)
 parse :: FileFormat -> Maybe SaveType
 parse (readM -> Just x :: Maybe SaveType) = Just x
 parse (readM -> Just x :: Maybe Old1.SaveType) = Just $ Old1.convert x
+parse _ = Nothing
 
 -- | converts an older file format to the newest version
 convertToNewest :: String -> String
@@ -60,29 +62,27 @@ convertToNewest s = case parse s of
 
 -- * loading
 
-load :: Maybe String -> IO (Maybe (String, Grounds PickleObject))
+load :: Maybe String -> IO (Maybe (FilePath, Grounds PickleObject))
 load mDefault = do
     args <- getArgs
     case (args, mDefault) of
-        ([name], _) -> inner name
-        ([], Just name) -> inner name
+        ([levelfile], _) -> inner levelfile
+        ([], Just levelfile) -> inner levelfile
         ([], Nothing) -> return Nothing
   where
-    inner name = do
-        objects <- loadByName name
-        return $ Just (name, objects)
+    inner path = do
+        objects <- loadByFilePath path
+        return $ Just (path, objects)
 
-loadByName :: String -> IO (Grounds PickleObject)
-loadByName name = do
-    mR <- parseSaved (levelNameToFilePath name)
+loadByFilePath :: FilePath -> IO (Grounds PickleObject)
+loadByFilePath path = do
+    exists <- doesFileExist path
+    when (not exists) $
+        error ("Sorry, the file \"" ++ path ++ "\" does not exist.")
+    mR <- parseSaved path
     return $ case mR of
         Just x -> x
-        Nothing -> error ("level not readable: " ++ name)
-
-
-levelNameToFilePath :: String -> FilePath
-levelNameToFilePath x = normalise (levelDir </> x <.> "nl")
-
+        Nothing -> error ("Sorry, this file is not a correct nikki level file: " ++ path)
 
 
 -- * saving
@@ -94,10 +94,10 @@ save scene = do
     case s of
         False -> putStrLn "Ok, not saving"
         True -> do
-            name <- askWithDefault "level name" (getLevelName scene)
-            assertIO (not $ null name) "filename not empty"
-            putStr ("saving as " ++ show name ++ "...")
-            writeObjectsToDisk (levelNameToFilePath name) (ES.objects scene)
+            levelFile <- askWithDefault "level path" (getLevelPath scene)
+            assertIO (not $ null levelFile) "filename not empty"
+            putStr ("saving as " ++ show levelFile ++ "...")
+            writeObjectsToDisk levelFile (ES.objects scene)
             putStrLn "done"
 
 wantsToSave :: IO Bool

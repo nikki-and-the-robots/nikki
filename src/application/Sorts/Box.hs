@@ -12,6 +12,7 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
+import Paths
 import Utils
 
 import Base.Constants
@@ -32,7 +33,8 @@ sorts =
   where
     mkSortId name = SortId ("objects/" ++ name)
     mkSort_ name = do
-        pix <- loadPixmap 1 $ mkPath name
+        pngFile <- getDataFileName $ mkPath name
+        pix <- loadPixmap 1 pngFile
         return $ Sort_ $ BSort (mkSortId name) pix
 
 mkPath :: String -> FilePath
