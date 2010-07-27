@@ -3,6 +3,7 @@
 module Utils (
     (<$>),
     (>>>),
+    trace,
     module Utils,
   ) where
 

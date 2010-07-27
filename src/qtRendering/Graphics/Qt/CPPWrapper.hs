@@ -165,10 +165,10 @@ foreign import ccall scale :: Ptr QPainter -> QtReal -> QtReal -> IO ()
 
 drawPixmap :: Ptr QPainter -> Position QtInt -> Ptr QPixmap -> IO ()
 drawPixmap ptr (Position x y) pix = do
-   cppDrawPixmap ptr x y pix
+    cppDrawPixmap ptr x y pix
 foreign import ccall cppDrawPixmap :: Ptr QPainter -> QtInt -> QtInt -> Ptr QPixmap -> IO ()
 
-foreign import ccall setPenColor :: Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
+foreign import ccall setPenColor :: Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 
 drawRect :: Ptr QPainter -> Position QtReal -> Size QtReal -> IO ()
 drawRect ptr (Position x y) (Size w h) = cppDrawRect ptr x y w h

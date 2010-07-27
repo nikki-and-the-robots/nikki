@@ -176,8 +176,9 @@ extern "C" void cppDrawPixmap(QPainter* painter, int x, int y, QPixmap* pixmap) 
     painter->drawPixmap(x, y, *pixmap);
 };
 
-extern "C" void setPenColor(QPainter* painter, int r, int g, int b, int a) {
+extern "C" void setPenColor(QPainter* painter, int r, int g, int b, int a, int width) {
     QPen pen = QPen(QColor(r, g, b, a));
+    pen.setWidth(width);
     painter->setPen(pen);
 };
 

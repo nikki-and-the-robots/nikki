@@ -17,9 +17,9 @@ data Development = Development {
 development = Development {
     profiling = False,
     windowSize = Windowed (Size 1000 650), -- FullScreen,
-    showScene = False,
+    showScene = True,
     showXYCross = False,
-    showChipmunkObjects = True
+    showChipmunkObjects = False
   }
 
 

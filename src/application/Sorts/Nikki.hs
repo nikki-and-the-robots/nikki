@@ -13,6 +13,9 @@ import Data.Initial
 import Data.Array.Storable
 import Data.List
 import Data.Maybe
+import Data.IORef
+
+import Control.Monad
 
 import System.FilePath
 
@@ -58,16 +61,18 @@ minimalJumpingHeight = fromKachel 0.7
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
 maximalJumpingHeight = fromKachel 3.5
 
--- | This determines, how much the current velocity gets decreased when walljumping
--- 1 - Current velocity is set to zero
--- 0 - Current velocity is untouched
-maximalVelocityJumpCorrectionFactor = 0.8
+-- | decides how strong the horizontal impulse is in case of a 90 degree wall jump
+-- 0 - no horizontal impulse
+-- 1 - same horizontal impulse as normal jumping impulse (pointing up)
+walljumpHorizontalFactor = 1
 
--- | defines how much the contactNormal weighs when calculating the jumping impulse
--- 1 - maximally orthogonal to the surface
--- 0 - always exactly up
--- (as there is also the jumping anti-gravity applied, there will always be a slight upward motion.)
-contactNormalWeight = 0.6
+-- | Controls how Nikki's velocity gets decreased by wall jumps.
+-- Must be >= 1.
+-- 1      - the downwards velocity is eliminated while jumping
+-- bigger - the downwards velocity has more and more influence
+-- No matter how high the value, the downwards velocity gets always clipped, 
+-- to avoid wall jumps that point downwards.
+correctionSteepness = 1.001
 
 
 -- animation times 
@@ -366,13 +371,24 @@ controlBody now contacts (True, cd)
         let surfaceVelocity = walking (leftHeld, rightHeld, bothHeld)
         setSurfaceVel feetShape surfaceVelocity
 
-        -- jumping (vertical)
+        -- jumping
+        -- =======
+
+        -- The basic idea is, that normal jumps and walljumps should not be two different things,
+        -- but rather the same. This way we ensure, that things in the middle (e.g. jumping off 
+        -- 45 degree steep floors) get a sensible behaviour, too.
 
         -- vertical jumping is done with two components:
         -- 1. The Initial Impulse
         -- when the A button is pressed, an impulse is applied
         -- the size of this impulse decides how high Nikki's minimal jump will be
         -- (see jumpingImpulse)
+        -- This impulse consists of three things:
+        -- 1. 1. An upwards impulse pointing exactly up and being constant
+        -- 1. 2. An additional impulse away from walls or steep floors
+        --          (thus allowing a wall jump)
+        -- 1. 3. A velocity correction that decreases the velocity if it contradicts with the
+        --       direction wanted (by Nikki). See velocityJumpCorrection.
         --
         -- 2. A jumping "anti gravity"
         -- This force is applied to nikki if the A button is held. This force
@@ -380,22 +396,22 @@ controlBody now contacts (True, cd)
         -- at the peak of the jump. This function will decide, how high Nikki can
         -- can jump maximally.
         -- (see longJumpAntiGravity)
-        --
-        -- There is documentation about this in /docs/physics
 
         -- initial impulse
         contactNormal <- jumpAngle <$> readContactNormals contacts
         doesJumpStartNow <- case (contactNormal, aPushed) of 
             (Just contactAngle, True) -> do
-                let   -- has to be fromAngle (instead of fromUpAngle) cause rotate uses the chipnunk angle convention.
-                    impulse = rotate (Vector 0 (- jumpingImpulse)) (fromAngle (contactAngle * contactNormalWeight))
-                    velocityCorrection = velocityJumpCorrection contactAngle velocity
+                let verticalImpulse = (- jumpingImpulse)
+                    contactNormalHorizontalImpulse =
+                        jumpingImpulse * walljumpHorizontalFactor * (2 * contactAngle / pi)
+                    wantedImpulse = Vector contactNormalHorizontalImpulse verticalImpulse
+                    velocityCorrection = velocityJumpCorrection (fromUpAngle contactAngle) velocity wantedImpulse
 
-                modifyApplyImpulse chip (impulse +~ velocityCorrection)
+                modifyApplyImpulse chip (wantedImpulse +~ velocityCorrection)
                 return True
             (Nothing, _) -> return False
             (_, False) -> return False
-        
+
         let isLongJump = aHeld
             timeInJump = if doesJumpStartNow then 0 else now - jumpStartTime
             jumpingAntiGravity = if isLongJump then longJumpAntiGravity timeInJump else 0
@@ -443,24 +459,54 @@ jumpingImpulse =
     c_v =  sqrt (2 * minimalJumpingHeight * gravity)
 
 -- | calculates a manipulation of the velocity (slowing it down) orthogonal to the contact normal.
--- This should be zero for a contact normal pointing exactly up
--- and maximal for a contact normal pointing exactly left or right.
-velocityJumpCorrection :: Angle -> Vector -> Vector
-velocityJumpCorrection normalAngle v_v =
-    scale o_v' nikkiMass
+-- This should be zero for a normal jump on an even floor
+-- and maximal for a wall jump.
+velocityJumpCorrection :: Vector -> Vector -> Vector -> Vector
+velocityJumpCorrection contactNormal velocity wantedImpulse = do
+    correction
   where
-    o_v' = negateAbelian $ scale o_v (contactNormalWeight normalAngle)
-    x_v = scale n_v x
-    o_v = v_v -~ x_v
-    n_v = fromUpAngle normalAngle
-    x = len v_v * cos alpha
-    alpha = v_angle - normalAngle
-    v_angle = toUpAngle v_v
+    -- angle between velocity and contact normal
+    -- (should normally be 90 degree because movement is orthogonal to walls most of the times)
+    alpha = foldAngle (toUpAngle velocity -~ toUpAngle contactNormal)
+    -- length of xVector
+    xLength = cos alpha * len velocity
+    -- the component of the velocity, that is parallel to the contact normal
+    xVector = scale contactNormal xLength
+    -- the component of the velocity, that is orthogonal to the contact normal
+    -- this is the thing, we are going to modify in it's length
+    oVector = velocity -~ xVector
+    oVectorLen = len oVector
 
-    -- calculates how much the actual velocity should be decreased
-    contactNormalWeight :: Angle -> Double
-    contactNormalWeight angle = (maximalVelocityJumpCorrectionFactor * 2 / pi) * abs angle
+    -- angle between the wanted jumping impulse and oVector
+    beta = foldAngle (toUpAngle wantedImpulse - toUpAngle (negateAbelian oVector))
+    -- length of the component of the wanted jumping vector, that is parallel to oVector
+    c = - (cos beta * len wantedImpulse)
 
+    -- Perfectly corrected length of the new oVector. It's never stronger than c.
+    -- CorrectionSteepness controls, how fast correctedOVectorLen gets to (- c)
+    correctedOVectorLen = (1 - (correctionSteepness ** (- oVectorLen))) * (- c)
+
+    -- well, if we don't want to correct anything
+    uncorrectedOVectorLen = oVectorLen
+
+    -- correctedOVectorLen and uncorrectedOVectorLen are being added with weights.
+    -- correction is greatest, when beta is smallest
+    correctionWeight =
+        if abs beta >= (pi / 2) then
+            0
+          else
+            cos (beta * 2) + 1
+
+    -- the new wanted length for oVector
+    newOVectorLen = correctionWeight * correctedOVectorLen
+                    + (1 - correctionWeight) * uncorrectedOVectorLen
+
+    -- impulse that has to be applied to nikki
+    correction =
+        if oVector == zero then
+            zero
+          else
+            scale (normalize oVector) newOVectorLen -~ scale oVector nikkiMass
 
 
 longJumpAntiGravity :: Seconds -> Double
