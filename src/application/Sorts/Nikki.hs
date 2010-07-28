@@ -216,7 +216,7 @@ instance Sort NSort Nikki where
 
     chipmunk = nchipmunk
 
-    updateNoSceneChange nikki now contacts cd = do
+    updateNoSceneChange nikki now contacts cd =
         (controlBody now contacts cd >>>>
         fromPure (updateStartTimes now (renderState nikki))) nikki
 
