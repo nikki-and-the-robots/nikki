@@ -25,6 +25,8 @@ else
     cabal build
 fi
 
-export nikki_datadir=../..
-dist/build/nikki/nikki $1
+cd ../..
+export nikki_datadir=$(pwd)
+cd src
+application/dist/build/nikki/nikki $1
 
