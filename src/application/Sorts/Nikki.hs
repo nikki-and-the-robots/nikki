@@ -26,6 +26,7 @@ import Sound.SFML
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
 
+import Paths
 import Utils
 
 import Base.Constants
@@ -113,7 +114,7 @@ loadPixmaps = do
     fmapM load statePixmaps
   where
     load :: (String, Int) -> IO [Pixmap]
-    load (name, n) = mapM (loadPixmap 1) $ map (mkPngPath name) [0..n]
+    load (name, n) = mapM (getDataFileName >>>> loadPixmap 1) $ map (mkPngPath name) [0..n]
 
 mkPngPath name n = nikkiPngDir </> name ++ "_0" ++ show n <.> "png"
 
