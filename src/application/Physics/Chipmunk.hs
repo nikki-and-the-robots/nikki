@@ -63,6 +63,9 @@ module Physics.Chipmunk (
     Contact(..),
 
     -- physics (and modification thereof)
+    setMass,
+    setMoment,
+
     Position,
     getPosition,
     Velocity,

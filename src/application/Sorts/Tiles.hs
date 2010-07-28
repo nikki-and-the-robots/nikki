@@ -128,45 +128,6 @@ instance Sort TSort Tile where
             translate ptr (negateAbelian pixmapOffset)
 
 
---         resetMatrix ptr
---         translate ptr offset
---         pos <- getRenderPosition chip
---         translate ptr (fst pos -~ Position 1 1)
--- --         let pixmap = animationPixmap animation s
---         drawPixmap ptr zero pixmap
---     render ptr globalOffset (MergedTile mergeds chipmunk) = do
---         pos <- getRenderPosition chipmunk
---         mapM_ (inner (fst pos)) mergeds
---       where
---         inner pos (MergedSprited sprited anchorOffset animation) = do
---             resetMatrix ptr
---             translate ptr globalOffset
---             translateVector ptr pos
---             translate ptr anchorOffset
---             let pixmap = animationPixmap animation sprited
---             drawPixmap ptr zero pixmap
-
-
---     sortId = SortId path,
--- 
---     readFilesFromDisk = do
---         pixmap <- newQPixmap path
---         size <- sizeQPixmap pixmap
---         return $ SimpleTile pixmap size (),
--- 
---     instantiate = \ (SimpleTile pixmap size _) pos -> SimpleTile pixmap size pos,
---     editorRender = \ ptr offset (SimpleTile pixmap _ pos) -> do
---         resetMatrix ptr
---         translate ptr offset
---         translateEditor ptr pos
---         drawPixmap ptr zero pixmap,
---     editorModify = Nothing
---   }
--- 
--- data Tile = Sort (Ptr QPixmap) (Size Double)
--- 
--- 
-
 type Box = (Maybe (Offset Double), Size Double)
 
 initializeBoxes :: Space -> [Box] -> (TSort, EditorPosition) -> IO Chipmunk

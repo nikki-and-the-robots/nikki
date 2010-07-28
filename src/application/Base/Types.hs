@@ -79,7 +79,8 @@ data Contacts
         nikkiTouchesLaser :: !Bool,
         nikkiTouchesMilkMachine :: !Bool,
         terminals :: Set Shape,
-        batteries :: Set Shape
+        batteries :: Set Shape,
+        fallingTiles :: Set Shape
       }
   deriving Show
 

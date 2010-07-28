@@ -200,21 +200,29 @@ pickleObject2EditorObject allSorts (PickleObject id position oemState) =
 sortRenderSinglePixmap :: Sort sort object =>
     Pixmap -> sort -> Ptr QPainter -> Offset Double
     -> EditorPosition -> Maybe (Size Double) -> IO ()
-sortRenderSinglePixmap pix sort ptr offset ep scaling = do
+sortRenderSinglePixmap pix sort ptr offset ep mScaling = do
     resetMatrix ptr
     translate ptr offset
-    let
-        (Size width height) = size sort
-        (factor, scalingOffset) = case scaling of
-            Just x ->
-                squeezeScaling x $ size sort
-            Nothing -> (1, zero)
-        p = editorPosition2QtPosition sort ep +~ scalingOffset
 
-    translate ptr (p +~ fmap fromIntegral (pixmapOffset pix))
+    let (pos, factor) = calculatePositionAndFactor sort ep mScaling
+
+    translate ptr (pos +~ fmap fromIntegral (pixmapOffset pix))
     Qt.scale ptr factor factor
 
     drawPixmap ptr zero (pixmap pix)
+
+
+calculatePositionAndFactor :: Sort sort object =>
+    sort -> EditorPosition -> Maybe (Size Double)
+    -> (Position Double, Double)
+calculatePositionAndFactor sort ep mScaling = 
+    let (factor, scalingOffset) = case mScaling of
+            Just x ->
+                squeezeScaling x (size sort)
+            Nothing -> (1, zero)
+        p = editorPosition2QtPosition sort ep +~ scalingOffset
+    in (p, factor)
+
 
 
 renderChipmunk :: Ptr QPainter -> Offset Double -> Pixmap -> Chipmunk -> IO ()

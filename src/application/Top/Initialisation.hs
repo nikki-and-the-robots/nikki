@@ -19,6 +19,7 @@ import Game.OptimizeChipmunks
 import qualified Sorts.Nikki
 import qualified Sorts.Terminal
 import qualified Sorts.Tiles
+import qualified Sorts.FallingTiles
 import qualified Sorts.Box
 import qualified Sorts.Battery
 
@@ -29,6 +30,7 @@ sortLoaders :: [IO [Sort_]]
 sortLoaders = [
     Sorts.Nikki.sorts,
     Sorts.Tiles.sorts,
+    Sorts.FallingTiles.sorts,
 
     Sorts.Terminal.sorts,
     Sorts.Battery.sorts,
