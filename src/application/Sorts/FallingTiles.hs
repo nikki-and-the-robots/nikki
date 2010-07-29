@@ -1,4 +1,5 @@
 {-# language DeriveDataTypeable, NamedFieldPuns, MultiParamTypeClasses #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
 
 -- | objects that seem like tiles, but move when Nikki touches them
 

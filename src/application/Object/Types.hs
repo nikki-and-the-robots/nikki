@@ -47,6 +47,10 @@ newtype SortId = SortId {getSortId :: FilePath}
 
 -- * Sort class
 
+-- | Class that every sort of objects has to implement. This is the interface between
+-- the game and the implemented objects.
+-- Minimal complete definition: 'sortId', 'size', 'sortRender', 'initialize', 'chipmunk', 'render'
+
 class (Show sort, Typeable sort, Show object, Typeable object) =>
     Sort sort object |
         sort -> object, object -> sort where

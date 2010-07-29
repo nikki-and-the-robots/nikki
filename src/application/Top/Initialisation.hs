@@ -22,6 +22,7 @@ import qualified Sorts.Tiles
 import qualified Sorts.FallingTiles
 import qualified Sorts.Box
 import qualified Sorts.Battery
+import qualified Sorts.Grids
 
 import qualified Sorts.Robots.Jetpack
 
@@ -30,14 +31,15 @@ sortLoaders :: [IO [Sort_]]
 sortLoaders = [
     Sorts.Nikki.sorts,
     Sorts.Tiles.sorts,
-    Sorts.FallingTiles.sorts,
 
     Sorts.Terminal.sorts,
     Sorts.Battery.sorts,
 
     Sorts.Robots.Jetpack.sorts,
 
-    Sorts.Box.sorts
+    Sorts.Box.sorts,
+    Sorts.FallingTiles.sorts,
+    Sorts.Grids.sorts
   ]
 
 

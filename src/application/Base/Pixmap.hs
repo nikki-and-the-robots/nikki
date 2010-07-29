@@ -1,4 +1,9 @@
 
+-- | provides a data type for pixmaps that saves the size and the internal offset (padding)
+-- of the image.
+-- Padding is the outer part of the image that should not be considered as part of 
+-- the physical object depictured by the image, e.g. an outer glow.
+
 module Base.Pixmap where
 
 
@@ -18,7 +23,9 @@ data Pixmap = Pixmap {
   }
     deriving Show
 
-loadPixmap :: Int -> FilePath -> IO Pixmap
+-- | Loads a pixmap. 
+loadPixmap :: Int -- ^ Size of the padding.
+    -> FilePath -> IO Pixmap
 loadPixmap padding path = do
     pix <- newQPixmap path
     size <- sizeQPixmap pix
@@ -27,10 +34,13 @@ loadPixmap padding path = do
         (fmap (fromIntegral . subtract (2 * padding)) size)
         (Position (- padding) (- padding))
 
-
-renderPixmap :: Ptr QPainter -> Offset Double
-    -> Position Double -> Maybe Double
-    -> Pixmap -> IO ()
+-- | renders the pixmap
+renderPixmap :: Ptr QPainter -- ^ painter to be rendered to
+    -> Offset Double -- ^ global (camera) offset
+    -> Position Double -- ^ position of pixmap
+    -> Maybe Double -- ^ rotation
+    -> Pixmap -- ^ pixmap to be rendered
+    -> IO ()
 renderPixmap ptr offset position mAngle pix = do
     resetMatrix ptr
     translate ptr offset
@@ -41,31 +51,4 @@ renderPixmap ptr offset position mAngle pix = do
     translate ptr (fmap fromIntegral (pixmapOffset pix))
 
     drawPixmap ptr zero (pixmap pix)
-
-
---     Qt.resetMatrix painter
---     translate painter worldOffset
--- 
---     (position, rad) <- getRenderPosition chipmunk
--- 
---     translate painter position
---     Qt.rotate painter (rad2deg rad)
--- 
---     Qt.drawPixmap painter zero p
-
-
---     resetMatrix ptr
---     translate ptr offset
---     let (Size width height) = size sort
---         (factor, innerOffset) = case scaling of
---             Just x ->
---                 squeezeScaling x $ size sort
---             Nothing -> (1, zero)
--- 
---         p = Position (x - 1) (y - 1 - height * factor) +~ innerOffset
--- 
---     translate ptr p
---     Qt.scale ptr factor factor
--- 
---     drawPixmap ptr zero pixmap
 
