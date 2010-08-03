@@ -8,7 +8,7 @@ exit 1
 }
 trap error ERR
 
-./compile.sh
+bash ./compile.sh
 
 cd application
 cabal install
