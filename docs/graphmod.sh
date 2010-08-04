@@ -4,12 +4,12 @@
 # graphmod outputs in dot format (so graphviz is probably needed).
 # dot can create other formats than pdf.
 
-graphmod ../src/application/Main.hs \
+graphmod ../src/application/Main.hs -q \
     -i ../src/application -i ../src/common -i ../src/qtRendering \
-    -r Utils -r Control -r Physics -r Data -r Graphics \
+    -R Data -R Graphics -R Physics -r Utils -r Paths \
     \
     \
-    -r Editor -r Game -r Top -r Base \
+    -c Top -c Sorts -c Game -c Base -c Editor -c Object\
     \
     | dot -Tpdf -o mods.pdf
 
