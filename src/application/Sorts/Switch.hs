@@ -26,6 +26,7 @@ import Paths
 
 import Base.Constants
 import Base.Pixmap
+import Base.Types
 
 import Object
 

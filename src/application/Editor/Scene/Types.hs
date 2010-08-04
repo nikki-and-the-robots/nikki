@@ -6,100 +6,45 @@ module Editor.Scene.Types where
 import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
-import Data.Menu hiding (selected)
-import Data.Generics
 
 import Control.Monad.State
 
 import Graphics.Qt
 
 import Base.Grounds
+import Base.Types
 
 import Object
 
 
-data EditorScene
-    = EditorScene {
-        levelPath :: Maybe FilePath,
-
-        cursor :: EditorPosition,
-        cursorStep :: EditorScene -> EditorPosition,
-
-        sorts :: SelectTree Sort_,
-
-        objects :: Grounds EditorObject,
-        selectedLayer :: GroundsIndex,
-        selected :: Maybe Index,
-            -- index of the object that is in the scene and currently under the cursor
-            -- (in the selected layer)
-        objectEditModeIndex :: Maybe Index,
-
-        debugMsgs :: [String]
-    }
---     | TerminalScene {
---         mainScene :: EditorScene,
---         tmAvailableRobots :: [Index],
---         tmTerminalIndex :: Index,
---         tmSelectedRobots :: [Index],
--- 
---         debugMsgs :: [String]
---     }
-    | MenuScene {
-        mainScene :: EditorScene,
-        menu :: Menu MenuLabel EditorScene,
-
-        debugMsgs :: [String]
-      }
-    | FinalState {
-        mainScene :: EditorScene,
-
-        debugMsgs :: [String]
-      }
-  deriving (Show, Typeable)
-
-instance Show (EditorScene -> EditorPosition) where
-    show _ = "<EditorScene -> EditorPosition>"
-
-
-getLevelPath :: EditorScene -> Maybe FilePath
-getLevelPath EditorScene{levelPath} = levelPath
-getLevelPath MenuScene{mainScene} = levelPath mainScene
-getLevelPath FinalState{mainScene} = levelPath mainScene
-
-getCursorStep :: EditorScene -> EditorPosition
-getCursorStep s = cursorStep s s
-
-data MenuLabel = MenuLabel (Maybe Sort_) String
-  deriving (Show)
-
 data ControlData = ControlData [QtEvent] [Key]
   deriving Show
 
-type SceneMonad = StateT EditorScene IO
+type SceneMonad = StateT (EditorScene Sort_) IO
 
 
 -- * getters
 
 -- | get the object that is actually selected by the cursor
-getSelectedObject :: EditorScene -> Maybe EditorObject
-getSelectedObject EditorScene{selected = Just i, objects, selectedLayer} =
-    Just (content (objects !|| selectedLayer) !!! i)
+getSelectedObject :: EditorScene Sort_ -> Maybe (EditorObject Sort_)
+getSelectedObject EditorScene{selected = Just i, editorObjects, selectedLayer} =
+    Just (content (editorObjects !|| selectedLayer) !!! i)
 getSelectedObject EditorScene{selected = Nothing} = Nothing
 
 -- | returns all Indices (to the mainLayer) for robots
-getRobotIndices :: EditorScene -> [Index]
-getRobotIndices EditorScene{objects} =
-    I.findIndices (isRobot . editorSort) $ content $ mainLayer objects
+getRobotIndices :: EditorScene Sort_ -> [Index]
+getRobotIndices EditorScene{editorObjects} =
+    I.findIndices (isRobot . editorSort) $ content $ mainLayer editorObjects
 
-getCursorSize :: EditorScene -> (Size Double)
+getCursorSize :: EditorScene Sort_ -> (Size Double)
 getCursorSize s@EditorScene{} =
-    size $ getSelected $ sorts s
+    size $ getSelected $ availableSorts s
 
 -- | returns an object from the main layer
-getMainObject :: EditorScene -> Index -> EditorObject
+getMainObject :: EditorScene Sort_ -> Index -> EditorObject Sort_
 getMainObject scene i = os !!! i
   where
-    os = mainLayerIndexable $ objects scene
+    os = mainLayerIndexable $ editorObjects scene
 
 -- getTerminalMRobot :: EditorScene -> Maybe EditorObject
 -- getTerminalMRobot scene@TerminalScene{} =
@@ -111,30 +56,30 @@ getMainObject scene i = os !!! i
 -- * Setters
 
 
-addDebugMsg :: String -> EditorScene -> EditorScene
+addDebugMsg :: String -> EditorScene Sort_ -> EditorScene Sort_
 addDebugMsg msg s =
     let msgs = debugMsgs s
     in s{debugMsgs = msg : msgs}
 
 -- | adds a new default Layer to the EditorScene
-addDefaultBackground :: EditorScene -> EditorScene
-addDefaultBackground s@EditorScene{objects = (Grounds backgrounds mainLayer foregrounds)} =
-    s{objects = objects'}
+addDefaultBackground :: EditorScene Sort_ -> EditorScene Sort_
+addDefaultBackground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
+    s{editorObjects = objects'}
   where
     objects' = Grounds (backgrounds >: initialLayer) mainLayer foregrounds
 
 -- | adds a new default Layer to the EditorScene
-addDefaultForeground :: EditorScene -> EditorScene
-addDefaultForeground s@EditorScene{objects = (Grounds backgrounds mainLayer foregrounds)} =
-    s{objects = objects'}
+addDefaultForeground :: EditorScene Sort_ -> EditorScene Sort_
+addDefaultForeground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
+    s{editorObjects = objects'}
   where
     objects' = Grounds backgrounds mainLayer (initialLayer <: foregrounds)
 
 -- * modification
 
-modifyObjects :: (Grounds EditorObject -> Grounds EditorObject) -> EditorScene -> EditorScene
-modifyObjects f s@EditorScene{objects} = s{objects = f objects}
+modifyEditorObjects :: (Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)) -> EditorScene Sort_ -> EditorScene Sort_
+modifyEditorObjects f s@EditorScene{editorObjects} = s{editorObjects = f editorObjects}
 
-modifySorts :: (SelectTree Sort_ -> SelectTree Sort_) -> EditorScene -> EditorScene
-modifySorts f scene@EditorScene{sorts} = scene{sorts = f sorts}
+modifySorts :: (SelectTree Sort_ -> SelectTree Sort_) -> EditorScene Sort_ -> EditorScene Sort_
+modifySorts f scene@EditorScene{availableSorts} = scene{availableSorts = f availableSorts}
 

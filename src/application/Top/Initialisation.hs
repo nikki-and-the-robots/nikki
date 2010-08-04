@@ -45,20 +45,20 @@ sortLoaders = [
   ]
 
 
-initSceneFromEditor :: Space -> Grounds EditorObject -> IO (Scene Object_)
+initSceneFromEditor :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
 initSceneFromEditor space =
     fromPure groundsOptimizeChipmunks >>>>
     initializeObjects space >>>>
     mkScene space
 
-initializeObjects :: Space -> Grounds EditorObject -> IO (Grounds Object_)
+initializeObjects :: Space -> Grounds (EditorObject Sort_) -> IO (Grounds Object_)
 initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
     bgs' <- fmapM (fmapM (editorObject2Object Nothing)) backgrounds
     ml' <- fmapM (editorObject2Object (Just space)) mainLayer
     fgs' <- fmapM (fmapM (editorObject2Object Nothing)) foregrounds
     return $ Grounds bgs' ml' fgs'
 
-editorObject2Object :: Maybe Space -> EditorObject -> IO Object_
+editorObject2Object :: Maybe Space -> EditorObject Sort_ -> IO Object_
 editorObject2Object mspace (EditorObject sort pos state) =
     initialize sort mspace pos (fmap oemState state)
 editorObject2Object (Just space) (MergedTilesEditorObject merged) =
@@ -74,7 +74,7 @@ mkScene space objects = do
 --     let allTriggerShapes = Set.fromList $ filter (isSwitch . sort_) $ I.toList mainLayerIndexable objects
     return $ Scene 0 0 objects initial contactRef initial (NikkiMode nikki)
 
-groundsOptimizeChipmunks :: Grounds EditorObject -> Grounds EditorObject
+groundsOptimizeChipmunks :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsOptimizeChipmunks =
     modifyMainLayer optimizeEditorObjects
 

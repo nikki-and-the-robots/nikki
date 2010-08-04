@@ -28,19 +28,6 @@ robotFriction = 1.0
 
 -- * misc
 
-data EditorPosition = EditorPosition {
-    editorX :: Double,
-    editorY :: Double
-  }
-  deriving (Show, Read, Eq)
-
-instance Abelian EditorPosition where
-    zero = EditorPosition 0 0
-    (EditorPosition a b) +~ (EditorPosition x y) =
-        EditorPosition (a + x) (b + y)
-    (EditorPosition a b) -~ (EditorPosition x y) =
-        EditorPosition (a - x) (b - y)
-
 newtype SortId = SortId {getSortId :: FilePath}
   deriving (Show, Read, Eq)
 
@@ -57,8 +44,8 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 
     sortId :: sort -> SortId
     size :: sort -> Size Double
-    objectEditMode :: sort -> Maybe ObjectEditMode
-    objectEditMode _ = Nothing
+    objectEditModeMethods :: sort -> Maybe (ObjectEditModeMethods Sort_)
+    objectEditModeMethods _ = Nothing
     sortRender :: sort -> Ptr QPainter -> Offset Double
         -> EditorPosition -> Maybe (Size Double) -> IO ()
     editorPosition2QtPosition :: sort -> EditorPosition -> Position Double
@@ -117,7 +104,7 @@ instance Show Object_ where
 instance Sort Sort_ Object_ where
     sortId (Sort_ s) = sortId s
     size (Sort_ s) = size s
-    objectEditMode (Sort_ s) = objectEditMode s
+    objectEditModeMethods (Sort_ s) = objectEditModeMethods s
     sortRender (Sort_ s) = sortRender s
     editorPosition2QtPosition (Sort_ s) = editorPosition2QtPosition s
     initialize (Sort_ sort) space editorPosition state =
@@ -156,24 +143,12 @@ isNikki s = (SortId "nikki" == sortId s)
 isTile :: Sort_ -> Bool
 isTile (sortId -> (SortId s)) = "tiles/" `isPrefixOf` s
 
+-- * EditorObject
 
--- * Editor objects
-
-data EditorObject
-    = EditorObject {
-        editorSort :: Sort_,
-        editorPosition :: EditorPosition,
-        editorOEMState :: Maybe OEMState
-      }
-    | MergedTilesEditorObject {
-        editorMergedObjects :: [EditorObject]
-      }
-  deriving Show
-
-mkEditorObject :: Sort_ -> EditorPosition -> EditorObject
+mkEditorObject :: Sort_ -> EditorPosition -> EditorObject Sort_
 mkEditorObject sort pos = EditorObject sort pos (mkOEMState sort)
 
-modifyOEMState :: (OEMState -> OEMState) -> EditorObject -> EditorObject
+modifyOEMState :: (OEMState sort -> OEMState sort) -> EditorObject sort -> EditorObject sort
 modifyOEMState f eo =
     case editorOEMState eo of
          Just x -> eo{editorOEMState = Just $ f x}
@@ -188,13 +163,13 @@ data PickleObject = PickleObject {
   }
     deriving (Read, Show)
 
-editorObject2PickleObject :: EditorObject -> PickleObject
+editorObject2PickleObject :: EditorObject Sort_ -> PickleObject
 editorObject2PickleObject (EditorObject sort p oemState) =
     PickleObject (sortId sort) p (fmap pickleOEM oemState)
 
 -- | converts pickled objects to editor objects
 -- needs all available sorts
-pickleObject2EditorObject :: [Sort_] -> PickleObject -> EditorObject
+pickleObject2EditorObject :: [Sort_] -> PickleObject -> EditorObject Sort_
 pickleObject2EditorObject allSorts (PickleObject id position oemState) =
     EditorObject sort position (fmap (unpickleOEM sort) oemState)
   where
@@ -240,48 +215,30 @@ renderChipmunk painter worldOffset p chipmunk = do
 
 -- * ObjectEditMode
 
-data ObjectEditMode
-    = ObjectEditMode {
-        oemInitialState :: String,
-        oemEnterMode :: Dynamic -> String -> String,
-        oemUpdate :: Dynamic -> Key -> String -> String,
-        oemRender :: Ptr QPainter -> Dynamic -> String -> IO () -- more args
-      }
-
-instance Show ObjectEditMode where
-    show = const "<ObjectEditMode>"
-
-data OEMState
-    = OEMState {
-        oem :: ObjectEditMode,
-        oemState :: String
-      }
-  deriving Show
-
-mkOEMState :: Sort_ -> Maybe OEMState
+mkOEMState :: Sort_ -> Maybe (OEMState Sort_)
 mkOEMState sort =
-    case objectEditMode sort of
+    case objectEditModeMethods sort of
         Nothing -> Nothing
         Just oem -> Just $ OEMState oem (oemInitialState oem)
 
-enterModeOEM :: Dynamic -> OEMState -> OEMState
+enterModeOEM :: EditorScene Sort_ -> OEMState Sort_ -> OEMState Sort_
 enterModeOEM scene (OEMState oem state) =
     OEMState oem (oemEnterMode oem scene state)
 
-updateOEM :: Dynamic -> Key -> OEMState -> OEMState
+updateOEM :: EditorScene Sort_ -> Key -> OEMState Sort_ -> OEMState Sort_
 updateOEM scene k (OEMState oem state) =
     OEMState oem (oemUpdate oem scene k state)
 
-renderOEM :: Ptr QPainter -> Dynamic -> OEMState -> IO ()
+renderOEM :: Ptr QPainter -> EditorScene Sort_ -> OEMState Sort_ -> IO ()
 renderOEM ptr scene (OEMState oem state) =
     oemRender oem ptr scene state
 
-pickleOEM :: OEMState -> String
+pickleOEM :: OEMState Sort_ -> String
 pickleOEM (OEMState _ state) = state
 
-unpickleOEM :: Sort_ -> String -> OEMState
+unpickleOEM :: Sort_ -> String -> OEMState Sort_
 unpickleOEM sort state =
-    case objectEditMode sort of
+    case objectEditModeMethods sort of
         Just x -> OEMState x state
 
 

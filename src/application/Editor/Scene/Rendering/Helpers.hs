@@ -10,6 +10,7 @@ import Data.Abelian
 import Graphics.Qt
 
 import Base.Constants
+import Base.Types
 
 import Object
 
@@ -43,7 +44,7 @@ drawColoredBox ptr position size thickness (RGBA r g b a) = do
     tb x = truncate (x * 255)
 
 -- | renders the given object (with the given Transformation)
-renderEditorObject :: Ptr QPainter -> Offset Double -> EditorObject -> IO ()
+renderEditorObject :: Ptr QPainter -> Offset Double -> EditorObject Sort_ -> IO ()
 renderEditorObject ptr offset eo = do
 --     let sprited = eObjectSprited o
 --         pos = eObjectPosition o

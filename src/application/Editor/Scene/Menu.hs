@@ -17,42 +17,43 @@ import System.IO.Unsafe
 import Graphics.Qt
 
 import Base.Grounds
--- import Base.Sprited
+import Base.Types hiding (selected)
 
 import Object
 
-import Editor.Scene.Types hiding (selected)
+import Editor.Scene.Types
+
 
 
 
 -- | creates a menu label without an icon
-mkLabel :: String -> MenuLabel
+mkLabel :: String -> MenuLabel Sort_
 mkLabel x = MenuLabel Nothing x
 
-save :: MenuItem MenuLabel EditorScene
+save :: MenuItem (MenuLabel Sort_) (EditorScene Sort_)
 save = Right $ Action (mkLabel "save") (const $ Left "NYI: saving")
 
 -- | quits the app
-quit :: MenuItem MenuLabel EditorScene
+quit :: MenuItem (MenuLabel Sort_) (EditorScene Sort_)
 quit = Right $ Action (mkLabel "quit")
     (\ mainScene -> (Right $ FinalState mainScene []))
 
 
-tileSelection :: EditorScene -> MenuItem MenuLabel EditorScene
-tileSelection s = browseTree "select used sort" setSelectedTile (sorts s)
+tileSelection :: EditorScene Sort_ -> MenuItem (MenuLabel Sort_) (EditorScene Sort_)
+tileSelection s = browseTree "select used sort" setSelectedTile (availableSorts s)
 
-setSelectedTile :: EditorScene -> Sort_ -> Either String EditorScene
+setSelectedTile :: EditorScene Sort_ -> Sort_ -> Either String (EditorScene Sort_)
 setSelectedTile scene sort =
-    let mSorts' = selectFirstElement (== sort) (sorts scene)
+    let mSorts' = selectFirstElement (== sort) (availableSorts scene)
     in case mSorts' of
-        (Just x) -> Right scene{sorts = x}
+        (Just x) -> Right scene{availableSorts = x}
 
 
 
 -- * menus for SelectTree Sprited
 
-browseTree :: String -> (EditorScene -> Sort_ -> Either String EditorScene)
-    -> SelectTree Sort_ -> MenuItem MenuLabel EditorScene
+browseTree :: String -> (EditorScene Sort_ -> Sort_ -> Either String (EditorScene Sort_))
+    -> SelectTree Sort_ -> MenuItem (MenuLabel Sort_) (EditorScene Sort_)
 browseTree menuHint f (Node label children _) =
     Left $ mkMenu (mkLabel menuTitle) menuEntries
   where
@@ -67,22 +68,22 @@ browseTree menuHint f (Leaf sort) =
 -- * Layer menu
 
 -- | menu for everything related to Layers
-layerMenu :: EditorScene -> MenuItem MenuLabel EditorScene
+layerMenu :: EditorScene Sort_ -> MenuItem (MenuLabel Sort_) (EditorScene Sort_)
 layerMenu s = Left $ mkMenu (mkLabel "Edit Layers") (editLayerMenu : addLayerMenus)
 
-editLayerMenu :: MenuItem MenuLabel EditorScene
+editLayerMenu :: MenuItem (MenuLabel Sort_) (EditorScene Sort_)
 editLayerMenu = Left $ mkMenu (mkLabel "Edit current Layer") [
     editLayerDistanceX,
     editLayerDistanceY
   ]
 
-editLayerDistanceX :: MenuItem MenuLabel EditorScene
+editLayerDistanceX :: MenuItem (MenuLabel Sort_) (EditorScene Sort_)
 editLayerDistanceX = Right $ layerAttributeMenu "Edit x distance" xDistance setXDistance
 
-editLayerDistanceY :: MenuItem MenuLabel EditorScene
+editLayerDistanceY :: MenuItem (MenuLabel Sort_) (EditorScene Sort_)
 editLayerDistanceY = Right $ layerAttributeMenu "Edit y distance" yDistance setYDistance
 
-addLayerMenus :: [MenuItem MenuLabel EditorScene]
+addLayerMenus :: [MenuItem (MenuLabel Sort_) (EditorScene Sort_)]
 addLayerMenus = map Right [
     Action (mkLabel "Add Background Layer") (Right . addDefaultBackground),
     Action (mkLabel "Add Foreground Layer") (Right . addDefaultForeground)
@@ -90,17 +91,18 @@ addLayerMenus = map Right [
 
 
 layerAttributeMenu :: Read x =>
-    String -> (Layer EditorObject -> x) -> (Layer EditorObject -> x -> Layer EditorObject)
-    -> Action MenuLabel EditorScene
+    String -> (Layer (EditorObject Sort_) -> x) 
+    -> (Layer (EditorObject Sort_) -> x -> Layer (EditorObject Sort_))
+    -> Action (MenuLabel Sort_) (EditorScene Sort_)
 layerAttributeMenu question getter setter =
     Action (mkLabel question) $ \ scene -> unsafePerformIO $ do
         putStr (question ++ ": ")
         line <- getLine
         putStrLn "Trying to set..."
         return $ Right $
-            modifyObjects (modifySelectedLayer (selectedLayer scene) (inner line)) scene
+            modifyEditorObjects (modifySelectedLayer (selectedLayer scene) (inner line)) scene
   where
-    inner :: String -> Layer EditorObject -> Layer EditorObject
+    inner :: String -> Layer (EditorObject Sort_) -> Layer (EditorObject Sort_)
     inner answer layer =
         setter layer (read answer)
 
@@ -108,7 +110,7 @@ layerAttributeMenu question getter setter =
 
 -- * rendering
 
-render :: Ptr QPainter -> Menu MenuLabel EditorScene -> IO ()
+render :: Ptr QPainter -> Menu (MenuLabel Sort_) (EditorScene Sort_) -> IO ()
 render ptr menu = do
     let (title, menuItems) = menuItemNames menu
 
@@ -121,7 +123,7 @@ render ptr menu = do
         let highlighted = i == selected menu
         writeLabel scrolled (i + 1) highlighted menuItem
   where
-    writeLabel :: Int -> Int -> Bool -> MenuLabel -> IO ()
+    writeLabel :: Int -> Int -> Bool -> MenuLabel Sort_ -> IO ()
     writeLabel scrolled rowNumber highlighted (MenuLabel mIcon text) = do
         resetMatrix ptr
         let pos :: Position Double

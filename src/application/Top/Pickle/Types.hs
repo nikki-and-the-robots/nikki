@@ -15,6 +15,7 @@ module Top.Pickle.Types (
 import Data.Indexable
 
 import Base.Grounds
+import Base.Types
 
 import Object
 

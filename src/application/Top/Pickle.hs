@@ -14,10 +14,9 @@ import System.Directory
 import Utils
 
 import Base.Grounds
+import Base.Types
 
 import Object as Object
-
-import Editor.Scene as ES
 
 import Top.Pickle.Types
 import qualified Top.Pickle.Old1 as Old1
@@ -87,7 +86,7 @@ loadByFilePath path = do
 
 -- * saving
 
-save :: EditorScene -> IO ()
+save :: EditorScene Sort_ -> IO ()
 save scene = do
     IO.hSetBuffering IO.stdin IO.NoBuffering
     s <- wantsToSave
@@ -97,7 +96,7 @@ save scene = do
             levelFile <- askWithDefault "level path" (getLevelPath scene)
             assertIO (not $ null levelFile) "filename not empty"
             putStr ("saving as " ++ show levelFile ++ "...")
-            writeObjectsToDisk levelFile (ES.objects scene)
+            writeObjectsToDisk levelFile (editorObjects scene)
             putStrLn "done"
 
 wantsToSave :: IO Bool
@@ -134,7 +133,7 @@ promptForInput p = do
     getLine
 
 
-writeObjectsToDisk :: FilePath -> (Grounds EditorObject) -> IO ()
+writeObjectsToDisk :: FilePath -> Grounds (EditorObject Sort_) -> IO ()
 writeObjectsToDisk file objects = do
     writeSaved file $ fmap editorObject2PickleObject objects
 

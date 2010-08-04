@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns, FlexibleInstances #-}
+{-# language NamedFieldPuns, FlexibleInstances, DeriveDataTypeable #-}
 
 
 -- module for often used types (in one Base module, to avoid module import cycles.)
@@ -11,8 +11,13 @@ import Data.Indexable
 import Data.Initial
 import Data.Abelian
 import Data.Array.Storable
+import Data.SelectTree
+import Data.Menu hiding (selected)
+import Data.Typeable
 
 import Physics.Chipmunk
+
+import Graphics.Qt
 
 import Utils
 
@@ -121,5 +126,102 @@ isTerminalMode _ = False
 
 
 data LevelResult = Passed | Failed
+  deriving Show
+
+
+-- * EditorScene types
+
+data EditorScene sort
+    = EditorScene {
+        levelPath :: Maybe FilePath,
+
+        cursor :: EditorPosition,
+        cursorStep :: EditorScene sort -> EditorPosition,
+
+        availableSorts :: SelectTree sort,
+
+        editorObjects :: Grounds (EditorObject sort),
+        selectedLayer :: GroundsIndex,
+        selected :: Maybe Index,
+            -- index of the object that is in the scene and currently under the cursor
+            -- (in the selected layer)
+        objectEditModeIndex :: Maybe Index,
+
+        debugMsgs :: [String]
+    }
+    | MenuScene {
+        mainScene :: EditorScene sort,
+        menu :: Menu (MenuLabel sort) (EditorScene sort),
+
+        debugMsgs :: [String]
+      }
+    | FinalState {
+        mainScene :: EditorScene sort,
+
+        debugMsgs :: [String]
+      }
+  deriving (Show, Typeable)
+
+instance Show (EditorScene sort -> EditorPosition) where
+    show _ = "<EditorScene -> EditorPosition>"
+
+
+getLevelPath :: EditorScene sort -> Maybe FilePath
+getLevelPath EditorScene{levelPath} = levelPath
+getLevelPath MenuScene{mainScene} = levelPath mainScene
+getLevelPath FinalState{mainScene} = levelPath mainScene
+
+getCursorStep :: EditorScene sort -> EditorPosition
+getCursorStep s = cursorStep s s
+
+
+data MenuLabel sort = MenuLabel (Maybe sort) String
+  deriving (Show)
+
+
+data EditorPosition = EditorPosition {
+    editorX :: Double,
+    editorY :: Double
+  }
+  deriving (Show, Read, Eq)
+
+instance Abelian EditorPosition where
+    zero = EditorPosition 0 0
+    (EditorPosition a b) +~ (EditorPosition x y) =
+        EditorPosition (a + x) (b + y)
+    (EditorPosition a b) -~ (EditorPosition x y) =
+        EditorPosition (a - x) (b - y)
+
+
+-- * Editor objects
+
+data EditorObject sort
+    = EditorObject {
+        editorSort :: sort,
+        editorPosition :: EditorPosition,
+        editorOEMState :: Maybe (OEMState sort)
+      }
+    | MergedTilesEditorObject {
+        editorMergedObjects :: [EditorObject sort]
+      }
+  deriving Show
+
+
+data ObjectEditModeMethods sort
+    = ObjectEditModeMethods {
+        oemInitialState :: String,
+        oemEnterMode :: EditorScene sort -> String -> String,
+        oemUpdate :: EditorScene sort -> Key -> String -> String,
+        oemRender :: Ptr QPainter -> EditorScene sort -> String -> IO () -- more args
+      }
+
+instance Show (ObjectEditModeMethods sort) where
+    show = const "<ObjectEditModeMethods>"
+
+data OEMState sort
+    = OEMState {
+        methods :: ObjectEditModeMethods sort,
+        oemState :: String
+      }
   deriving Show
 

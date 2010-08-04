@@ -37,14 +37,14 @@ data AppState = AppState {
     qApplication :: Ptr QApplication,
     qWidget :: Ptr AppWidget,
     keyState :: Set Key,
-    scene :: EditorScene,
+    scene :: EditorScene Sort_,
     levelTesting :: Maybe (IORef GameAppState)
   }
 
 
 setKeyState :: AppState -> Set Key -> AppState
 setKeyState (AppState a b _ d e) c = AppState a b c d e
-setScene :: AppState -> EditorScene -> AppState
+setScene :: AppState -> EditorScene Sort_ -> AppState
 setScene    (AppState a b c _ e) d = AppState a b c d e
 setLevelTesting :: AppState -> Maybe (IORef GameAppState) -> AppState
 setLevelTesting  (AppState a b c d _) e = AppState a b c d e
@@ -119,7 +119,7 @@ renderWithState events painter = do
                 case s of
                     EditorScene{} -> do
                         ref <- liftIO $ Game.initialStateRef app widget
-                            (flip initSceneFromEditor $ objects s)
+                            (flip initSceneFromEditor $ editorObjects s)
                         puts setLevelTesting (Just ref)
                     _ -> return ()
             Just _ -> puts setLevelTesting Nothing

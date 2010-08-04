@@ -37,10 +37,11 @@ import Base.Events
 import Base.Constants
 import Base.Animation
 import Base.Pixmap
+import Base.Types hiding (selected, OEMState)
 
-import Object hiding (OEMState)
+import Object
 
-import Editor.Scene.Types hiding (sorts, ControlData, selected)
+import Editor.Scene.Types hiding (ControlData)
 import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
 
@@ -140,7 +141,7 @@ instance Sort TSort Terminal where
     sortRender sort =
         sortRenderSinglePixmap (head $ blinkenLights $ pixmaps sort) sort
 
-    objectEditMode _ = Just editMode
+    objectEditModeMethods _ = Just editMode
 
     initialize sort (Just space) editorPosition (Just state_) = do
         let pixmap = head $ blinkenLights $ pixmaps sort
@@ -448,21 +449,17 @@ boxY = fromUber 7
 -- * special edit mode (OEM)
 -- how to attach robots to Terminals
 
-editMode :: ObjectEditMode
-editMode = ObjectEditMode {
+editMode :: ObjectEditModeMethods Sort_
+editMode = ObjectEditModeMethods {
     oemInitialState = show (initial :: OEMState),
-    oemEnterMode = \ scene_ state_ ->
-        case fromDynamic scene_ of
-            Just scene -> show $ enterMode scene
-                (readNote "Terminal.editMode.oemEnterMode" state_),
-    oemUpdate = \ scene_ key ->
-        case fromDynamic scene_ of
-            Just scene ->
-                readNote "Terminal.editMode.oemUpdate" >>> editorUpdate scene key >>> show,
-    oemRender = \ ptr scene_ 
+    oemEnterMode = \ scene state_ ->
+        show $ enterMode scene
+            (readNote "Terminal.editMode.oemEnterMode" state_),
+    oemUpdate = \ scene key ->
+        readNote "Terminal.editMode.oemUpdate" >>> editorUpdate scene key >>> show,
+    oemRender = \ ptr scene
         (readNote  "Terminal.editMode.oemRender" -> state :: OEMState) ->
-            case fromDynamic scene_ of
-                Just scene -> oemRender_ ptr scene state
+            oemRender_ ptr scene state
   }
 
 data OEMState
@@ -477,7 +474,7 @@ data OEMState
 instance Initial OEMState where
     initial = NoRobots
 
-enterMode :: EditorScene -> OEMState -> OEMState
+enterMode :: EditorScene Sort_ -> OEMState -> OEMState
 enterMode scene NoRobots =
     case getRobotIndices scene of
         [] -> NoRobots
@@ -490,7 +487,7 @@ enterMode scene (Robots _ selected attached) =
           where
             selected' = if selected `elem` available then selected else first
 
-editorUpdate :: EditorScene -> Key -> OEMState -> OEMState
+editorUpdate :: EditorScene Sort_ -> Key -> OEMState -> OEMState
 editorUpdate scene key NoRobots = NoRobots
 editorUpdate scene key state@(Robots available selected attached) =
   case key of
@@ -515,20 +512,20 @@ swapIsElem needle list = list +: needle
 
 -- * rendering of OEM
 
-oemRender_ :: Ptr QPainter -> EditorScene -> OEMState -> IO ()
+oemRender_ :: Ptr QPainter -> EditorScene Sort_ -> OEMState -> IO ()
 oemRender_ ptr scene state = do
     offset <- transformation ptr (cursor scene) (getCursorSize scene)
     renderObjectScene ptr offset scene
     renderOEMOSDs ptr offset scene state
 
-renderOEMOSDs :: Ptr QPainter -> Offset Double -> EditorScene -> OEMState -> IO ()
+renderOEMOSDs :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> OEMState -> IO ()
 renderOEMOSDs ptr offset scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
     renderRobotBox orange{alphaC = 0.5} (getMainObject scene selected)
     mapM_ (renderRobotBox yellow{alphaC = 0.3}) $ map (getMainObject scene) $
         attached
   where
-    renderRobotBox :: RGBA -> EditorObject -> IO ()
+    renderRobotBox :: RGBA -> EditorObject Sort_ -> IO ()
     renderRobotBox color robot = do
         let sort = editorSort robot
             pos = editorPosition2QtPosition sort $ editorPosition robot

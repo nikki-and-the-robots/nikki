@@ -23,7 +23,6 @@ import qualified Data.Indexable as I
 import Data.Indexable (Index, (>:), modifyByIndex, deleteByIndex)
 import Data.Menu hiding (selected)
 import Data.Abelian
-import Data.Dynamic
 
 import Control.Monad.State
 import Control.Arrow
@@ -34,6 +33,7 @@ import Utils
 
 import Base.Constants
 import Base.Grounds
+import Base.Types
 
 import Object
 
@@ -44,9 +44,9 @@ import Editor.Scene.Rendering
 
 -- | looks, if there is an object under the cursor (and therefore selected)
 -- in the selected layer
-searchSelectedObject :: EditorScene -> Maybe Index
+searchSelectedObject :: EditorScene Sort_ -> Maybe Index
 searchSelectedObject s@EditorScene{selectedLayer} =
-    let indices = I.findIndices isSelected (content (objects s !|| selectedLayer))
+    let indices = I.findIndices isSelected (content (editorObjects s !|| selectedLayer))
         isSelected o = lowerCorner o == cursor s
         lowerCorner o = editorPosition o
     in case indices of
@@ -55,30 +55,30 @@ searchSelectedObject s@EditorScene{selectedLayer} =
 
 -- * normalizers
 
-normSelected :: EditorScene -> EditorScene
-normSelected s@EditorScene{} = s{selected = searchSelectedObject s}
-normSelected x = x
+updateSelected :: EditorScene Sort_ -> EditorScene Sort_
+updateSelected s@EditorScene{} = s{selected = searchSelectedObject s}
+updateSelected x = x
 
 -- * constructors
 
 -- | the initial editor scene
-initScene :: [IO [Sort_]] -> Maybe (String, Grounds PickleObject) -> IO EditorScene
+initScene :: [IO [Sort_]] -> Maybe (String, Grounds PickleObject) -> IO (EditorScene Sort_)
 initScene sortLoaders mObjects = flip evalStateT empty $ do
 
     sorts <- liftIO $ getAllSorts sortLoaders
 
-    let (path, objects :: Grounds EditorObject) = case mObjects of
+    let (path, objects :: Grounds (EditorObject Sort_)) = case mObjects of
                 Nothing -> (Nothing, emptyGrounds)
                 Just (p, os) ->
                     let objects = fmap (pickleObject2EditorObject $ leafs sorts) os
                     in (Just p, objects)
     pixmap <- get
-    return $ normSelected EditorScene{
+    return $ updateSelected EditorScene{
         levelPath = path,
         cursor = zero,
         cursorStep = const (EditorPosition 64 64),
-        sorts = sorts,
-        objects = objects,
+        availableSorts = sorts,
+        editorObjects = objects,
         selectedLayer = MainLayer,
         selected = Nothing,
         objectEditModeIndex = Nothing,
@@ -94,9 +94,9 @@ getAllSorts sortLoaders = do
 
 -- * manipulating
 
-updateScene :: ControlData -> EditorScene -> EditorScene
+updateScene :: ControlData -> EditorScene Sort_ -> EditorScene Sort_
 updateScene (ControlData events held) scene =
-    normSelected $ chainApp keyPress pressed scene
+    updateSelected $ chainApp keyPress pressed scene
   where
     pressed = mapMaybe unwrapPress events
     unwrapPress (KeyPress x) = Just x
@@ -105,7 +105,7 @@ updateScene (ControlData events held) scene =
 
 
 
-keyPress :: Key -> EditorScene -> EditorScene
+keyPress :: Key -> EditorScene Sort_ -> EditorScene Sort_
 
 -- * Main Editor mode
 
@@ -113,22 +113,22 @@ keyPress :: Key -> EditorScene -> EditorScene
 keyPress Escape s@EditorScene{objectEditModeIndex = Just i} =
     s{objectEditModeIndex = Nothing}
 keyPress x s@EditorScene{objectEditModeIndex = Just i} =
-    s{objects = objects'}
+    s{editorObjects = objects'}
   where
-    objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ objects s
-    mod :: OEMState -> OEMState
-    mod = updateOEM (toDyn s) x
+    objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
+    mod :: OEMState Sort_ -> OEMState Sort_
+    mod = updateOEM s x
 
 keyPress Enter s@EditorScene{} =
     case selected s of
         Nothing -> s
         Just i -> case mkOEMState $ editorSort $ getMainObject s i of
             Nothing -> s
-            Just _ -> s{objectEditModeIndex = Just i, objects = objects'}
+            Just _ -> s{objectEditModeIndex = Just i, editorObjects = objects'}
               where
-                objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ objects s
-                mod :: OEMState -> OEMState
-                mod = enterModeOEM (toDyn s)
+                objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
+                mod :: OEMState Sort_ -> OEMState Sort_
+                mod = enterModeOEM s
 
 -- arrow keys
 keyPress LeftArrow scene@EditorScene{cursor = (EditorPosition x y)} =
@@ -146,19 +146,19 @@ keyPress DownArrow scene@EditorScene{cursor = (EditorPosition x y)} =
 
 -- add object
 keyPress Space scene@EditorScene{cursor, selectedLayer} =
-    scene{objects = objects'}
+    scene{editorObjects = objects'}
   where
-    objects' = modifySelectedLayer selectedLayer (modifyContent (>: new)) (objects scene)
+    objects' = modifySelectedLayer selectedLayer (modifyContent (>: new)) (editorObjects scene)
     new = mkEditorObject selectedSort cursor
-    selectedSort = getSelected $ sorts scene
+    selectedSort = getSelected $ availableSorts scene
 
 -- delete selected object
 keyPress Delete scene@EditorScene{selectedLayer} =
     case selected scene of
         Nothing -> scene
         (Just i) ->
-            let newObjects = modifySelectedLayer selectedLayer (modifyContent (deleteByIndex i)) (objects scene)
-            in scene{objects = newObjects}
+            let newObjects = modifySelectedLayer selectedLayer (modifyContent (deleteByIndex i)) (editorObjects scene)
+            in scene{editorObjects = newObjects}
 
 -- skip through available objects
 keyPress X scene@EditorScene{} =
@@ -167,20 +167,20 @@ keyPress Y scene@EditorScene{} =
     modifySorts selectPrevious scene
 
 -- put selected object to the back
-keyPress B scene@EditorScene{objects, selected = Just i} =
-    let mainLayer' = I.toHead i (mainLayerIndexable objects)
-    in scene{objects = objects{mainLayer = mkMainLayer mainLayer'}}
+keyPress B scene@EditorScene{editorObjects, selected = Just i} =
+    let mainLayer' = I.toHead i (mainLayerIndexable editorObjects)
+    in scene{editorObjects = editorObjects{mainLayer = mkMainLayer mainLayer'}}
 -- put selected object to the front
-keyPress F scene@EditorScene{objects, selected = Just i} =
-    let mainLayer' = I.toLast i (mainLayerIndexable objects)
-    in scene{objects = objects{mainLayer = mkMainLayer mainLayer'}}
+keyPress F scene@EditorScene{editorObjects, selected = Just i} =
+    let mainLayer' = I.toLast i (mainLayerIndexable editorObjects)
+    in scene{editorObjects = editorObjects{mainLayer = mkMainLayer mainLayer'}}
 
 -- * Layers
 
-keyPress Plus s@EditorScene{objects, selectedLayer} =
-    s{selectedLayer = modifyGroundsIndex objects (+ 1) selectedLayer}
-keyPress Minus s@EditorScene{objects, selectedLayer} =
-    s{selectedLayer = modifyGroundsIndex objects (subtract 1) selectedLayer}
+keyPress Plus s@EditorScene{editorObjects, selectedLayer} =
+    s{selectedLayer = modifyGroundsIndex editorObjects (+ 1) selectedLayer}
+keyPress Minus s@EditorScene{editorObjects, selectedLayer} =
+    s{selectedLayer = modifyGroundsIndex editorObjects (subtract 1) selectedLayer}
 
 
 -- * Menus
@@ -233,14 +233,14 @@ keyPress _ s = s
 
 
 -- | contains the shortcuts to change the vector the cursor is moved by the arrow keys.
-cursorStepShortCuts :: Map Key (EditorScene -> EditorPosition)
+cursorStepShortCuts :: Map Key (EditorScene Sort_ -> EditorPosition)
 cursorStepShortCuts = fromList (
     (K0, fromSelectedPixmap) -- like the selected object
     : map (second (\ x -> const $ EditorPosition x x)) constSquareShortcuts)
   where
-    fromSelectedPixmap :: EditorScene -> EditorPosition
-    fromSelectedPixmap EditorScene{sorts} =
-        let (Size x y) = size $ getSelected sorts
+    fromSelectedPixmap :: EditorScene Sort_ -> EditorPosition
+    fromSelectedPixmap EditorScene{availableSorts} =
+        let (Size x y) = size $ getSelected availableSorts
         in EditorPosition x y
     -- | shortcuts that put cursorStep to a constant square
     constSquareShortcuts :: [(Key, Double)]
@@ -258,7 +258,7 @@ cursorStepShortCuts = fromList (
 
 
 
-topLevelMenu :: EditorScene -> Menu MenuLabel EditorScene
+topLevelMenu :: EditorScene Sort_ -> Menu (MenuLabel Sort_) (EditorScene Sort_)
 topLevelMenu s = mkMenu (mkLabel "Menu") [
     tileSelection s,
     layerMenu s,

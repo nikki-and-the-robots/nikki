@@ -7,26 +7,28 @@ import Data.Indexable
 
 import Utils
 
+import Base.Types
+
 import Object
 
 import qualified Sorts.Tiles as Tiles
 
 
-optimizeEditorObjects :: Indexable EditorObject -> Indexable EditorObject
+optimizeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
 optimizeEditorObjects = optimizeMerge opt
 
-opt :: EditorObject -> EditorObject -> Maybe EditorObject
+opt :: EditorObject Sort_ -> EditorObject Sort_ -> Maybe (EditorObject Sort_)
 opt a b | optIsTile a && optIsTile b =
     merge Tiles.canBeMerged a b
 opt _ _ = Nothing
 
 -- | returns True if the object is a Tile or an MergedTilesEditorObject
-optIsTile :: EditorObject -> Bool
+optIsTile :: EditorObject Sort_ -> Bool
 optIsTile EditorObject{editorSort} = isTile editorSort
 optIsTile MergedTilesEditorObject{} = True
 
-merge :: (EditorObject -> EditorObject -> Bool)
-    -> EditorObject -> EditorObject -> Maybe EditorObject
+merge :: (EditorObject Sort_ -> EditorObject Sort_ -> Bool)
+    -> EditorObject Sort_ -> EditorObject Sort_ -> Maybe (EditorObject Sort_)
 merge canBeMerged a@EditorObject{} b@EditorObject{} =
     if canBeMerged a b then
 -- --         let anchor = editorPosition a

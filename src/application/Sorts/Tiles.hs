@@ -30,6 +30,7 @@ import Physics.Chipmunk as CM
 
 import Base.Constants
 import Base.Pixmap
+import Base.Types
 
 import Object
 
@@ -325,7 +326,7 @@ shortenLine padding x = es "shortenLine" x
 -- * Chipmunk optimisation
 
 -- | looks, if two Tiles can be merged (actually just horizontally adjacent)
-canBeMerged :: EditorObject -> EditorObject -> Bool
+canBeMerged :: EditorObject Sort_ -> EditorObject Sort_ -> Bool
 canBeMerged a b =
     horizontallyAdjacent || verticallyAdjacent
   where
@@ -344,13 +345,13 @@ canBeMerged a b =
     searchedYDist = withView ((/ 2) . height . size . editorSort) (+) a b
 
 
-initializeMerged :: Space -> [EditorObject] -> IO Object_
+initializeMerged :: Space -> [EditorObject Sort_] -> IO Object_
 initializeMerged space objects@(a : _) = do
     chip <- initializeBoxes space (map (first Just) boxes) position
     return $ Object_ MergedSort $
          Merged chip (zip offsets (map tilePixmap sorts))
   where
-    toBox :: EditorObject -> (Offset Double, Size Double)
+    toBox :: EditorObject Sort_ -> (Offset Double, Size Double)
     toBox EditorObject{editorSort, editorPosition} =
         (pos -~ anchor, size editorSort)
       where

@@ -7,12 +7,12 @@ import Utils
 import Data.SelectTree
 import Data.Color
 import Data.Abelian
-import Data.Dynamic
 
 import Graphics.Qt
 
 import Base.Grounds
 import Base.Constants
+import Base.Types
 
 import Object
 
@@ -21,11 +21,11 @@ import Editor.Scene.Menu as Menu
 import Editor.Scene.Rendering.Helpers
 
 -- | renders the whole editor scene (with gui)
-renderScene :: Ptr QPainter -> EditorScene -> IO ()
+renderScene :: Ptr QPainter -> EditorScene Sort_ -> IO ()
 renderScene ptr (FinalState _ _) =
     quitQApplication
 renderScene ptr scene@EditorScene{objectEditModeIndex = Just i} =
-    renderOEM ptr (toDyn scene) oemState
+    renderOEM ptr scene oemState
   where
     Just oemState = editorOEMState $ getMainObject scene i
 renderScene ptr s@EditorScene{} = do
@@ -37,20 +37,20 @@ renderScene ptr s@MenuScene{mainScene, menu} = do
     renderScene ptr mainScene
     Menu.render ptr menu
 
-
+renderObjectScene :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()
 renderObjectScene ptr offset s = do
     size <- fmap fromIntegral <$> sizeQPainter ptr
     clearScreen ptr
     let -- the layers behind the currently selected Layer
-        currentBackgrounds = belowSelected (selectedLayer s) (objects s)
-        currentLayer = objects s !|| selectedLayer s
+        currentBackgrounds = belowSelected (selectedLayer s) (editorObjects s)
+        currentLayer = editorObjects s !|| selectedLayer s
     mapM_ (renderLayer ptr size offset . correctDistances currentLayer)
         (currentBackgrounds +: currentLayer)
 
 renderGUI ptr offset s = do
     renderCursor' ptr offset s
 
-    renderSelectedIcon ptr (getSelected $ sorts s)
+    renderSelectedIcon ptr (getSelected $ availableSorts s)
     renderCursorPositionOSD ptr $ cursor s
     renderCursorStepSize ptr $ getCursorStep s
     renderLayerOSD ptr $ selectedLayer s
@@ -59,16 +59,16 @@ renderGUI ptr offset s = do
 
 
 renderLayer :: Ptr QPainter -> Size Double -> Offset Double 
-    -> Layer EditorObject -> IO ()
+    -> Layer (EditorObject Sort_) -> IO ()
 renderLayer ptr size offset layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
     fmapM_ (renderEditorObject ptr modifiedOffset) (content layer)
 
 -- | renders the pink cursor box
-renderCursor' :: Ptr QPainter -> Offset Double -> EditorScene -> IO ()
+renderCursor' :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()
 renderCursor' ptr offset scene = do
     let cursorPos = cursor scene
-        sort = getSelected $ sorts scene
+        sort = getSelected $ availableSorts scene
         size_ = size sort
         pos = offset +~ editorPosition2QtPosition sort cursorPos
     resetMatrix ptr
@@ -76,7 +76,7 @@ renderCursor' ptr offset scene = do
 
 
 -- calculates the rendering position for all objects (does the clipping, etc.)
-calculateRenderTransformation :: Ptr QPainter -> EditorScene -> IO (Offset Double)
+calculateRenderTransformation :: Ptr QPainter -> EditorScene Sort_ -> IO (Offset Double)
 -- calculateRenderTransformation ptr s@TerminalScene{} =
 --     calculateRenderTransformation ptr (mainScene s)
 calculateRenderTransformation ptr s@EditorScene{} = do

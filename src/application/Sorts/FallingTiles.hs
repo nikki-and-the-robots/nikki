@@ -10,7 +10,6 @@ import Data.Generics
 import Data.Abelian
 import Data.Set (member)
 
-import Control.Applicative
 import Control.Arrow
 
 import System.FilePath
@@ -24,6 +23,7 @@ import Paths
 
 import Base.Constants
 import Base.Pixmap
+import Base.Types
 
 import Object
 
