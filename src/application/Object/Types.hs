@@ -71,7 +71,9 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     -- that is not added to the chipmunk space (i.e. background tiles)
     initialize :: sort -> Maybe Space -> EditorPosition -> Maybe String -> IO object
 
-    chipmunk :: object -> Chipmunk
+    chipmunks :: object -> [Chipmunk]
+
+    objectPosition :: object -> IO Vector
 
     startControl :: object -> object
     startControl = id
@@ -107,7 +109,7 @@ data Object_
             Show sort, Typeable sort, 
             Show object, Typeable object) =>
                 Object_ sort object
-  deriving Typeable
+  deriving (Typeable)
 
 instance Show Object_ where
     show (Object_ s o) = "Object_ (" ++ show o ++ ")"
@@ -120,7 +122,8 @@ instance Sort Sort_ Object_ where
     editorPosition2QtPosition (Sort_ s) = editorPosition2QtPosition s
     initialize (Sort_ sort) space editorPosition state =
         Object_ sort <$> initialize sort space editorPosition state
-    chipmunk (Object_ _ o) = chipmunk o
+    chipmunks (Object_ _ o) = chipmunks o
+    objectPosition (Object_ _ o) = objectPosition o
     startControl (Object_ sort o) = Object_ sort $ startControl o
     update (Object_ sort o) i now contacts cd = do
         (f, o') <- update o i now contacts cd

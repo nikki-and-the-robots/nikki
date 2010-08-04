@@ -112,7 +112,7 @@ data TSort = TSort {
     deriving (Show, Typeable)
 
 data Terminal = Terminal {
-    tchipmunk :: Chipmunk,
+    chipmunk :: Chipmunk,
     robots :: [Index],
     selected :: Selected,
     exitMode :: ExitMode,
@@ -166,7 +166,9 @@ instance Sort TSort Terminal where
                     (mkColorLights $ map (< length attached) [0..3])
                     0
 
-    chipmunk = tchipmunk
+    chipmunks = chipmunk >>> return
+
+    objectPosition = chipmunk >>> body >>> getPosition
 
     startControl t = t{exitMode = DontExit}
 
@@ -335,11 +337,11 @@ renderTerminalBackground ptr offset now t sort = do
     let pixmap =
             pickAnimationFrame (blinkenLights $ pixmaps sort)
                 [blinkenLightSpeed] now
-    renderChipmunk ptr offset pixmap (tchipmunk t)
+    renderChipmunk ptr offset pixmap (chipmunk t)
 
 
 renderLittleColorLights ptr offset t sort = do
-    pos <- fst <$> getRenderPosition (tchipmunk t)
+    pos <- fst <$> getRenderPosition (chipmunk t)
     mapM_ (renderLight ptr (offset +~ pos) t (littleColorLights $ pixmaps sort))
         [red_, blue_, green_, yellow_]
 
@@ -551,7 +553,7 @@ renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
 
 hasTerminalShape :: Terminal -> Shape -> Bool
 hasTerminalShape terminal shape =
-    shape `elem` shapes (tchipmunk terminal)
+    shape `elem` shapes (chipmunk terminal)
 
 -- whichTerminalCollides collisions =
 --     let colls = filter snd $ toList $ terminals collisions

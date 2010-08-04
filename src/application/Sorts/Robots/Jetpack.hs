@@ -75,7 +75,7 @@ defaultPixmap :: Map RenderState [Pixmap] -> Pixmap
 defaultPixmap m = head (m ! Wait)
 
 data Jetpack = Jetpack {
-    jchipmunk :: Chipmunk,
+    chipmunk :: Chipmunk,
     boost :: Bool,
     direction :: Maybe HorizontalDirection,
     renderState :: RenderState,
@@ -105,7 +105,9 @@ instance Sort JSort Jetpack where
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
         return $ Jetpack chip False Nothing Idle 0
 
-    chipmunk = jchipmunk
+    chipmunks = chipmunk >>> return
+
+    objectPosition = chipmunk >>> body >>> getPosition
 
     updateNoSceneChange object now contacts (isControlled, cd) = inner object
       where
@@ -193,7 +195,7 @@ updateRenderState now controlled j =
 
 renderJetpack j sort ptr offset now = do
     let pixmap = pickPixmap now j sort
-    renderChipmunk ptr offset pixmap (jchipmunk j)
+    renderChipmunk ptr offset pixmap (chipmunk j)
 
 pickPixmap :: Seconds -> Jetpack -> JSort -> Pixmap
 pickPixmap now j sort =
@@ -206,12 +208,12 @@ pickPixmap now j sort =
 -- * chipmunk control
 
 controlToChipmunk :: Jetpack -> IO Jetpack
-controlToChipmunk object@Jetpack{jchipmunk, boost, direction} = do
-    angle <- normalizeAngle $ body jchipmunk
-    angVel <- getAngVel $ body jchipmunk
+controlToChipmunk object@Jetpack{chipmunk, boost, direction} = do
+    angle <- normalizeAngle $ body chipmunk
+    angVel <- getAngVel $ body chipmunk
 
     -- hovering
-    hover (body jchipmunk) angle boost
+    hover (body chipmunk) angle boost
 
     -- angle correction
 --     correctAngle (robotBoost state) body angle angVel
@@ -223,7 +225,7 @@ controlToChipmunk object@Jetpack{jchipmunk, boost, direction} = do
 
         appliedTorque = frictionTorque_ +~ controlTorque +~ uprightCorrection_
 
-    setTorque (body jchipmunk) (appliedTorque <<| "appliedTorque")
+    setTorque (body chipmunk) (appliedTorque <<| "appliedTorque")
 
     return object
 

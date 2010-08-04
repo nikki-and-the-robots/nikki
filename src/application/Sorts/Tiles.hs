@@ -4,11 +4,12 @@
 
 module Sorts.Tiles (
     sorts,
+    tileShapeAttributes,
     Tile,
     unwrapTile,
     unwrapTileSort,
     canBeMerged,
-    initializeMerged
+    initializeMerged,
   ) where
 
 
@@ -107,8 +108,11 @@ instance Sort TSort Tile where
         Tile <$>
         initializeBoxes space [(Nothing, size sort)] (sort, editorPosition)
 
-    chipmunk (Tile c) = c
-    chipmunk (Merged c _) = c
+    chipmunks (Tile c) = [c]
+    chipmunks (Merged c _) = [c]
+
+    objectPosition (Tile c) = getPosition $ body c
+    objectPosition (Merged c _) = getPosition $ body c
 
     render t@Tile{} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPosition $ tchipmunk t
@@ -134,7 +138,7 @@ initializeBoxes :: Space -> [Box] -> (TSort, EditorPosition) -> IO Chipmunk
 initializeBoxes space boxes position = do
     let (shapes, baryCenterOffset) = mkShapes boxes
         shapesWithAttributes =
-            map (tuple (shapeAttributes TileCT)) shapes
+            map (tuple tileShapeAttributes) shapes
         pos :: Vector
         pos = qtPosition2Vector (uncurry editorPosition2QtPosition position)
                 +~ baryCenterOffset
@@ -169,12 +173,12 @@ bodyAttributes pos =
         CM.position = pos
       }
 
-shapeAttributes :: MyCollisionType -> ShapeAttributes
-shapeAttributes collisionType =
+tileShapeAttributes :: ShapeAttributes
+tileShapeAttributes =
     ShapeAttributes {
         elasticity = 0.5,
         friction = 2,
-        CM.collisionType = collisionType
+        CM.collisionType = TileCT
       }
 
 

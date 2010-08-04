@@ -7,10 +7,11 @@ module Game.Scene (
 
 import Prelude hiding (foldr)
 
-import Data.Indexable (Indexable, Index, findIndices, fmapMWithIndex)
+import Data.Indexable (Indexable, Index, findIndices, fmapMWithIndex, toList)
 import Data.Abelian
 import qualified Data.Set as Set
 import Data.Foldable (foldr)
+import Data.Maybe
 
 import Control.Monad.State hiding ((>=>), (<=<))
 
@@ -31,6 +32,7 @@ import Object
 import Game.Scene.Camera
 
 import Sorts.Terminal
+import Sorts.Switch
 
 
 -- * entry
@@ -134,8 +136,13 @@ gameOver scene | nikkiTouchesLaser $ contacts scene =
 gameOver _ = Nothing
 
 levelPassed :: Scene Object_ -> Maybe (Scene Object_)
-levelPassed scene | nikkiTouchesMilkMachine $ contacts scene =
-    Just $ modifyMode (const $ LevelFinished Passed) scene
+levelPassed scene =
+    let allSwitches :: [Switch] = catMaybes $ map unwrapSwitch $ toList $ content $ mainLayer $ objects scene
+        allTriggered = all triggered allSwitches
+    in if allTriggered then
+        Just $ modifyMode (const $ LevelFinished Passed) scene
+      else
+        Nothing
 levelPassed _ = Nothing
 
 
@@ -202,7 +209,7 @@ renderScene ptr now scene@Scene{} = do
     windowSize <- sizeQPainter ptr
     eraseRect ptr zero windowSize (QtColor 0 0 0 255)
 
-    controlledPosition <- getPosition $ body $ chipmunk $ getControlled scene
+    controlledPosition <- objectPosition $ getControlled scene
     (center, cameraState') <- getCenter controlledPosition (cameraState scene)
 
     intSize@(Size width height) <- sizeQPainter ptr
@@ -261,10 +268,8 @@ debugDrawCoordinateSystem ptr offset = do
 
 renderObjectGrid :: Ptr QPainter -> Qt.Position Double -> Object_ -> IO ()
 renderObjectGrid ptr offset object = do
-    resetMatrix ptr
-    translate ptr offset
-    let chip = chipmunk object
-    renderGrid ptr chip
+    let chips :: [Chipmunk] = chipmunks object
+    renderGrids ptr offset chips
 
 -- renderObjectGrid ptr offset o = es "renderGrid" o
 

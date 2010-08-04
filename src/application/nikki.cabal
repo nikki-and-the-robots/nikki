@@ -48,6 +48,9 @@ data-files:
     data/png/backgrounds/trailer-01.png
     data/png/objects/box-wood-large.png
     data/png/objects/box-wood-small.png
+    data/png/objects/switch-platform.png
+    data/png/objects/switch-standard-off.png
+    data/png/objects/switch-standard-on.png
     data/png/robots/jetpack/idle_03.png
     data/png/robots/jetpack/idle_00.png
     data/png/robots/jetpack/idle_02.png

@@ -3,7 +3,7 @@
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 
-module Sorts.Nikki (sorts, addBatteryPower, modifyNikki) where
+module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass) where
 
 
 import Data.Abelian
@@ -142,7 +142,7 @@ data NSort = NSort {
 
 data Nikki
     = Nikki {
-        nchipmunk :: Chipmunk,
+        chipmunk :: Chipmunk,
         feetShape :: Shape,
         jumpStartTime :: Seconds,
         renderState :: RenderState,
@@ -214,16 +214,18 @@ instance Sort NSort Nikki where
             jumpSound
             0
 
-    chipmunk = nchipmunk
+    chipmunks = return . chipmunk
 
-    updateNoSceneChange nikki now contacts cd =
+    objectPosition nikki = getPosition $ body $ chipmunk nikki
+
+    updateNoSceneChange nikki now contacts cd = do
         (controlBody now contacts cd >>>>
-        fromPure (updateStartTimes now (renderState nikki))) nikki
+            fromPure (updateStartTimes now (renderState nikki))) nikki
 
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
-        renderChipmunk ptr offset pixmap (nchipmunk nikki)
+        renderChipmunk ptr offset pixmap (chipmunk nikki)
 
 
 -- * initialisation
@@ -248,7 +250,7 @@ bodyShapeAttributes :: ShapeAttributes
 bodyShapeAttributes = ShapeAttributes {
     elasticity    = elasticity_,
     friction      = 0,
-    CM.collisionType = NikkiFeetCT
+    CM.collisionType = NikkiBodyCT
   }
 
 
@@ -353,7 +355,7 @@ jumpAngle angles =
 
 controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
 controlBody _ _ (False, _) nikki = do
-    let ss = shapes $ nchipmunk nikki
+    let ss = shapes $ chipmunk nikki
     setSurfaceVel (head ss) zero
     return nikki{renderState = UsingTerminal $ direction $ renderState nikki}
 controlBody now contacts (True, cd)
@@ -418,9 +420,9 @@ controlBody now contacts (True, cd)
             jumpingAntiGravity = if isLongJump then longJumpAntiGravity timeInJump else 0
 
         -- horizontal moving while airborne
-        let ifNikkiTouchesGround = isJust contactNormal
+        let ifNikkiFeetTouchGround = nikkiFeetTouchGround contacts
             airborneForce =
-                airborne rightHeld leftHeld bothHeld ifNikkiTouchesGround xVelocity
+                airborne rightHeld leftHeld bothHeld ifNikkiFeetTouchGround xVelocity
 
         -- Apply airborne forces (for longer jumps and vertical movement)
         modifyApplyOnlyForce chip (Vector airborneForce jumpingAntiGravity)
@@ -431,7 +433,7 @@ controlBody now contacts (True, cd)
 --         debugChipGraph now body
 
         -- renderState updating
-        let state = pickRenderState (renderState nikki) ifNikkiTouchesGround
+        let state = pickRenderState (renderState nikki) ifNikkiFeetTouchGround
                         (bothHeld, leftHeld, rightHeld)
 
         return $ if doesJumpStartNow then

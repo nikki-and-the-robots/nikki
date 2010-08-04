@@ -1,7 +1,7 @@
 {-# language NamedFieldPuns #-}
 
 module Physics.Chipmunk.DebugGrid (
-    renderGrid,
+    renderGrids,
   ) where
 
 
@@ -14,8 +14,15 @@ import Physics.Chipmunk.Types
 import Utils
 
 
-renderGrid :: Ptr QPainter -> Chipmunk -> IO ()
-renderGrid ptr chip = do
+renderGrids :: Ptr QPainter -> Qt.Position Double -> [Chipmunk] -> IO ()
+renderGrids ptr offset chips =
+    mapM_ (renderGrid ptr offset) chips
+
+renderGrid :: Ptr QPainter -> Qt.Position Double -> Chipmunk -> IO ()
+renderGrid ptr offset chip = do
+    resetMatrix ptr
+    translate ptr offset
+
     (position, rad) <- getChipmunkPosition chip
 
     translateVector ptr position
@@ -32,6 +39,6 @@ renderShapeType ptr st = nm "renderShape" st
 
 renderVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
 renderVectorLine ptr (Vector x1 y1) (Vector x2 y2) = do
-    setPenColor ptr 255 55 55 128 1
+    setPenColor ptr 255 55 55 255 1
     drawLine ptr (Position x1 y1) (Position x2 y2)
 

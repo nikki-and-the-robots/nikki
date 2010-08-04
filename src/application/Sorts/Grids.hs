@@ -10,6 +10,8 @@ import Control.Monad
 
 import System.FilePath
 
+import Physics.Chipmunk hiding (Position, position)
+
 import Graphics.Qt
 
 import Paths
@@ -44,6 +46,7 @@ data GSort = GSort {
     deriving (Show, Typeable)
 
 data Grid = Grid {
+    gridSize :: Size Double,
     position :: (Position Double)
   }
     deriving (Show, Typeable)
@@ -62,9 +65,17 @@ instance Sort GSort Grid where
 
     initialize sort mSpace ep Nothing = do
         let pos = editorPosition2QtPosition sort ep
-        return $ Grid pos
+        return $ Grid (size sort) pos
 
-    chipmunk = error "chipmunk in Sorts.Grids"
+    chipmunks = const []
+
+    objectPosition grid =
+        return $ Vector x y
+      where
+        x = qtX + w / 2
+        y = qtY + h / 2
+        Size w h = gridSize grid
+        Position qtX qtY = position grid
 
     render o s ptr offset now =
         renderGrid ptr offset s (position o)

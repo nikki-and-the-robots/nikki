@@ -8,6 +8,8 @@ import Data.Abelian
 import Data.Set
 import Data.Indexable as I
 
+import Control.Arrow
+
 import System.FilePath
 
 import Physics.Chipmunk as CM
@@ -55,8 +57,8 @@ data BSort
   deriving (Show, Typeable)
 
 data Battery
-    = Battery {bchip :: Chipmunk}
-    | Consumed {bchip :: Chipmunk}
+    = Battery {chipmunk :: Chipmunk}
+    | Consumed {chipmunk :: Chipmunk}
   deriving (Show, Typeable)
 
 
@@ -77,19 +79,21 @@ instance Sort BSort Battery where
         chip <- initChipmunk space (bodyAttributes pos) shapes baryCenterOffset
         return $ Battery chip
 
-    chipmunk = bchip
+    chipmunks = chipmunk >>> return
+
+    objectPosition = chipmunk >>> body >>> getPosition
 
     update o i now contacts cd
-        | any (`member` batteries contacts) (shapes $ bchip o) = do
+        | any (`member` batteries contacts) (shapes $ chipmunk o) = do
             -- the battery is consumed by nikki (TODO: delete battery)
-            removeChipmunk $ bchip o
+            removeChipmunk $ chipmunk o
             let sceneChange = modifyNikki addBatteryPower . removeBattery
                 removeBattery = modifyObjects (modifyMainLayer (deleteByIndex i))
-            return (sceneChange, Consumed $ bchip o)
+            return (sceneChange, Consumed $ chipmunk o)
     update o i now contacts cd = return (id, o) -- no change
 
     render o@Battery{} sort ptr offset now =
-        renderChipmunk ptr offset (batteryPixmap sort) (bchip o)
+        renderChipmunk ptr offset (batteryPixmap sort) (chipmunk o)
     render Consumed{} _ _ _ _ = return ()
 
 

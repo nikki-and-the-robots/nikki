@@ -47,7 +47,7 @@ data BSort
       }
   deriving (Show, Typeable)
 
-data Box = Box {bchip :: Chipmunk}
+data Box = Box {chipmunk :: Chipmunk}
     deriving (Show, Typeable)
 
 instance Sort BSort Box where
@@ -63,13 +63,14 @@ instance Sort BSort Box where
         chip <- CM.initChipmunk space (bodyAttributes position (size sort)) 
                     shapesWithAttributes baryCenterOffset
         return $ Box chip
-    chipmunk = bchip
+    chipmunks b = [chipmunk b]
+    objectPosition = chipmunk >>> body >>> getPosition
     render o sort ptr offset now =
-        renderChipmunk ptr offset (boxPixmap sort) (bchip o)
+        renderChipmunk ptr offset (boxPixmap sort) (chipmunk o)
 
 
 bodyAttributes :: CM.Position -> Size QtReal -> BodyAttributes
-bodyAttributes pos (Size a b) = BodyAttributes{
+bodyAttributes pos (Size a b) = BodyAttributes {
     CM.position         = pos,
     mass                = (1 * (toKachel a) * (toKachel b)),
     inertia             = 6000

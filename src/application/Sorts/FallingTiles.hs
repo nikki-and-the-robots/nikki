@@ -11,6 +11,7 @@ import Data.Abelian
 import Data.Set (member)
 
 import Control.Applicative
+import Control.Arrow
 
 import System.FilePath
 import System.Random
@@ -62,7 +63,7 @@ data TSort
 data FallingTile
     = FallingTile {
         tileSize :: Size Double,
-        tchipmunk :: Chipmunk,
+        chipmunk :: Chipmunk,
         status :: Status
       }
   deriving (Show, Typeable)
@@ -101,12 +102,14 @@ instance Sort TSort FallingTile where
         modifyApplyForce chip (CM.scale (Vector 0 (- gravity)) (scaleMass (size sort) staticMass))
         return $ FallingTile (size sort) chip Static
 
-    chipmunk (FallingTile _ c _) = c
+    chipmunks (FallingTile _ c _) = [c]
+
+    objectPosition = chipmunk >>> body >>> getPosition
 
     updateNoSceneChange fallingTile now contacts cd =
         case status fallingTile of
             Static ->
-                if any (`member` fallingTiles contacts) (shapes (tchipmunk fallingTile)) then
+                if any (`member` fallingTiles contacts) (shapes (chipmunk fallingTile)) then
                     return fallingTile{status = GettingLoose now}
                   else
                     return fallingTile
@@ -125,7 +128,7 @@ instance Sort TSort FallingTile where
                 return fallingTile
 
     render t@FallingTile{} sort@TSort{tilePixmap} ptr offset _now = do
-        (position, rad) <- getRenderPosition $ tchipmunk t
+        (position, rad) <- getRenderPosition $ chipmunk t
         renderPixmap ptr offset position (Just rad) tilePixmap
 
 

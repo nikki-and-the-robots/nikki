@@ -76,8 +76,9 @@ instance Initial CameraState where
 data Contacts
     = Contacts {
         nikkiContacts :: [(StorableArray Int Contact, Double)],
+        nikkiFeetTouchGround :: !Bool,
         nikkiTouchesLaser :: !Bool,
-        nikkiTouchesMilkMachine :: !Bool,
+        triggers :: Set Shape,
         terminals :: Set Shape,
         batteries :: Set Shape,
         fallingTiles :: Set Shape

@@ -23,6 +23,7 @@ import qualified Sorts.FallingTiles
 import qualified Sorts.Box
 import qualified Sorts.Battery
 import qualified Sorts.Grids
+import qualified Sorts.Switch
 
 import qualified Sorts.Robots.Jetpack
 
@@ -34,6 +35,7 @@ sortLoaders = [
 
     Sorts.Terminal.sorts,
     Sorts.Battery.sorts,
+    Sorts.Switch.sorts,
 
     Sorts.Robots.Jetpack.sorts,
 
@@ -68,6 +70,8 @@ mkScene :: Space -> Grounds Object_ -> IO (Scene Object_)
 mkScene space objects = do
     let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
     contactRef <- initContactRef space initial watchedContacts
+--     error $ show $ I.toList $ mainLayerIndexable objects
+--     let allTriggerShapes = Set.fromList $ filter (isSwitch . sort_) $ I.toList mainLayerIndexable objects
     return $ Scene 0 0 objects initial contactRef initial (NikkiMode nikki)
 
 groundsOptimizeChipmunks :: Grounds EditorObject -> Grounds EditorObject

@@ -7,12 +7,6 @@ module Game.MainLoop (
     initialStateRef,
   ) where
 
--- my utils
-
-import Utils
-import Base.Constants
-
--- normal haskell stuff
 
 import Data.Set as Set (Set, empty, insert, delete, toList)
 import Data.IORef
@@ -21,14 +15,16 @@ import Control.Monad.State hiding ((>=>))
 
 import GHC.Conc
 
--- special gaming stuff
+import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
-import Physics.Chipmunk as CM
+import Utils
 
 import Base.Events
 import Base.FPSState
+import Base.Constants
+import Base.Types
 
 import Object
 
@@ -113,9 +109,9 @@ renderWithState events painter = do
     actualizeFPS
 
     puts setScene sc'
---     case sc' of
---         FinalState x -> liftIO (print x) >> sendQuit
---         _ -> return ()
+    case mode sc' of
+        LevelFinished x -> liftIO (print x) >> sendQuit
+        _ -> return ()
 
 -- | returns the time passed since program start
 getSecs :: AppMonad Double

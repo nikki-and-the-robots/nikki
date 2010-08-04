@@ -31,7 +31,7 @@ module Physics.Chipmunk (
 
     -- re-exports from submodules
     translateVector,
-    renderGrid,
+    renderGrids,
     rotateVector,
     qtPosition2Vector,
     vector2QtPosition,
