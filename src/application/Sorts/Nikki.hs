@@ -490,7 +490,7 @@ velocityJumpCorrection contactNormal velocity wantedImpulse = do
     correctedOVectorLen = (1 - (correctionSteepness ** (- oVectorLen))) * (- c)
 
     -- well, if we don't want to correct anything
-    uncorrectedOVectorLen = oVectorLen
+    uncorrectedOVectorLen = oVectorLen * nikkiMass
 
     -- correctedOVectorLen and uncorrectedOVectorLen are being added with weights.
     -- correction is greatest, when beta is smallest
