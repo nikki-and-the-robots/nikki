@@ -42,10 +42,7 @@ names :: [(String, Qt.Position Int, Size Double)]
 names = [
     ("tiles/tile-standard-white", (Position (- 33) (- 33)), Size 64 64),
     ("tiles/tile-standard-black", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/terminal-frame-editor", (Position (- 1) (- 1)), Size 192 192),
-    ("tiles/special-jump", (Position (- 33) (- 33)), Size 1600 320),
-    ("multilayers/grid-white", (Position (- 1) (- 1)), Size 512 512),
-    ("backgrounds/trailer-01", (Position (- 0) (- 0)), Size 640 480)
+    ("tiles/terminal-frame-editor", (Position (- 1) (- 1)), Size 192 192)
   ]
 
 
