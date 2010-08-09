@@ -3,6 +3,7 @@
 module Game.Scene (
     Scene,
     stepScene,
+    renderScene,
   ) where
 
 import Prelude hiding (foldr)
@@ -43,22 +44,12 @@ import Sorts.Switch
 -- updating the objects
 -- rendering
 
-stepScene :: Seconds -> Space -> ControlData -> Ptr QPainter -> Scene Object_ -> IO (Scene Object_)
-stepScene now space controlData ptr =
-    fromPure (updateNow now) >>>>
-
+stepScene :: Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
+stepScene space controlData =
     updateScene controlData >>>>
     stepSpace space >>>>
-    renderScene ptr now >>>>
-
     fromPure (maybeId (flip transition controlData))
 
--- * step time measurement
-
--- | updates the fields now and oldNow
-updateNow :: Seconds -> Scene o -> Scene o
-updateNow now' scene@Scene{now} =
-    scene{now = now', oldNow = now}
 
 -- * State automaton stuff
 
@@ -155,26 +146,18 @@ stepSpace :: Space -> Scene Object_ -> IO (Scene Object_)
 
 stepSpace _space s@Scene{mode = TerminalMode{}} = return s
 
-stepSpace space s@Scene{now, oldNow, contactRef} =
-    if n > 0 then do
-        forM_ [1..n] $ const $ do
-            resetContactRef contactRef
-            CM.step space stepQuantum
-        contacts' <- readContactRef contactRef
-        return s{contacts = contacts'}
-      else
-        return s
-  where
-    n :: Int = stepQuantums now - stepQuantums oldNow
-    stepQuantums :: Seconds -> Int
-    stepQuantums t = truncate (t / stepQuantum)
+stepSpace space s@Scene{contactRef} = do
+    resetContactRef contactRef
+    CM.step space stepQuantum
+    contacts' <- readContactRef contactRef
+    return s{contacts = contacts', spaceTime = spaceTime s + stepQuantum}
 
 
 -- * object updating
 
 -- | updates every object
 updateScene :: ControlData -> Scene Object_ -> IO (Scene Object_)
-updateScene cd scene@Scene{now, objects, contacts, mode} = do
+updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     backgrounds' <- fmapM (modifyContentM (fmapMWithIndex updateMultiLayerObjects)) backgrounds
     (sceneChange, mainLayer') <- updateMainLayer mainLayer
     foregrounds' <- fmapM (modifyContentM (fmapMWithIndex updateMultiLayerObjects)) foregrounds
@@ -202,8 +185,8 @@ updateScene cd scene@Scene{now, objects, contacts, mode} = do
 -- * rendering
 
 -- | well, renders the scene to the screen (to the max :)
-renderScene :: Ptr QPainter -> Seconds -> Scene Object_ -> IO (Scene Object_)
-renderScene ptr now scene@Scene{} = do
+renderScene :: Ptr QPainter -> Scene Object_ -> IO ()
+renderScene ptr scene@Scene{spaceTime = now} = do
 
     resetMatrix ptr
     windowSize <- sizeQPainter ptr
@@ -232,7 +215,7 @@ renderScene ptr now scene@Scene{} = do
 
 
 
-    return scene{cameraState = cameraState'}
+--     return scene{cameraState = cameraState'}
 
 
 -- | renders the different Layers.

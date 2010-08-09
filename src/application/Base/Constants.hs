@@ -38,10 +38,7 @@ robotIdleEyeTime :: Double = 0.4
 
 -- * Physics
 
-gravity :: Double = 1904 * time
-
--- how fast the physic works (all forces and accelerations times time)
-time :: Double = 1
+gravity :: Double = 1904
 
 stepQuantum :: Double = 0.002
 

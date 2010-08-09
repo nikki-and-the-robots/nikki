@@ -30,13 +30,10 @@ import Editor.Scene.Types
 mkLabel :: String -> MenuLabel Sort_
 mkLabel x = MenuLabel Nothing x
 
-save :: MenuItem (MenuLabel Sort_) (EditorScene Sort_)
-save = Right $ Action (mkLabel "save") (const $ Left "NYI: saving")
-
 -- | quits the app
 quit :: MenuItem (MenuLabel Sort_) (EditorScene Sort_)
 quit = Right $ Action (mkLabel "quit")
-    (\ mainScene -> (Right $ FinalState mainScene []))
+    (\ mainScene -> (Right $ ExitEditorScene (levelPath mainScene) (editorObjects mainScene)))
 
 
 tileSelection :: EditorScene Sort_ -> MenuItem (MenuLabel Sort_) (EditorScene Sort_)

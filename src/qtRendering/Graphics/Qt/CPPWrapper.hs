@@ -66,6 +66,10 @@ data AppWidget
 
 foreign import ccall newAppWidget :: Int -> IO (Ptr AppWidget)
 
+foreign import ccall setRenderLooped :: Ptr AppWidget -> Bool -> IO ()
+
+foreign import ccall updateAppWidget :: Ptr AppWidget -> IO ()
+
 -- | sets the AppWidget fullscreen mode.
 -- In fullscreen mode the mouse cursor is hidden
 foreign import ccall setFullscreenAppWidget :: Ptr AppWidget -> Bool -> IO ()

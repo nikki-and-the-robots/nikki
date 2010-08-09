@@ -80,6 +80,9 @@ pollEvents kp@(KeyPoller chan) = do
         r <- pollEvents kp
         return (a : r)
 
+readNextEvent :: KeyPoller -> IO QtEvent
+readNextEvent (KeyPoller c) = readChan c
+
 
 
 -- * Colors
@@ -120,6 +123,12 @@ drawSqueezedPixmap ptr position boxSize@(Size width height) pixmap = do
     scale ptr scaling scaling
     drawPixmap ptr zero pixmap
 
+-- | clears the whole screen
+clearScreen :: Ptr QPainter -> IO ()
+clearScreen ptr = do
+    resetMatrix ptr
+    windowSize <- sizeQPainter ptr
+    eraseRect ptr zero windowSize (QtColor 0 0 0 255)
 
 
 

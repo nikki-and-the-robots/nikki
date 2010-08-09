@@ -74,9 +74,9 @@ Executable            nikki
     ghc-options:
         -O2
 
---        -threaded
---        -eventlog
---        -prof -auto-all
+        -threaded
+--         -eventlog
+--         -prof -auto-all
 
         -Werror
         -fwarn-missing-fields

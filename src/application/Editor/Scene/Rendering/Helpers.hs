@@ -14,16 +14,6 @@ import Base.Types
 
 import Object
 
--- import Editor.Scene.Types
-
-
--- | clears the whole screen
-clearScreen :: Ptr QPainter -> IO ()
-clearScreen ptr = do
-    resetMatrix ptr
-    windowSize <- sizeQPainter ptr
-    eraseRect ptr zero windowSize (QtColor 0 0 0 255)
-
 
 -- draw a box at the given position with the given size
 drawBox :: Ptr QPainter -> Position Double -> Size Double -> Double -> IO ()

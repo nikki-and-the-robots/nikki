@@ -7,10 +7,15 @@ module Base.FPSState (
     initialFPSState,
     tickFPS,
     terminateFpsState,
+    initialFPSRef,
+    tickFPSRef,
+    terminateFPSRef,
   ) where
 
 
 import Prelude hiding ((.))
+
+import Data.IORef
 
 import Control.Category
 
@@ -37,15 +42,13 @@ data FpsState
   deriving Show
 
 
-
-
 logFile = "fps.dat"
 
 -- creates the initial FpsState
 initialFPSState :: IO FpsState
 initialFPSState =
     if profiling Configuration.development then do
-        logHandle <- openFile logFile WriteMode
+--         logHandle <- openFile logFile WriteMode
 --         return $ FpsState 0 Nothing Nothing logHandle
         return $ FpsState 0 Nothing Nothing Nothing
       else
@@ -104,6 +107,18 @@ calculateDistribution list =
     map (\ n -> (n, length (filter (== n) list))) [minimum list .. maximum list]
 
 
+-- * FPSRef
 
+newtype FPSRef = FPSRef (IORef FpsState)
 
+initialFPSRef :: IO FPSRef
+initialFPSRef =
+    initialFPSState >>= newIORef >>= return . FPSRef
 
+tickFPSRef :: FPSRef -> IO ()
+tickFPSRef (FPSRef ref) =
+    readIORef ref >>= tickFPS >>= writeIORef ref
+
+terminateFPSRef :: FPSRef -> IO ()
+terminateFPSRef (FPSRef ref)  =
+    readIORef ref >>= terminateFpsState

@@ -7,6 +7,8 @@ import Control.Exception as E
 
 import System.Exit
 
+import Graphics.Qt
+
 
 globalCatcher :: IO () -> IO ()
 globalCatcher cmd = flip E.catch handler cmd
@@ -14,12 +16,8 @@ globalCatcher cmd = flip E.catch handler cmd
     handler :: SomeException -> IO ()
     handler (show -> "ExitSuccess") = return ()
     handler e = do
-        globalCatcher $ mapM_ putStrLn (text e)
+        putStrLn ("error message:\n\n" ++ show e ++ "\n")
+        quitQApplication
         exitWith (ExitFailure 42)
-    text e = [
-            "error message:",
-            "",
-            show e
-          ]
 
 

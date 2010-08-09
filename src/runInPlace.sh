@@ -28,5 +28,5 @@ fi
 cd ../..
 export nikki_datadir=$(pwd)
 cd src
-application/dist/build/nikki/nikki $1
+application/dist/build/nikki/nikki
 

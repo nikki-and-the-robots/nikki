@@ -17,6 +17,8 @@ public:
 
     AppWidget(const QGLFormat& format);
 
+    QTimer* repaintTimer;
+
     drawingCallbackFunction* drawingCallback;
 
     keyCallbackFunction* keyCallback;

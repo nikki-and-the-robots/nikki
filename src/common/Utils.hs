@@ -15,9 +15,12 @@ import Data.Map (Map, fromList, member, (!), findWithDefault)
 import qualified Data.Foldable
 import qualified Data.Traversable
 
+import Text.Printf
+
 import Control.Applicative ((<$>))
 import Control.Monad.State hiding ((>=>))
 import Control.Arrow ((>>>))
+import Control.Concurrent
 
 import System
 import System.Directory
@@ -363,27 +366,38 @@ xor :: Bool -> Bool -> Bool
 xor True True = False
 xor a b = a || b
 
+-- | reads all currently available messages from the channel.
+pollChannel :: Chan a -> IO [a]
+pollChannel chan = do
+    empty <- isEmptyChan chan
+    if empty then
+        return []
+      else do
+        a <- readChan chan
+        r <- pollChannel chan
+        return (a : r)
+
+
 
 -- * Pretty Printing
 
 class PP a where
     pp :: a -> String
 
-formatInt :: Int -> Int -> String
-formatInt = e "formatInt"
+instance (PP a, PP b) => PP (a, b) where
+    pp (a, b) = "(" ++ pp a ++ ", " ++ pp b ++ ")"
 
-formatDouble :: (Int, Int) -> Double -> String
-formatDouble (preDigits, postDigits) x =
-    preFilled ++ "." ++ postFilled ++ " - " ++ show x
-  where
-    preFilled = if length pre > preDigits then pre else
-        reverse $ take preDigits $ (++ repeat ' ') $ reverse pre
-    postFilled = take postDigits post
-    pre = if x >= 0 then absPre else '-' : absPre
-    absPre = show (truncate (abs x))
-    post = postInner $ foldToRange (0, 1) (abs x)
-    postInner rest = show (truncate (rest * 10)) ++ postInner (foldToRange (0, 1) (rest * 10))
+instance (PP a, PP b, PP c) => PP (a, b, c) where
+    pp (a, b, c) = "(" ++ pp a ++ ", " ++ pp b ++ ", " ++ pp c ++ ")"
 
+instance (PP a, PP b, PP c, PP d) => PP (a, b, c, d) where
+    pp (a, b, c, d) = "(" ++ pp a ++ ", " ++ pp b ++ ", " ++ pp c ++ ", " ++ pp d ++ ")"
+
+instance PP Double where
+    pp = printf "%8.3f"
+
+instance PP Int where
+    pp = show
 
 -- * File stuff
 

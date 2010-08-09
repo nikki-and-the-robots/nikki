@@ -45,8 +45,8 @@ sortLoaders = [
   ]
 
 
-initSceneFromEditor :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
-initSceneFromEditor space =
+initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
+initScene space =
     fromPure groundsOptimizeChipmunks >>>>
     initializeObjects space >>>>
     mkScene space
@@ -72,7 +72,7 @@ mkScene space objects = do
     contactRef <- initContactRef space initial watchedContacts
 --     error $ show $ I.toList $ mainLayerIndexable objects
 --     let allTriggerShapes = Set.fromList $ filter (isSwitch . sort_) $ I.toList mainLayerIndexable objects
-    return $ Scene 0 0 objects initial contactRef initial (NikkiMode nikki)
+    return $ Scene 0 objects initial contactRef initial (NikkiMode nikki)
 
 groundsOptimizeChipmunks :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsOptimizeChipmunks =

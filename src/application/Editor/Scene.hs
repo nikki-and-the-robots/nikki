@@ -11,9 +11,9 @@ module Editor.Scene (
     EditorScene(..),
     getLevelPath,
     ControlData(..),
-    initScene,
-    updateScene,
-    renderScene,
+    initEditorScene,
+    updateEditorScene,
+    renderEditorScene,
   ) where
 
 import Data.Maybe
@@ -62,11 +62,8 @@ updateSelected x = x
 -- * constructors
 
 -- | the initial editor scene
-initScene :: [IO [Sort_]] -> Maybe (String, Grounds PickleObject) -> IO (EditorScene Sort_)
-initScene sortLoaders mObjects = flip evalStateT empty $ do
-
-    sorts <- liftIO $ getAllSorts sortLoaders
-
+initEditorScene :: SelectTree Sort_ -> Maybe (String, Grounds PickleObject) -> IO (EditorScene Sort_)
+initEditorScene sorts mObjects = flip evalStateT empty $ do
     let (path, objects :: Grounds (EditorObject Sort_)) = case mObjects of
                 Nothing -> (Nothing, emptyGrounds)
                 Just (p, os) ->
@@ -85,17 +82,11 @@ initScene sortLoaders mObjects = flip evalStateT empty $ do
         debugMsgs = []
       }
 
-getAllSorts :: [IO [Sort_]] -> IO (SelectTree Sort_)
-getAllSorts sortLoaders = do
-    sorts <- concat <$> mapM id sortLoaders
-    return $ Node "editor-Tiles" (I.fromList $ map Leaf sorts) 0
-
-
 
 -- * manipulating
 
-updateScene :: ControlData -> EditorScene Sort_ -> EditorScene Sort_
-updateScene (ControlData events held) scene =
+updateEditorScene :: ControlData -> EditorScene Sort_ -> EditorScene Sort_
+updateEditorScene (ControlData events held) scene =
     updateSelected $ chainApp keyPress pressed scene
   where
     pressed = mapMaybe unwrapPress events
@@ -207,29 +198,7 @@ keyPress Escape s@MenuScene{menu} =
 keyPress k s@EditorScene{} | k `member` cursorStepShortCuts =
     s{cursorStep = (cursorStepShortCuts ! k)}
 
-
--- * Debugging
-
-keyPress D scene = inner scene
-  where
-    inner = id
---         addDebugMsg (pp $ fmap (getName . loadedSpritedName) $ availables scene)
-{-        addDebugMsg (unwords $ map (getName . loadedSpritedName . eObjectSprited) $
-                I.toList $ mainLayerIndexable $ objects scene)
-        >>> addDebugMsg (show $ map associatedRobots $ filter isETerminal $
-            I.toList $ mainLayerIndexable $ objects scene)
-        >>> addDebugMsg (show $
-            getName <$> loadedSpritedName <$> eObjectSprited <$> getSelectedObject scene)-}
---         addDebugMsg "c" (cursor s) >>>
---         addDebugMsg "os" (map eObjectPosition $ filter hasPosition $ I.toList $ objects s) >>>
---         addDebugMsg "sel" (getSelectedObject s)
---        chainApp (addDebugMsg "obj") (fmap (show) (objects s))
---        addDebugMsg "pos" (cursor s) .>>
---        addDebugMsg "getsel" (getSelectedObject s) .>>
---        addDebugMsg "sel" (selected s)
-
 keyPress _ s = s
--- keyPress x s = es "keyPress" (x, getSelectedObject s)
 
 
 -- | contains the shortcuts to change the vector the cursor is moved by the arrow keys.

@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns, DeriveDataTypeable, ScopedTypeVariables, ViewPatterns #-}
 
-module Editor.Scene.Rendering (renderScene, renderObjectScene, transformation) where
+module Editor.Scene.Rendering (renderEditorScene, renderObjectScene, transformation) where
 
 import Utils
 
@@ -21,20 +21,18 @@ import Editor.Scene.Menu as Menu
 import Editor.Scene.Rendering.Helpers
 
 -- | renders the whole editor scene (with gui)
-renderScene :: Ptr QPainter -> EditorScene Sort_ -> IO ()
-renderScene ptr (FinalState _ _) =
-    quitQApplication
-renderScene ptr scene@EditorScene{objectEditModeIndex = Just i} =
+renderEditorScene :: Ptr QPainter -> EditorScene Sort_ -> IO ()
+renderEditorScene ptr scene@EditorScene{objectEditModeIndex = Just i} =
     renderOEM ptr scene oemState
   where
     Just oemState = editorOEMState $ getMainObject scene i
-renderScene ptr s@EditorScene{} = do
+renderEditorScene ptr s@EditorScene{} = do
     offset <- calculateRenderTransformation ptr s
     renderObjectScene ptr offset s
     renderGUI ptr offset s
 
-renderScene ptr s@MenuScene{mainScene, menu} = do
-    renderScene ptr mainScene
+renderEditorScene ptr s@MenuScene{mainScene, menu} = do
+    renderEditorScene ptr mainScene
     Menu.render ptr menu
 
 renderObjectScene :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()

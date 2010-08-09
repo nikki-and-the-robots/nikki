@@ -117,7 +117,7 @@ initSpace gravity = do
     setIterations space 10 -- default: 10
 
     -- Number of iterations to use in the impulse solver to solve elastic collisions.
-    setElasticIterations space 10 -- default: 0
+    setElasticIterations space 10 -- default: 0 , better: 10
 
     -- Default gravity to supply when integrating rigid body motions.
     setGravity space (Vector 0 gravity)

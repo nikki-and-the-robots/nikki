@@ -27,8 +27,7 @@ import Base.Grounds
 
 data Scene object
     = Scene {
-        now :: Seconds,
-        oldNow :: Seconds,
+        spaceTime :: Seconds,
         objects :: Grounds object,
         cameraState :: CameraState,
         contactRef :: !(ContactRef Contacts),
@@ -155,10 +154,9 @@ data EditorScene sort
 
         debugMsgs :: [String]
       }
-    | FinalState {
-        mainScene :: EditorScene sort,
-
-        debugMsgs :: [String]
+    | ExitEditorScene {
+        levelPath :: Maybe FilePath,
+        editorObjects :: Grounds (EditorObject sort)
       }
   deriving (Show, Typeable)
 
@@ -169,7 +167,6 @@ instance Show (EditorScene sort -> EditorPosition) where
 getLevelPath :: EditorScene sort -> Maybe FilePath
 getLevelPath EditorScene{levelPath} = levelPath
 getLevelPath MenuScene{mainScene} = levelPath mainScene
-getLevelPath FinalState{mainScene} = levelPath mainScene
 
 getCursorStep :: EditorScene sort -> EditorPosition
 getCursorStep s = cursorStep s s

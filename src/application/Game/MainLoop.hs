@@ -1,10 +1,12 @@
+{-# language ScopedTypeVariables #-}
 
 -- | The (real) main (that is, entry-) module for the game
 
 module Game.MainLoop (
-    renderCallback,
-    GameAppState,
+    logicLoop,
+    GameState(..),
     initialStateRef,
+    initialState
   ) where
 
 
@@ -12,6 +14,9 @@ import Data.Set as Set (Set, empty, insert, delete, toList)
 import Data.IORef
 
 import Control.Monad.State hiding ((>=>))
+import Control.Concurrent
+
+import System.Random
 
 import GHC.Conc
 
@@ -30,6 +35,8 @@ import Object
 
 import Game.Scene
 
+import Top.Application
+
 
 -- prints the version number of qt and exits
 debugQtVersion :: IO ()
@@ -45,73 +52,86 @@ debugNumberOfHecs =
 
 
 -- * running the state monad inside the render IO command
-renderCallback :: IORef GameAppState -> [QtEvent] -> Ptr QPainter -> IO ()
-renderCallback stateRef qtEvents painter = do
-    let allEvents = toEitherList qtEvents []
-
-    state <- readIORef stateRef
-    ((), state') <- runStateT (renderWithState allEvents painter) state
-    writeIORef stateRef state'
+-- renderCallback :: Application -> IORef GameAppState -> [QtEvent] -> Ptr QPainter -> IO ()
+-- renderCallback app stateRef qtEvents painter = do
+--     let allEvents = toEitherList qtEvents []
+-- 
+--     state <- readIORef stateRef
+--     ((), state') <- runStateT (renderWithState app painter) state
+--     writeIORef stateRef state'
 
 -- Application Monad and State
 
-type AppMonad o = StateT GameAppState IO o
+type AppMonad o = StateT GameState IO o
 
-data GameAppState = GameAppState {
-    qApplication :: Ptr QApplication,
-    qWidget :: Ptr AppWidget,
+data GameState = GameState {
     keyState :: Set AppButton,
-    fpsState :: FpsState,
     cmSpace :: CM.Space,
     scene :: Scene Object_,
     timer :: Ptr QTime
   }
 
-setKeyState :: GameAppState -> Set AppButton -> GameAppState
-setKeyState (GameAppState a b _ d e f g) c = GameAppState a b c d e f g
-setFpsState :: GameAppState -> FpsState -> GameAppState
-setFpsState (GameAppState a b c _ e f g) d = GameAppState a b c d e f g
-setScene :: GameAppState -> Scene Object_ -> GameAppState
-setScene    (GameAppState a b c d e _ g) f = GameAppState a b c d e f g
-
+setKeyState :: GameState -> Set AppButton -> GameState
+setKeyState s x = s{keyState = x}
+setScene :: GameState -> Scene Object_ -> GameState
+setScene s x = s{scene = x}
 
 initialStateRef :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO (Scene Object_))
-    -> IO (IORef GameAppState)
+    -> IO (IORef GameState)
 initialStateRef app widget scene = initialState app widget scene >>= newIORef
 
-initialState :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO (Scene Object_)) -> IO GameAppState
+initialState :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO (Scene Object_)) -> IO GameState
 initialState app widget startScene = do
-    fps <- initialFPSState
     cmSpace <- initSpace gravity
     scene <- startScene cmSpace
     qtime <- newQTime
     startQTime qtime
-    return $ GameAppState app widget Set.empty fps cmSpace scene qtime
+    return $ GameState Set.empty cmSpace scene qtime
 
 
 
 -- State monad command for rendering (for drawing callback)
-renderWithState :: [Either QtEvent JJ_Event] -> Ptr QPainter -> AppMonad ()
-renderWithState events painter = do
+-- logicLoop :: Application -> MVar (Scene Object_) -> Seconds -> AppMonad AppState
+logicLoop app sceneMVar = do
+    timer_ <- gets timer
+    startTime <- liftIO $ elapsed timer_
     -- input events
+    qtEvents <- liftIO $ pollEvents $ keyPoller app
+    let events = toEitherList qtEvents []
     oldKeyState <- gets keyState
     let appEvents = concatMap (toAppEvent oldKeyState) events
     heldKeys <- actualizeKeyState appEvents
 
     -- stepping of the scene (includes rendering)
-    now <- getSecs
     space <- gets cmSpace
     sc <- gets scene
-    sc' <- liftIO $
-        stepScene now space (ControlData appEvents heldKeys) painter sc
+    sc' <- liftIO $ stepScene space (ControlData appEvents heldKeys) sc
 
-    -- FPS counter
-    actualizeFPS
+    liftIO $ swapMVar sceneMVar $ unmutableCopy sc'
 
     puts setScene sc'
     case mode sc' of
-        LevelFinished x -> liftIO (print x) >> sendQuit
-        _ -> return ()
+        LevelFinished x -> return FinalState
+        _ -> do
+            waitPhysics startTime
+            logicLoop app sceneMVar
+
+-- | Waits till the real world catches up with the simulation.
+-- Since 'threadDelay' seems to be far to inaccurate, we have a busy wait :(
+-- TODO
+waitPhysics :: Int -> AppMonad ()
+waitPhysics startTime = do
+    timer_ <- gets timer
+    let loop = do
+            now <- elapsed $ timer_
+            when (now - startTime < round (stepQuantum * 1000))
+                loop
+    liftIO $ loop
+
+-- Well, this isn't really an unmutable copy. Maybe we can get away without.
+unmutableCopy :: Scene Object_ -> Scene Object_
+unmutableCopy = id
+
 
 -- | returns the time passed since program start
 getSecs :: AppMonad Double
@@ -120,9 +140,6 @@ getSecs = do
     time <- liftIO $ elapsed qtime
     return (fromIntegral time / 10 ^ 3)
 
-
-actualizeFPS :: StateT GameAppState IO ()
-actualizeFPS = modifiesT fpsState setFpsState tickFPS
 
 actualizeKeyState :: [AppEvent] -> AppMonad [AppButton]
 actualizeKeyState events = do
@@ -134,13 +151,6 @@ actualizeKeyState events = do
     inner (Release k) ll = delete k ll
 
 
-sendQuit :: AppMonad ()
-sendQuit = do
-    widget <- gets qWidget
-    app <- gets qApplication
-    liftIO $ do
-        setDrawingCallbackAppWidget widget Nothing
-        quitQApplication
 
 
 

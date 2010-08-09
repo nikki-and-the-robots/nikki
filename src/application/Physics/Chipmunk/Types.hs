@@ -31,10 +31,6 @@ instance Abelian Vector where
 instance PP Vector where
     pp (Vector a b) = "(Vector " ++ pp a ++ " " ++ pp b ++ ")"
 
-instance PP Double where
-    pp n | n < 0 = take 5 $ show n
-    pp n = " " ++ take 4 (show n)
-
 
 -- * Types
 

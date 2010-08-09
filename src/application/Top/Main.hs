@@ -1,148 +1,166 @@
-{-# language NamedFieldPuns #-}
+{-# language NamedFieldPuns, ScopedTypeVariables #-}
 
+-- | The game is made up of different 'AppState's (see Top.Application), but basically
+-- these are just IO-operations. They represent the top level menu, the loading stages and
+-- playing or editing a level.
+-- This module also contains setting up the Qt stuff
+-- (application, window, event polling).
+--
+-- There are two threads:
+-- 1. The logic thread. This will do the physics simulation as well as game logic
+-- 2. The rendering thread (which is also the bound main thread). 
+--    This will just render to the widget.
+--    Most of the states will use 'setDrawingCallbackAppWidget' to set the rendering function.
+--    This is the way, to let the rendering thread do stuff.
+--
+-- Forking takes place once in 'Top.main' forking the logic thread.
 
 module Top.Main where
 
-import Data.IORef
-import Data.Set (Set, empty, insert, delete, toList)
 
-import Control.Monad.State hiding ((>=>))
+import Data.SelectTree
+import Data.Indexable as I
 
+import Control.Concurrent
+import Control.Monad
+
+import System.FilePath
 import System.IO
 import System.Exit
+import System.Directory
+
+import GHC.Conc
+
+import Physics.Chipmunk
 
 import Graphics.Qt
 
-
 import Utils
 
-import Base.Grounds
 import Base.GlobalCatcher
-import qualified Base.Configuration as Conf
-import Base.Constants
+import Base.Types hiding (menu)
 
 import Object
 
-import Game.MainLoop as Game
+import Game.MainLoop
 
-import Editor.Scene
+import Editor.Scene (initEditorScene)
 
 import Top.Pickle
 import Top.Initialisation
+import Top.Editor (editLevel)
+import Top.Game (playLevel)
+import Top.Application
 
 
-type MM o = StateT AppState IO o
+-- prints the number of HECs (see haskell concurrency)
+debugNumberOfHecs :: IO ()
+debugNumberOfHecs =
+    putStrLn ("Number of HECs: " ++ show numCapabilities)
 
-data AppState = AppState {
-    qApplication :: Ptr QApplication,
-    qWidget :: Ptr AppWidget,
-    keyState :: Set Key,
-    scene :: EditorScene Sort_,
-    levelTesting :: Maybe (IORef GameAppState)
-  }
-
-
-setKeyState :: AppState -> Set Key -> AppState
-setKeyState (AppState a b _ d e) c = AppState a b c d e
-setScene :: AppState -> EditorScene Sort_ -> AppState
-setScene    (AppState a b c _ e) d = AppState a b c d e
-setLevelTesting :: AppState -> Maybe (IORef GameAppState) -> AppState
-setLevelTesting  (AppState a b c d _) e = AppState a b c d e
-
--- initialStateRef :: Ptr QApplication -> Ptr AppWidget -> Maybe (String, Grounds UnloadedEditorObject) -> IO (IORef AppState)
-initialStateRef app widget mObjects = initialState app widget mObjects >>= newIORef
-
-initialState :: Ptr QApplication -> Ptr AppWidget
-    -> Maybe (String, Grounds PickleObject)
-    -> IO AppState
-initialState app widget mObjects = do
-    is <- initScene sortLoaders mObjects
-    return $ AppState app widget empty is Nothing
-
-main :: IO ()
 main = globalCatcher $ do
+
+    debugNumberOfHecs
 
     hSetBuffering stdout NoBuffering
     putStrLn "\neditor started..."
 
     -- qt initialisation
-    app <- newQApplication
+    qApp <- newQApplication
     window <- newAppWidget 0
+    keyPoller <- newKeyPoller window
 
-    -- level loading
-    mObjects <- load Nothing
+    -- sort loading (pixmaps and sounds)
+    sorts <- getAllSorts sortLoaders
 
-    -- render loop
-    isr <- Top.Main.initialStateRef app window mObjects
-    ec <- qtRendering app window windowTitle (Conf.windowSize Conf.development) (Top.Main.renderCallback isr) globalCatcher
-    hideAppWidget window
+    -- start state logick
+    let app = Application qApp window keyPoller sorts
+    -- there are two main threads:
+    -- this is the logick [sick!] thread
+    forkIO $ globalCatcher $ do
+        executeStates (applicationStates app)
+        quitQApplication
 
-    -- saving
-    s <- scene <$> readIORef isr
-    case s of
-        EditorScene{} -> save s
-        FinalState{mainScene} -> save mainScene
-        x -> es "main" x
+    -- start app
+    showAppWidget window
+    -- this is the rendering thread
+    code <- execQApplication qApp
 
-    -- quitting
-    exitWith ec
-
-
-
-renderCallback :: IORef AppState -> [QtEvent] -> Ptr QPainter -> IO ()
-renderCallback stateRef qtEvents painter = do
-    state <- readIORef stateRef
-    ((), state') <- runStateT (renderWithState qtEvents painter) state
-    writeIORef stateRef state'
+    case code of
+        0 -> exitWith ExitSuccess
 
 
-actualizeKeyState :: [QtEvent] -> MM [Key]
-actualizeKeyState events = do
-    modifies keyState setKeyState (chainApp inner events)
-    fmap toList $ gets keyState
+getAllSorts :: [IO [Sort_]] -> IO (SelectTree Sort_)
+getAllSorts sortLoaders = do
+    sorts <- concat <$> mapM id sortLoaders
+    return $ Node "editor-Tiles" (I.fromList $ map Leaf sorts) 0
+
+
+
+-- * states
+
+-- | top level application state (main menu)
+applicationStates :: Application -> AppState
+applicationStates app =
+    menu app Nothing Nothing [
+        ("play", selectLevelPlay app this),
+        ("edit", selectLevelEdit app this),
+        ("quit", quit app this)
+      ]
   where
-    inner :: QtEvent -> Set Key -> Set Key
-    inner (KeyPress k) ll = insert k ll
-    inner (KeyRelease k) ll = delete k ll
+    this = applicationStates app
 
-renderWithState :: [QtEvent] -> Ptr QPainter -> MM ()
-renderWithState events painter = do
+-- | asks, if the user really wants to quit
+quit :: Application -> AppState -> AppState
+quit app parent =
+    menu app (Just "quit?") (Just parent) [
+        ("no", applicationStates app),
+        ("yes", FinalState)
+      ]
 
-    -- switch to testing mode
-    when (KeyPress T `elem` events) $ do
-        lt <- gets levelTesting
-        case lt of
-            Nothing -> do
-                app <- gets qApplication
-                widget <- gets qWidget
-                s <- gets scene
-                case s of
-                    EditorScene{} -> do
-                        ref <- liftIO $ Game.initialStateRef app widget
-                            (flip initSceneFromEditor $ editorObjects s)
-                        puts setLevelTesting (Just ref)
-                    _ -> return ()
-            Just _ -> puts setLevelTesting Nothing
+-- | select a saved level.
+selectLevelPlay :: Application -> AppState -> AppState
+selectLevelPlay app parent = AppState $ do
+    levelFiles <- filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
+    if null levelFiles then
+        return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
+      else do
+        let follower = Top.Main.playLevel app parent
+        return $ menu app (Just "pick a level to play") (Just parent) $
+            map (\ p -> (p, loadingEditorScene app p follower)) levelFiles
+
+-- | load a level, got to playing state afterwards
+-- This AppState involves is a hack to do things from the logic thread 
+-- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
+loadingEditorScene :: Application -> FilePath -> (EditorScene Sort_ -> AppState) -> AppState
+loadingEditorScene app file follower = AppState $ do
+    cmdChannel <- newChan
+    setDrawingCallbackAppWidget (window app) (Just $ showProgress cmdChannel)
+    grounds <- loadByFilePath file
+    editorScene <- initEditorScene (sorts app) (Just (file, grounds))
+    return $ follower editorScene
+  where
+    showProgress cmdChannel ptr = globalCatcher $ do
+        cmds <- pollChannel cmdChannel
+        mapM_ id cmds
+        resetMatrix ptr
+        clearScreen ptr
+        drawText ptr (Position 100 100) False "loading..."
+
+playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
+playLevel app parent editorScene = AppState $ do
+    let scene :: (Space -> IO (Scene Object_)) = flip initScene (editorObjects editorScene)
+    state <- initialState (application app) (window app) scene
+    return $ Top.Game.playLevel app state parent
 
 
-    t <- gets levelTesting
-    case t of
-        Nothing -> do
-            -- normal editing
-            heldKeys <- actualizeKeyState events
-            modifies scene setScene (updateScene (ControlData events heldKeys))
-            debugScene
-            sc <- gets scene
-            liftIO $ renderScene painter sc
-            return ()
-        Just stateRef -> do
-            -- level testing using natr
-            liftIO $ Game.renderCallback stateRef events painter
+selectLevelEdit :: Application -> AppState -> AppState
+selectLevelEdit app parent = AppState $ do
+    levelFiles <- filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
+    return $ menu app (Just "pick a level to edit") (Just parent) $
+        ("new level", pickNewLevel) :
+        map (\ p -> (p, loadingEditorScene app p (editLevel app parent))) levelFiles
 
-debugScene :: MM ()
-debugScene = do
-    s <- get
-    liftIO $ mapM_ printDebug (reverse $ debugMsgs $ scene s)
-    put s{scene = (scene s){debugMsgs = []}}
-
+pickNewLevel :: AppState
+pickNewLevel = error "pickNewLevel"
 

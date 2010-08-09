@@ -18,9 +18,8 @@ AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
     this->setAutoFillBackground(false);
     this->setCursor(Qt::BlankCursor);
 
-    QTimer* timer = new QTimer(this);
-    QObject::connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    timer->start();
+    this->repaintTimer = new QTimer(this);
+    QObject::connect(this->repaintTimer, SIGNAL(timeout()), this, SLOT(update()));
 };
 
 void AppWidget::paintEvent(QPaintEvent* event) {
@@ -74,7 +73,6 @@ extern "C" QApplication* newQApplication(char* progName) {
 };
 
 extern "C" int execQApplication(QApplication* ptr) {
-//     qDebug() << "libraryPaths: " << ptr->libraryPaths();
     return ptr->exec();
 }
 
@@ -114,6 +112,19 @@ extern "C" AppWidget* newAppWidget(int swapInterval) {
     return new AppWidget(format);
 };
 
+extern "C" void setRenderLooped(AppWidget* self, bool looped) {
+    if (looped) {
+        self->repaintTimer->start();
+    } else {
+        self->repaintTimer->stop();
+    }
+};
+
+extern "C" void updateAppWidget(AppWidget* self) {
+    self->update();
+};
+
+
 // sets the window to fullscreen mode.
 // In fullscreen mode the mouse cursor is hidden
 extern "C" void setFullscreenAppWidget(AppWidget* ptr, bool fullscreen) {
@@ -151,6 +162,8 @@ extern "C" int paintEngineTypeAppWidget(AppWidget* widget) {
 
 extern "C" void setDrawingCallbackAppWidget(AppWidget* ptr, drawingCallbackFunction cb) {
     ptr->drawingCallback = cb;
+    // since we have a new drawing callback, we might want to use it ;)
+    ptr->update();
 };
 
 extern "C" void setKeyCallbackAppWidget(AppWidget* ptr, keyCallbackFunction cb) {
