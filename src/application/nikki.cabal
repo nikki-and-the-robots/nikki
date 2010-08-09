@@ -1,7 +1,14 @@
 Name:           nikki
 version:        0.2
-Author:         Florian Hofer, Sönke Hahn
 Category:       Game
+Author:         Florian Hofer, Sönke Hahn
+Maintainer:     shahn@joyridelabs.de
+
+Extra-source-files:
+    LICENSE
+    README
+    data/LICENSE
+    data/README
 
 Build-Type:     Simple
 Cabal-Version:  >= 1.6
@@ -10,59 +17,15 @@ data-dir:
     ../../
 
 data-files:
-    data/LICENSE
-    data/README
-    data/png/nikki/happy_left_00.png
-    data/png/nikki/walk_right_01.png
-    data/png/nikki/walk_left_01.png
-    data/png/nikki/walk_right_00.png
-    data/png/nikki/happy_right_00.png
-    data/png/nikki/jump_right_00.png
-    data/png/nikki/wait_left_02.png
-    data/png/nikki/walk_left_00.png
-    data/png/nikki/sad_left_00.png
-    data/png/nikki/jump_left_00.png
-    data/png/nikki/wait_right_02.png
-    data/png/nikki/walk_left_03.png
-    data/png/nikki/wait_right_00.png
-    data/png/nikki/jump_right_01.png
-    data/png/nikki/wait_left_00.png
-    data/png/nikki/walk_left_02.png
-    data/png/nikki/wait_left_01.png
-    data/png/nikki/walk_right_02.png
-    data/png/nikki/sad_right_00.png
-    data/png/nikki/walk_right_03.png
-    data/png/nikki/jump_left_01.png
-    data/png/nikki/terminal_00.png
-    data/png/nikki/wait_right_01.png
-    data/png/battery/standard.png
-    data/png/terminals/terminal-main_01.png
-    data/png/terminals/terminal-green.png
-    data/png/terminals/terminal-main_03.png
-    data/png/terminals/terminal-blue.png
-    data/png/terminals/terminal-red.png
-    data/png/terminals/terminal-yellow.png
-    data/png/terminals/terminal-main_02.png
-    data/png/terminals/terminal-main_00.png
-    data/png/multilayers/grid-white.png
-    data/png/backgrounds/trailer-01.png
-    data/png/objects/box-wood-large.png
-    data/png/objects/box-wood-small.png
-    data/png/objects/switch-platform.png
-    data/png/objects/switch-standard-off.png
-    data/png/objects/switch-standard-on.png
-    data/png/robots/jetpack/idle_03.png
-    data/png/robots/jetpack/idle_00.png
-    data/png/robots/jetpack/idle_02.png
-    data/png/robots/jetpack/idle_01.png
-    data/png/robots/jetpack/boost_01.png
-    data/png/robots/jetpack/wait_01.png
-    data/png/robots/jetpack/wait_00.png
-    data/png/robots/jetpack/boost_00.png
-    data/png/tiles/tile-standard-white.png
-    data/png/tiles/terminal-frame-editor.png
-    data/png/tiles/tile-standard-black.png
-    data/png/tiles/special-jump.png
+    data/png/nikki/*.png
+    data/png/battery/*.png
+    data/png/terminals/*.png
+    data/png/multilayers/*.png
+--    data/png/backgrounds/*.png
+    data/png/objects/*.png
+    data/png/robots/jetpack/*.png
+    data/png/tiles/*.png
+
     data/sounds/nikki/jump.wav
 
 
