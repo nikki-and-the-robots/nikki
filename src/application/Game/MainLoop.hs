@@ -111,7 +111,7 @@ logicLoop app sceneMVar = do
 
     puts setScene sc'
     case mode sc' of
-        LevelFinished x -> return FinalState
+        LevelFinished _ x -> return FinalState
         _ -> do
             waitPhysics startTime
             logicLoop app sceneMVar

@@ -70,11 +70,10 @@ instance Sort SwitchSort Switch where
     sortId _ = SortId "switch/levelExit"
     size _ = boxSize +~ Size 0 (fromUber 8)
 
-    sortRender sort ptr offset ep _ = do
-        sortRenderSinglePixmap (stampPix sort) sort ptr
-            offset ep Nothing
-        sortRenderSinglePixmap (boxOffPix sort) sort ptr
-            (offset +~ Position 0 (fromUber 8)) ep Nothing
+    sortRender sort ptr _ = do
+        renderPixmapSimple ptr (stampPix sort)
+        translate ptr (Position 0 (fromUber 8))
+        renderPixmapSimple ptr (boxOffPix sort)
 
     initialize sort (Just space) ep Nothing = do
         let ((boxShapes, boxBaryCenterOffset), triggerShapes, (stampShapes, stampBaryCenterOffset)) =

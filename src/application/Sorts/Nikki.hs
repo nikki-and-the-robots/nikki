@@ -191,8 +191,8 @@ instance Sort NSort Nikki where
 
     size sort = pixmapSize $ defaultPixmap $ pixmaps sort
 
-    sortRender sort =
-        sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
+    sortRender sort ptr _ =
+        renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
     initialize sort (Just space) editorPosition Nothing = do
         let (nikkiShapes, baryCenterOffset) = mkPolys $ size sort

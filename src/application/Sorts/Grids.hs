@@ -56,12 +56,18 @@ instance Sort GSort Grid where
     size s = pixmapSize $ gridPixmap s
 
     -- if rendered without scaling, the grid will be multiplied
-    sortRender sort ptr offset ep Nothing = do
-        let pos = editorPosition2QtPosition sort ep
-        renderGrid ptr offset sort pos
-    -- if rendered with scaling, the grid image is rendered once.
-    sortRender sort ptr offset ep (Just scaling) =
-        sortRenderSinglePixmap (gridPixmap sort) sort ptr offset ep (Just scaling)
+    sortRender sort ptr Iconified = 
+        renderPixmapSimple ptr (gridPixmap sort)
+    sortRender sort ptr (InScene offset) = do
+        -- render the grid
+        windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+        renderGrid ptr sort offset windowSize
+        -- render an indicator on the actual objects position
+        let tileSize@(Size w h) = size sort
+        setPenColor ptr 255 255 255 255 3
+        drawCircle ptr 
+            (fmap (/ 2) $ Position w h) 
+            ((min (width tileSize) (height tileSize)) * 0.4)
 
     initialize sort mSpace ep Nothing = do
         let pos = editorPosition2QtPosition sort ep
@@ -77,36 +83,34 @@ instance Sort GSort Grid where
         Size w h = gridSize grid
         Position qtX qtY = position grid
 
-    render o s ptr offset now =
-        renderGrid ptr offset s (position o)
+    render o s ptr offset now = do
+        resetMatrix ptr
+        let offsetPlusPosition = offset +~ position o
+        translate ptr offsetPlusPosition
+        windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+        renderGrid ptr s offsetPlusPosition windowSize
 
 
-renderGrid :: Ptr QPainter -> Offset Double -> GSort -> Position Double -> IO ()
-renderGrid ptr offset sort pos = do
+renderGrid :: Ptr QPainter -> GSort -> Position Double -> Size Double -> IO ()
+renderGrid ptr sort position windowSize = do
     let pix = gridPixmap sort
-
-    resetMatrix ptr
-
-    translate ptr (fmap fromIntegral (pixmapOffset pix))
-
-    windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-    let positions = calculateGridRenderPositions windowSize (size sort) (pos +~ offset)
+        positions = calculateGridRenderPositions windowSize (size sort) position
 
     forM_ positions $ \ p -> do
         translate ptr p
-        drawPixmap ptr zero (pixmap pix)
+        renderPixmapSimple ptr pix
         translate ptr (negateAbelian p)
 
 -- | calculates where to render the grid, so that every space of the screen is filled
 calculateGridRenderPositions :: Size Double -> Size Double
-    -> Position Double -- ^ actual render position (including offset)
+    -> Position Double -- ^ actual render position
     -> [Position Double]
 calculateGridRenderPositions windowSize tileSize position =
     map toRenderPosition intPositions
   where
     toRenderPosition :: (Int, Int) -> Position Double
-    toRenderPosition (x, y) = position +~ (Position (fromIntegral x * w) (fromIntegral y * h))
-    Size w h = tileSize
+    toRenderPosition (x, y) = 
+        Position (fromIntegral x * width tileSize) (fromIntegral y * height tileSize)
     intPositions :: [(Int, Int)]
     intPositions = cartesian [xmin .. xmax] [ymin .. ymax]
 
@@ -114,15 +118,4 @@ calculateGridRenderPositions windowSize tileSize position =
     xmax = floor ((width windowSize - positionX position) / width tileSize)
     ymin = floor ((0 - positionY position) / height tileSize)
     ymax = floor ((height windowSize - positionY position) / height tileSize)
-
-
-
-
-
-
-
-
-
-
-
 

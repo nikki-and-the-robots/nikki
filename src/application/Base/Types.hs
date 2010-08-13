@@ -48,6 +48,7 @@ getControlledIndex Scene{mode} =
         NikkiMode{nikki} -> nikki
         TerminalMode{terminal} -> terminal
         RobotMode{robot} -> robot
+        LevelFinished{lastControlled} -> lastControlled
 
 -- | returns an object from the mainLayer
 getMainlayerObject :: Scene o -> Index -> o
@@ -107,7 +108,10 @@ data Mode
         terminal :: Index,
         robot :: Index
       }
-    | LevelFinished LevelResult
+    | LevelFinished {
+        lastControlled :: Index,
+        levelResult :: LevelResult
+      }
   deriving Show
 
 -- | returns, if Nikki is controlled currently

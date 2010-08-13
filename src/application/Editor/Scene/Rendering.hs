@@ -93,12 +93,11 @@ transformation ptr (EditorPosition x y) (Size cw ch) = do
     return $ fmap (fromIntegral . truncate)
         (viewMiddle +~ negateAbelian pos +~ halfCursor)
 
--- draws the icon of the selected object (lower left corner of the screen)
+-- draws the icon of the selected sort (lower left corner of the screen)
 renderSelectedIcon :: Ptr QPainter -> Sort_ -> IO ()
-renderSelectedIcon ptr co = do
+renderSelectedIcon ptr sort = do
     screenSize <- fmap fromIntegral <$> sizeQPainter ptr
---     drawSqueezedPixmap ptr (Position 0 y) (Size 64 64) (defaultPixmap co)
-    sortRender co ptr zero
+    sortRenderTransformed sort ptr zero
         (EditorPosition 0 (height screenSize)) (Just $ Size 64 64)
 
 -- | renders the selected object (if any) in the right lower corner
@@ -110,8 +109,7 @@ renderSelectedObject ptr sort = do
         Size screenWidth screenHeight = screenSize
         boxSize@(Size boxWidth _) = Size 64 64
 
---     drawSqueezedPixmap ptr position boxSize (defaultPixmap sprited)
-    sortRender sort ptr zero position (Just boxSize)
+    sortRenderTransformed sort ptr zero position (Just boxSize)
 
 -- | renders the currently selected Layer in the right lower corner
 renderLayerOSD :: Ptr QPainter -> GroundsIndex -> IO ()

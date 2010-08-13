@@ -17,6 +17,7 @@ import Physics.Chipmunk as CM
 import Graphics.Qt
 
 import Paths
+import Utils
 
 import Base.Constants
 import Base.Pixmap
@@ -67,8 +68,8 @@ instance Sort BSort Battery where
 
     size (BSort p) = pixmapSize p
 
-    sortRender sort =
-        sortRenderSinglePixmap (batteryPixmap sort) sort
+    sortRender sort ptr _ =
+        renderPixmapSimple ptr (batteryPixmap sort)
 
     -- sort -> Maybe  Space  -> EditorPosition  -> Maybe  String  -> IO  object
     initialize sort (Just space) ep Nothing = do

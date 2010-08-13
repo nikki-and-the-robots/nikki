@@ -123,7 +123,7 @@ robotToTerminal _ _ = Nothing
 
 gameOver :: Scene Object_ -> Maybe (Scene Object_)
 gameOver scene | nikkiTouchesLaser $ contacts scene =
-    Just $ modifyMode (const $ LevelFinished Failed) scene
+    Just $ modifyMode (const $ LevelFinished (getControlledIndex scene) Failed) scene
 gameOver _ = Nothing
 
 levelPassed :: Scene Object_ -> Maybe (Scene Object_)
@@ -131,7 +131,7 @@ levelPassed scene =
     let allSwitches :: [Switch] = catMaybes $ map unwrapSwitch $ toList $ content $ mainLayer $ objects scene
         allTriggered = all triggered allSwitches
     in if allTriggered then
-        Just $ modifyMode (const $ LevelFinished Passed) scene
+        Just $ modifyMode (const $ LevelFinished (getControlledIndex scene) Passed) scene
       else
         Nothing
 levelPassed _ = Nothing

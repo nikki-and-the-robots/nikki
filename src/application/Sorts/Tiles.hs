@@ -95,8 +95,8 @@ instance Sort TSort Tile where
 
     size (TSort _ pix) = pixmapSize pix
 
-    sortRender sort@TSort{tilePixmap} =
-        sortRenderSinglePixmap tilePixmap sort
+    sortRender sort ptr _ =
+        renderPixmapSimple ptr (tilePixmap sort)
 
     initialize sort@TSort{} Nothing editorPosition Nothing = do
         let -- baryCenterOffset = fmap (/ 2) $ size sort
@@ -114,7 +114,7 @@ instance Sort TSort Tile where
 
     render t@Tile{} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPosition $ tchipmunk t
-        renderPixmap ptr offset position (Just rad) tilePixmap
+        renderPixmap ptr offset position (Just rad) Nothing tilePixmap
 
     render (Merged chip tiles) _ ptr worldOffset seconds = do
         Qt.resetMatrix ptr

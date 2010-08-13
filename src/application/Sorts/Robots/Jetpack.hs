@@ -86,8 +86,8 @@ data Jetpack = Jetpack {
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
     size = pixmapSize . defaultPixmap . pixmaps
-    sortRender sort =
-        sortRenderSinglePixmap (defaultPixmap $ pixmaps sort) sort
+    sortRender sort ptr _ =
+        renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
     initialize sort (Just space) ep Nothing = do
         let 

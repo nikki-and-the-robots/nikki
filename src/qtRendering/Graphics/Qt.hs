@@ -111,18 +111,6 @@ doubleToByteInt d | d >= 0 && d <= 1 =
 
 -- * convenience drawing
 
--- | draws a scaled pixmap centered in a given box
-drawSqueezedPixmap :: Ptr QPainter -> Position QtReal -> Size QtReal -> Ptr QPixmap -> IO ()
-drawSqueezedPixmap ptr position boxSize@(Size width height) pixmap = do
-    pixmapSize@(Size pWidth pHeight) <- fmap fromIntegral <$> sizeQPixmap pixmap
-    let (scaling, offset) = squeezeScaling boxSize pixmapSize
-        renderPosition = position +~ offset
-
-    resetMatrix ptr
-    translate ptr renderPosition
-    scale ptr scaling scaling
-    drawPixmap ptr zero pixmap
-
 -- | clears the whole screen
 clearScreen :: Ptr QPainter -> IO ()
 clearScreen ptr = do

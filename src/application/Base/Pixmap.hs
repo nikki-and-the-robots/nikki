@@ -34,14 +34,16 @@ loadPixmap padding path = do
         (fmap (fromIntegral . subtract (2 * padding)) size)
         (Position (- padding) (- padding))
 
+
 -- | renders the pixmap
 renderPixmap :: Ptr QPainter -- ^ painter to be rendered to
     -> Offset Double -- ^ global (camera) offset
     -> Position Double -- ^ position of pixmap
     -> Maybe Double -- ^ rotation
+    -> Maybe (Size Double) -- ^ scaling
     -> Pixmap -- ^ pixmap to be rendered
     -> IO ()
-renderPixmap ptr offset position mAngle pix = do
+renderPixmap ptr offset position mAngle Nothing pix = do
     resetMatrix ptr
     translate ptr offset
 
@@ -51,4 +53,9 @@ renderPixmap ptr offset position mAngle pix = do
     translate ptr (fmap fromIntegral (pixmapOffset pix))
 
     drawPixmap ptr zero (pixmap pix)
+
+
+renderPixmapSimple :: Ptr QPainter -> Pixmap -> IO ()
+renderPixmapSimple ptr pix = do
+    drawPixmap ptr (pixmapOffset pix) (pixmap pix)
 

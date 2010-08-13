@@ -20,6 +20,7 @@ import Physics.Chipmunk as CM hiding (Static)
 import Graphics.Qt
 
 import Paths
+import Utils
 
 import Base.Constants
 import Base.Pixmap
@@ -77,18 +78,13 @@ instance Sort TSort FallingTile where
 
     size (TSort _ pix) = pixmapSize pix
 
-    sortRender sort@TSort{tilePixmap} ptr offset ep mScaling = do
-        sortRenderSinglePixmap tilePixmap sort ptr offset ep mScaling
-
+    sortRender sort ptr _ = do
+        renderPixmapSimple ptr (tilePixmap sort)
+        let Size w h = fmap (subtract 1) $ size sort
         -- draw a red cross on top
-        resetMatrix ptr
-        translate ptr offset
-        let (pos, factor) = calculatePositionAndFactor sort ep mScaling
-            Size w h = size sort
         setPenColor ptr 255 0 0 255 2
-        drawLine ptr pos (pos +~ fmap (* factor) (Position w h))
-        drawLine ptr (pos +~ Position (w * factor) 0) (pos +~ Position 0 (h * factor))
-
+        drawLine ptr zero (Position w h)
+        drawLine ptr (Position w 0) (Position 0 h)
 
     initialize sort@TSort{} Nothing editorPosition Nothing = do
         let -- baryCenterOffset = fmap (/ 2) $ size sort
@@ -129,7 +125,7 @@ instance Sort TSort FallingTile where
 
     render t@FallingTile{} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPosition $ chipmunk t
-        renderPixmap ptr offset position (Just rad) tilePixmap
+        renderPixmap ptr offset position (Just rad) Nothing tilePixmap
 
 
 initializeBox :: Space -> TSort -> EditorPosition -> IO Chipmunk

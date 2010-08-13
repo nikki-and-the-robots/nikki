@@ -138,8 +138,8 @@ unwrapTerminal (Object_ sort o) = cast o
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
     size = pixmaps >>> blinkenLights >>> head >>> pixmapSize
-    sortRender sort =
-        sortRenderSinglePixmap (head $ blinkenLights $ pixmaps sort) sort
+    sortRender sort ptr _ =
+        renderPixmapSimple ptr (head $ blinkenLights $ pixmaps sort)
 
     objectEditModeMethods _ = Just editMode
 
@@ -352,7 +352,7 @@ renderLight ptr offset t pixmaps color =
     when (color $ lightState t) $ do
         let lightOffset = color littleLightOffsets
             pixmap = color pixmaps
-        renderPixmap ptr offset lightOffset Nothing pixmap
+        renderPixmap ptr offset lightOffset Nothing Nothing pixmap
 --         resetMatrix ptr
 --         translate ptr offset
 --         translate ptr lightOffset

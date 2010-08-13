@@ -6,12 +6,16 @@ import Data.Generics
 import Data.Binary
 import Data.Abelian
 
+import Utils
+
 
 -- * Types
 
 type QtInt = Int
 
 type QtReal = Double -- unless running on ARM ;)
+
+-- * Position
 
 data Position a = Position {positionX :: a, positionY :: a}
   deriving (Show, Read, Eq, Data, Typeable)
@@ -33,6 +37,12 @@ instance Binary a => Binary (Position a) where
         b <- get
         return $ Position a b
 
+instance PP p => PP (Position p) where
+    pp (Position x y) = unwords ["Position", pp x, pp y]
+
+
+-- * Size
+
 data Size a = Size {width :: a, height :: a}
   deriving (Eq, Show, Data, Typeable)
 
@@ -48,21 +58,6 @@ data Color = QtColor QtInt QtInt QtInt QtInt
 
 
 -- * utils
-
--- | calculates a factor. Transform the second given size
--- by this factor and it will fit into the first given.
--- The second returned value is the offset of the inner box
--- from the outer box.
-squeezeScaling :: Size QtReal -> Size QtReal -> (QtReal, Position QtReal)
-squeezeScaling limits box =
-    (scaling, offset)
-  where
-    scaling = min widthFactor heightFactor
-    offset = Position
-                ((width limits - width box * scaling) / 2)
-                ((height limits - height box * scaling) / 2)
-    widthFactor = width limits / width box
-    heightFactor = height limits / height box
 
 sizeToPosition :: Size a -> Position a
 sizeToPosition (Size x y) = Position x y

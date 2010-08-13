@@ -22,7 +22,7 @@ import Base.Types hiding (selected)
 import Object
 
 import Editor.Scene.Types
-
+import Editor.Scene.Rendering.Helpers
 
 
 
@@ -59,7 +59,7 @@ browseTree menuHint f (Node label children _) =
 browseTree menuHint f (Leaf sort) =
     Right $ Action label (flip f sort)
   where
-    label = MenuLabel (Just sort) (show sort)
+    label = MenuLabel (Just sort) (getSortId $ sortId sort)
 
 
 -- * Layer menu
@@ -148,7 +148,7 @@ render ptr menu = do
             position = EditorPosition x y
             iconSize = Size thumbnailHeight thumbnailHeight
 --         drawSqueezedPixmap ptr position iconSize $ defaultPixmap sprited
-        sortRender sort ptr zero position (Just iconSize)
+        sortRenderTransformed sort ptr zero position (Just iconSize)
 
 --         resetMatrix ptr
 --         translate ptr $ Position x y

@@ -35,14 +35,34 @@ drawColoredBox ptr position size thickness (RGBA r g b a) = do
 
 -- | renders the given object (with the given Transformation)
 renderEditorObject :: Ptr QPainter -> Offset Double -> EditorObject Sort_ -> IO ()
-renderEditorObject ptr offset eo = do
---     let sprited = eObjectSprited o
---         pos = eObjectPosition o
---         pix = defaultPixmap sprited
---     renderAvailableObject ptr (offset +~ pos) sprited
-    sortRender (editorSort eo) ptr offset (editorPosition eo) Nothing
+renderEditorObject ptr offset eo =
+    sortRenderTransformed (editorSort eo) ptr offset (editorPosition eo) Nothing
 
+-- | renders a sort with the given transformations in the scene
+sortRenderTransformed :: Sort s o => s -> Ptr QPainter -> Offset Double -> EditorPosition
+    -> Maybe (Size Double) -> IO ()
+sortRenderTransformed sort ptr offset ep Nothing = do
+    resetMatrix ptr
+    let pos = editorPosition2QtPosition sort ep
+        offsetPlusPosition = offset +~ pos
+    translate ptr offsetPlusPosition
+    sortRender sort ptr (InScene offsetPlusPosition)
 
+sortRenderTransformed sort ptr offset ep (Just boxSize) = do
+    resetMatrix ptr
+    translate ptr offset
 
+    let pos = Position (editorX ep) (editorY ep - height boxSize)
+    translate ptr pos
 
+    let factor = min (height boxSize / height (size sort))
+                     (width boxSize / width (size sort))
+        xScalingOffset = max 0 ((width boxSize - factor * width (size sort)) / 2)
+        yScalingOffset = max 0 ((height boxSize - factor * height (size sort)) / 2)
+        scalingOffset = Position xScalingOffset yScalingOffset
+
+    translate ptr scalingOffset
+    scale ptr factor factor
+
+    sortRender sort ptr Iconified
 
