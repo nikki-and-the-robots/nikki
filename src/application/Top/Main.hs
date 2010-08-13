@@ -39,6 +39,7 @@ import Utils
 
 import Base.GlobalCatcher
 import Base.Types hiding (menu)
+import Base.Configuration
 
 import Object
 
@@ -82,6 +83,7 @@ main = globalCatcher $ do
         quitQApplication
 
     -- start app
+    setWindowSize window (windowSize Base.Configuration.development)
     showAppWidget window
     -- this is the rendering thread
     code <- execQApplication qApp
