@@ -18,7 +18,11 @@ Runs the game in place. Does recompile some (but NOT all) of the sources.
 Works not on windows.
 
 ./deploy.sh
-Creates a distributable application. Works only on windows
+Creates a distributable application. Works only on windows.
+(Compiling on windows is very complicated right now. We are using msys and mingw to do this. The main problem is, that both Qt and the GHC come with their own gcc version. We managed to get the ghc use Qt's gcc, but it seems not very elegant. If you have experience in compiling stuff on windows and have some time to help out, you effort would be highly appreciated.)
+
+./haddock
+Builds the Haskell code documentation under application/
 
 
 2. External dependencies
@@ -26,7 +30,7 @@ Creates a distributable application. Works only on windows
 
 * cmake (tested with 2.8.0)
 
-* qt (tested with 4.6.2)
+* qt (tested with 4.6.2 and 4.7.0 beta)
 
 * ghc (tested with 6.10 and 6.12)
 
@@ -48,10 +52,8 @@ Creates a distributable application. Works only on windows
 * homegrown haskell bindings for sfml-audio
     sfml-audio (from darcs.joyridelabs.de/sfml-audio)
 
-* lots of haskell stuff from hackage:
-    hipmunk
-    uniplate
-    zlib
+* lots of haskell stuff from hackage
+    look at application/nikki.cabal for full hackage dependencies
 
 
 3. Feedback

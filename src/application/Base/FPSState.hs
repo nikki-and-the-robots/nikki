@@ -1,4 +1,5 @@
 {-# language NamedFieldPuns #-}
+{-# OPTIONS_HADDOCK ignore-exports #-}
 
 -- module to analyse the performance (FPS == Frames Per Second)
 
