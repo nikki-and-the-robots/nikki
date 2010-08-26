@@ -187,14 +187,18 @@ toLast i (Indexable values keys) | i `elem` keys =
 -- This function is idempotent. (if that's an english word)
 -- Note, that indices of optimized items are going to be invalidated.
 optimizeMerge :: Show a => (a -> a -> Maybe a) -> Indexable a -> Indexable a
-optimizeMerge p ix =
-    let r = mergeIndexableOnce p ix
-    in if length r == length ix then ix else optimizeMerge p r
-
-mergeIndexableOnce :: Show a => (a -> a -> Maybe a) -> Indexable a -> Indexable a
-mergeIndexableOnce p =
-    convertToList >>> mergeListOnce p >>> convertToIndexable
+optimizeMerge p =
+    convertToList >>> fixpoint 0 >>> convertToIndexable
   where
+    fixpoint n list =
+--         trace (show n) $
+        let r = mergeListSome p list
+        in if List.length r == List.length list then 
+            list
+          else
+            fixpoint (n + 1) r
+
+
     convertToList :: Indexable a -> [Either (Index, a) a] -- left unmerged, right merged
     convertToList ix = map (\ i -> Left (i, values ix ! index i)) (keys ix)
     convertToIndexable :: [Either (Index, a) a] -> Indexable a
@@ -207,23 +211,27 @@ mergeIndexableOnce p =
         inner (Left x) _ = x
         inner (Right x) i = (i, x)
 
-    mergeListOnce :: Show a => (a -> a -> Maybe a)
-        -> [(Either (Index, a) a)] -> [(Either (Index, a) a)]
-    mergeListOnce p (a : r) =
-        case mergeOnce p a ([], r) of
-            Just (merged, r') -> Right merged : r'
-            Nothing -> a : mergeListOnce p r
-    mergeListOnce _ [] = []
-
-    mergeOnce :: Show a => (a -> a -> Maybe a)
+mergeListSome :: (a -> a -> Maybe a) -> [(Either (Index, a) a)] -> [(Either (Index, a) a)]
+mergeListSome p (a : r) =
+        case mergeSome p a ([], r) of
+            Just (merged, r') -> Right merged : mergeListSome p r'
+            Nothing -> a : mergeListSome p r
+  where
+    mergeSome :: (a -> a -> Maybe a)
         -> Either (Index, a) a
         -> ([(Either (Index, a) a)], [(Either (Index, a) a)])
         -> Maybe (a, [(Either (Index, a) a)])
-    mergeOnce p a_@(Left (_, a)) (before, (b_@(Left (_, b)) : r)) =
-        case p a b of
-            Just x -> Just (x, before ++ r)
-            Nothing -> mergeOnce p a_ (before +: b_, r)
-    mergeOnce _ _ (_, []) = Nothing
-    mergeOnce p a b = es "help" (a, b)
+    mergeSome p outerA (before, (outerB : r)) =
+        case p (getInner outerA) (getInner outerB) of
+            Just x -> Just (x, reverse before ++ r)
+            Nothing -> mergeSome p outerA (outerB : before, r)
+    mergeSome _ _ (_, []) = Nothing
+
+    getInner (Left (_, a)) = a
+    getInner (Right b) = b
+
+
+mergeListSome _ [] = []
+
 
 
