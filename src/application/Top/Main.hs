@@ -78,7 +78,7 @@ main = globalCatcher $ do
     let app = Application qApp window keyPoller sorts
     -- there are two main threads:
     -- this is the logick [sick!] thread
-    forkIO $ globalCatcher $ do
+    forkOS $ globalCatcher $ do
         executeStates (applicationStates app)
         quitQApplication
 
