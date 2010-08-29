@@ -12,15 +12,8 @@ import Data.Generics
 import Data.Initial
 import Data.Array.Storable
 import Data.List
-import Data.IORef
-
-import Control.Monad
 
 import System.FilePath
-import System.IO.Unsafe
-import System.Random
-
-import Physics.Chipmunk (getPosition)
 
 import Graphics.Qt as Qt hiding (rotate, scale)
 

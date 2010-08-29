@@ -16,8 +16,6 @@ import Data.IORef
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
 
-import System.Random
-
 import GHC.Conc
 
 import Physics.Chipmunk as CM
@@ -27,7 +25,6 @@ import Graphics.Qt
 import Utils
 
 import Base.Events
-import Base.FPSState
 import Base.Constants
 import Base.Types
 import Base.PhysicsProfiling

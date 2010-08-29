@@ -2,22 +2,13 @@
 module Top.Game (playLevel) where
 
 
-import Data.IORef
-
 import Control.Concurrent
 import Control.Monad.State
 
 import Graphics.Qt
 
-import Utils
-
-import Base.Grounds
 import Base.GlobalCatcher
 import Base.FPSState
-
-import Object
-
-import Editor.Scene
 
 import Game.Scene
 import Game.MainLoop

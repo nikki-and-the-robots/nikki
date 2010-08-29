@@ -5,7 +5,6 @@ module Object.Types where
 
 import Utils
 
-import Data.Abelian
 import Data.Dynamic
 import Data.List
 import Data.Indexable (Index)

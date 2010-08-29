@@ -6,12 +6,8 @@ module Game.Scene.Camera (
   ) where
 
 
-import Data.Abelian
-
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
-
-import Utils
 
 import Base.Types
 

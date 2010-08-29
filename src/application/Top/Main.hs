@@ -23,7 +23,6 @@ import Data.Indexable as I
 import Data.List
 
 import Control.Concurrent
-import Control.Monad
 
 import System.FilePath
 import System.IO

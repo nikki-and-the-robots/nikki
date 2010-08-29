@@ -12,7 +12,6 @@ module Graphics.Qt (
 import Data.Abelian
 
 import Control.Concurrent
-import Control.Applicative
 
 import Graphics.Qt.Types
 import Graphics.Qt.CPPWrapper

@@ -13,8 +13,6 @@ import Data.Generics
 import Data.Abelian
 import Data.Set (member)
 
-import Control.Monad
-
 import System.FilePath
 
 import Physics.Chipmunk as CM

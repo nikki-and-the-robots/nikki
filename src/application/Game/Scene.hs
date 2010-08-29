@@ -137,7 +137,6 @@ levelPassed scene =
         Just $ modifyMode (const $ LevelFinished (getControlledIndex scene) Passed) scene
       else
         Nothing
-levelPassed _ = Nothing
 
 
 -- * chipmunk stepping

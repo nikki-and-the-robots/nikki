@@ -7,7 +7,6 @@ module Sorts.Robots.MovingPlatforms (sorts) where
 
 import Data.Typeable
 import Data.Abelian
-import Data.Initial
 import Data.Color
 
 import Control.Monad
