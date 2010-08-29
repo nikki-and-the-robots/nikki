@@ -27,7 +27,6 @@ module Physics.Chipmunk (
     foldAngle,
 
     mkStandardPolys,
-    debugChipmunk,
 
     -- re-exports from submodules
     translateVector,
@@ -198,21 +197,6 @@ normalizeAngle body = do
 foldAngle :: Double -> Double
 foldAngle = foldToRange (- pi, pi)
 
-
--- * debugging
-
--- | prints human readable information about the current state of the object
-debugChipmunk :: Chipmunk -> IO ()
-debugChipmunk Chipmunk{body} = do
-    putStrLn $ replicate 50 '='
-    inner body getPosition "Position"
-    inner body getVelocity "Velocity"
-    inner body getForce    "Force   "
-  where
-    inner :: Show v => x -> (x -> IO v) -> String -> IO ()
-    inner x getter name = do
-        v <- getter x
-        putStrLn (name ++ ": " ++ show v)
 
 
 
