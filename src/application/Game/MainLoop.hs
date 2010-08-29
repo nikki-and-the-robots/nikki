@@ -30,6 +30,7 @@ import Base.Events
 import Base.FPSState
 import Base.Constants
 import Base.Types
+import Base.PhysicsProfiling
 
 import Object
 
@@ -120,13 +121,16 @@ logicLoop app sceneMVar = do
 -- Since 'threadDelay' seems to be far to inaccurate, we have a busy wait :(
 -- TODO
 waitPhysics :: Int -> AppMonad ()
-waitPhysics startTime = do
-    timer_ <- gets timer
-    let loop = do
-            now <- elapsed $ timer_
-            when (now - startTime < round (stepQuantum * 1000))
-                loop
-    liftIO $ loop
+waitPhysics startTime = gets timer >>= \ timer_ -> liftIO $ do
+    let loop n = do
+            now <- elapsed timer_
+            if (now - startTime < round (stepQuantum * 1000)) then
+                loop (n + 1)
+              else
+                return n
+    n <- loop 0
+    tickBusyWaitCounter n
+
 
 -- Well, this isn't really an unmutable copy. Maybe we can get away without.
 unmutableCopy :: Scene Object_ -> Scene Object_
