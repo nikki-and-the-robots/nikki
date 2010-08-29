@@ -46,7 +46,7 @@ sorts = do
     pixmaps <- fmapM (fmapM (
                     fromPure mkJetpackPngPath >>>> 
                     getDataFileName >>>>
-                    loadPixmap 1
+                    loadJetpackPixmap
                 )) pngMap
     let r = JSort pixmaps
     return $ map Sort_ [r]
@@ -59,6 +59,12 @@ pngMap = fromList [
   ]
 
 mkJetpackPngPath name = pngDir </> "robots" </> "jetpack" </> name <.> "png"
+
+-- | loads a pixmap with the special size and padding of jetpack pixmaps
+loadJetpackPixmap :: FilePath -> IO Pixmap
+loadJetpackPixmap file = do
+    p <- newQPixmap file
+    return (Pixmap p (Size (fromUber 27) (fromUber 21)) (Position (- 9) (- 1)))
 
 data RenderState
     = Wait
