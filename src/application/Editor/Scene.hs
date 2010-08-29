@@ -113,7 +113,7 @@ keyPress x s@EditorScene{objectEditModeIndex = Just i} =
 keyPress Enter s@EditorScene{} =
     case selected s of
         Nothing -> s
-        Just i -> case mkOEMState $ editorSort $ getMainObject s i of
+        Just i -> case objectEditModeMethods $ editorSort $ getMainObject s i of
             Nothing -> s
             Just _ -> s{objectEditModeIndex = Just i, editorObjects = objects'}
               where

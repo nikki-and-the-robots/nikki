@@ -215,7 +215,7 @@ data EditorObject sort
 
 data ObjectEditModeMethods sort
     = ObjectEditModeMethods {
-        oemInitialState :: String,
+        oemInitialState :: EditorPosition -> String,
         oemEnterMode :: EditorScene sort -> String -> String,
         oemUpdate :: EditorScene sort -> Key -> String -> String,
         oemRender :: Ptr QPainter -> EditorScene sort -> String -> IO () -- more args

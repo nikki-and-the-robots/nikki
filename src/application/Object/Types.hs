@@ -154,7 +154,7 @@ isTile (sortId -> (SortId s)) = "tiles/" `isPrefixOf` s
 -- * EditorObject
 
 mkEditorObject :: Sort_ -> EditorPosition -> EditorObject Sort_
-mkEditorObject sort pos = EditorObject sort pos (mkOEMState sort)
+mkEditorObject sort pos = EditorObject sort pos (mkOEMState sort pos)
 
 modifyOEMState :: (OEMState sort -> OEMState sort) -> EditorObject sort -> EditorObject sort
 modifyOEMState f eo =
@@ -197,11 +197,11 @@ renderChipmunk painter worldOffset p chipmunk = do
 
 -- * ObjectEditMode
 
-mkOEMState :: Sort_ -> Maybe (OEMState Sort_)
-mkOEMState sort =
+mkOEMState :: Sort_ -> EditorPosition -> Maybe (OEMState Sort_)
+mkOEMState sort editorPosition =
     case objectEditModeMethods sort of
         Nothing -> Nothing
-        Just oem -> Just $ OEMState oem (oemInitialState oem)
+        Just oem -> Just $ OEMState oem (oemInitialState oem editorPosition)
 
 enterModeOEM :: EditorScene Sort_ -> OEMState Sort_ -> OEMState Sort_
 enterModeOEM scene (OEMState oem state) =

@@ -454,7 +454,7 @@ boxY = fromUber 7
 
 editMode :: ObjectEditModeMethods Sort_
 editMode = ObjectEditModeMethods {
-    oemInitialState = show (initial :: OEMState),
+    oemInitialState = \ _ -> show (initial :: OEMState),
     oemEnterMode = \ scene state_ ->
         show $ enterMode scene
             (readNote "Terminal.editMode.oemEnterMode" state_),
