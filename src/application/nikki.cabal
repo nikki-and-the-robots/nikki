@@ -35,7 +35,7 @@ Executable            nikki
         Paths_nikki
 
     ghc-options:
-        -O2
+        -O1
 
         -threaded
 --         -eventlog
