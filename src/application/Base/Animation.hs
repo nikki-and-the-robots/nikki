@@ -23,7 +23,7 @@ pickAnimationFrame list frameTimes now =
     toDrop = (n * length frameTimes) `mod` length list
 
 -- | picks animation frames from infinite lists
--- has O(now) :(
+-- has O(now) :( todo
 pickAnimationFrameNonLooping :: [a] -> [(Int, Seconds)] -> Seconds -> a
 pickAnimationFrameNonLooping list ((i, secs) : r) now =
     if now >= secs then
