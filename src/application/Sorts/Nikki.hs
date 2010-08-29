@@ -1,23 +1,26 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
-    FlexibleInstances, DeriveDataTypeable #-}
+    FlexibleInstances, DeriveDataTypeable, ScopedTypeVariables #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 
-module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass) where
+module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass, walkingVelocity) where
 
 
 import Data.Abelian
-import Data.Map hiding (map, size, filter)
+import Data.Map hiding (map, size, filter, null)
 import Data.Generics
 import Data.Initial
 import Data.Array.Storable
 import Data.List
-import Data.Maybe
 import Data.IORef
 
 import Control.Monad
 
 import System.FilePath
+import System.IO.Unsafe
+import System.Random
+
+import Physics.Chipmunk (getPosition)
 
 import Graphics.Qt as Qt hiding (rotate, scale)
 
@@ -51,12 +54,18 @@ nikkiMass = 2.5
 
 -- | friction for nikkis feet. The higher the friction,
 -- the faster nikki will gain maximum walking speed.
-nikkiFeetFriction = 0.5
+nikkiFeetFriction = 0.35
 
 -- | maximum walking speed (pixel per second)
-walkingVelocity = fromUber 100.8
+walkingVelocity = fromUber 100.8 <<? "walkingVelocity"
+
+-- | how strong the vertical force is while Nikki is airborne
+-- in gravities
+airBorneForceFactor = 1000 / gravity
 
 -- | minimal jumping height (for calculating the impulse strength)
+-- We have an air drag for nikki and that makes calculating the right forces
+-- difficult. So this variable and maximalJumpingHeight are just estimates.
 minimalJumpingHeight = fromKachel 0.7
 
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
@@ -87,8 +96,10 @@ frameTimesMap = fromList [
     (Jump HLeft,  jump),
     (Jump HRight, jump),
     (UsingTerminal HLeft, terminal),
-    (UsingTerminal HRight, terminal)
-      ]
+    (UsingTerminal HRight, terminal),
+    (Grip HLeft, grip),
+    (Grip HRight, grip)
+  ]
   where
     wait = zip
         (0 : cycle [1, 2, 1, 2, 1, 2, 1])
@@ -99,7 +110,9 @@ frameTimesMap = fromList [
     jump = zip
        (0 : repeat 1)
        (0.6 : repeat 10)
-    terminal = repeat (0, 10)
+    terminal = singleFrame
+    grip = singleFrame
+    singleFrame = repeat (0, 10)
 
 
 sorts :: IO [Sort_]
@@ -129,7 +142,9 @@ statePixmaps = fromList [
     (Jump HLeft,  ("jump_left", 1)),
     (Jump HRight, ("jump_right", 1)),
     (UsingTerminal HLeft, ("terminal", 0)),
-    (UsingTerminal HRight, ("terminal", 0))
+    (UsingTerminal HRight, ("terminal", 0)),
+    (Grip HLeft, ("grip_left", 0)),
+    (Grip HRight, ("grip_right", 0))
   ]
 
 defaultPixmap :: Map RenderState [Pixmap] -> Pixmap
@@ -143,7 +158,7 @@ data NSort = NSort {
 data Nikki
     = Nikki {
         chipmunk :: Chipmunk,
-        feetShape :: Shape,
+        feetShapes :: [Shape],
         jumpStartTime :: Seconds,
         renderState :: RenderState,
         startTime :: Seconds,
@@ -170,15 +185,13 @@ modifyNikki f scene =
 
 
 data RenderState
-    = Wait          {direction :: HorizontalDirection}
-    | Walk          {direction :: HorizontalDirection}
-    | Jump          {direction :: HorizontalDirection}
+    = Wait {direction :: HorizontalDirection}
+    | Walk {direction :: HorizontalDirection}
+    | Jump {direction :: HorizontalDirection}
     | UsingTerminal {direction :: HorizontalDirection}
+    | Grip {direction :: HorizontalDirection}
+    | Touchdown {direction :: HorizontalDirection}
 
---     | Happy
---     | Angry
---     | Sad
---     | Confused
   deriving (Eq, Ord, Show)
 
 instance Initial RenderState where
@@ -201,27 +214,32 @@ instance Sort NSort Nikki where
 
         chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes
                     baryCenterOffset
-        let feetShape = head $ shapes chip
+        let feetShapes = take 2 $ shapes chip
 
         jumpSound <- newPolySound (soundDir </> "nikki/jump.wav") 4
 
         return $ Nikki
             chip
-            feetShape
+            feetShapes
             0
             initial
             0
             jumpSound
             0
 
+    immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
+
     chipmunks = return . chipmunk
 
-    objectPosition nikki = getPosition $ body $ chipmunk nikki
+    objectPosition nikki = getPosition $ chipmunk nikki
 
-    updateNoSceneChange nikki now contacts cd = do
-        (controlBody now contacts cd >>>>
-            fromPure (updateStartTimes now (renderState nikki))) nikki
-
+    updateNoSceneChange nikki now contacts cd = (
+        controlBody now contacts cd >>>>
+        fromPure (
+            updateRenderState contacts cd >>>
+            updateStartTime now (renderState nikki))
+--         >>>> debugNikki (renderState nikki)
+      ) nikki
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
@@ -245,6 +263,13 @@ feetShapeAttributes = ShapeAttributes {
     CM.collisionType    = NikkiFeetCT
   }
 
+pawShapeAttributes :: ShapeAttributes
+pawShapeAttributes = ShapeAttributes {
+    elasticity          = elasticity_,
+    friction            = nikkiFeetFriction,
+    CM.collisionType    = NikkiPawsCT
+  }
+
 -- Attributes for nikkis body (not to be confused with chipmunk bodies, it's a chipmunk shape)
 bodyShapeAttributes :: ShapeAttributes
 bodyShapeAttributes = ShapeAttributes {
@@ -254,15 +279,16 @@ bodyShapeAttributes = ShapeAttributes {
   }
 
 
-mkPolys :: Size Double -> ([(ShapeAttributes, ShapeType)], Vector)
+mkPolys :: Size Double -> ([ShapeDescription], Vector)
 mkPolys (Size w h) =
     (rects, baryCenterOffset)
   where
     rects = [
         -- the one where surface velocity (for walking) is applied
-        (feetShapeAttributes, legs),
-        (bodyShapeAttributes, headPoly)
---         (bodyShapeAttributes, bodyPoly)
+        (ShapeDescription feetShapeAttributes feetCircle feetPosition),
+        (mkShapeDescription pawShapeAttributes pawsPoly),
+        (mkShapeDescription bodyShapeAttributes headPoly),
+        (mkShapeDescription bodyShapeAttributes legsPoly)
       ]
 
     wh = w / 2
@@ -271,50 +297,41 @@ mkPolys (Size w h) =
     low = hh
     up = - hh
     left = (- wh)
-    right = wh
-
-    upperLeft = Vector left up
-    lowerLeft = Vector left low
-    lowerRight = Vector right low
-    upperRight = Vector right up
-
-    boundingBox = Polygon [upperLeft, lowerLeft, lowerRight, upperRight]
 
     headLeft = left + fromUber 3
     headRight = headLeft + fromUber 13
-    headUp = up + fromUber 1
-    headLow = headUp + fromUber 14
+    headUp = up + fromUber 1.5
+    headLow = headUp + fromUber 16
 
-    leftLeg = left + fromUber 7
-    rightLeg = leftLeg + fromUber 5
-
-    armpitPadding = 0 -- fromUber 1
-    armpitLeft = leftLeg - armpitPadding
-    armpitRight = rightLeg + armpitPadding
-    armpitY = low - 1
+    legLeft = left + fromUber 7
+    legRight = legLeft + fromUber 5
+    legLow = low - feetRadius
 
     headPoly = Polygon [
         Vector headLeft headUp,
-        Vector headLeft headLow,
-        Vector armpitLeft armpitY,
-        Vector armpitRight armpitY,
-        Vector headRight headLow,
+        Vector headLeft (headLow - 1),
+        Vector headRight (headLow - 1),
         Vector headRight headUp
       ]
 
-    bodyPoly = Polygon [
-        Vector armpitLeft armpitY,
-        Vector leftLeg (low - 1),
-        Vector rightLeg (low - 1),
-        Vector armpitRight armpitY
+    pawsPoly = Polygon [
+        Vector (headLeft + eps) (headLow - 1),
+        Vector (headLeft + eps) (headLow),
+        Vector (headRight - eps) (headLow),
+        Vector (headRight - eps) (headLow - 1)
+      ]
+    eps = 1
+
+    legsPoly = Polygon [
+        Vector legLeft headLow,
+        Vector legLeft legLow,
+        Vector legRight legLow,
+        Vector legRight headLow
       ]
 
-    legs = Polygon [
-        Vector leftLeg 0,
-        Vector leftLeg low,
-        Vector rightLeg low,
-        Vector rightLeg 0
-      ]
+    feetRadius = (legRight - legLeft) / 2
+    feetCircle = Circle feetRadius
+    feetPosition = Vector 0 legLow
 
 
 -- * Control logic
@@ -351,15 +368,16 @@ jumpAngle angles =
                 Just 0
               else
                 Just a
-    
 
-controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
+
+
+
+controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO (Maybe Angle, Nikki)
 controlBody _ _ (False, _) nikki = do
-    let ss = shapes $ chipmunk nikki
-    setSurfaceVel (head ss) zero
-    return nikki{renderState = UsingTerminal $ direction $ renderState nikki}
+    mapM_ (\ feetShape -> setSurfaceVel feetShape zero) $ feetShapes nikki
+    return (Nothing, nikki)
 controlBody now contacts (True, cd)
-    nikki@(Nikki chip feetShape jumpStartTime _ _ jumpSound _) = do
+    nikki@(Nikki chip feetShapes jumpStartTime _ _ jumpSound _) = do
         let Chipmunk space body shapes shapeTypes co = chip
             -- buttons
             bothHeld = leftHeld && rightHeld
@@ -368,11 +386,11 @@ controlBody now contacts (True, cd)
             aPushed = Press AButton `elem` pushed cd
             aHeld = AButton `elem` held cd
 
-        velocity@(Vector xVelocity _) <- getVelocity body
+        velocity <- getVelocity body
 
         -- walking
         let surfaceVelocity = walking (leftHeld, rightHeld, bothHeld)
-        setSurfaceVel feetShape surfaceVelocity
+        mapM_ (\ feetShape -> setSurfaceVel feetShape surfaceVelocity) feetShapes
 
         -- jumping
         -- =======
@@ -415,31 +433,42 @@ controlBody now contacts (True, cd)
             (Nothing, _) -> return False
             (_, False) -> return False
 
+--         p <- getPosition chip
+--         v <- getVelocity body
+--         b <- every 30
+--         when b $
+--             putStrLn $ unwords $ map pp $ 
+--             [vectorX v]
+
         let isLongJump = aHeld
             timeInJump = if doesJumpStartNow then 0 else now - jumpStartTime
             jumpingAntiGravity = if isLongJump then longJumpAntiGravity timeInJump else 0
 
+        modifyApplyOnlyForce chip (Vector 0 jumpingAntiGravity)
+
         -- horizontal moving while airborne
         let ifNikkiFeetTouchGround = nikkiFeetTouchGround contacts
-            airborneForce =
-                airborne rightHeld leftHeld bothHeld ifNikkiFeetTouchGround xVelocity
+        airborneForce <-
+                airborne contacts rightHeld leftHeld bothHeld ifNikkiFeetTouchGround velocity
 
         -- Apply airborne forces (for longer jumps and vertical movement)
-        modifyApplyOnlyForce chip (Vector airborneForce jumpingAntiGravity)
+--         applyNikkiForceViaVelocity chip airborneForce
+        modifyApplyForce chip airborneForce
 
         -- jumping sound
 --         when doesJumpStartNow $ triggerPolySound jumpSound
 
 --         debugChipGraph now body
 
-        -- renderState updating
-        let state = pickRenderState (renderState nikki) ifNikkiFeetTouchGround
-                        (bothHeld, leftHeld, rightHeld)
-
-        return $ if doesJumpStartNow then
-            nikki{renderState = state, jumpStartTime = now}
+        return $ tuple contactNormal $ if doesJumpStartNow then
+            nikki{jumpStartTime = now}
           else
-            nikki{renderState = state}
+            nikki
+
+applyNikkiForceViaVelocity :: Chipmunk -> Vector -> IO ()
+applyNikkiForceViaVelocity chip f =
+    modifyVelocity chip (\ v -> v +~ scale f (stepQuantum / nikkiMass))
+
 
 -- | calculates the surface velocity for walking
 walking (leftHeld, rightHeld, bothHeld) = Vector xSurfaceVelocity 0
@@ -459,7 +488,7 @@ jumpingImpulse :: Double
 jumpingImpulse =
     c_v * nikkiMass
   where
-    c_v =  sqrt (2 * minimalJumpingHeight * gravity)
+    c_v = sqrt (2 * minimalJumpingHeight * gravity)
 
 -- | calculates a manipulation of the velocity (slowing it down) orthogonal to the contact normal.
 -- This should be zero for a normal jump on an even floor
@@ -501,8 +530,9 @@ velocityJumpCorrection contactNormal velocity wantedImpulse = do
             cos (beta * 2) + 1
 
     -- the new wanted length for oVector
-    newOVectorLen = correctionWeight * correctedOVectorLen
-                    + (1 - correctionWeight) * uncorrectedOVectorLen
+    newOVectorLen =
+        correctionWeight * correctedOVectorLen
+        + (1 - correctionWeight) * uncorrectedOVectorLen
 
     -- impulse that has to be applied to nikki
     correction =
@@ -513,88 +543,110 @@ velocityJumpCorrection contactNormal velocity wantedImpulse = do
 
 
 longJumpAntiGravity :: Seconds -> Double
-longJumpAntiGravity t = (- (gravity + f t)) * nikkiMass
+longJumpAntiGravity t = negate $
+    if t < t_s then
+        q_a * t ^ 2 + s_a * t + c_a
+      else
+        0
+
   where
-    f t =
-        if t < t_s then
-            q_a * t ^ 2 + s_a * t + c_a
-          else
-            - gravity
 
     h = maximalJumpingHeight
     c_vi = jumpingImpulse / nikkiMass
     g = gravity
+    mass = nikkiMass
 
     -- generated by maxima
-    q_a = (6*c_vi*g^3*sqrt(16*g*h+c_vi^2)-24*g^4*h-6*c_vi^2*g^3)
-             /(-32*g^2*h^2+sqrt(16*g*h+c_vi^2)*(8*c_vi*g*h+c_vi^3)
-                          -16*c_vi^2*g*h-c_vi^4)
-
-    s_a = (sqrt(16*g*h+c_vi^2)*(96*g^4*h^2+120*c_vi^2*g^3*h
-                                               +12*c_vi^4*g^2)
-             -672*c_vi*g^4*h^2-216*c_vi^3*g^3*h-12*c_vi^5*g^2)
-             /(-128*g^3*h^3+sqrt(16*g*h+c_vi^2)
-                            *(48*c_vi*g^2*h^2+16*c_vi^3*g*h+c_vi^5)
-                           -144*c_vi^2*g^2*h^2-24*c_vi^4*g*h-c_vi^6)
-
-    c_a = (-1024*g^5*h^4+sqrt(16*g*h+c_vi^2)
-                              *(704*c_vi*g^4*h^3+608*c_vi^3*g^3*h^2
-                                                +108*c_vi^5*g^2*h+5*c_vi^7*g)
-                             -3392*c_vi^2*g^4*h^3-1312*c_vi^4*g^3*h^2
-                             -148*c_vi^6*g^2*h-5*c_vi^8*g)
-             /(-512*g^4*h^4+sqrt(16*g*h+c_vi^2)
-                            *(256*c_vi*g^3*h^3+160*c_vi^3*g^2*h^2
-                                              +24*c_vi^5*g*h+c_vi^7)
-                           -1024*c_vi^2*g^3*h^3-320*c_vi^4*g^2*h^2
-                           -32*c_vi^6*g*h-c_vi^8)
-
+    q_a = (6*c_vi*g^3*sqrt(16*g*h+c_vi^2)-24*g^4*h-6*c_vi^2*g^3)*mass
+            /(-32*g^2*h^2+sqrt(16*g*h+c_vi^2)*(8*c_vi*g*h+c_vi^3)
+                         -16*c_vi^2*g*h-c_vi^4)
+    s_a = (sqrt(16*g*h+c_vi^2)*(96*g^4*h^2+120*c_vi^2*g^3*h+12*c_vi^4*g^2)
+            -672*c_vi*g^4*h^2-216*c_vi^3*g^3*h-12*c_vi^5*g^2)
+            *mass
+            /(-128*g^3*h^3+sqrt(16*g*h+c_vi^2)
+                           *(48*c_vi*g^2*h^2+16*c_vi^3*g*h+c_vi^5)
+                          -144*c_vi^2*g^2*h^2-24*c_vi^4*g*h-c_vi^6)
+    c_a = (-1536*g^5*h^4+sqrt(16*g*h+c_vi^2)
+                             *(960*c_vi*g^4*h^3+768*c_vi^3*g^3*h^2
+                                               +132*c_vi^5*g^2*h+6*c_vi^7*g)
+                            -4416*c_vi^2*g^4*h^3-1632*c_vi^4*g^3*h^2
+                            -180*c_vi^6*g^2*h-6*c_vi^8*g)
+            *mass
+            /(-512*g^4*h^4+sqrt(16*g*h+c_vi^2)
+                           *(256*c_vi*g^3*h^3+160*c_vi^3*g^2*h^2+24*c_vi^5*g*h
+                                             +c_vi^7)-1024*c_vi^2*g^3*h^3
+                          -320*c_vi^4*g^2*h^2-32*c_vi^6*g*h-c_vi^8)
+    c_v = c_vi
+    c_p = 0
     t_s = (sqrt(16*g*h+c_vi^2)-c_vi)/(2*g)
 
-airborne rightHeld leftHeld bothHeld ifNikkiTouchesGround xVelocity =
-    if ifNikkiTouchesGround || bothHeld then
-        zero
-      else if rightHeld && xVelocity < walkingVelocity then
-        x
-      else if leftHeld && xVelocity > - walkingVelocity then
-        - x
-      else
-        zero
+
+airborne :: Contacts -> Bool -> Bool -> Bool -> Bool -> Vector -> IO Vector
+airborne contacts rightHeld leftHeld bothHeld ifNikkiFeetTouchGround velocity = do
+    return force
   where
-    x = 1000 * nikkiMass
+    -- force applied to change horizontal movement while airborne
+    force =
+        if ifNikkiFeetTouchGround || bothHeld then
+            zero
+          else if rightHeld then
+            if xVel < walkingVelocity then Vector airForce 0 else zero
+          else if leftHeld then
+            if xVel > (- walkingVelocity) then Vector (- airForce) 0 else zero
+          else
+            zero
+    xVel = vectorX velocity
 
--- | print information about an object readable by chipgraph
-debugChipGraph now body = do
-        Vector _ force <- getForce body
-        Vector _ velocity <- getVelocity body
-        Vector _ position <- getPosition body
-
-        let valuesString = unwords ("CHIPGRAPH" : (map show [now, - force, - velocity, - position]))
-        putStrLn valuesString
+airForce = (gravity * nikkiMass * airBorneForceFactor) <<? "airborne"
 
 
-updateStartTimes :: Seconds -> RenderState -> Nikki -> Nikki
-updateStartTimes now oldRenderState nikki@Nikki{renderState = newRenderState} =
-    if oldRenderState == newRenderState then
+
+updateRenderState :: Contacts -> (Bool, ControlData)
+    -> (Maybe Angle, Nikki) -> Nikki
+updateRenderState _ (False, _) (_, nikki) =
+    nikki{renderState = UsingTerminal $ direction $ renderState nikki}
+updateRenderState contacts (True, controlData) (contactNormal, nikki) =
+    nikki{renderState = state}
+  where
+    state =
+        if nikkiPawTouchesGround contacts then
+        -- nikki is hanging on one of the its paws (or both)
+            Grip buttonDirection
+        else if nikkiFeetTouchGround contacts then
+        -- nikki is on the ground
+            if nothingHeld then
+                Wait oldDirection
+              else
+                Walk buttonDirection
+          else
+        -- nikki is in the air
+            Jump buttonDirection
+
+    aPushed = Press AButton `elem` pushed controlData
+    rightHeld = RightButton `elem` held controlData
+    leftHeld = LeftButton `elem` held controlData
+    nothingHeld = not (rightHeld `xor` leftHeld)
+
+    oldDirection = direction $ renderState nikki
+    buttonDirection =
+        if aPushed then angleDirection else
+        if nothingHeld then oldDirection else
+        if leftHeld then HLeft else
+        HRight
+
+    angleDirection =
+        case contactNormal of
+            Just angle | abs angle > deg2rad 10
+                -> if angle > 0 then HRight else HLeft
+            _ -> oldDirection
+
+
+updateStartTime :: Seconds -> RenderState -> Nikki -> Nikki
+updateStartTime now oldRenderState nikki =
+    if oldRenderState == renderState nikki then
         nikki
       else
         nikki{startTime = now}
-
-pickRenderState oldRenderState touchesGround (bothHeld, leftHeld, rightHeld) =
-    if not touchesGround then
-        Jump dir
-      else if leftHeld `xor` rightHeld then
-        Walk dir
-      else
-        Wait dir
-  where
-    dir = if bothHeld then
-        direction oldRenderState
-      else if leftHeld then
-        HLeft
-      else if rightHeld then
-        HRight
-      else
-        direction oldRenderState
 
 pickPixmap :: Seconds -> NSort -> Nikki -> Pixmap
 pickPixmap now sort nikki = 
@@ -602,4 +654,19 @@ pickPixmap now sort nikki =
         (pixmaps sort ! renderState nikki)
         (frameTimesMap ! renderState nikki)
         (now - startTime nikki)
+
+
+
+
+
+-- debugging
+
+debugNikki :: RenderState -> Nikki -> IO Nikki
+debugNikki oldRenderState nikki = do
+    every 10 $ do
+        p <- getPosition (chipmunk nikki)
+        v <- getVelocity $ body $ chipmunk nikki
+        putStrLn (pp (vectorY p) ++ " " ++ pp (vectorY v))
+    return nikki
+
 

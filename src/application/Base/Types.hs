@@ -82,6 +82,7 @@ data Contacts
     = Contacts {
         nikkiContacts :: [(StorableArray Int Contact, Double)],
         nikkiFeetTouchGround :: !Bool,
+        nikkiPawTouchesGround :: !Bool,
         nikkiTouchesLaser :: !Bool,
         triggers :: Set Shape,
         terminals :: Set Shape,

@@ -19,9 +19,11 @@ import Base.Types
 
 
 data MyCollisionType
-    = TileCT
-    | NikkiBodyCT
+    = NikkiBodyCT
     | NikkiFeetCT
+    | NikkiPawsCT
+
+    | TileCT
     | TerminalCT
     | LaserCT
     | RobotCT
@@ -30,10 +32,24 @@ data MyCollisionType
     | FallingTileCT
   deriving (Enum, Eq, Show)
 
+nikkiCollisionTypes :: [MyCollisionType]
+nikkiCollisionTypes = [
+    NikkiBodyCT,
+    NikkiFeetCT,
+    NikkiPawsCT
+  ]
+
+solidCollisionTypes :: [MyCollisionType]
+solidCollisionTypes = [
+    TileCT,
+    RobotCT,
+    FallingTileCT
+  ]
+
 
 -- initial in the sense that nothing collides
 instance Initial Contacts where
-    initial = Contacts [] False False empty empty empty empty
+    initial = Contacts [] False False False empty empty empty empty
 
 
 -- * setter (boolean to True)
@@ -44,6 +60,9 @@ addNikkiContacts contactArray coefficient c =
 
 setNikkiFeetTouchGround :: Contacts -> Contacts
 setNikkiFeetTouchGround c = c{nikkiFeetTouchGround = True}
+
+setNikkiPawsTouchesGround :: Contacts -> Contacts
+setNikkiPawsTouchesGround c = c{nikkiPawTouchesGround = True}
 
 setNikkiTouchesLaser :: Contacts -> Contacts
 setNikkiTouchesLaser c = c{nikkiTouchesLaser = True}
@@ -69,33 +88,15 @@ addFallingTileContact fallingTileShape contacts =
 
 
 watchedContacts :: [Callback MyCollisionType Contacts]
-watchedContacts = [
+watchedContacts =
     -- normal contacts of nikki
-    Callback (FullWatch TileCT NikkiBodyCT (\ _ _ -> addNikkiContacts)) Solid,
-    Callback (FullWatch TileCT NikkiFeetCT 
-                (\ _ _ a b -> setNikkiFeetTouchGround . addNikkiContacts a b)) Solid,
-    Callback (FullWatch RobotCT NikkiBodyCT (\ _ _ -> addNikkiContacts)) Solid,
-    Callback (FullWatch RobotCT NikkiFeetCT
-                (\ _ _ a b -> setNikkiFeetTouchGround . addNikkiContacts a b)) Solid,
-
-    -- a trigger (in w switch) is activated
-    Callback (Watch TileCT TriggerCT (\ _ t -> addTrigger t)) Permeable,
-
-    -- nikki stands in front of a terminal 
-    Callback (Watch NikkiBodyCT TerminalCT (\ _ t -> addTerminal t)) Permeable,
-    Callback (DontWatch TerminalCT NikkiFeetCT) Permeable,
-    -- robots and Tiles vs. Terminals
-    Callback (DontWatch RobotCT TerminalCT) Permeable,
-    Callback (DontWatch TileCT TerminalCT) Permeable,
-
-    -- batteries
-    batteryCallback NikkiBodyCT,
-    batteryCallback NikkiFeetCT,
-    Callback (DontWatch BatteryCT TerminalCT) Permeable,
-
-    -- contact with nikki and falling tiles
-    Callback (FullWatch FallingTileCT NikkiFeetCT
-        (\ a b contacts normal -> addFallingTileContact a . addNikkiContacts contacts normal)) Solid
+    concatMap nikkiSolidCallbacks solidCollisionTypes ++
+    [switchCallback] ++
+    nikkiTerminalCallbacks ++
+    map terminalSolidCallback solidCollisionTypes ++
+    map batteryCallback nikkiCollisionTypes ++
+    [Callback (DontWatch BatteryCT TerminalCT) Permeable] ++
+    nikkiFallingTilesCallbacks
 
     -- Lasers
 --     Callback (Watch NikkiBodyCT LaserCT (\ _ _ -> setNikkiTouchesLaser)) Permeable,
@@ -106,11 +107,39 @@ watchedContacts = [
 --     Callback (DontWatch NikkiFeetCT MilkMachineCT) Permeable,
 --     Callback (DontWatch RobotCT MilkMachineCT) Permeable,
 
+
+nikkiSolidCallbacks solidCT = [
+    Callback (FullWatch solidCT NikkiBodyCT (\ _ _ -> addNikkiContacts)) Solid,
+    Callback (FullWatch solidCT NikkiFeetCT
+                (\ _ _ a b -> setNikkiFeetTouchGround . addNikkiContacts a b)) Solid,
+    Callback (FullWatch solidCT NikkiPawsCT
+                (\ _ _ a b -> setNikkiPawsTouchesGround . addNikkiContacts a b)) Solid
   ]
- where
-    batteryCallback nikkiCT =
-        Callback (Watch nikkiCT BatteryCT (\ _ b -> addBattery b)) Permeable
 
+-- nikki stands in front of a terminal 
+nikkiTerminalCallbacks = [
+    Callback (Watch NikkiBodyCT TerminalCT (\ _ t -> addTerminal t)) Permeable,
+    Callback (DontWatch TerminalCT NikkiFeetCT) Permeable,
+    Callback (DontWatch TerminalCT NikkiPawsCT) Permeable
+  ]
 
+batteryCallback nikkiCT =
+    Callback (Watch nikkiCT BatteryCT (\ _ b -> addBattery b)) Permeable
+
+-- a trigger (in a switch) is activated
+switchCallback =
+    Callback (Watch TileCT TriggerCT (\ _ t -> addTrigger t)) Permeable
+
+terminalSolidCallback solidCT =
+    Callback (DontWatch TerminalCT solidCT) Permeable
+
+-- contact with nikki and falling tiles
+nikkiFallingTilesCallbacks = [
+    Callback (FullWatch FallingTileCT NikkiBodyCT (\ a b c cn -> addFallingTileContact a . addNikkiContacts c cn)) Solid,
+    Callback (FullWatch FallingTileCT NikkiFeetCT
+                (\ a b c cn -> addFallingTileContact a . setNikkiFeetTouchGround . addNikkiContacts c cn)) Solid,
+    Callback (FullWatch FallingTileCT NikkiPawsCT
+                (\ a b c cn -> addFallingTileContact a . setNikkiPawsTouchesGround . addNikkiContacts c cn)) Solid
+  ]
 
 
