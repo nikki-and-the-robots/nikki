@@ -57,14 +57,15 @@ instance Sort BSort Box where
         renderPixmapSimple ptr (boxPixmap sort)
     initialize sort (Just space) editorPosition Nothing = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
-            shapesWithAttributes = map (tuple shapeAttributes) shapes
+            shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
             position = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
                             +~ baryCenterOffset
         chip <- CM.initChipmunk space (bodyAttributes position (size sort)) 
                     shapesWithAttributes baryCenterOffset
         return $ Box chip
+    immutableCopy (Box x) = CM.immutableCopy x >>= return . Box
     chipmunks b = [chipmunk b]
-    objectPosition = chipmunk >>> body >>> getPosition
+    objectPosition = chipmunk >>> getPosition
     render o sort ptr offset now =
         renderChipmunk ptr offset (boxPixmap sort) (chipmunk o)
 

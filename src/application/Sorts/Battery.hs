@@ -74,15 +74,18 @@ instance Sort BSort Battery where
     -- sort -> Maybe  Space  -> EditorPosition  -> Maybe  String  -> IO  object
     initialize sort (Just space) ep Nothing = do
         let baryCenterOffset = Vector (batteryWidth / 2) (batteryHeight / 2)
-            shapes = zip (repeat shapeAttributes) $ mkShapes
+            shapes = fmap (mkShapeDescription shapeAttributes) mkShapes
             pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
         chip <- initChipmunk space (bodyAttributes pos) shapes baryCenterOffset
         return $ Battery chip
 
+    immutableCopy b =
+        CM.immutableCopy (chipmunk b) >>= \ x -> return b{chipmunk = x}
+
     chipmunks = chipmunk >>> return
 
-    objectPosition = chipmunk >>> body >>> getPosition
+    objectPosition = chipmunk >>> getPosition
 
     update o i now contacts cd
         | any (`member` batteries contacts) (shapes $ chipmunk o) = do

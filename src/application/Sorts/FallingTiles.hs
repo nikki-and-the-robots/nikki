@@ -86,21 +86,17 @@ instance Sort TSort FallingTile where
         drawLine ptr zero (Position w h)
         drawLine ptr (Position w 0) (Position 0 h)
 
-    initialize sort@TSort{} Nothing editorPosition Nothing = do
-        let -- baryCenterOffset = fmap (/ 2) $ size sort
-            pos = editorPosition2QtPosition sort editorPosition
-        return $ FallingTile
-            (size sort)
-            (DummyChipmunk{renderPosition = pos})
-            Static
     initialize sort@TSort{} (Just space) editorPosition Nothing = do
         chip <- initializeBox space sort editorPosition
         modifyApplyForce chip (CM.scale (Vector 0 (- gravity)) (scaleMass (size sort) staticMass))
         return $ FallingTile (size sort) chip Static
 
+    immutableCopy t@FallingTile{chipmunk} =
+        CM.immutableCopy chipmunk >>= \ x -> return t{chipmunk = x}
+
     chipmunks (FallingTile _ c _) = [c]
 
-    objectPosition = chipmunk >>> body >>> getPosition
+    objectPosition = chipmunk >>> getPosition
 
     updateNoSceneChange fallingTile now contacts cd =
         case status fallingTile of
@@ -123,7 +119,7 @@ instance Sort TSort FallingTile where
             Loose ->
                 return fallingTile
 
-    render t@FallingTile{} sort@TSort{tilePixmap} ptr offset _now = do
+    render t@FallingTile{chipmunk = ImmutableChipmunk{}} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPosition $ chipmunk t
         renderPixmap ptr offset position (Just rad) Nothing tilePixmap
 
@@ -131,7 +127,7 @@ instance Sort TSort FallingTile where
 initializeBox :: Space -> TSort -> EditorPosition -> IO Chipmunk
 initializeBox space sort ep = do
     let (shape, baryCenterOffset) = mkShape sort
-        shapeWithAttributes = (shapeAttributes, shape)
+        shapeWithAttributes = (mkShapeDescription shapeAttributes shape)
         pos :: Vector
         pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                 +~ baryCenterOffset

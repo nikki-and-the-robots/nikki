@@ -4,6 +4,9 @@ module Physics.Chipmunk (
     Chipmunk(..),
     BodyAttributes(..),
     ShapeAttributes(..),
+    ShapeDescription(ShapeDescription),
+    mkShapeDescription,
+    immutableCopy,
 
     getRenderPosition,
     getChipmunkPosition,
@@ -66,7 +69,7 @@ module Physics.Chipmunk (
     setMoment,
 
     Position,
-    getPosition,
+    Physics.Chipmunk.Types.getPosition,
     Velocity,
     getVelocity,
     Force,

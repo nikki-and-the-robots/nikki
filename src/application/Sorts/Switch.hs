@@ -1,4 +1,4 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable #-}
+{-# language MultiParamTypeClasses, DeriveDataTypeable, NamedFieldPuns #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 module Sorts.Switch (
@@ -92,9 +92,14 @@ instance Sort SwitchSort Switch where
 
         return $ Switch boxChip stampChip triggerChip triggerShape False
 
+    immutableCopy s@Switch{boxChipmunk, stampChipmunk} = do
+        newBoxChipmunk <- CM.immutableCopy boxChipmunk
+        newStampChipmunk <- CM.immutableCopy stampChipmunk
+        return s{boxChipmunk = newBoxChipmunk, stampChipmunk = newStampChipmunk}
+
     chipmunks (Switch a b c _ _) = [a, b, c]
 
-    objectPosition = boxChipmunk >>> body >>> getPosition
+    objectPosition = boxChipmunk >>> getPosition
 
     updateNoSceneChange switch@Switch{triggered = False} now contacts cd = return $
         if triggerShape switch `member` triggers contacts then
@@ -147,12 +152,12 @@ triggerShapeAttributes =
 boxSize = Size (fromUber 31) (fromUber 15)
 
 
-switchShapes :: (([(ShapeAttributes, ShapeType)], Vector),
-                 [(ShapeAttributes, ShapeType)],
-                 ([(ShapeAttributes, ShapeType)], Vector))
+switchShapes :: (([ShapeDescription], Vector),
+                 [ShapeDescription],
+                 ([ShapeDescription], Vector))
 switchShapes =
-    ((map (tuple tileShapeAttributes) box, boxBaryCenterOffset),
-     [(triggerShapeAttributes, trigger)],
+    ((map (mkShapeDescription tileShapeAttributes) box, boxBaryCenterOffset),
+     [mkShapeDescription triggerShapeAttributes trigger],
      (stamp, stampBaryCenterOffset))
   where
     -- Configuration
@@ -179,11 +184,11 @@ switchShapes =
       mkRect (boxRightUpper -~ Position outerToOpening 0) (Size outerToOpening wallThickness)
       ]
 
-    stamp :: [(ShapeAttributes, ShapeType)]
+    stamp :: [ShapeDescription]
     stamp = [
-        (tileShapeAttributes, platform),
-        (innerStampShapeAttributes, shaft),
-        (innerStampShapeAttributes, innerStampThingie)
+        (mkShapeDescription tileShapeAttributes platform),
+        (mkShapeDescription innerStampShapeAttributes shaft),
+        (mkShapeDescription innerStampShapeAttributes innerStampThingie)
       ]
     platform = mkRect stampLeftUpper platformSize
     shaft = mkRect (Position (- (width shaftSize / 2)) (- height shaftSize))

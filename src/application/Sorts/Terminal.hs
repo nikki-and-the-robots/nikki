@@ -161,15 +161,18 @@ instance Sort TSort Terminal where
                 CM.collisionType = TerminalCT
               }
             (polys, baryCenterOffset) = mkPolys $ size sort
-            polysAndAttributes = map (tuple shapeAttributes) polys
+            polysAndAttributes = map (mkShapeDescription shapeAttributes) polys
         chip <- initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
         return $ Terminal chip attached (NikkiSelected 0) DontExit
                     (mkColorLights $ map (< length attached) [0..3])
                     0
 
+    immutableCopy t =
+        CM.immutableCopy (chipmunk t) >>= \ x -> return t{chipmunk = x}
+
     chipmunks = chipmunk >>> return
 
-    objectPosition = chipmunk >>> body >>> getPosition
+    objectPosition = chipmunk >>> getPosition
 
     startControl t = t{exitMode = DontExit}
 

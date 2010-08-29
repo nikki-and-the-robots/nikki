@@ -57,6 +57,8 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     -- that is not added to the chipmunk space (i.e. background tiles)
     initialize :: sort -> Maybe Space -> EditorPosition -> Maybe String -> IO object
 
+    immutableCopy :: object -> IO object
+
     chipmunks :: object -> [Chipmunk]
 
     objectPosition :: object -> IO Vector
@@ -114,6 +116,7 @@ instance Sort Sort_ Object_ where
     editorPosition2QtPosition (Sort_ s) = editorPosition2QtPosition s
     initialize (Sort_ sort) space editorPosition state =
         Object_ sort <$> initialize sort space editorPosition state
+    immutableCopy (Object_ s o) = Object_ s <$> Object.Types.immutableCopy o
     chipmunks (Object_ _ o) = chipmunks o
     objectPosition (Object_ _ o) = objectPosition o
     startControl (Object_ sort o) = Object_ sort $ startControl o

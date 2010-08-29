@@ -5,9 +5,11 @@ module Physics.Chipmunk.DebugGrid (
   ) where
 
 
+import Data.Abelian
+
 import Graphics.Qt as Qt
 
-import Physics.Hipmunk
+import Physics.Hipmunk as CM
 
 import Physics.Chipmunk.Types
 
@@ -30,12 +32,17 @@ renderGrid ptr offset chip = do
 
     mapM_ (renderShapeType ptr) (shapeTypes chip)
 
-renderShapeType :: Ptr QPainter -> ShapeType -> IO ()
-renderShapeType ptr Polygon{vertices} =
-    mapM_ (uncurry (renderVectorLine ptr)) (adjacentCyclic vertices)
-renderShapeType ptr (LineSegment start end thickness) =
-    renderVectorLine ptr start end
-renderShapeType ptr st = nm "renderShape" st
+renderShapeType :: Ptr QPainter -> ShapeDescription -> IO ()
+renderShapeType ptr ShapeDescription{shapeType, shapeOffset} =
+    case (shapeType, shapeOffset) of
+        (Polygon{vertices}, Vector 0 0) ->
+            mapM_ (uncurry (renderVectorLine ptr)) (adjacentCyclic vertices)
+        (LineSegment start end thickness, Vector 0 0) ->
+            renderVectorLine ptr start end
+        (Circle radius, Vector x y) -> do
+            setPenColor ptr 255 55 55 255 1
+            drawCircle ptr (Position x y) radius
+        st -> nm "renderShape" st
 
 renderVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
 renderVectorLine ptr (Vector x1 y1) (Vector x2 y2) = do

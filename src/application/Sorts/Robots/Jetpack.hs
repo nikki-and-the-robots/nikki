@@ -100,14 +100,17 @@ instance Sort JSort Jetpack where
                 CM.collisionType = RobotCT
               }
             (polys, baryCenterOffset) = mkPolys $ size sort
-            shapesAndPolys = map (tuple shapeAttributes) polys
+            shapesAndPolys = map (mkShapeDescription shapeAttributes) polys
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
         return $ Jetpack chip False Nothing Idle 0
 
     chipmunks = chipmunk >>> return
 
-    objectPosition = chipmunk >>> body >>> getPosition
+    immutableCopy j@Jetpack{chipmunk} =
+        CM.immutableCopy chipmunk >>= \ x -> return j{chipmunk = x}
+
+    objectPosition = chipmunk >>> getPosition
 
     updateNoSceneChange object now contacts (isControlled, cd) = inner object
       where

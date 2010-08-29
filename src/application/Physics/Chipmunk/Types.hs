@@ -58,34 +58,59 @@ instance Show ShapeAttributes where
         unwords ["ShapeAttributes", show a, show b, show c]
 
 
+data ShapeDescription = ShapeDescription {
+    shapeAttributes :: ShapeAttributes,
+    shapeType :: ShapeType,
+    shapeOffset :: Position
+  }
+    deriving Show
+
+mkShapeDescription :: ShapeAttributes -> ShapeType -> ShapeDescription
+mkShapeDescription a st = ShapeDescription a st zero
+
+
 data Chipmunk
     = Chipmunk {
         space :: Space,
         body :: Body,
         shapes :: [Shape],
-        shapeTypes :: [ShapeType],
+        shapeTypes :: [ShapeDescription],
         baryCenterOffset :: Vector  -- saves the distance from the left upper corner to the body position
       }
     | StaticChipmunk {
         space :: Space,
         body :: Body,
         shapes :: [Shape],
-        shapeTypes :: [ShapeType],
+        shapeTypes :: [ShapeDescription],
         renderPosition :: Qt.Position Double,
-        chipmunkPosition :: Vector  -- saves the distance from the left upper corner to the body position
+        chipmunkPosition :: Vector
       }
-    | DummyChipmunk { -- used for objects that aren't added to any space
-        renderPosition :: Qt.Position Double
+    | ImmutableChipmunk { -- used for objects that aren't added to any space and to make immutable copies of chipmunk objects
+        renderPosition :: Qt.Position Double,
+        renderAngle :: Angle,
+        baryCenterOffset :: Vector,
+        shapeTypes :: [ShapeDescription]  -- just for grid rendering for debugging
       }
   deriving (Show)
 
 instance Show Space where
     show _ = "<Space>"
 
+immutableCopy :: Chipmunk -> IO Chipmunk
+immutableCopy c = do
+    (pos, angle) <- getRenderPosition c
+    return $ ImmutableChipmunk pos angle (bcOffset c) (shapeTypes c)
+  where
+    bcOffset :: Chipmunk -> Vector
+    bcOffset Chipmunk{baryCenterOffset} = baryCenterOffset
+    bcOffset StaticChipmunk{chipmunkPosition, renderPosition = Qt.Position x y} = 
+        chipmunkPosition -~ Vector x y
+    bcOffset ImmutableChipmunk{baryCenterOffset} = baryCenterOffset
+
 
 -- * creation
 
-initChipmunk :: Space -> BodyAttributes -> [(ShapeAttributes, ShapeType)]
+initChipmunk :: Space -> BodyAttributes -> [ShapeDescription]
     -> Vector -> IO Chipmunk
 initChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenterOffset = do
     let normalAttrs = static2normalAttributes as
@@ -107,32 +132,34 @@ mkBody BodyAttributes{position, mass, inertia} = do
     setPosition body position
     return body
 
-mkShape :: Body -> ShapeAttributes -> ShapeType -> IO Shape
-mkShape body ShapeAttributes{elasticity, friction, collisionType} shapeType = do
-    shape <- newShape body shapeType zero
-    setElasticity shape elasticity
-    setFriction shape friction
-    setMyCollisionType shape collisionType
-    return shape
+mkShape :: Body -> ShapeDescription -> IO Shape
+mkShape body ShapeDescription{shapeAttributes = (ShapeAttributes elasticity friction collisionType), 
+    shapeType, shapeOffset} = do
+        shape <- newShape body shapeType shapeOffset
+        setElasticity shape elasticity
+        setFriction shape friction
+        setMyCollisionType shape collisionType
+        return shape
 
 -- | initially adds shapes to a Chipmunk
-addInitShape :: Chipmunk -> [(ShapeAttributes, ShapeType)] -> IO Chipmunk
+addInitShape :: Chipmunk -> [ShapeDescription] -> IO Chipmunk
 addInitShape (Chipmunk space body shapes shapeTypes baryCenterOffset) newShapeTypes = do
-    newShapes <- mapM (uncurry (mkShape body)) newShapeTypes
+    newShapes <- mapM (mkShape body) newShapeTypes
     mapM_ (spaceAdd space) newShapes
 
     let chip = Chipmunk
             space body
             newShapes
-            (shapeTypes ++ (map snd newShapeTypes))
+            (shapeTypes ++ newShapeTypes)
             baryCenterOffset
     return chip
 
 addInitShape (StaticChipmunk space body [] shapeTypes position baryCenterOffset) newShapeTypes = do
-    newShapes <- mapM (uncurry (mkShape body)) newShapeTypes
+    newShapes <- mapM (mkShape body) newShapeTypes
     mapM_ (spaceAdd space . Static) newShapes
     let chip =
-            StaticChipmunk space body newShapes (shapeTypes ++ map snd newShapeTypes) position baryCenterOffset
+            StaticChipmunk space body newShapes (shapeTypes ++ newShapeTypes)
+                position baryCenterOffset
     return chip
 
 
@@ -147,25 +174,33 @@ removeChipmunk c@Chipmunk{} = do
 
 -- * getters
 
+getPosition :: Chipmunk -> IO Vector
+getPosition Chipmunk{body} = Physics.Hipmunk.getPosition body
+getPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
+    return (Vector x y +~ baryCenterOffset)
+getPosition x = es "getPosition" x
+
 -- returns the angle and the position of the (rotated) left upper corner of the object.
 getRenderPosition :: Chipmunk -> IO (Qt.Position Double, Angle)
 getRenderPosition Chipmunk{body, baryCenterOffset} = do
-    pos <- getPosition body
+    pos <- Physics.Hipmunk.getPosition body
     angle <- getAngle body
     let rotatedOffset = rotateVector angle baryCenterOffset
         (Vector x y) = pos -~ rotatedOffset
     return (Qt.Position x y, angle)
 getRenderPosition StaticChipmunk{renderPosition} = do
     return (renderPosition, 0)
-getRenderPosition (DummyChipmunk pos) = return (pos, 0)
+getRenderPosition (ImmutableChipmunk pos angle _ _) = return (pos, angle)
 
 getChipmunkPosition :: Chipmunk -> IO (Position, Angle)
 getChipmunkPosition Chipmunk{body} = do
-    p <- getPosition body
+    p <- Physics.Hipmunk.getPosition body
     a <- getAngle body
     return (p, a)
 getChipmunkPosition StaticChipmunk{chipmunkPosition} =
     return (chipmunkPosition, 0)
+getChipmunkPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
+    return (Vector x y +~ rotateVector angle baryCenterOffset, angle)
 
 
 -- * conversion

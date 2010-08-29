@@ -73,6 +73,8 @@ instance Sort GSort Grid where
         let pos = editorPosition2QtPosition sort ep
         return $ Grid (size sort) pos
 
+    immutableCopy = return
+
     chipmunks = const []
 
     objectPosition grid =

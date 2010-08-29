@@ -101,16 +101,19 @@ instance Sort TSort Tile where
     initialize sort@TSort{} Nothing editorPosition Nothing = do
         let -- baryCenterOffset = fmap (/ 2) $ size sort
             pos = editorPosition2QtPosition sort editorPosition
-        return $ Tile $ DummyChipmunk{renderPosition = pos}
+        return $ Tile $ (ImmutableChipmunk pos 0 0 [])
     initialize sort@TSort{} (Just space) editorPosition Nothing =
         Tile <$>
         initializeBoxes space [(Nothing, size sort)] (sort, editorPosition)
 
+    immutableCopy (Tile c) = CM.immutableCopy c >>= return . Tile
+    immutableCopy (Merged c ts) = CM.immutableCopy c >>= \ im -> return (Merged im ts)
+
     chipmunks (Tile c) = [c]
     chipmunks (Merged c _) = [c]
 
-    objectPosition (Tile c) = getPosition $ body c
-    objectPosition (Merged c _) = getPosition $ body c
+    objectPosition (Tile c) = getPosition c
+    objectPosition (Merged c _) = getPosition c
 
     render t@Tile{} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPosition $ tchipmunk t
@@ -136,7 +139,7 @@ initializeBoxes :: Space -> [Box] -> (TSort, EditorPosition) -> IO Chipmunk
 initializeBoxes space boxes position = do
     let (shapes, baryCenterOffset) = mkShapes boxes
         shapesWithAttributes =
-            map (tuple tileShapeAttributes) shapes
+            map (mkShapeDescription tileShapeAttributes) shapes
         pos :: Vector
         pos = qtPosition2Vector (uncurry editorPosition2QtPosition position)
                 +~ baryCenterOffset
