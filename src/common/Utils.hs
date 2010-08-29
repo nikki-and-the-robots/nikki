@@ -14,6 +14,7 @@ import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault)
 import qualified Data.Foldable
 import qualified Data.Traversable
+import Data.IORef
 
 import Text.Printf
 
@@ -86,6 +87,22 @@ warn m = liftIO $ putStrLn ("WARNING: " ++ m)
 
 toDebug :: Show s => String -> s -> String
 toDebug msg s = msg ++ ": " ++ show s
+
+-- | returns True every n-th time 'every' is called.
+-- (of course this involves unsafeIO-magick.
+every :: Int -> IO () -> IO ()
+every n cmd = do
+    c <- readIORef everyRef
+    if c >= n then do
+        writeIORef everyRef 0
+        cmd
+      else do
+        writeIORef everyRef (c + 1)
+        return ()
+
+{-# NOINLINE everyRef #-}
+everyRef :: IORef Int
+everyRef = unsafePerformIO $ newIORef 0
 
 
 -- * re-named re-exports
@@ -278,6 +295,9 @@ maybeId fun a =
 rad2deg :: Floating a => a -> a
 rad2deg x = (x * 360) / (pi * 2)
 
+deg2rad :: Floating a => a -> a
+deg2rad x = x * 2 * pi / 360
+
 cartesian :: [a] -> [b] -> [(a, b)]
 cartesian a b = do
     a' <- a
@@ -393,11 +413,21 @@ instance (PP a, PP b, PP c) => PP (a, b, c) where
 instance (PP a, PP b, PP c, PP d) => PP (a, b, c, d) where
     pp (a, b, c, d) = "(" ++ pp a ++ ", " ++ pp b ++ ", " ++ pp c ++ ", " ++ pp d ++ ")"
 
+instance PP Bool where
+    pp True = "|"
+    pp False = "O"
+
+instance PP a => PP [a] where
+    pp list = "List:\n\t" ++ intercalate "\n\t" (map pp list) ++ "\n"
+
 instance PP Double where
     pp = printf "%8.3f"
 
 instance PP Int where
     pp = show
+
+ppp :: PP p => p -> IO ()
+ppp = pp >>> putStrLn
 
 -- * File stuff
 
