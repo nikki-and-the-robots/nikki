@@ -65,6 +65,10 @@ modifyObjects :: (Grounds a -> Grounds b) -> Scene a -> Scene b
 modifyObjects f s@Scene{objects} =
     s{objects = f objects}
 
+modifyObjectsM :: Monad m => (Grounds a -> m (Grounds b)) -> Scene a -> m (Scene b)
+modifyObjectsM op s@Scene{objects} =
+    op objects >>= \ new -> return s{objects = new}
+
 modifyMode :: (Mode -> Mode) -> Scene o -> Scene o
 modifyMode f s@Scene{mode} = s{mode = f mode}
 

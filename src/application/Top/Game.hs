@@ -27,7 +27,7 @@ import Top.Application
 
 playLevel :: Application -> GameState -> AppState -> AppState
 playLevel app gameAppState parent = AppState $ do
-    sceneMVar <- newMVar $ scene gameAppState
+    sceneMVar <- newEmptyMVar
     fpsRef <- initialFPSRef
     setDrawingCallbackAppWidget (window app) (Just $ render fpsRef sceneMVar)
 

@@ -2,6 +2,7 @@
 
 module Game.Scene (
     Scene,
+    Game.Scene.immutableCopy,
     stepScene,
     renderScene,
   ) where
@@ -191,6 +192,11 @@ updateCamera scene = do
 
 
 -- * rendering
+
+-- | immutable copy (for the rendering thread)
+immutableCopy :: Scene Object_ -> IO (Scene Object_)
+immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Object.immutableCopy))
+
 
 -- | well, renders the scene to the screen (to the max :)
 renderScene :: Ptr QPainter -> Scene Object_ -> IO ()

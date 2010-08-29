@@ -91,31 +91,53 @@ initialState app widget startScene = do
 
 
 
--- State monad command for rendering (for drawing callback)
--- logicLoop :: Application -> MVar (Scene Object_) -> Seconds -> AppMonad AppState
+-- | main loop for logic thread in gaming mode
+-- the sceneMVar has to be empty initially.
+logicLoop :: Application -> MVar (Scene Object_) -> AppMonad AppState
 logicLoop app sceneMVar = do
-    timer_ <- gets timer
-    startTime <- liftIO $ elapsed timer_
-    -- input events
-    qtEvents <- liftIO $ pollEvents $ keyPoller app
-    let events = toEitherList qtEvents []
-    oldKeyState <- gets keyState
-    let appEvents = concatMap (toAppEvent oldKeyState) events
-    heldKeys <- actualizeKeyState appEvents
+    initializeSceneMVar
+    loop 0
+  where
+    loop oldTime = do
+        timer_ <- gets timer
+        startTime <- liftIO $ elapsed timer_
+--         liftIO $ print (startTime - oldTime)
+        -- input events
+        qtEvents <- liftIO $ pollEvents $ keyPoller app
+        let events = toEitherList qtEvents []
+        oldKeyState <- gets keyState
+        let appEvents = concatMap (toAppEvent oldKeyState) events
+        heldKeys <- actualizeKeyState appEvents
 
-    -- stepping of the scene (includes rendering)
-    space <- gets cmSpace
-    sc <- gets scene
-    sc' <- liftIO $ stepScene space (ControlData appEvents heldKeys) sc
+        -- stepping of the scene (includes rendering)
+        space <- gets cmSpace
+        sc <- gets scene
+        sc' <- liftIO $ stepScene space (ControlData appEvents heldKeys) sc
+        puts setScene sc'
 
-    liftIO $ swapMVar sceneMVar $ unmutableCopy sc'
+        swapSceneMVar
 
-    puts setScene sc'
-    case mode sc' of
-        LevelFinished _ x -> return FinalState
-        _ -> do
-            waitPhysics startTime
-            logicLoop app sceneMVar
+        case mode sc' of
+            LevelFinished _ x -> return FinalState
+            _ -> do
+                waitPhysics startTime
+                loop startTime
+
+    initializeSceneMVar :: AppMonad ()
+    initializeSceneMVar = do
+        empty <- liftIO $ isEmptyMVar sceneMVar
+        when (not empty) $ fail "sceneMVar has to be empty"
+        s <- gets scene
+        immutableCopyOfScene <- liftIO $ Game.Scene.immutableCopy s
+        liftIO $ putMVar sceneMVar immutableCopyOfScene
+    swapSceneMVar :: AppMonad ()
+    swapSceneMVar = do
+        s <- gets scene
+        liftIO $ do
+            immutableCopyOfScene <- Game.Scene.immutableCopy s
+            swapMVar sceneMVar immutableCopyOfScene
+            return ()
+
 
 -- | Waits till the real world catches up with the simulation.
 -- Since 'threadDelay' seems to be far to inaccurate, we have a busy wait :(
@@ -132,9 +154,6 @@ waitPhysics startTime = gets timer >>= \ timer_ -> liftIO $ do
     tickBusyWaitCounter n
 
 
--- Well, this isn't really an unmutable copy. Maybe we can get away without.
-unmutableCopy :: Scene Object_ -> Scene Object_
-unmutableCopy = id
 
 
 -- | returns the time passed since program start
