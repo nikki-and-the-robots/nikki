@@ -20,6 +20,7 @@ module Top.Main where
 
 import Data.SelectTree
 import Data.Indexable as I
+import Data.List
 
 import Control.Concurrent
 import Control.Monad
@@ -61,10 +62,10 @@ debugNumberOfHecs =
 
 main = globalCatcher $ do
 
-    debugNumberOfHecs
+--     debugNumberOfHecs
 
     hSetBuffering stdout NoBuffering
-    putStrLn "\neditor started..."
+    putStrLn "\nstarted..."
 
     -- qt initialisation
     qApp <- newQApplication
@@ -123,7 +124,7 @@ quit app parent =
 -- | select a saved level.
 selectLevelPlay :: Application -> AppState -> AppState
 selectLevelPlay app parent = AppState $ do
-    levelFiles <- filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
+    levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
     if null levelFiles then
         return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
       else do
@@ -158,7 +159,7 @@ playLevel app parent editorScene = AppState $ do
 
 selectLevelEdit :: Application -> AppState -> AppState
 selectLevelEdit app parent = AppState $ do
-    levelFiles <- filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
+    levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
     return $ menu app (Just "pick a level to edit") (Just parent) $
         ("new level", pickNewLevel) :
         map (\ p -> (p, loadingEditorScene app p (editLevel app parent))) levelFiles
