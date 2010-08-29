@@ -48,6 +48,7 @@ stepScene :: Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
 stepScene space controlData =
     updateScene controlData >>>>
     stepSpace space >>>>
+    updateCamera >>>>
     fromPure (maybeId (flip transition controlData))
 
 
@@ -181,23 +182,27 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     updateMultiLayerObjects :: Index -> Object_ -> IO Object_
     updateMultiLayerObjects i o = update o i now contacts (False, cd) >>= fromPure snd
 
+updateCamera :: Scene Object_ -> IO (Scene Object_)
+updateCamera scene = do
+    controlledPosition <- objectPosition $ getControlled scene
+    let cameraState' = updateCameraState controlledPosition (cameraState scene)
+    return scene{cameraState = cameraState'}
+
+
 
 -- * rendering
 
 -- | well, renders the scene to the screen (to the max :)
 renderScene :: Ptr QPainter -> Scene Object_ -> IO ()
-renderScene ptr scene@Scene{spaceTime = now} = do
+renderScene ptr scene@Scene{spaceTime = now, cameraState} = do
 
     resetMatrix ptr
     windowSize <- sizeQPainter ptr
     eraseRect ptr zero windowSize (QtColor 0 0 0 255)
 
-    controlledPosition <- objectPosition $ getControlled scene
-    (center, cameraState') <- getCenter controlledPosition (cameraState scene)
-
-    intSize@(Size width height) <- sizeQPainter ptr
-    let size = fmap fromIntegral intSize
-        offsetVector = - (center - Vector (fromIntegral width / 2) (fromIntegral height / 2))
+    size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
+    let center = getCameraPosition cameraState
+        offsetVector = - (center - Vector (width / 2) (height / 2))
         offset = fmap (fromIntegral . truncate) $ vector2QtPosition offsetVector
 
     when (showScene Configuration.development) $ do
@@ -212,10 +217,6 @@ renderScene ptr scene@Scene{spaceTime = now} = do
         debugDrawCoordinateSystem ptr offset
     when (showChipmunkObjects Configuration.development) $
         fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
-
-
-
---     return scene{cameraState = cameraState'}
 
 
 -- | renders the different Layers.
