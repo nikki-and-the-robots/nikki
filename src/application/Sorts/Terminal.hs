@@ -172,8 +172,6 @@ instance Sort TSort Terminal where
 
     chipmunks = chipmunk >>> return
 
-    objectPosition = chipmunk >>> getPosition
-
     startControl t = t{exitMode = DontExit}
 
     updateNoSceneChange terminal now contacts (False, cd) =

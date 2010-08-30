@@ -60,7 +60,9 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 
     chipmunks :: object -> [Chipmunk]
 
-    objectPosition :: object -> IO Vector
+    -- | only implemented in Nikki and robots
+    getControlledChipmunk :: object -> Chipmunk
+    getControlledChipmunk o = error ("please implement getControlledChipmunk in: " ++ show o)
 
     startControl :: object -> object
     startControl = id
@@ -69,7 +71,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     update o i now contacts cd = do
         o' <- updateNoSceneChange o now contacts cd
         return (id, o')
-    
+
     updateNoSceneChange :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
     updateNoSceneChange o _ _ _ = return o
 
@@ -117,7 +119,7 @@ instance Sort Sort_ Object_ where
         Object_ sort <$> initialize sort space editorPosition state
     immutableCopy (Object_ s o) = Object_ s <$> Object.Types.immutableCopy o
     chipmunks (Object_ _ o) = chipmunks o
-    objectPosition (Object_ _ o) = objectPosition o
+    getControlledChipmunk (Object_ _ o) = getControlledChipmunk o
     startControl (Object_ sort o) = Object_ sort $ startControl o
     update (Object_ sort o) i now contacts cd = do
         (f, o') <- update o i now contacts cd

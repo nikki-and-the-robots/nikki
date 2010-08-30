@@ -97,8 +97,6 @@ instance Sort SwitchSort Switch where
 
     chipmunks (Switch a b c _ _) = [a, b, c]
 
-    objectPosition = boxChipmunk >>> getPosition
-
     updateNoSceneChange switch@Switch{triggered = False} now contacts cd = return $
         if triggerShape switch `member` triggers contacts then
             switch{triggered = True}

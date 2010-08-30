@@ -15,6 +15,7 @@ import Base.Types
 import Object
 
 import Game.OptimizeChipmunks
+import Game.Scene.Camera
 
 import qualified Sorts.Nikki
 import qualified Sorts.Terminal
@@ -71,10 +72,9 @@ editorObject2Object (Just space) (MergedTilesEditorObject merged) =
 mkScene :: Space -> Grounds Object_ -> IO (Scene Object_)
 mkScene space objects = do
     let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
+    nikkiPosition <- getPosition $ getControlledChipmunk (mainLayerIndexable objects !!! nikki)
     contactRef <- initContactRef space initial watchedContacts
---     error $ show $ I.toList $ mainLayerIndexable objects
---     let allTriggerShapes = Set.fromList $ filter (isSwitch . sort_) $ I.toList mainLayerIndexable objects
-    return $ Scene 0 objects initial contactRef initial (NikkiMode nikki)
+    return $ Scene 0 objects (initialCameraState nikkiPosition) contactRef initial (NikkiMode nikki)
 
 groundsOptimizeChipmunks :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsOptimizeChipmunks =

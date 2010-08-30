@@ -95,8 +95,6 @@ instance Sort TSort FallingTile where
 
     chipmunks (FallingTile _ c _) = [c]
 
-    objectPosition = chipmunk >>> getPosition
-
     updateNoSceneChange fallingTile now contacts cd =
         case status fallingTile of
             Static ->

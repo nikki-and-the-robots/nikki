@@ -77,14 +77,6 @@ instance Sort GSort Grid where
 
     chipmunks = const []
 
-    objectPosition grid =
-        return $ Vector x y
-      where
-        x = qtX + w / 2
-        y = qtY + h / 2
-        Size w h = gridSize grid
-        Position qtX qtY = position grid
-
     render o s ptr offset now = do
         resetMatrix ptr
         let offsetPlusPosition = offset +~ position o

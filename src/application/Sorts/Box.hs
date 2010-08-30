@@ -65,7 +65,6 @@ instance Sort BSort Box where
         return $ Box chip
     immutableCopy (Box x) = CM.immutableCopy x >>= return . Box
     chipmunks b = [chipmunk b]
-    objectPosition = chipmunk >>> getPosition
     render o sort ptr offset now =
         renderChipmunk ptr offset (boxPixmap sort) (chipmunk o)
 

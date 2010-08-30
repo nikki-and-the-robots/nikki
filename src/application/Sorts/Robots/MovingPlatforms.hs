@@ -88,7 +88,6 @@ instance Sort PSort Platform where
         return $ Platform (size sort) chip (Path r) a (const $ return ())
 
     chipmunks p = [chipmunk p]
-    objectPosition = chipmunk >>> getPosition
 
     immutableCopy p@Platform{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
@@ -146,7 +145,7 @@ getNextPosition p@(mode -> Path (a : _)) = a
 
 updatePlatform platform = do
     let nextPosition = getNextPosition platform
-    position <- objectPosition platform
+    position <- getPosition $ chipmunk platform
     velocity <- getVelocity $ body $ chipmunk platform
     -- drag of the medium (air).
     let drag = calculateDrag size velocity

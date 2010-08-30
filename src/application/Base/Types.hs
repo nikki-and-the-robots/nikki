@@ -8,7 +8,6 @@ module Base.Types where
 
 import Data.Set
 import Data.Indexable
-import Data.Initial
 import Data.Abelian
 import Data.Array.Storable
 import Data.SelectTree
@@ -76,10 +75,6 @@ modifyMode f s@Scene{mode} = s{mode = f mode}
 data CameraState
     = CS Vector
   deriving Show
-
-instance Initial CameraState where
-    initial = CS zero
-
 
 
 data Contacts

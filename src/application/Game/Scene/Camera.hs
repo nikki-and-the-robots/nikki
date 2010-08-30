@@ -1,22 +1,30 @@
 
 module Game.Scene.Camera (
     CameraState,
+    initialCameraState,
     updateCameraState,
     getCameraPosition,
   ) where
 
 
+import Data.Abelian
+
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
+
+import Utils
 
 import Base.Types
 
 
+initialCameraState :: CM.Position -> CameraState
+initialCameraState = CS
+
 
 -- returns the position the camera looks at
-updateCameraState :: CM.Position -> CameraState -> CameraState
-updateCameraState position (CS camPos) =
---     trace ("newPos: " ++ pp newPos ++ " camPos: " ++ pp camPos) $
+updateCameraState :: CM.Position -> Velocity -> CameraState -> CameraState
+updateCameraState position velocity (CS camPos) =
+--     trace ("vel: " ++ show xLimit) $
     CS newPos
   where
     distance = camPos - position

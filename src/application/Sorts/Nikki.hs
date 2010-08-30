@@ -224,7 +224,7 @@ instance Sort NSort Nikki where
 
     chipmunks = return . chipmunk
 
-    objectPosition nikki = getPosition $ chipmunk nikki
+    getControlledChipmunk = chipmunk
 
     updateNoSceneChange nikki now contacts cd = (
         controlBody now contacts cd >>>>

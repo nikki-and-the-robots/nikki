@@ -112,9 +112,6 @@ instance Sort TSort Tile where
     chipmunks (Tile c) = [c]
     chipmunks (Merged c _) = [c]
 
-    objectPosition (Tile c) = getPosition c
-    objectPosition (Merged c _) = getPosition c
-
     render t@Tile{} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPosition $ tchipmunk t
         renderPixmap ptr offset position (Just rad) Nothing tilePixmap

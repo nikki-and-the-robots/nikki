@@ -185,8 +185,10 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
 
 updateCamera :: Scene Object_ -> IO (Scene Object_)
 updateCamera scene = do
-    controlledPosition <- objectPosition $ getControlled scene
-    let cameraState' = updateCameraState controlledPosition (cameraState scene)
+    let controlled = getControlledChipmunk $ getControlled scene
+    position <- getPosition controlled
+    velocity <- getVelocity $ body controlled
+    let cameraState' = updateCameraState position velocity (cameraState scene)
     return scene{cameraState = cameraState'}
 
 

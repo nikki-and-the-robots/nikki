@@ -84,8 +84,6 @@ instance Sort BSort Battery where
 
     chipmunks = chipmunk >>> return
 
-    objectPosition = chipmunk >>> getPosition
-
     update o i now contacts cd
         | any (`member` batteries contacts) (shapes $ chipmunk o) = do
             -- the battery is consumed by nikki (TODO: delete battery)

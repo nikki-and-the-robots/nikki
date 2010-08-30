@@ -116,8 +116,6 @@ instance Sort JSort Jetpack where
     immutableCopy j@Jetpack{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return j{chipmunk = x}
 
-    objectPosition = chipmunk >>> getPosition
-
     updateNoSceneChange object now contacts (isControlled, cd) = inner object
       where
         inner =
