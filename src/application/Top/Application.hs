@@ -65,7 +65,7 @@ menu app mTitle mParent children =
             Press UpButton -> return $ inner $ selectPrevious items
             Press DownButton -> return $ inner $ selectNext items
             Press AButton -> return $ snd $ selected items
-            Press StartButton -> case mParent of
+            Press BButton -> case mParent of
                 Just parent -> return parent
                 Nothing -> return $ inner items
             x -> return $ inner items

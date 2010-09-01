@@ -51,14 +51,12 @@ editorLoop app parent sceneMVar scene = AppState $ do
         event <- liftIO $ waitForAppEvent $ keyPoller app
         if event == Press StartButton then do
             s <- get
-            return $ editorMenu app this sceneMVar s
+            return $ editorMenu app parent sceneMVar s
           else do
             -- other events are handled below (in Editor.Scene)
             modifyState (updateEditorScene event)
             updateSceneMVar app sceneMVar
             worker
-
-    this = editorLoop app parent sceneMVar scene
 
     render sceneMVar ptr = do
         scene <- readMVar sceneMVar
@@ -84,13 +82,12 @@ editorMenu app parent sceneMVar scene =
       (
       lEnterOEM ++
       [
-        ("select object", selectSort app parent sceneMVar scene),
+        ("select object", selectSort app parent this sceneMVar scene),
         ("return to editing", edit scene),
         ("save level and exit editor", saveLevel app parent scene),
         ("exit editor without saving", reallyExitEditor app parent this)
       ])
   where
-    this = editorMenu app parent sceneMVar scene
     lEnterOEM = case selected scene of
         Nothing -> []
         Just i -> case objectEditModeMethods $ editorSort $ getMainObject scene i of
@@ -103,17 +100,18 @@ editorMenu app parent sceneMVar scene =
                 mod = enterModeOEM scene
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app parent sceneMVar scene
+    this = editorMenu app parent sceneMVar scene
 
-reallyExitEditor app parent editorMenu =
-    Top.Application.menu app (Just "really exit without saving?") (Just editorMenu) [
-        ("no", editorMenu),
+reallyExitEditor app parent editor =
+    Top.Application.menu app (Just "really exit without saving?") (Just editor) [
+        ("no", editor),
         ("yes", parent)
       ]
 
-selectSort :: Application -> AppState -> MVar (EditorScene Sort_)
+selectSort :: Application -> AppState -> AppState -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-selectSort app parent mvar scene =
-    treeToMenu app parent (fmap (sortId >>> getSortId) $ availableSorts scene) select
+selectSort app parent editorMenu mvar scene =
+    treeToMenu app editorMenu (fmap (sortId >>> getSortId) $ availableSorts scene) select
   where
     select :: String -> AppState
     select n =
