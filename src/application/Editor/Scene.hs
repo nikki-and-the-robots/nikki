@@ -54,8 +54,7 @@ searchSelectedObject s@EditorScene{selectedLayer} =
 -- * normalizers
 
 updateSelected :: EditorScene Sort_ -> EditorScene Sort_
-updateSelected s@EditorScene{} = s{selected = searchSelectedObject s}
-updateSelected x = x
+updateSelected s = s{selected = searchSelectedObject s}
 
 -- * constructors
 
@@ -85,6 +84,7 @@ initEditorScene sorts mObjects = flip evalStateT empty $ do
 
 updateEditorScene :: AppEvent -> EditorScene Sort_ -> EditorScene Sort_
 updateEditorScene (Press button) scene =
+    updateSelected $
     keyPress button scene
 updateEditorScene (Release button) s = s
 
