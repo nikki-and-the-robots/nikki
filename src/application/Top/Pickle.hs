@@ -51,27 +51,8 @@ parse (readM -> Just x :: Maybe SaveType) = Just x
 parse (readM -> Just x :: Maybe Old1.SaveType) = Just $ Old1.convert x
 parse _ = Nothing
 
--- | converts an older file format to the newest version
-convertToNewest :: String -> String
-convertToNewest s = case parse s of
-    Just x -> show x
-    Nothing -> error "convertToNewest"
-
-
 
 -- * loading
-
-load :: Maybe String -> IO (Maybe (FilePath, Grounds PickleObject))
-load mDefault = do
-    args <- getArgs
-    case (args, mDefault) of
-        ([levelfile], _) -> inner levelfile
-        ([], Just levelfile) -> inner levelfile
-        ([], Nothing) -> return Nothing
-  where
-    inner path = do
-        objects <- loadByFilePath path
-        return $ Just (path, objects)
 
 loadByFilePath :: FilePath -> IO (Grounds PickleObject)
 loadByFilePath path = do
@@ -86,56 +67,6 @@ loadByFilePath path = do
 
 -- * saving
 
-saveDepr :: EditorScene Sort_ -> IO ()
-saveDepr scene = do
-    IO.hSetBuffering IO.stdin IO.NoBuffering
-    s <- wantsToSave
-    case s of
-        False -> putStrLn "Ok, not saving"
-        True -> do
-            levelFile <- askWithDefault "level path" $ error "(getLevelPath scene)"
-            assertIO (not $ null levelFile) "filename not empty"
-            putStr ("saving as " ++ show levelFile ++ "...")
-            writeObjectsToDisk levelFile (editorObjects scene)
-            putStrLn "done"
-
-wantsToSave :: IO Bool
-wantsToSave = do
-    c <- promptForInput "Do you want to save this level? (Y/n):"
-    if c `elem` ["", "Y", "y"] then
-        return True
-      else if c `elem` ["n", "N"] then
-        return False
-      else do
-        putStrLn "Wrong answer"
-        wantsToSave
-
-
-askWithDefault :: String -> Maybe String -> IO String
-askWithDefault prompt vorauswahl =
-    case vorauswahl of
-        Nothing -> do
-            res <- promptForInput (prompt ++ ": ")
-            myreturn res vorauswahl
-        Just def -> do
-            res <- promptForInput (prompt ++ " [" ++ def ++ "] : ")
-            myreturn res vorauswahl
-  where
-    myreturn "" Nothing = do
-        putStrLn "Wrong answer"
-        askWithDefault prompt vorauswahl
-    myreturn "" (Just x) = return x
-    myreturn name _ = return name
-
-promptForInput :: String -> IO String
-promptForInput p = do
-    putStrLn p
-    getLine
-
-
 writeObjectsToDisk :: FilePath -> Grounds (EditorObject Sort_) -> IO ()
 writeObjectsToDisk file objects = do
     writeSaved file $ fmap editorObject2PickleObject objects
-
-
-
