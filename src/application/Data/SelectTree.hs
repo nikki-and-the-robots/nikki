@@ -2,6 +2,7 @@
 
 module Data.SelectTree (
     SelectTree(..),
+    mkNode,
     getSelected,
     selectNext,
     selectPrevious,
@@ -30,6 +31,10 @@ instance Functor SelectTree where
 
 instance Show a => PP (SelectTree a) where
     pp = T.drawTree . fmap show . toTree
+
+
+mkNode :: String -> (Indexable (SelectTree a)) -> SelectTree a
+mkNode label ix = Node label ix (head (keys ix))
 
 
 getSelected :: SelectTree a -> a

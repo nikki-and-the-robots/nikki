@@ -20,7 +20,7 @@ module Top.Main where
 
 import Data.SelectTree
 import Data.Indexable as I
-import Data.List
+import Data.List as List
 
 import Control.Concurrent
 
@@ -91,12 +91,28 @@ main = globalCatcher $ do
     case code of
         0 -> exitWith ExitSuccess
 
-
+-- | returns all sorts in a nicely sorted SelectTree
 getAllSorts :: [IO [Sort_]] -> IO (SelectTree Sort_)
 getAllSorts sortLoaders = do
     sorts <- concat <$> mapM id sortLoaders
-    return $ Node "editor-Tiles" (I.fromList $ map Leaf sorts) 0
+    return $ mkSelectTree "" sorts
+  where
+    mkSelectTree :: String -> [Sort_] -> SelectTree Sort_
+    mkSelectTree prefix sorts =
+        mkNode prefix (I.fromList $ map (mkPrefixChild sorts) (childrenPrefixes prefix sorts))
+      where
+        childrenPrefixes :: String -> [Sort_] -> [String]
+        childrenPrefixes prefix =
+            map (takeWhile (/= '/') . drop (List.length prefix) . getSortId . sortId)
+            >>> nub
+            >>> map (prefix ++)
 
+        mkPrefixChild :: [Sort_] -> String -> SelectTree Sort_
+        mkPrefixChild sorts prefix =
+            trace ("prefix: " ++ prefix) $
+            case filter (\ sort -> prefix `isPrefixOf` getSortId (sortId sort)) sorts of
+                [single] -> Leaf single
+                list@(_ : _) -> mkSelectTree (prefix ++ "/") list
 
 
 -- * states
