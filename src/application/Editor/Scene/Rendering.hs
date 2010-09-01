@@ -17,7 +17,6 @@ import Base.Types
 import Object
 
 import Editor.Scene.Types
-import Editor.Scene.Menu as Menu
 import Editor.Scene.Rendering.Helpers
 
 -- | renders the whole editor scene (with gui)
@@ -26,14 +25,11 @@ renderEditorScene ptr scene@EditorScene{objectEditModeIndex = Just i} =
     renderOEM ptr scene oemState
   where
     Just oemState = editorOEMState $ getMainObject scene i
-renderEditorScene ptr s@EditorScene{} = do
+renderEditorScene ptr s = do
     offset <- calculateRenderTransformation ptr s
     renderObjectScene ptr offset s
     renderGUI ptr offset s
 
-renderEditorScene ptr s@MenuScene{mainScene, menu} = do
-    renderEditorScene ptr mainScene
-    Menu.render ptr menu
 
 renderObjectScene :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()
 renderObjectScene ptr offset s = do

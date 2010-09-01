@@ -375,7 +375,7 @@ controlBody now contacts (True, cd)
         let bothHeld = leftHeld && rightHeld
             leftHeld = LeftButton `elem` held cd
             rightHeld = RightButton `elem` held cd
-            aPushed = Press AButton `elem` pushed cd
+            aPushed = Press AButton `elem` pressed cd
             aHeld = AButton `elem` held cd
 
         velocity <- getVelocity body
@@ -614,7 +614,7 @@ updateRenderState contacts (True, controlData) (contactNormal, nikki) =
         -- nikki is in the air
             Jump buttonDirection
 
-    aPushed = Press AButton `elem` pushed controlData
+    aPushed = Press AButton `elem` pressed controlData
     rightHeld = RightButton `elem` held controlData
     leftHeld = LeftButton `elem` held controlData
     nothingHeld = not (rightHeld `xor` leftHeld)

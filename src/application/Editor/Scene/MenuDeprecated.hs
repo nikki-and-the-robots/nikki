@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns #-}
 
-module Editor.Scene.Menu where
+module Editor.Scene.MenuDeprecated where
 
 
 import Utils

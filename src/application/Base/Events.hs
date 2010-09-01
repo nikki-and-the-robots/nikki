@@ -25,10 +25,12 @@ data AppButton
     | BButton
 
     | StartButton -- calling of a Menu
+
+    | KeyboardButton Key
   deriving (Eq, Ord, Show)
 
 data ControlData = ControlData {
-    pushed :: [AppEvent],
+    pressed :: [AppEvent],
     held :: [AppButton]
   }
     deriving Show
@@ -46,6 +48,8 @@ toAppEvent _ (Left (KeyPress key)) | key `member` key2button =
     [Press (key2button ! key)]
 toAppEvent _ (Left (KeyRelease key)) | key `member` key2button =
     [Release (key2button ! key)]
+toAppEvent _ (Left (KeyPress key)) = [Press (KeyboardButton key)]
+toAppEvent _ (Left (KeyRelease key)) = [Release (KeyboardButton key)]
 
 -- joystick
 -- toAppEvent _ (Right (JoyButtonDown 0 jbutton)) | jbutton `member` jbutton2button =
@@ -56,7 +60,6 @@ toAppEvent _ (Left (KeyRelease key)) | key `member` key2button =
 --     calculateJoyHatEvents oldButtons x
 
 -- else:
-toAppEvent _ _ = []
 
 
 key2button :: Map Key AppButton 

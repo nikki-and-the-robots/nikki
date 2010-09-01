@@ -86,14 +86,14 @@ loadByFilePath path = do
 
 -- * saving
 
-save :: EditorScene Sort_ -> IO ()
-save scene = do
+saveDepr :: EditorScene Sort_ -> IO ()
+saveDepr scene = do
     IO.hSetBuffering IO.stdin IO.NoBuffering
     s <- wantsToSave
     case s of
         False -> putStrLn "Ok, not saving"
         True -> do
-            levelFile <- askWithDefault "level path" (getLevelPath scene)
+            levelFile <- askWithDefault "level path" $ error "(getLevelPath scene)"
             assertIO (not $ null levelFile) "filename not empty"
             putStr ("saving as " ++ show levelFile ++ "...")
             writeObjectsToDisk levelFile (editorObjects scene)

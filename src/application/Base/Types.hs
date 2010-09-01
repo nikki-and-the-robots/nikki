@@ -152,25 +152,11 @@ data EditorScene sort
 
         debugMsgs :: [String]
     }
-    | MenuScene {
-        mainScene :: EditorScene sort,
-        menu :: Menu (MenuLabel sort) (EditorScene sort),
-
-        debugMsgs :: [String]
-      }
-    | ExitEditorScene {
-        levelPath :: Maybe FilePath,
-        editorObjects :: Grounds (EditorObject sort)
-      }
   deriving (Show, Typeable)
 
 instance Show (EditorScene sort -> EditorPosition) where
     show _ = "<EditorScene -> EditorPosition>"
 
-
-getLevelPath :: EditorScene sort -> Maybe FilePath
-getLevelPath EditorScene{levelPath} = levelPath
-getLevelPath MenuScene{mainScene} = levelPath mainScene
 
 getCursorStep :: EditorScene sort -> EditorPosition
 getCursorStep s = cursorStep s s
@@ -225,4 +211,3 @@ data OEMState sort
         oemState :: String
       }
   deriving Show
-

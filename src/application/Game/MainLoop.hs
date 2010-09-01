@@ -3,7 +3,7 @@
 -- | The (real) main (that is, entry-) module for the game
 
 module Game.MainLoop (
-    logicLoop,
+    gameLoop,
     GameState(..),
     initialStateRef,
     initialState
@@ -90,8 +90,8 @@ initialState app widget startScene = do
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
-logicLoop :: Application -> MVar (Scene Object_) -> AppMonad AppState
-logicLoop app sceneMVar = do
+gameLoop :: Application -> MVar (Scene Object_) -> AppMonad AppState
+gameLoop app sceneMVar = do
     initializeSceneMVar
     loop 0
   where

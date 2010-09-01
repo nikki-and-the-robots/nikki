@@ -38,7 +38,7 @@ import Graphics.Qt
 import Utils
 
 import Base.GlobalCatcher
-import Base.Types hiding (menu)
+import Base.Types
 import Base.Configuration
 
 import Object
@@ -107,7 +107,7 @@ applicationStates app =
     menu app Nothing Nothing [
         ("play", selectLevelPlay app this),
         ("edit", selectLevelEdit app this),
-        ("quit", quit app this)
+        ("quit", FinalState)
       ]
   where
     this = applicationStates app

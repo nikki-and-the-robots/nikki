@@ -23,7 +23,7 @@ playLevel app gameAppState parent = AppState $ do
     setDrawingCallbackAppWidget (window app) (Just $ render fpsRef sceneMVar)
 
     setRenderLooped (window app) True
-    runStateT (logicLoop app sceneMVar) gameAppState
+    runStateT (gameLoop app sceneMVar) gameAppState
     setRenderLooped (window app) False
 
     return parent

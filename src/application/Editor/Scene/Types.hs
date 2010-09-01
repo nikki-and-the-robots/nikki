@@ -17,10 +17,7 @@ import Base.Types
 import Object
 
 
-data ControlData = ControlData [QtEvent] [Key]
-  deriving Show
-
-type SceneMonad = StateT (EditorScene Sort_) IO
+-- type SceneMonad = StateT (EditorScene Sort_) IO
 
 
 -- * getters
@@ -45,12 +42,6 @@ getMainObject :: EditorScene Sort_ -> Index -> EditorObject Sort_
 getMainObject scene i = os !!! i
   where
     os = mainLayerIndexable $ editorObjects scene
-
--- getTerminalMRobot :: EditorScene -> Maybe EditorObject
--- getTerminalMRobot scene@TerminalScene{} =
---     case tmAvailableRobots scene of
---         (i : _) -> Just (getObject scene i)
---         [] -> Nothing
 
 
 -- * Setters

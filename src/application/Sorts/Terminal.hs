@@ -41,7 +41,7 @@ import Base.Types hiding (selected, OEMState)
 
 import Object
 
-import Editor.Scene.Types hiding (ControlData)
+import Editor.Scene.Types
 import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
 
@@ -205,21 +205,21 @@ mkPolys (Size w h) =
 -- * controlling
 
 controlTerminal :: Seconds -> ControlData -> Terminal -> Terminal
-controlTerminal now cd t | Press BButton `elem` pushed cd =
---     || Press AButton `elem` pushed cd =
+controlTerminal now cd t | Press BButton `elem` pressed cd =
+--     || Press AButton `elem` pressed cd =
         case selected t of
             NikkiSelected _ -> t{exitMode = ExitToNikki}
             RobotSelected i -> t{exitMode = ExitToRobot (robots t !! i)}
-controlTerminal now cd t | Press RightButton `elem` pushed cd =
+controlTerminal now cd t | Press RightButton `elem` pressed cd =
     modifySelected now t (+ 1)
-controlTerminal now cd t | Press LeftButton `elem` pushed cd =
+controlTerminal now cd t | Press LeftButton `elem` pressed cd =
     modifySelected now t (subtract 1)
 controlTerminal now cd t@Terminal{selected = NikkiSelected i, robots}
-    | Press DownButton `elem` pushed cd
+    | Press DownButton `elem` pressed cd
       && not (null robots) =
         t{selected = RobotSelected i, selectedChangedTime = now}
 controlTerminal now cd t@Terminal{selected = RobotSelected i}
-    | Press UpButton `elem` pushed cd =
+    | Press UpButton `elem` pressed cd =
         t{selected = NikkiSelected i}
 controlTerminal _ _ t = t
 
@@ -281,8 +281,8 @@ blinkSelectedColorLight now t =
 --         Just f ->
 --             modifySelected f state
 --   where
---     right = Press RightButton `elem` pushed cd
---     left = Press LeftButton `elem` pushed cd
+--     right = Press RightButton `elem` pressed cd
+--     left = Press LeftButton `elem` pressed cd
 --     mf = if right then
 --         Just (+ 1)
 --       else if left then
