@@ -26,27 +26,12 @@ import Top.Pickle
 type MM o = StateT EditorState IO o
 
 data EditorState = EditorState {
-    keyState :: Set AppButton,
     scene :: EditorScene Sort_
   }
 
-setKeyState :: EditorState -> Set AppButton -> EditorState
-setKeyState (EditorState _ b) a = EditorState a b
-
 setScene :: EditorState -> EditorScene Sort_ -> EditorState
-setScene    (EditorState a _ ) b = EditorState a b
+setScene _ s = EditorState s
 
-updateKeyState :: Either QtEvent JJ_Event -> MM ControlData
-updateKeyState event = do
-    s <- gets keyState
-    let appEvents = toAppEvent s event
-    mapM_ (modifies keyState setKeyState . inner) appEvents
-    s <- gets keyState
-    return $ ControlData appEvents (toList s)
-  where
-    inner :: AppEvent -> Set AppButton -> Set AppButton
-    inner (Press k) ll = insert k ll
-    inner (Release k) ll = delete k ll
 
 updateSceneMVar :: Application -> MVar (EditorScene Sort_) -> MM ()
 updateSceneMVar app mvar = do
@@ -60,14 +45,13 @@ updateSceneMVar app mvar = do
 
 editorLoop :: Application -> AppState -> MVar (EditorScene Sort_) -> MM AppState
 editorLoop app parent sceneMVar = do
-    event <- liftIO $ readNextEvent $ keyPoller app
-    cd <- updateKeyState $ Left event
-    if Press StartButton `elem` pressed cd then do
+    event <- liftIO $ waitForAppEvent $ keyPoller app
+    if event == Press StartButton then do
         s <- gets scene
         return $ editorMenu app parent s
       else do
         -- other events are handled below (in Editor.Scene)
-        modifies scene setScene (updateEditorScene cd)
+        modifies scene setScene (updateEditorScene event)
         updateSceneMVar app sceneMVar
         editorLoop app parent sceneMVar
 

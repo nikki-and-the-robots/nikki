@@ -83,14 +83,10 @@ initEditorScene sorts mObjects = flip evalStateT empty $ do
 
 -- * manipulating
 
-updateEditorScene :: ControlData -> EditorScene Sort_ -> EditorScene Sort_
-updateEditorScene (ControlData events held) scene =
-    updateSelected $ chainApp keyPress pressed scene
-  where
-    pressed = mapMaybe unwrapPress events
-    unwrapPress (Press x) = Just x
-    unwrapPress _ = Nothing
-
+updateEditorScene :: AppEvent -> EditorScene Sort_ -> EditorScene Sort_
+updateEditorScene (Press button) scene =
+    keyPress button scene
+updateEditorScene (Release button) s = s
 
 
 

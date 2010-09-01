@@ -63,14 +63,11 @@ debugNumberOfHecs =
 type AppMonad o = StateT GameState IO o
 
 data GameState = GameState {
-    keyState :: Set AppButton,
     cmSpace :: CM.Space,
     scene :: Scene Object_,
     timer :: Ptr QTime
   }
 
-setKeyState :: GameState -> Set AppButton -> GameState
-setKeyState s x = s{keyState = x}
 setScene :: GameState -> Scene Object_ -> GameState
 setScene s x = s{scene = x}
 
@@ -84,7 +81,7 @@ initialState app widget startScene = do
     scene <- startScene cmSpace
     qtime <- newQTime
     startQTime qtime
-    return $ GameState Set.empty cmSpace scene qtime
+    return $ GameState cmSpace scene qtime
 
 
 
@@ -100,16 +97,12 @@ gameLoop app sceneMVar = do
         startTime <- liftIO $ elapsed timer_
 --         liftIO $ print (startTime - oldTime)
         -- input events
-        qtEvents <- liftIO $ pollEvents $ keyPoller app
-        let events = toEitherList qtEvents []
-        oldKeyState <- gets keyState
-        let appEvents = concatMap (toAppEvent oldKeyState) events
-        heldKeys <- actualizeKeyState appEvents
+        controlData <- liftIO $ pollAppEvents $ keyPoller app
 
         -- stepping of the scene (includes rendering)
         space <- gets cmSpace
         sc <- gets scene
-        sc' <- liftIO $ stepScene space (ControlData appEvents heldKeys) sc
+        sc' <- liftIO $ stepScene space controlData sc
         puts setScene sc'
 
         swapSceneMVar
@@ -159,19 +152,3 @@ getSecs = do
     qtime <- gets timer
     time <- liftIO $ elapsed qtime
     return (fromIntegral time / 10 ^ 3)
-
-
-actualizeKeyState :: [AppEvent] -> AppMonad [AppButton]
-actualizeKeyState events = do
-    modifies keyState setKeyState (chainApp inner events)
-    fmap toList $ gets keyState
-  where
-    inner :: AppEvent -> Set AppButton -> Set AppButton
-    inner (Press k) ll = insert k ll
-    inner (Release k) ll = delete k ll
-
-
-
-
-
-

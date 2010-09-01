@@ -9,7 +9,8 @@ module Sorts.Robots.Jetpack (sorts) where
 import Data.Abelian
 import Data.Maybe
 import Data.Generics
-import Data.Map hiding (size, map)
+import Data.Map hiding (size, map, member)
+import Data.Set (member)
 
 import System.FilePath
 
@@ -176,9 +177,9 @@ jupdate (True, (ControlData _ held)) (Jetpack chip _ _ renderState times) =
           else
             Nothing
 
-    aButton = AButton `elem` held
-    left = LeftButton `elem` held
-    right = RightButton `elem` held
+    aButton = AButton `member` held
+    left = LeftButton `member` held
+    right = RightButton `member` held
 
 
 updateRenderState :: Seconds -> Bool -> Jetpack -> Jetpack

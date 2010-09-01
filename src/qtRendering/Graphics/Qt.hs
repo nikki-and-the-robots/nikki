@@ -80,8 +80,8 @@ pollEvents kp@(KeyPoller chan) = do
         r <- pollEvents kp
         return (a : r)
 
-readNextEvent :: KeyPoller -> IO QtEvent
-readNextEvent (KeyPoller c) = readChan c
+waitForEvent :: KeyPoller -> IO QtEvent
+waitForEvent (KeyPoller c) = readChan c
 
 
 sendDebugInitials :: Chan QtEvent -> IO ()

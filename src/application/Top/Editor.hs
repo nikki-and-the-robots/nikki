@@ -28,7 +28,7 @@ editLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
 editLevel app parent s = AppState $ do
     sceneMVar <- newMVar s
     setDrawingCallbackAppWidget (window app) (Just $ render sceneMVar)
-    evalStateT (editorLoop app parent sceneMVar) (EditorState empty s)
+    evalStateT (editorLoop app parent sceneMVar) (EditorState s)
   where
     render sceneMVar ptr = do
         scene <- readMVar sceneMVar

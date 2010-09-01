@@ -7,7 +7,8 @@ module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass, walkingVeloc
 
 
 import Data.Abelian
-import Data.Map hiding (map, size, filter, null)
+import Data.Map hiding (map, size, filter, null, member)
+import Data.Set (member)
 import Data.Generics
 import Data.Initial
 import Data.Array.Storable
@@ -373,10 +374,10 @@ controlBody now contacts (True, cd)
     nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ jumpSound _) = do
             -- buttons
         let bothHeld = leftHeld && rightHeld
-            leftHeld = LeftButton `elem` held cd
-            rightHeld = RightButton `elem` held cd
+            leftHeld = LeftButton `member` held cd
+            rightHeld = RightButton `member` held cd
             aPushed = Press AButton `elem` pressed cd
-            aHeld = AButton `elem` held cd
+            aHeld = AButton `member` held cd
 
         velocity <- getVelocity body
 
@@ -615,8 +616,8 @@ updateRenderState contacts (True, controlData) (contactNormal, nikki) =
             Jump buttonDirection
 
     aPushed = Press AButton `elem` pressed controlData
-    rightHeld = RightButton `elem` held controlData
-    leftHeld = LeftButton `elem` held controlData
+    rightHeld = RightButton `member` held controlData
+    leftHeld = LeftButton `member` held controlData
     nothingHeld = not (rightHeld `xor` leftHeld)
 
     oldDirection = direction $ renderState nikki

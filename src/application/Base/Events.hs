@@ -5,9 +5,16 @@ module Base.Events where
 import Data.Map (Map, fromList, member, (!))
 import Data.Word
 import qualified Data.Set as Set
-import Data.Set (Set, union, difference, insert, intersection)
+import Data.Set (Set, union, difference, insert, intersection, empty, delete)
+import Data.IORef
+
+import Control.Concurrent
+
+import System.IO.Unsafe
 
 import Graphics.Qt
+
+import Utils
 
 
 data AppEvent
@@ -31,7 +38,7 @@ data AppButton
 
 data ControlData = ControlData {
     pressed :: [AppEvent],
-    held :: [AppButton]
+    held :: Set AppButton
   }
     deriving Show
 
@@ -39,8 +46,50 @@ allArrowButtons :: Set AppButton
 allArrowButtons = Set.fromList [UpButton, RightButton, DownButton, LeftButton]
 
 
+
+
 -- this is for joystick (and gamepad) stuff, will be used soon!
 type JJ_Event = ()
+
+{-# NOINLINE keyStateRef #-}
+keyStateRef :: IORef ([AppEvent], Set AppButton)
+keyStateRef = unsafePerformIO $ newIORef ([], empty)
+
+-- | non-blocking polling of AppEvents
+pollAppEvents :: KeyPoller -> IO ControlData
+pollAppEvents poller = do
+    (unpolledEvents, keyState) <- readIORef keyStateRef
+    qEvents <- pollEvents poller
+    let appEvents = concatMap (toAppEvent keyState) (map Left qEvents)
+        keyState' = foldr (.) id (map updateKeyState appEvents) keyState
+    writeIORef keyStateRef ([], keyState')
+    return $ ControlData (unpolledEvents ++ appEvents) keyState'
+
+-- | puts AppEvents back to be polled again
+unpollAppEvents :: [AppEvent] -> IO ()
+unpollAppEvents events = do
+    (unpolledEvents, keyState) <- readIORef keyStateRef
+    writeIORef keyStateRef (unpolledEvents ++ events, keyState)
+
+
+-- | Blocking wait for the next event.
+-- waits between polls
+waitForAppEvent :: KeyPoller -> IO AppEvent
+waitForAppEvent poller = do
+    ControlData events _ <- pollAppEvents poller
+    case events of
+        (a : r) -> do
+            unpollAppEvents r
+            return a
+        [] -> do
+            threadDelay (round (0.01 * 10 ^ 6))
+            waitForAppEvent poller
+
+
+updateKeyState :: AppEvent -> Set AppButton -> Set AppButton
+updateKeyState (Press   k) ll = insert k ll
+updateKeyState (Release k) ll = delete k ll
+
 
 toAppEvent :: Set AppButton -> Either QtEvent JJ_Event -> [AppEvent]
 -- keyboard

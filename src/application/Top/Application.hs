@@ -11,6 +11,7 @@ import Graphics.Qt
 import Utils
 
 import Base.GlobalCatcher
+import Base.Events
 
 import Object
 
@@ -58,13 +59,12 @@ menu app mTitle mParent children =
   where
     inner items = AppState $ do
         setDrawingCallbackAppWidget (window app) (Just $ loop items)
-        event <- readNextEvent $ keyPoller app
---         print event
+        event <- waitForAppEvent $ keyPoller app
         case event of
-            KeyPress UpArrow -> return $ inner $ selectPrevious items
-            KeyPress DownArrow -> return $ inner $ selectNext items
-            KeyPress Enter -> return $ snd $ selected items
-            KeyPress Escape -> case mParent of
+            Press UpButton -> return $ inner $ selectPrevious items
+            Press DownButton -> return $ inner $ selectNext items
+            Press AButton -> return $ snd $ selected items
+            Press StartButton -> case mParent of
                 Just parent -> return parent
                 Nothing -> return $ inner items
             x -> return $ inner items
