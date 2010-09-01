@@ -129,6 +129,14 @@ keyPress BButton scene@EditorScene{selectedLayer} =
 
 -- * buttons pressed on the keyboard
 
+-- skip through available objects
+keyPress (KeyboardButton D) scene@EditorScene{} =
+    modifySorts selectNext scene
+keyPress (KeyboardButton A) scene@EditorScene{} =
+    modifySorts selectPrevious scene
+
+
+
 -- * object edit mode
 -- keyPress Escape s@EditorScene{objectEditModeIndex = Just i} =
 --     s{objectEditModeIndex = Nothing}
@@ -140,12 +148,6 @@ keyPress BButton scene@EditorScene{selectedLayer} =
 --     mod = updateOEM s x
 -- 
 
--- -- skip through available objects
--- keyPress X scene@EditorScene{} =
---     modifySorts selectNext scene
--- keyPress Y scene@EditorScene{} =
---     modifySorts selectPrevious scene
--- 
 -- -- put selected object to the back
 -- keyPress B scene@EditorScene{editorObjects, selected = Just i} =
 --     let mainLayer' = I.toHead i (mainLayerIndexable editorObjects)
