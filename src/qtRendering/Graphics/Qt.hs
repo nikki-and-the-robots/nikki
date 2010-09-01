@@ -67,6 +67,7 @@ newKeyPoller :: Ptr AppWidget -> IO KeyPoller
 newKeyPoller widget = do
     chan <- newChan
     setKeyCallbackAppWidget widget (writeChan chan)
+--     sendDebugInitials chan
     return $ KeyPoller chan
 
 pollEvents :: KeyPoller -> IO [QtEvent]
@@ -81,6 +82,20 @@ pollEvents kp@(KeyPoller chan) = do
 
 readNextEvent :: KeyPoller -> IO QtEvent
 readNextEvent (KeyPoller c) = readChan c
+
+
+sendDebugInitials :: Chan QtEvent -> IO ()
+sendDebugInitials c = do
+    mapM_ (writeChan c) [
+        KeyPress Enter,
+        KeyRelease Enter,
+        KeyPress DownArrow,
+        KeyRelease DownArrow,
+        KeyPress DownArrow,
+        KeyRelease DownArrow,
+        KeyPress Enter,
+        KeyRelease Enter
+      ]
 
 
 
