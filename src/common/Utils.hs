@@ -173,6 +173,10 @@ modifiesT getter setter cmd = do
     x' <- lift $ cmd x
     puts setter x'
 
+modifyState :: MonadState s m => (s -> s) -> m ()
+modifyState f =
+    get >>= (return . f) >>= put
+
 
 -- * Monad stuff
 

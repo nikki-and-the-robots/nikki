@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns #-}
 
-module Editor.MainLoop (editorLoop, EditorState(..)) where
+module Editor.MainLoop (editorLoop) where
 
 
 import Data.Set (Set, empty, toList, insert, delete)
@@ -23,19 +23,12 @@ import Top.Application
 import Top.Pickle
 
 
-type MM o = StateT EditorState IO o
-
-data EditorState = EditorState {
-    scene :: EditorScene Sort_
-  }
-
-setScene :: EditorState -> EditorScene Sort_ -> EditorState
-setScene _ s = EditorState s
+type MM o = StateT (EditorScene Sort_) IO o
 
 
 updateSceneMVar :: Application -> MVar (EditorScene Sort_) -> MM ()
 updateSceneMVar app mvar = do
-    s <- gets scene
+    s <- get
     liftIO $ do
         swapMVar mvar s
         updateAppWidget $ window app
@@ -43,17 +36,23 @@ updateSceneMVar app mvar = do
 
 -- * menus and states
 
-editorLoop :: Application -> AppState -> MVar (EditorScene Sort_) -> MM AppState
-editorLoop app parent sceneMVar = do
-    event <- liftIO $ waitForAppEvent $ keyPoller app
-    if event == Press StartButton then do
-        s <- gets scene
-        return $ editorMenu app parent s
-      else do
-        -- other events are handled below (in Editor.Scene)
-        modifies scene setScene (updateEditorScene event)
-        updateSceneMVar app sceneMVar
-        editorLoop app parent sceneMVar
+editorLoop :: Application -> AppState -> MVar (EditorScene Sort_)
+    -> EditorScene Sort_ -> AppState
+editorLoop app parent sceneMVar s = AppState $
+    -- drawing callback is set above (in Top.Editor)
+    evalStateT worker s
+  where
+    worker :: MM AppState
+    worker = do
+        event <- liftIO $ waitForAppEvent $ keyPoller app
+        if event == Press StartButton then do
+            s <- get
+            return $ editorMenu app parent s
+          else do
+            -- other events are handled below (in Editor.Scene)
+            modifyState (updateEditorScene event)
+            updateSceneMVar app sceneMVar
+            worker
 
 askSaveLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
 askSaveLevel app parent scene@EditorScene{levelPath = (Just path)} =

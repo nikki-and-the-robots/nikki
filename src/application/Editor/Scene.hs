@@ -129,7 +129,6 @@ keyPress BButton scene@EditorScene{selectedLayer} =
 
 -- * buttons pressed on the keyboard
 
-
 -- * object edit mode
 -- keyPress Escape s@EditorScene{objectEditModeIndex = Just i} =
 --     s{objectEditModeIndex = Nothing}
