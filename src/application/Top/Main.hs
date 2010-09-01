@@ -72,7 +72,7 @@ main = globalCatcher $ do
     keyPoller <- newKeyPoller window
 
     -- sort loading (pixmaps and sounds)
-    sorts <- getAllSorts sortLoaders
+    sorts <- getAllSorts
 
     -- start state logick
     let app = Application qApp window keyPoller sorts
@@ -90,29 +90,6 @@ main = globalCatcher $ do
 
     case code of
         0 -> exitWith ExitSuccess
-
--- | returns all sorts in a nicely sorted SelectTree
-getAllSorts :: [IO [Sort_]] -> IO (SelectTree Sort_)
-getAllSorts sortLoaders = do
-    sorts <- concat <$> mapM id sortLoaders
-    return $ mkSelectTree "" sorts
-  where
-    mkSelectTree :: String -> [Sort_] -> SelectTree Sort_
-    mkSelectTree prefix sorts =
-        mkNode prefix (I.fromList $ map (mkPrefixChild sorts) (childrenPrefixes prefix sorts))
-      where
-        childrenPrefixes :: String -> [Sort_] -> [String]
-        childrenPrefixes prefix =
-            map (takeWhile (/= '/') . drop (List.length prefix) . getSortId . sortId)
-            >>> nub
-            >>> map (prefix ++)
-
-        mkPrefixChild :: [Sort_] -> String -> SelectTree Sort_
-        mkPrefixChild sorts prefix =
-            trace ("prefix: " ++ prefix) $
-            case filter (\ sort -> prefix `isPrefixOf` getSortId (sortId sort)) sorts of
-                [single] -> Leaf single
-                list@(_ : _) -> mkSelectTree (prefix ++ "/") list
 
 
 -- * states

@@ -4,6 +4,8 @@ module Top.Initialisation where
 
 import Data.Indexable as I
 import Data.Initial
+import Data.SelectTree
+import Data.List as List
 
 import Physics.Chipmunk
 
@@ -46,6 +48,29 @@ sortLoaders = [
 
     Sorts.Grids.sorts
   ]
+
+-- | returns all sorts in a nicely sorted SelectTree
+getAllSorts :: IO (SelectTree Sort_)
+getAllSorts = do
+    sorts <- concat <$> mapM id sortLoaders
+    return $ mkSelectTree "" sorts
+  where
+    mkSelectTree :: String -> [Sort_] -> SelectTree Sort_
+    mkSelectTree prefix sorts =
+        mkNode prefix (I.fromList $ map (mkPrefixChild sorts) (childrenPrefixes prefix sorts))
+      where
+        childrenPrefixes :: String -> [Sort_] -> [String]
+        childrenPrefixes prefix =
+            map (takeWhile (/= '/') . drop (List.length prefix) . getSortId . sortId)
+            >>> nub
+            >>> map (prefix ++)
+
+        mkPrefixChild :: [Sort_] -> String -> SelectTree Sort_
+        mkPrefixChild sorts prefix =
+            case filter (\ sort -> prefix `isPrefixOf` getSortId (sortId sort)) sorts of
+                [single] -> Leaf single
+                list@(_ : _) -> mkSelectTree (prefix ++ "/") list
+
 
 
 initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
