@@ -27,10 +27,5 @@ import Top.Pickle
 editLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
 editLevel app parent s = AppState $ do
     sceneMVar <- newMVar s
-    setDrawingCallbackAppWidget (window app) (Just $ render sceneMVar)
     return $ editorLoop app parent sceneMVar s
-  where
-    render sceneMVar ptr = do
-        scene <- readMVar sceneMVar
-        renderEditorScene ptr scene
 

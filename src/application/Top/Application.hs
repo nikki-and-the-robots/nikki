@@ -2,7 +2,8 @@
 module Top.Application where
 
 
-import Data.SelectTree (SelectTree)
+import Data.SelectTree hiding (selectPrevious, selectNext)
+import qualified Data.Indexable as I
 
 import Control.Monad
 
@@ -95,5 +96,16 @@ menu app mTitle mParent children =
     yStep = 20
     x = 10
 
+treeToMenu :: Application -> AppState -> SelectTree String -> (String -> AppState)
+    -> AppState
+treeToMenu app parent (Leaf n) f = f n
+treeToMenu app parent (Node label children i) f =
+    menu app (Just label) (Just parent) (map mkItem (I.toList children))
+  where
+    mkItem t = (getLabel t, treeToMenu app this t f)
+    getLabel (Leaf n) = n
+    getLabel (Node n _ _) = n
+
+    this = treeToMenu app parent (Node label children i) f
 
 

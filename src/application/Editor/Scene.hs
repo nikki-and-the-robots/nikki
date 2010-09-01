@@ -139,16 +139,7 @@ keyPress BButton scene@EditorScene{selectedLayer} =
 --     mod :: OEMState Sort_ -> OEMState Sort_
 --     mod = updateOEM s x
 -- 
--- keyPress Enter s@EditorScene{} =
---     case selected s of
---         Nothing -> s
---         Just i -> case objectEditModeMethods $ editorSort $ getMainObject s i of
---             Nothing -> s
---             Just _ -> s{objectEditModeIndex = Just i, editorObjects = objects'}
---               where
---                 objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
---                 mod :: OEMState Sort_ -> OEMState Sort_
---                 mod = enterModeOEM s
+
 -- -- skip through available objects
 -- keyPress X scene@EditorScene{} =
 --     modifySorts selectNext scene
@@ -225,12 +216,6 @@ cursorStepShortCuts = fromList (
 
 
 
--- topLevelMenu :: EditorScene Sort_ -> Menu (MenuLabel Sort_) (EditorScene Sort_)
--- topLevelMenu s = mkMenu (mkLabel "Menu") [
---     tileSelection s,
---     layerMenu s,
---     quit
---   ]
 
 
 
