@@ -95,7 +95,7 @@ instance Sort TSort FallingTile where
 
     chipmunks (FallingTile _ c _) = [c]
 
-    updateNoSceneChange fallingTile now contacts cd =
+    updateNoSceneChange sort now contacts cd fallingTile =
         case status fallingTile of
             Static ->
                 if any (`member` fallingTiles contacts) (shapes (chipmunk fallingTile)) then

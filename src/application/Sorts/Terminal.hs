@@ -173,9 +173,9 @@ instance Sort TSort Terminal where
 
     startControl t = t{exitMode = DontExit}
 
-    updateNoSceneChange terminal now contacts (False, cd) =
+    updateNoSceneChange sort now contacts (False, cd) terminal =
         return $ blinkSelectedColorLight now terminal
-    updateNoSceneChange terminal now contacts (True, cd) = do
+    updateNoSceneChange sort now contacts (True, cd) terminal = do
         let cls = pp $ lightState terminal
         case selected terminal of
             NikkiSelected _ -> putStrLn ("[Nikki]\n " ++ cls)

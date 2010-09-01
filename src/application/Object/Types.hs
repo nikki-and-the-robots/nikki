@@ -67,13 +67,14 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     startControl :: object -> object
     startControl = id
 
-    update :: object -> Index -> Seconds -> Contacts -> (Bool, ControlData) -> IO (Scene Object_ -> Scene Object_, object)
-    update o i now contacts cd = do
-        o' <- updateNoSceneChange o now contacts cd
+    update :: object -> sort -> Index -> Seconds -> Contacts -> (Bool, ControlData) -> IO (Scene Object_ -> Scene Object_, object)
+    update o sort i now contacts cd = do
+        o' <- updateNoSceneChange sort now contacts cd o
         return (id, o')
 
-    updateNoSceneChange :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
-    updateNoSceneChange o _ _ _ = return o
+    updateNoSceneChange :: sort -> Seconds -> Contacts -> (Bool, ControlData)
+        -> object -> IO object
+    updateNoSceneChange _ _ _ _ o = return o
 
     render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
 
@@ -90,6 +91,7 @@ data Sort_
     = forall sort object .
         (Sort sort object, Show sort, Typeable sort) =>
             Sort_ sort
+    | DummySort -- used if the wrapper object (Object_) will find the sort.
   deriving Typeable
 
 instance Show Sort_ where
@@ -121,10 +123,11 @@ instance Sort Sort_ Object_ where
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk (Object_ _ o) = getControlledChipmunk o
     startControl (Object_ sort o) = Object_ sort $ startControl o
-    update (Object_ sort o) i now contacts cd = do
-        (f, o') <- update o i now contacts cd
+    update (Object_ sort o) DummySort i now contacts cd = do
+        (f, o') <- update o sort i now contacts cd
         return (f, Object_ sort o')
-    updateNoSceneChange (Object_ sort o) now contacts cd = Object_ sort <$> updateNoSceneChange o now contacts cd
+    updateNoSceneChange DummySort now contacts cd (Object_ sort o) =
+        Object_ sort <$> updateNoSceneChange sort now contacts cd o
     render = error "Don't use this function, use render_ instead (that't type safe)"
 
 sort_ :: Object_ -> Sort_

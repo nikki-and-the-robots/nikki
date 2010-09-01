@@ -84,14 +84,14 @@ instance Sort BSort Battery where
 
     chipmunks = chipmunk >>> return
 
-    update o i now contacts cd
+    update o sort i now contacts cd
         | any (`member` batteries contacts) (shapes $ chipmunk o) = do
             -- the battery is consumed by nikki (TODO: delete battery)
             removeChipmunk $ chipmunk o
             let sceneChange = modifyNikki addBatteryPower . removeBattery
                 removeBattery = modifyObjects (modifyMainLayer (deleteByIndex i))
             return (sceneChange, Consumed $ chipmunk o)
-    update o i now contacts cd = return (id, o) -- no change
+    update o sort i now contacts cd = return (id, o) -- no change
 
     render o@Battery{} sort ptr offset now =
         renderChipmunk ptr offset (batteryPixmap sort) (chipmunk o)

@@ -71,7 +71,6 @@ menu app mTitle mParent children =
             x -> return $ inner items
 
     loop items ptr = globalCatcher $ do
---         putStrLn ("repaint: " ++ fst (selected items))
         resetMatrix ptr
         clearScreen ptr
         setPenColor ptr 255 255 255 255 1

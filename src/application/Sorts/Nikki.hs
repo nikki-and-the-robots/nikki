@@ -14,6 +14,8 @@ import Data.Initial
 import Data.Array.Storable
 import Data.List
 
+import Control.Monad
+
 import System.FilePath
 
 import Graphics.Qt as Qt hiding (rotate, scale)
@@ -113,7 +115,9 @@ sorts :: IO [Sort_]
 sorts = do
     pixmaps <- loadPixmaps
     psize <- fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
-    let r = NSort pixmaps
+    soundFile <- getDataFileName (soundDir </> "nikki/jump.wav")
+    jumpSound <- newPolySound soundFile 4
+    let r = NSort pixmaps jumpSound
     return [Sort_ r]
 
 loadPixmaps :: IO (Map RenderState [Pixmap])
@@ -145,7 +149,8 @@ defaultPixmap :: Map RenderState [Pixmap] -> Pixmap
 defaultPixmap pixmaps = head (pixmaps ! Wait HLeft)
 
 data NSort = NSort {
-    pixmaps :: Map RenderState [Pixmap]
+    pixmaps :: Map RenderState [Pixmap],
+    jumpSound :: PolySound
   }
     deriving (Show, Typeable)
 
@@ -156,7 +161,6 @@ data Nikki
         jumpStartTime :: Seconds,
         renderState :: RenderState,
         startTime :: Seconds,
-        jumpSound :: PolySound,
         batteryPower :: Integer -- makes it possible to have REALLY BIG amounts of power :)
       }
   deriving (Show, Typeable)
@@ -210,15 +214,12 @@ instance Sort NSort Nikki where
                     baryCenterOffset
         let feetShapes = take 2 $ shapes chip
 
-        jumpSound <- newPolySound (soundDir </> "nikki/jump.wav") 4
-
         return $ Nikki
             chip
             feetShapes
             0
             initial
             0
-            jumpSound
             0
 
     immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
@@ -227,13 +228,15 @@ instance Sort NSort Nikki where
 
     getControlledChipmunk = chipmunk
 
-    updateNoSceneChange nikki now contacts cd = (
-        controlBody now contacts cd >>>>
-        fromPure (
-            updateRenderState contacts cd >>>
-            updateStartTime now (renderState nikki))
+    updateNoSceneChange sort now contacts cd nikki = inner nikki
+      where
+        inner =
+            controlBody now contacts cd sort >>>>
+            fromPure (
+                updateRenderState contacts cd >>>
+                updateStartTime now (renderState nikki))
 --         >>>> debugNikki (renderState nikki)
-      ) nikki
+
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
@@ -366,12 +369,12 @@ jumpAngle angles =
 
 
 
-controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO (Maybe Angle, Nikki)
-controlBody _ _ (False, _) nikki = do
+controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO (Maybe Angle, Nikki)
+controlBody _ _ (False, _) _ nikki = do
     mapM_ (\ feetShape -> setSurfaceVel feetShape zero) $ feetShapes nikki
     return (Nothing, nikki)
-controlBody now contacts (True, cd)
-    nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ jumpSound _) = do
+controlBody now contacts (True, cd) NSort{jumpSound}
+    nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ _) = do
             -- buttons
         let bothHeld = leftHeld && rightHeld
             leftHeld = LeftButton `member` held cd

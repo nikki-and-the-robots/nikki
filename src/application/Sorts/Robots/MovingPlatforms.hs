@@ -94,12 +94,10 @@ instance Sort PSort Platform where
 
 
 --     updateNoSceneChange :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
-    updateNoSceneChange platform now contacts cd =
-        (
+    updateNoSceneChange sort now contacts cd =
          updateNextPosition >>>>
 --          printNext >>>>
          updatePlatform
-         ) platform
 
     render platform sort ptr offset now = do
         (position, rad) <- getRenderPosition $ chipmunk platform
