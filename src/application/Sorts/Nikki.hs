@@ -370,10 +370,9 @@ controlBody _ _ (False, _) nikki = do
     mapM_ (\ feetShape -> setSurfaceVel feetShape zero) $ feetShapes nikki
     return (Nothing, nikki)
 controlBody now contacts (True, cd)
-    nikki@(Nikki chip feetShapes jumpStartTime _ _ jumpSound _) = do
-        let Chipmunk space body shapes shapeTypes co = chip
+    nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ jumpSound _) = do
             -- buttons
-            bothHeld = leftHeld && rightHeld
+        let bothHeld = leftHeld && rightHeld
             leftHeld = LeftButton `elem` held cd
             rightHeld = RightButton `elem` held cd
             aPushed = Press AButton `elem` pushed cd

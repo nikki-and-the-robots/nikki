@@ -144,8 +144,7 @@ instance Sort TSort Terminal where
     objectEditModeMethods _ = Just editMode
 
     initialize sort (Just space) editorPosition (Just state_) = do
-        let pixmap = head $ blinkenLights $ pixmaps sort
-            oemState = readNote "Terminal.initialize" state_
+        let oemState = readNote "Terminal.initialize" state_
             attached = case oemState of
                 NoRobots -> []
                 Robots _ _ x -> x
