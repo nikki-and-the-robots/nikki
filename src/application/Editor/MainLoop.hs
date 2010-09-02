@@ -48,6 +48,7 @@ editorLoop app mainMenu sceneMVar scene = AppState $ do
   where
     worker :: MM AppState
     worker = do
+        updateSceneMVar app sceneMVar
         event <- liftIO $ waitForAppEvent $ keyPoller app
         if event == Press StartButton then do
             s <- get
@@ -55,7 +56,6 @@ editorLoop app mainMenu sceneMVar scene = AppState $ do
           else do
             -- other events are handled below (in Editor.Scene)
             modifyState (updateEditorScene event)
-            updateSceneMVar app sceneMVar
             worker
 
     render sceneMVar ptr = do
