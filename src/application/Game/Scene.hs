@@ -219,6 +219,8 @@ renderScene ptr scene@Scene{spaceTime = now, cameraState} = do
         renderLayer ptr size offset now $ mainLayer os
         fmapM_ (renderLayer ptr size offset now) $ foregrounds os
 
+    renderTerminalOSD ptr scene
+
 
 -- debugging
     when (showXYCross Configuration.development) $
@@ -234,6 +236,7 @@ renderLayer :: Ptr QPainter -> Size Double -> Offset Double -> Seconds
 renderLayer ptr size offset now layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
     fmapM_ (\ o -> render_ o ptr modifiedOffset now) (content layer)
+
 
 
 -- * debugging

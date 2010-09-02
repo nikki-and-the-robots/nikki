@@ -8,6 +8,7 @@ module Sorts.Terminal (
     Terminal(exitMode),
     hasTerminalShape,
     ExitMode(..),
+    renderTerminalOSD,
     OEMState(..),
   ) where
 
@@ -175,14 +176,11 @@ instance Sort TSort Terminal where
 
     startControl t = t{exitMode = DontExit}
 
-    updateNoSceneChange sort now contacts (False, cd) terminal =
-        return $ blinkSelectedColorLight now terminal
-    updateNoSceneChange sort now contacts (True, cd) terminal = do
-        let cls = pp $ lightState terminal
-        case selected terminal of
-            NikkiSelected _ -> putStrLn ("[Nikki]\n " ++ cls)
-            RobotSelected _ -> putStrLn (" Nikki\n[" ++ cls ++ "]")
-        return $ blinkSelectedColorLight now $ controlTerminal now cd terminal
+    updateNoSceneChange sort now contacts (False, cd) =
+        fromPure (blinkSelectedColorLight now)
+    updateNoSceneChange sort now contacts (True, cd) = fromPure (
+        controlTerminal now cd
+        >>> blinkSelectedColorLight now)
 
     render terminal sort ptr offset seconds =
         renderTerminal ptr offset seconds terminal sort
@@ -390,62 +388,19 @@ yellowBoxX = greenBoxX + boxWidth + padding
 boxY = fromUber 7
 
 
-
-
---     renderLights ptr (offset +~ pos) t
-
--- renderTerminal :: Ptr QPainter -> Qt.Position Double -> Object -> IO (Qt.Position Double)
--- renderTerminal ptr offset (Terminal sprited chipmunk state) = do
---     resetMatrix ptr
---     translate ptr offset
---     pos <- (vectorToPosition . fst) <$> getRenderPosition chipmunk
---     translate ptr pos
---     let pixmap = animationPixmap (terminalAnimation state) sprited
---     drawPixmap ptr zero pixmap
---     return pos
--- 
--- renderLights :: Ptr QPainter -> Qt.Position Double -> Terminal -> Sort -> IO ()
--- renderLights ptr offset scene (Terminal _ _ state) = do
---     let lightPixmaps = searchLightPixmaps scene
---     mapM_ (uncurry $ drawLights ptr offset) $
---         map (coloredLights lightPixmaps !) $
---             terminalLights state
-
-
--- -- * custom rendering
--- 
--- -- | draws a single light on top of the in game terminal
--- drawLights :: Ptr QPainter -> Qt.Position Double -> Double -> Ptr QPixmap -> IO ()
--- drawLights ptr offset x pixmap = do
---     resetMatrix ptr
---     translate ptr (Position x lightsY +~ offset)
---     drawPixmap ptr zero pixmap
--- 
--- 
--- searchLightPixmaps :: Scene -> (Ptr QPixmap, Ptr QPixmap, Ptr QPixmap, Ptr QPixmap)
--- searchLightPixmaps scene =
---     (getPixmap "terminal-red",
---      getPixmap "terminal-blue",
---      getPixmap "terminal-green",
---      getPixmap "terminal-yellow")
---   where
---     m = osdSpriteds scene
---     getPixmap :: String -> Ptr QPixmap
---     getPixmap name = defaultPixmap (sprited (m ! name))
--- 
--- coloredLights :: (a, a, a, a) -> Map TerminalLight (Double, a)
--- coloredLights (red, blue, green, yellow) = fromList [
---     (TerminalRed, (redX, red)),
---     (TerminalBlue, (blueX, blue)),
---     (TerminalGreen, (greenX, green)),
---     (TerminalYellow, (yellowX, yellow))
---   ]
--- 
--- 
--- 
--- 
--- 
--- 
+renderTerminalOSD :: Ptr QPainter -> Scene Object_ -> IO ()
+renderTerminalOSD ptr scene@Scene{mode = TerminalMode{terminal}} = do
+    let Just t = unwrapTerminal $ getMainlayerObject scene terminal
+        cls = pp $ lightState t
+        texts = lines $ case selected t of
+            NikkiSelected _ -> "[Nikki]\n " ++ cls
+            RobotSelected _ -> " Nikki\n[" ++ cls ++ "]"
+    resetMatrix ptr
+    setPenColor ptr 255 255 255 255 1
+    forM_ texts $ \ text -> do
+        translate ptr (Position 0 20)
+        drawText ptr (Position 10 0) False text
+renderTerminalOSD _ _ = return ()
 
 
 -- * special edit mode (OEM)
@@ -534,51 +489,9 @@ renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
             size_ = size sort
         drawColoredBox ptr (pos +~ offset) size_ 4 color
 
--- calculateRenderTransformationTerminal :: Ptr QPainter -> EditorScene -> IO (Position Double)
--- calculateRenderTransformationTerminal ptr scene@TerminalScene{mainScene} =
---     transformation ptr pos size
---   where
---     (pos, size) = case getTerminalMRobot scene of
---         -- use the terminal
---         Nothing -> (cursor mainScene, getCursorSize scene)
--- --         Just (ERobot (Position x y) sprited) ->
--- --             error "            (EditorPosition x (y + height size), size)"
--- --           where
--- --             size = defaultPixmapSize sprited
-
-
 
 -- * game logick
 
 hasTerminalShape :: Terminal -> Shape -> Bool
 hasTerminalShape terminal shape =
     shape `elem` shapes (chipmunk terminal)
-
--- whichTerminalCollides collisions =
---     let colls = filter snd $ toList $ terminals collisions
---     in case colls of
---         (a : r) -> fst a
--- 
--- 
--- -- collision setters
--- 
--- whichTerminal :: Shape -> Shape -> Shape
--- whichTerminal terminalShape _ = terminalShape
--- 
--- activateTerminal :: Indexable object -> Contacts o -> Shape -> IO (Contacts o)
--- activateTerminal objects collisions terminalShape = do
---     e "activateTerminal"
--- --     let terminalBody = getBody terminalShape
--- --     let terminal = single "activatTerminal" $ I.findIndices pred objects
--- --         pred :: object -> Bool
--- --         pred object = isTerminal (sort_ object) && (terminalBody == body (chipmunk_ object))
--- --     return $ setTerminalActive collisions terminal
--- 
--- setTerminalActive :: Contacts o -> Index -> Contacts o
--- setTerminalActive collisions@Contacts{terminals} i =
---     collisions{terminals = insert i True terminals}
--- 
-
-
-
-
