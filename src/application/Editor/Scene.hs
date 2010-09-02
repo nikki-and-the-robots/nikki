@@ -167,48 +167,11 @@ keyboardPress S scene =
         Just (EditorPosition 1 1) -> setCursorStep scene Nothing
         Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x / 2) (y / 2)
 
+-- * Layers
+
+keyboardPress Plus s@EditorScene{editorObjects, selectedLayer} =
+    s{selectedLayer = modifyGroundsIndex editorObjects (+ 1) selectedLayer}
+keyboardPress Minus s@EditorScene{editorObjects, selectedLayer} =
+    s{selectedLayer = modifyGroundsIndex editorObjects (subtract 1) selectedLayer}
+
 keyboardPress _ scene = scene
-
--- -- * Layers
--- 
--- keyPress Plus s@EditorScene{editorObjects, selectedLayer} =
---     s{selectedLayer = modifyGroundsIndex editorObjects (+ 1) selectedLayer}
--- keyPress Minus s@EditorScene{editorObjects, selectedLayer} =
---     s{selectedLayer = modifyGroundsIndex editorObjects (subtract 1) selectedLayer}
--- 
--- 
--- -- * Menus
--- 
--- keyPress Escape s@EditorScene{debugMsgs} =
---     MenuScene s (topLevelMenu s) debugMsgs
--- 
--- -- selecting
--- keyPress DownArrow s@MenuScene{menu} = s{menu = selectFun (+ 1) menu}
--- keyPress UpArrow s@MenuScene{menu} = s{menu = selectFun (subtract 1) menu}
--- keyPress Shift s@MenuScene{mainScene, menu} =
---     case enterMenu menu mainScene of
---         Left menu' -> s{menu = menu'}
---         Right (Left errorMsg) -> addDebugMsg errorMsg mainScene
---         Right (Right scene') -> scene'
--- keyPress Escape s@MenuScene{menu} =
---     case exitMenu menu of
---         Nothing -> mainScene s
---         Just x -> s{menu = x}
--- 
--- 
--- -- * changing of cursorStep
--- 
--- keyPress k s@EditorScene{} | k `member` cursorStepShortCuts =
---     s{cursorStep = (cursorStepShortCuts ! k)}
-
-
-
-
-
-
-
-
-
-
-
-

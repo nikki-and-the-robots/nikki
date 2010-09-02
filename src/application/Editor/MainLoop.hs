@@ -42,7 +42,7 @@ updateSceneMVar app mvar = do
 
 editorLoop :: Application -> AppState -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorLoop app parent sceneMVar scene = AppState $ do
+editorLoop app mainMenu sceneMVar scene = AppState $ do
     setDrawingCallbackAppWidget (window app) (Just $ render sceneMVar)
     evalStateT worker scene
   where
@@ -51,7 +51,7 @@ editorLoop app parent sceneMVar scene = AppState $ do
         event <- liftIO $ waitForAppEvent $ keyPoller app
         if event == Press StartButton then do
             s <- get
-            return $ editorMenu app parent sceneMVar s
+            return $ editorMenu app mainMenu sceneMVar s
           else do
             -- other events are handled below (in Editor.Scene)
             modifyState (updateEditorScene event)
@@ -63,52 +63,50 @@ editorLoop app parent sceneMVar scene = AppState $ do
         renderEditorScene ptr scene
 
 
-askSaveLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
-askSaveLevel app parent scene@EditorScene{levelPath = (Just path)} =
-    Top.Application.menu app (Just ("save level (under name \"" ++ path ++ "\")?")) Nothing [
-        ("yes", saveLevel app parent scene),
-        ("no", parent)
-      ]
-
-saveLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
-saveLevel app parent EditorScene{levelPath = (Just path), editorObjects} = AppState $ do
-    writeObjectsToDisk path editorObjects
-    return parent
 
 editorMenu :: Application -> AppState -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorMenu app parent mvar scene =
-    Top.Application.menu app (Just "editor menu") (Just (edit scene))
+editorMenu app mainMenu mvar scene =
+    Top.Application.menu app (Just menuTitle) (Just (edit scene))
       (
       lEnterOEM ++
       [
-        ("select object", selectSort app parent this mvar scene),
+        ("select object", selectSort app mainMenu this mvar scene),
         ("return to editing", edit scene),
-        ("save level and exit editor", saveLevel app parent scene),
-        ("exit editor without saving", reallyExitEditor app parent this)
+        ("edit layers", editLayers app mainMenu mvar scene),
+        ("save level and exit editor", saveLevel app mainMenu scene),
+        ("exit editor without saving", reallyExitEditor app mainMenu this)
       ])
   where
-    lEnterOEM = case enterOEM app parent mvar scene of
+    menuTitle = case levelPath scene of
+        Nothing -> "editing untitled level"
+        Just f -> "editing " ++ f
+    lEnterOEM = case enterOEM app mainMenu mvar scene of
         Nothing -> []
         Just x -> [x]
     edit :: EditorScene Sort_ -> AppState
-    edit s = editorLoop app parent mvar scene
-    this = editorMenu app parent mvar scene
+    edit s = editorLoop app mainMenu mvar scene
+    this = editorMenu app mainMenu mvar scene
 
-reallyExitEditor app parent editor =
+saveLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
+saveLevel app mainMenu EditorScene{levelPath = (Just path), editorObjects} = AppState $ do
+    writeObjectsToDisk path editorObjects
+    return mainMenu
+
+reallyExitEditor app mainMenu editor =
     Top.Application.menu app (Just "really exit without saving?") (Just editor) [
         ("no", editor),
-        ("yes", parent)
+        ("yes", mainMenu)
       ]
 
 selectSort :: Application -> AppState -> AppState -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-selectSort app parent editorMenu mvar scene =
+selectSort app mainMenu editorMenu mvar scene =
     treeToMenu app editorMenu (fmap (sortId >>> getSortId) $ availableSorts scene) select
   where
     select :: String -> AppState
     select n =
-        editorLoop app parent mvar scene'
+        editorLoop app mainMenu mvar scene'
       where
         scene' = case selectFirstElement pred (availableSorts scene) of
             Just newTree -> scene{availableSorts = newTree}
@@ -117,7 +115,7 @@ selectSort app parent editorMenu mvar scene =
 
 enterOEM :: Application -> AppState -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Maybe (String, AppState)
-enterOEM app parent mvar scene@EditorScene{objectEditModeIndex = Nothing} = do -- maybe monad
+enterOEM app mainMenu mvar scene@EditorScene{objectEditModeIndex = Nothing} = do -- maybe monad
     i <- selected scene
     _ <- objectEditModeMethods $ editorSort $ getMainObject scene i
     let objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects scene
@@ -127,9 +125,21 @@ enterOEM app parent mvar scene@EditorScene{objectEditModeIndex = Nothing} = do -
     Just $ ("edit object", edit scene{objectEditModeIndex = Just i, editorObjects = objects'})
   where
     edit :: EditorScene Sort_ -> AppState
-    edit s = editorLoop app parent mvar s
+    edit s = editorLoop app mainMenu mvar s
 enterOEM app parent mvar s@EditorScene{objectEditModeIndex = Just i} =
     -- exit oem
     Just $ ("exit object edit mode", editorLoop app parent mvar s{objectEditModeIndex = Nothing})
+
+
+editLayers :: Application -> AppState -> MVar (EditorScene Sort_)
+    -> EditorScene Sort_ -> AppState
+editLayers app mainMenu mvar scene =
+    menu app (Just "edit layers") (Just editMenu) [
+        ("add background layer", edit (addDefaultBackground scene)),
+        ("add foreground layer", edit (addDefaultForeground scene))
+      ]
+  where
+    edit s = editorLoop app mainMenu mvar s
+    editMenu = editorMenu app mainMenu mvar scene
 
 
