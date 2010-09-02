@@ -149,7 +149,7 @@ data EditorScene sort
         selected :: Maybe Index,
             -- index of the object that is in the scene and currently under the cursor
             -- (in the selected layer)
-        objectEditModeIndex :: Maybe Index,
+        editorMode :: EditorMode,
 
         debugMsgs :: [String]
     }
@@ -159,8 +159,12 @@ instance Show (EditorScene sort -> EditorPosition) where
     show _ = "<EditorScene -> EditorPosition>"
 
 
-data MenuLabel sort = MenuLabel (Maybe sort) String
-  deriving (Show)
+data EditorMode
+    = NormalMode
+    | ObjectEditMode {
+        objectIndex :: Index
+      }
+  deriving (Show, Typeable)
 
 
 data EditorPosition = EditorPosition {

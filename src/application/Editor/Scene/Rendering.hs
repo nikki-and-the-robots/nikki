@@ -21,14 +21,15 @@ import Editor.Scene.Rendering.Helpers
 
 -- | renders the whole editor scene (with gui)
 renderEditorScene :: Ptr QPainter -> EditorScene Sort_ -> IO ()
-renderEditorScene ptr scene@EditorScene{objectEditModeIndex = Just i} =
-    renderOEM ptr scene oemState
-  where
-    Just oemState = editorOEMState $ getMainObject scene i
-renderEditorScene ptr s = do
-    offset <- calculateRenderTransformation ptr s
-    renderObjectScene ptr offset s
-    renderGUI ptr offset s
+renderEditorScene ptr scene =
+    case editorMode scene of
+        NormalMode -> do
+            offset <- calculateRenderTransformation ptr scene
+            renderObjectScene ptr offset scene
+            renderGUI ptr offset scene
+        ObjectEditMode index -> do
+            let Just oemState = editorOEMState $ getMainObject scene index
+            renderOEM ptr scene oemState
 
 
 renderObjectScene :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()

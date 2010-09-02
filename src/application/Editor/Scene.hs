@@ -75,7 +75,7 @@ initEditorScene sorts mObjects = flip evalStateT empty $ do
         editorObjects = objects,
         selectedLayer = MainLayer,
         selected = Nothing,
-        objectEditModeIndex = Nothing,
+        editorMode = NormalMode,
         debugMsgs = []
       }
 
@@ -94,7 +94,7 @@ keyPress :: AppButton -> EditorScene Sort_ -> EditorScene Sort_
 
 -- * object edit mode
 
-keyPress x s@EditorScene{objectEditModeIndex = Just i} =
+keyPress x s@EditorScene{editorMode = ObjectEditMode i} =
     s{editorObjects = objects'}
   where
     objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s

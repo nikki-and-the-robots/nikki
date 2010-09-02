@@ -115,20 +115,20 @@ selectSort app mainMenu editorMenu mvar scene =
 
 enterOEM :: Application -> AppState -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Maybe (String, AppState)
-enterOEM app mainMenu mvar scene@EditorScene{objectEditModeIndex = Nothing} = do -- maybe monad
+enterOEM app mainMenu mvar scene@EditorScene{editorMode = NormalMode} = do -- maybe monad
     i <- selected scene
     _ <- objectEditModeMethods $ editorSort $ getMainObject scene i
     let objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects scene
         mod :: OEMState Sort_ -> OEMState Sort_
         mod = enterModeOEM scene
     -- enter oem
-    Just $ ("edit object", edit scene{objectEditModeIndex = Just i, editorObjects = objects'})
+    Just $ ("edit object", edit scene{editorMode = ObjectEditMode i, editorObjects = objects'})
   where
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app mainMenu mvar s
-enterOEM app parent mvar s@EditorScene{objectEditModeIndex = Just i} =
+enterOEM app parent mvar s@EditorScene{editorMode = ObjectEditMode i} =
     -- exit oem
-    Just $ ("exit object edit mode", editorLoop app parent mvar s{objectEditModeIndex = Nothing})
+    Just $ ("exit object edit mode", editorLoop app parent mvar s{editorMode = NormalMode})
 
 
 editLayers :: Application -> AppState -> MVar (EditorScene Sort_)
