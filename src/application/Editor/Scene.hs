@@ -89,40 +89,33 @@ updateEditorScene (Press button) scene =
 updateEditorScene (Release button) s = s
 
 
-
-keyPress :: AppButton -> EditorScene Sort_ -> EditorScene Sort_
-
--- * object edit mode
-
-keyPress x s@EditorScene{editorMode = ObjectEditMode i} =
-    s{editorObjects = objects'}
-  where
-    objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
-    mod :: OEMState Sort_ -> OEMState Sort_
-    mod = updateOEM s x
-
-
--- * Main Editor mode
-
 -- * gamepad buttons
 -- Start (== Escape) is handled above in Editor.MainLoop
 
+keyPress :: AppButton -> EditorScene Sort_ -> EditorScene Sort_
+keyPress button scene =
+    case editorMode scene of
+        NormalMode -> normalMode button scene
+        ObjectEditMode{} -> objectEditMode button scene
+
+-- * Main Editor mode
+
 -- arrow keys
-keyPress LeftButton scene@EditorScene{cursor = (EditorPosition x y)} =
+normalMode LeftButton scene@EditorScene{cursor = (EditorPosition x y)} =
     let (EditorPosition sx sy) = getCursorStep scene
     in scene{cursor = (EditorPosition (x - sx) y)}
-keyPress RightButton scene@EditorScene{cursor = (EditorPosition x y)} =
+normalMode RightButton scene@EditorScene{cursor = (EditorPosition x y)} =
     let (EditorPosition sx sy) = getCursorStep scene
     in scene{cursor = (EditorPosition (x + sx) y)}
-keyPress UpButton scene@EditorScene{cursor = (EditorPosition x y)} =
+normalMode UpButton scene@EditorScene{cursor = (EditorPosition x y)} =
     let (EditorPosition sx sy) = getCursorStep scene
     in scene{cursor = (EditorPosition x (y - sy))}
-keyPress DownButton scene@EditorScene{cursor = (EditorPosition x y)} =
+normalMode DownButton scene@EditorScene{cursor = (EditorPosition x y)} =
     let (EditorPosition sx sy) = getCursorStep scene
     in scene{cursor = (EditorPosition x (y + sy))}
 
 -- add object
-keyPress AButton scene@EditorScene{cursor, selectedLayer} =
+normalMode AButton scene@EditorScene{cursor, selectedLayer} =
     scene{editorObjects = objects'}
   where
     objects' = modifySelectedLayer selectedLayer (modifyContent (>: new)) (editorObjects scene)
@@ -130,38 +123,38 @@ keyPress AButton scene@EditorScene{cursor, selectedLayer} =
     selectedSort = getSelected $ availableSorts scene
 
 -- delete selected object
-keyPress BButton scene@EditorScene{selectedLayer} =
+normalMode BButton scene@EditorScene{selectedLayer} =
     case selected scene of
         Nothing -> scene
         (Just i) ->
             let newObjects = modifySelectedLayer selectedLayer (modifyContent (deleteByIndex i)) (editorObjects scene)
             in scene{editorObjects = newObjects}
 
-keyPress (KeyboardButton x) scene = keyboardPress x scene
+normalMode (KeyboardButton x) scene = normalModeKeyboard x scene
 
-keyPress _ s = s
+normalMode _ s = s
 
 -- * buttons pressed on the keyboard
 
 -- skip through available objects
-keyboardPress D scene@EditorScene{} =
+normalModeKeyboard D scene@EditorScene{} =
     modifySorts selectNext scene
-keyboardPress A scene@EditorScene{} =
+normalModeKeyboard A scene@EditorScene{} =
     modifySorts selectPrevious scene
 
 -- cycle through objects under cursor
 -- (ordering of rendering will be automated)
-keyboardPress C scene@EditorScene{editorObjects, selected = Just i} =
+normalModeKeyboard C scene@EditorScene{editorObjects, selected = Just i} =
     let mainLayer' = I.toHead i (mainLayerIndexable editorObjects)
     in scene{editorObjects = editorObjects{mainLayer = mkMainLayer mainLayer'}}
 
 -- change cursor step size
 
-keyboardPress W scene =
+normalModeKeyboard W scene =
     case cursorStep scene of
         Nothing -> setCursorStep scene $ Just $ EditorPosition 1 1
         Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x * 2) (y * 2)
-keyboardPress S scene =
+normalModeKeyboard S scene =
     case cursorStep scene of
         Nothing -> setCursorStep scene Nothing
         Just (EditorPosition 1 1) -> setCursorStep scene Nothing
@@ -169,9 +162,18 @@ keyboardPress S scene =
 
 -- * Layers
 
-keyboardPress Plus s@EditorScene{editorObjects, selectedLayer} =
+normalModeKeyboard Plus s@EditorScene{editorObjects, selectedLayer} =
     s{selectedLayer = modifyGroundsIndex editorObjects (+ 1) selectedLayer}
-keyboardPress Minus s@EditorScene{editorObjects, selectedLayer} =
+normalModeKeyboard Minus s@EditorScene{editorObjects, selectedLayer} =
     s{selectedLayer = modifyGroundsIndex editorObjects (subtract 1) selectedLayer}
 
-keyboardPress _ scene = scene
+normalModeKeyboard _ scene = scene
+
+-- * object edit mode
+
+objectEditMode x s@EditorScene{editorMode = ObjectEditMode i} =
+    s{editorObjects = objects'}
+  where
+    objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
+    mod :: OEMState Sort_ -> OEMState Sort_
+    mod = updateOEM s x
