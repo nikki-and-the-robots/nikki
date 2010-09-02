@@ -1,0 +1,10 @@
+These are the keyboard shortcuts for the editor (advanced mode):
+
+Arrow keys or gamepad hat - move the cursor
+A button or CTRL - set an object
+B button or Shift - delete an object
+Start button or Escape - bring up the menu
+a and d - select another object
+w and s - change the cursor step size
+c - cycle through objects under cursor
++ and - - select active layer
