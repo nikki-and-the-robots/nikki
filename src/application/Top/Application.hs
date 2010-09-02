@@ -59,18 +59,22 @@ menu app mTitle mParent children =
     inner $ mkMenuItems children
   where
     inner items = AppState $ do
-        setDrawingCallbackAppWidget (window app) (Just $ loop items)
+        setDrawingCallbackAppWidget (window app) (Just $ render items)
         event <- waitForAppEvent $ keyPoller app
         case event of
             Press UpButton -> return $ inner $ selectPrevious items
             Press DownButton -> return $ inner $ selectNext items
             Press AButton -> return $ snd $ selected items
-            Press BButton -> case mParent of
+            Press x | isBackButton x -> case mParent of
                 Just parent -> return parent
                 Nothing -> return $ inner items
             x -> return $ inner items
 
-    loop items ptr = globalCatcher $ do
+    isBackButton BButton = True
+    isBackButton StartButton = True
+    isBackButton _  = False
+
+    render items ptr = globalCatcher $ do
         resetMatrix ptr
         clearScreen ptr
         setPenColor ptr 255 255 255 255 1
