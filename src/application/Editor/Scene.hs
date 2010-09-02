@@ -144,9 +144,9 @@ keyPress _ s = s
 -- * buttons pressed on the keyboard
 
 -- skip through available objects
-keyPress (KeyboardButton D) scene@EditorScene{} =
+keyboardPress D scene@EditorScene{} =
     modifySorts selectNext scene
-keyPress (KeyboardButton A) scene@EditorScene{} =
+keyboardPress A scene@EditorScene{} =
     modifySorts selectPrevious scene
 
 -- cycle through objects under cursor
