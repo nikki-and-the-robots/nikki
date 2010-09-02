@@ -148,10 +148,10 @@ mkPolys (Size w h) =
         leftEngine,
         rightEngine
       ]
-    bodyRect = mkRect (Position 32 0) (Size 60 68)
-    legsRect = mkRect (Position 36 68) (Size 52 16)
-    leftEngine = mkRect (Position 8 20) engineSize
-    rightEngine = mkRect (Position 92 20) engineSize
+    bodyRect = mkRect (Position 24 0) (Size 60 68)
+    legsRect = mkRect (Position 28 68) (Size 52 16)
+    leftEngine = mkRect (Position 0 20) engineSize
+    rightEngine = mkRect (Position 84 20) engineSize
 
     engineSize = Size 24 48
 
