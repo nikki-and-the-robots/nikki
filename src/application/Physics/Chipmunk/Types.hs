@@ -178,7 +178,7 @@ getPosition :: Chipmunk -> IO Vector
 getPosition Chipmunk{body} = Physics.Hipmunk.getPosition body
 getPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
     return (Vector x y +~ baryCenterOffset)
-getPosition x = es "getPosition" x
+getPosition StaticChipmunk{chipmunkPosition} = return chipmunkPosition
 
 -- returns the angle and the position of the (rotated) left upper corner of the object.
 getRenderPosition :: Chipmunk -> IO (Qt.Position Double, Angle)

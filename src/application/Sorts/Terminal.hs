@@ -169,6 +169,8 @@ instance Sort TSort Terminal where
     immutableCopy t =
         CM.immutableCopy (chipmunk t) >>= \ x -> return t{chipmunk = x}
 
+    getControlledChipmunk = chipmunk
+
     chipmunks = chipmunk >>> return
 
     startControl t = t{exitMode = DontExit}
