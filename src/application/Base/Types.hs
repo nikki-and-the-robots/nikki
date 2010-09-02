@@ -151,6 +151,8 @@ data EditorScene sort
             -- (in the selected layer)
         editorMode :: EditorMode,
 
+        clipBoard :: [EditorObject sort],
+
         debugMsgs :: [String]
     }
   deriving (Show, Typeable)
@@ -200,6 +202,10 @@ data EditorObject sort
         editorMergedObjects :: [EditorObject sort]
       }
   deriving Show
+
+modifyEditorPosition :: (EditorPosition -> EditorPosition)
+    -> EditorObject s -> EditorObject s
+modifyEditorPosition f o@EditorObject{editorPosition} = o{editorPosition = f editorPosition}
 
 
 -- * object edit mode

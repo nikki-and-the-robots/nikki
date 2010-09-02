@@ -19,7 +19,7 @@ import Data.Map hiding (map, filter, mapMaybe, size, member)
 import Data.Set (member)
 import Data.SelectTree
 import qualified Data.Indexable as I
-import Data.Indexable (Index, (>:), modifyByIndex, deleteByIndex)
+import Data.Indexable (Index, Indexable, (!!!), (>:), modifyByIndex, deleteByIndex)
 import Data.Menu hiding (selected)
 import Data.Abelian
 
@@ -77,6 +77,7 @@ initEditorScene sorts mObjects = flip evalStateT empty $ do
         selectedLayer = MainLayer,
         selected = Nothing,
         editorMode = NormalMode,
+        clipBoard = [],
         debugMsgs = []
       }
 
@@ -169,6 +170,10 @@ normalModeKeyboard Plus s@EditorScene{editorObjects, selectedLayer} =
 normalModeKeyboard Minus s@EditorScene{editorObjects, selectedLayer} =
     s{selectedLayer = modifyGroundsIndex editorObjects (subtract 1) selectedLayer}
 
+-- * paste from clipBoard
+
+normalModeKeyboard V s = pasteClipboard s
+
 normalModeKeyboard _ scene = scene
 
 
@@ -195,4 +200,7 @@ selectionMode button scene@EditorScene{editorMode = SelectionMode pos}
     changeSelectionPosition RightButton (EditorPosition x y) = EditorPosition (x + sx) y
     sy = 100
     sx = 100
+selectionMode (KeyboardButton X) scene =
+    cutSelection scene
 
+selectionMode _ scene = scene

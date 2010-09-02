@@ -100,3 +100,34 @@ inCopySelection EditorScene{editorMode = SelectionMode endPosition, cursor} obje
         (x `between` (x1, x2)) &&
         (y `between` (y1, y2))
     between x (a, b) = x >= min a b && x <= max a b
+
+
+cutSelection :: EditorScene Sort_ -> EditorScene Sort_
+cutSelection scene =
+    scene{editorMode = NormalMode, clipBoard = clipBoard, editorObjects = newObjects}
+  where
+    newObjects = modifySelectedLayer (selectedLayer scene) 
+                    (modifyContent deleteCutObjects) 
+                    (editorObjects scene)
+    deleteCutObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
+    deleteCutObjects = foldr (.) id (map deleteByIndex cutIndices)
+    cutIndices = I.findIndices (inCopySelection scene) layer
+    layer :: Indexable (EditorObject Sort_)
+    layer = content (editorObjects scene !|| selectedLayer scene)
+    clipBoard :: [EditorObject Sort_]
+    clipBoard = map moveToZero $ map (\ i -> layer !!! i) cutIndices
+    moveToZero :: EditorObject Sort_ -> EditorObject Sort_
+    moveToZero = modifyEditorPosition (-~ cursor scene)
+
+pasteClipboard :: EditorScene Sort_ -> EditorScene Sort_
+pasteClipboard scene =
+    scene{editorObjects = newObjects}
+  where
+    newObjects = modifySelectedLayer (selectedLayer scene)
+                    (modifyContent addClipboard)
+                    (editorObjects scene)
+    addClipboard :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
+    addClipboard = 
+        foldr (.) id $ map (\ o ix -> ix >: o) $
+        map (modifyEditorPosition (+~ cursor scene)) $
+        clipBoard scene
