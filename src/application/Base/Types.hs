@@ -164,7 +164,14 @@ data EditorMode
     | ObjectEditMode {
         objectIndex :: Index
       }
+    | SelectionMode {
+        endPosition :: EditorPosition
+      }
   deriving (Show, Typeable)
+
+
+toSelectionMode :: EditorScene s -> EditorScene s
+toSelectionMode scene = scene{editorMode = SelectionMode (cursor scene)}
 
 
 data EditorPosition = EditorPosition {
@@ -195,6 +202,8 @@ data EditorObject sort
   deriving Show
 
 
+-- * object edit mode
+
 data ObjectEditModeMethods sort
     = ObjectEditModeMethods {
         oemInitialState :: EditorPosition -> String,
@@ -212,3 +221,5 @@ data OEMState sort
         oemState :: String
       }
   deriving Show
+
+

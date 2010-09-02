@@ -26,7 +26,7 @@ drawBox ptr (Position x y) (Size w h) thickness = do
 -- | same as $drawBox$, but with color
 drawColoredBox :: Ptr QPainter -> Position Double -> Size Double -> Double -> RGBA -> IO ()
 drawColoredBox ptr position size thickness (RGBA r g b a) = do
-    setPenColor ptr (tb r) (tb g) (tb b) 127 1
+    setPenColor ptr (tb r) (tb g) (tb b) (tb a) 1
     drawBox ptr position size thickness
   where
     tb :: Double -> QtInt

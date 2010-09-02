@@ -15,7 +15,8 @@ module Editor.Scene (
   ) where
 
 import Data.Maybe
-import Data.Map hiding (map, filter, mapMaybe, size)
+import Data.Map hiding (map, filter, mapMaybe, size, member)
+import Data.Set (member)
 import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable (Index, (>:), modifyByIndex, deleteByIndex)
@@ -97,6 +98,7 @@ keyPress button scene =
     case editorMode scene of
         NormalMode -> normalMode button scene
         ObjectEditMode{} -> objectEditMode button scene
+        SelectionMode{} -> selectionMode button scene
 
 -- * Main Editor mode
 
@@ -169,6 +171,7 @@ normalModeKeyboard Minus s@EditorScene{editorObjects, selectedLayer} =
 
 normalModeKeyboard _ scene = scene
 
+
 -- * object edit mode
 
 objectEditMode x s@EditorScene{editorMode = ObjectEditMode i} =
@@ -177,3 +180,19 @@ objectEditMode x s@EditorScene{editorMode = ObjectEditMode i} =
     objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
     mod :: OEMState Sort_ -> OEMState Sort_
     mod = updateOEM s x
+
+
+-- * selection mode
+
+selectionMode :: AppButton -> EditorScene Sort_ -> EditorScene Sort_
+selectionMode button scene@EditorScene{editorMode = SelectionMode pos}
+    | button `member` allArrowButtons =
+        scene{editorMode = SelectionMode (changeSelectionPosition button pos)}
+  where
+    changeSelectionPosition UpButton (EditorPosition x y) = EditorPosition x (y - sy)
+    changeSelectionPosition DownButton (EditorPosition x y) = EditorPosition x (y + sy)
+    changeSelectionPosition LeftButton (EditorPosition x y) = EditorPosition (x - sx) y
+    changeSelectionPosition RightButton (EditorPosition x y) = EditorPosition (x + sx) y
+    sy = 100
+    sx = 100
+

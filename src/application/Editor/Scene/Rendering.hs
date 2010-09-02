@@ -7,6 +7,7 @@ import Utils
 import Data.SelectTree
 import Data.Color
 import Data.Abelian
+import qualified Data.Indexable as I
 
 import Graphics.Qt
 
@@ -21,7 +22,7 @@ import Editor.Scene.Rendering.Helpers
 
 -- | renders the whole editor scene (with gui)
 renderEditorScene :: Ptr QPainter -> EditorScene Sort_ -> IO ()
-renderEditorScene ptr scene =
+renderEditorScene ptr scene = do
     case editorMode scene of
         NormalMode -> do
             offset <- calculateRenderTransformation ptr scene
@@ -30,6 +31,7 @@ renderEditorScene ptr scene =
         ObjectEditMode index -> do
             let Just oemState = editorOEMState $ getMainObject scene index
             renderOEM ptr scene oemState
+        SelectionMode endPosition -> renderCopySelection ptr scene endPosition
 
 
 renderObjectScene :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()
@@ -127,6 +129,35 @@ renderCursorStepSize ptr (EditorPosition x y) = do
     resetMatrix ptr
     (Size w h) <- fmap fromIntegral <$> sizeQPainter ptr
     drawText ptr (Position 500 (h - 20)) False ("Step: " ++ show (x, y))
+
+
+-- * copy selection
+
+renderCopySelection ptr scene endPosition@(EditorPosition x y) = do
+    cursorOffset <- calculateRenderTransformation ptr scene
+    let offset = cursorOffset -~ Position x y
+    renderObjectScene ptr offset scene
+    renderSelectionBox ptr offset scene endPosition
+    renderSelectedBoxes ptr offset scene
+
+renderSelectionBox ptr offset scene (EditorPosition x2 y2) = do
+    let EditorPosition x1 y1 = cursor scene
+        boxPosition = offset +~ Position x1 y2
+        size = Size (x2 - x1) (y1 - y2)
+    drawColoredBox ptr boxPosition size 3 (RGBA 1 0 0 1)
+
+renderSelectedBoxes ptr offset scene =
+    mapM_ (drawCopySelectedBox ptr offset) $ 
+        filter (inCopySelection scene) $ I.toList $
+            content (editorObjects scene !|| selectedLayer scene)
+
+drawCopySelectedBox ptr offset object = do
+    let sort = editorSort object
+        p = editorPosition2QtPosition sort (editorPosition object) +~ offset
+    drawColoredBox ptr p (size sort) 3 (RGBA 0 1 0 1)
+
+
+
 
 
 

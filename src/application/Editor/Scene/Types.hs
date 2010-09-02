@@ -6,6 +6,7 @@ module Editor.Scene.Types where
 import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
+import Data.Abelian
 
 import Control.Monad.State
 
@@ -85,3 +86,17 @@ modifyEditorObjects f s@EditorScene{editorObjects} = s{editorObjects = f editorO
 modifySorts :: (SelectTree Sort_ -> SelectTree Sort_) -> EditorScene Sort_ -> EditorScene Sort_
 modifySorts f scene@EditorScene{availableSorts} = scene{availableSorts = f availableSorts}
 
+-- | returns if an object is currently in the copy selection
+inCopySelection :: Sort s x => EditorScene s -> EditorObject s -> Bool
+inCopySelection EditorScene{editorMode = SelectionMode endPosition, cursor} object =
+    (editorPosition object `pBetween` range) &&
+    objectEndPosition `pBetween` range
+  where
+    Size w h = size $ editorSort object
+    objectEndPosition = editorPosition object +~ EditorPosition w (- h)
+    range = (cursor, endPosition)
+
+    pBetween (EditorPosition x y) (EditorPosition x1 y1, EditorPosition x2 y2) =
+        (x `between` (x1, x2)) &&
+        (y `between` (y1, y2))
+    between x (a, b) = x >= min a b && x <= max a b
