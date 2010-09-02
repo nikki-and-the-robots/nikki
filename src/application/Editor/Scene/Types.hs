@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns, FlexibleInstances, DeriveDataTypeable #-}
+{-# language NamedFieldPuns, FlexibleInstances, DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Editor.Scene.Types where
 
@@ -43,8 +43,19 @@ getMainObject scene i = os !!! i
   where
     os = mainLayerIndexable $ editorObjects scene
 
+-- returns the wanted cursor step
+getCursorStep :: EditorScene Sort_ -> EditorPosition
+getCursorStep s = case cursorStep s of
+    Just x -> x
+    Nothing ->
+        let (Size x y) = size $ getSelected $ availableSorts s
+        in EditorPosition x y
+
 
 -- * Setters
+
+setCursorStep :: EditorScene s -> Maybe EditorPosition -> EditorScene s
+setCursorStep scene x = scene{cursorStep = x}
 
 
 addDebugMsg :: String -> EditorScene Sort_ -> EditorScene Sort_

@@ -139,7 +139,7 @@ data EditorScene sort
         levelPath :: Maybe FilePath,
 
         cursor :: EditorPosition,
-        cursorStep :: EditorScene sort -> EditorPosition,
+        cursorStep :: Maybe EditorPosition, -- if Nothing -> size of selected object
 
         availableSorts :: SelectTree sort,
 
@@ -156,10 +156,6 @@ data EditorScene sort
 
 instance Show (EditorScene sort -> EditorPosition) where
     show _ = "<EditorScene -> EditorPosition>"
-
-
-getCursorStep :: EditorScene sort -> EditorPosition
-getCursorStep s = cursorStep s s
 
 
 data MenuLabel sort = MenuLabel (Maybe sort) String

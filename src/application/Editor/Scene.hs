@@ -70,7 +70,7 @@ initEditorScene sorts mObjects = flip evalStateT empty $ do
     return $ updateSelected EditorScene{
         levelPath = path,
         cursor = zero,
-        cursorStep = const (EditorPosition 64 64),
+        cursorStep = Just $ EditorPosition 64 64,
         availableSorts = sorts,
         editorObjects = objects,
         selectedLayer = MainLayer,
@@ -127,6 +127,10 @@ keyPress BButton scene@EditorScene{selectedLayer} =
             let newObjects = modifySelectedLayer selectedLayer (modifyContent (deleteByIndex i)) (editorObjects scene)
             in scene{editorObjects = newObjects}
 
+keyPress (KeyboardButton x) scene = keyboardPress x scene
+
+keyPress _ s = s
+
 -- * buttons pressed on the keyboard
 
 -- skip through available objects
@@ -135,7 +139,19 @@ keyPress (KeyboardButton D) scene@EditorScene{} =
 keyPress (KeyboardButton A) scene@EditorScene{} =
     modifySorts selectPrevious scene
 
+-- change cursor step size
 
+keyboardPress W scene =
+    case cursorStep scene of
+        Nothing -> setCursorStep scene $ Just $ EditorPosition 1 1
+        Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x * 2) (y * 2)
+keyboardPress S scene =
+    case cursorStep scene of
+        Nothing -> setCursorStep scene Nothing
+        Just (EditorPosition 1 1) -> setCursorStep scene Nothing
+        Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x / 2) (y / 2)
+
+keyboardPress _ scene = scene
 
 -- * object edit mode
 -- keyPress Escape s@EditorScene{objectEditModeIndex = Just i} =
@@ -189,32 +205,8 @@ keyPress (KeyboardButton A) scene@EditorScene{} =
 -- keyPress k s@EditorScene{} | k `member` cursorStepShortCuts =
 --     s{cursorStep = (cursorStepShortCuts ! k)}
 
-keyPress _ s = s
 
 
--- | contains the shortcuts to change the vector the cursor is moved by the arrow keys.
-cursorStepShortCuts :: Map Key (EditorScene Sort_ -> EditorPosition)
-cursorStepShortCuts = fromList (
-    (K0, fromSelectedPixmap) -- like the selected object
-    : map (second (\ x -> const $ EditorPosition x x)) constSquareShortcuts)
-  where
-    fromSelectedPixmap :: EditorScene Sort_ -> EditorPosition
-    fromSelectedPixmap EditorScene{availableSorts} =
-        let (Size x y) = size $ getSelected availableSorts
-        in EditorPosition x y
-    -- | shortcuts that put cursorStep to a constant square
-    constSquareShortcuts :: [(Key, Double)]
-    constSquareShortcuts = [
-        (K1, 1),
-        (K2, fromUber 1),
-        (K3, fromUber 4),
-        (K4, fromUber 8),  -- 32
-        (K5, fromUber 16), -- 64
-        (K6, fromUber 32), -- 128
-        (K7, fromUber 64),
-        (K8, fromUber 128),
-        (K9, fromUber 256)
-      ]
 
 
 
