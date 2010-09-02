@@ -77,30 +77,23 @@ saveLevel app parent EditorScene{levelPath = (Just path), editorObjects} = AppSt
 
 editorMenu :: Application -> AppState -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorMenu app parent sceneMVar scene =
+editorMenu app parent mvar scene =
     Top.Application.menu app (Just "editor menu") (Just (edit scene))
       (
       lEnterOEM ++
       [
-        ("select object", selectSort app parent this sceneMVar scene),
+        ("select object", selectSort app parent this mvar scene),
         ("return to editing", edit scene),
         ("save level and exit editor", saveLevel app parent scene),
         ("exit editor without saving", reallyExitEditor app parent this)
       ])
   where
-    lEnterOEM = case selected scene of
+    lEnterOEM = case enterOEM app parent mvar scene of
         Nothing -> []
-        Just i -> case objectEditModeMethods $ editorSort $ getMainObject scene i of
-            Nothing -> []
-            Just _ -> [("edit object", 
-                        edit scene{objectEditModeIndex = Just i, editorObjects = objects'})]
-              where
-                objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects scene
-                mod :: OEMState Sort_ -> OEMState Sort_
-                mod = enterModeOEM scene
+        Just x -> [x]
     edit :: EditorScene Sort_ -> AppState
-    edit s = editorLoop app parent sceneMVar scene
-    this = editorMenu app parent sceneMVar scene
+    edit s = editorLoop app parent mvar scene
+    this = editorMenu app parent mvar scene
 
 reallyExitEditor app parent editor =
     Top.Application.menu app (Just "really exit without saving?") (Just editor) [
@@ -120,4 +113,23 @@ selectSort app parent editorMenu mvar scene =
         scene' = case selectFirstElement pred (availableSorts scene) of
             Just newTree -> scene{availableSorts = newTree}
         pred sort = SortId n == sortId sort
+
+
+enterOEM :: Application -> AppState -> MVar (EditorScene Sort_)
+    -> EditorScene Sort_ -> Maybe (String, AppState)
+enterOEM app parent mvar scene@EditorScene{objectEditModeIndex = Nothing} = do -- maybe monad
+    i <- selected scene
+    _ <- objectEditModeMethods $ editorSort $ getMainObject scene i
+    let objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects scene
+        mod :: OEMState Sort_ -> OEMState Sort_
+        mod = enterModeOEM scene
+    -- enter oem
+    Just $ ("edit object", edit scene{objectEditModeIndex = Just i, editorObjects = objects'})
+  where
+    edit :: EditorScene Sort_ -> AppState
+    edit s = editorLoop app parent mvar s
+enterOEM app parent mvar s@EditorScene{objectEditModeIndex = Just i} =
+    -- exit oem
+    Just $ ("exit object edit mode", editorLoop app parent mvar s{objectEditModeIndex = Nothing})
+
 

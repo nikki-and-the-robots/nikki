@@ -92,6 +92,16 @@ updateEditorScene (Release button) s = s
 
 keyPress :: AppButton -> EditorScene Sort_ -> EditorScene Sort_
 
+-- * object edit mode
+
+keyPress x s@EditorScene{objectEditModeIndex = Just i} =
+    s{editorObjects = objects'}
+  where
+    objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
+    mod :: OEMState Sort_ -> OEMState Sort_
+    mod = updateOEM s x
+
+
 -- * Main Editor mode
 
 -- * gamepad buttons
@@ -139,6 +149,12 @@ keyPress (KeyboardButton D) scene@EditorScene{} =
 keyPress (KeyboardButton A) scene@EditorScene{} =
     modifySorts selectPrevious scene
 
+-- cycle through objects under cursor
+-- (ordering of rendering will be automated)
+keyboardPress C scene@EditorScene{editorObjects, selected = Just i} =
+    let mainLayer' = I.toHead i (mainLayerIndexable editorObjects)
+    in scene{editorObjects = editorObjects{mainLayer = mkMainLayer mainLayer'}}
+
 -- change cursor step size
 
 keyboardPress W scene =
@@ -153,26 +169,6 @@ keyboardPress S scene =
 
 keyboardPress _ scene = scene
 
--- * object edit mode
--- keyPress Escape s@EditorScene{objectEditModeIndex = Just i} =
---     s{objectEditModeIndex = Nothing}
--- keyPress x s@EditorScene{objectEditModeIndex = Just i} =
---     s{editorObjects = objects'}
---   where
---     objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
---     mod :: OEMState Sort_ -> OEMState Sort_
---     mod = updateOEM s x
--- 
-
--- -- put selected object to the back
--- keyPress B scene@EditorScene{editorObjects, selected = Just i} =
---     let mainLayer' = I.toHead i (mainLayerIndexable editorObjects)
---     in scene{editorObjects = editorObjects{mainLayer = mkMainLayer mainLayer'}}
--- -- put selected object to the front
--- keyPress F scene@EditorScene{editorObjects, selected = Just i} =
---     let mainLayer' = I.toLast i (mainLayerIndexable editorObjects)
---     in scene{editorObjects = editorObjects{mainLayer = mkMainLayer mainLayer'}}
--- 
 -- -- * Layers
 -- 
 -- keyPress Plus s@EditorScene{editorObjects, selectedLayer} =

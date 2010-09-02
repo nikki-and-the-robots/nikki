@@ -487,13 +487,13 @@ enterMode scene (Robots _ selected attached) =
           where
             selected' = if selected `elem` available then selected else first
 
-editorUpdate :: EditorScene Sort_ -> Key -> OEMState -> OEMState
+editorUpdate :: EditorScene Sort_ -> AppButton -> OEMState -> OEMState
 editorUpdate scene key NoRobots = NoRobots
 editorUpdate scene key state@(Robots available selected attached) =
   case key of
-    RightArrow -> state{selectedRobot = searchNext selected available}
-    LeftArrow  -> state{selectedRobot = searchNext selected (reverse available)}
-    Enter -> state{attachedRobots = swapIsElem selected attached}
+    RightButton -> state{selectedRobot = searchNext selected available}
+    LeftButton -> state{selectedRobot = searchNext selected (reverse available)}
+    AButton -> state{attachedRobots = swapIsElem selected attached}
     _ -> state
 
 -- | searches the next element that is not equal to the given one in the list

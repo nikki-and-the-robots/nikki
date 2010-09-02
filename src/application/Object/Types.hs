@@ -211,7 +211,7 @@ enterModeOEM :: EditorScene Sort_ -> OEMState Sort_ -> OEMState Sort_
 enterModeOEM scene (OEMState oem state) =
     OEMState oem (oemEnterMode oem scene state)
 
-updateOEM :: EditorScene Sort_ -> Key -> OEMState Sort_ -> OEMState Sort_
+updateOEM :: EditorScene Sort_ -> AppButton -> OEMState Sort_ -> OEMState Sort_
 updateOEM scene k (OEMState oem state) =
     OEMState oem (oemUpdate oem scene k state)
 

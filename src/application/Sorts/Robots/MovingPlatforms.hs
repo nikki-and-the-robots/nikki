@@ -23,6 +23,7 @@ import Paths
 import Base.Constants
 import Base.Pixmap
 import Base.Types (ObjectEditModeMethods(..), EditorPosition(..))
+import Base.Events
 
 import Object
 
@@ -278,8 +279,8 @@ initialState :: EditorPosition -> Paths
 initialState p = Paths p [p]
 
 
-updatePaths :: Key -> Paths -> Paths
-updatePaths RightArrow p = modifyCursor (+~ EditorPosition cursorStep 0) p
+updatePaths :: AppButton -> Paths -> Paths
+updatePaths RightButton p = modifyCursor (+~ EditorPosition cursorStep 0) p
 updatePaths _ p = p
 
 cursorStep = fromKachel 1

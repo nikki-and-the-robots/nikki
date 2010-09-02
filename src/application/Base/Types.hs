@@ -22,6 +22,7 @@ import Utils
 
 import Base.Constants
 import Base.Grounds
+import Base.Events
 
 
 data Scene object
@@ -194,7 +195,7 @@ data ObjectEditModeMethods sort
     = ObjectEditModeMethods {
         oemInitialState :: EditorPosition -> String,
         oemEnterMode :: EditorScene sort -> String -> String,
-        oemUpdate :: EditorScene sort -> Key -> String -> String,
+        oemUpdate :: EditorScene sort -> AppButton -> String -> String,
         oemRender :: Ptr QPainter -> EditorScene sort -> String -> IO () -- more args
       }
 
