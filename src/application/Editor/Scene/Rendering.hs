@@ -133,9 +133,12 @@ renderCursorStepSize ptr (EditorPosition x y) = do
 
 -- * copy selection
 
-renderCopySelection ptr scene endPosition@(EditorPosition x y) = do
+renderCopySelection ptr scene endPosition@(EditorPosition x2 y2) = do
     Size w h <- fmap fromIntegral <$> sizeQPainter ptr
-    let offset = negateAbelian (Position x y) +~ Position w 0 +~ Position (- 50) 50
+    let EditorPosition x1 y1 = cursor scene
+        x = max x1 x2
+        y = min y1 y2
+        offset = negateAbelian (Position x y) +~ Position w 0 +~ Position (- 50) 50
     renderObjectScene ptr offset scene
     renderSelectionBox ptr offset scene endPosition
     renderSelectedBoxes ptr offset scene
