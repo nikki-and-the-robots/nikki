@@ -83,6 +83,12 @@ editorMenu app mainMenu mvar scene =
         ObjectEditMode{} ->
             menu app (Just menuTitle) (Just (edit scene))
             [("exit object edit mode", exitOEM app mainMenu mvar scene)]
+        SelectionMode{} ->
+            menu app (Just menuTitle) (Just (edit scene)) [
+                ("cut selected objects", edit (cutSelection scene)),
+                ("copy selected objects", edit (copySelection scene)),
+                ("exit selection mode", edit scene{editorMode = NormalMode})
+              ]
   where
     menuTitle = case levelPath scene of
         Nothing -> "editing untitled level"
