@@ -173,6 +173,8 @@ normalModeKeyboard Minus s@EditorScene{editorObjects, selectedLayer} =
 
 normalModeKeyboard V s = pasteClipboard s
 
+normalModeKeyboard Space s = toSelectionMode s
+
 normalModeKeyboard _ scene = scene
 
 
