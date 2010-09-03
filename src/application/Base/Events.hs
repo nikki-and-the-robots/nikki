@@ -61,7 +61,7 @@ pollAppEvents poller = do
     (unpolledEvents, keyState) <- readIORef keyStateRef
     qEvents <- pollEvents poller
     let appEvents = concatMap (toAppEvent keyState) (map Left qEvents)
-        keyState' = foldr (.) id (map updateKeyState appEvents) keyState
+        keyState' = foldr (>>>) id (map updateKeyState appEvents) keyState
     writeIORef keyStateRef ([], keyState')
     return $ ControlData (unpolledEvents ++ appEvents) keyState'
 
