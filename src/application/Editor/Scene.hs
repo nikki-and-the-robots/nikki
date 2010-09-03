@@ -77,8 +77,7 @@ initEditorScene sorts mObjects = flip evalStateT empty $ do
         selectedLayer = MainLayer,
         selected = Nothing,
         editorMode = NormalMode,
-        clipBoard = [],
-        debugMsgs = []
+        clipBoard = []
       }
 
 

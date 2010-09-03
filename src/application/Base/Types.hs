@@ -151,9 +151,7 @@ data EditorScene sort
             -- (in the selected layer)
         editorMode :: EditorMode,
 
-        clipBoard :: [EditorObject sort],
-
-        debugMsgs :: [String]
+        clipBoard :: [EditorObject sort]
     }
   deriving (Show, Typeable)
 

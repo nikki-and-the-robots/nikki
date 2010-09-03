@@ -58,12 +58,6 @@ getCursorStep s = case cursorStep s of
 setCursorStep :: EditorScene s -> Maybe EditorPosition -> EditorScene s
 setCursorStep scene x = scene{cursorStep = x}
 
-
-addDebugMsg :: String -> EditorScene Sort_ -> EditorScene Sort_
-addDebugMsg msg s =
-    let msgs = debugMsgs s
-    in s{debugMsgs = msg : msgs}
-
 -- | adds a new default Layer to the EditorScene
 addDefaultBackground :: EditorScene Sort_ -> EditorScene Sort_
 addDefaultBackground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
