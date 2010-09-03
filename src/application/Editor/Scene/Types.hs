@@ -109,9 +109,8 @@ cutSelection scene =
     deleteCutObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
     deleteCutObjects = foldr (.) id (map deleteByIndex cutIndices)
     clipBoard :: [EditorObject Sort_]
-    clipBoard = map moveToZero $ map (\ i -> getSelectedLayerContent scene !!! i) cutIndices
-    moveToZero :: EditorObject Sort_ -> EditorObject Sort_
-    moveToZero = modifyEditorPosition (-~ cursor scene)
+    clipBoard = map (moveSelectionToZero scene) $
+        map (\ i -> getSelectedLayerContent scene !!! i) cutIndices
     cutIndices = findCopySelectionIndices scene
 
 copySelection :: EditorScene Sort_ -> EditorScene Sort_
@@ -119,14 +118,21 @@ copySelection scene =
     scene{editorMode = NormalMode, clipBoard = clipBoard}
   where
     clipBoard :: [EditorObject Sort_]
-    clipBoard = map moveToZero $ map (\ i -> getSelectedLayerContent scene !!! i) copyIndices
-    moveToZero :: EditorObject Sort_ -> EditorObject Sort_
-    moveToZero = modifyEditorPosition (-~ cursor scene)
+    clipBoard = map (moveSelectionToZero scene) $ 
+        map (\ i -> getSelectedLayerContent scene !!! i) copyIndices
     copyIndices = findCopySelectionIndices scene
 
 findCopySelectionIndices :: EditorScene Sort_ -> [Index]
 findCopySelectionIndices scene =
     I.findIndices (inCopySelection scene) $ getSelectedLayerContent scene
+
+moveSelectionToZero :: EditorScene Sort_ -> EditorObject Sort_ -> EditorObject Sort_
+moveSelectionToZero scene@EditorScene{editorMode = SelectionMode (EditorPosition x2 y2)} =
+    modifyEditorPosition (-~ EditorPosition x y)
+  where
+    x = min x1 x2
+    y = max y1 y2
+    EditorPosition x1 y1 = cursor scene
 
 pasteClipboard :: EditorScene Sort_ -> EditorScene Sort_
 pasteClipboard scene =
