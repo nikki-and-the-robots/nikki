@@ -199,7 +199,7 @@ selectionMode button scene@EditorScene{editorMode = SelectionMode pos}
     changeSelectionPosition RightButton (EditorPosition x y) = EditorPosition (x + sx) y
     sy = 100
     sx = 100
-selectionMode (KeyboardButton X) scene =
-    cutSelection scene
+selectionMode (KeyboardButton X) scene = cutSelection scene
+selectionMode (KeyboardButton C) scene = copySelection scene
 
 selectionMode _ scene = scene

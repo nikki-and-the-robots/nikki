@@ -23,6 +23,9 @@ import Object
 
 -- * getters
 
+getSelectedLayerContent :: EditorScene Sort_ -> Indexable (EditorObject Sort_)
+getSelectedLayerContent scene = content (editorObjects scene !|| selectedLayer scene)
+
 -- | get the object that is actually selected by the cursor
 getSelectedObject :: EditorScene Sort_ -> Maybe (EditorObject Sort_)
 getSelectedObject EditorScene{selected = Just i, editorObjects, selectedLayer} =
@@ -105,13 +108,25 @@ cutSelection scene =
                     (editorObjects scene)
     deleteCutObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
     deleteCutObjects = foldr (.) id (map deleteByIndex cutIndices)
-    cutIndices = I.findIndices (inCopySelection scene) layer
-    layer :: Indexable (EditorObject Sort_)
-    layer = content (editorObjects scene !|| selectedLayer scene)
     clipBoard :: [EditorObject Sort_]
-    clipBoard = map moveToZero $ map (\ i -> layer !!! i) cutIndices
+    clipBoard = map moveToZero $ map (\ i -> getSelectedLayerContent scene !!! i) cutIndices
     moveToZero :: EditorObject Sort_ -> EditorObject Sort_
     moveToZero = modifyEditorPosition (-~ cursor scene)
+    cutIndices = findCopySelectionIndices scene
+
+copySelection :: EditorScene Sort_ -> EditorScene Sort_
+copySelection scene =
+    scene{editorMode = NormalMode, clipBoard = clipBoard}
+  where
+    clipBoard :: [EditorObject Sort_]
+    clipBoard = map moveToZero $ map (\ i -> getSelectedLayerContent scene !!! i) copyIndices
+    moveToZero :: EditorObject Sort_ -> EditorObject Sort_
+    moveToZero = modifyEditorPosition (-~ cursor scene)
+    copyIndices = findCopySelectionIndices scene
+
+findCopySelectionIndices :: EditorScene Sort_ -> [Index]
+findCopySelectionIndices scene =
+    I.findIndices (inCopySelection scene) $ getSelectedLayerContent scene
 
 pasteClipboard :: EditorScene Sort_ -> EditorScene Sort_
 pasteClipboard scene =
