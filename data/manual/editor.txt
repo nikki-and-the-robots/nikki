@@ -8,3 +8,12 @@ a and d - select another object
 w and s - change the cursor step size
 c - cycle through objects under cursor
 + and - - select active layer
+space - activate selection mode
+v - paste selected objects
+
+selection mode
+==============
+
+Arrow keys or gamepad hat - move the upper right corner of the selection box
+x - cut selected objects
+c - copy selected objects
