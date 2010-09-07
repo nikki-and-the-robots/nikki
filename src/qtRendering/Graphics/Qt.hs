@@ -86,16 +86,14 @@ waitForEvent (KeyPoller c) = readChan c
 
 sendDebugInitials :: Chan QtEvent -> IO ()
 sendDebugInitials c = do
-    mapM_ (writeChan c) [
-        KeyPress Enter,
-        KeyRelease Enter,
-        KeyPress DownArrow,
-        KeyRelease DownArrow,
-        KeyPress DownArrow,
-        KeyRelease DownArrow,
-        KeyPress Enter,
-        KeyRelease Enter
-      ]
+    mapM_ worker (selectionMode ++ [RightArrow, RightArrow, RightArrow, UpArrow, UpArrow, UpArrow])
+  where
+    worker k = do
+        writeChan c (KeyPress k)
+        writeChan c (KeyRelease k)
+
+    editFirstLevel = [DownArrow, Ctrl, DownArrow, Ctrl]
+    selectionMode = editFirstLevel ++ [Space]
 
 
 
