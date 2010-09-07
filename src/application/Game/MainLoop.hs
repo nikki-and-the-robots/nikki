@@ -10,7 +10,6 @@ module Game.MainLoop (
   ) where
 
 
-import Data.Set as Set (Set, empty, insert, delete, toList)
 import Data.IORef
 
 import Control.Monad.State hiding ((>=>))

@@ -14,23 +14,17 @@ module Editor.Scene (
     renderEditorScene,
   ) where
 
-import Data.Maybe
 import Data.Map hiding (map, filter, mapMaybe, size, member)
 import Data.Set (member)
 import Data.SelectTree
 import qualified Data.Indexable as I
-import Data.Indexable (Index, Indexable, (!!!), (>:), modifyByIndex, deleteByIndex)
-import Data.Menu hiding (selected)
+import Data.Indexable (Index, (>:), modifyByIndex, deleteByIndex)
 import Data.Abelian
 
 import Control.Monad.State
-import Control.Arrow
 
 import Graphics.Qt
 
-import Utils
-
-import Base.Constants
 import Base.Grounds
 import Base.Types
 import Base.Events

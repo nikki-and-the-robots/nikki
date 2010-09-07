@@ -10,8 +10,6 @@ import Control.Monad
 
 import System.FilePath
 
-import Physics.Chipmunk hiding (Position, position)
-
 import Graphics.Qt
 
 import Paths

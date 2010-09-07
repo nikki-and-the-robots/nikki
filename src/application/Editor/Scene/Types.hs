@@ -8,8 +8,6 @@ import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
 import Data.Abelian
 
-import Control.Monad.State
-
 import Graphics.Qt
 
 import Base.Grounds

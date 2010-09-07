@@ -3,7 +3,6 @@
 module Editor.MainLoop (editorLoop) where
 
 
-import Data.Set (Set, empty, toList, insert, delete)
 import Data.Indexable (modifyByIndex)
 import Data.SelectTree
 

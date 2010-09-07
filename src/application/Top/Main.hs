@@ -18,8 +18,6 @@
 module Top.Main where
 
 
-import Data.SelectTree
-import Data.Indexable as I
 import Data.List as List
 
 import Control.Concurrent
@@ -31,8 +29,6 @@ import System.Directory
 
 import GHC.Conc
 
-import Physics.Chipmunk
-
 import Graphics.Qt
 
 import Utils
@@ -42,8 +38,6 @@ import Base.Types
 import Base.Configuration
 
 import Object
-
-import Game.MainLoop
 
 import Editor.Scene (initEditorScene)
 

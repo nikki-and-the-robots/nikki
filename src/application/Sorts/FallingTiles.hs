@@ -10,8 +10,6 @@ import Data.Generics
 import Data.Abelian
 import Data.Set (member)
 
-import Control.Arrow
-
 import System.FilePath
 import System.Random
 

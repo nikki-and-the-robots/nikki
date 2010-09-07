@@ -11,7 +11,6 @@ import Data.Indexable
 import Data.Abelian
 import Data.Array.Storable
 import Data.SelectTree
-import Data.Menu hiding (selected)
 import Data.Typeable
 
 import Physics.Chipmunk

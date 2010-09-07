@@ -4,24 +4,13 @@
 module Top.Editor where
 
 
-import Data.Set (Set, empty, toList, insert, delete)
-
 import Control.Concurrent
-import Control.Monad.State
-
-import Graphics.Qt
-
-import Utils
 
 import Base.Types
 
 import Object
 
 import Editor.MainLoop
-import Editor.Scene
-
-import Top.Application
-import Top.Pickle
 
 
 editLevel :: Application -> AppState -> EditorScene Sort_ -> AppState

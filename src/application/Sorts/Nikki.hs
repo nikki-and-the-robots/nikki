@@ -14,8 +14,6 @@ import Data.Initial
 import Data.Array.Storable
 import Data.List
 
-import Control.Monad
-
 import System.FilePath
 
 import Graphics.Qt as Qt hiding (rotate, scale)

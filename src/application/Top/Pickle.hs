@@ -7,7 +7,6 @@ import Prelude hiding (readFile, writeFile)
 
 import Control.Monad
 
-import System
 import qualified System.IO as IO
 import System.Directory
 

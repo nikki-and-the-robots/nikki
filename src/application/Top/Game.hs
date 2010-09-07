@@ -5,6 +5,7 @@ module Top.Game (playLevel) where
 import Control.Concurrent
 import Control.Monad.State
 
+import Physics.Chipmunk
 import Graphics.Qt
 
 import Base.GlobalCatcher
@@ -16,7 +17,7 @@ import Object
 import Game.Scene
 import Game.MainLoop
 
-import Top.Application
+import Top.Initialisation
 
 
 playLevel :: Application -> GameState -> AppState -> AppState
