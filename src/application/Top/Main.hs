@@ -135,7 +135,7 @@ play :: Application -> AppState -> FilePath  -> AppState
 play app parent file = loadingEditorScene app file (playLevel app parent)
 
 edit :: Application -> AppState -> FilePath  -> AppState
-edit app parent file = loadingEditorScene app file (editLevel app parent)
+edit app parent file = loadingEditorScene app file (editLevel app parent playLevel)
 
 -- | load a level, got to playing state afterwards
 -- This AppState involves is a hack to do things from the logic thread 

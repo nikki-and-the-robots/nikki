@@ -14,8 +14,8 @@ import Object
 import Editor.MainLoop
 
 
-editLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
-editLevel app parent s = AppState $ do
+editLevel :: Application -> AppState -> PlayLevel -> EditorScene Sort_ -> AppState
+editLevel app parent play s = AppState $ do
     sceneMVar <- newMVar s
-    return $ editorLoop app parent sceneMVar s
+    return $ editorLoop app parent play sceneMVar s
 

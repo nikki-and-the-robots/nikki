@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns #-}
 
-module Editor.MainLoop (editorLoop) where
+module Editor.MainLoop (PlayLevel, editorLoop) where
 
 
 import Data.Indexable (modifyByIndex)
@@ -25,6 +25,8 @@ import Editor.Scene.Types
 import Editor.Pickle
 
 
+type PlayLevel = Application -> AppState -> EditorScene Sort_ -> AppState
+
 type MM o = StateT (EditorScene Sort_) IO o
 
 
@@ -38,9 +40,9 @@ updateSceneMVar app mvar = do
 
 -- * menus and states
 
-editorLoop :: Application -> AppState -> MVar (EditorScene Sort_)
+editorLoop :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorLoop app mainMenu sceneMVar scene = AppState $ do
+editorLoop app mainMenu play sceneMVar scene = AppState $ do
     setDrawingCallbackAppWidget (window app) (Just $ render sceneMVar)
     evalStateT worker scene
   where
@@ -50,7 +52,7 @@ editorLoop app mainMenu sceneMVar scene = AppState $ do
         event <- liftIO $ waitForAppEvent $ keyPoller app
         if event == Press StartButton then do
             s <- get
-            return $ editorMenu app mainMenu sceneMVar s
+            return $ editorMenu app mainMenu play sceneMVar s
           else do
             -- other events are handled below (in Editor.Scene)
             modifyState (updateEditorScene event)
@@ -62,17 +64,17 @@ editorLoop app mainMenu sceneMVar scene = AppState $ do
 
 
 
-editorMenu :: Application -> AppState -> MVar (EditorScene Sort_)
+editorMenu :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorMenu app mainMenu mvar scene =
+editorMenu app mainMenu play mvar scene =
     case editorMode scene of
         NormalMode ->
             menu app (Just menuTitle) (Just (edit scene))
               (
               lEnterOEM ++
               [
-                ("select object", selectSort app mainMenu this mvar scene),
-                ("edit layers", editLayers app mainMenu mvar scene),
+                ("select object", selectSort app mainMenu this play mvar scene),
+                ("edit layers", editLayers app mainMenu play mvar scene),
                 ("activate selection mode (for copy, cut and paste)", edit (toSelectionMode scene)),
                 ("return to editing", edit scene),
                 ("save level and exit editor", saveLevel app mainMenu scene),
@@ -80,7 +82,7 @@ editorMenu app mainMenu mvar scene =
               ])
         ObjectEditMode{} ->
             menu app (Just menuTitle) (Just (edit scene))
-            [("exit object edit mode", exitOEM app mainMenu mvar scene)]
+            [("exit object edit mode", exitOEM app mainMenu play mvar scene)]
         SelectionMode{} ->
             menu app (Just menuTitle) (Just (edit scene)) [
                 ("cut selected objects", edit (cutSelection scene)),
@@ -92,10 +94,10 @@ editorMenu app mainMenu mvar scene =
         Nothing -> "editing untitled level"
         Just f -> "editing " ++ f
     edit :: EditorScene Sort_ -> AppState
-    edit s = editorLoop app mainMenu mvar s
-    this = editorMenu app mainMenu mvar scene
+    edit s = editorLoop app mainMenu play mvar s
+    this = editorMenu app mainMenu play mvar scene
 
-    lEnterOEM = case enterOEM app mainMenu mvar scene of
+    lEnterOEM = case enterOEM app mainMenu play mvar scene of
         Nothing -> []
         Just x -> [("edit object", x)]
 
@@ -111,23 +113,23 @@ reallyExitEditor app mainMenu editor =
         ("yes", mainMenu)
       ]
 
-selectSort :: Application -> AppState -> AppState -> MVar (EditorScene Sort_)
+selectSort :: Application -> AppState -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-selectSort app mainMenu editorMenu mvar scene =
+selectSort app mainMenu editorMenu play mvar scene =
     treeToMenu app editorMenu (fmap (sortId >>> getSortId) $ availableSorts scene) select
   where
     select :: String -> AppState
     select n =
-        editorLoop app mainMenu mvar scene'
+        editorLoop app mainMenu play mvar scene'
       where
         scene' = case selectFirstElement pred (availableSorts scene) of
             Just newTree -> scene{availableSorts = newTree}
         pred sort = SortId n == sortId sort
 
 
-enterOEM :: Application -> AppState -> MVar (EditorScene Sort_)
+enterOEM :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Maybe AppState
-enterOEM app mainMenu mvar scene = do -- maybe monad
+enterOEM app mainMenu play mvar scene = do -- maybe monad
     i <- selected scene
     _ <- objectEditModeMethods $ editorSort $ getMainObject scene i
     let objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects scene
@@ -136,23 +138,23 @@ enterOEM app mainMenu mvar scene = do -- maybe monad
     Just $ edit scene{editorMode = ObjectEditMode i, editorObjects = objects'}
   where
     edit :: EditorScene Sort_ -> AppState
-    edit s = editorLoop app mainMenu mvar s
+    edit s = editorLoop app mainMenu play mvar s
 
-exitOEM :: Application -> AppState -> MVar (EditorScene Sort_)
+exitOEM :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-exitOEM app parent mvar s =
-    editorLoop app parent mvar s{editorMode = NormalMode}
+exitOEM app parent play mvar s =
+    editorLoop app parent play mvar s{editorMode = NormalMode}
 
 
-editLayers :: Application -> AppState -> MVar (EditorScene Sort_)
+editLayers :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editLayers app mainMenu mvar scene =
+editLayers app mainMenu play mvar scene =
     menu app (Just "edit layers") (Just editMenu) [
         ("add background layer", edit (addDefaultBackground scene)),
         ("add foreground layer", edit (addDefaultForeground scene))
       ]
   where
-    edit s = editorLoop app mainMenu mvar s
-    editMenu = editorMenu app mainMenu mvar scene
+    edit s = editorLoop app mainMenu play mvar s
+    editMenu = editorMenu app mainMenu play mvar scene
 
 
