@@ -114,11 +114,28 @@ selectLevelPlay app parent = AppState $ do
     if null levelFiles then
         return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
       else do
-        let follower = playLevel app parent
         return $ menu app (Just "pick a level to play") (Just parent) $
-            map (\ p -> (p, loadingEditorScene app p follower)) levelFiles
+            map (\ path -> (path, play app parent path)) levelFiles
 
 
+
+selectLevelEdit :: Application -> AppState -> AppState
+selectLevelEdit app parent = AppState $ do
+    levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
+    return $ menu app (Just "pick a level to edit") (Just parent) $
+        ("new level", pickNewLevel) :
+        map (\ path -> (path, edit app parent path)) levelFiles
+
+pickNewLevel :: AppState
+pickNewLevel = error "pickNewLevel"
+
+
+
+play :: Application -> AppState -> FilePath  -> AppState
+play app parent file = loadingEditorScene app file (playLevel app parent)
+
+edit :: Application -> AppState -> FilePath  -> AppState
+edit app parent file = loadingEditorScene app file (editLevel app parent)
 
 -- | load a level, got to playing state afterwards
 -- This AppState involves is a hack to do things from the logic thread 
@@ -138,14 +155,4 @@ loadingEditorScene app file follower = AppState $ do
         clearScreen ptr
         drawText ptr (Position 100 100) False "loading..."
 
-
-selectLevelEdit :: Application -> AppState -> AppState
-selectLevelEdit app parent = AppState $ do
-    levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
-    return $ menu app (Just "pick a level to edit") (Just parent) $
-        ("new level", pickNewLevel) :
-        map (\ p -> (p, loadingEditorScene app p (editLevel app parent))) levelFiles
-
-pickNewLevel :: AppState
-pickNewLevel = error "pickNewLevel"
 
