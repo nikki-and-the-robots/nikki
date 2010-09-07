@@ -13,22 +13,10 @@ import Utils
 
 import Base.GlobalCatcher
 import Base.Events
+import Base.Types (AppState(..), Application_(..))
 
 import Object
 
-
-data Application
-    = Application {
-        application :: Ptr QApplication,
-        window :: Ptr AppWidget,
-        keyPoller :: KeyPoller,
-        sorts :: SelectTree Sort_
-      }
-
-
-data AppState
-    = AppState (IO AppState)
-    | FinalState
 
 executeStates :: AppState -> IO ()
 executeStates (AppState cmd) =

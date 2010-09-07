@@ -33,8 +33,6 @@ import Object
 
 import Game.Scene
 
-import Top.Application
-
 
 -- prints the version number of qt and exits
 debugQtVersion :: IO ()

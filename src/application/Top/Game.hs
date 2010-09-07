@@ -9,6 +9,9 @@ import Graphics.Qt
 
 import Base.GlobalCatcher
 import Base.FPSState
+import Base.Types
+
+import Object
 
 import Game.Scene
 import Game.MainLoop

@@ -132,7 +132,7 @@ loadingEditorScene app file follower = AppState $ do
     cmdChannel <- newChan
     setDrawingCallbackAppWidget (window app) (Just $ showProgress cmdChannel)
     grounds <- loadByFilePath file
-    editorScene <- initEditorScene (sorts app) (Just (file, grounds))
+    editorScene <- initEditorScene (allSorts app) (Just (file, grounds))
     return $ follower editorScene
   where
     showProgress cmdChannel ptr = globalCatcher $ do

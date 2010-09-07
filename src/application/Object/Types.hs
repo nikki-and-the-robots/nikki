@@ -30,6 +30,8 @@ robotFriction = 1.0
 newtype SortId = SortId {getSortId :: FilePath}
   deriving (Show, Read, Eq)
 
+type Application = Application_ Sort_
+
 
 -- * Sort class
 
