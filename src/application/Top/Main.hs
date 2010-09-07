@@ -114,9 +114,11 @@ selectLevelPlay app parent = AppState $ do
     if null levelFiles then
         return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
       else do
-        let follower = Top.Main.playLevel app parent
+        let follower = playLevel app parent
         return $ menu app (Just "pick a level to play") (Just parent) $
             map (\ p -> (p, loadingEditorScene app p follower)) levelFiles
+
+
 
 -- | load a level, got to playing state afterwards
 -- This AppState involves is a hack to do things from the logic thread 
@@ -135,12 +137,6 @@ loadingEditorScene app file follower = AppState $ do
         resetMatrix ptr
         clearScreen ptr
         drawText ptr (Position 100 100) False "loading..."
-
-playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
-playLevel app parent editorScene = AppState $ do
-    let scene :: (Space -> IO (Scene Object_)) = flip initScene (editorObjects editorScene)
-    state <- initialState (application app) (window app) scene
-    return $ Top.Game.playLevel app state parent
 
 
 selectLevelEdit :: Application -> AppState -> AppState

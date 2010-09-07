@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Top.Game (playLevel) where
 
@@ -21,8 +22,10 @@ import Game.MainLoop
 import Top.Initialisation
 
 
-playLevel :: Application -> GameState -> AppState -> AppState
-playLevel app gameAppState parent = AppState $ do
+playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
+playLevel app parent editorScene = AppState $ do
+    let scene :: (Space -> IO (Scene Object_)) = flip initScene (editorObjects editorScene)
+    gameAppState <- initialState (application app) (window app) scene
     sceneMVar <- newEmptyMVar
     fpsRef <- initialFPSRef
     setDrawingCallbackAppWidget (window app) (Just $ render fpsRef sceneMVar)
