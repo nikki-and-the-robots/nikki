@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables, NamedFieldPuns, ViewPatterns #-}
 
-module Top.Pickle where
+module Editor.Pickle where
 
 
 import Prelude hiding (readFile, writeFile)
@@ -17,8 +17,8 @@ import Base.Types
 
 import Object as Object
 
-import Top.Pickle.Types
-import qualified Top.Pickle.Old1 as Old1
+import qualified Editor.Pickle.Old1 as Old1
+import Editor.Pickle.Types
 
 
 -- * IO stuff

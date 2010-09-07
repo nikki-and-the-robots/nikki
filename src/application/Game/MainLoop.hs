@@ -27,6 +27,7 @@ import Base.Events
 import Base.Constants
 import Base.Types
 import Base.PhysicsProfiling
+import Base.Application
 
 import Object
 

@@ -7,6 +7,7 @@ module Top.Editor where
 import Control.Concurrent
 
 import Base.Types
+import Base.Application
 
 import Object
 

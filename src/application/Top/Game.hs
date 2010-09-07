@@ -11,6 +11,7 @@ import Graphics.Qt
 import Base.GlobalCatcher
 import Base.FPSState
 import Base.Types
+import Base.Application
 
 import Object
 

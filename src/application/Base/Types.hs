@@ -23,21 +23,6 @@ import Base.Constants
 import Base.Grounds
 import Base.Events
 
--- from Top.Application
-
-data Application_ sort
-    = Application {
-        application :: Ptr QApplication,
-        window :: Ptr AppWidget,
-        keyPoller :: KeyPoller,
-        allSorts :: SelectTree sort
-      }
-
-
-data AppState
-    = AppState (IO AppState)
-    | FinalState
-
 
 -- from Game.Scene
 

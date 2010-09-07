@@ -16,14 +16,13 @@ import Utils
 import Base.Types
 import Base.Events
 import Base.Grounds
+import Base.Application hiding (selected)
 
 import Object
 
 import Editor.Scene
 import Editor.Scene.Types
-
-import Top.Application hiding (selected)
-import Top.Pickle
+import Editor.Pickle
 
 
 type MM o = StateT (EditorScene Sort_) IO o
@@ -107,7 +106,7 @@ saveLevel app mainMenu EditorScene{levelPath = (Just path), editorObjects} = App
     return mainMenu
 
 reallyExitEditor app mainMenu editor =
-    Top.Application.menu app (Just "really exit without saving?") (Just editor) [
+    menu app (Just "really exit without saving?") (Just editor) [
         ("no", editor),
         ("yes", mainMenu)
       ]

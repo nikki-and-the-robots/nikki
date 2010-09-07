@@ -17,6 +17,7 @@ import Base.Events
 import Base.Constants
 import Base.Pixmap
 import Base.Types
+import Base.Application
 
 
 -- * Constants

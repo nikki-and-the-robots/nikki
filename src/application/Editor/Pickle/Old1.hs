@@ -3,7 +3,7 @@
 
 -- | version of the save type from 2010-06-24
 
-module Top.Pickle.Old1 (
+module Editor.Pickle.Old1 (
     SaveType,
     convert,
   ) where
@@ -19,7 +19,7 @@ import Utils
 
 import qualified Sorts.Terminal
 
-import qualified Top.Pickle.Types as Newest
+import qualified Editor.Pickle.Types as Newest
 
 
 

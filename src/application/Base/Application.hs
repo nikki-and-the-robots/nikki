@@ -1,5 +1,5 @@
 
-module Top.Application where
+module Base.Application where
 
 
 import Data.SelectTree hiding (selectPrevious, selectNext)
@@ -13,9 +13,22 @@ import Utils
 
 import Base.GlobalCatcher
 import Base.Events
-import Base.Types (AppState(..), Application_(..))
 
-import Object
+
+-- from Top.Application
+
+data Application_ sort
+    = Application {
+        application :: Ptr QApplication,
+        window :: Ptr AppWidget,
+        keyPoller :: KeyPoller,
+        allSorts :: SelectTree sort
+      }
+
+
+data AppState
+    = AppState (IO AppState)
+    | FinalState
 
 
 executeStates :: AppState -> IO ()
@@ -42,7 +55,7 @@ selectPrevious :: MenuItems -> MenuItems
 selectPrevious m@(MenuItems [] _ _) = m
 selectPrevious (MenuItems b s a) = MenuItems (init b) (last b) (s : a)
 
-menu :: Application -> Maybe String -> Maybe AppState -> [(String, AppState)] -> AppState
+menu :: Application_ sort -> Maybe String -> Maybe AppState -> [(String, AppState)] -> AppState
 menu app mTitle mParent children =
     inner $ mkMenuItems children
   where
@@ -87,7 +100,7 @@ menu app mTitle mParent children =
     yStep = 20
     x = 10
 
-treeToMenu :: Application -> AppState -> SelectTree String -> (String -> AppState)
+treeToMenu :: Application_ sort -> AppState -> SelectTree String -> (String -> AppState)
     -> AppState
 treeToMenu app parent (Leaf n) f = f n
 treeToMenu app parent (Node label children i) f =

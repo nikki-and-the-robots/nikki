@@ -1,5 +1,5 @@
 
-module Top.Pickle.Types (
+module Editor.Pickle.Types (
     SaveType,
     FileFormat,
     Grounds(..),

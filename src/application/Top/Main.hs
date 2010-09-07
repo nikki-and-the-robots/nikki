@@ -36,16 +36,16 @@ import Utils
 import Base.GlobalCatcher
 import Base.Types
 import Base.Configuration
+import Base.Application
 
 import Object
 
 import Editor.Scene (initEditorScene)
+import Editor.Pickle
 
-import Top.Pickle
 import Top.Initialisation
 import Top.Editor (editLevel)
 import Top.Game (playLevel)
-import Top.Application
 
 
 -- prints the number of HECs (see haskell concurrency)
