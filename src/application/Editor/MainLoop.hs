@@ -42,17 +42,19 @@ updateSceneMVar app mvar = do
 
 editorLoop :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorLoop app mainMenu play sceneMVar scene = AppState $ do
-    setDrawingCallbackAppWidget (window app) (Just $ render sceneMVar)
+editorLoop app mainMenu play mvar scene = AppState $ do
+    setDrawingCallbackAppWidget (window app) (Just $ render mvar)
     evalStateT worker scene
   where
     worker :: MM AppState
     worker = do
-        updateSceneMVar app sceneMVar
+        updateSceneMVar app mvar
         event <- liftIO $ waitForAppEvent $ keyPoller app
-        if event == Press StartButton then do
-            s <- get
-            return $ editorMenu app mainMenu play sceneMVar s
+        s <- get
+        if event == Press StartButton then
+            return $ editorMenu app mainMenu play mvar s
+          else if editorMode s == NormalMode && event == Press (KeyboardButton T) then
+            return $ play app (editorLoop app mainMenu play mvar s) s
           else do
             -- other events are handled below (in Editor.Scene)
             modifyState (updateEditorScene event)
@@ -76,6 +78,7 @@ editorMenu app mainMenu play mvar scene =
                 ("select object", selectSort app mainMenu this play mvar scene),
                 ("edit layers", editLayers app mainMenu play mvar scene),
                 ("activate selection mode (for copy, cut and paste)", edit (toSelectionMode scene)),
+                ("try playing the level", play app (edit scene) scene),
                 ("return to editing", edit scene),
                 ("save level and exit editor", saveLevel app mainMenu scene),
                 ("exit editor without saving", reallyExitEditor app mainMenu this)

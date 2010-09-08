@@ -168,7 +168,7 @@ data EditorMode
     | SelectionMode {
         endPosition :: EditorPosition
       }
-  deriving (Show, Typeable)
+  deriving (Eq, Show, Typeable)
 
 
 toSelectionMode :: EditorScene s -> EditorScene s
