@@ -238,17 +238,18 @@ instance Sort NSort Nikki where
                 updateRenderState contacts cd >>>
                 updateStartTime now (renderState nikki)
               )
-            >>>> debugNikki contacts
+--             >>>> debugNikki contacts
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
         renderChipmunk ptr offset pixmap (chipmunk nikki)
+        debugCmd nikki ptr
 
 
 -- * initialisation
 
 bodyAttributes :: CM.Position -> BodyAttributes
-bodyAttributes pos = BodyAttributes{
+bodyAttributes pos = BodyAttributes {
     CM.position         = pos,
     mass                = nikkiMass,
     inertia             = infinity
@@ -344,15 +345,15 @@ fromUpAngle = (subtract (pi / 2)) >>> fromAngle
 
 
 -- | updates the possible jumping angle from the contacts
-readContactNormals :: Contacts -> IO [(MyCollisionType, Angle)]
+readContactNormals :: Contacts -> IO [Angle]
 readContactNormals contacts = do
     concat <$> mapM getCorrectedAngles (nikkiContacts contacts)
   where
     -- apply the coefficient to get the corrected angle (see hipmunk docs)
-    getCorrectedAngles :: (MyCollisionType, StorableArray Int Contact, Double) -> IO [(MyCollisionType, Angle)]
-    getCorrectedAngles (ct, array, coefficient) = do
+    getCorrectedAngles :: (StorableArray Int Contact, Double) -> IO [Angle]
+    getCorrectedAngles (array, coefficient) = do
         x <- getElems array
-        return $ map (tuple ct . foldAngle . toUpAngle) $ map (\ v -> Physics.Chipmunk.scale v coefficient) $ map ctNormal x
+        return $ map (foldAngle . toUpAngle) $ map (\ v -> Physics.Chipmunk.scale v coefficient) $ map ctNormal x
 
 -- | calculates the angle a possible jump is to be performed in
 jumpAngle :: [Angle] -> Maybe Angle
@@ -416,7 +417,8 @@ controlBody now contacts (True, cd) NSort{jumpSound}
         -- (see longJumpAntiGravity)
 
         -- initial impulse
-        contactNormal <- jumpAngle <$> map snd <$> readContactNormals contacts
+        angles <- readContactNormals contacts
+        let contactNormal = jumpAngle $ angles
         doesJumpStartNow <- case (contactNormal, aPushed) of 
             (Just contactAngle, True) -> do
                 let verticalImpulse = (- jumpingImpulse)
@@ -663,17 +665,11 @@ debugNikki contacts nikki = do
   where
     worker angles ptr = do
         resetMatrix ptr
+        setPenColor ptr 255 0 255 255 3
         translate ptr (Position 100 100)
         drawCircle ptr zero 10
         forM_ angles (drawAngle ptr)
 
-    drawAngle ptr (ct, angle) = do
-        print (ct, angle)
-        setPen ptr ct
+    drawAngle ptr angle = do
         let Vector x y = fromUpAngle angle
         drawLine ptr zero (fmap (* 60) (Position x y))
-
-    setPen ptr (NikkiCT NikkiHead) = setPenColor ptr 255 255 0 255 3
-    setPen ptr (NikkiCT NikkiFeet) = setPenColor ptr 0 0 255 255 3
-    setPen ptr (NikkiCT NikkiPaws) = setPenColor ptr 255 0 255 255 3
-

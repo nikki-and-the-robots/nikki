@@ -81,7 +81,7 @@ data CameraState
 
 data Contacts
     = Contacts {
-        nikkiContacts :: [(MyCollisionType, StorableArray Int Contact, Double)],
+        nikkiContacts :: [(StorableArray Int Contact, Double)],
         nikkiFeetTouchGround :: !Bool,
         nikkiPawTouchesGround :: !Bool,
         nikkiTouchesLaser :: !Bool,
