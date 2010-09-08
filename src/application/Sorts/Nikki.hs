@@ -52,6 +52,9 @@ nikkiMass = 2.5
 -- the faster nikki will gain maximum walking speed.
 nikkiFeetFriction = 0.35
 
+-- | the friction of the head ( and the legs (without the feet))
+headFriction = 0.1
+
 -- | maximum walking speed (pixel per second)
 walkingVelocity = fromUber 100.8 <<? "walkingVelocity"
 
@@ -274,7 +277,7 @@ pawShapeAttributes nct = ShapeAttributes {
 bodyShapeAttributes :: ShapeAttributes
 bodyShapeAttributes = ShapeAttributes {
     elasticity    = elasticity_,
-    friction      = 0,
+    friction      = headFriction,
     CM.collisionType = NikkiCT NikkiHead
   }
 
