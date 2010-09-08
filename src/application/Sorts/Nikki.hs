@@ -207,17 +207,18 @@ instance Sort NSort Nikki where
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
     initialize sort (Just space) editorPosition Nothing = do
-        let (nikkiShapes, baryCenterOffset) = mkPolys $ size sort
+        let (surfaceVelocityShapeTypes, otherShapes, baryCenterOffset) = mkPolys $ size sort
             pos = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
 
-        chip <- CM.initChipmunk space (bodyAttributes pos) nikkiShapes
+        chip <- CM.initChipmunk space (bodyAttributes pos) (surfaceVelocityShapeTypes ++ otherShapes)
                     baryCenterOffset
-        let feetShapes = take 2 $ shapes chip
+
+        let surfaceVelocityShapes = take (length surfaceVelocityShapeTypes) $ shapes chip
 
         return $ Nikki
             chip
-            feetShapes
+            surfaceVelocityShapes
             0
             initial
             0
@@ -279,14 +280,18 @@ bodyShapeAttributes = ShapeAttributes {
   }
 
 
-mkPolys :: Size Double -> ([ShapeDescription], Vector)
+mkPolys :: Size Double -> ([ShapeDescription], [ShapeDescription], Vector)
 mkPolys (Size w h) =
-    (rects, baryCenterOffset)
+    (surfaceVelocityShapes, otherShapes, baryCenterOffset)
   where
-    rects = [
-        -- the one where surface velocity (for walking) is applied
-        (ShapeDescription feetShapeAttributes feetCircle feetPosition),
-        (mkShapeDescription pawShapeAttributes pawsPoly),
+    -- the ones where surface velocity (for walking) is applied
+    surfaceVelocityShapes =
+        ShapeDescription feetShapeAttributes feetCircle feetPosition :
+        (uncurry (ShapeDescription pawShapeAttributes)) leftPawCircle :
+        map (mkShapeDescription feetShapeAttributes) leftPawRects ++
+        ((uncurry (ShapeDescription pawShapeAttributes)) rightPawCircle :
+        map (mkShapeDescription feetShapeAttributes) rightPawRects)
+    otherShapes = [
         (mkShapeDescription bodyShapeAttributes headPoly),
         (mkShapeDescription bodyShapeAttributes legsPoly)
       ]
@@ -301,7 +306,8 @@ mkPolys (Size w h) =
     headLeft = left + fromUber 3
     headRight = headLeft + fromUber 13
     headUp = up + fromUber 1.5
-    headLow = headUp + fromUber 16
+    headLow = headUp + fromUber 13
+    headWidth = headRight - headLeft
 
     legLeft = left + fromUber 7
     legRight = legLeft + fromUber 5
@@ -309,24 +315,45 @@ mkPolys (Size w h) =
 
     headPoly = Polygon [
         Vector headLeft headUp,
-        Vector headLeft (headLow - 1),
-        Vector headRight (headLow - 1),
+        Vector headLeft headLow,
+        Vector (headLeft + headEdge) (headLow + headEdge),
+        Vector (headRight - headEdge) (headLow + headEdge),
+        Vector headRight headLow,
         Vector headRight headUp
       ]
 
-    pawsPoly = Polygon [
-        Vector (headLeft + eps) (headLow - 1),
-        Vector (headLeft + eps) (headLow),
-        Vector (headRight - eps) (headLow),
-        Vector (headRight - eps) (headLow - 1)
-      ]
+    -- tuning variables
+    pawRadius = 2
     eps = 1
 
+    leftPawCircle = (Circle pawRadius, Vector (headLeft + pawXPadding + pawRadius) (headLow + pawThickness - pawRadius))
+    leftPawRects = [
+        mkRect
+            (Position (headLeft + pawXPadding + eps) headLow)
+            (Size (headWidth / 2 - pawXPadding - eps) (pawThickness - pawRadius)),
+        mkRect
+            (Position (headLeft + pawXPadding + pawRadius) headLow)
+            (Size (headWidth / 2 - (pawXPadding + pawRadius)) (pawThickness - eps))
+      ]
+    rightPawCircle = (Circle pawRadius, Vector (headRight - pawXPadding - pawRadius) (headLow + pawThickness - pawRadius))
+    rightPawRects = [
+        mkRect
+            (Position 0 headLow)
+            (Size (headWidth / 2 - pawXPadding - eps) (pawThickness - pawRadius)),
+        mkRect
+            (Position 0 headLow)
+            (Size (headWidth / 2 - (pawXPadding + pawRadius)) (pawThickness - eps))
+      ]
+
+    pawXPadding = fromUber 1
+    pawThickness = fromUber 3
+    headEdge = pawXPadding + pawRadius
+
     legsPoly = Polygon [
-        Vector legLeft headLow,
-        Vector legLeft legLow,
-        Vector legRight legLow,
-        Vector legRight headLow
+        Vector (legLeft + eps) headLow,
+        Vector (legLeft + eps) legLow,
+        Vector (legRight - eps) legLow,
+        Vector (legRight - eps) headLow
       ]
 
     feetRadius = (legRight - legLeft) / 2
@@ -431,13 +458,6 @@ controlBody now contacts (True, cd) NSort{jumpSound}
                 return True
             (Nothing, _) -> return False
             (_, False) -> return False
-
---         p <- getPosition chip
---         v <- getVelocity body
---         b <- every 30
---         when b $
---             putStrLn $ unwords $ map pp $ 
---             [vectorX v]
 
         let isLongJump = aHeld
             timeInJump = if doesJumpStartNow then 0 else now - jumpStartTime
