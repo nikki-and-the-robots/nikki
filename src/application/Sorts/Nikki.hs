@@ -264,11 +264,10 @@ feetShapeAttributes = ShapeAttributes {
     CM.collisionType    = NikkiCT NikkiFeet
   }
 
-pawShapeAttributes :: ShapeAttributes
-pawShapeAttributes = ShapeAttributes {
+pawShapeAttributes nct = ShapeAttributes {
     elasticity          = elasticity_,
     friction            = nikkiFeetFriction,
-    CM.collisionType    = NikkiCT NikkiPaws
+    CM.collisionType    = NikkiCT nct
   }
 
 -- Attributes for nikkis body (not to be confused with chipmunk bodies, it's a chipmunk shape)
@@ -287,10 +286,10 @@ mkPolys (Size w h) =
     -- the ones where surface velocity (for walking) is applied
     surfaceVelocityShapes =
         ShapeDescription feetShapeAttributes feetCircle feetPosition :
-        (uncurry (ShapeDescription pawShapeAttributes)) leftPawCircle :
-        map (mkShapeDescription feetShapeAttributes) leftPawRects ++
-        ((uncurry (ShapeDescription pawShapeAttributes)) rightPawCircle :
-        map (mkShapeDescription feetShapeAttributes) rightPawRects)
+        (uncurry (ShapeDescription (pawShapeAttributes NikkiLeftPaw))) leftPawCircle :
+        map (mkShapeDescription (pawShapeAttributes NikkiLeftPaw)) leftPawRects ++
+        ((uncurry (ShapeDescription (pawShapeAttributes NikkiRightPaw))) rightPawCircle :
+        map (mkShapeDescription (pawShapeAttributes NikkiRightPaw)) rightPawRects)
     otherShapes = [
         (mkShapeDescription bodyShapeAttributes headPoly),
         (mkShapeDescription bodyShapeAttributes legsPoly)
@@ -628,9 +627,10 @@ updateRenderState contacts (True, controlData) (contactNormal, nikki) =
     nikki{renderState = state}
   where
     state =
-        if nikkiPawTouchesGround contacts then
-        -- nikki is hanging on one of the its paws (or both)
-            Grip buttonDirection
+      if nikkiLeftPawTouchesGround contacts then
+            Grip HLeft
+        else if nikkiRightPawTouchesGround contacts then
+            Grip HRight
         else if nikkiFeetTouchGround contacts then
         -- nikki is on the ground
             if nothingHeld then

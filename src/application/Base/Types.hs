@@ -83,7 +83,8 @@ data Contacts
     = Contacts {
         nikkiContacts :: [(StorableArray Int Contact, Double)],
         nikkiFeetTouchGround :: !Bool,
-        nikkiPawTouchesGround :: !Bool,
+        nikkiLeftPawTouchesGround :: !Bool,
+        nikkiRightPawTouchesGround :: !Bool,
         nikkiTouchesLaser :: !Bool,
         triggers :: Set Shape,
         terminals :: Set Shape,
@@ -136,7 +137,8 @@ instance PP MyCollisionType where
 data NikkiCollisionType
     = NikkiHead
     | NikkiFeet
-    | NikkiPaws
+    | NikkiLeftPaw
+    | NikkiRightPaw
   deriving (Enum, Bounded, Eq, Show)
 
 
