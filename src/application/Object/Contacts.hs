@@ -21,11 +21,7 @@ import Base.Types
 
 
 nikkiCollisionTypes :: [MyCollisionType]
-nikkiCollisionTypes = [
-    NikkiBodyCT,
-    NikkiFeetCT,
-    NikkiPawsCT
-  ]
+nikkiCollisionTypes = map NikkiCT allNikkiCollisionType
 
 solidCollisionTypes :: [MyCollisionType]
 solidCollisionTypes = [
@@ -97,18 +93,18 @@ watchedContacts =
 
 
 nikkiSolidCallbacks solidCT = [
-    Callback (FullWatch solidCT NikkiBodyCT (\ _ _ -> addNikkiContacts NikkiBodyCT)) Solid,
-    Callback (FullWatch solidCT NikkiFeetCT
-                (\ _ _ a b -> setNikkiFeetTouchGround . addNikkiContacts NikkiFeetCT a b)) Solid,
-    Callback (FullWatch solidCT NikkiPawsCT
-                (\ _ _ a b -> setNikkiPawsTouchesGround . addNikkiContacts NikkiPawsCT a b)) Solid
+    Callback (FullWatch solidCT (NikkiCT NikkiHead) (\ _ _ -> addNikkiContacts (NikkiCT NikkiHead))) Solid,
+    Callback (FullWatch solidCT (NikkiCT NikkiFeet)
+                (\ _ _ a b -> setNikkiFeetTouchGround . addNikkiContacts (NikkiCT NikkiFeet) a b)) Solid,
+    Callback (FullWatch solidCT (NikkiCT NikkiPaws)
+                (\ _ _ a b -> setNikkiPawsTouchesGround . addNikkiContacts (NikkiCT NikkiPaws) a b)) Solid
   ]
 
 -- nikki stands in front of a terminal 
 nikkiTerminalCallbacks = [
-    Callback (Watch NikkiBodyCT TerminalCT (\ _ t -> addTerminal t)) Permeable,
-    Callback (DontWatch TerminalCT NikkiFeetCT) Permeable,
-    Callback (DontWatch TerminalCT NikkiPawsCT) Permeable
+    Callback (Watch (NikkiCT NikkiHead) TerminalCT (\ _ t -> addTerminal t)) Permeable,
+    Callback (DontWatch TerminalCT (NikkiCT NikkiFeet)) Permeable,
+    Callback (DontWatch TerminalCT (NikkiCT NikkiPaws)) Permeable
   ]
 
 batteryCallback nikkiCT =
@@ -123,10 +119,10 @@ terminalSolidCallback solidCT =
 
 -- contact with nikki and falling tiles
 nikkiFallingTilesCallbacks = [
-    Callback (FullWatch FallingTileCT NikkiBodyCT (\ a b c cn -> addFallingTileContact a . addNikkiContacts FallingTileCT c cn)) Solid,
-    Callback (FullWatch FallingTileCT NikkiFeetCT
+    Callback (FullWatch FallingTileCT (NikkiCT NikkiHead) (\ a b c cn -> addFallingTileContact a . addNikkiContacts FallingTileCT c cn)) Solid,
+    Callback (FullWatch FallingTileCT (NikkiCT NikkiFeet)
                 (\ a b c cn -> addFallingTileContact a . setNikkiFeetTouchGround . addNikkiContacts FallingTileCT c cn)) Solid,
-    Callback (FullWatch FallingTileCT NikkiPawsCT
+    Callback (FullWatch FallingTileCT (NikkiCT NikkiPaws)
                 (\ a b c cn -> addFallingTileContact a . setNikkiPawsTouchesGround . addNikkiContacts FallingTileCT c cn)) Solid
   ]
 

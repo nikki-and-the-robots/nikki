@@ -259,14 +259,14 @@ feetShapeAttributes :: ShapeAttributes
 feetShapeAttributes = ShapeAttributes {
     elasticity          = elasticity_,
     friction            = nikkiFeetFriction,
-    CM.collisionType    = NikkiFeetCT
+    CM.collisionType    = NikkiCT NikkiFeet
   }
 
 pawShapeAttributes :: ShapeAttributes
 pawShapeAttributes = ShapeAttributes {
     elasticity          = elasticity_,
     friction            = nikkiFeetFriction,
-    CM.collisionType    = NikkiPawsCT
+    CM.collisionType    = NikkiCT NikkiPaws
   }
 
 -- Attributes for nikkis body (not to be confused with chipmunk bodies, it's a chipmunk shape)
@@ -274,7 +274,7 @@ bodyShapeAttributes :: ShapeAttributes
 bodyShapeAttributes = ShapeAttributes {
     elasticity    = elasticity_,
     friction      = 0,
-    CM.collisionType = NikkiBodyCT
+    CM.collisionType = NikkiCT NikkiHead
   }
 
 
@@ -673,7 +673,7 @@ debugNikki contacts nikki = do
         let Vector x y = fromUpAngle angle
         drawLine ptr zero (fmap (* 60) (Position x y))
 
-    setPen ptr NikkiFeetCT = setPenColor ptr 0 0 255 255 3
-    setPen ptr NikkiBodyCT = setPenColor ptr 255 255 0 255 3
-    setPen ptr NikkiPawsCT = setPenColor ptr 255 0 255 255 3
+    setPen ptr (NikkiCT NikkiHead) = setPenColor ptr 255 255 0 255 3
+    setPen ptr (NikkiCT NikkiFeet) = setPenColor ptr 0 0 255 255 3
+    setPen ptr (NikkiCT NikkiPaws) = setPenColor ptr 255 0 255 255 3
 
