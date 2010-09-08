@@ -344,15 +344,15 @@ fromUpAngle = (subtract (pi / 2)) >>> fromAngle
 
 
 -- | updates the possible jumping angle from the contacts
-readContactNormals :: Contacts -> IO [Angle]
+readContactNormals :: Contacts -> IO [(MyCollisionType, Angle)]
 readContactNormals contacts = do
     concat <$> mapM getCorrectedAngles (nikkiContacts contacts)
   where
     -- apply the coefficient to get the corrected angle (see hipmunk docs)
-    getCorrectedAngles :: (StorableArray Int Contact, Double) -> IO [Angle]
-    getCorrectedAngles (array, coefficient) = do
+    getCorrectedAngles :: (MyCollisionType, StorableArray Int Contact, Double) -> IO [(MyCollisionType, Angle)]
+    getCorrectedAngles (ct, array, coefficient) = do
         x <- getElems array
-        return $ map (foldAngle . toUpAngle) $ map (\ v -> Physics.Chipmunk.scale v coefficient) $ map ctNormal x
+        return $ map (tuple ct . foldAngle . toUpAngle) $ map (\ v -> Physics.Chipmunk.scale v coefficient) $ map ctNormal x
 
 -- | calculates the angle a possible jump is to be performed in
 jumpAngle :: [Angle] -> Maybe Angle
@@ -416,7 +416,7 @@ controlBody now contacts (True, cd) NSort{jumpSound}
         -- (see longJumpAntiGravity)
 
         -- initial impulse
-        contactNormal <- jumpAngle <$> readContactNormals contacts
+        contactNormal <- jumpAngle <$> map snd <$> readContactNormals contacts
         doesJumpStartNow <- case (contactNormal, aPushed) of 
             (Just contactAngle, True) -> do
                 let verticalImpulse = (- jumpingImpulse)
@@ -664,10 +664,16 @@ debugNikki contacts nikki = do
     worker angles ptr = do
         resetMatrix ptr
         translate ptr (Position 100 100)
-        setPenColor ptr 255 55 55 255 3
         drawCircle ptr zero 10
         forM_ angles (drawAngle ptr)
 
-    drawAngle ptr angle = do
+    drawAngle ptr (ct, angle) = do
+        print (ct, angle)
+        setPen ptr ct
         let Vector x y = fromUpAngle angle
         drawLine ptr zero (fmap (* 60) (Position x y))
+
+    setPen ptr NikkiFeetCT = setPenColor ptr 0 0 255 255 3
+    setPen ptr NikkiBodyCT = setPenColor ptr 255 255 0 255 3
+    setPen ptr NikkiPawsCT = setPenColor ptr 255 0 255 255 3
+

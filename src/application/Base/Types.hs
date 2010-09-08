@@ -81,7 +81,7 @@ data CameraState
 
 data Contacts
     = Contacts {
-        nikkiContacts :: [(StorableArray Int Contact, Double)],
+        nikkiContacts :: [(MyCollisionType, StorableArray Int Contact, Double)],
         nikkiFeetTouchGround :: !Bool,
         nikkiPawTouchesGround :: !Bool,
         nikkiTouchesLaser :: !Bool,
@@ -94,6 +94,23 @@ data Contacts
 
 instance Show (StorableArray Int Contact) where
     show = const "<StorableArray>"
+
+data MyCollisionType
+    = NikkiBodyCT
+    | NikkiFeetCT
+    | NikkiPawsCT
+
+    | TileCT
+    | TerminalCT
+    | LaserCT
+    | RobotCT
+    | TriggerCT
+    | BatteryCT
+    | FallingTileCT
+  deriving (Enum, Eq, Show)
+
+instance PP MyCollisionType where
+    pp = show
 
 
 -- * mode for the game scene
