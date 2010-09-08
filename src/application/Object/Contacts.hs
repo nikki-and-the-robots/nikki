@@ -18,10 +18,8 @@ import Physics.Chipmunk hiding (position)
 import Base.Types
 
 
-
-
-nikkiCollisionTypes :: [MyCollisionType]
-nikkiCollisionTypes = map NikkiCT allNikkiCollisionType
+nikkiSolidCollisionTypes :: [NikkiCollisionType]
+nikkiSolidCollisionTypes = [NikkiHead, NikkiFeet, NikkiPaws]
 
 solidCollisionTypes :: [MyCollisionType]
 solidCollisionTypes = [
@@ -78,18 +76,9 @@ watchedContacts =
     [switchCallback] ++
     nikkiTerminalCallbacks ++
     map terminalSolidCallback solidCollisionTypes ++
-    map batteryCallback nikkiCollisionTypes ++
+    map batteryCallback nikkiSolidCollisionTypes ++
     [Callback (DontWatch BatteryCT TerminalCT) Permeable] ++
     nikkiFallingTilesCallbacks
-
-    -- Lasers
---     Callback (Watch NikkiBodyCT LaserCT (\ _ _ -> setNikkiTouchesLaser)) Permeable,
---     Callback (Watch NikkiFeetCT LaserCT (\ _ _ -> setNikkiTouchesLaser)) Permeable,
---     Callback (DontWatch RobotCT LaserCT) Permeable,
-
---     Callback (Watch NikkiBodyCT MilkMachineCT (\ _ _ -> setNikkiTouchesMilkMachine)) Permeable,
---     Callback (DontWatch NikkiFeetCT MilkMachineCT) Permeable,
---     Callback (DontWatch RobotCT MilkMachineCT) Permeable,
 
 
 nikkiSolidCallbacks solidCT = [
@@ -108,7 +97,7 @@ nikkiTerminalCallbacks = [
   ]
 
 batteryCallback nikkiCT =
-    Callback (Watch nikkiCT BatteryCT (\ _ b -> addBattery b)) Permeable
+    Callback (Watch (NikkiCT nikkiCT) BatteryCT (\ _ b -> addBattery b)) Permeable
 
 -- a trigger (in a switch) is activated
 switchCallback =

@@ -139,8 +139,6 @@ data NikkiCollisionType
     | NikkiPaws
   deriving (Enum, Bounded, Eq, Show)
 
-allNikkiCollisionType = [NikkiHead, NikkiFeet, NikkiPaws]
-
 
 -- * mode for the game scene
 data Mode
