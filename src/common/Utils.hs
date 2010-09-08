@@ -54,6 +54,9 @@ a <<? msg = trace (msg ++ ": " ++ show a) a
 -- | useful for temporarily deactivating $<<?$
 a <<| _ = a
 
+traceThis :: Show s => String -> s -> s
+traceThis msg x = trace (msg ++ ": " ++ show x) x
+
 
 
 e :: String -> a
@@ -422,7 +425,12 @@ instance PP Bool where
     pp False = "O"
 
 instance PP a => PP [a] where
-    pp list = "List:\n\t" ++ intercalate "\n\t" (map pp list) ++ "\n"
+    pp list = "[" ++ intercalate ", " (map (clipString . pp) list) ++ "]"
+      where
+        clipString s = if length s < limit then s else take (limit - length dots) s ++ dots
+        limit = 20
+        dots = "..."
+
 
 instance PP Double where
     pp = printf "%8.3f"

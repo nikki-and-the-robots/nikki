@@ -55,8 +55,6 @@ data Platform
       }
   deriving (Show, Typeable)
 
-instance Show (Ptr QPainter -> IO ()) where
-    show _ = "<Ptr QPainter -> IO ()>"
 
 data Mode
     = Still Vector

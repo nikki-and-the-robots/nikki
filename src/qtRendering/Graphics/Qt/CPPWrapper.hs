@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface,  EmptyDataDecls, NamedFieldPuns, DeriveDataTypeable #-}
+{-# LANGUAGE ForeignFunctionInterface,  EmptyDataDecls, NamedFieldPuns, DeriveDataTypeable, FlexibleInstances #-}
 
 module Graphics.Qt.CPPWrapper where
 
@@ -154,6 +154,9 @@ setKeyCallbackAppWidget ptr cmd =
 -- * QPainter
 
 data QPainter
+
+instance Show (Ptr QPainter -> IO ()) where
+    show _ = "<Ptr QPainter -> IO ()>"
 
 foreign import ccall "eraseRect" cppEraseRect ::
     Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()

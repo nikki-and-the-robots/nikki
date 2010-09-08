@@ -14,6 +14,8 @@ import Data.Initial
 import Data.Array.Storable
 import Data.List
 
+import Control.Monad
+
 import System.FilePath
 
 import Graphics.Qt as Qt hiding (rotate, scale)
@@ -159,7 +161,8 @@ data Nikki
         jumpStartTime :: Seconds,
         renderState :: RenderState,
         startTime :: Seconds,
-        batteryPower :: Integer -- makes it possible to have REALLY BIG amounts of power :)
+        batteryPower :: Integer, -- makes it possible to have REALLY BIG amounts of power :)
+        debugCmd :: Ptr QPainter -> IO ()
       }
   deriving (Show, Typeable)
 
@@ -219,6 +222,7 @@ instance Sort NSort Nikki where
             initial
             0
             0
+            (const $ return ())
 
     immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
 
@@ -232,9 +236,9 @@ instance Sort NSort Nikki where
             controlBody now contacts cd sort >>>>
             fromPure (
                 updateRenderState contacts cd >>>
-                updateStartTime now (renderState nikki))
---         >>>> debugNikki (renderState nikki)
-
+                updateStartTime now (renderState nikki)
+              )
+            >>>> debugNikki contacts
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
@@ -333,7 +337,7 @@ mkPolys (Size w h) =
 
 -- | a chipmunk angles of 0 points east. We need to use angles that point north.
 toUpAngle :: Vector -> Angle
-toUpAngle = toAngle >>> (+ (pi / 2))
+toUpAngle v = toAngle v + (pi / 2)
 
 fromUpAngle :: Angle -> Vector
 fromUpAngle = (subtract (pi / 2)) >>> fromAngle
@@ -341,7 +345,6 @@ fromUpAngle = (subtract (pi / 2)) >>> fromAngle
 
 -- | updates the possible jumping angle from the contacts
 readContactNormals :: Contacts -> IO [Angle]
-
 readContactNormals contacts = do
     concat <$> mapM getCorrectedAngles (nikkiContacts contacts)
   where
@@ -372,7 +375,7 @@ controlBody _ _ (False, _) _ nikki = do
     mapM_ (\ feetShape -> setSurfaceVel feetShape zero) $ feetShapes nikki
     return (Nothing, nikki)
 controlBody now contacts (True, cd) NSort{jumpSound}
-    nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ _) = do
+    nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ _ _) = do
             -- buttons
         let bothHeld = leftHeld && rightHeld
             leftHeld = LeftButton `member` held cd
@@ -651,16 +654,20 @@ pickPixmap now sort nikki =
 
 
 
-
-
 -- debugging
 
-debugNikki :: RenderState -> Nikki -> IO Nikki
-debugNikki oldRenderState nikki = do
-    every 10 $ do
-        p <- getPosition (chipmunk nikki)
-        v <- getVelocity $ body $ chipmunk nikki
-        putStrLn (pp (vectorY p) ++ " " ++ pp (vectorY v))
-    return nikki
+debugNikki :: Contacts -> Nikki -> IO Nikki
+debugNikki contacts nikki = do
+    angles <- readContactNormals contacts
+    return nikki{debugCmd = worker angles}
+  where
+    worker angles ptr = do
+        resetMatrix ptr
+        translate ptr (Position 100 100)
+        setPenColor ptr 255 55 55 255 3
+        drawCircle ptr zero 10
+        forM_ angles (drawAngle ptr)
 
-
+    drawAngle ptr angle = do
+        let Vector x y = fromUpAngle angle
+        drawLine ptr zero (fmap (* 60) (Position x y))

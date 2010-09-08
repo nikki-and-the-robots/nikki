@@ -94,6 +94,7 @@ sendDebugInitials c = do
 
     editFirstLevel = [DownArrow, Ctrl, DownArrow, Ctrl]
     selectionMode = editFirstLevel ++ [Space]
+    playFirstLevel = [Ctrl, Ctrl]
 
 
 
