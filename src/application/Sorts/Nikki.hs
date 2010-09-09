@@ -293,10 +293,10 @@ mkPolys (Size w h) =
         map (mkShapeDescription (pawShapeAttributes NikkiLeftPaw)) leftPawRects ++
         ((uncurry (ShapeDescription (pawShapeAttributes NikkiRightPaw))) rightPawCircle :
         map (mkShapeDescription (pawShapeAttributes NikkiRightPaw)) rightPawRects)
-    otherShapes = [
-        (mkShapeDescription bodyShapeAttributes headPoly),
-        (mkShapeDescription bodyShapeAttributes legsPoly)
-      ]
+    otherShapes =
+        map (mkShapeDescription bodyShapeAttributes) headShapes ++
+        map (uncurry (ShapeDescription bodyShapeAttributes)) ears ++
+        [(mkShapeDescription bodyShapeAttributes legsPoly)]
 
     wh = w / 2
     hh = h / 2
@@ -315,14 +315,22 @@ mkPolys (Size w h) =
     legRight = legLeft + fromUber 5
     legLow = low - feetRadius
 
+    headShapes = [headPoly, betweenEars]
     headPoly = Polygon [
-        Vector headLeft headUp,
-        Vector headLeft headLow,
-        Vector (headLeft + headEdge) (headLow + headEdge),
-        Vector (headRight - headEdge) (headLow + headEdge),
-        Vector headRight headLow,
-        Vector headRight headUp
+        Vector (headLeft + eps) (headUp + earRadius),
+        Vector (headLeft + eps) headLow,
+        Vector (headLeft + eps + headEdge) (headLow + headEdge),
+        Vector (headRight - eps - headEdge) (headLow + headEdge),
+        Vector (headRight - eps) headLow,
+        Vector (headRight - eps) (headUp + earRadius)
       ]
+    betweenEars = mkRectFromPositions
+        (Vector (headLeft + earRadius) (headUp + fromUber 2))
+        (Vector (headRight - earRadius) (headUp + earRadius))
+    earRadius = fromUber 2.5
+    ears = [leftEar, rightEar]
+    leftEar = (Circle (fromUber 2.5), Vector (headLeft + earRadius) (headUp + earRadius))
+    rightEar = (Circle (fromUber 2.5), Vector (headRight - earRadius) (headUp + earRadius))
 
     -- tuning variables
     pawRadius = 2

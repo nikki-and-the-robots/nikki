@@ -40,6 +40,7 @@ module Physics.Chipmunk (
     mapVectors,
     vmap,
     mkRect,
+    mkRectFromPositions,
     module Physics.Chipmunk.ContactRef,
 
     -- re-exports from Physics.Hipmunk

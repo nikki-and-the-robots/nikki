@@ -258,6 +258,20 @@ mkRect (Qt.Position x y) (Qt.Size width height) =
     top = y
     bottom = y + height
 
+mkRectFromPositions :: Vector -> Vector -> ShapeType
+mkRectFromPositions (Vector x1 y1) (Vector x2 y2) =
+    Polygon [
+        Vector minX minY,
+        Vector minX maxY,
+        Vector maxX maxY,
+        Vector maxX minY
+      ]
+  where
+    minX = min x1 x2
+    maxX = max x1 x2
+    minY = min y1 y2
+    maxY = max y1 y2
+
 
 -- * chipmunk initialisation
 
