@@ -1,5 +1,6 @@
 {-# language ViewPatterns, ScopedTypeVariables #-}
 -- | allows to show how many busy wait cycles are used in the physics thread
+{-# OPTIONS_HADDOCK ignore-exports #-}
 
 module Base.PhysicsProfiling (tickBusyWaitCounter) where
 
