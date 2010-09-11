@@ -418,12 +418,15 @@ controlBody now contacts (True, cd) NSort{jumpSound}
             rightHeld = RightButton `member` held cd
             aPushed = Press AButton `elem` pressed cd
             aHeld = AButton `member` held cd
-
+            -- if nikki touches anything with feet or paws
+            isAirborne = not (nikkiFeetTouchGround contacts ||
+                            nikkiLeftPawTouchesGround contacts ||
+                            nikkiRightPawTouchesGround contacts)
         velocity <- getVelocity body
 
         -- walking
         let surfaceVelocity = walking (leftHeld, rightHeld, bothHeld)
-        if nikkiFeetTouchGround contacts then
+        if not isAirborne then
             forM_ feetShapes $ \ fs -> setSurfaceVel fs surfaceVelocity
           else
             forM_ feetShapes $ \ fs -> setSurfaceVel fs zero
@@ -477,9 +480,7 @@ controlBody now contacts (True, cd) NSort{jumpSound}
         modifyApplyOnlyForce chip (Vector 0 jumpingAntiGravity)
 
         -- horizontal moving while airborne
-        airborneForce <-
-                airborne contacts rightHeld leftHeld bothHeld
-                    (nikkiFeetTouchGround contacts) velocity
+        airborneForce <- airborne rightHeld leftHeld bothHeld isAirborne velocity
 
         -- Apply airborne forces (for longer jumps and vertical movement)
 --         applyNikkiForceViaVelocity chip airborneForce
@@ -611,13 +612,13 @@ longJumpAntiGravity t = negate $
     t_s = (sqrt(16*g*h+c_vi^2)-c_vi)/(2*g)
 
 
-airborne :: Contacts -> Bool -> Bool -> Bool -> Bool -> Vector -> IO Vector
-airborne contacts rightHeld leftHeld bothHeld ifNikkiFeetTouchGround velocity = do
+airborne :: Bool -> Bool -> Bool -> Bool -> Vector -> IO Vector
+airborne rightHeld leftHeld bothHeld isAirborne velocity = do
     return force
   where
     -- force applied to change horizontal movement while airborne
     force =
-        if ifNikkiFeetTouchGround || bothHeld then
+        if not isAirborne || bothHeld then
             zero
           else if rightHeld then
             if xVel < walkingVelocity then Vector airForce 0 else zero
