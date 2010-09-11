@@ -402,7 +402,7 @@ jumpAngle angles =
 
 controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO (Maybe Angle, Nikki)
 controlBody _ _ (False, _) _ nikki = do
-    mapM_ (\ feetShape -> setSurfaceVel feetShape zero) $ feetShapes nikki
+    forM_ (feetShapes nikki) $ \ fs -> setSurfaceVel fs zero
     return (Nothing, nikki)
 controlBody now contacts (True, cd) NSort{jumpSound}
     nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ _ _) = do
@@ -417,7 +417,10 @@ controlBody now contacts (True, cd) NSort{jumpSound}
 
         -- walking
         let surfaceVelocity = walking (leftHeld, rightHeld, bothHeld)
-        mapM_ (\ feetShape -> setSurfaceVel feetShape surfaceVelocity) feetShapes
+        if nikkiFeetTouchGround contacts then
+            forM_ feetShapes $ \ fs -> setSurfaceVel fs surfaceVelocity
+          else
+            forM_ feetShapes $ \ fs -> setSurfaceVel fs zero
 
         -- jumping
         -- =======
@@ -468,9 +471,9 @@ controlBody now contacts (True, cd) NSort{jumpSound}
         modifyApplyOnlyForce chip (Vector 0 jumpingAntiGravity)
 
         -- horizontal moving while airborne
-        let ifNikkiFeetTouchGround = nikkiFeetTouchGround contacts
         airborneForce <-
-                airborne contacts rightHeld leftHeld bothHeld ifNikkiFeetTouchGround velocity
+                airborne contacts rightHeld leftHeld bothHeld
+                    (nikkiFeetTouchGround contacts) velocity
 
         -- Apply airborne forces (for longer jumps and vertical movement)
 --         applyNikkiForceViaVelocity chip airborneForce
