@@ -324,7 +324,7 @@ mkPolys (Size w h) =
       ]
 
     -- tuning variables
-    pawRadius = 2
+    pawRadius = 4
     eps = 1
 
     leftPawCircle = (Circle pawRadius, Vector (headLeft + pawXPadding + pawRadius) (headLow + pawThickness - pawRadius))
