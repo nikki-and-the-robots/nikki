@@ -19,6 +19,7 @@ module Physics.Chipmunk (
     vectorX,
     vectorY,
 
+    modifyPosition,
     modifyVelocity,
     modifyApplyForce,
     modifyApplyOnlyForce,
@@ -153,6 +154,12 @@ vectorY (Vector x y) = y
 -- * Controls
 
 -- look in Hipmunk doc (common?)
+
+modifyPosition :: Chipmunk -> (Vector -> Vector) -> IO ()
+modifyPosition Chipmunk{body} f = do
+    v <- Physics.Hipmunk.getPosition body
+    setPosition body (f v)
+
 modifyVelocity :: Chipmunk -> (Vector -> Vector) -> IO ()
 modifyVelocity Chipmunk{body} f =
     velocity body $~ f

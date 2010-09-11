@@ -491,11 +491,29 @@ controlBody now contacts (True, cd) NSort{jumpSound}
 --         when doesJumpStartNow $ triggerPolySound jumpSound
 
 --         debugChipGraph now body
+--         fakeControl cd nikki
 
         return $ tuple contactNormal $ if doesJumpStartNow then
             nikki{jumpStartTime = now}
           else
             nikki
+
+fakeControl cd nikki = do
+    when (Press (KeyboardButton D) `elem` pressed cd) $
+        inner (+~ Vector step 0)
+    when (Press (KeyboardButton A) `elem` pressed cd) $
+        inner (+~ Vector (- step) 0)
+    when (Press (KeyboardButton W) `elem` pressed cd) $
+        inner (+~ Vector 0 (- step))
+    when (Press (KeyboardButton S) `elem` pressed cd) $
+        inner (+~ Vector 0 step)
+    p <- getPosition $ chipmunk nikki
+    every 100 $ ppp p
+  where
+    step = 0.01
+    inner f = modifyPosition (chipmunk nikki) (roundX . f)
+    roundX (Vector x y) = Vector (r x) y
+    r x = fromIntegral (round (x / step)) * step
 
 applyNikkiForceViaVelocity :: Chipmunk -> Vector -> IO ()
 applyNikkiForceViaVelocity chip f =
