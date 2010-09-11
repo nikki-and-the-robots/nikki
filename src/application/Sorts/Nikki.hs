@@ -290,11 +290,12 @@ mkPolys (Size w h) =
   where
     -- the ones where surface velocity (for walking) is applied
     surfaceVelocityShapes =
-        ShapeDescription feetShapeAttributes feetCircle feetPosition :
-        (uncurry (ShapeDescription (pawShapeAttributes NikkiLeftPaw))) leftPawCircle :
+        mkShapeDescription feetShapeAttributes betweenFeet :
+        (map (uncurry (ShapeDescription feetShapeAttributes)) feetCircles ++
+        ((uncurry (ShapeDescription (pawShapeAttributes NikkiLeftPaw))) leftPawCircle :
         map (mkShapeDescription (pawShapeAttributes NikkiLeftPaw)) leftPawRects ++
         ((uncurry (ShapeDescription (pawShapeAttributes NikkiRightPaw))) rightPawCircle :
-        map (mkShapeDescription (pawShapeAttributes NikkiRightPaw)) rightPawRects)
+        map (mkShapeDescription (pawShapeAttributes NikkiRightPaw)) rightPawRects)))
     otherShapes = [
         (mkShapeDescription bodyShapeAttributes headPoly),
         (mkShapeDescription bodyShapeAttributes legsPoly)
@@ -312,10 +313,6 @@ mkPolys (Size w h) =
     headUp = up + fromUber 1.5
     headLow = headUp + fromUber 13
     headWidth = headRight - headLeft
-
-    legLeft = left + fromUber 7
-    legRight = legLeft + fromUber 5
-    legLow = low - feetRadius
 
     headPoly = Polygon [
         Vector headLeft headUp,
@@ -353,16 +350,23 @@ mkPolys (Size w h) =
     pawThickness = fromUber 3
     headEdge = pawXPadding + pawRadius
 
+    legLeft = left + fromUber 7
+    legRight = legLeft + fromUber 5
+
     legsPoly = Polygon [
         Vector (legLeft + eps) headLow,
-        Vector (legLeft + eps) legLow,
-        Vector (legRight - eps) legLow,
+        Vector (legLeft + eps) (low - pawRadius),
+        Vector (legRight - eps) (low - pawRadius),
         Vector (legRight - eps) headLow
       ]
+    betweenFeet = mkRectFromPositions
+        (Vector (legLeft + pawRadius) (low - pawRadius))
+        (Vector (legRight - pawRadius) (low - eps))
 
-    feetRadius = (legRight - legLeft) / 2
-    feetCircle = Circle feetRadius
-    feetPosition = Vector 0 legLow
+    feetCircle = Circle pawRadius
+    feetCircles = [leftFeet, rightFeet]
+    leftFeet = (feetCircle, Vector (legLeft + pawRadius) (low - pawRadius))
+    rightFeet = (feetCircle, Vector (legRight - pawRadius) (low - pawRadius))
 
 
 -- * Control logic
