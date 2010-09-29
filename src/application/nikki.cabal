@@ -62,7 +62,7 @@ Executable            nikki
         , mtl
         , process
         , zlib
-        , Hipmunk
+        , Hipmunk == 5.0.1.1
         , sfml-audio
         , safe
         , array
