@@ -53,7 +53,7 @@ Executable            nikki
 
     hs-source-dirs: ., ../common, ../qtRendering
     build-depends:
-          base >= 4
+          base >= 4 && < 5
         , haskell98
         , binary
         , syb
