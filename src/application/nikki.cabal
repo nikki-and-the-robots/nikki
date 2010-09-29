@@ -25,6 +25,7 @@ data-files:
     data/png/objects/*.png
     data/png/robots/jetpack/*.png
     data/png/tiles/*.png
+    data/png/robots/platform/*.png
 
     data/sounds/nikki/jump.wav
 
