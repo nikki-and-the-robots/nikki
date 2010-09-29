@@ -5,8 +5,9 @@ module Editor.Scene.Types where
 
 import Data.SelectTree
 import qualified Data.Indexable as I
-import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
+import Data.Indexable hiding (length, toList, findIndices, fromList)
 import Data.Abelian
+import Data.Initial
 
 import Graphics.Qt
 
@@ -64,14 +65,14 @@ addDefaultBackground :: EditorScene Sort_ -> EditorScene Sort_
 addDefaultBackground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
     s{editorObjects = objects'}
   where
-    objects' = Grounds (backgrounds >: initialLayer) mainLayer foregrounds
+    objects' = Grounds (backgrounds >: initial) mainLayer foregrounds
 
 -- | adds a new default Layer to the EditorScene
 addDefaultForeground :: EditorScene Sort_ -> EditorScene Sort_
 addDefaultForeground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
     s{editorObjects = objects'}
   where
-    objects' = Grounds backgrounds mainLayer (initialLayer <: foregrounds)
+    objects' = Grounds backgrounds mainLayer (initial <: foregrounds)
 
 -- * modification
 

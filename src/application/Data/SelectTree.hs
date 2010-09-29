@@ -14,7 +14,7 @@ module Data.SelectTree (
 import Utils
 
 import qualified Data.Indexable as I
-import Data.Indexable hiding (length, toList, findIndices, fromList, empty)
+import Data.Indexable hiding (length, toList, findIndices, fromList)
 import qualified Data.Tree as T
 
 

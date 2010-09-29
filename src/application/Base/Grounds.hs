@@ -10,6 +10,7 @@ import Data.Generics
 import Data.List
 import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, traverse)
+import Data.Initial
 
 import Control.Applicative ((<*>), pure)
 
@@ -58,17 +59,16 @@ instance Foldable Layer where
 instance Traversable Layer where
     traverse cmd (Layer content x y) = Layer <$> traverse cmd content <*> pure x <*> pure y
 
+instance Initial (Grounds a) where
+    initial = Grounds initial initial initial
+
+instance Initial (Layer a) where
+    initial = Layer initial 1 1
 
 -- * construction
 
-emptyGrounds :: Grounds a
-emptyGrounds = Grounds I.empty initialLayer I.empty
-
-initialLayer :: Layer a
-initialLayer = Layer I.empty 1 1
-
 mkMainLayer :: Indexable a -> Layer a
-mkMainLayer content = initialLayer{content}
+mkMainLayer content = initial{content}
 
 
 -- * getter

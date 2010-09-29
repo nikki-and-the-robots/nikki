@@ -20,6 +20,7 @@ import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable (Index, (>:), modifyByIndex, deleteByIndex)
 import Data.Abelian
+import Data.Initial
 
 import Control.Monad.State
 
@@ -57,7 +58,7 @@ updateSelected s = s{selected = searchSelectedObject s}
 initEditorScene :: SelectTree Sort_ -> Maybe (String, Grounds PickleObject) -> IO (EditorScene Sort_)
 initEditorScene sorts mObjects = flip evalStateT empty $ do
     let (path, objects :: Grounds (EditorObject Sort_)) = case mObjects of
-                Nothing -> (Nothing, emptyGrounds)
+                Nothing -> (Nothing, initial)
                 Just (p, os) ->
                     let objects = fmap (pickleObject2EditorObject $ leafs sorts) os
                     in (Just p, objects)

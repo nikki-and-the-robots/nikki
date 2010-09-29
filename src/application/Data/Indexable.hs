@@ -18,7 +18,6 @@ module Data.Indexable (
     findIndices,
 
     fromList,
-    empty,
     (<:),
     (>:),
 
@@ -44,6 +43,7 @@ import Data.Either
 import Data.Traversable (Traversable, traverse)
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
+import Data.Initial
 
 import Control.Applicative ((<*>), Applicative, pure)
 import Control.Arrow
@@ -91,6 +91,8 @@ fmapMWithIndex cmd (Indexable values keys) = do
     newValues <- mapM (\ k -> cmd k (values ! (index k))) keys
     return $ Indexable (Map.fromList $ zip (map index keys) newValues) keys
 
+instance Initial (Indexable a) where
+    initial = Indexable initial initial
 
 -- * getter
 
@@ -125,9 +127,6 @@ newIndex [] = 0
 newIndex l = maximum l + 1
 
 -- * constructors
-
-empty :: Indexable a
-empty = Indexable Map.empty []
 
 (<:) :: a -> Indexable a -> Indexable a
 a <: (Indexable values keys) =
