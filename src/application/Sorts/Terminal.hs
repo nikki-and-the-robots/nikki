@@ -1,6 +1,5 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, ScopedTypeVariables,
      ViewPatterns, DeriveDataTypeable, Rank2Types, FlexibleInstances #-}
-{-# OPTIONS_HADDOCK ignore-exports #-}
 
 module Sorts.Terminal (
     sorts,

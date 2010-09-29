@@ -1,6 +1,4 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances, DeriveDataTypeable #-}
-{-# OPTIONS_HADDOCK ignore-exports #-}
-
 
 module Sorts.Tiles (
     sorts,

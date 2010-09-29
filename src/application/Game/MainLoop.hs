@@ -1,5 +1,4 @@
 {-# language ScopedTypeVariables #-}
-{-# OPTIONS_HADDOCK ignore-exports #-}
 
 -- | The (real) main (that is, entry-) module for the game
 

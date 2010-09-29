@@ -1,5 +1,4 @@
 {-# language NamedFieldPuns, ScopedTypeVariables, ViewPatterns #-}
-{-# OPTIONS_HADDOCK ignore-exports #-}
 
 module Game.Scene (
     Scene,

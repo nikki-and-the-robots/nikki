@@ -34,24 +34,31 @@ toKachel = (/ 16) . toUber
 
 -- * animation speeds
 
-robotIdleEyeTime :: Double = 0.4
+robotIdleEyeTime :: Double 
+robotIdleEyeTime = 0.4
 
 -- * Physics
 
-gravity :: Double = 1904
+gravity :: Double
+gravity = 1904
 
-stepQuantum :: Double = 0.002
+stepQuantum :: Double
+stepQuantum = 0.002
 
 -- * file directories
 
-soundDir :: FilePath = "data" </> "sounds"
+soundDir :: FilePath
+soundDir = "data" </> "sounds"
 
-pngDir :: FilePath = "data" </> "png"
+pngDir :: FilePath
+pngDir = "data" </> "png"
 
-levelDir :: FilePath = "levels"
+levelDir :: FilePath
+levelDir = "levels"
 
 
 -- * misc
 
+windowTitle :: String
 windowTitle = "Nikki and the Robots"
 

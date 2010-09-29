@@ -1,7 +1,5 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
     FlexibleInstances, DeriveDataTypeable, ScopedTypeVariables #-}
-{-# OPTIONS_HADDOCK ignore-exports #-}
-
 
 module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass, walkingVelocity) where
 

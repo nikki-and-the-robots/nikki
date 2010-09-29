@@ -1,7 +1,5 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
      FlexibleInstances, DeriveDataTypeable #-}
-{-# OPTIONS_HADDOCK ignore-exports #-}
-
 
 module Sorts.Robots.Jetpack (sorts) where
 

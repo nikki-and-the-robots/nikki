@@ -19,5 +19,5 @@ echo
 cd application
 
 cabal configure
-cabal haddock --executables
+cabal haddock --executables --haddock-option=--ignore-all-exports
 echo actually in application/dist/doc/html/nikki/nikki/index.html

@@ -1,6 +1,5 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable, ScopedTypeVariables, FlexibleInstances,
     ViewPatterns, NamedFieldPuns #-}
-{-# OPTIONS_HADDOCK ignore-exports #-}
 
 module Sorts.Robots.MovingPlatforms (sorts) where
 

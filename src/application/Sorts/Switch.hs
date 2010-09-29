@@ -1,5 +1,4 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable, NamedFieldPuns #-}
-{-# OPTIONS_HADDOCK ignore-exports #-}
 
 module Sorts.Switch (
     sorts, 
