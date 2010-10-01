@@ -125,10 +125,8 @@ selectLevelEdit :: Application -> AppState -> AppState
 selectLevelEdit app parent = AppState $ do
     levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
     return $ menu app (Just "pick a level to edit") (Just parent) $
-        ("new level", pickNewLevel app this) :
+        ("new level", pickNewLevel app parent) :
         map (\ path -> (path, edit app parent (path, False))) levelFiles
-  where
-    this = selectLevelEdit app parent
 
 pickNewLevel :: Application -> AppState -> AppState
 pickNewLevel app parent = AppState $ do
