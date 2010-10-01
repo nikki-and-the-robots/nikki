@@ -23,9 +23,12 @@ data Application_ sort
         application :: Ptr QApplication,
         window :: Ptr AppWidget,
         keyPoller :: KeyPoller,
+        mainMenu_ :: Application_ sort -> AppState,
         allSorts :: SelectTree sort
       }
 
+mainMenu :: Application_ sort -> AppState
+mainMenu app = mainMenu_ app app
 
 data AppState
     = AppState (IO AppState)

@@ -71,7 +71,7 @@ main = globalCatcher $ do
     sorts <- getAllSorts
 
     -- start state logick
-    let app = Application qApp window keyPoller sorts
+    let app = Application qApp window keyPoller applicationStates sorts
     -- there are two main threads:
     -- this is the logick [sick!] thread
     forkOS $ globalCatcher $ do
@@ -142,7 +142,7 @@ play :: Application -> AppState -> FilePath -> AppState
 play app parent file = loadingEditorScene app (file, False) (playLevel app parent)
 
 edit :: Application -> AppState -> (FilePath, Bool) -> AppState
-edit app parent file = loadingEditorScene app file (editLevel app parent playLevel)
+edit app parent file = loadingEditorScene app file (editLevel app playLevel)
 
 -- | load a level, got to playing state afterwards
 -- This AppState involves is a hack to do things from the logic thread 
