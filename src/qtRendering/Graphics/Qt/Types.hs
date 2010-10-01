@@ -1,4 +1,4 @@
-{-# language DeriveDataTypeable, TypeSynonymInstances #-}
+{-# language DeriveDataTypeable, TypeSynonymInstances, EmptyDataDecls #-}
 
 module Graphics.Qt.Types where
 
@@ -14,6 +14,8 @@ import Utils
 type QtInt = Int
 
 type QtReal = Double -- unless running on ARM ;)
+
+data QKeyEvent
 
 -- * Position
 

@@ -3,19 +3,22 @@ module Graphics.Qt.Events (
     QtEvent(..),
     Key(..),
     translateQtKey,
+    modifyTextField,
   ) where
 
 import Data.Map
+
+import Control.Concurrent.Chan
+
+import Foreign.Ptr
 
 import Graphics.Qt.Types
 
 
 data QtEvent
-    = KeyPress Key
-    | KeyRelease Key
+    = KeyPress Key String
+    | KeyRelease Key String
   deriving (Eq, Show)
-
-
 
 data Key
     -- characters
@@ -101,6 +104,15 @@ data Key
     | UnknownKey QtInt
 
   deriving (Eq, Ord, Show)
+
+
+-- | modifies the contents of a text field
+modifyTextField :: Key -> String -> String -> String
+modifyTextField BackSpace _ [] = []
+modifyTextField BackSpace _ l = init l
+modifyTextField _ t l = l ++ t
+
+
 
 translateQtKey :: QtInt -> Key
 translateQtKey keyInt | keyInt `member` keyMap =

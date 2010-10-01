@@ -32,11 +32,13 @@ import GHC.Conc
 import Graphics.Qt
 
 import Utils
+import Paths
 
 import Base.GlobalCatcher
 import Base.Types
 import Base.Configuration
 import Base.Application
+import Base.Constants
 
 import Object
 
@@ -123,29 +125,36 @@ selectLevelEdit :: Application -> AppState -> AppState
 selectLevelEdit app parent = AppState $ do
     levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
     return $ menu app (Just "pick a level to edit") (Just parent) $
-        ("new level", pickNewLevel) :
-        map (\ path -> (path, edit app parent path)) levelFiles
+        ("new level", pickNewLevel app this) :
+        map (\ path -> (path, edit app parent (path, False))) levelFiles
+  where
+    this = selectLevelEdit app parent
 
-pickNewLevel :: AppState
-pickNewLevel = error "pickNewLevel"
+pickNewLevel :: Application -> AppState -> AppState
+pickNewLevel app parent = AppState $ do
+    let pathToEmptyLevel_ = templateLevelsDir </> "empty.nl"
+    pathToEmptyLevel_ <- getDataFileName pathToEmptyLevel_
+    return $ menu app (Just "pick a template to start from") (Just parent) $
+        ("empty level", edit app parent (pathToEmptyLevel_, True)) :
+        []
 
 
+play :: Application -> AppState -> FilePath -> AppState
+play app parent file = loadingEditorScene app (file, False) (playLevel app parent)
 
-play :: Application -> AppState -> FilePath  -> AppState
-play app parent file = loadingEditorScene app file (playLevel app parent)
-
-edit :: Application -> AppState -> FilePath  -> AppState
+edit :: Application -> AppState -> (FilePath, Bool) -> AppState
 edit app parent file = loadingEditorScene app file (editLevel app parent playLevel)
 
 -- | load a level, got to playing state afterwards
 -- This AppState involves is a hack to do things from the logic thread 
 -- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
-loadingEditorScene :: Application -> FilePath -> (EditorScene Sort_ -> AppState) -> AppState
-loadingEditorScene app file follower = AppState $ do
+loadingEditorScene :: Application -> (FilePath, Bool) -> (EditorScene Sort_ -> AppState) -> AppState
+loadingEditorScene app (file, isTemplateFile) follower = AppState $ do
     cmdChannel <- newChan
     setDrawingCallbackAppWidget (window app) (Just $ showProgress cmdChannel)
     grounds <- loadByFilePath file
-    editorScene <- initEditorScene (allSorts app) (Just (file, grounds))
+    let mFile = if isTemplateFile then Nothing else Just file
+    editorScene <- initEditorScene (allSorts app) mFile grounds
     return $ follower editorScene
   where
     showProgress cmdChannel ptr = globalCatcher $ do

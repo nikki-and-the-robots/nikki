@@ -6,6 +6,7 @@ import Data.SelectTree hiding (selectPrevious, selectNext)
 import qualified Data.Indexable as I
 
 import Control.Monad
+import Control.Concurrent.MVar
 
 import Graphics.Qt
 
@@ -111,5 +112,36 @@ treeToMenu app parent (Node label children i) f =
     getLabel (Node n _ _) = n
 
     this = treeToMenu app parent (Node label children i) f
+
+
+askString :: Application_ sort -> String -> IO String
+askString app question = do
+    answerRef <- newMVar ""
+    setDrawingCallbackAppWidget (window app) (Just $ render question answerRef)
+    loop answerRef
+  where
+    loop answerRef = do
+        updateAppWidget $ window app
+        event <- waitForAppEvent $ keyPoller app
+        case event of
+            Press (KeyboardButton Enter _) ->
+                readMVar answerRef
+            Press (KeyboardButton k text) -> do
+                modifyMVar_ answerRef (\ x -> return $ modifyTextField k text x)
+                loop answerRef
+            _ -> loop answerRef
+    render :: String -> MVar String -> Ptr QPainter -> IO ()
+    render question answerRef ptr = do
+        resetMatrix ptr
+        clearScreen ptr
+        setPenColor ptr 255 255 255 255 1
+
+        let nextY = translate ptr (Position 0 20)
+
+        nextY
+
+        answer <- readMVar answerRef
+        drawText ptr (Position 10 0) False (question ++ ": " ++ answer)
+
 
 

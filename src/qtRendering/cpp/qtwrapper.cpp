@@ -1,6 +1,18 @@
 
 #include "qtwrapper.h"
 
+// * utils
+
+char* QStringToCString(QString x) {
+    qDebug() << "X" << x;
+    char* arr = (char*) malloc(sizeof(char) * (x.size() + 1));
+    for (int i = 0; i < x.size(); i++) {
+        arr[i] = x.at(i).toAscii();
+    };
+    arr[x.size()] = 0;
+    return arr;
+};
+
 // * debugging
 
 void error(QString msg) {
@@ -34,13 +46,13 @@ void AppWidget::paintEvent(QPaintEvent* event) {
 
 void AppWidget::keyPressEvent(QKeyEvent* e) {
     if ((! e->isAutoRepeat()) && (keyCallback != NULL)) {
-        this->keyCallback(true, e->key());
+        this->keyCallback(true, e);
     }
 };
 
 void AppWidget::keyReleaseEvent(QKeyEvent* e) {
     if ((! e->isAutoRepeat()) && (keyCallback != NULL)) {
-        this->keyCallback(false, e->key());
+        this->keyCallback(false, e);
     }
 };
 
@@ -279,3 +291,11 @@ extern "C" int elapsed(QTime* ptr) {
     return ptr->elapsed();
 };
 
+// * QKeyEvent
+extern "C" int keyQKeyEvent(QKeyEvent* ptr) {
+    return ptr->key();
+};
+
+extern "C" char* textQKeyEvent(QKeyEvent* ptr) {
+    return QStringToCString(ptr->text());
+};

@@ -33,7 +33,7 @@ data AppButton
 
     | StartButton -- calling of a Menu
 
-    | KeyboardButton Key
+    | KeyboardButton Key String
   deriving (Eq, Ord, Show)
 
 data ControlData = ControlData {
@@ -93,12 +93,12 @@ updateKeyState (Release k) ll = delete k ll
 
 toAppEvent :: Set AppButton -> Either QtEvent JJ_Event -> [AppEvent]
 -- keyboard
-toAppEvent _ (Left (KeyPress key)) | key `member` key2button =
+toAppEvent _ (Left (KeyPress key _)) | key `member` key2button =
     [Press (key2button ! key)]
-toAppEvent _ (Left (KeyRelease key)) | key `member` key2button =
+toAppEvent _ (Left (KeyRelease key _)) | key `member` key2button =
     [Release (key2button ! key)]
-toAppEvent _ (Left (KeyPress key)) = [Press (KeyboardButton key)]
-toAppEvent _ (Left (KeyRelease key)) = [Release (KeyboardButton key)]
+toAppEvent _ (Left (KeyPress key text)) = [Press (KeyboardButton key text)]
+toAppEvent _ (Left (KeyRelease key text)) = [Release (KeyboardButton key text)]
 
 -- joystick
 -- toAppEvent _ (Right (JoyButtonDown 0 jbutton)) | jbutton `member` jbutton2button =

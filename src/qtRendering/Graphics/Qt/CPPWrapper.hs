@@ -10,6 +10,7 @@ import Control.Monad
 
 import Foreign (Ptr, FunPtr, nullFunPtr)
 import Foreign.C.String
+import Foreign.Marshal.Alloc (free)
 
 import System
 import System.Directory
@@ -130,10 +131,10 @@ setDrawingCallbackAppWidget ptr Nothing =
 -- event callbacks
 
 foreign import ccall "setKeyCallbackAppWidget" cppSetKeyCallbackAppWidget ::
-    Ptr AppWidget -> FunPtr (Bool -> QtInt -> IO ()) -> IO ()
+    Ptr AppWidget -> FunPtr (Bool -> Ptr QKeyEvent -> IO ()) -> IO ()
 
 foreign import ccall "wrapper" wrapKeyCallback ::
-    (Bool -> QtInt -> IO ()) -> IO (FunPtr (Bool -> QtInt -> IO ()))
+    (Bool -> Ptr QKeyEvent -> IO ()) -> IO (FunPtr (Bool -> Ptr QKeyEvent -> IO ()))
 -- True means Press, False means Release
 
 setKeyCallbackAppWidget :: Ptr AppWidget -> (QtEvent -> IO ()) -> IO ()
@@ -141,14 +142,13 @@ setKeyCallbackAppWidget ptr cmd =
     wrapKeyCallback preWrap >>=
         cppSetKeyCallbackAppWidget ptr
   where
-    preWrap :: (Bool -> QtInt -> IO ())
-    preWrap True key =
-        let event = KeyPress (translateQtKey key)
-        in cmd event
-    preWrap False key =
-        let event = KeyRelease (translateQtKey key)
-        in cmd event
-
+    preWrap :: (Bool -> Ptr QKeyEvent -> IO ())
+    preWrap isPress ptr = do
+        key <- keyQKeyEvent ptr
+        text <- textQKeyEvent ptr
+        let constructor = if isPress then KeyPress else KeyRelease
+            event = constructor (translateQtKey key) text
+        cmd event
 
 
 -- * QPainter
@@ -263,3 +263,18 @@ foreign import ccall restartQTime :: Ptr QTime -> IO QtInt
 
 foreign import ccall elapsed :: Ptr QTime -> IO QtInt
 
+
+-- * QKeyEvent
+
+-- type declaration in Qt.Types, because it's needed in Qt.Events
+
+foreign import ccall keyQKeyEvent :: Ptr QKeyEvent -> IO QtInt
+
+foreign import ccall "textQKeyEvent" cppTextQKeyEvent :: Ptr QKeyEvent -> IO CString
+
+textQKeyEvent :: Ptr QKeyEvent -> IO String
+textQKeyEvent ptr = do
+    cs <- cppTextQKeyEvent ptr
+    r <- peekCString cs
+    free cs
+    return r

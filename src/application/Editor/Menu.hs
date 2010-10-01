@@ -9,6 +9,8 @@ import Data.SelectTree
 import Control.Concurrent
 import Control.Monad.State
 
+import System.Directory
+
 import Graphics.Qt
 
 import Utils
@@ -53,12 +55,13 @@ editorLoop app mainMenu play mvar scene = AppState $ do
         s <- get
         if event == Press StartButton then
             return $ editorMenu app mainMenu play mvar s
-          else if editorMode s == NormalMode && event == Press (KeyboardButton T) then
-            return $ play app (editorLoop app mainMenu play mvar s) s
-          else do
-            -- other events are handled below (in Editor.Scene)
-            modifyState (updateEditorScene event)
-            worker
+          else case (editorMode s, event) of
+            (NormalMode, Press (KeyboardButton T _)) ->
+                return $ play app (editorLoop app mainMenu play mvar s) s
+            _ -> do
+                -- other events are handled below (in Editor.Scene)
+                modifyState (updateEditorScene event)
+                worker
 
     render sceneMVar ptr = do
         scene <- readMVar sceneMVar
@@ -109,6 +112,27 @@ saveLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
 saveLevel app mainMenu EditorScene{levelPath = (Just path), editorObjects} = AppState $ do
     writeObjectsToDisk path editorObjects
     return mainMenu
+saveLevel app mainMenu scene@EditorScene{levelPath = Nothing, editorObjects} = AppState $ do
+    name <- askString app "level name:"
+    let path = name <|> "nl"
+    exists <- doesFileExist path
+    if exists then
+        return $ fileExists app mainMenu this path editorObjects
+      else do
+        writeObjectsToDisk path editorObjects
+        return mainMenu
+  where
+    this = saveLevel app mainMenu scene
+
+fileExists app mainMenu save path objects =
+    menu app (Just ("level with the name " ++ path ++ " already exists")) (Just save) [
+        ("no", save),
+        ("yes", writeAnyway)
+      ]
+  where
+    writeAnyway = AppState $ do
+        writeObjectsToDisk path objects
+        return mainMenu
 
 reallyExitEditor app mainMenu editor =
     menu app (Just "really exit without saving?") (Just editor) [

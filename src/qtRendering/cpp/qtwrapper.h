@@ -5,7 +5,7 @@
 // * function pointer types
 typedef void (drawingCallbackFunction)(QPainter*);
 
-typedef void (keyCallbackFunction)(bool, int);
+typedef void (keyCallbackFunction) (bool, QKeyEvent*);
 
 
 

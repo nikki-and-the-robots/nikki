@@ -55,16 +55,12 @@ updateSelected s = s{selected = searchSelectedObject s}
 -- * constructors
 
 -- | the initial editor scene
-initEditorScene :: SelectTree Sort_ -> Maybe (String, Grounds PickleObject) -> IO (EditorScene Sort_)
-initEditorScene sorts mObjects = flip evalStateT empty $ do
-    let (path, objects :: Grounds (EditorObject Sort_)) = case mObjects of
-                Nothing -> (Nothing, initial)
-                Just (p, os) ->
-                    let objects = fmap (pickleObject2EditorObject $ leafs sorts) os
-                    in (Just p, objects)
+initEditorScene :: SelectTree Sort_ -> Maybe String -> Grounds PickleObject -> IO (EditorScene Sort_)
+initEditorScene sorts mPath pickledObjects = flip evalStateT empty $ do
+    let objects :: Grounds (EditorObject Sort_) = fmap (pickleObject2EditorObject $ leafs sorts) pickledObjects
     pixmap <- get
     return $ updateSelected EditorScene{
-        levelPath = path,
+        levelPath = mPath,
         cursor = zero,
         cursorStep = Just $ EditorPosition 64 64,
         availableSorts = sorts,
@@ -127,7 +123,7 @@ normalMode BButton scene@EditorScene{selectedLayer} =
             let newObjects = modifySelectedLayer selectedLayer (modifyContent (deleteByIndex i)) (editorObjects scene)
             in scene{editorObjects = newObjects}
 
-normalMode (KeyboardButton x) scene = normalModeKeyboard x scene
+normalMode (KeyboardButton x _) scene = normalModeKeyboard x scene
 
 normalMode _ s = s
 
@@ -196,7 +192,7 @@ selectionMode button scene@EditorScene{editorMode = SelectionMode pos}
     changeSelectionPosition RightButton (EditorPosition x y) = EditorPosition (x + sx) y
     sy = 100
     sx = 100
-selectionMode (KeyboardButton X) scene = cutSelection scene
-selectionMode (KeyboardButton C) scene = copySelection scene
+selectionMode (KeyboardButton X _) scene = cutSelection scene
+selectionMode (KeyboardButton C _) scene = copySelection scene
 
 selectionMode _ scene = scene

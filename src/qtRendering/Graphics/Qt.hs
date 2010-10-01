@@ -4,6 +4,7 @@ module Graphics.Qt (
     module Graphics.Qt.CPPWrapper,
     module Graphics.Qt,
     QtEvent(..),
+    modifyTextField,
     Key(..),
     Ptr,
   ) where
@@ -20,6 +21,8 @@ import Graphics.Qt.Events
 import Foreign.Ptr
 
 import System.Exit
+
+import Utils
 
 
 -- * entry points
@@ -59,45 +62,6 @@ setWindowSize win FullScreen =
     setFullscreenAppWidget win True
 
 
--- * Key Polling
-
-newtype KeyPoller = KeyPoller (Chan QtEvent)
-
-newKeyPoller :: Ptr AppWidget -> IO KeyPoller
-newKeyPoller widget = do
-    chan <- newChan
-    setKeyCallbackAppWidget widget (writeChan chan)
---     sendDebugInitials chan
-    return $ KeyPoller chan
-
-pollEvents :: KeyPoller -> IO [QtEvent]
-pollEvents kp@(KeyPoller chan) = do
-    empty <- isEmptyChan chan
-    if empty then
-        return []
-      else do
-        a <- readChan chan
-        r <- pollEvents kp
-        return (a : r)
-
-waitForEvent :: KeyPoller -> IO QtEvent
-waitForEvent (KeyPoller c) = readChan c
-
-
-sendDebugInitials :: Chan QtEvent -> IO ()
-sendDebugInitials c = do
-    mapM_ worker (selectionMode ++ [RightArrow, RightArrow, RightArrow, UpArrow, UpArrow, UpArrow])
-  where
-    worker k = do
-        writeChan c (KeyPress k)
-        writeChan c (KeyRelease k)
-
-    editFirstLevel = [DownArrow, Ctrl, DownArrow, Ctrl]
-    selectionMode = editFirstLevel ++ [Space]
-    playFirstLevel = [Ctrl, Ctrl]
-
-
-
 -- * Colors
 
 red :: Color
@@ -132,6 +96,41 @@ clearScreen ptr = do
     eraseRect ptr zero windowSize (QtColor 0 0 0 255)
 
 
+-- * Key Polling
+
+newtype KeyPoller = KeyPoller (Chan QtEvent)
+
+newKeyPoller :: Ptr AppWidget -> IO KeyPoller
+newKeyPoller widget = do
+    chan <- newChan
+    setKeyCallbackAppWidget widget (writeChan chan)
+--     sendDebugInitials chan
+    return $ KeyPoller chan
+
+pollEvents :: KeyPoller -> IO [QtEvent]
+pollEvents kp@(KeyPoller chan) = do
+    empty <- isEmptyChan chan
+    if empty then
+        return []
+      else do
+        a <- readChan chan
+        r <- pollEvents kp
+        return (a : r)
+
+waitForEvent :: KeyPoller -> IO QtEvent
+waitForEvent (KeyPoller c) = readChan c
 
 
+sendDebugInitials :: Chan QtEvent -> IO ()
+sendDebugInitials c = ignore $ forkOS $ do
+    mapM_ worker (saveNewLevel)
+  where
+    worker k = do
+        threadDelay $ round (0.1 * 10 ^ 6)
+        writeChan c (KeyPress k (return $ head $ show k))
+        writeChan c (KeyRelease k (return $ head $ show k))
 
+    editFirstLevel = [DownArrow, Ctrl, DownArrow, Ctrl]
+    saveNewLevel = [DownArrow, Ctrl, Ctrl, Ctrl, Ctrl, DownArrow, DownArrow, D, Ctrl, RightArrow, RightArrow, D, D, D, D, Ctrl, Escape, DownArrow, DownArrow, DownArrow, DownArrow, DownArrow, Ctrl]
+    selectionMode = editFirstLevel ++ [Space]
+    playFirstLevel = [Ctrl, Ctrl]

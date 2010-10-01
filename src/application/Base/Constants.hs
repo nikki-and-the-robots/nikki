@@ -53,6 +53,9 @@ soundDir = "data" </> "sounds"
 pngDir :: FilePath
 pngDir = "data" </> "png"
 
+templateLevelsDir :: FilePath
+templateLevelsDir = "data" </> "template_levels"
+
 levelDir :: FilePath
 levelDir = "levels"
 
