@@ -11,7 +11,7 @@ import Base.Application
 
 import Object
 
-import Editor.MainLoop
+import Editor.Menu
 
 
 editLevel :: Application -> AppState -> PlayLevel -> EditorScene Sort_ -> AppState

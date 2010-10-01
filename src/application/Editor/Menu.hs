@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns #-}
 
-module Editor.MainLoop (PlayLevel, editorLoop) where
+module Editor.Menu (PlayLevel, editorLoop) where
 
 
 import Data.Indexable (modifyByIndex)
