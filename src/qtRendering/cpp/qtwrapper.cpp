@@ -4,7 +4,6 @@
 // * utils
 
 char* QStringToCString(QString x) {
-    qDebug() << "X" << x;
     char* arr = (char*) malloc(sizeof(char) * (x.size() + 1));
     for (int i = 0; i < x.size(); i++) {
         arr[i] = x.at(i).toAscii();
