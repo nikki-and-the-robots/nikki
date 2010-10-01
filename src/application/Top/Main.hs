@@ -86,6 +86,7 @@ main = globalCatcher $ do
 
     case code of
         0 -> exitWith ExitSuccess
+        x -> exitWith (ExitFailure x)
 
 
 -- * states
