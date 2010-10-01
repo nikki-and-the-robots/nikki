@@ -189,6 +189,9 @@ chainAppM cmd (b : r) a = do
     chainAppM cmd r a'
 chainAppM _ [] a = return a
 
+ignore :: Monad m => m a -> m ()
+ignore = (>> return ())
+
 
 -- * list stuff
 infixl 4 +:
