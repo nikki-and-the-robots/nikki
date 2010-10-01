@@ -9,6 +9,8 @@ module Utils (
 
 -- imports
 
+import Safe
+
 import Data.Char
 import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault)
@@ -259,13 +261,12 @@ mergePairs f [] = []
 
 -- * String stuff
 
-toCapital :: String -> String
-toCapital [] = []
-toCapital (a : r) = toUpper a : r
+(<|>) :: FilePath -> String -> FilePath
+path <|> ext =
+    if dotExt `isSuffixOf` path then path else path <.> ext
+  where
+    dotExt = if Just '.' == headMay ext then ext else '.' : ext
 
-toNotCapital :: String -> String
-toNotCapital [] = []
-toNotCapital (a : r) = toLower a : r
 
 -- * Map stuff
 
