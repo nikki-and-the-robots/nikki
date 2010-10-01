@@ -16,6 +16,7 @@ import Utils
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList)
 import qualified Data.Tree as T
+import Data.Foldable (Foldable, foldMap)
 
 
 data SelectTree a
@@ -31,6 +32,10 @@ instance Functor SelectTree where
 
 instance Show a => PP (SelectTree a) where
     pp = T.drawTree . fmap show . toTree
+
+instance Foldable SelectTree where
+    foldMap f (Leaf a) = f a
+    foldMap f (Node _ cs _) = foldMap (foldMap f) cs
 
 
 mkNode :: String -> (Indexable (SelectTree a)) -> SelectTree a

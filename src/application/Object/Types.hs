@@ -45,6 +45,11 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
         sort -> object, object -> sort where
 
     sortId :: sort -> SortId
+
+    -- free memory for allocated resources
+    freeSort :: sort -> IO ()
+    freeSort _ = return ()
+
     size :: sort -> Size Double
     objectEditModeMethods :: sort -> Maybe (ObjectEditModeMethods Sort_)
     objectEditModeMethods _ = Nothing
@@ -116,6 +121,7 @@ instance Show Object_ where
 
 instance Sort Sort_ Object_ where
     sortId (Sort_ s) = sortId s
+    freeSort (Sort_ s) = freeSort s
     size (Sort_ s) = size s
     objectEditModeMethods (Sort_ s) = objectEditModeMethods s
     sortRender (Sort_ s) = sortRender s

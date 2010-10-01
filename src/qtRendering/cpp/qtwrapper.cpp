@@ -265,6 +265,10 @@ extern "C" QPixmap* newQPixmap(char* file) {
     return result;
 };
 
+extern "C" void destroyQPixmap(QPixmap* ptr) {
+    return delete ptr;
+};
+
 extern "C" int widthQPixmap(QPixmap* ptr) {
     return ptr->width();
 };

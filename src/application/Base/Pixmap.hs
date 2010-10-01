@@ -34,6 +34,9 @@ loadPixmap padding path = do
         (fmap (fromIntegral . subtract (2 * padding)) size)
         (Position (- padding) (- padding))
 
+freePixmap :: Pixmap -> IO ()
+freePixmap = pixmap >>> destroyQPixmap
+
 
 -- | renders the pixmap
 renderPixmap :: Ptr QPainter -- ^ painter to be rendered to

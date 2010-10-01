@@ -68,21 +68,21 @@ main = globalCatcher $ do
     keyPoller <- newKeyPoller window
 
     -- sort loading (pixmaps and sounds)
-    sorts <- getAllSorts
+    code <- withAllSorts $ \ sorts -> do
 
-    -- start state logick
-    let app = Application qApp window keyPoller applicationStates sorts
-    -- there are two main threads:
-    -- this is the logick [sick!] thread
-    forkOS $ globalCatcher $ do
-        executeStates (applicationStates app)
-        quitQApplication
+        -- start state logick
+        let app = Application qApp window keyPoller applicationStates sorts
+        -- there are two main threads:
+        -- this is the logick [sick!] thread
+        forkOS $ globalCatcher $ do
+            executeStates (applicationStates app)
+            quitQApplication
 
-    -- start app
-    setWindowSize window (windowSize Base.Configuration.development)
-    showAppWidget window
-    -- this is the rendering thread
-    code <- execQApplication qApp
+        -- start app
+        setWindowSize window (windowSize Base.Configuration.development)
+        showAppWidget window
+        -- this is the rendering thread (will be quit by the logick thread)
+        execQApplication qApp
 
     case code of
         0 -> exitWith ExitSuccess

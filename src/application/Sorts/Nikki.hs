@@ -202,6 +202,10 @@ instance Sort NSort Nikki where
 
     sortId _ = SortId "nikki"
 
+    freeSort (NSort pixmaps sound) = do
+        fmapM_ (fmapM_ freePixmap) pixmaps
+        freePolySound sound
+
     size sort = pixmapSize $ defaultPixmap $ pixmaps sort
 
     sortRender sort ptr _ =

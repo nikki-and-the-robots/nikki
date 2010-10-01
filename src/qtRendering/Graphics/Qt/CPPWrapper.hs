@@ -238,6 +238,8 @@ newQPixmap file_ = do
         error ("file does not exist: " ++ file)
     withCString file cppNewQPixmap
 
+foreign import ccall destroyQPixmap :: Ptr QPixmap -> IO ()
+
 foreign import ccall "newQPixmap" cppNewQPixmap :: CString -> IO (Ptr QPixmap)
 
 foreign import ccall widthQPixmap :: Ptr QPixmap -> IO QtInt

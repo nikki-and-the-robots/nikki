@@ -58,6 +58,7 @@ newtype Index = Index {index :: Int}
 -- | invariants:
 -- sort (keys x) == sort (Map.keys (values x))
 -- nub (keys x) == keys x
+-- const True (keys x == sort (keys x))  (that is, the keys may be unsorted)
 data Indexable a = Indexable {
     values :: Map.IntMap a,
     keys :: [Index]

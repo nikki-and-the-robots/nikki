@@ -7,6 +7,8 @@ import Data.Initial
 import Data.SelectTree
 import Data.List as List
 
+import Control.Exception
+
 import Physics.Chipmunk
 
 import Utils
@@ -49,6 +51,11 @@ sortLoaders = [
     Sorts.Grids.sorts
   ]
 
+withAllSorts :: (SelectTree Sort_ -> IO a) -> IO a
+withAllSorts cmd = do
+    sorts <- getAllSorts
+    cmd sorts `finally` freeAllSorts sorts
+
 -- | returns all sorts in a nicely sorted SelectTree
 getAllSorts :: IO (SelectTree Sort_)
 getAllSorts = do
@@ -71,6 +78,9 @@ getAllSorts = do
                 [single] -> Leaf single
                 list@(_ : _) -> mkSelectTree (prefix ++ "/") list
 
+freeAllSorts :: SelectTree Sort_ -> IO ()
+freeAllSorts sorts = do
+    fmapM_ freeSort sorts
 
 
 initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
