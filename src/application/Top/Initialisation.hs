@@ -60,23 +60,33 @@ withAllSorts cmd = do
 getAllSorts :: IO (SelectTree Sort_)
 getAllSorts = do
     sorts <- concat <$> mapM id sortLoaders
-    return $ mkSelectTree "" sorts
+    return $ mkSelectTree sorts
   where
-    mkSelectTree :: String -> [Sort_] -> SelectTree Sort_
-    mkSelectTree prefix sorts =
-        mkNode prefix (I.fromList $ map (mkPrefixChild sorts) (childrenPrefixes prefix sorts))
+    mkSelectTree :: [Sort_] -> SelectTree Sort_
+    mkSelectTree sorts =
+        foldl (flip addSort) (EmptyNode "objects") sorts
       where
-        childrenPrefixes :: String -> [Sort_] -> [String]
-        childrenPrefixes prefix =
-            map (takeWhile (/= '/') . drop (List.length prefix) . getSortId . sortId)
-            >>> nub
-            >>> map (prefix ++)
+        addSort :: Sort_ -> SelectTree Sort_ -> SelectTree Sort_
+        addSort sort t = addByPrefix (init $ wordsBy ['/'] (getSortId $ sortId sort)) sort t
 
-        mkPrefixChild :: [Sort_] -> String -> SelectTree Sort_
-        mkPrefixChild sorts prefix =
-            case filter (\ sort -> prefix `isPrefixOf` getSortId (sortId sort)) sorts of
-                [single] -> Leaf single
-                list@(_ : _) -> mkSelectTree (prefix ++ "/") list
+        -- | adds an element by a given prefix to a SelectTree. If branches with needed labels
+        -- are missing, they are created.
+        -- PRE: The tree is not a Leaf.
+        addByPrefix :: [String] -> a -> SelectTree a -> SelectTree a
+        addByPrefix _ _ (Leaf _) = error "addByPrefix"
+        addByPrefix (a : r) x node =
+            -- prefixes left: the tree needs to be descended further
+            if any (\ subTree -> getLabel subTree == Just a) (getChildren node) then
+                -- if the child already exists
+                modifyLabelled a (addByPrefix r x) node
+              else
+                -- the branch doesn't exist, it's created
+                addChild (addByPrefix r x (EmptyNode a)) node
+          where
+            Just parentLabel = getLabel node
+        addByPrefix [] x node =
+            -- no prefixes left: here the element is added
+            addChild (Leaf x) node
 
 freeAllSorts :: SelectTree Sort_ -> IO ()
 freeAllSorts sorts = do
