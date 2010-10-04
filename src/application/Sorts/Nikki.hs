@@ -11,6 +11,7 @@ import Data.Generics
 import Data.Initial
 import Data.Array.Storable
 import Data.List
+import Data.Maybe
 
 import Control.Monad
 
@@ -499,13 +500,13 @@ controlBody now contacts (True, cd) NSort{jumpSound}
             nikki
 
 fakeControl cd nikki = do
-    when (Press (KeyboardButton D) `elem` pressed cd) $
+    when (D `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector step 0)
-    when (Press (KeyboardButton A) `elem` pressed cd) $
+    when (A `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector (- step) 0)
-    when (Press (KeyboardButton W) `elem` pressed cd) $
+    when (W `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector 0 (- step))
-    when (Press (KeyboardButton S) `elem` pressed cd) $
+    when (S `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector 0 step)
     p <- getPosition $ chipmunk nikki
     every 100 $ ppp p
@@ -514,6 +515,12 @@ fakeControl cd nikki = do
     inner f = modifyPosition (chipmunk nikki) (roundX . f)
     roundX (Vector x y) = Vector (r x) y
     r x = fromIntegral (round (x / step)) * step
+
+    extractPressedKeys :: [AppEvent] -> [Key]
+    extractPressedKeys = map inner >>> catMaybes
+      where
+        inner (Press (KeyboardButton k _)) = Just k
+        inner _ = Nothing
 
 applyNikkiForceViaVelocity :: Chipmunk -> Vector -> IO ()
 applyNikkiForceViaVelocity chip f =
