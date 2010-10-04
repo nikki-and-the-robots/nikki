@@ -3,11 +3,15 @@
 module Data.SelectTree (
     SelectTree(..),
     mkNode,
+    addChild,
+    getLabel,
+    getChildren,
     getSelected,
     selectNext,
     selectPrevious,
     selectFirstElement,
     leafs,
+    modifyLabelled,
     (-<),
   ) where
 
@@ -23,6 +27,7 @@ data SelectTree a
     -- Invariant: length [SelectTree a] > Index
     = Node String (Indexable (SelectTree a)) Index
     | Leaf {fromLeaf :: a}
+    | EmptyNode String
   deriving Show
 
 
@@ -41,6 +46,20 @@ instance Foldable SelectTree where
 mkNode :: String -> (Indexable (SelectTree a)) -> SelectTree a
 mkNode label ix = Node label ix (head (keys ix))
 
+-- | adds a child (at the end)
+-- PRE: the second given tree is not a Leaf
+addChild :: SelectTree a -> SelectTree a -> SelectTree a
+addChild _ (Leaf _) = error "addChild"
+addChild x (EmptyNode label) = mkNode label (I.fromList [x])
+addChild x (Node label children selected) = Node label (children >: x) selected
+
+getLabel :: SelectTree a -> Maybe String
+getLabel (Node l _ _) = Just l
+getLabel _ = Nothing
+
+getChildren :: SelectTree a -> [SelectTree a]
+getChildren (Node _ x _) = I.toList x
+getChildren _ = []
 
 getSelected :: SelectTree a -> a
 getSelected (Node sn cs i) = getSelected (cs !!! i)
@@ -105,6 +124,16 @@ selectFirstElement f tree = inner (length $ leafs tree) tree
             Just tree
           else
             inner (n - 1) (selectNext tree)
+
+
+-- | modifies the children of a given tree with a given function, if it has a given label
+-- PRE: given tree can not be a Leaf
+modifyLabelled :: String -> (SelectTree a -> SelectTree a) -> SelectTree a -> SelectTree a
+modifyLabelled testLabel f (Node label children selected) =
+    Node label (fmap inner children) selected
+  where
+    inner n = if getLabel n == Just testLabel then f n else n
+modifyLabelled _ _ x = x
 
 
 toTree :: Show a => SelectTree a -> T.Tree (Either String a)
