@@ -385,10 +385,11 @@ readContactNormals contacts = do
     concat <$> mapM getCorrectedAngles (nikkiContacts contacts)
   where
     -- apply the coefficient to get the corrected angle (see hipmunk docs)
-    getCorrectedAngles :: (StorableArray Int Contact, Double) -> IO [Angle]
-    getCorrectedAngles (array, coefficient) = do
-        x <- getElems array
-        return $ map (foldAngle . toUpAngle) $ map (\ v -> Physics.Chipmunk.scale v coefficient) $ map ctNormal x
+    getCorrectedAngles :: Vector -> IO [Angle]
+    getCorrectedAngles v = do
+        error ("getCorrectedAngles: " ++ show contacts)
+--         x <- getElems array
+--         return $ map (foldAngle . toUpAngle) $ map (\ v -> Physics.Chipmunk.scale v coefficient) $ map ctNormal x
 
 -- | calculates the angle a possible jump is to be performed in
 jumpAngle :: [Angle] -> Maybe Angle
@@ -408,7 +409,7 @@ jumpAngle angles =
 
 controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO (Maybe Angle, Nikki)
 controlBody _ _ (False, _) _ nikki = do
-    forM_ (feetShapes nikki) $ \ fs -> setSurfaceVel fs zero
+    forM_ (feetShapes nikki) $ \ fs -> surfaceVel fs $= zero
     return (Nothing, nikki)
 controlBody now contacts (True, cd) NSort{jumpSound}
     nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ _ _) = do
@@ -422,14 +423,14 @@ controlBody now contacts (True, cd) NSort{jumpSound}
             isAirborne = not (nikkiFeetTouchGround contacts ||
                             nikkiLeftPawTouchesGround contacts ||
                             nikkiRightPawTouchesGround contacts)
-        velocity <- getVelocity body
+        velocity <- get $ velocity body
 
         -- walking
         let surfaceVelocity = walking (leftHeld, rightHeld, bothHeld)
         if not isAirborne then
-            forM_ feetShapes $ \ fs -> setSurfaceVel fs surfaceVelocity
+            forM_ feetShapes $ \ fs -> surfaceVel fs $= surfaceVelocity
           else
-            forM_ feetShapes $ \ fs -> setSurfaceVel fs (Vector (- vectorX velocity) 0)
+            forM_ feetShapes $ \ fs -> setSurfaceVel fs zero
 
         -- jumping
         -- =======

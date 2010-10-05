@@ -142,7 +142,7 @@ getNextPosition p@(mode -> Path (a : _)) = a
 updatePlatform platform = do
     let nextPosition = getNextPosition platform
     position <- getPosition $ chipmunk platform
-    velocity <- getVelocity $ body $ chipmunk platform
+    velocity <- get $ velocity $ body $ chipmunk platform
     -- drag of the medium (air).
     let drag = calculateDrag size velocity
     -- Force to move the platform to the next position.

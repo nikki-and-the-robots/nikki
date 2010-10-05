@@ -12,6 +12,7 @@ import Data.Set (member)
 import System.FilePath
 import System.Random
 
+import qualified Physics.Hipmunk as H
 import Physics.Chipmunk as CM hiding (Static)
 
 import Graphics.Qt
@@ -103,8 +104,8 @@ instance Sort TSort FallingTile where
                 if now - t >= timeBeforeGettingLoose then do
                     modifyApplyOnlyForce (chipmunk fallingTile) zero
                     let b = body $ chipmunk fallingTile
-                    setMass b (scaleMass (tileSize fallingTile) dynamicMass)
-                    setMoment b dynamicInertia
+                    H.mass b $= scaleMass (tileSize fallingTile) dynamicMass
+                    moment b $= dynamicInertia
                     angVel <- randomRIO (-2, 2)
                     modifyAngVel (chipmunk fallingTile) (const angVel)
                     return $ fallingTile{status = Loose}

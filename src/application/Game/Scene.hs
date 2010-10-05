@@ -186,7 +186,7 @@ updateCamera :: Scene Object_ -> IO (Scene Object_)
 updateCamera scene = do
     let controlled = getControlledChipmunk $ getControlled scene
     position <- getPosition controlled
-    velocity <- getVelocity $ body controlled
+    velocity <- CM.get $ velocity $ body controlled
     let cameraState' = updateCameraState position velocity (cameraState scene)
     return scene{cameraState = cameraState'}
 

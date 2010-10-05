@@ -81,7 +81,7 @@ data CameraState
 
 data Contacts
     = Contacts {
-        nikkiContacts :: [(StorableArray Int Contact, Double)],
+        nikkiContacts :: [Vector],
         nikkiFeetTouchGround :: !Bool,
         nikkiLeftPawTouchesGround :: !Bool,
         nikkiRightPawTouchesGround :: !Bool,
@@ -93,8 +93,6 @@ data Contacts
       }
   deriving Show
 
-instance Show (StorableArray Int Contact) where
-    show = const "<StorableArray>"
 
 data MyCollisionType
     = NikkiCT NikkiCollisionType

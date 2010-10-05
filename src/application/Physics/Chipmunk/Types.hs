@@ -6,11 +6,13 @@ import Utils
 
 import Data.Complex
 import Data.Abelian
+import Data.StateVar
 
 import Graphics.Qt (Ptr, QPainter, translate)
 import qualified Graphics.Qt as Qt
 
-import Physics.Hipmunk
+import Physics.Hipmunk hiding (shapes, position, mass, body)
+import qualified Physics.Hipmunk as H
 
 import Physics.Chipmunk.ContactRef
 
@@ -129,15 +131,15 @@ initChipmunk space as@BodyAttributes{} shapeTypes baryCenterOffset = do
 mkBody :: BodyAttributes -> IO Body
 mkBody BodyAttributes{position, mass, inertia} = do
     body <- newBody mass inertia
-    setPosition body position
+    H.position body $= position
     return body
 
 mkShape :: Body -> ShapeDescription -> IO Shape
 mkShape body ShapeDescription{shapeAttributes = (ShapeAttributes elasticity friction collisionType), 
     shapeType, shapeOffset} = do
         shape <- newShape body shapeType shapeOffset
-        setElasticity shape elasticity
-        setFriction shape friction
+        H.elasticity shape $= elasticity
+        H.friction shape $= friction
         setMyCollisionType shape collisionType
         return shape
 
@@ -175,7 +177,7 @@ removeChipmunk c@Chipmunk{} = do
 -- * getters
 
 getPosition :: Chipmunk -> IO Vector
-getPosition Chipmunk{body} = Physics.Hipmunk.getPosition body
+getPosition Chipmunk{body} = get $ H.position body
 getPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
     return (Vector x y +~ baryCenterOffset)
 getPosition StaticChipmunk{chipmunkPosition} = return chipmunkPosition
@@ -183,8 +185,8 @@ getPosition StaticChipmunk{chipmunkPosition} = return chipmunkPosition
 -- returns the angle and the position of the (rotated) left upper corner of the object.
 getRenderPosition :: Chipmunk -> IO (Qt.Position Double, Angle)
 getRenderPosition Chipmunk{body, baryCenterOffset} = do
-    pos <- Physics.Hipmunk.getPosition body
-    angle <- getAngle body
+    pos <- get $ H.position body
+    angle <- get $ H.angle body
     let rotatedOffset = rotateVector angle baryCenterOffset
         (Vector x y) = pos -~ rotatedOffset
     return (Qt.Position x y, angle)
@@ -194,8 +196,8 @@ getRenderPosition (ImmutableChipmunk pos angle _ _) = return (pos, angle)
 
 getChipmunkPosition :: Chipmunk -> IO (Position, Angle)
 getChipmunkPosition Chipmunk{body} = do
-    p <- Physics.Hipmunk.getPosition body
-    a <- getAngle body
+    p <- get $ H.position body
+    a <- get $ H.angle body
     return (p, a)
 getChipmunkPosition StaticChipmunk{chipmunkPosition} =
     return (chipmunkPosition, 0)

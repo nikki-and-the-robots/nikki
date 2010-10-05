@@ -216,7 +216,7 @@ pickPixmap now j sort =
 controlToChipmunk :: Jetpack -> IO Jetpack
 controlToChipmunk object@Jetpack{chipmunk, boost, direction} = do
     angle <- normalizeAngle $ body chipmunk
-    angVel <- getAngVel $ body chipmunk
+    angVel <- get $ angVel $ body chipmunk
 
     -- hovering
     hover (body chipmunk) angle boost
@@ -231,7 +231,7 @@ controlToChipmunk object@Jetpack{chipmunk, boost, direction} = do
 
         appliedTorque = frictionTorque_ +~ controlTorque +~ uprightCorrection_
 
-    setTorque (body chipmunk) (appliedTorque <<| "appliedTorque")
+    torque (body chipmunk) $= (appliedTorque <<| "appliedTorque")
 
     return object
 

@@ -63,11 +63,12 @@ Executable            nikki
         , mtl
         , process
         , zlib
-        , Hipmunk == 5.0.1.1
+        , Hipmunk == 5.2.0.2
         , sfml-audio
         , safe
         , array
         , random
+        , StateVar
 
     if os(linux)
         extra-libraries:

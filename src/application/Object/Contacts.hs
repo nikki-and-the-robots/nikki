@@ -13,7 +13,7 @@ import Data.Set as Set hiding (map)
 import Data.Array.Storable
 import Data.Initial
 
-import Physics.Chipmunk hiding (position)
+import Physics.Chipmunk
 
 import Base.Types
 
@@ -36,9 +36,9 @@ instance Initial Contacts where
 
 -- * setter (boolean to True)
 
-addNikkiContacts :: StorableArray Int Contact -> Double -> Contacts -> Contacts
-addNikkiContacts contactArray coefficient c =
-    c{nikkiContacts = ((contactArray, coefficient) : nikkiContacts c)}
+addNikkiContacts :: Vector -> Contacts -> Contacts
+addNikkiContacts v c =
+    c{nikkiContacts = (v : nikkiContacts c)}
 
 setNikkiFeetTouchGround :: Contacts -> Contacts
 setNikkiFeetTouchGround c = c{nikkiFeetTouchGround = True}
@@ -87,11 +87,11 @@ watchedContacts =
 nikkiSolidCallbacks solidCT = [
     Callback (FullWatch solidCT (NikkiCT NikkiHead) (\ _ _ -> addNikkiContacts)) Solid,
     Callback (FullWatch solidCT (NikkiCT NikkiFeet)
-                (\ _ _ a b -> setNikkiFeetTouchGround . addNikkiContacts a b)) Solid,
+                (\ _ _ v -> setNikkiFeetTouchGround . addNikkiContacts v)) Solid,
     Callback (FullWatch solidCT (NikkiCT NikkiLeftPaw)
-                (\ _ _ a b -> setNikkiLeftPawTouchesGround . addNikkiContacts a b)) Solid,
+                (\ _ _ v -> setNikkiLeftPawTouchesGround . addNikkiContacts v)) Solid,
     Callback (FullWatch solidCT (NikkiCT NikkiRightPaw)
-                (\ _ _ a b -> setNikkiRightPawTouchesGround . addNikkiContacts a b)) Solid
+                (\ _ _ v -> setNikkiRightPawTouchesGround . addNikkiContacts v)) Solid
   ]
 
 -- nikki stands in front of a terminal 
@@ -114,13 +114,13 @@ terminalSolidCallback solidCT =
 
 -- contact with nikki and falling tiles
 nikkiFallingTilesCallbacks = [
-    Callback (FullWatch FallingTileCT (NikkiCT NikkiHead) (\ a b c cn -> addFallingTileContact a . addNikkiContacts c cn)) Solid,
+    Callback (FullWatch FallingTileCT (NikkiCT NikkiHead) (\ a b v -> addFallingTileContact a . addNikkiContacts v)) Solid,
     Callback (FullWatch FallingTileCT (NikkiCT NikkiFeet)
-                (\ a b c cn -> addFallingTileContact a . setNikkiFeetTouchGround . addNikkiContacts c cn)) Solid,
+                (\ a b v -> addFallingTileContact a . setNikkiFeetTouchGround . addNikkiContacts v)) Solid,
     Callback (FullWatch FallingTileCT (NikkiCT NikkiLeftPaw)
-                (\ a b c cn -> addFallingTileContact a . setNikkiLeftPawTouchesGround . addNikkiContacts c cn)) Solid,
+                (\ a b v -> addFallingTileContact a . setNikkiLeftPawTouchesGround . addNikkiContacts v)) Solid,
     Callback (FullWatch FallingTileCT (NikkiCT NikkiRightPaw)
-                (\ a b c cn -> addFallingTileContact a . setNikkiRightPawTouchesGround . addNikkiContacts c cn)) Solid
+                (\ a b v -> addFallingTileContact a . setNikkiRightPawTouchesGround . addNikkiContacts v)) Solid
   ]
 
 
