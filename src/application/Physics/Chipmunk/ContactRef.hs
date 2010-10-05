@@ -19,7 +19,10 @@ import Data.IORef
 import Data.Array.Storable
 import Data.StateVar
 
+import Control.Monad.IO.Class
+
 import Physics.Hipmunk hiding (Callback)
+import Physics.Hipmunk.Callbacks ()
 
 
 -- * collisionTypes
@@ -67,21 +70,22 @@ initContactRef space empty callbacks = do
     mapM_ (installCallback ref) callbacks
     return $ ContactRef empty ref
   where
-    installCallback _ref (Callback (DontWatch a b) permeability) = do
-        addCollisionHandler space (toNumber a) (toNumber b) $ mkBegin $ do
+    installCallback _ref (Callback (DontWatch a b) permeability) =
+        addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
             return $ isSolid permeability
---     installCallback ref (Callback (Watch a b f) permeability) = do
---         addCallback space (toNumber a, toNumber b) $
---             Basic $ \ shapeA shapeB -> do
---                 modifyIORef ref (f shapeA shapeB)
---                 return (isSolid permeability)
---     installCallback ref (Callback (FullWatch a b f) permeability) = do
---         addCallback space (toNumber a, toNumber b) $
---             Full $ \ shapeA shapeB contacts coefficient -> do
---                 modifyIORef ref (f shapeA shapeB contacts coefficient)
---                 return (isSolid permeability)
+    installCallback ref (Callback (Watch a b f) permeability) =
+        addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
+            (shapeA, shapeB) <- shapes
+            liftIO $ modifyIORef ref (f shapeA shapeB)
+            return (isSolid permeability)
+    installCallback ref (Callback (FullWatch a b f) permeability) =
+        addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
+            (shapeA, shapeB) <- shapes
+            normal_ <- normal
+            liftIO $ modifyIORef ref (f shapeA shapeB normal_)
+            return (isSolid permeability)
 
-mkBegin x = Handler (Just x) Nothing Nothing Nothing
+mkPreSolve x = Handler Nothing (Just x) Nothing Nothing
 
 
 -- updating

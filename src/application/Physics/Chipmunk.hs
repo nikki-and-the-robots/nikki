@@ -156,9 +156,8 @@ vectorY (Vector x y) = y
 -- look in Hipmunk doc (common?)
 
 modifyPosition :: Chipmunk -> (Vector -> Vector) -> IO ()
-modifyPosition Chipmunk{body} f = do
-    v <- Physics.Hipmunk.getPosition body
-    setPosition body (f v)
+modifyPosition Chipmunk{body} f =
+    H.position body $~ f
 
 modifyVelocity :: Chipmunk -> (Vector -> Vector) -> IO ()
 modifyVelocity Chipmunk{body} f =

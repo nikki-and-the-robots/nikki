@@ -381,16 +381,8 @@ fromUpAngle = (subtract (pi / 2)) >>> fromAngle
 
 
 -- | updates the possible jumping angle from the contacts
-readContactNormals :: Contacts -> IO [Angle]
-readContactNormals contacts = do
-    concat <$> mapM getCorrectedAngles (nikkiContacts contacts)
-  where
-    -- apply the coefficient to get the corrected angle (see hipmunk docs)
-    getCorrectedAngles :: Vector -> IO [Angle]
-    getCorrectedAngles v = do
-        error ("getCorrectedAngles: " ++ show contacts)
---         x <- getElems array
---         return $ map (foldAngle . toUpAngle) $ map (\ v -> Physics.Chipmunk.scale v coefficient) $ map ctNormal x
+getContactNormals :: Contacts -> [Angle]
+getContactNormals = map (foldAngle . toUpAngle) . nikkiContacts
 
 -- | calculates the angle a possible jump is to be performed in
 jumpAngle :: [Angle] -> Maybe Angle
@@ -460,8 +452,7 @@ controlBody now contacts (True, cd) NSort{jumpSound}
         -- (see longJumpAntiGravity)
 
         -- initial impulse
-        angles <- readContactNormals contacts
-        let contactNormal = jumpAngle $ angles
+        let contactNormal = jumpAngle $ getContactNormals contacts
         doesJumpStartNow <- case (contactNormal, aPushed) of 
             (Just contactAngle, True) -> do
                 let verticalImpulse = (- jumpingImpulse)
@@ -719,8 +710,7 @@ pickPixmap now sort nikki =
 
 debugNikki :: Contacts -> Nikki -> IO Nikki
 debugNikki contacts nikki = do
-    angles <- readContactNormals contacts
-    return nikki{debugCmd = worker angles}
+    return nikki{debugCmd = worker $ getContactNormals contacts}
   where
     worker angles ptr = do
         resetMatrix ptr

@@ -69,6 +69,7 @@ Executable            nikki
         , array
         , random
         , StateVar
+        , transformers
 
     if os(linux)
         extra-libraries:
