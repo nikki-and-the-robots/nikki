@@ -430,7 +430,7 @@ controlBody now contacts (True, cd) NSort{jumpSound}
         if not isAirborne then
             forM_ feetShapes $ \ fs -> surfaceVel fs $= surfaceVelocity
           else
-            forM_ feetShapes $ \ fs -> setSurfaceVel fs zero
+            forM_ feetShapes $ \ fs -> surfaceVel fs $= zero
 
         -- jumping
         -- =======
