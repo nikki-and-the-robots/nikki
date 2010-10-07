@@ -13,7 +13,7 @@ import Data.Array.Storable
 import Data.SelectTree
 import Data.Typeable
 
-import Physics.Chipmunk
+import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
@@ -81,10 +81,8 @@ data CameraState
 
 data Contacts
     = Contacts {
-        nikkiContacts :: [Vector],
+        nikkiContacts :: [Collision],
         nikkiFeetTouchGround :: !Bool,
-        nikkiLeftPawTouchesGround :: !Bool,
-        nikkiRightPawTouchesGround :: !Bool,
         nikkiTouchesLaser :: !Bool,
         triggers :: Set Shape,
         terminals :: Set Shape,
@@ -93,9 +91,9 @@ data Contacts
       }
   deriving Show
 
-
 data MyCollisionType
-    = NikkiCT NikkiCollisionType
+    = NikkiBodyCT
+    | NikkiFeetCT
 
     | TileCT
     | TerminalCT
@@ -104,41 +102,10 @@ data MyCollisionType
     | TriggerCT
     | BatteryCT
     | FallingTileCT
-  deriving (Eq, Show)
-
-instance Enum MyCollisionType where
-    toEnum x =
-        if x <= maxB then NikkiCT (toEnum x) else inner (x - maxB - 1)
-      where
-        maxB = fromEnum (maxBound :: NikkiCollisionType)
-        inner 0 = TileCT
-        inner 1 = TerminalCT
-        inner 2 = LaserCT
-        inner 3 = RobotCT
-        inner 4 = TriggerCT
-        inner 5 = BatteryCT
-        inner 6 = FallingTileCT
-    fromEnum (NikkiCT nct) = fromEnum nct
-    fromEnum x = inner x + fromEnum (maxBound :: NikkiCollisionType) + 1
-      where
-        inner TileCT = 0
-        inner TerminalCT = 1
-        inner LaserCT = 2
-        inner RobotCT = 3
-        inner TriggerCT = 4
-        inner BatteryCT = 5
-        inner FallingTileCT = 6
+  deriving (Eq, Enum, Show)
 
 instance PP MyCollisionType where
     pp = show
-
-data NikkiCollisionType
-    = NikkiHead
-    | NikkiFeet
-    | NikkiLeftPaw
-    | NikkiRightPaw
-  deriving (Enum, Bounded, Eq, Show)
-
 
 -- * mode for the game scene
 data Mode

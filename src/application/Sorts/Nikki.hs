@@ -4,16 +4,21 @@
 module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass, walkingVelocity) where
 
 
-import Data.Abelian
-import Data.Map hiding (map, size, filter, null, member)
+import Prelude hiding (lookup)
+
+import Data.List (sortBy)
+import Data.Map (Map, fromList, toList, (!), lookup)
 import Data.Set (member)
+import Data.Abelian
 import Data.Generics
 import Data.Initial
 import Data.Array.Storable
-import Data.List
 import Data.Maybe
+import qualified Data.Set as Set
 
 import Control.Monad
+import Control.Arrow
+import Control.Applicative ((<|>))
 
 import System.FilePath
 
@@ -85,19 +90,22 @@ correctionSteepness = 1.001
 
 -- animation times 
 
-frameTimesMap :: Map RenderState [(Int, Seconds)]
-frameTimesMap = fromList [
-    (Wait HLeft, wait),
-    (Wait HRight, wait),
-    (Walk HLeft,  walk),
-    (Walk HRight, walk),
-    (Jump HLeft,  jump),
-    (Jump HRight, jump),
-    (UsingTerminal HLeft, terminal),
-    (UsingTerminal HRight, terminal),
-    (Grip HLeft, grip),
-    (Grip HRight, grip)
-  ]
+frameTimes :: State -> (String, [(Int, Seconds)])
+frameTimes action = case action of
+    State Wait HLeft -> ("wait_left", wait)
+    State Wait HRight -> ("wait_right", wait)
+    State Walk HLeft -> ("walk_left", walk)
+    State Walk HRight -> ("walk_right", walk)
+    State JumpImpulse{} HLeft -> ("jump_left", airborne)
+    State JumpImpulse{} HRight -> ("jump_right", airborne)
+    State Airborne{} HLeft -> ("jump_left", airborne)
+    State Airborne{} HRight -> ("jump_right", airborne)
+    State WallSlide{} HLeft -> ("wallslide_left", airborne)
+    State WallSlide{} HRight -> ("wallslide_right", airborne)
+    State Grip HLeft -> ("grip_left", singleFrame)
+    State Grip HRight -> ("grip_right", singleFrame)
+
+    x -> es "frameTimes" x
   where
     wait = zip
         (0 : cycle [1, 2, 1, 2, 1, 2, 1])
@@ -105,12 +113,29 @@ frameTimesMap = fromList [
     walk = zip
         (cycle [0..3])
         (repeat 0.15)
-    jump = zip
+    airborne = zip
        (0 : repeat 1)
        (0.6 : repeat 10)
     terminal = singleFrame
     grip = singleFrame
     singleFrame = repeat (0, 10)
+
+
+statePixmaps :: Map String Int
+statePixmaps = fromList [
+    ("wait_left", 2),
+    ("wait_right", 2),
+    ("walk_left", 3),
+    ("walk_right", 3),
+    ("jump_left", 1),
+    ("jump_right", 1),
+    ("terminal", 0),
+    ("terminal", 0),
+    ("grip_left", 0),
+    ("grip_right", 0),
+    ("wallslide_left", 0),
+    ("wallslide_right", 0)
+  ]
 
 
 sorts :: IO [Sort_]
@@ -122,36 +147,24 @@ sorts = do
     let r = NSort pixmaps jumpSound
     return [Sort_ r]
 
-loadPixmaps :: IO (Map RenderState [Pixmap])
+loadPixmaps :: IO (Map String [Pixmap])
 loadPixmaps = do
-    fmapM load statePixmaps
+    fromList <$> (fmapM load $ toList statePixmaps)
   where
-    load :: (String, Int) -> IO [Pixmap]
-    load (name, n) = mapM (getDataFileName >>>> loadPixmap 1) $ map (mkPngPath name) [0..n]
+    load :: (String, Int) -> IO (String, [Pixmap])
+    load (name, n) = do
+        pixmaps <- mapM (getDataFileName >>>> loadPixmap 1) $ map (mkPngPath name) [0..n]
+        return (name, pixmaps)
 
 mkPngPath name n = nikkiPngDir </> name ++ "_0" ++ show n <.> "png"
 
 nikkiPngDir = pngDir </> "nikki"
 
-statePixmaps :: Map RenderState (String, Int)
-statePixmaps = fromList [
-    (Wait HLeft,  ("wait_left", 2)),
-    (Wait HRight, ("wait_right", 2)),
-    (Walk HLeft,  ("walk_left", 3)),
-    (Walk HRight, ("walk_right", 3)),
-    (Jump HLeft,  ("jump_left", 1)),
-    (Jump HRight, ("jump_right", 1)),
-    (UsingTerminal HLeft, ("terminal", 0)),
-    (UsingTerminal HRight, ("terminal", 0)),
-    (Grip HLeft, ("grip_left", 0)),
-    (Grip HRight, ("grip_right", 0))
-  ]
-
-defaultPixmap :: Map RenderState [Pixmap] -> Pixmap
-defaultPixmap pixmaps = head (pixmaps ! Wait HLeft)
+defaultPixmap :: Map String [Pixmap] -> Pixmap
+defaultPixmap pixmaps = head (pixmaps ! "wait_left")
 
 data NSort = NSort {
-    pixmaps :: Map RenderState [Pixmap],
+    pixmaps :: Map String [Pixmap],
     jumpSound :: PolySound
   }
     deriving (Show, Typeable)
@@ -160,13 +173,15 @@ data Nikki
     = Nikki {
         chipmunk :: Chipmunk,
         feetShapes :: [Shape],
-        jumpStartTime :: Seconds,
-        renderState :: RenderState,
-        startTime :: Seconds,
+        state :: State,
+        startTime :: Seconds, -- time the State was last changed
         batteryPower :: Integer, -- makes it possible to have REALLY BIG amounts of power :)
-        debugCmd :: Ptr QPainter -> IO ()
+        debugCmd :: Ptr QPainter -> Offset Double -> IO ()
       }
   deriving (Show, Typeable)
+
+instance Show (Ptr QPainter -> Offset Double -> IO ()) where
+    show _ = "<Ptr QPainter -> Offset Double -> IO ()>"
 
 addBatteryPower :: Nikki -> Nikki
 addBatteryPower n = n{batteryPower = batteryPower n + 1}
@@ -185,19 +200,46 @@ modifyNikki f scene =
         o' = f castO
 
 
-data RenderState
-    = Wait {direction :: HorizontalDirection}
-    | Walk {direction :: HorizontalDirection}
-    | Jump {direction :: HorizontalDirection}
-    | UsingTerminal {direction :: HorizontalDirection}
-    | Grip {direction :: HorizontalDirection}
-    | Touchdown {direction :: HorizontalDirection}
+data State = State {
+    action :: Action,
+    direction :: HorizontalDirection -- | the direction nikki faces
+  }
+    deriving (Show, Eq, Ord)
 
+instance Initial State where
+    initial = State Wait HLeft
+
+data Action
+    = Wait
+    | Walk
+        -- state for one frame (when a jump starts)
+    | JumpImpulse Seconds Angle (Maybe HorizontalDirection) Velocity
+    | Airborne JumpInformation
+    | WallSlide JumpInformation
+    | UsingTerminal
+    | Grip -- when Nikki uses the paws to hold on to something
+    | EndGripImpulse -- state for one frame (when grip state is ended)
+    | Touchdown
   deriving (Eq, Ord, Show)
 
-instance Initial RenderState where
-    initial = Wait HLeft
+toActionNumber Wait = 0
+toActionNumber Walk = 1
+toActionNumber JumpImpulse{} = 2
+toActionNumber Airborne{} = 3
+toActionNumber WallSlide{} = 4
+toActionNumber UsingTerminal = 5
+toActionNumber Grip = 6
+toActionNumber EndGripImpulse = 7
+toActionNumber Touchdown = 8
 
+data JumpInformation =
+    JumpInformation {
+        jumpStartTime :: Maybe Seconds,
+        jumpButtonDirection :: (Maybe HorizontalDirection),
+        jumpNikkiVelocity :: Velocity,
+        jumpVerticalDirection :: VerticalDirection
+      }
+  deriving (Eq, Ord, Show)
 
 instance Sort NSort Nikki where
 
@@ -225,11 +267,10 @@ instance Sort NSort Nikki where
         return $ Nikki
             chip
             surfaceVelocityShapes
-            0
             initial
             0
             0
-            (const $ return ())
+            (const $ const $ return ())
 
     immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
 
@@ -240,17 +281,15 @@ instance Sort NSort Nikki where
     updateNoSceneChange sort now contacts cd nikki = inner nikki
       where
         inner =
-            controlBody now contacts cd sort >>>>
-            fromPure (
-                updateRenderState contacts cd >>>
-                updateStartTime now (renderState nikki)
-              )
+            updateState now contacts cd >>>>
+            fromPure (updateStartTime now (state nikki)) >>>>
+            passThrough (controlBody now contacts cd sort)
 --             >>>> debugNikki contacts
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
         renderChipmunk ptr offset pixmap (chipmunk nikki)
-        debugCmd nikki ptr
+        debugCmd nikki ptr offset
 
 
 -- * initialisation
@@ -267,21 +306,16 @@ feetShapeAttributes :: ShapeAttributes
 feetShapeAttributes = ShapeAttributes {
     elasticity          = elasticity_,
     friction            = nikkiFeetFriction,
-    CM.collisionType    = NikkiCT NikkiFeet
+    CM.collisionType    = NikkiFeetCT
   }
 
-pawShapeAttributes nct = ShapeAttributes {
-    elasticity          = elasticity_,
-    friction            = nikkiFeetFriction,
-    CM.collisionType    = NikkiCT nct
-  }
 
 -- Attributes for nikkis body (not to be confused with chipmunk bodies, it's a chipmunk shape)
 bodyShapeAttributes :: ShapeAttributes
 bodyShapeAttributes = ShapeAttributes {
     elasticity    = elasticity_,
     friction      = headFriction,
-    CM.collisionType = NikkiCT NikkiHead
+    CM.collisionType = NikkiBodyCT
   }
 
 
@@ -292,11 +326,7 @@ mkPolys (Size w h) =
     -- the ones where surface velocity (for walking) is applied
     surfaceVelocityShapes =
         mkShapeDescription feetShapeAttributes betweenFeet :
-        (map (uncurry (ShapeDescription feetShapeAttributes)) feetCircles ++
-        ((uncurry (ShapeDescription (pawShapeAttributes NikkiLeftPaw))) leftPawCircle :
-        map (mkShapeDescription (pawShapeAttributes NikkiLeftPaw)) leftPawRects ++
-        ((uncurry (ShapeDescription (pawShapeAttributes NikkiRightPaw))) rightPawCircle :
-        map (mkShapeDescription (pawShapeAttributes NikkiRightPaw)) rightPawRects)))
+        (map (uncurry (ShapeDescription feetShapeAttributes)) feetCircles)
     otherShapes = [
         (mkShapeDescription bodyShapeAttributes headPoly),
         (mkShapeDescription bodyShapeAttributes legsPoly)
@@ -313,43 +343,18 @@ mkPolys (Size w h) =
     headRight = headLeft + fromUber 13
     headUp = up + fromUber 1.5
     headLow = headUp + fromUber 13
-    headWidth = headRight - headLeft
 
     headPoly = Polygon [
         Vector headLeft headUp,
-        Vector headLeft headLow,
-        Vector (headLeft + headEdge) (headLow + headEdge),
-        Vector (headRight - headEdge) (headLow + headEdge),
-        Vector headRight headLow,
+        Vector headLeft (headLow + pawThickness),
+        Vector headRight (headLow + pawThickness),
         Vector headRight headUp
       ]
 
     -- tuning variables
     pawRadius = 4
     eps = 1
-
-    leftPawCircle = (Circle pawRadius, Vector (headLeft + pawXPadding + pawRadius) (headLow + pawThickness - pawRadius))
-    leftPawRects = [
-        mkRect
-            (Position (headLeft + pawXPadding + eps) headLow)
-            (Size (headWidth / 2 - pawXPadding - eps) (pawThickness - pawRadius)),
-        mkRect
-            (Position (headLeft + pawXPadding + pawRadius) headLow)
-            (Size (headWidth / 2 - (pawXPadding + pawRadius)) (pawThickness - eps))
-      ]
-    rightPawCircle = (Circle pawRadius, Vector (headRight - pawXPadding - pawRadius) (headLow + pawThickness - pawRadius))
-    rightPawRects = [
-        mkRect
-            (Position 0 headLow)
-            (Size (headWidth / 2 - pawXPadding - eps) (pawThickness - pawRadius)),
-        mkRect
-            (Position 0 headLow)
-            (Size (headWidth / 2 - (pawXPadding + pawRadius)) (pawThickness - eps))
-      ]
-
-    pawXPadding = fromUber 1
     pawThickness = fromUber 3
-    headEdge = pawXPadding + pawRadius
 
     legLeft = left + fromUber 7
     legRight = legLeft + fromUber 5
@@ -370,7 +375,92 @@ mkPolys (Size w h) =
     rightFeet = (feetCircle, Vector (legRight - pawRadius) (low - pawRadius))
 
 
--- * Control logic
+-- * nikkis state
+
+updateState :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
+updateState _ _ (False, _) nikki =
+    return $ nikki{state = State UsingTerminal (direction $ state nikki)}
+updateState now contacts (True, controlData) nikki = do
+    velocity_ <- get $ velocity $ body $ chipmunk nikki
+    nikkiPos <- getPosition $ chipmunk nikki
+    return $ nikki{state = state' nikkiPos velocity_}
+  where
+    state' nikkiPos velocity_ =
+        case (aPushed, mContactAngle) of
+            -- nikki jumps
+            (True, Just contactAngle) -> State (JumpImpulse now contactAngle buttonDirection velocity_)
+                                            (jumpImpulseDirection contactAngle)
+            -- nikki touches something
+            (False, Just contactAngle) ->
+                case grips nikkiPos contacts of
+                    -- nikki grabs something
+                    Just gripDirection -> State Grip gripDirection
+                    -- nikki grabs nothing
+                    Nothing ->
+                        if nikkiFeetTouchGround contacts then
+                            if nothingHeld then
+                                State Wait oldDirection
+                              else
+                                State Walk (fromMaybe oldDirection buttonDirection)
+                          else
+                            State (WallSlide (jumpInformation velocity_))
+                                (fromMaybe oldDirection buttonDirection)
+            (_, Nothing) ->
+                State (Airborne (jumpInformation velocity_))
+                    (fromMaybe oldDirection buttonDirection)
+
+    grips :: CM.Position -> Contacts -> Maybe HorizontalDirection
+    grips nikkiPos contacts = case filter (isGripCollision nikkiPos) (nikkiContacts contacts) of
+        [] -> Nothing
+        (Collision _ (p : _) : _) -> Just $
+            if vectorX (p -~ nikkiPos) <= 0 then HLeft else HRight
+    isGripCollision nikkiPos (Collision normal points) =
+        any (isGripPoint nikkiPos) points && isGripNormal normal
+    isGripPoint nikkiPos p = vectorY (p -~ nikkiPos) =~= 19
+    isGripNormal ((toUpAngle >>> foldAngle) -> angle) =
+        (angle > (- angleLimit)) && (angle < angleLimit)
+    angleLimit = deg2rad 45
+    a =~= b = abs (a - b) < eps
+    eps = 1
+
+
+    aPushed = Press AButton `elem` pressed controlData
+    aHeld = AButton `member` held controlData
+    rightHeld = RightButton `member` held controlData
+    leftHeld = LeftButton `member` held controlData
+    nothingHeld = not (rightHeld `xor` leftHeld)
+
+    oldDirection :: HorizontalDirection
+    oldDirection = direction $ state nikki
+    buttonDirection :: Maybe HorizontalDirection
+    buttonDirection =
+        if nothingHeld then Nothing else
+        if leftHeld then Just HLeft else
+        Just HRight
+    verticalDirection velocity_ = if vectorY velocity_ <= 0 then VUp else VDown
+
+    mContactAngle :: Maybe Angle
+    mContactAngle = jumpAngle $ getContactNormals contacts
+
+    jumpInformation velocity =
+        JumpInformation jumpStartTime_ buttonDirection velocity (verticalDirection velocity)
+
+    jumpStartTime_ :: Maybe Seconds
+    jumpStartTime_ = case action $ state nikki of
+        JumpImpulse t _ _ _ -> Just t
+        Airborne ji -> if aHeld then jumpStartTime ji else Nothing
+        WallSlide ji -> if aHeld then jumpStartTime ji else Nothing
+        x -> Nothing
+
+    angleDirection :: Angle -> Maybe HorizontalDirection
+    angleDirection angle =
+        if abs angle > deg2rad 10 then
+            Just $ if angle > 0 then HRight else HLeft
+          else
+            Nothing
+
+    jumpImpulseDirection angle = fromMaybe oldDirection
+        (buttonDirection <|> angleDirection angle)
 
 -- | a chipmunk angles of 0 points east. We need to use angles that point north.
 toUpAngle :: Vector -> Angle
@@ -382,7 +472,7 @@ fromUpAngle = (subtract (pi / 2)) >>> fromAngle
 
 -- | updates the possible jumping angle from the contacts
 getContactNormals :: Contacts -> [Angle]
-getContactNormals = map (foldAngle . toUpAngle) . nikkiContacts
+getContactNormals = map (foldAngle . toUpAngle . collisionNormal) . nikkiContacts
 
 -- | calculates the angle a possible jump is to be performed in
 jumpAngle :: [Angle] -> Maybe Angle
@@ -397,33 +487,42 @@ jumpAngle angles =
               else
                 Just a
 
+updateStartTime :: Seconds -> State -> Nikki -> Nikki
+updateStartTime now oldState nikki =
+    if sameState oldState (state nikki) then
+        nikki
+      else
+        nikki{startTime = now}
+
+sameState a b =
+    toActionNumber (action a) == toActionNumber (action b)
+    && direction a == direction b
 
 
+-- * Control logic
 
-controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO (Maybe Angle, Nikki)
+setNikkiSurfaceVelocity :: Nikki -> Double -> IO ()
+setNikkiSurfaceVelocity nikki surfaceVelocity =
+    forM_ (feetShapes nikki) $ \ fs ->
+        surfaceVel fs $= Vector surfaceVelocity 0
+
+controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO ()
 controlBody _ _ (False, _) _ nikki = do
-    forM_ (feetShapes nikki) $ \ fs -> surfaceVel fs $= zero
-    return (Nothing, nikki)
-controlBody now contacts (True, cd) NSort{jumpSound}
-    nikki@(Nikki chip@Chipmunk{body} feetShapes jumpStartTime _ _ _ _) = do
-            -- buttons
-        let bothHeld = leftHeld && rightHeld
-            leftHeld = LeftButton `member` held cd
-            rightHeld = RightButton `member` held cd
-            aPushed = Press AButton `elem` pressed cd
-            aHeld = AButton `member` held cd
-            -- if nikki touches anything with feet or paws
-            isAirborne = not (nikkiFeetTouchGround contacts ||
-                            nikkiLeftPawTouchesGround contacts ||
-                            nikkiRightPawTouchesGround contacts)
-        velocity <- get $ velocity body
+    forM_ (feetShapes nikki) $ \ fs ->
+        surfaceVel fs $= zero
+controlBody now contacts (True, cd) nsort nikki =
+    case state nikki of
 
-        -- walking
-        let surfaceVelocity = walking (leftHeld, rightHeld, bothHeld)
-        if not isAirborne then
-            forM_ feetShapes $ \ fs -> surfaceVel fs $= surfaceVelocity
-          else
-            forM_ feetShapes $ \ fs -> surfaceVel fs $= zero
+        State Wait direction -> do
+            setNikkiSurfaceVelocity nikki zero
+            resetForces $ body $ chipmunk nikki
+
+        State Walk direction -> do
+            setNikkiSurfaceVelocity nikki (walking direction)
+            resetForces $ body $ chipmunk nikki
+          where
+            walking HLeft = walkingVelocity
+            walking HRight = - walkingVelocity
 
         -- jumping
         -- =======
@@ -450,45 +549,33 @@ controlBody now contacts (True, cd) NSort{jumpSound}
         -- at the peak of the jump. This function will decide, how high Nikki can
         -- can jump maximally.
         -- (see longJumpAntiGravity)
+        State (JumpImpulse _ contactAngle buttonDirection velocity) direction -> do
+            setNikkiSurfaceVelocity nikki (- vectorX velocity)
+            let verticalImpulse = (- jumpingImpulse)
+                contactNormalHorizontalImpulse =
+                    jumpingImpulse * walljumpHorizontalFactor * (2 * contactAngle / pi)
+                wantedImpulse = Vector contactNormalHorizontalImpulse verticalImpulse -- TODO: is this correct?
+                velocityCorrection =
+                    velocityJumpCorrection (fromUpAngle contactAngle) velocity wantedImpulse
+            modifyApplyImpulse (chipmunk nikki) (wantedImpulse +~ velocityCorrection)
+            let jumpingAntiGravity = longJumpAntiGravity 0
+                airborneForce = airborne buttonDirection velocity
+            modifyApplyOnlyForce (chipmunk nikki) (Vector airborneForce jumpingAntiGravity)
 
-        -- initial impulse
-        let contactNormal = jumpAngle $ getContactNormals contacts
-        doesJumpStartNow <- case (contactNormal, aPushed) of 
-            (Just contactAngle, True) -> do
-                let verticalImpulse = (- jumpingImpulse)
-                    contactNormalHorizontalImpulse =
-                        jumpingImpulse * walljumpHorizontalFactor * (2 * contactAngle / pi)
-                    wantedImpulse = Vector contactNormalHorizontalImpulse verticalImpulse
-                    velocityCorrection = velocityJumpCorrection (fromUpAngle contactAngle) velocity wantedImpulse
+        State (Airborne ji) direction -> do
+            setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
+            setJumpForces now nikki ji
 
-                modifyApplyImpulse chip (wantedImpulse +~ velocityCorrection)
-                return True
-            (Nothing, _) -> return False
-            (_, False) -> return False
+        State (WallSlide ji) direction -> do
+            setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
+            setJumpForces now nikki ji
 
-        let isLongJump = aHeld
-            timeInJump = if doesJumpStartNow then 0 else now - jumpStartTime
-            jumpingAntiGravity = if isLongJump then longJumpAntiGravity timeInJump else 0
+        State Grip direction -> do
+            setNikkiSurfaceVelocity nikki 0
+            return ()
 
-        modifyApplyOnlyForce chip (Vector 0 jumpingAntiGravity)
+        x -> es "controlBody" x
 
-        -- horizontal moving while airborne
-        airborneForce <- airborne rightHeld leftHeld bothHeld isAirborne velocity
-
-        -- Apply airborne forces (for longer jumps and vertical movement)
---         applyNikkiForceViaVelocity chip airborneForce
-        modifyApplyForce chip airborneForce
-
-        -- jumping sound
---         when doesJumpStartNow $ triggerPolySound jumpSound
-
---         debugChipGraph now body
---         fakeControl cd nikki
-
-        return $ tuple contactNormal $ if doesJumpStartNow then
-            nikki{jumpStartTime = now}
-          else
-            nikki
 
 fakeControl cd nikki = do
     when (D `elem` extractPressedKeys (pressed cd)) $
@@ -513,23 +600,15 @@ fakeControl cd nikki = do
         inner (Press (KeyboardButton k _)) = Just k
         inner _ = Nothing
 
-applyNikkiForceViaVelocity :: Chipmunk -> Vector -> IO ()
-applyNikkiForceViaVelocity chip f =
-    modifyVelocity chip (\ v -> v +~ scale f (stepQuantum / nikkiMass))
 
+setJumpForces :: Seconds -> Nikki -> JumpInformation -> IO ()
+setJumpForces now nikki ji = do
+    let jumpingAntiGravity = case jumpStartTime ji of
+            Nothing -> 0
+            Just jumpStartTime_ -> longJumpAntiGravity (now - jumpStartTime_)
+        airborneForce = airborne (jumpButtonDirection ji) (jumpNikkiVelocity ji)
+    modifyApplyOnlyForce (chipmunk nikki) (Vector airborneForce jumpingAntiGravity)
 
--- | calculates the surface velocity for walking
-walking (leftHeld, rightHeld, bothHeld) = Vector xSurfaceVelocity 0
-  where
-    xSurfaceVelocity =
-        if bothHeld then
-            0
-          else if leftHeld then
-            walkingVelocity
-          else if rightHeld then
-            - walkingVelocity
-          else
-            0
 
 -- | calculates the force of the initial jumping impulse
 jumpingImpulse :: Double
@@ -629,80 +708,26 @@ longJumpAntiGravity t = negate $
     t_s = (sqrt(16*g*h+c_vi^2)-c_vi)/(2*g)
 
 
-airborne :: Bool -> Bool -> Bool -> Bool -> Vector -> IO Vector
-airborne rightHeld leftHeld bothHeld isAirborne velocity = do
-    return force
-  where
-    -- force applied to change horizontal movement while airborne
-    force =
-        if not isAirborne || bothHeld then
-            zero
-          else if rightHeld then
-            if xVel < walkingVelocity then Vector airForce 0 else zero
-          else if leftHeld then
-            if xVel > (- walkingVelocity) then Vector (- airForce) 0 else zero
-          else
-            zero
-    xVel = vectorX velocity
+airborne :: Maybe HorizontalDirection -> Velocity -> Double
+airborne (Just HLeft) velocity =
+    if vectorX velocity > (- walkingVelocity) then (- airForce) else 0
+airborne (Just HRight) velocity =
+    if vectorX velocity < walkingVelocity then airForce else 0
+airborne Nothing _ = 0
 
 airForce = (gravity * nikkiMass * airBorneForceFactor) <<? "airborne"
 
 
 
-updateRenderState :: Contacts -> (Bool, ControlData)
-    -> (Maybe Angle, Nikki) -> Nikki
-updateRenderState _ (False, _) (_, nikki) =
-    nikki{renderState = UsingTerminal $ direction $ renderState nikki}
-updateRenderState contacts (True, controlData) (contactNormal, nikki) =
-    nikki{renderState = state}
-  where
-    state =
-      if nikkiLeftPawTouchesGround contacts then
-            Grip HLeft
-        else if nikkiRightPawTouchesGround contacts then
-            Grip HRight
-        else if nikkiFeetTouchGround contacts then
-        -- nikki is on the ground
-            if nothingHeld then
-                Wait oldDirection
-              else
-                Walk buttonDirection
-          else
-        -- nikki is in the air
-            Jump buttonDirection
-
-    aPushed = Press AButton `elem` pressed controlData
-    rightHeld = RightButton `member` held controlData
-    leftHeld = LeftButton `member` held controlData
-    nothingHeld = not (rightHeld `xor` leftHeld)
-
-    oldDirection = direction $ renderState nikki
-    buttonDirection =
-        if aPushed then angleDirection else
-        if nothingHeld then oldDirection else
-        if leftHeld then HLeft else
-        HRight
-
-    angleDirection =
-        case contactNormal of
-            Just angle | abs angle > deg2rad 10
-                -> if angle > 0 then HRight else HLeft
-            _ -> oldDirection
-
-
-updateStartTime :: Seconds -> RenderState -> Nikki -> Nikki
-updateStartTime now oldRenderState nikki =
-    if oldRenderState == renderState nikki then
-        nikki
-      else
-        nikki{startTime = now}
 
 pickPixmap :: Seconds -> NSort -> Nikki -> Pixmap
-pickPixmap now sort nikki = 
-    pickAnimationFrameNonLooping
-        (pixmaps sort ! renderState nikki)
-        (frameTimesMap ! renderState nikki)
-        (now - startTime nikki)
+pickPixmap now sort nikki =
+    let (name, frameTimes_) = frameTimes $ state nikki
+        m = lookup name (pixmaps sort)
+    in case m of
+        Just pixmapList ->
+            pickAnimationFrameNonLooping pixmapList frameTimes_ (now - startTime nikki)
+        Nothing -> es "problem finding pixmaps in Nikki: " name
 
 
 
@@ -710,15 +735,28 @@ pickPixmap now sort nikki =
 
 debugNikki :: Contacts -> Nikki -> IO Nikki
 debugNikki contacts nikki = do
-    return nikki{debugCmd = worker $ getContactNormals contacts}
+    return nikki{debugCmd = worker contacts}
   where
-    worker angles ptr = do
+    worker contacts ptr offset = do
         resetMatrix ptr
-        setPenColor ptr 255 0 255 255 3
-        translate ptr (Position 100 100)
-        drawCircle ptr zero 10
-        forM_ angles (drawAngle ptr)
+        translate ptr offset
+        setPenColor ptr 0 255 255 255 1
+        nikkiPos <- getPosition $ chipmunk nikki
+--         print $ map (-~ nikkiPos) (concatMap snd $ nikkiContacts contacts)
+        let pawContacts = Set.unions $ map (paws nikkiPos) $ (nikkiContacts contacts)
+        mapM_ (inner ptr) $ Set.toList pawContacts
+    inner ptr (normal, Vector x y) = do
+        when (normal == zero) $
+            print $ Vector x y
+        let pos = Position x y
+            Vector xn yn = scale (normalize normal) 100
+        drawCircle ptr pos 3
+        drawLine ptr pos (pos +~ Position xn yn)
 
-    drawAngle ptr angle = do
-        let Vector x y = fromUpAngle angle
-        drawLine ptr zero (fmap (* 60) (Position x y))
+    paws :: CM.Position -> Collision -> Set.Set (Vector, Vector)
+    paws nikkiPos (Collision normal points) = Set.fromList $ map (\ p -> (normal, p)) $ filter (pawsH normal . (-~ nikkiPos)) points
+    pawsH ((toUpAngle >>> foldAngle) -> angle) v@(Vector x y) =
+        (y =~= 19) && (angle > (- angleLimit)) && (angle < angleLimit)
+    angleLimit = deg2rad 45
+    a =~= b = abs (a - b) < eps
+    eps = 1

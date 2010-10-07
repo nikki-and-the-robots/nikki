@@ -50,7 +50,7 @@ data Platform
         chipmunk :: Chipmunk,
         mode :: Mode,
         lastNode :: Vector,
-        debugCmds :: Ptr QPainter -> IO ()
+        debugCmds :: Ptr QPainter -> Offset Double -> IO ()
       }
   deriving (Show, Typeable)
 
@@ -83,7 +83,7 @@ instance Sort PSort Platform where
 
         let (a : r) = (cycle [pos, pos +~ down, pos +~ right +~ down, pos +~ right])
 --         let path = Still pos
-        return $ Platform (size sort) chip (Path r) a (const $ return ())
+        return $ Platform (size sort) chip (Path r) a (const $ const $ return ())
 
     chipmunks p = [chipmunk p]
 
@@ -101,7 +101,7 @@ instance Sort PSort Platform where
         (position, rad) <- getRenderPosition $ chipmunk platform
         renderPixmap ptr offset position (Just rad) Nothing (pix sort)
 
-        debugCmds platform ptr
+        debugCmds platform ptr offset
 
 down = Vector 0 200
 right = Vector 400 0
@@ -235,8 +235,8 @@ viscosity =
 
 
 
-deb :: Vector -> Ptr QPainter -> IO ()
-deb v ptr = do
+deb :: Vector -> Ptr QPainter -> Offset Double -> IO ()
+deb v ptr offset = do
     let start = Position 200 400
         drawVector (Vector x y) r g b = do
             setPenColor ptr r g b 255 3

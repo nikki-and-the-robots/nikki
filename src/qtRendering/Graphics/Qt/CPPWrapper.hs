@@ -155,9 +155,6 @@ setKeyCallbackAppWidget ptr cmd =
 
 data QPainter
 
-instance Show (Ptr QPainter -> IO ()) where
-    show _ = "<Ptr QPainter -> IO ()>"
-
 foreign import ccall "eraseRect" cppEraseRect ::
     Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 

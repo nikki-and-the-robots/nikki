@@ -114,7 +114,7 @@ saveLevel app EditorScene{levelPath = (Just path), editorObjects} = AppState $ d
     return $ mainMenu app
 saveLevel app scene@EditorScene{levelPath = Nothing, editorObjects} = AppState $ do
     name <- askString app "level name:"
-    let path = name <|> "nl"
+    let path = name <..> "nl"
     exists <- doesFileExist path
     if exists then
         return $ fileExists app this path editorObjects

@@ -17,6 +17,7 @@ import Data.Map (Map, fromList, member, (!), findWithDefault)
 import qualified Data.Foldable
 import qualified Data.Traversable
 import Data.IORef
+import qualified Data.Set as Set
 
 import Text.Printf
 
@@ -261,8 +262,9 @@ mergePairs f [] = []
 
 -- * String stuff
 
-(<|>) :: FilePath -> String -> FilePath
-path <|> ext =
+-- | adds an extension, if the path does not already have the same extension
+(<..>) :: FilePath -> String -> FilePath
+path <..> ext =
     if dotExt `isSuffixOf` path then path else path <.> ext
   where
     dotExt = if Just '.' == headMay ext then ext else '.' : ext
@@ -434,6 +436,13 @@ instance PP a => PP [a] where
         clipString s = if length s < limit then s else take (limit - length dots) s ++ dots
         limit = 20
         dots = "..."
+
+instance PP a => PP (Set.Set a) where
+    pp set = "{" ++ (tail (init (pp (Set.toList set)))) ++ "}"
+
+instance PP a => PP (Maybe a) where
+    pp Nothing = "Nothing"
+    pp (Just x) = "Just (" ++ pp x ++ ")"
 
 
 instance PP Double where

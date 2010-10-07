@@ -6,6 +6,7 @@ module Physics.Chipmunk.ContactRef (
     setMyCollisionType,
 
     ContactRef,
+    Collision(..),
     Callback(..),
     Watcher(..),
     Permeability(..),
@@ -21,7 +22,7 @@ import Data.StateVar
 
 import Control.Monad.IO.Class
 
-import Physics.Hipmunk hiding (Callback)
+import Physics.Hipmunk as H hiding (Callback)
 import Physics.Hipmunk.Callbacks ()
 
 
@@ -54,7 +55,14 @@ data Watcher collisionType x
     | FullWatch
         collisionType
         collisionType
-        (Shape -> Shape -> Vector -> x -> x)
+        (Shape -> Shape -> Collision -> x -> x)
+
+data Collision
+    = Collision {
+        collisionNormal :: Vector,
+        collisionPoints :: [Position]
+      }
+  deriving Show
 
 data Permeability = Permeable | Solid
 
@@ -82,7 +90,8 @@ initContactRef space empty callbacks = do
         addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
             (shapeA, shapeB) <- shapes
             normal_ <- normal
-            liftIO $ modifyIORef ref (f shapeA shapeB normal_)
+            points_ <- points
+            liftIO $ modifyIORef ref (f shapeA shapeB (Collision normal_ points_))
             return (isSolid permeability)
 
 mkPreSolve x = Handler Nothing (Just x) Nothing Nothing

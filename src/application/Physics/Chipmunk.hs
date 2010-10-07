@@ -75,6 +75,7 @@ module Physics.Chipmunk (
     applyImpulse,
     applyForce,
     applyOnlyForce,
+    resetForces,
 
     surfaceVel,
 
@@ -127,7 +128,7 @@ initSpace gravity = do
     -- global constants
 
     -- Number of frames that contact information should persist.
-    contactPersistence $= 3 -- default: 3 (number of frames)
+    contactPersistence $= 1 -- default: 3 (number of frames)
 
     -- Amount of allowed penetration. Used to reduce vibrating contacts.
     collisionSlop $= 0.1 -- default: 0.1
