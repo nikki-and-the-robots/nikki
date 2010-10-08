@@ -52,7 +52,7 @@ data State = State {
     action :: Action,
     direction :: HorizontalDirection -- | the direction nikki faces
   }
-    deriving (Show, Eq, Ord)
+    deriving (Show)
 
 instance Initial State where
     initial = State Wait HLeft
@@ -68,7 +68,7 @@ data Action
     | Grip -- when Nikki uses the paws to hold on to something
     | EndGripImpulse -- state for one frame (when grip state is ended)
     | Touchdown
-  deriving (Eq, Ord, Show)
+  deriving (Show)
 
 toActionNumber Wait = 0
 toActionNumber Walk = 1
@@ -87,7 +87,7 @@ data JumpInformation =
         jumpNikkiVelocity :: Velocity,
         jumpVerticalDirection :: VerticalDirection
       }
-  deriving (Eq, Ord, Show)
+  deriving (Show)
 
 
 -- | a chipmunk angles of 0 points east. We need to use angles that point north.
