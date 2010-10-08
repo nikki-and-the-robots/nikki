@@ -51,7 +51,7 @@ Executable            nikki
         -fno-warn-missing-signatures
 --        -fwarn-unused-do-bind -- does not work with ghc 6.10
 
-    hs-source-dirs: ., ../common, ../qtRendering
+    hs-source-dirs: ., ../qtRendering
     build-depends:
           base >= 4 && < 5
         , haskell98

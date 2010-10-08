@@ -5,10 +5,8 @@ module Build where
 
 import Data.List
 
+import System
 import System.Directory
-
-
-import Utils
 
 
 data Target
@@ -44,7 +42,7 @@ makeTarget t = do
     mapM_ execute deps
     execute t
 
-collectDependencies t = nubBy (withView name (==)) $ allDeps t
+collectDependencies t = nubBy sameName $ allDeps t
   where
     allDeps Target{dependencies} = dependencies ++ concatMap allDeps dependencies
 
@@ -53,6 +51,7 @@ execute t = do
     command t
     putStrLn ("\tTarget: " ++ name t ++ " done.")
 
+sameName a b = name a == name b
 
 
 -- * specific Types
@@ -62,3 +61,26 @@ data CabalOptions = CabalOptions {
     ghcOptions :: String
   }
     deriving Show
+
+
+-- * Utils
+
+-- | changes the working directory temporarily.
+withCurrentDirectory :: FilePath -> IO () -> IO ()
+withCurrentDirectory path cmd = do
+    putStrLn ("Entering directory " ++ path)
+    oldWorkingDirectory <- getCurrentDirectory
+    setCurrentDirectory path
+    x <- cmd
+    setCurrentDirectory oldWorkingDirectory
+    putStrLn ("Leaving directory " ++ path)
+    return x
+
+-- | executes a unix command on the shell and exits if it does not succeed.
+trySystem :: String -> IO ()
+trySystem cmd = do
+    putStrLn ("Executing \"" ++ cmd ++ "\" ...")
+    exitcode <- system cmd
+    case exitcode of
+        ExitSuccess -> return ()
+        ExitFailure n -> exitWith $ ExitFailure n

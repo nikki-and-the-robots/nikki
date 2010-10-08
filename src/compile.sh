@@ -34,7 +34,7 @@ else
     cabal configure --ghc-options="$GHC_OPTIONS"
 fi
 cabal build
-# ghc --make -i../common Main.hs -o build $GHC_OPTIONS
+# ghc --make Main.hs -o build $GHC_OPTIONS
 cd ..
 
 BUILD_COMMAND="buildSystem/dist/build/build/build build_application"

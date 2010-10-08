@@ -7,9 +7,6 @@ import Control.Monad
 import System.Directory
 import System.FilePath
 
-
-import Utils
-
 import Build
 
 
@@ -42,10 +39,7 @@ needsConfiguring = do
         return True
       else do
         files <- getDirectoryContents "."
-        let cabalFile =
-                files
-                |> filter (\ f -> ".cabal" == takeExtension f)
-                |> head
+        let cabalFile = head $ filter (\ f -> ".cabal" == takeExtension f) files
         cabalMT <- getModificationTime cabalFile
         distMT <- getModificationTime "dist/setup-config"
         return (distMT < cabalMT)

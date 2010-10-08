@@ -8,8 +8,6 @@ import System.FilePath
 import System.Directory
 import System.Info
 
-import Utils
-
 import Build
 
 
