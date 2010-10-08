@@ -60,8 +60,14 @@ walljumpHorizontalFactor = 1
 -- to avoid wall jumps that point downwards.
 correctionSteepness = 1.001
 
+-- | strength of the impulse applied to nikki,
+-- when dropping of a tile nikki hangs on with the paws.
+gripImpulse :: Double
+gripImpulse = 500
 
--- animation times 
+
+
+-- * animation times
 
 frameTimes :: State -> (String, [(Int, Seconds)])
 frameTimes action = case action of
@@ -77,6 +83,8 @@ frameTimes action = case action of
     State WallSlide{} HRight -> ("wallslide_right", airborne)
     State Grip HLeft -> ("grip_left", singleFrame)
     State Grip HRight -> ("grip_right", singleFrame)
+    State EndGripImpulse HLeft -> ("grip_left", singleFrame)
+    State EndGripImpulse HRight -> ("grip_right", singleFrame)
 
     x -> es "frameTimes" x
   where

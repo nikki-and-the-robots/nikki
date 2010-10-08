@@ -46,22 +46,27 @@ updateState now contacts (True, controlData) nikki = do
             (False, Just contactAngle) ->
                 case grips nikkiPos contacts of
                     -- nikki grabs something
+                    Just HLeft | rightPushed -> State EndGripImpulse HLeft
+                    Just HRight | leftPushed -> State EndGripImpulse HRight
                     Just gripDirection -> State Grip gripDirection
                     -- nikki grabs nothing
                     Nothing ->
                         if nikkiFeetTouchGround contacts then
                             if nothingHeld then
-                                State Wait oldDirection
+                                State Wait newDirection
                               else
-                                State Walk (fromMaybe oldDirection buttonDirection)
+                                State Walk newDirection
                           else
-                            let direction = fromMaybe oldDirection buttonDirection
-                            in State (WallSlide (jumpInformation velocity_) (clouds nikkiPos direction))
-                                    direction
+                            State (WallSlide (jumpInformation velocity_)
+                                (clouds nikkiPos newDirection))
+                                newDirection
             (_, Nothing) ->
-                State (Airborne (jumpInformation velocity_))
-                    (fromMaybe oldDirection buttonDirection)
+                State (Airborne (jumpInformation velocity_)) newDirection
 
+    newDirection :: HorizontalDirection
+    newDirection = case state nikki of
+        State Grip direction -> swapHorizontalDirection direction
+        _ -> fromMaybe oldDirection buttonDirection
     grips :: CM.Position -> Contacts -> Maybe HorizontalDirection
     grips nikkiPos contacts = case filter (isGripCollision nikkiPos) (nikkiContacts contacts) of
         [] -> Nothing
@@ -79,6 +84,8 @@ updateState now contacts (True, controlData) nikki = do
 
     aPushed = Press AButton `elem` pressed controlData
     aHeld = AButton `member` held controlData
+    rightPushed = Press RightButton `elem` pressed controlData
+    leftPushed = Press LeftButton `elem` pressed controlData
     rightHeld = RightButton `member` held controlData
     leftHeld = LeftButton `member` held controlData
     nothingHeld = not (rightHeld `xor` leftHeld)

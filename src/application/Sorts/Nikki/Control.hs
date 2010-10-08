@@ -96,7 +96,15 @@ controlBody now contacts (True, cd) nsort nikki =
 
         State Grip direction -> do
             setNikkiSurfaceVelocity nikki 0
-            return ()
+            resetForces $ body $ chipmunk nikki
+
+        State EndGripImpulse direction -> do
+            setNikkiSurfaceVelocity nikki 0
+            modifyApplyImpulse (chipmunk nikki) (Vector (mkGripImpulse direction) 0)
+            resetForces $ body $ chipmunk nikki
+          where
+            mkGripImpulse HLeft = gripImpulse
+            mkGripImpulse HRight = - gripImpulse
 
         x -> es "controlBody" x
 
