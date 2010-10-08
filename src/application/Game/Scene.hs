@@ -205,7 +205,7 @@ renderScene ptr scene@Scene{spaceTime = now, cameraState} = do
 
     resetMatrix ptr
     windowSize <- sizeQPainter ptr
-    eraseRect ptr zero windowSize (QtColor 0 0 0 255)
+    eraseRect ptr zero windowSize (QtColor 32 64 128 255)
 
     size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
     let center = getCameraPosition cameraState
