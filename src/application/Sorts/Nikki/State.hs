@@ -13,6 +13,8 @@ import Data.Maybe
 import Control.Arrow
 import Control.Applicative ((<|>))
 
+import Graphics.Qt as Qt hiding (rotate, scale)
+
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
 
@@ -24,6 +26,7 @@ import Base.Directions
 import Base.Types
 
 import Sorts.Nikki.Types
+import Sorts.Nikki.Configuration
 
 
 updateState :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
@@ -52,8 +55,9 @@ updateState now contacts (True, controlData) nikki = do
                               else
                                 State Walk (fromMaybe oldDirection buttonDirection)
                           else
-                            State (WallSlide (jumpInformation velocity_))
-                                (fromMaybe oldDirection buttonDirection)
+                            let direction = fromMaybe oldDirection buttonDirection
+                            in State (WallSlide (jumpInformation velocity_) (clouds nikkiPos direction))
+                                    direction
             (_, Nothing) ->
                 State (Airborne (jumpInformation velocity_))
                     (fromMaybe oldDirection buttonDirection)
@@ -98,7 +102,7 @@ updateState now contacts (True, controlData) nikki = do
     jumpStartTime_ = case action $ state nikki of
         JumpImpulse t _ _ _ -> Just t
         Airborne ji -> if aHeld then jumpStartTime ji else Nothing
-        WallSlide ji -> if aHeld then jumpStartTime ji else Nothing
+        WallSlide ji _ -> if aHeld then jumpStartTime ji else Nothing
         x -> Nothing
 
     angleDirection :: Angle -> Maybe HorizontalDirection
@@ -110,6 +114,20 @@ updateState now contacts (True, controlData) nikki = do
 
     jumpImpulseDirection angle = fromMaybe oldDirection
         (buttonDirection <|> angleDirection angle)
+
+    clouds (Vector x y) direction = case action $ state nikki of
+        WallSlide _ (a : r) ->
+            if now - creationTime a > cloudCreationTime then
+                newCloud direction : filtered
+              else
+                filtered
+          where
+            filtered = filter (\ c -> now - creationTime c < 4 * cloudCreationTime) (a : r)
+        x -> [newCloud direction]
+      where
+        newCloud HLeft = Cloud now (Position x y +~ Position (- fromUber (13 / 2)) (fromUber (24 / 2)) +~ cloudRenderCorrection)
+        newCloud HRight = Cloud now (Position x y +~ Position (fromUber (13 / 2)) (fromUber (24 / 2)) +~ cloudRenderCorrection)
+        cloudRenderCorrection = Position (- fromUber (5 / 2)) (- fromUber (5 / 2))
 
 
 -- | updates the possible jumping angle from the contacts

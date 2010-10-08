@@ -30,3 +30,12 @@ pickAnimationFrameNonLooping list ((i, secs) : r) now =
         pickAnimationFrameNonLooping list r (now - secs)
       else
         cycle list !! i
+
+-- | picks an animation frame from an animation that ends. Will return Nothing after animation ends
+pickLimitedAnimationFrame :: [a] -> [(Int, Seconds)] -> Seconds -> Maybe a
+pickLimitedAnimationFrame list ((i, secs) : r) now =
+    if now >= secs then
+        pickLimitedAnimationFrame list r (now - secs)
+      else
+        Just (cycle list !! i)
+pickLimitedAnimationFrame _ [] _ = Nothing

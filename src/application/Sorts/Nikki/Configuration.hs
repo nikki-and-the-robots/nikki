@@ -94,6 +94,12 @@ frameTimes action = case action of
     singleFrame = repeat (0, 10)
 
 
+cloudFrameTimes :: [(Int, Seconds)]
+cloudFrameTimes = zip [0 .. 3] (repeat cloudCreationTime)
+
+cloudCreationTime = 0.1
+
+
 statePixmaps :: Map String Int
 statePixmaps = fromList [
     ("wait_left", 2),
@@ -107,5 +113,6 @@ statePixmaps = fromList [
     ("grip_left", 0),
     ("grip_right", 0),
     ("wallslide_left", 0),
-    ("wallslide_right", 0)
+    ("wallslide_right", 0),
+    ("dust", 3)
   ]

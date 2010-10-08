@@ -63,7 +63,7 @@ data Action
         -- state for one frame (when a jump starts)
     | JumpImpulse Seconds Angle (Maybe HorizontalDirection) Velocity
     | Airborne JumpInformation
-    | WallSlide JumpInformation
+    | WallSlide JumpInformation [Cloud]
     | UsingTerminal
     | Grip -- when Nikki uses the paws to hold on to something
     | EndGripImpulse -- state for one frame (when grip state is ended)
@@ -86,6 +86,13 @@ data JumpInformation =
         jumpButtonDirection :: (Maybe HorizontalDirection),
         jumpNikkiVelocity :: Velocity,
         jumpVerticalDirection :: VerticalDirection
+      }
+  deriving (Show)
+
+data Cloud
+    = Cloud {
+        creationTime :: Seconds,
+        cloudPosition :: Qt.Position Double
       }
   deriving (Show)
 

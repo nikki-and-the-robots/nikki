@@ -90,7 +90,7 @@ controlBody now contacts (True, cd) nsort nikki =
             setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
             setJumpForces now nikki ji
 
-        State (WallSlide ji) direction -> do
+        State (WallSlide ji _) direction -> do
             setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
             setJumpForces now nikki ji
 
