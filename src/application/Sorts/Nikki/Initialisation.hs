@@ -80,11 +80,11 @@ mkPolys (Size w h) =
     legLeft = left + fromUber 7
     legRight = legLeft + fromUber 5
 
-    legsPoly = Polygon [
-        Vector (legLeft + eps) headLow,
+    legsPoly = Polygon [ -- trapeze to avoid touching of walls during grip
+        Vector (legLeft - eps) headLow,
         Vector (legLeft + eps) (low - pawRadius),
         Vector (legRight - eps) (low - pawRadius),
-        Vector (legRight - eps) headLow
+        Vector (legRight + eps) headLow
       ]
     betweenFeet = mkRectFromPositions
         (Vector (legLeft + pawRadius) (low - pawRadius))
