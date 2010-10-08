@@ -92,8 +92,7 @@ gameLoop app sceneMVar = do
   where
     loop oldTime = do
         timer_ <- gets timer
-        startTime <- liftIO $ elapsed timer_
---         liftIO $ print (startTime - oldTime)
+        startTime <- getTime
         -- input events
         controlData <- liftIO $ pollAppEvents $ keyPoller app
 
@@ -130,23 +129,23 @@ gameLoop app sceneMVar = do
 -- | Waits till the real world catches up with the simulation.
 -- Since 'threadDelay' seems to be far to inaccurate, we have a busy wait :(
 -- TODO
-waitPhysics :: Int -> AppMonad ()
-waitPhysics startTime = gets timer >>= \ timer_ -> liftIO $ do
+waitPhysics :: Double -> AppMonad ()
+waitPhysics startTime = do
     let loop n = do
-            now <- elapsed timer_
-            if (now - startTime < round (stepQuantum * 1000)) then
+            now <- getTime
+            if (now - startTime < (stepQuantum * 1000)) then
                 loop (n + 1)
               else
                 return n
     n <- loop 0
     tickBusyWaitCounter n
 
-
+timeFactor = 1.0
 
 
 -- | returns the time passed since program start
-getSecs :: AppMonad Double
-getSecs = do
+getTime :: AppMonad Double
+getTime = do
     qtime <- gets timer
-    time <- liftIO $ elapsed qtime
-    return (fromIntegral time / 10 ^ 3)
+    t <- liftIO $ elapsed qtime
+    return (fromIntegral t * timeFactor)

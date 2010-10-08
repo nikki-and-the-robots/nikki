@@ -7,15 +7,17 @@ module Base.PhysicsProfiling (tickBusyWaitCounter) where
 import Data.IORef
 import Data.Initial
 
+import Control.Monad.Trans
+
 import System.IO.Unsafe
 
 import Base.Configuration
 
 
 -- | tell the profiler how many busy wait cycles were used
-tickBusyWaitCounter :: Int -> IO ()
+tickBusyWaitCounter :: MonadIO m => Int -> m ()
 tickBusyWaitCounter _ | not (profiling development) = return ()
-tickBusyWaitCounter (fromIntegral -> waited :: Double) = do
+tickBusyWaitCounter (fromIntegral -> waited :: Double) = liftIO $ do
     accu <- readIORef busyWaitCounter
     let zero = if waited == 0 then 1 else 0
         accu' = case accu of
