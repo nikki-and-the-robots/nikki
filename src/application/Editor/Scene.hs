@@ -20,7 +20,6 @@ import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable (Index, (>:), modifyByIndex, deleteByIndex)
 import Data.Abelian
-import Data.Initial
 
 import Control.Monad.State
 

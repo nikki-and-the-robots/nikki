@@ -5,7 +5,6 @@ module Top.Initialisation where
 import Data.Indexable as I
 import Data.Initial
 import Data.SelectTree
-import Data.List as List
 
 import Control.Exception
 

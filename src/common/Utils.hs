@@ -11,7 +11,6 @@ module Utils (
 
 import Safe
 
-import Data.Char
 import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault)
 import qualified Data.Foldable

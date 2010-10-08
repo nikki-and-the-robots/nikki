@@ -6,19 +6,14 @@ module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass, walkingVeloc
 
 import Prelude hiding (lookup)
 
-import Data.List (sortBy)
 import Data.Map (Map, fromList, toList, (!), lookup)
-import Data.Set (member)
+import qualified Data.Set as Set
 import Data.Abelian
 import Data.Generics
 import Data.Initial
-import Data.Array.Storable
-import Data.Maybe
-import qualified Data.Set as Set
 
 import Control.Monad
 import Control.Arrow
-import Control.Applicative ((<|>))
 
 import System.FilePath
 
@@ -33,8 +28,6 @@ import Paths
 import Utils
 
 import Base.Constants
-import Base.Events
-import Base.Directions
 import Base.Animation
 import Base.Pixmap
 import Base.Types

@@ -6,11 +6,8 @@ module Graphics.Qt.Events (
     modifyTextField,
   ) where
 
+
 import Data.Map
-
-import Control.Concurrent.Chan
-
-import Foreign.Ptr
 
 import Graphics.Qt.Types
 

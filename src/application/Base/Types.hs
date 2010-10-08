@@ -9,7 +9,6 @@ module Base.Types where
 import Data.Set
 import Data.Indexable
 import Data.Abelian
-import Data.Array.Storable
 import Data.SelectTree
 import Data.Typeable
 

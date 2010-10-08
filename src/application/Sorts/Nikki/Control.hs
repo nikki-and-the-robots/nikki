@@ -4,40 +4,22 @@ module Sorts.Nikki.Control where
 
 import Prelude hiding (lookup)
 
-import Data.List (sortBy)
-import Data.Map (Map, fromList, toList, (!), lookup)
-import Data.Set (member)
 import Data.Abelian
-import Data.Generics
-import Data.Initial
-import Data.Array.Storable
 import Data.Maybe
-import qualified Data.Set as Set
 
 import Control.Monad
 import Control.Arrow
-import Control.Applicative ((<|>))
-
-import System.FilePath
 
 import Graphics.Qt as Qt hiding (rotate, scale)
 
-import Sound.SFML
-
-import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
 
-import Paths
 import Utils
 
 import Base.Constants
 import Base.Events
 import Base.Directions
-import Base.Animation
-import Base.Pixmap
 import Base.Types
-
-import Object
 
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration

@@ -17,7 +17,6 @@ module Physics.Chipmunk.ContactRef (
 
 
 import Data.IORef
-import Data.Array.Storable
 import Data.StateVar
 
 import Control.Monad.IO.Class

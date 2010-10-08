@@ -10,7 +10,6 @@ module Object.Contacts (
 
 
 import Data.Set as Set hiding (map)
-import Data.Array.Storable
 import Data.Initial
 
 import Physics.Chipmunk
