@@ -11,6 +11,7 @@ module Game.MainLoop (
 
 
 import Data.IORef
+import Data.Set (member)
 
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
@@ -106,7 +107,9 @@ gameLoop app sceneMVar = do
 
         case mode sc' of
             LevelFinished _ x -> return FinalState
-            _ -> do
+            _ -> if StartButton `member` held controlData then
+                return FinalState -- TODO: should be a menu
+              else do
                 waitPhysics startTime
                 loop startTime
 
