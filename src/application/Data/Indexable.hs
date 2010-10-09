@@ -16,6 +16,7 @@ module Data.Indexable (
     toList,
     (!!!),
     findIndices,
+    filter,
 
     fromList,
     (<:),
@@ -33,7 +34,7 @@ module Data.Indexable (
     optimizeMerge,
   ) where
 
-import Prelude hiding (length)
+import Prelude hiding (length, filter)
 
 import qualified Data.IntMap as Map
 import Data.IntMap ((!))
@@ -119,7 +120,13 @@ Indexable{values} !!! i =
 -- Honours the order of values.
 findIndices :: (a -> Bool) -> Indexable a -> [Index]
 findIndices p (Indexable values keys) =
-    filter (p . (values !) . index) keys
+    List.filter (p . (values !) . index) keys
+
+filter :: (a -> Bool) -> Indexable a -> Indexable a
+filter p ixs = Indexable newValues newIndices
+  where
+    newIndices = findIndices p ixs
+    newValues = Map.fromList $ map (\ i -> (index i, ixs !!! i)) newIndices
 
 -- | generate an unused Index
 -- (newIndex l) `elem` l == False
@@ -151,7 +158,7 @@ fromList list =
 
 deleteByIndex :: Index -> Indexable a -> Indexable a
 deleteByIndex i (Indexable values keys) =
-    Indexable (Map.delete (index i) values) (filter (/= i) keys)
+    Indexable (Map.delete (index i) values) (List.filter (/= i) keys)
 
 modifyByIndex :: (a -> a) -> Index -> Indexable a -> Indexable a
 modifyByIndex f i (Indexable values keys) | i `elem` keys =
@@ -171,12 +178,12 @@ modifyByIndex f i (Indexable values keys) | i `elem` keys =
 -- | puts the indexed element first
 toHead :: Index -> Indexable a -> Indexable a
 toHead i (Indexable values keys) | i `elem` keys =
-    Indexable values (i : filter (/= i) keys)
+    Indexable values (i : List.filter (/= i) keys)
 
 -- | puts the indexed element last
 toLast :: Index -> Indexable a -> Indexable a 
 toLast i (Indexable values keys) | i `elem` keys =
-    Indexable values (filter (/= i) keys +: i)
+    Indexable values (List.filter (/= i) keys +: i)
 
 
 -- | optimizes an Indexable with merging.

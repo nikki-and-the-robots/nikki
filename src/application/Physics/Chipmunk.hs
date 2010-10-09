@@ -43,6 +43,7 @@ module Physics.Chipmunk (
     mkRect,
     mkRectFromPositions,
     module Physics.Chipmunk.ContactRef,
+    module Physics.Chipmunk.OptimizePolygons,
 
     -- re-exports from Physics.Hipmunk
     infinity,
@@ -103,6 +104,7 @@ import qualified Physics.Hipmunk as H
 import Physics.Chipmunk.Types
 import Physics.Chipmunk.DebugGrid
 import Physics.Chipmunk.ContactRef
+import Physics.Chipmunk.OptimizePolygons
 
 
 

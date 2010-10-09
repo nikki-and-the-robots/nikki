@@ -108,10 +108,6 @@ initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
 editorObject2Object :: Maybe Space -> EditorObject Sort_ -> IO Object_
 editorObject2Object mspace (EditorObject sort pos state) =
     initialize sort mspace pos (fmap oemState state)
-editorObject2Object (Just space) (MergedTilesEditorObject merged) =
-    Sorts.Tiles.initializeMerged space merged
-
-
 
 mkScene :: Space -> Grounds Object_ -> IO (Scene Object_)
 mkScene space objects = do
@@ -123,7 +119,3 @@ mkScene space objects = do
 groundsOptimizeChipmunks :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsOptimizeChipmunks =
     modifyMainLayer optimizeEditorObjects
-
-
-
-

@@ -207,10 +207,10 @@ data EditorObject sort
         editorPosition :: EditorPosition,
         editorOEMState :: Maybe (OEMState sort)
       }
-    | MergedTilesEditorObject {
-        editorMergedObjects :: [EditorObject sort]
-      }
   deriving Show
+
+instance Functor EditorObject where
+    fmap f (EditorObject sort pos Nothing) = EditorObject (f sort) pos Nothing
 
 modifyEditorPosition :: (EditorPosition -> EditorPosition)
     -> EditorObject s -> EditorObject s
