@@ -34,7 +34,7 @@ renderShapeType :: Ptr QPainter -> ShapeDescription -> IO ()
 renderShapeType ptr ShapeDescription{shapeType, shapeOffset} =
     case (shapeType, shapeOffset) of
         (Polygon{vertices}, Vector 0 0) ->
-            mapM_ (uncurry (renderVectorLine ptr)) (adjacentCyclic vertices)
+            mapM_ (uncurry (renderPolygonLine ptr)) (adjacentCyclic vertices)
         (LineSegment start end thickness, Vector 0 0) ->
             renderVectorLine ptr start end
         (Circle radius, Vector x y) -> do
@@ -42,8 +42,15 @@ renderShapeType ptr ShapeDescription{shapeType, shapeOffset} =
             drawCircle ptr (Position x y) radius
         st -> nm "renderShape" st
 
+renderPolygonLine ptr a b = do
+    renderCorner ptr a
+    renderVectorLine ptr a b
+
+renderCorner ptr (Vector x y) = do
+    setPenColor ptr 255 255 55 255 1
+    drawCircle ptr (Position x y) 3
+
 renderVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
 renderVectorLine ptr (Vector x1 y1) (Vector x2 y2) = do
     setPenColor ptr 255 55 55 255 1
     drawLine ptr (Position x1 y1) (Position x2 y2)
-
