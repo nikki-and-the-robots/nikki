@@ -241,12 +241,16 @@ adjacentCyclic list@(head : _) = inner head list
 
 -- | merges pairs of elements for which the given function returns (Just a).
 -- removes the pair and inserts (the merged) as.
-mergePairs :: (a -> a -> Maybe a) -> [a] -> [a]
-mergePairs f (a : r) =
-    case inner a r of
-        Nothing -> a : mergePairs f r
-        Just r' -> mergePairs f r'
+-- Is idempotent.
+mergePairs :: Eq a => (a -> a -> Maybe a) -> [a] -> [a]
+mergePairs f =
+    fixpoint merge
   where
+    merge (a : r) =
+        case inner a r of
+            Nothing -> a : merge r
+            Just r' -> r'
+    merge [] = []
     inner a (b : r) =
         case f a b of
             Nothing ->
@@ -255,7 +259,26 @@ mergePairs f (a : r) =
                     Just r' -> Just (b : r')
             Just newAs -> Just (newAs : r)
     inner a [] = Nothing
-mergePairs f [] = []
+
+-- | like mergePairs, but only tries to merge adjacent elements (or the first and the last element)
+-- Is idempotent.
+mergeAdjacentCyclicPairs :: Eq a => (a -> a -> Maybe a) -> [a] -> [a]
+mergeAdjacentCyclicPairs f =
+    fixpoint merge
+  where
+    merge = headAndLast . adjacent
+    adjacent (a : b : r) = case f a b of
+        Nothing -> a : adjacent (b : r)
+        Just x -> adjacent (x : r)
+    adjacent [x] = [x]
+    adjacent [] = []
+    headAndLast [] = []
+    headAndLast [a] = [a]
+    headAndLast l = case f (last l) (head l) of
+        Nothing -> l
+        Just x -> x : tail (init l)
+
+
 
 -- * String stuff
 
@@ -401,6 +424,10 @@ pollChannel chan = do
         r <- pollChannel chan
         return (a : r)
 
+fixpoint :: Eq e => (e -> e) -> e -> e
+fixpoint f x = if fx == x then x else fixpoint f fx
+  where
+    fx = f x
 
 
 -- * Pretty Printing

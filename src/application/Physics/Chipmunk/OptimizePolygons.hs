@@ -63,9 +63,10 @@ maybeMergePoly :: [Edge] -> [Edge] -> Maybe [Edge]
 maybeMergePoly a b = case intersectionCandidates a b of
         [] -> Nothing
         -- puts the two polygons together
-        [intersectingEdge] -> if isConvex candidate then Just candidate else Nothing
+        [intersectingEdge] ->
+            if isConvex candidate then Just candidate else Nothing
           where
-            candidate = aBeforeEdge ++ bAfterEdge ++ bBeforeEdge ++ aAfterEdge
+            candidate = removeUnneededCorners (aBeforeEdge ++ bAfterEdge ++ bBeforeEdge ++ aAfterEdge)
             aBeforeEdge = takeWhile (/= intersectingEdge) a
             aAfterEdge = case dropWhile (/= intersectingEdge) a of
                 (_ : tail) -> tail
@@ -73,7 +74,7 @@ maybeMergePoly a b = case intersectionCandidates a b of
             bAfterEdge = case dropWhile (/= swapEdge intersectingEdge) b of
                 (_ : tail) -> tail
                 x -> es "ccc" (intersectingEdge `elem` a, swapEdge intersectingEdge `elem` b)
-        _ -> error "more than one intersecting edge"
+        x -> trace "more than one intersecting edge" Nothing
 
 -- | returns candidates the intersecting Edges where polygons can be merged
 intersectionCandidates :: [Edge] -> [Edge] -> [Edge]
@@ -105,4 +106,11 @@ addWedges = id
 -- * removing unneeded corners of polygons
 
 removeUnneededCorners :: [Edge] -> [Edge]
-removeUnneededCorners = id
+removeUnneededCorners =
+    mergeAdjacentCyclicPairs merge
+  where
+    merge :: Edge -> Edge -> Maybe Edge
+    merge a b = if edgeAngle a == edgeAngle b then
+                    Just $ Edge (from a) (to b)
+                  else
+                    Nothing
