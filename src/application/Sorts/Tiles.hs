@@ -50,7 +50,7 @@ mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do
     pngFile <- getDataFileName (pngDir </> name <.> "png")
     pixmap <- newQPixmap pngFile
-    return $ Sort_ $ TSort name (Pixmap pixmap size offset)
+    return $ Sort_ $ TSort name (Pixmap pixmap size (fmap fromIntegral offset))
 
 data TSort
     = TSort {
@@ -85,7 +85,7 @@ instance Sort TSort Tile where
         resetMatrix ptr
         translate ptr offset
         let pix = tilePixmap sort
-        translate ptr (position +~ fmap fromIntegral (pixmapOffset pix))
+        translate ptr (position +~ pixmapOffset pix)
         drawPixmap ptr zero $ pixmap pix
 
 -- before initializing the scene, all tiles in the physics scene are being merged 
@@ -131,7 +131,7 @@ instance Sort AllTilesSort AllTiles where
         mapM_ draw renderables
       where
         draw (sort, position) = do
-            let pixOffset = position +~ fmap fromIntegral (pixmapOffset (tilePixmap sort))
+            let pixOffset = position +~ pixmapOffset (tilePixmap sort)
             translate ptr pixOffset
             drawPixmap ptr zero $ pixmap $ tilePixmap sort
             translate ptr (negateAbelian pixOffset)

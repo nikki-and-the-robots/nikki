@@ -48,7 +48,7 @@ mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do
     pngFile <- getDataFileName (pngDir </> name <.> "png")
     pixmap <- newQPixmap pngFile
-    return $ Sort_ $ TSort name (Pixmap pixmap size offset)
+    return $ Sort_ $ TSort name (Pixmap pixmap size (fmap fromIntegral offset))
 
 
 data TSort

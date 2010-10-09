@@ -1,3 +1,4 @@
+{-# language ViewPatterns #-}
 
 -- | provides a data type for pixmaps that saves the size and the internal offset (padding)
 -- of the image.
@@ -19,7 +20,7 @@ import Base.Constants
 data Pixmap = Pixmap {
     pixmap :: Ptr QPixmap,
     pixmapSize :: Size Double,
-    pixmapOffset :: Position Int
+    pixmapOffset :: Position Double
   }
     deriving Show
 
@@ -32,7 +33,7 @@ loadPixmap padding path = do
     return $ Pixmap
         pix
         (fmap (fromIntegral . subtract (2 * padding)) size)
-        (Position (- padding) (- padding))
+        (fmap fromIntegral (Position (- padding) (- padding)))
 
 freePixmap :: Pixmap -> IO ()
 freePixmap = pixmap >>> destroyQPixmap
@@ -53,12 +54,12 @@ renderPixmap ptr offset position mAngle Nothing pix = do
     translate ptr position 
     whenMaybe mAngle $ \ angle ->
         rotate ptr (rad2deg angle)
-    translate ptr (fmap fromIntegral (pixmapOffset pix))
+    translate ptr (pixmapOffset pix)
 
     drawPixmap ptr zero (pixmap pix)
 
 
 renderPixmapSimple :: Ptr QPainter -> Pixmap -> IO ()
 renderPixmapSimple ptr pix = do
-    drawPixmap ptr (pixmapOffset pix) (pixmap pix)
+    drawPixmap ptr (fmap round $ pixmapOffset pix) (pixmap pix)
 
