@@ -224,6 +224,10 @@ vector2QtPosition (Vector x y) = Qt.Position x y
 
 -- * missing
 
+-- | folds the angle of a body to (- pi, pi)
+foldAngle :: Double -> Double
+foldAngle = foldToRange (- pi, pi)
+
 rotateVector :: Angle -> Vector -> Vector
 rotateVector angle (Vector a b) =
     Vector a' b'

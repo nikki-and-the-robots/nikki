@@ -198,15 +198,3 @@ normalizeAngle body = do
     a <- foldAngle <$> get (angle body)
     angle body $= a
     return a
-
--- | folds the angle of a body to (- pi, pi)
-foldAngle :: Double -> Double
-foldAngle = foldToRange (- pi, pi)
-
-
-
-
-
-
-
-

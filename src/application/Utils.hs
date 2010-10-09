@@ -225,6 +225,12 @@ wordsBy seps ll = inner [] ll
           else
             inner (a : akk) r
 
+cartesian :: [a] -> [b] -> [(a, b)]
+cartesian a b = do
+    a' <- a
+    b' <- b
+    return (a', b')
+
 adjacentCyclic :: [a] -> [(a, a)]
 adjacentCyclic [] = []
 adjacentCyclic [a] = []
@@ -233,31 +239,23 @@ adjacentCyclic list@(head : _) = inner head list
     inner first (a : b : r) = (a, b) : inner first (b : r)
     inner first [last] = [(last, first)]
 
--- | removes pairs of elements (both elements)
-removePairs :: (a -> a -> Bool) -> [a] -> [a]
-removePairs f = mergePairs $ \ a b -> if f a b then Just [] else Nothing
-
 -- | merges pairs of elements for which the given function returns (Just a).
 -- removes the pair and inserts (the merged) as.
-mergePairs :: (a -> a -> Maybe [a]) -> [a] -> [a]
+mergePairs :: (a -> a -> Maybe a) -> [a] -> [a]
 mergePairs f (a : r) =
     case inner a r of
         Nothing -> a : mergePairs f r
         Just r' -> mergePairs f r'
   where
---     inner :: a -> [a] -> Maybe [a]
     inner a (b : r) =
         case f a b of
             Nothing ->
                 case inner a r of
                     Nothing -> Nothing
                     Just r' -> Just (b : r')
-            Just newAs -> Just (newAs ++ r)
+            Just newAs -> Just (newAs : r)
     inner a [] = Nothing
 mergePairs f [] = []
-
-
-
 
 -- * String stuff
 
@@ -309,12 +307,6 @@ rad2deg x = (x * 360) / (pi * 2)
 
 deg2rad :: Floating a => a -> a
 deg2rad x = x * 2 * pi / 360
-
-cartesian :: [a] -> [b] -> [(a, b)]
-cartesian a b = do
-    a' <- a
-    b' <- b
-    return (a', b')
 
 (~=) :: (Ord n, Fractional n) => n -> n -> Bool
 a ~= b = distance a b < epsilon
