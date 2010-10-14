@@ -27,12 +27,7 @@ else
 fi
 
 cd buildSystem
-if [ -d dist ]
-then
-    echo
-else
-    cabal configure --ghc-options="$GHC_OPTIONS"
-fi
+cabal configure --ghc-options="$GHC_OPTIONS"
 cabal build
 # ghc --make Main.hs -o build $GHC_OPTIONS
 cd ..
