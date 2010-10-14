@@ -17,7 +17,7 @@ import Physics.Chipmunk as CM hiding (Position, radius)
 import Graphics.Qt hiding (scale)
 
 import Utils
-import Paths
+import Paths_nikki
 
 import Base.Constants
 import Base.Pixmap

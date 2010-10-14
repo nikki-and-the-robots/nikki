@@ -7,7 +7,7 @@ module Sorts.Tiles (
   ) where
 
 
-import Paths
+import Paths_nikki
 import Utils
 
 import Data.Abelian

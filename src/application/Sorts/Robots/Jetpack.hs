@@ -16,7 +16,7 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Paths
+import Paths_nikki
 import Utils
 
 import Base.Directions
