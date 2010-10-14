@@ -3,7 +3,7 @@ Version:             0.1
 Synopsis:            build system for nikki and the robots
 Homepage:            http://joyridelabs.de
 License:             LGPL-3
-License-file:        LICENSE
+License-file:        ../../LICENSE
 Author:              Sönke Hahn
 Maintainer:          shahn@joyridelabs.de
 Category:            Development
