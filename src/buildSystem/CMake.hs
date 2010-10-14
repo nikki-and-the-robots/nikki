@@ -25,7 +25,7 @@ cmakeTargets postfix path = [configure, build]
     build =
         Target ("build_" ++ postfix) [configure] $
             withCurrentDirectory (path </> "dist") $ do
-                trySystem "make -j3"
+                trySystem "make"
 
 cmakeCommand =
     case os of
