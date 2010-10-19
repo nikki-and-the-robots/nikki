@@ -67,7 +67,8 @@ data Key
     | SquareBracketClose
 
     -- special keys
-    | Enter
+    | Return
+    | Enter -- num pad
     | Escape
     | Tab
     | Delete
@@ -170,7 +171,8 @@ keyMapping = [
     (43, Plus),
 
     -- special keys
-    (16777220, Enter),
+    (16777220, Return),
+    (16777221, Enter),
     (16777216, Escape),
     (16777217, Tab),
     (16777223, Delete),

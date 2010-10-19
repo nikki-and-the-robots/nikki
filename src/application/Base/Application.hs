@@ -2,6 +2,8 @@
 module Base.Application where
 
 
+import Safe
+
 import Data.SelectTree hiding (selectPrevious, selectNext)
 import qualified Data.Indexable as I
 
@@ -116,9 +118,10 @@ treeToMenu app parent (Node label children i) f =
 
     this = treeToMenu app parent (Node label children i) f
 
-
-askString :: Application_ sort -> String -> IO String
-askString app question = do
+-- | Gets a string from the user.
+-- returns the parent if Escape is pressed.
+askString :: Application_ sort -> AppState -> String -> (String -> AppState) -> AppState
+askString app parent question follower = AppState $ do
     answerRef <- newMVar ""
     setDrawingCallbackAppWidget (window app) (Just $ render question answerRef)
     loop answerRef
@@ -127,8 +130,10 @@ askString app question = do
         updateAppWidget $ window app
         event <- waitForAppEvent $ keyPoller app
         case event of
-            Press (KeyboardButton Enter _) ->
-                readMVar answerRef
+            Press StartButton ->
+                return parent
+            Press (KeyboardButton k _) | k == Return || k == Enter ->
+                follower <$> readMVar answerRef
             Press (KeyboardButton k text) -> do
                 modifyMVar_ answerRef (\ x -> return $ modifyTextField k text x)
                 loop answerRef
@@ -140,11 +145,17 @@ askString app question = do
         setPenColor ptr 255 255 255 255 1
 
         let nextY = translate ptr (Position 0 20)
-
         nextY
 
         answer <- readMVar answerRef
         drawText ptr (Position 10 0) False (question ++ ": " ++ answer)
 
-
-
+-- | Like askString, but reads (parses with Read) the given String. Asks again, if not parsable.
+askStringRead :: Read a => Application_ sort -> AppState -> String -> (a -> AppState) -> AppState
+askStringRead app parent question follower =
+    askString app parent question wrapper
+  where
+    wrapper :: String -> AppState
+    wrapper s = case readMay s of
+        Nothing -> askStringRead app parent question follower -- try again
+        Just r -> follower r

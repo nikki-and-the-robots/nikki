@@ -83,7 +83,7 @@ editorMenu app play mvar scene =
                 ("activate selection mode (for copy, cut and paste)", edit (toSelectionMode scene)),
                 ("try playing the level", play app (edit scene) scene),
                 ("return to editing", edit scene),
-                ("save level and exit editor", saveLevel app scene),
+                ("save level and exit editor", saveLevel app this scene),
                 ("exit editor without saving", reallyExitEditor app this)
               ])
         ObjectEditMode{} ->
@@ -108,21 +108,21 @@ editorMenu app play mvar scene =
         Just x -> [("edit object", x)]
 
 
-saveLevel :: Application -> EditorScene Sort_ -> AppState
-saveLevel app EditorScene{levelPath = (Just path), editorObjects} = AppState $ do
+saveLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
+saveLevel app _parent EditorScene{levelPath = (Just path), editorObjects} = AppState $ do
     writeObjectsToDisk path editorObjects
     return $ mainMenu app
-saveLevel app scene@EditorScene{levelPath = Nothing, editorObjects} = AppState $ do
-    name <- askString app "level name:"
-    let path = name <..> "nl"
-    exists <- doesFileExist path
-    if exists then
-        return $ fileExists app this path editorObjects
-      else do
-        writeObjectsToDisk path editorObjects
-        return $ mainMenu app
+saveLevel app parent scene@EditorScene{levelPath = Nothing, editorObjects} =
+    askString app parent "level name:" $ \ name -> AppState $ do
+        let path = name <..> "nl"
+        exists <- doesFileExist path
+        if exists then
+            return $ fileExists app this path editorObjects
+          else do
+            writeObjectsToDisk path editorObjects
+            return $ mainMenu app
   where
-    this = saveLevel app scene
+    this = saveLevel app parent scene
 
 fileExists app save path objects =
     menu app (Just ("level with the name " ++ path ++ " already exists")) (Just save) [
