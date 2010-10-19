@@ -31,13 +31,17 @@ data NSort = NSort {
 data Nikki
     = Nikki {
         chipmunk :: Chipmunk,
-        feetShapes :: [Shape],
+        feetShape :: Shape,
         state :: State,
         startTime :: Seconds, -- time the State was last changed
         batteryPower :: Integer, -- makes it possible to have REALLY BIG amounts of power :)
         debugCmd :: Ptr QPainter -> Offset Double -> IO ()
       }
   deriving (Show, Typeable)
+
+-- | just for compatibility (TODO: remove)
+feetShapes :: Nikki -> [Shape]
+feetShapes = return . feetShape
 
 instance Show (Ptr QPainter -> Offset Double -> IO ()) where
     show _ = "<Ptr QPainter -> Offset Double -> IO ()>"

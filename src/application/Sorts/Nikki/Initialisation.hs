@@ -40,14 +40,13 @@ bodyShapeAttributes = ShapeAttributes {
   }
 
 
-mkPolys :: Size Double -> ([ShapeDescription], [ShapeDescription], Vector)
+mkPolys :: Size Double -> (ShapeDescription, [ShapeDescription], Vector)
 mkPolys (Size w h) =
-    (surfaceVelocityShapes, otherShapes, baryCenterOffset)
+    (surfaceVelocityShape, otherShapes, baryCenterOffset)
   where
     -- the ones where surface velocity (for walking) is applied
-    surfaceVelocityShapes =
-        mkShapeDescription feetShapeAttributes betweenFeet :
-        (map (uncurry (ShapeDescription feetShapeAttributes)) feetCircles)
+    surfaceVelocityShape =
+        mkShapeDescription feetShapeAttributes feet
     otherShapes = [
         (mkShapeDescription bodyShapeAttributes headPoly),
         (mkShapeDescription bodyShapeAttributes legsPoly)
@@ -73,7 +72,6 @@ mkPolys (Size w h) =
       ]
 
     -- tuning variables
-    pawRadius = 4
     eps = 1
     pawThickness = fromUber 3
 
@@ -82,15 +80,13 @@ mkPolys (Size w h) =
 
     legsPoly = Polygon [ -- trapeze to avoid touching of walls during grip
         Vector (legLeft - eps) headLow,
-        Vector (legLeft + eps) (low - pawRadius),
-        Vector (legRight - eps) (low - pawRadius),
+        Vector (legLeft + eps) (low - eps),
+        Vector (legRight - eps) (low - eps),
         Vector (legRight + eps) headLow
       ]
-    betweenFeet = mkRectFromPositions
-        (Vector (legLeft + pawRadius) (low - pawRadius))
-        (Vector (legRight - pawRadius) (low - eps))
-
-    feetCircle = Circle pawRadius
-    feetCircles = [leftFeet, rightFeet]
-    leftFeet = (feetCircle, Vector (legLeft + pawRadius) (low - pawRadius))
-    rightFeet = (feetCircle, Vector (legRight - pawRadius) (low - pawRadius))
+    feet = Polygon [
+        Vector legLeft headLow,
+        Vector legLeft low,
+        Vector legRight low,
+        Vector legRight headLow
+      ]

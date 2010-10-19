@@ -94,18 +94,18 @@ instance Sort NSort Nikki where
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
     initialize sort (Just space) editorPosition Nothing = do
-        let (surfaceVelocityShapeTypes, otherShapes, baryCenterOffset) = mkPolys $ size sort
+        let (surfaceVelocityShapeType, otherShapes, baryCenterOffset) = mkPolys $ size sort
             pos = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
 
-        chip <- CM.initChipmunk space (bodyAttributes pos) (surfaceVelocityShapeTypes ++ otherShapes)
+        chip <- CM.initChipmunk space (bodyAttributes pos) (surfaceVelocityShapeType : otherShapes)
                     baryCenterOffset
 
-        let surfaceVelocityShapes = take (length surfaceVelocityShapeTypes) $ shapes chip
+        let surfaceVelocityShape = head $ shapes chip
 
         return $ Nikki
             chip
-            surfaceVelocityShapes
+            surfaceVelocityShape
             initial
             0
             0

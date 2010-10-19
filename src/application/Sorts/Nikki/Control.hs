@@ -109,6 +109,7 @@ controlBody now contacts (True, cd) nsort nikki =
         x -> es "controlBody" x
 
 
+fakeControl :: ControlData -> Nikki -> IO ()
 fakeControl cd nikki = do
     when (D `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector step 0)
