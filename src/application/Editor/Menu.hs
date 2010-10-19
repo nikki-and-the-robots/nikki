@@ -178,11 +178,18 @@ editLayers :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
 editLayers app play mvar scene =
     menu app (Just "edit layers") (Just editMenu) [
+        ("change layer distance", changeLayerDistance app this scene edit),
         ("add background layer", edit (addDefaultBackground scene)),
         ("add foreground layer", edit (addDefaultForeground scene))
       ]
   where
     edit s = editorLoop app play mvar s
     editMenu = editorMenu app play mvar scene
+    this = editLayers app play mvar scene
 
-
+changeLayerDistance :: Application -> AppState -> EditorScene Sort_ -> (EditorScene Sort_ -> AppState) -> AppState
+changeLayerDistance app parent scene follower =
+    askStringRead app parent "x distance" $ \ x ->
+    askStringRead app parent "y distance" $ \ y -> AppState $
+        return $ follower
+            (modifyEditorObjects (modifySelectedLayer (selectedLayer scene) (setYDistance y . setXDistance x)) scene)

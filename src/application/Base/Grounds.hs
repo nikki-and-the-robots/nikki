@@ -102,11 +102,11 @@ belowSelected index grounds =
 
 -- * setter
 
-setXDistance :: Layer a -> Double -> Layer a
-setXDistance l x = l{xDistance = x}
+setXDistance :: Double -> Layer a -> Layer a
+setXDistance x l = l{xDistance = x}
 
-setYDistance :: Layer a -> Double -> Layer a
-setYDistance l y = l{yDistance = y}
+setYDistance :: Double -> Layer a -> Layer a
+setYDistance y l = l{yDistance = y}
 
 
 -- * conversions
@@ -187,11 +187,6 @@ layerMapM_ cmd (Grounds backgrounds mainLayer foregrounds) = do
     fmapM_ cmd foregrounds
 
 
--- * updating Layers
-
-updateLayer :: Layer a -> Layer a
-updateLayer = id
-
 -- * rendering offset
 
 -- | calculates the offset for one Layer.
@@ -218,9 +213,3 @@ correctDistances pretendMain l@Layer{xDistance = oldX, yDistance = oldY} =
   where
     inner 0 _ = 1
     inner pretend old = old / pretend
-
-
-
-
-
-
