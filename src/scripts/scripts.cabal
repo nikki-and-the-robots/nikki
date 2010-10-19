@@ -33,11 +33,14 @@ Cabal-version:       >=1.2
 
 
 Executable writeEmptyTemplateLevel
-  hs-source-dirs: ., ../application, ../common, ../qtRendering
+  hs-source-dirs: ., ../application, ../qtRendering, ../application/dist/build/autogen/
 
   -- .hs or .lhs file containing the Main module.
   Main-is: writeEmptyTemplateLevel.hs
-  
+
+  ghc-options:
+     -O0
+
   -- Packages needed in order to build this package.
   Build-depends:
     base >= 4 && < 5,
@@ -48,12 +51,14 @@ Executable writeEmptyTemplateLevel
     containers,
     binary,
     syb,
-    Hipmunk == 5.0.1.1,
+    Hipmunk == 5.2.0.2,
     array,
-    safe
+    safe,
+    transformers,
+    StateVar,
+    QuickCheck
 
   extra-libraries:
     qtwrapper, QtOpenGL
   extra-lib-dirs:
     ../qtRendering/cpp/dist
-
