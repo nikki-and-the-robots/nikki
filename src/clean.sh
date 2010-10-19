@@ -11,5 +11,7 @@ trap error ERR
 rm -rfv buildSystem/dist
 rm -rfv qtRendering/cpp/dist
 rm -rfv application/dist
+rm -rfv scripts/dist
+rm -rfv testsuite/dist
 rm -rfv nikki
 
