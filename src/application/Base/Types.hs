@@ -157,9 +157,8 @@ data EditorScene sort
 
         editorObjects :: Grounds (EditorObject sort),
         selectedLayer :: GroundsIndex,
-        selected :: Maybe Index,
+        selected :: Maybe (GroundsIndex, Index),
             -- index of the object that is in the scene and currently under the cursor
-            -- (in the selected layer)
         editorMode :: EditorMode,
 
         clipBoard :: [EditorObject sort]

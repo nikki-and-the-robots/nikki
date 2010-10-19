@@ -11,6 +11,8 @@ import Data.Initial
 
 import Graphics.Qt
 
+import Utils
+
 import Base.Grounds
 import Base.Types
 
@@ -27,9 +29,9 @@ getSelectedLayerContent scene = content (editorObjects scene !|| selectedLayer s
 
 -- | get the object that is actually selected by the cursor
 getSelectedObject :: EditorScene Sort_ -> Maybe (EditorObject Sort_)
-getSelectedObject EditorScene{selected = Just i, editorObjects, selectedLayer} =
-    Just (content (editorObjects !|| selectedLayer) !!! i)
-getSelectedObject EditorScene{selected = Nothing} = Nothing
+getSelectedObject scene =
+    flip fmap (selected scene) $
+        \ (layerIndex, i) -> content (editorObjects scene !|| layerIndex) !!! i
 
 -- | returns all Indices (to the mainLayer) for robots
 getRobotIndices :: EditorScene Sort_ -> [Index]

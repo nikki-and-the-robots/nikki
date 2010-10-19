@@ -157,9 +157,10 @@ selectSort app editorMenu play mvar scene =
 enterOEM :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Maybe AppState
 enterOEM app play mvar scene = do -- maybe monad
-    i <- selected scene
-    _ <- objectEditModeMethods $ editorSort $ getMainObject scene i
-    let objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects scene
+    (layerIndex, i) <- selected scene
+    selectedObject <- getSelectedObject scene
+    _ <- objectEditModeMethods $ editorSort $ selectedObject
+    let objects' = modifySelectedLayer layerIndex (modifyContent (modifyByIndex (modifyOEMState mod) i)) $ editorObjects scene
         mod :: OEMState Sort_ -> OEMState Sort_
         mod = enterModeOEM scene
     Just $ edit scene{editorMode = ObjectEditMode i, editorObjects = objects'}

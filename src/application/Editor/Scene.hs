@@ -37,14 +37,14 @@ import Editor.Scene.Rendering
 
 -- | looks, if there is an object under the cursor (and therefore selected)
 -- in the selected layer
-searchSelectedObject :: EditorScene Sort_ -> Maybe Index
+searchSelectedObject :: EditorScene Sort_ -> Maybe (GroundsIndex, Index)
 searchSelectedObject s@EditorScene{selectedLayer} =
     let indices = I.findIndices isSelected (content (editorObjects s !|| selectedLayer))
         isSelected o = lowerCorner o == cursor s
         lowerCorner o = editorPosition o
     in case indices of
         [] -> Nothing
-        ll -> Just $ last ll
+        ll -> Just $ (selectedLayer, last ll)
 
 -- * normalizers
 
@@ -115,11 +115,11 @@ normalMode AButton scene@EditorScene{cursor, selectedLayer} =
     selectedSort = getSelected $ availableSorts scene
 
 -- delete selected object
-normalMode BButton scene@EditorScene{selectedLayer} =
+normalMode BButton scene@EditorScene{} =
     case selected scene of
         Nothing -> scene
-        (Just i) ->
-            let newObjects = modifySelectedLayer selectedLayer (modifyContent (deleteByIndex i)) (editorObjects scene)
+        (Just (layerIndex, i)) ->
+            let newObjects = modifySelectedLayer layerIndex (modifyContent (deleteByIndex i)) (editorObjects scene)
             in scene{editorObjects = newObjects}
 
 normalMode (KeyboardButton x _) scene = normalModeKeyboard x scene
@@ -127,6 +127,8 @@ normalMode (KeyboardButton x _) scene = normalModeKeyboard x scene
 normalMode _ s = s
 
 -- * buttons pressed on the keyboard
+
+normalModeKeyboard :: Key -> EditorScene Sort_ -> EditorScene Sort_
 
 -- skip through available objects
 normalModeKeyboard D scene@EditorScene{} =
@@ -136,9 +138,9 @@ normalModeKeyboard A scene@EditorScene{} =
 
 -- cycle through objects under cursor
 -- (ordering of rendering will be automated)
-normalModeKeyboard C scene@EditorScene{editorObjects, selected = Just i} =
-    let mainLayer' = I.toHead i (mainLayerIndexable editorObjects)
-    in scene{editorObjects = editorObjects{mainLayer = mkMainLayer mainLayer'}}
+normalModeKeyboard C scene@EditorScene{editorObjects, selected = Just (layerIndex, i)} =
+    let editorObjects' = modifySelectedLayer layerIndex (modifyContent (I.toHead i)) editorObjects
+    in scene{editorObjects = editorObjects'}
 
 -- change cursor step size
 
