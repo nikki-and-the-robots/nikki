@@ -43,7 +43,7 @@ module Physics.Chipmunk (
     mkRect,
     mkRectFromPositions,
     module Physics.Chipmunk.ContactRef,
-    module Physics.Chipmunk.OptimizePolygons,
+    module Physics.Chipmunk.StickyEdges,
 
     -- re-exports from Physics.Hipmunk
     infinity,
@@ -104,7 +104,7 @@ import qualified Physics.Hipmunk as H
 import Physics.Chipmunk.Types
 import Physics.Chipmunk.DebugGrid
 import Physics.Chipmunk.ContactRef
-import Physics.Chipmunk.OptimizePolygons
+import Physics.Chipmunk.StickyEdges
 
 
 
@@ -143,15 +143,6 @@ initSpace gravity = do
     return space
 
 --     todo : freeSpace
-
-
--- * helpers
-
-vectorX :: Vector -> Double
-vectorX (Vector x y) = x
-
-vectorY :: Vector -> Double
-vectorY (Vector x y) = y
 
 
 -- * Controls

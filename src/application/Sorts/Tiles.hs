@@ -89,8 +89,8 @@ instance Sort TSort Tile where
         drawPixmap ptr zero $ pixmap pix
 
 -- before initializing the scene, all tiles in the physics scene are being merged 
--- (in Top.Initialisation and Game.OptimizeChipmunk), resulting in an AllTiles object. 
--- This is a workaround for optimizing tiles. It relies on the following things:
+-- (in Top.Initialisation), resulting in an AllTiles object. 
+-- This is a workaround for merging tiles. It relies on the following things:
 -- 1. Tiles are static
 -- 2. Tiles are being rendered above everything else in the physics layer
 
@@ -150,7 +150,7 @@ initChipmunks space objects =
 mkAbsoluteShapes :: [EditorObject TSort] -> [ShapeType]
 mkAbsoluteShapes =
     map mkAbsoluteShape
-    >>> optimizePolygons
+    >>> removeStickyEdges
 
 mkAbsoluteShape :: EditorObject TSort -> ShapeType
 mkAbsoluteShape (EditorObject sort ep Nothing) =

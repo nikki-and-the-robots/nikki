@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns, ExistentialQuantification #-}
+{-# language NamedFieldPuns, ExistentialQuantification, StandaloneDeriving, DeriveDataTypeable #-}
 
 module Physics.Chipmunk.Types where
 
@@ -7,6 +7,11 @@ import Utils
 import Data.Complex
 import Data.Abelian
 import Data.StateVar
+import Data.Typeable
+
+import Control.Applicative ((<*>))
+
+import Test.QuickCheck
 
 import Graphics.Qt (Ptr, QPainter, translate)
 import qualified Graphics.Qt as Qt
@@ -32,6 +37,11 @@ instance Abelian Vector where
 
 instance PP Vector where
     pp (Vector a b) = "(Vector " ++ pp a ++ " " ++ pp b ++ ")"
+
+instance Arbitrary Vector where
+    arbitrary = Vector <$> arbitrary <*> arbitrary
+
+deriving instance Typeable ShapeType
 
 
 -- * Types
@@ -223,6 +233,12 @@ vector2QtPosition (Vector x y) = Qt.Position x y
 
 
 -- * missing
+
+vectorX :: Vector -> Double
+vectorX (Vector x y) = x
+
+vectorY :: Vector -> Double
+vectorY (Vector x y) = y
 
 -- | folds the angle of a body to (- pi, pi)
 foldAngle :: Double -> Double

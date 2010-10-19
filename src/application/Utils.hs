@@ -17,13 +17,16 @@ import qualified Data.Foldable
 import qualified Data.Traversable
 import Data.IORef
 import qualified Data.Set as Set
+import Data.Maybe
 
 import Text.Printf
 
-import Control.Applicative ((<$>))
+import Control.Applicative ((<$>), (<|>))
 import Control.Monad.State hiding ((>=>))
 import Control.Arrow ((>>>))
 import Control.Concurrent
+
+import Test.QuickCheck
 
 import System
 import System.Directory
@@ -231,6 +234,11 @@ cartesian a b = do
     b' <- b
     return (a', b')
 
+-- | returns every combination of given elements once.
+completeEdges :: [a] -> [(a, a)]
+completeEdges (a : r) = map (tuple a) r ++ completeEdges r
+completeEdges [] = []
+
 adjacentCyclic :: [a] -> [(a, a)]
 adjacentCyclic [] = []
 adjacentCyclic [a] = []
@@ -242,7 +250,7 @@ adjacentCyclic list@(head : _) = inner head list
 -- | merges pairs of elements for which the given function returns (Just a).
 -- removes the pair and inserts (the merged) as.
 -- Is idempotent.
-mergePairs :: Eq a => (a -> a -> Maybe a) -> [a] -> [a]
+mergePairs :: Eq a => (a -> a -> Maybe [a]) -> [a] -> [a]
 mergePairs f =
     fixpoint merge
   where
@@ -252,13 +260,24 @@ mergePairs f =
             Just r' -> r'
     merge [] = []
     inner a (b : r) =
-        case f a b of
+        case f a b <|> f b a of
             Nothing ->
                 case inner a r of
                     Nothing -> Nothing
                     Just r' -> Just (b : r')
-            Just newAs -> Just (newAs : r)
+            Just newAs -> Just (newAs ++ r)
     inner a [] = Nothing
+
+testMergePairs :: Property
+testMergePairs = foldr1 (.&.) $ map property [
+    \ l -> isIdempotent l (mergePairs p),
+    \ l -> null (mergePairs p l \\ mergePairs p (reverse l)),
+    \ l -> all isNothing $ map (uncurry p) $ completeEdges $ mergePairs p l
+   ]
+  where
+    p :: Int -> Int -> Maybe [Int]
+    p a b | a == 0 = Nothing
+    p a b = if b `mod` a == 0 then Just [a] else Nothing
 
 -- | like mergePairs, but only tries to merge adjacent elements (or the first and the last element)
 -- Is idempotent.
@@ -323,6 +342,11 @@ maybeId fun a =
         Nothing -> a
         Just x -> x
 
+justWhen :: Bool -> a -> Maybe a
+justWhen True = Just
+justWhen False = const Nothing
+
+
 -- * math stuff
 
 rad2deg :: Floating a => a -> a
@@ -340,7 +364,11 @@ epsilon = 0.001
 divide :: Double -> Double -> (Int, Double)
 divide a b = (n, f * b)
   where
-    (n, f) = properFraction (a / b) 
+    (n, f) = properFraction (a / b)
+
+-- | tests if a given alpha is in a given range (including both bounds)
+inside :: Ord a => a -> (a, a) -> Bool
+inside x (a, b) = x >= a && x <= b
 
 -- | folds the given number to the given range
 -- range is including lower bound and excluding upper bound
@@ -413,6 +441,12 @@ xor :: Bool -> Bool -> Bool
 xor True True = False
 xor a b = a || b
 
+-- | boolean implication
+infix 4 ~>
+(~>) :: Bool -> Bool -> Bool
+True ~> x = x
+False ~> _ = True
+
 -- | reads all currently available messages from the channel.
 pollChannel :: Chan a -> IO [a]
 pollChannel chan = do
@@ -428,6 +462,10 @@ fixpoint :: Eq e => (e -> e) -> e -> e
 fixpoint f x = if fx == x then x else fixpoint f fx
   where
     fx = f x
+
+-- | applies a function n times
+superApply :: Int -> (a -> a) -> a -> a
+superApply n f = foldr (.) id $ replicate n f
 
 
 -- * Pretty Printing
@@ -493,7 +531,16 @@ assertDirectoryExists path = do
     canonicalPath <- canonicalizePath path
     assertIO exists (canonicalPath ++ " is not a directory")
 
+-- * tests
 
+tests :: Property
+tests = property $ testMergePairs
+
+isIdempotent :: Eq a => a -> (a -> a) -> Bool
+isIdempotent x f =
+    fx == f fx
+  where
+    fx = f x
 
 
 

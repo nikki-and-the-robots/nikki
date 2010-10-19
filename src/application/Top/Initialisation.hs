@@ -17,7 +17,6 @@ import Base.Types
 
 import Object
 
-import Game.OptimizeChipmunks
 import Game.Scene.Camera
 
 import qualified Sorts.Nikki
@@ -94,7 +93,7 @@ freeAllSorts sorts = do
 
 initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
 initScene space =
-    fromPure groundsOptimizeChipmunks >>>>
+    fromPure groundsMergeTiles >>>>
     initializeObjects space >>>>
     mkScene space
 
@@ -116,6 +115,13 @@ mkScene space objects = do
     contactRef <- initContactRef space initial watchedContacts
     return $ Scene 0 objects (initialCameraState nikkiPosition) contactRef initial (NikkiMode nikki)
 
-groundsOptimizeChipmunks :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
-groundsOptimizeChipmunks =
-    modifyMainLayer optimizeEditorObjects
+groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
+groundsMergeTiles =
+    modifyMainLayer mergeEditorObjects
+
+mergeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
+mergeEditorObjects ixs =
+    otherObjects >: Sorts.Tiles.mkAllTiles tiles
+  where
+    tiles = toList $ I.filter (isTile . editorSort) ixs
+    otherObjects = I.filter (not . isTile . editorSort) ixs
