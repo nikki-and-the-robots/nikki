@@ -78,7 +78,7 @@ controlBody now contacts (True, cd) nsort nikki =
             let verticalImpulse = (- jumpingImpulse)
                 contactNormalHorizontalImpulse =
                     jumpingImpulse * walljumpHorizontalFactor * (2 * contactAngle / pi)
-                wantedImpulse = Vector contactNormalHorizontalImpulse verticalImpulse -- TODO: is this correct?
+                wantedImpulse = Vector contactNormalHorizontalImpulse verticalImpulse
                 velocityCorrection =
                     velocityJumpCorrection (fromUpAngle contactAngle) velocity wantedImpulse
             modifyApplyImpulse (chipmunk nikki) (wantedImpulse +~ velocityCorrection)
