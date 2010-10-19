@@ -111,14 +111,22 @@ controlBody now contacts (True, cd) nsort nikki =
 
 fakeControl :: ControlData -> Nikki -> IO ()
 fakeControl cd nikki = do
-    when (D `elem` extractPressedKeys (pressed cd)) $
-        inner (+~ Vector step 0)
     when (A `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector (- step) 0)
     when (W `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector 0 (- step))
     when (S `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector 0 step)
+    when (D `elem` extractPressedKeys (pressed cd)) $
+        inner (+~ Vector step 0)
+    when (F `elem` extractPressedKeys (pressed cd)) $
+        inner (+~ Vector (10 * step) 0)
+    when (G `elem` extractPressedKeys (pressed cd)) $
+        inner (+~ Vector (100 * step) 0)
+    when (H `elem` extractPressedKeys (pressed cd)) $
+        inner (+~ Vector (1000 * step) 0)
+    when (J `elem` extractPressedKeys (pressed cd)) $
+        inner (+~ Vector (10000 * step) 0)
     p <- getPosition $ chipmunk nikki
     every 100 $ ppp p
   where
