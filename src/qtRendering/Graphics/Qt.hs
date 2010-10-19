@@ -123,14 +123,16 @@ waitForEvent (KeyPoller c) = readChan c
 
 sendDebugInitials :: Chan QtEvent -> IO ()
 sendDebugInitials c = ignore $ forkOS $ do
-    mapM_ worker (saveNewLevel)
+    mapM_ worker signals
   where
     worker k = do
         threadDelay $ round (0.1 * 10 ^ 6)
-        writeChan c (KeyPress k (return $ head $ show k))
-        writeChan c (KeyRelease k (return $ head $ show k))
+        writeChan c (KeyPress k (text k))
+        writeChan c (KeyRelease k (text k))
 
-    editFirstLevel = [DownArrow, Ctrl, DownArrow, Ctrl]
-    saveNewLevel = [DownArrow, Ctrl, Ctrl, Ctrl, Ctrl, DownArrow, DownArrow, D, Ctrl, RightArrow, RightArrow, D, D, D, D, Ctrl, Escape, DownArrow, DownArrow, DownArrow, DownArrow, DownArrow, Ctrl]
-    selectionMode = editFirstLevel ++ [Space]
-    playFirstLevel = [Ctrl, Ctrl]
+    signals = [DownArrow, Ctrl, DownArrow, Ctrl, Escape, DownArrow, Ctrl, DownArrow, Ctrl,
+               Minus, A, Ctrl, Escape, DownArrow, Ctrl, Ctrl, K0, Dot, K5, Enter, K0, Dot, K5, Enter]
+    text K0 = "0"
+    text K5 = "5"
+    text Dot = "."
+    text x = return $ head (show x)
