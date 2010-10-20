@@ -11,6 +11,7 @@ import qualified Data.Indexable as I
 import Data.Abelian
 import Data.Typeable
 
+import Control.Monad
 import Control.Applicative ((<$>))
 import Control.Concurrent
 import Control.Exception
@@ -215,12 +216,17 @@ tests =
 
 -- | draw the nth example on the screen
 showExample n = do
-    putStrLn ("example nr.: " ++ show n)
+    putStrLn ("example nr.: " ++ show n ++ " --> " ++ show (predStickyEdges (examples !! n)))
     catcher $ quickCheck $ mkProperty (const False) (examples !! n)
 
+-- | show all examples one after the other
+showExamples = forM_ [0 .. (length examples - 1)] showExample
+
 -- | tests the removal of sticky edges for all examples
-testExamples :: Property
-testExamples = foldr1 (.&.) $ map (mkProperty predStickyEdges) examples
+testExamples =
+    forM_ [0 .. (length examples - 1)] $ \ i -> do
+        putStrLn ("example nr.: " ++ show i)
+        quickCheck $ mkProperty predStickyEdges (examples !! i)
 
 testArbitraries :: Property
 testArbitraries = property $ mkProperty predStickyEdges
