@@ -278,7 +278,7 @@ examples = map (Wrap . map (Wrap . Polygon)) [
         [Vector 1.0 (-10.0),Vector 1.0 (-6.0),Vector 2.0 (-6.0),Vector 2.0 (-10.0)],
         [Vector (-1.0) (-8.0),Vector (-1.0) (-6.0),Vector 3.0 (-6.0),Vector 3.0 (-8.0)]
     ],
-    [ -- TODO: this test case could have a better result, but i think it's good enough
+    [
         [Vector 2.0 (-6.0),Vector 2.0 (-3.0),Vector 4.0 (-3.0),Vector 4.0 (-6.0)],
         [Vector 0.0 (-8.0),Vector 0.0 (-3.0),Vector 2.0 (-3.0),Vector 2.0 (-8.0)],
         [Vector (-2.0) (-3.0),Vector (-2.0) 1.0,Vector 2.0 1.0,Vector 2.0 (-3.0)]
@@ -292,5 +292,15 @@ examples = map (Wrap . map (Wrap . Polygon)) [
         [Vector 5.0 0.0,Vector 5.0 4.0,Vector 7.0 4.0,Vector 7.0 0.0],
         [Vector 3.0 0.0,Vector 3.0 4.0,Vector 5.0 4.0,Vector 5.0 0.0],
         [Vector 4.0 2.0,Vector 4.0 3.0,Vector 7.0 3.0,Vector 7.0 2.0]
+    ],
+    [
+        [Vector (-7.0) (-5.0),Vector (-7.0) (-2.0),Vector (-2.0) (-2.0),Vector (-2.0) (-5.0)],
+        [Vector (-9.0) (-5.0),Vector (-9.0) 0.0,Vector (-5.0) 0.0,Vector (-5.0) (-5.0)],
+        [Vector (-9.0) (-2.0),Vector (-9.0) 3.0,Vector (-8.0) 3.0,Vector (-8.0) (-2.0)]
+    ],
+    [
+        [Vector (-2.0) 4.0,Vector (-2.0) 8.0,Vector (-1.0) 8.0,Vector (-1.0) 4.0],
+        [Vector 1.0 4.0,Vector 1.0 5.0,Vector 2.0 5.0,Vector 2.0 4.0],
+        [Vector (-2.0) 1.0,Vector (-2.0) 5.0,Vector 1.0 5.0,Vector 1.0 1.0]
     ]
   ]
