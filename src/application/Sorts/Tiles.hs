@@ -39,6 +39,9 @@ names = [
     ("tiles/terminal-frame-editor", (Position (- 1) (- 1)), Size 192 192)
   ]
 
+-- | points are moved by this distance to avoid sticky edges
+tileMergingEpsilon = 1
+
 
 -- * Tile loading
 
@@ -150,7 +153,7 @@ initChipmunks space objects =
 mkAbsoluteShapes :: [EditorObject TSort] -> [ShapeType]
 mkAbsoluteShapes =
     map mkAbsoluteShape
-    >>> removeStickyEdges
+    >>> removeStickyEdges tileMergingEpsilon
 
 mkAbsoluteShape :: EditorObject TSort -> ShapeType
 mkAbsoluteShape (EditorObject sort ep Nothing) =

@@ -112,10 +112,9 @@ instance Arbitrary (Wrap ShapeType) where
             Vector (x + width) y
           ]
 
-rectSize :: Double
-rectSize = 5
-rectLimit :: Double
-rectLimit = 10
+rectSize :: Double = 5
+rectLimit :: Double = 10
+testEpsilon :: Double = 0.5
 
 
 
@@ -159,7 +158,7 @@ drawOffender (fromTestPolygons -> offender) = do
             $ concatMap (\ (a, b) -> [a, b]) $
             filter (uncurry stickyEdges) $ completeEdges $ concatMap toEdges offender
         resetMatrix ptr
-        let traversed = removeStickyEdges offender
+        let traversed = removeStickyEdges testEpsilon offender
         drawText ptr (Position 60 30) False (show (length traversed))
         mapM_ (mapM_ (uncurry (renderPolygonLine ptr)) . adjacentCyclic . vertices) $
             map (mapVectors (scaleVector ws . (+~ Vector (rectLimit * 2) 0))) $
@@ -233,11 +232,11 @@ testArbitraries = property $ mkProperty predStickyEdges
 
 -- | creates a quickcheck Property for a given predicate and set of polygons
 mkProperty :: (TestPolygons -> Bool) -> TestPolygons -> Property
-mkProperty p a = whenFail (throwIO a) $ within 1000000 $ p a
+mkProperty p a = whenFail (throwIO a) $ p a
 
 -- | this is the actual predicate, that 'removeStickyEdges' should ensure.
 predStickyEdges :: TestPolygons -> Bool
-predStickyEdges = not . hasStickyEdges . removeStickyEdges . fromTestPolygons
+predStickyEdges = not . hasStickyEdges . removeStickyEdges testEpsilon . fromTestPolygons
 
 -- | collection of problematic examples with increasing complexity
 examples :: [TestPolygons]

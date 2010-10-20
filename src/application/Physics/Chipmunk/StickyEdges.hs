@@ -91,13 +91,13 @@ rightSide = state >>> (! DRight)
 
 -- * actual algorithm
 
-removeStickyEdges :: [ShapeType] -> [ShapeType]
-removeStickyEdges =
+removeStickyEdges :: Double -> [ShapeType] -> [ShapeType]
+removeStickyEdges epsilon =
     map toRectangle >>>
     mergePairs removeContained >>>
     fixpoint moveSides >>>
     map fromRectangle >>>
-    removeWedges >>>
+    removeWedges epsilon >>>
     id
 
 -- removes rectangles that are containesd inside others
@@ -151,8 +151,8 @@ moveRightSide a b |
   = Just [Rectangle (start a) (x (end b) - x (start a)) (height a) initialState]
 moveRightSide a b = Nothing
 
--- | moves two points in L-shaped combinations of two shapes to avoid sticky edges
-removeWedges =
+-- | moves two points (by distance of epsilon) in L-shaped combinations of two shapes to avoid sticky edges
+removeWedges epsilon =
     foldr1 (>>>) $ replicate 4 (mergePairs removeWedgesFromLowerLeftCorner >>> map rotateShapeTypeHalfPi)
   where
     removeWedgesFromLowerLeftCorner (Polygon [a, b, c, d]) (Polygon [p, q, r, s])
@@ -161,13 +161,11 @@ removeWedges =
           && y c == y b
       = if y b - y a > y q - y p then
             -- first rectangle is higher
-            Just [Polygon [a, b, c -~ Vector 0 eps, d], Polygon [p +~ Vector eps 0, q, r, s]]
+            Just [Polygon [a, b, c -~ Vector 0 epsilon, d], Polygon [p +~ Vector epsilon 0, q, r, s]]
           else
             -- second rectangle is higher
-            Just [Polygon [a +~ Vector eps 0, b, c, d], Polygon [p, q, r -~ Vector 0 eps, s]]
+            Just [Polygon [a +~ Vector epsilon 0, b, c, d], Polygon [p, q, r -~ Vector 0 epsilon, s]]
     removeWedgesFromLowerLeftCorner _ _ = Nothing
-
-eps = 1
 
 -- | rotates rectangles by 90 degrees
 rotateShapeTypeHalfPi :: ShapeType -> ShapeType
