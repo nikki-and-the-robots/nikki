@@ -110,15 +110,15 @@ moveSides =
 moveRightSides = mergePairs moveRightSide
 
 moveRightSide a b |
-    -- moved side is smaller than the right rectangle
-    -- rectangle will be shortened
+    -- moved side is smaller than the right rectangle --> shrink rect
+    x (start a) < x (start b) &&
     x (end a) > x (start b) &&
     x (end a) == x (end b) &&
     y (start a) > y (start b) &&
     y (end a) < y (end b)
   = Just [modifyWidth (subtract (x (end a) - x (start b))) a, b]
 moveRightSide a b |
-    -- rectangles overlap, one horizontal side is flush
+    -- rectangles overlap, one horizontal side is flush --> form an L-shaped thing
     x (end a) >= x (start b) &&
     x (end a) < x (end b) &&
     ((y (start a) > y (start b) && -- downside is flush
@@ -127,7 +127,7 @@ moveRightSide a b |
       y (end a) < y (end b)))
   = Just [modifyWidth (+ (x (end b) - x (end a))) a, b]
 moveRightSide a b |
-    -- both horizontal sides are flush
+    -- both horizontal sides are flush --> merge rects
     x (end a) >= x (start b) &&
     x (end a) <= x (end b) &&
     y (start a) == y (start b) &&
