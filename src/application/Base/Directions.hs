@@ -18,3 +18,6 @@ swapHorizontalDirection HRight = HLeft
 
 data VerticalDirection = VUp | VDown
   deriving (Show, Eq, Ord)
+
+data Direction = DLeft | DRight | DUp | DDown
+  deriving (Eq, Show, Ord, Enum)

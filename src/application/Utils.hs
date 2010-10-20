@@ -12,7 +12,7 @@ module Utils (
 import Safe
 
 import Data.List
-import Data.Map (Map, fromList, member, (!), findWithDefault)
+import Data.Map (Map, fromList, member, (!), findWithDefault, toList)
 import qualified Data.Foldable
 import qualified Data.Traversable
 import Data.IORef
@@ -326,6 +326,9 @@ toFunction :: (Show k, Ord k) => String -> Map k e -> k -> e
 toFunction msg m k = findWithDefault err k m
   where
     err = error ("key not found: " ++ show k ++ " from " ++ msg)
+
+mapPairs :: Ord k => (k -> a -> (k, a)) -> Map k a -> Map k a
+mapPairs f = fromList . map (uncurry f) . toList
 
 
 -- * Maybe stuff

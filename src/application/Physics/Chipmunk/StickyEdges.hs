@@ -17,6 +17,7 @@ import Prelude hiding (Left, Right)
 
 import Data.Abelian
 import Data.Maybe
+import Data.Map (Map, fromList, (!), insert)
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Arrow
@@ -29,6 +30,8 @@ import Utils hiding (tests)
 
 import Physics.Chipmunk.Types (foldAngle, vectorX, vectorY, rotateVector)
 
+import Base.Directions
+
 
 x = vectorX
 y = vectorY
@@ -39,39 +42,51 @@ data Rectangle
   = Rectangle {
     start :: Vector,
     width :: Double,
-    height :: Double
+    height :: Double,
+    state :: ChangeState -- change states of edges
   }
     deriving (Eq, Show)
 
 instance Arbitrary Rectangle where
-    arbitrary = Rectangle <$> arbitrary <*> arbitrary <*> arbitrary
+    arbitrary = Rectangle <$> arbitrary <*> arbitrary <*> arbitrary <*> return initialState
 
 -- | returns the lower right corner of rectangles
 end :: Rectangle -> Vector
 end r = start r +~ Vector (width r) (height r)
 
-modifyWidth :: (Double -> Double) -> Rectangle -> Rectangle
-modifyWidth f (Rectangle start w h) = Rectangle start (f w) h
+modifyWidth :: (Double -> Double) -> EdgeState -> Rectangle -> Rectangle
+modifyWidth f rightSideState (Rectangle start w h state) =
+    Rectangle start (f w) h (insert DRight rightSideState state)
 
 -- | rotates the given rectangle by 90 degrees
 rotateRectangleHalfPi :: Rectangle -> Rectangle
-rotateRectangleHalfPi (Rectangle (Vector x y) w h) =
-    Rectangle (Vector (- y - h) x) h w
+rotateRectangleHalfPi (Rectangle (Vector x y) w h s) =
+    Rectangle (Vector (- y - h) x) h w (mapPairs (\ k a -> (rotateDirection k, a)) s)
 
 -- conversions
 
 toRectangle :: ShapeType -> Rectangle
 toRectangle (Polygon [Vector x1 y1, Vector x2 y2, Vector x3 y3, Vector x4 y4])
     | x1 == x2 && x3 == x4 && y1 == y4 && y2 == y3 =
-        Rectangle (Vector x1 y1) (x3 - x1) (y3 - y1)
+        Rectangle (Vector x1 y1) (x3 - x1) (y3 - y1) initialState
 
 fromRectangle :: Rectangle -> ShapeType
-fromRectangle (Rectangle (Vector x y) w h) = Polygon [
+fromRectangle (Rectangle (Vector x y) w h _) = Polygon [
         Vector x y,
         Vector x (y + h),
         Vector (x + w) (y + h),
         Vector (x + w) y
       ]
+
+type ChangeState = Map Direction EdgeState
+
+initialState = fromList $ zip [toEnum 0 ..] (repeat Unchanged)
+
+data EdgeState = Unchanged | Expanded | Shrunk
+    deriving (Eq, Show)
+
+rightSide :: Rectangle -> EdgeState
+rightSide = state >>> (! DRight)
 
 
 -- * actual algorithm
@@ -80,7 +95,7 @@ removeStickyEdges :: [ShapeType] -> [ShapeType]
 removeStickyEdges =
     map toRectangle >>>
     mergePairs removeContained >>>
-    moveSides >>>
+    fixpoint moveSides >>>
     map fromRectangle >>>
     removeWedges >>>
     id
@@ -97,7 +112,6 @@ removeContained a b =
 -- but with rotating is applied to all sides.
 moveSides :: [Rectangle] -> [Rectangle]
 moveSides =
-    moveRightSides >>>
     map rotateRectangleHalfPi >>>
     moveRightSides >>>
     map rotateRectangleHalfPi >>>
@@ -105,6 +119,7 @@ moveSides =
     map rotateRectangleHalfPi >>>
     moveRightSides >>>
     map rotateRectangleHalfPi >>>
+    moveRightSides >>>
     id
 
 moveRightSides = mergePairs moveRightSide
@@ -116,23 +131,24 @@ moveRightSide a b |
     x (end a) == x (end b) &&
     y (start a) > y (start b) &&
     y (end a) < y (end b)
-  = Just [modifyWidth (subtract (x (end a) - x (start b))) a, b]
+  = Just [modifyWidth (subtract (x (end a) - x (start b))) Shrunk a, b]
 moveRightSide a b |
-    -- rectangles overlap, one horizontal side is flush --> form an L-shaped thing
+    -- rectangles overlap, one horizontal side is flush --> expand rect, form an L-shaped thing
+    rightSide a `elem` [Unchanged, Expanded] &&
     x (end a) >= x (start b) &&
     x (end a) < x (end b) &&
     ((y (start a) > y (start b) && -- downside is flush
       y (end a) == y (end b)) ||
      (y (start a) == y (start b) && -- upside is flush
       y (end a) < y (end b)))
-  = Just [modifyWidth (+ (x (end b) - x (end a))) a, b]
+  = Just [modifyWidth (+ (x (end b) - x (end a))) Expanded a, b]
 moveRightSide a b |
     -- both horizontal sides are flush --> merge rects
     x (end a) >= x (start b) &&
     x (end a) <= x (end b) &&
     y (start a) == y (start b) &&
     y (end a) == y (end b)
-  = Just [Rectangle (start a) (x (end b) - x (start a)) (height a)]
+  = Just [Rectangle (start a) (x (end b) - x (start a)) (height a) initialState]
 moveRightSide a b = Nothing
 
 -- | moves two points in L-shaped combinations of two shapes to avoid sticky edges
@@ -160,7 +176,11 @@ rotateShapeTypeHalfPi (Polygon v) = Polygon $ map rotateVectorHalfPi (tail v +: 
 rotateVectorHalfPi :: Vector -> Vector
 rotateVectorHalfPi (Vector x y) = Vector (- y) x
 
-
+rotateDirection :: Direction -> Direction
+rotateDirection DLeft = DUp
+rotateDirection DUp = DRight
+rotateDirection DRight = DDown
+rotateDirection DDown = DLeft
 
 
 tests =
@@ -170,9 +190,9 @@ tests =
 testRotateVectorHalfPi v = v == superApply 4 rotateVectorHalfPi v
 
 testRotateRectangleHalfPi r =
-    whenFail (putStrLn ("rotateRectangleHalfPi: " ++ show (r, r'))) 
+    label ("rotateRectangleHalfPi: " ++ show (r, r'))
         (equals r r')
   where
     r' = superApply 4 rotateRectangleHalfPi r
-    equals (Rectangle (Vector a b) c d) (Rectangle (Vector p q) r s) =
+    equals (Rectangle (Vector a b) c d _) (Rectangle (Vector p q) r s _) =
         a ~= p && b ~= q && c ~= r && d ~= s
