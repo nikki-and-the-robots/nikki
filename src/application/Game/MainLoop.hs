@@ -70,17 +70,16 @@ data GameState = GameState {
 setScene :: GameState -> Scene Object_ -> GameState
 setScene s x = s{scene = x}
 
-initialStateRef :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO (Scene Object_))
+initialStateRef :: Ptr QApplication -> Ptr AppWidget -> CM.Space -> IO (Scene Object_)
     -> IO (IORef GameState)
-initialStateRef app widget scene = initialState app widget scene >>= newIORef
+initialStateRef app widget space scene = initialState app widget space scene >>= newIORef
 
-initialState :: Ptr QApplication -> Ptr AppWidget -> (CM.Space -> IO (Scene Object_)) -> IO GameState
-initialState app widget startScene = do
-    cmSpace <- initSpace gravity
-    scene <- startScene cmSpace
+initialState :: Ptr QApplication -> Ptr AppWidget -> CM.Space -> IO (Scene Object_) -> IO GameState
+initialState app widget space startScene = do
+    scene <- startScene
     qtime <- newQTime
     startQTime qtime
-    return $ GameState cmSpace scene qtime
+    return $ GameState space scene qtime
 
 
 

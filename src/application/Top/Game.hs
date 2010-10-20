@@ -9,6 +9,7 @@ import Control.Monad.State
 import Physics.Chipmunk
 import Graphics.Qt
 
+import Base.Constants
 import Base.GlobalCatcher
 import Base.FPSState
 import Base.Types
@@ -23,9 +24,9 @@ import Top.Initialisation
 
 
 playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
-playLevel app parent editorScene = AppState $ do
-    let scene :: (Space -> IO (Scene Object_)) = flip initScene (editorObjects editorScene)
-    gameAppState <- initialState (application app) (window app) scene
+playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
+    let scene :: IO (Scene Object_) = initScene space (editorObjects editorScene)
+    gameAppState <- initialState (application app) (window app) space scene
     sceneMVar <- newEmptyMVar
     fpsRef <- initialFPSRef
     setDrawingCallbackAppWidget (window app) (Just $ render fpsRef sceneMVar)
@@ -33,6 +34,7 @@ playLevel app parent editorScene = AppState $ do
     setRenderLooped (window app) True
     runStateT (gameLoop app sceneMVar) gameAppState
     setRenderLooped (window app) False
+    setDrawingCallbackAppWidget (window app) Nothing
 
     return parent
 
