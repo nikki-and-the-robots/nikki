@@ -1,5 +1,5 @@
 
-module Sorts.Nikki.Control where
+module Sorts.Nikki.Control (controlNikki) where
 
 
 import Prelude hiding (lookup)
@@ -30,11 +30,16 @@ setNikkiSurfaceVelocity nikki surfaceVelocity =
     forM_ (feetShapes nikki) $ \ fs ->
         surfaceVel fs $= Vector surfaceVelocity 0
 
-controlBody :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO ()
-controlBody _ _ (False, _) _ nikki = do
+controlNikki :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO Nikki
+controlNikki now contacts cd sort =
+--     fakeControl (snd cd) >>>>
+    passThrough (control now contacts cd sort)
+
+control :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO ()
+control _ _ (False, _) _ nikki = do
     forM_ (feetShapes nikki) $ \ fs ->
         surfaceVel fs $= zero
-controlBody now contacts (True, cd) nsort nikki =
+control now contacts (True, cd) nsort nikki =
     case state nikki of
 
         State Wait direction -> do
@@ -109,7 +114,7 @@ controlBody now contacts (True, cd) nsort nikki =
         x -> es "controlBody" x
 
 
-fakeControl :: ControlData -> Nikki -> IO ()
+fakeControl :: ControlData -> Nikki -> IO Nikki
 fakeControl cd nikki = do
     when (A `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector (- step) 0)
@@ -128,7 +133,7 @@ fakeControl cd nikki = do
     when (J `elem` extractPressedKeys (pressed cd)) $
         inner (+~ Vector (10000 * step) 0)
     p <- getPosition $ chipmunk nikki
-    every 100 $ ppp p
+    return $ nikki
   where
     step = 0.01
     inner f = modifyPosition (chipmunk nikki) (roundX . f)

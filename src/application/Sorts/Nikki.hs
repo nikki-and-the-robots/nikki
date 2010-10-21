@@ -120,9 +120,10 @@ instance Sort NSort Nikki where
     updateNoSceneChange sort now contacts cd nikki = inner nikki
       where
         inner =
+            fromPure resetDebugCmd >>>>
             updateState now contacts cd >>>>
             fromPure (updateStartTime now (state nikki)) >>>>
-            passThrough (controlBody now contacts cd sort)
+            controlNikki now contacts cd sort
 --             >>>> debugNikki contacts
 
     render nikki sort ptr offset now = do
@@ -159,16 +160,25 @@ renderClouds _ _ _ _ _ = return ()
 
 -- debugging
 
+resetDebugCmd :: Nikki -> Nikki
+resetDebugCmd n = n{debugCmd = const $ const $ return ()}
+
+addDebugCmd :: (Ptr QPainter -> Offset Double -> IO ()) -> Nikki -> Nikki
+addDebugCmd cmd nikki@Nikki{debugCmd} =
+    nikki{debugCmd = \ ptr offset ->
+        debugCmd ptr offset >> cmd ptr offset}
+
 debugNikki :: Contacts -> Nikki -> IO Nikki
 debugNikki contacts nikki = do
-    return nikki{debugCmd = worker contacts}
+    return $ addDebugCmd (worker contacts) nikki
   where
     worker contacts ptr offset = do
         resetMatrix ptr
+        nikkiPos <- getPosition $ chipmunk nikki
+        drawText ptr (Position 30 30) False $ pp nikkiPos
         translate ptr offset
         setPenColor ptr 0 255 255 255 1
         nikkiPos <- getPosition $ chipmunk nikki
---         print $ map (-~ nikkiPos) (concatMap snd $ nikkiContacts contacts)
         let pawContacts = Set.unions $ map (paws nikkiPos) $ (nikkiContacts contacts)
         mapM_ (inner ptr) $ Set.toList pawContacts
     inner ptr (normal, Vector x y) = do
