@@ -70,7 +70,7 @@ Executable            nikki
         , random
         , StateVar
         , transformers
-        , QuickCheck
+        , QuickCheck >= 2
 
     if os(linux)
         extra-libraries:
