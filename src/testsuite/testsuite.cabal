@@ -33,7 +33,7 @@ Cabal-version:       >=1.2
 
 
 Executable testsuite
-    hs-source-dirs: ., ../application, ../qtRendering, ../application/dist/build/autogen
+    hs-source-dirs: ., .., ../dist/build/autogen
 
     Main-is: testsuite.hs
 
@@ -60,4 +60,4 @@ Executable testsuite
     extra-libraries:
         qtwrapper, QtOpenGL
     extra-lib-dirs:
-        ../qtRendering/cpp/dist
+        ../cpp/dist

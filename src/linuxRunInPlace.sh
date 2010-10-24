@@ -8,8 +8,7 @@ exit 1
 }
 trap error ERR
 
-bash ./compile.sh
-
-cd application
-cabal install
-
+cd ..
+export nikki_datadir=$(pwd)
+cd src
+dist/build/nikki/nikki

@@ -23,62 +23,64 @@ echo
 echo ========================================================================
 echo
 
-if [ -z "$QT_DIR" ]
-then
-    echo QT_DIR not set. Please let QT_DIR point to your Qt SDK.
-    exit 1
-fi
+echo does not work right now
 
-if [ -z "$SFML_DIR" ]
-then
-    echo SFML_DIR not set. Please let SFML_DIR point to your SFML2 copy.
-    exit 1
-fi
-
-echo ======================
-echo compiling...
-echo ======================
-./compile.sh
-
-echo ======================
-echo cleaning...
-echo ======================
-if [ -d nikki ]
-then
-    rm -rfv nikki/*
-fi
-
-echo ======================
-echo copying...
-echo ======================
-mkdir -p nikki
-# sfml-dlls
-cp -v $SFML_DIR/CSFML/lib/mingw/csfml-audio.dll nikki
-cp -v $SFML_DIR/CSFML/lib/mingw/csfml-system.dll nikki
-cp -v $SFML_DIR/extlibs/bin/openal32.dll nikki
-cp -v $SFML_DIR/extlibs/bin/libsndfile-1.dll nikki
-# qt-dlls
-cp -v $QT_DIR/qt/bin/QtCore4.dll nikki
-cp -v $QT_DIR/qt/bin/QtGui4.dll nikki
-cp -v $QT_DIR/qt/bin/QtOpenGL4.dll nikki
-# mingw-dlls
-cp -v /mingw/bin/mingwm10.dll nikki
-cp -v /mingw/bin/libgcc_s_dw2-1.dll nikki
-# main binary
-cp -v application/dist/build/nikki/nikki.exe nikki
-# data
-echo copying data...
-cp -r ../data nikki
-# and levels
-echo copying levels...
-cp -r ../levels nikki
-
-echo ======================
-echo zipping...
-echo ======================
-
-export ZIPFILE="nikki-$(date +%Y-%m-%d-%H-%M-%S).zip"
-zip -r $ZIPFILE nikki
-
-# scp $ZIPFILE shahn@joyridelabs.de://var//joyride//darcs//alpha-binaries//win32//
-
+# if [ -z "$QT_DIR" ]
+# then
+#     echo QT_DIR not set. Please let QT_DIR point to your Qt SDK.
+#     exit 1
+# fi
+# 
+# if [ -z "$SFML_DIR" ]
+# then
+#     echo SFML_DIR not set. Please let SFML_DIR point to your SFML2 copy.
+#     exit 1
+# fi
+# 
+# echo ======================
+# echo compiling...
+# echo ======================
+# ./compile.sh
+# 
+# echo ======================
+# echo cleaning...
+# echo ======================
+# if [ -d nikki ]
+# then
+#     rm -rfv nikki/*
+# fi
+# 
+# echo ======================
+# echo copying...
+# echo ======================
+# mkdir -p nikki
+# # sfml-dlls
+# cp -v $SFML_DIR/CSFML/lib/mingw/csfml-audio.dll nikki
+# cp -v $SFML_DIR/CSFML/lib/mingw/csfml-system.dll nikki
+# cp -v $SFML_DIR/extlibs/bin/openal32.dll nikki
+# cp -v $SFML_DIR/extlibs/bin/libsndfile-1.dll nikki
+# # qt-dlls
+# cp -v $QT_DIR/qt/bin/QtCore4.dll nikki
+# cp -v $QT_DIR/qt/bin/QtGui4.dll nikki
+# cp -v $QT_DIR/qt/bin/QtOpenGL4.dll nikki
+# # mingw-dlls
+# cp -v /mingw/bin/mingwm10.dll nikki
+# cp -v /mingw/bin/libgcc_s_dw2-1.dll nikki
+# # main binary
+# cp -v application/dist/build/nikki/nikki.exe nikki
+# # data
+# echo copying data...
+# cp -r ../data nikki
+# # and levels
+# echo copying levels...
+# cp -r ../levels nikki
+# 
+# echo ======================
+# echo zipping...
+# echo ======================
+# 
+# export ZIPFILE="nikki-$(date +%Y-%m-%d-%H-%M-%S).zip"
+# zip -r $ZIPFILE nikki
+# 
+# # scp $ZIPFILE shahn@joyridelabs.de://var//joyride//darcs//alpha-binaries//win32//
+# 

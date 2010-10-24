@@ -33,7 +33,7 @@ Cabal-version:       >=1.2
 
 
 Executable writeEmptyTemplateLevel
-  hs-source-dirs: ., ../application, ../qtRendering, ../application/dist/build/autogen/
+  hs-source-dirs: ., .., ../dist/build/autogen/
 
   -- .hs or .lhs file containing the Main module.
   Main-is: writeEmptyTemplateLevel.hs
@@ -61,4 +61,4 @@ Executable writeEmptyTemplateLevel
   extra-libraries:
     qtwrapper, QtOpenGL
   extra-lib-dirs:
-    ../qtRendering/cpp/dist
+    ../cpp/dist

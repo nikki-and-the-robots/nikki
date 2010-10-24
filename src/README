@@ -4,25 +4,27 @@ This directory contains all source files for Nikki and the Robots.
 1. Available scripts
 ====================
 
-./installWithCabal.sh
-Should install nikki (with cabal install, so probably in $HOME/.cabal). If you just want to try out the game, this is probably what you want.
-
 ./compile.sh
 Compiles everything in place.
 
 ./clean.sh
-removes all compilation products
+Removes all compilation products.
 
-./runInPlace.sh
-Runs the game in place. Does recompile some (but NOT all) of the sources.
-Doesn't work on windows.
+./linuxRunInPlace.sh
+Runs the game in place. Run ./compile.sh first.
 
-./deploy.sh
-Creates a distributable application. Works only on windows.
+./windowsDeploy.sh
+Creates a distributable application on windows. 
 (Compiling on windows is very complicated right now. We are using msys and mingw to do this. The main problem is, that both Qt and the GHC come with their own gcc version. We managed to get the ghc use Qt's gcc, but it seems not very elegant. If you have experience in compiling stuff on windows and have some time to help out, you effort would be highly appreciated.)
 
-./haddock
-Builds the Haskell code documentation under application/
+./haddock.sh
+Builds the Haskell code documentation. Run ./compile.sh first.
+
+./testsuite
+Contains a testsuite (which covers only very selected parts of the code).
+
+./scripts
+Contains helper scripts.
 
 
 2. External dependencies
@@ -63,7 +65,7 @@ Builds the Haskell code documentation under application/
         cabal install
 
 * lots of haskell stuff from hackage
-    look at application/nikki.cabal for full hackage dependencies
+    look at nikki.cabal for full hackage dependencies
 
 
 3. Feedback

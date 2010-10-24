@@ -1,0 +1,5 @@
+Scripts
+=======
+
+./writeEmptyTemplateLevel.hs
+Will write an empty level into data/template_levels/empty.nl

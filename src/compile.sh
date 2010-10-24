@@ -11,32 +11,17 @@ trap error ERR
 echo ========================================================================
 echo This is a simple script, trying to make it easy to compile Nikki. Look at README for more details.
 echo This is tested on linux and on windows using msys
-echo
-echo You can create a file called "ghc_options" that contains options that will be passed to any calls of ghc.
-echo
-echo You can create a file called "cabal_options" that contains options that will be passed to any calls of cabal.
 echo ========================================================================
 echo
 echo compiling:
 
-if [ -f ghc_options ]
-then
-    GHC_OPTIONS=$(cat ghc_options)
-else
-    GHC_OPTIONS=""
-fi
+# building c++-part (qt-bindings)
+cd cpp
+mkdir -p dist
+cd dist
+cmake ..
+make
+cd ../..
 
-cd buildSystem
-cabal configure --ghc-options="$GHC_OPTIONS"
+cabal configure
 cabal build
-# ghc --make Main.hs -o build $GHC_OPTIONS
-cd ..
-
-BUILD_COMMAND="buildSystem/dist/build/build/build build_application"
-if (which hate)
-then
-    $BUILD_COMMAND 2>&1 | hate application
-else
-    $BUILD_COMMAND
-fi
-
