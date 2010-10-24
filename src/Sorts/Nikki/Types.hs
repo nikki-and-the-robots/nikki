@@ -54,7 +54,7 @@ addBatteryPower n = n{batteryPower = batteryPower n + 1}
 
 data State = State {
     action :: Action,
-    direction :: HorizontalDirection -- | the direction nikki faces
+    direction :: HorizontalDirection -- the direction nikki faces
   }
     deriving (Show)
 
