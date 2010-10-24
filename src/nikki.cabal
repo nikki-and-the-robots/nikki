@@ -84,7 +84,7 @@ Executable            nikki
         extra-libraries:
             qtwrapper, QtOpenGL4, QtGui4, QtCore4, stdc++
         extra-lib-dirs:
-            ../qtRendering,
-            C:/Qt/2010.02.1/qt/lib
+            cpp/dist/,
+            C:/Qt/2010.02.1/qt/lib/
 
 

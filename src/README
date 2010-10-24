@@ -4,14 +4,14 @@ This directory contains all source files for Nikki and the Robots.
 1. Available scripts
 ====================
 
-./compile.sh
+./linuxCompile.sh and ./windowsCompile.sh
 Compiles everything in place.
 
 ./clean.sh
 Removes all compilation products.
 
 ./linuxRunInPlace.sh
-Runs the game in place. Run ./compile.sh first.
+Runs the game in place. Run ./linuxCompile.sh first.
 
 ./windowsDeploy.sh
 Creates a distributable application on windows. 
