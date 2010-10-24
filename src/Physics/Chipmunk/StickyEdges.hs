@@ -16,19 +16,18 @@ module Physics.Chipmunk.StickyEdges (removeStickyEdges, tests) where
 import Prelude hiding (Left, Right)
 
 import Data.Abelian
-import Data.Maybe
 import Data.Map (Map, fromList, (!), insert)
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative ((<*>))
 import Control.Arrow
 
 import Test.QuickCheck
 
-import Physics.Hipmunk (ShapeType(Polygon, vertices), Vector(Vector), toAngle, Angle)
+import Physics.Hipmunk (ShapeType(Polygon), Vector(Vector))
 
 import Utils hiding (tests)
 
-import Physics.Chipmunk.Types (foldAngle, vectorX, vectorY, rotateVector)
+import Physics.Chipmunk.Types (vectorX, vectorY)
 
 import Base.Directions
 

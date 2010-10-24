@@ -13,9 +13,6 @@ import Utils
 import Data.Abelian
 import Data.Generics
 
-import Control.Arrow
-import Control.Monad
-
 import System.FilePath
 
 import Graphics.Qt as Qt
