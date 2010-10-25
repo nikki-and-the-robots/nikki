@@ -26,6 +26,7 @@ import Graphics.Qt
 import Utils
 
 import Base.Configuration as Configuration
+import Base.Timer
 
 
 
@@ -35,7 +36,7 @@ data FpsState
     = FpsState {
         counter :: !Int,
         averageSpan :: !(Maybe Double),
-        time :: Maybe (Ptr QTime),
+        oldTime :: Maybe Double,
         logHandle :: Maybe Handle
     }
     | NotActivated
@@ -58,25 +59,25 @@ initialFPSState =
 tickFPS :: FpsState -> IO FpsState
 tickFPS (FpsState counter avg Nothing logHandle) = do
     -- first time: QTime has to be constructed
-    ptr <- newQTime
-    startQTime ptr
-    return $ FpsState counter avg (Just ptr) logHandle
-tickFPS (FpsState counter avg (Just qtime) logHandle) = do
-        elapsed <- restartQTime qtime
+    now <- getNow
+    return $ FpsState counter avg (Just now) logHandle
+tickFPS (FpsState counter avg (Just oldTime) logHandle) = do
+        now <- getNow
+        let elapsed = now - oldTime
         log elapsed
         let avg' = calcAvg counter avg elapsed
-        handle (FpsState (counter + 1) (Just avg') (Just qtime) logHandle)
+        handle (FpsState (counter + 1) (Just avg') (Just now) logHandle)
   where
     handle x@(FpsState 10 (Just avg) qtime lf) = do
-        putStrLn ("(FPS: " ++ show (1000 / avg) ++ ") | ")
+        putStrLn ("(FPS: " ++ show (1 / avg) ++ ") | ")
 --         putStrLn "terminating application for profiling purposes." >> quitQApplication
         return $ FpsState 0 Nothing qtime lf
     handle x = return x
 
-    calcAvg :: Int -> Maybe Double -> QtInt -> Double
-    calcAvg 0 Nothing newValue = fromIntegral newValue
+    calcAvg :: Int -> Maybe Double -> Double -> Double
+    calcAvg 0 Nothing newValue = newValue
     calcAvg len (Just avg) newValue =
-        (lenF * avg + fromIntegral newValue) / (lenF + 1)
+        (lenF * avg + newValue) / (lenF + 1)
       where lenF = fromIntegral len
 
     log elapsed = whenMaybe logHandle $ \ h -> 

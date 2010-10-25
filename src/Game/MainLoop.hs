@@ -29,6 +29,7 @@ import Base.Constants
 import Base.Types
 import Base.PhysicsProfiling
 import Base.Application
+import Base.Timer
 
 import Object
 
@@ -64,7 +65,7 @@ type AppMonad o = StateT GameState IO o
 data GameState = GameState {
     cmSpace :: CM.Space,
     scene :: Scene Object_,
-    timer :: Ptr QTime
+    startTime :: Double
   }
 
 setScene :: GameState -> Scene Object_ -> GameState
@@ -77,9 +78,8 @@ initialStateRef app widget space scene = initialState app widget space scene >>=
 initialState :: Ptr QApplication -> Ptr AppWidget -> CM.Space -> IO (Scene Object_) -> IO GameState
 initialState app widget space startScene = do
     scene <- startScene
-    qtime <- newQTime
-    startQTime qtime
-    return $ GameState space scene qtime
+    now <- getNow
+    return $ GameState space scene now
 
 
 
@@ -91,7 +91,6 @@ gameLoop app sceneMVar = do
     loop 0
   where
     loop oldTime = do
-        timer_ <- gets timer
         startTime <- getTime
         -- input events
         controlData <- liftIO $ pollAppEvents $ keyPoller app
@@ -135,7 +134,7 @@ waitPhysics :: Double -> AppMonad ()
 waitPhysics startTime = do
     let loop n = do
             now <- getTime
-            if (now - startTime < (stepQuantum * 1000)) then
+            if (now - startTime < stepQuantum) then
                 loop (n + 1)
               else
                 return n
@@ -145,9 +144,9 @@ waitPhysics startTime = do
 timeFactor = 1.0
 
 
--- | returns the time passed since program start
+-- | returns the time passed since level start
 getTime :: AppMonad Double
 getTime = do
-    qtime <- gets timer
-    t <- liftIO $ elapsed qtime
-    return (fromIntegral t * timeFactor)
+    startTime_ <- gets startTime
+    now <- liftIO $ getNow
+    return (now - startTime_)

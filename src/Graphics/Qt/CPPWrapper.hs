@@ -250,19 +250,6 @@ sizeQPixmap ptr = do
     return $ Size w h
 
 
--- * QTime
-
-data QTime
-
-foreign import ccall newQTime :: IO (Ptr QTime)
-
-foreign import ccall startQTime :: Ptr QTime -> IO ()
-
-foreign import ccall restartQTime :: Ptr QTime -> IO QtInt
-
-foreign import ccall elapsed :: Ptr QTime -> IO QtInt
-
-
 -- * QKeyEvent
 
 -- type declaration in Qt.Types, because it's needed in Qt.Events

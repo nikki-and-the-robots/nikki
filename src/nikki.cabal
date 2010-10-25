@@ -70,6 +70,7 @@ Executable            nikki
         , StateVar
         , transformers
         , QuickCheck >= 2
+        , time
 
     if os(linux)
         extra-libraries:
