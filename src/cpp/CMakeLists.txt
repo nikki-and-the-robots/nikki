@@ -23,5 +23,5 @@ ENDIF(UNIX)
 
 add_custom_command(TARGET qtwrapper POST_BUILD
                    COMMAND touch
-                   ../Main.hs)
+                   ../../Main.hs) # to force re-linking
 
