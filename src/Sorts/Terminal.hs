@@ -30,7 +30,7 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt as Qt
 
-import Paths_nikki
+import Paths
 import Utils
 
 import Base.Events

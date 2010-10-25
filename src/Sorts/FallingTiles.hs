@@ -17,7 +17,7 @@ import Physics.Chipmunk as CM hiding (Static)
 
 import Graphics.Qt
 
-import Paths_nikki
+import Paths
 
 import Base.Constants
 import Base.Pixmap

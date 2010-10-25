@@ -32,7 +32,7 @@ import GHC.Conc
 import Graphics.Qt
 
 import Utils
-import Paths_nikki
+import Paths
 
 import Base.GlobalCatcher
 import Base.Types

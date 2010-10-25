@@ -24,7 +24,7 @@ import Sound.SFML
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
 
-import Paths_nikki
+import Paths
 import Utils
 
 import Base.Constants

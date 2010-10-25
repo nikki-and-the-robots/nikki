@@ -12,7 +12,7 @@ import System.FilePath
 
 import Graphics.Qt
 
-import Paths_nikki
+import Paths
 import Utils
 
 import Base.Constants
