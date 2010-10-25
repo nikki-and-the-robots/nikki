@@ -31,6 +31,8 @@ AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
 
     this->repaintTimer = new QTimer(this);
     QObject::connect(this->repaintTimer, SIGNAL(timeout()), this, SLOT(update()));
+
+    QObject::connect(this, SIGNAL(setRenderingLoopedSignal(bool)), this, SLOT(setRenderingLoopedSlot(bool)));
 };
 
 void AppWidget::paintEvent(QPaintEvent* event) {
@@ -55,6 +57,17 @@ void AppWidget::keyReleaseEvent(QKeyEvent* e) {
     }
 };
 
+void AppWidget::setRenderingLooped(bool looped) {
+    emit setRenderingLoopedSignal(looped);
+};
+
+void AppWidget::setRenderingLoopedSlot(bool looped) {
+    if (looped) {
+        this->repaintTimer->start();
+    } else {
+        this->repaintTimer->stop();
+    }
+};
 
 
 // ** stuff called by haskell
@@ -123,12 +136,8 @@ extern "C" AppWidget* newAppWidget(int swapInterval) {
     return new AppWidget(format);
 };
 
-extern "C" void setRenderLooped(AppWidget* self, bool looped) {
-    if (looped) {
-        self->repaintTimer->start();
-    } else {
-        self->repaintTimer->stop();
-    }
+extern "C" void setRenderingLooped(AppWidget* self, bool looped) {
+    self->setRenderingLooped(looped);
 };
 
 extern "C" void updateAppWidget(AppWidget* self) {

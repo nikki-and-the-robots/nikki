@@ -29,5 +29,13 @@ public:
 
     void keyReleaseEvent(QKeyEvent* e);
 
+    void setRenderingLooped(bool b);
+
+signals:
+    void setRenderingLoopedSignal(bool b);
+
+public slots:
+    void setRenderingLoopedSlot(bool b);
+
 };
 

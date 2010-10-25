@@ -31,9 +31,9 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
     fpsRef <- initialFPSRef
     setDrawingCallbackAppWidget (window app) (Just $ render fpsRef sceneMVar)
 
-    setRenderLooped (window app) True
+    setRenderingLooped (window app) True
     runStateT (gameLoop app sceneMVar) gameAppState
-    setRenderLooped (window app) False
+    setRenderingLooped (window app) False
     setDrawingCallbackAppWidget (window app) Nothing
 
     return parent

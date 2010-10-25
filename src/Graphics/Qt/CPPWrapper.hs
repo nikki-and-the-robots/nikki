@@ -67,7 +67,7 @@ data AppWidget
 
 foreign import ccall newAppWidget :: Int -> IO (Ptr AppWidget)
 
-foreign import ccall setRenderLooped :: Ptr AppWidget -> Bool -> IO ()
+foreign import ccall setRenderingLooped :: Ptr AppWidget -> Bool -> IO ()
 
 foreign import ccall updateAppWidget :: Ptr AppWidget -> IO ()
 
