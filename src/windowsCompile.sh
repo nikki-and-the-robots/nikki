@@ -15,8 +15,8 @@ trap error ERR
 cd cpp
 mkdir -p dist
 cd dist
-# cmake -G "MSYS Makefiles" ..
-# make
+cmake -G "MSYS Makefiles" ..
+make
 cd ../..
 
 cabal configure --with-ar=ar --with-gcc=gcc --with-ld=ld --ghc-options=" -pgmc gcc -pgml gcc -pgma gcc -pgmwindres windres -pgmP \"gcc -E -undef -traditional\""
