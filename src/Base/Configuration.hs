@@ -7,7 +7,8 @@ import Graphics.Qt
 
 -- | developing configuration
 data Development = Development {
-    profiling :: Bool,
+    graphicsProfiling :: Bool,
+    physicsProfiling :: Bool,
     windowSize :: WindowSize,
     showScene :: Bool,
     showXYCross :: Bool,
@@ -15,7 +16,8 @@ data Development = Development {
   }
 
 development = Development {
-    profiling = False,
+    graphicsProfiling = False,
+    physicsProfiling = False,
     windowSize = Windowed (Size 1000 650), -- FullScreen,
     showScene = True,
     showXYCross = False,

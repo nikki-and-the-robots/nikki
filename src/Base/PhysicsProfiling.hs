@@ -16,7 +16,7 @@ import Base.Configuration
 
 -- | tell the profiler how many busy wait cycles were used
 tickBusyWaitCounter :: MonadIO m => Int -> m ()
-tickBusyWaitCounter _ | not (profiling development) = return ()
+tickBusyWaitCounter _ | not (physicsProfiling development) = return ()
 tickBusyWaitCounter (fromIntegral -> waited :: Double) = liftIO $ do
     accu <- readIORef busyWaitCounter
     let zero = if waited == 0 then 1 else 0

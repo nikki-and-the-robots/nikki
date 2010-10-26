@@ -48,7 +48,7 @@ logFile = "fps.dat"
 -- creates the initial FpsState
 initialFPSState :: IO FpsState
 initialFPSState =
-    if profiling Configuration.development then do
+    if graphicsProfiling Configuration.development then do
 --         logHandle <- openFile logFile WriteMode
 --         return $ FpsState 0 Nothing Nothing logHandle
         return $ FpsState 0 Nothing Nothing Nothing
