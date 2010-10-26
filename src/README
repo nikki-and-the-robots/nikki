@@ -53,13 +53,13 @@ Contains helper scripts.
 
 * homegrown haskell bindings for sfml-audio
     install with e.g.:
-        darcs get http://darcs.joyridelabs.de/sfml-audio/
+        darcs get http://code.joyridelabs.de/sfml-audio/
         cd sfml-audio
         cabal install
 
-* hipmunk-5.2.0.2 from http://darcs.joyridelabs.de/Hipmunk-5.2.0.2.tar.gz
+* hipmunk-5.2.0.2 from http://code.joyridelabs.de/Hipmunk-5.2.0.2.tar.gz
     install with e.g.:
-        wget http://darcs.joyridelabs.de/Hipmunk-5.2.0.2.tar.gz
+        wget http://code.joyridelabs.de/Hipmunk-5.2.0.2.tar.gz
         tar xf Hipmunk-5.2.0.2.tar.gz
         cd Hipmunk-5.2.0.2
         cabal install
