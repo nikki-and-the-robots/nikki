@@ -50,6 +50,8 @@ Contains helper scripts.
         make
         sudo make install
     Don't forget to install sfml before trying to build csfml.
+	sfml has some dependencies (c-libraries) of its own:
+		* openAL
 
 * homegrown haskell bindings for sfml-audio
     install with e.g.:
