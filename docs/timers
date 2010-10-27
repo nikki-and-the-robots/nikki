@@ -1,0 +1,11 @@
+We need to accurately time the steps done in the physics simulation. The simulation should never be faster than real life, but the waiting mechanism should be as exact as possible.
+
+Normally, 'threadDelay' is not accurate. Therefore we have a busy wait, which is better in terms of accuracy, but we don't really want a busy wait, of course.
+
+I think, we could get better behaviour with 'threadDelay' (even better than with busy wait), when we do three things:
+
+1. Don't call threadDelay, if the time the thread would have to wait is smaller than 0. (Maybe it's even better to use some small positive number as limit.)
+
+2. Don't call threadDelay with the full time the thread should wait, but with something a little smaller. (like 0.00011 seconds shorter)
+
+3. Pass the runtime option -C.
