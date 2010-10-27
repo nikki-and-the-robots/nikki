@@ -4,7 +4,7 @@ Normally, 'threadDelay' is not accurate. Therefore we have a busy wait, which is
 
 I think, we could get better behaviour with 'threadDelay' (even better than with busy wait), when we do three things:
 
-1. Don't call threadDelay, if the time the thread would have to wait is smaller than 0. (Maybe it's even better to use some small positive number as limit.)
+1. Don't call threadDelay, if the time the thread would have to wait is smaller than 0. (Maybe it's even better to use some small positive number as limit, but empirical data suggests otherwise.)
 
 2. Don't call threadDelay with the full time the thread should wait, but with something a little smaller. (like 0.00011 seconds shorter)
 

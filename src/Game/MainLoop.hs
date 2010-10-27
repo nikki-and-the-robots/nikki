@@ -15,6 +15,7 @@ import Data.Set (member)
 
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
+import Control.Concurrent.TickTimer
 
 import GHC.Conc
 
@@ -88,10 +89,10 @@ initialState app widget space startScene = do
 gameLoop :: Application -> MVar (Scene Object_) -> AppMonad AppState
 gameLoop app sceneMVar = do
     initializeSceneMVar
-    loop 0
+    timer <- liftIO $ newTickTimer stepQuantum
+    loop timer
   where
-    loop oldTime = do
-        startTime <- getTime
+    loop timer = do
         -- input events
         controlData <- liftIO $ pollAppEvents $ keyPoller app
 
@@ -108,8 +109,8 @@ gameLoop app sceneMVar = do
             _ -> if StartButton `member` held controlData then
                 return FinalState -- TODO: should be a menu
               else do
-                waitPhysics startTime
-                loop startTime
+                liftIO $ waitTick timer
+                loop timer
 
     initializeSceneMVar :: AppMonad ()
     initializeSceneMVar = do
@@ -125,28 +126,3 @@ gameLoop app sceneMVar = do
             immutableCopyOfScene <- Game.Scene.immutableCopy s
             swapMVar sceneMVar immutableCopyOfScene
             return ()
-
-
--- | Waits till the real world catches up with the simulation.
--- Since 'threadDelay' seems to be far to inaccurate, we have a busy wait :(
--- TODO
-waitPhysics :: Double -> AppMonad ()
-waitPhysics startTime = do
-    let loop n = do
-            now <- getTime
-            if (now - startTime < stepQuantum) then
-                loop (n + 1)
-              else
-                return n
-    n <- loop 0
-    tickBusyWaitCounter n
-
-timeFactor = 1.0
-
-
--- | returns the time passed since level start
-getTime :: AppMonad Double
-getTime = do
-    startTime_ <- gets startTime
-    now <- liftIO $ getNow
-    return (now - startTime_)

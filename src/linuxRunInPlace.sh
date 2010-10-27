@@ -11,4 +11,4 @@ trap error ERR
 cd ..
 export nikki_datadir=$(pwd)
 cd src
-dist/build/nikki/nikki
+dist/build/nikki/nikki +RTS -C
