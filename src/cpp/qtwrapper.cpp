@@ -291,18 +291,6 @@ extern "C" QTime* newQTime() {
     return new QTime();
 };
 
-extern "C" void startQTime(QTime* ptr) {
-    ptr->start();
-};
-
-extern "C" int restartQTime(QTime* ptr) {
-    return ptr->restart();
-};
-
-extern "C" int elapsed(QTime* ptr) {
-    return ptr->elapsed();
-};
-
 // * QKeyEvent
 extern "C" int keyQKeyEvent(QKeyEvent* ptr) {
     return ptr->key();

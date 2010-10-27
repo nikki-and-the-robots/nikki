@@ -16,20 +16,19 @@ module Base.FPSState (
 import Prelude hiding ((.))
 
 import Data.IORef
+import Data.Time.Clock.POSIX
 
 import Control.Category
 
 import System.IO
 
-import Graphics.Qt
-
 import Utils
 
 import Base.Configuration as Configuration
-import Base.Timer
 
 
-
+-- | returns the seconds since epoch start
+getNow = realToFrac <$> getPOSIXTime
 
 -- State for this module (abstract type)
 data FpsState

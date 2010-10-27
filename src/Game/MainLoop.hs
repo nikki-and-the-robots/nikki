@@ -28,9 +28,7 @@ import Utils
 import Base.Events
 import Base.Constants
 import Base.Types
-import Base.PhysicsProfiling
 import Base.Application
-import Base.Timer
 
 import Object
 
@@ -65,8 +63,7 @@ type AppMonad o = StateT GameState IO o
 
 data GameState = GameState {
     cmSpace :: CM.Space,
-    scene :: Scene Object_,
-    startTime :: Double
+    scene :: Scene Object_
   }
 
 setScene :: GameState -> Scene Object_ -> GameState
@@ -79,9 +76,7 @@ initialStateRef app widget space scene = initialState app widget space scene >>=
 initialState :: Ptr QApplication -> Ptr AppWidget -> CM.Space -> IO (Scene Object_) -> IO GameState
 initialState app widget space startScene = do
     scene <- startScene
-    now <- getNow
-    return $ GameState space scene now
-
+    return $ GameState space scene
 
 
 -- | main loop for logic thread in gaming mode

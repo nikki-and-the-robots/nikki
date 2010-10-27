@@ -25,8 +25,6 @@ import Control.Applicative
 import Control.Monad
 import Control.Concurrent
 
-import Base.Constants
-
 
 data TickTimer = TickTimer Double (IORef Double)
 
@@ -45,4 +43,3 @@ waitTick (TickTimer secondsToPass oldRef) = do
         threadDelay $ round (waitTime * 10 ^ 6)
     now <- getMyTime
     writeIORef oldRef now
---     print (now / stepQuantum)
