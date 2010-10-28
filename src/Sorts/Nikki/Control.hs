@@ -98,6 +98,8 @@ control now contacts (True, cd) nsort nikki =
         State (WallSlide ji _) direction -> do
             setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
             setJumpForces now nikki ji
+            when (isNothing $ jumpButtonDirection ji) $
+                modifyVelocity (chipmunk nikki) (\ (Vector _ y) -> Vector 0 y)
 
         State Grip direction -> do
             setNikkiSurfaceVelocity nikki 0
