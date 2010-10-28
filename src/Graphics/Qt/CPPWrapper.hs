@@ -41,6 +41,8 @@ newQApplication = do
     cs <- newCString progName
     cppNewQApplication cs
 
+foreign import ccall destroyQApplication :: Ptr QApplication -> IO ()
+
 foreign import ccall execQApplication :: Ptr QApplication -> IO QtInt
 
 foreign import ccall quitQApplication :: IO ()

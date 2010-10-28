@@ -96,6 +96,10 @@ extern "C" QApplication* newQApplication(char* progName) {
     return new QApplication(*argcPtr, argv, true);
 };
 
+extern "C" void destroyQApplication(QApplication* ptr) {
+    delete ptr;
+};
+
 extern "C" int execQApplication(QApplication* ptr) {
     return ptr->exec();
 }
@@ -275,6 +279,7 @@ extern "C" QPixmap* newQPixmap(char* file) {
 };
 
 extern "C" void destroyQPixmap(QPixmap* ptr) {
+    // why return? (cause Ptr QPixmap -> IO ()?)
     return delete ptr;
 };
 

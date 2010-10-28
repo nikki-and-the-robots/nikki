@@ -13,6 +13,7 @@ module Graphics.Qt (
 import Data.Abelian
 
 import Control.Concurrent
+import Control.Exception
 
 import Graphics.Qt.Types
 import Graphics.Qt.CPPWrapper
@@ -26,6 +27,11 @@ import Utils
 
 
 -- * entry points
+
+withQApplication :: (Ptr QApplication -> IO a) -> IO a
+withQApplication cmd = do
+    app <- newQApplication
+    cmd app `finally` destroyQApplication app
 
 qtRendering :: Ptr QApplication
     -> Ptr AppWidget
