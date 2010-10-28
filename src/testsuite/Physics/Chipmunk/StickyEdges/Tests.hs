@@ -10,6 +10,7 @@ import Data.Initial
 import qualified Data.Indexable as I
 import Data.Abelian
 import Data.Typeable
+import Data.List
 
 import Control.Monad
 import Control.Applicative ((<$>))
@@ -136,15 +137,15 @@ scaleVector (Size width height) = (+~ Vector rectLimit rectLimit) >>> (flip scal
 drawOffender :: TestPolygons -> IO ()
 drawOffender (fromTestPolygons -> offender) = do
     print offender
-    qApp <- newQApplication
-    window <- newAppWidget 0
-    keyPoller <- newKeyPoller window
-    randoms <- generateRandoms
-    setDrawingCallbackAppWidget window $ Just (render (cycle randoms))
-    setWindowSize window $ Windowed (Size 1000 500)
-    showAppWidget window
-    execQApplication qApp
-    return ()
+    withQApplication $ \ qApp -> do
+        window <- newAppWidget 0
+        keyPoller <- newKeyPoller window
+        randoms <- generateRandoms
+        setDrawingCallbackAppWidget window $ Just (render (cycle randoms))
+        setWindowSize window $ Windowed (Size 1000 500)
+        showAppWidget window
+        execQApplication qApp
+        return ()
   where
     render randoms ptr = do
         resetMatrix ptr
@@ -218,14 +219,19 @@ showExample n = do
     putStrLn ("example nr.: " ++ show n ++ " --> " ++ show (predStickyEdges (examples !! n)))
     catcher $ quickCheck $ mkProperty (const False) (examples !! n)
 
--- | show all examples one after the other
-showExamples = forM_ [0 .. (length examples - 1)] showExample
+-- | show all examples one after the other from n
+showExamples n = forM_ [n .. (length examples - 1)] showExample
 
 -- | tests the removal of sticky edges for all examples
+testExamples :: IO ()
 testExamples =
-    forM_ [0 .. (length examples - 1)] $ \ i -> do
+    inner 0 examples
+  where
+    inner i (example : r) = do
         putStrLn ("example nr.: " ++ show i)
-        quickCheck $ mkProperty predStickyEdges (examples !! i)
+        quickCheck $ mkProperty predStickyEdges example
+        inner (i + 1) r
+    inner i [] = return ()
 
 testArbitraries :: Property
 testArbitraries = property $ mkProperty predStickyEdges
@@ -240,7 +246,7 @@ predStickyEdges = not . hasStickyEdges . removeStickyEdges testEpsilon . fromTes
 
 -- | collection of problematic examples with increasing complexity
 examples :: [TestPolygons]
-examples = map (Wrap . map (Wrap . Polygon)) [
+examples = map (Wrap . map (Wrap . Polygon)) ([
     [
         [Vector (-5.0) 2.0,Vector (-5.0) 5.0,Vector (-3.0) 5.0,Vector (-3.0) 2.0],
         [Vector (-5.0) 3.0,Vector (-5.0) 5.0,Vector (-4.0) 5.0,Vector (-4.0) 3.0]
@@ -303,4 +309,17 @@ examples = map (Wrap . map (Wrap . Polygon)) [
         [Vector 1.0 4.0,Vector 1.0 5.0,Vector 2.0 5.0,Vector 2.0 4.0],
         [Vector (-2.0) 1.0,Vector (-2.0) 5.0,Vector 1.0 5.0,Vector 1.0 1.0]
     ]
-  ]
+  ] +: innerSquareExample)
+
+
+innerSquareExample =
+    big : nub (left ++ right ++ up ++ down)
+  where
+    standard = [Vector 0 0, Vector 0 1, Vector 1 1, Vector 1 0]
+    big = map (flip scale 2 >>> (+~ Vector 1 1)) standard
+    left = map (\ i -> map (+~ Vector 0 i) standard) [0 .. 3]
+    right = map (\ i -> map (+~ Vector 3 i) standard) [0 .. 3]
+    up = map (\ i -> map (+~ Vector i 0) standard) [0 .. 3]
+    down = map (\ i -> map (+~ Vector i 3) standard) [0 .. 3]
+
+
