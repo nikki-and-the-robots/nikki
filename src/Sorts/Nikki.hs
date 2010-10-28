@@ -11,6 +11,7 @@ import qualified Data.Set as Set
 import Data.Abelian
 import Data.Generics
 import Data.Initial
+import Data.List (nub, sort)
 
 import Control.Monad
 import Control.Arrow
@@ -170,16 +171,21 @@ addDebugCmd cmd nikki@Nikki{debugCmd} =
 
 debugNikki :: Contacts -> Nikki -> IO Nikki
 debugNikki contacts nikki = do
-    return $ addDebugCmd (worker contacts) nikki
+    return $ addDebugCmd (render contacts) nikki
   where
-    worker contacts ptr offset = do
+    render contacts ptr offset = do
         resetMatrix ptr
+
         nikkiPos <- getPosition $ chipmunk nikki
         drawText ptr (Position 30 30) False $ pp nikkiPos
+
+        let pawContacts = Set.unions $ map (paws nikkiPos) $ (nikkiContacts contacts)
+        mapM_ (drawTextAngles ptr) $ zip [0..] $ sort $ map (rad2deg . toUpAngle) $
+            nub $ map fst $ Set.toList pawContacts
+
         translate ptr offset
         setPenColor ptr 0 255 255 255 1
         nikkiPos <- getPosition $ chipmunk nikki
-        let pawContacts = Set.unions $ map (paws nikkiPos) $ (nikkiContacts contacts)
         mapM_ (inner ptr) $ Set.toList pawContacts
     inner ptr (normal, Vector x y) = do
         when (normal == zero) $
@@ -188,11 +194,11 @@ debugNikki contacts nikki = do
             Vector xn yn = scale (normalize normal) 100
         drawCircle ptr pos 3
         drawLine ptr pos (pos +~ Position xn yn)
+    drawTextAngles ptr (i, v) = do
+        drawText ptr (Position 30 (60 + i * 30)) False (pp v)
 
     paws :: CM.Position -> Collision -> Set.Set (Vector, Vector)
-    paws nikkiPos (Collision normal points) = Set.fromList $ map (\ p -> (normal, p)) $ filter (pawsH normal . (-~ nikkiPos)) points
-    pawsH ((toUpAngle >>> foldAngle) -> angle) v@(Vector x y) =
-        (y =~= 19) && (angle > (- angleLimit)) && (angle < angleLimit)
+    paws nikkiPos (Collision normal points) = Set.fromList $ map (tuple normal) $ points
     angleLimit = deg2rad 45
     a =~= b = abs (a - b) < eps
     eps = 1
