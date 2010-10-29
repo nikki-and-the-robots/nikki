@@ -148,6 +148,11 @@ examples = map (Wrap . map (Wrap . Polygon)) [
         [Vector (-3.0) 3.0,Vector (-3.0) 5.0,Vector 0.0 5.0,Vector 0.0 3.0],
         [Vector 0.0 4.0,Vector 0.0 5.0,Vector 2.0 5.0,Vector 2.0 4.0],
         [Vector (-2.0) 5.0,Vector (-2.0) 10.0,Vector 2.0 10.0,Vector 2.0 5.0]
+    ],
+    [
+        [Vector 1.0 (-4.0),Vector 1.0 1.0,Vector 6.0 1.0,Vector 6.0 (-4.0)],
+        [Vector 1.0 1.0,Vector 1.0 6.0,Vector 4.0 6.0,Vector 4.0 1.0],
+        [Vector 1.0 (-5.0),Vector 1.0 (-2.0),Vector 2.0 (-2.0),Vector 2.0 (-5.0)]
     ]
   ]
 
