@@ -559,6 +559,6 @@ quickCheckOnce = quickCheckWith stdArgs{maxSuccess = 1}
 testExamples :: Testable p => String -> (a -> p) -> [a] -> IO ()
 testExamples msg p examples =
     mapM_ (\ (i, example) -> quickCheckOnce $
-        putTestCase (msg ++ ": " ++ show i) $
+        putTestCase (msg ++ " element no.: " ++ show i) $
         p example)
         (zip [0..] examples)

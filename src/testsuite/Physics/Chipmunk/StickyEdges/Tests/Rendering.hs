@@ -56,7 +56,7 @@ scaleVector (Size width height) = (+~ Vector rectLimit rectLimit) >>> (flip scal
 
 drawOffender :: Maybe Vector -> TestPolygons -> IO ()
 drawOffender mPoint (fromTestPolygons -> offender) = do
-    print offender
+    print $ map vertices offender
     withQApplication $ \ qApp -> do
         window <- newAppWidget 0
         keyPoller <- newKeyPoller window
