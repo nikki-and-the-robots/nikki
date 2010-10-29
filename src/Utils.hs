@@ -268,11 +268,11 @@ mergePairs f =
             Just newAs -> Just (newAs ++ r)
     inner a [] = Nothing
 
-testMergePairs :: Property
-testMergePairs = foldr1 (.&.) $ map property [
-    \ l -> isIdempotent l (mergePairs p),
-    \ l -> null (mergePairs p l \\ mergePairs p (reverse l)),
-    \ l -> all isNothing $ map (uncurry p) $ completeEdges $ mergePairs p l
+testMergePairs :: IO ()
+testMergePairs = mapM_ (quickCheckWith stdArgs{maxSuccess = 1000}) [
+    putTestCase "testMergePairs.isIdempotent" $ \ l -> isIdempotent l (mergePairs p),
+    putTestCase "testMergePairs.reversal" $ \ l -> null (mergePairs p l \\ mergePairs p (reverse l)),
+    putTestCase "testMergePairs.done all" $ \ l -> all isNothing $ map (uncurry p) $ completeEdges $ mergePairs p l
    ]
   where
     p :: Int -> Int -> Maybe [Int]
@@ -536,8 +536,8 @@ assertDirectoryExists path = do
 
 -- * tests
 
-tests :: Property
-tests = property $ testMergePairs
+tests :: IO ()
+tests = testMergePairs
 
 isIdempotent :: Eq a => a -> (a -> a) -> Bool
 isIdempotent x f =
@@ -545,8 +545,18 @@ isIdempotent x f =
   where
     fx = f x
 
+-- | attaches a message to a property that will be printed in case of failure
+putTestCase :: Testable p => String -> p -> Property
+putTestCase msg p = whenFail (putStrLn msg) p
 
+-- | executes a test only once
+quickCheckOnce :: Testable p => p -> IO ()
+quickCheckOnce = quickCheckWith stdArgs{maxSuccess = 1}
 
-
-
-
+-- | tests a list of possible offending values
+testExamples :: Testable p => String -> (a -> p) -> [a] -> IO ()
+testExamples msg p examples =
+    mapM_ (\ (i, example) -> quickCheckOnce $
+        putTestCase (msg ++ ": " ++ show i) $
+        p example)
+        (zip [0..] examples)

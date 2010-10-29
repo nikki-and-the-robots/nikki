@@ -169,13 +169,15 @@ rotateDirection DUp = DRight
 rotateDirection DRight = DDown
 rotateDirection DDown = DLeft
 
+tests :: IO ()
+tests = do
+    quickCheck $ putTestCase "testRotateVectorHalfPi" testRotateVectorHalfPi
+    quickCheck $ putTestCase "testRotateRectangleHalfPi" testRotateRectangleHalfPi
 
-tests =
-    testRotateVectorHalfPi .&.
-    testRotateRectangleHalfPi
-
+testRotateVectorHalfPi :: Vector -> Bool
 testRotateVectorHalfPi v = v == superApply 4 rotateVectorHalfPi v
 
+testRotateRectangleHalfPi :: Rectangle -> Bool
 testRotateRectangleHalfPi r =
     equals r r'
   where
