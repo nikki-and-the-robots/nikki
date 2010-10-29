@@ -1,4 +1,4 @@
-{-# language EmptyDataDecls, FlexibleInstances #-}
+{-# language EmptyDataDecls, FlexibleInstances, ViewPatterns #-}
 
 module Utils (
     (<$>),
@@ -270,14 +270,16 @@ mergePairs f =
 
 testMergePairs :: IO ()
 testMergePairs = mapM_ (quickCheckWith stdArgs{maxSuccess = 1000}) [
-    putTestCase "testMergePairs.isIdempotent" $ \ l -> isIdempotent l (mergePairs p),
-    putTestCase "testMergePairs.reversal" $ \ l -> null (mergePairs p l \\ mergePairs p (reverse l)),
-    putTestCase "testMergePairs.done all" $ \ l -> all isNothing $ map (uncurry p) $ completeEdges $ mergePairs p l
+    putTestCase "testMergePairs.isIdempotent" $ \ l -> isIdempotent l (mergePairs testPredicate),
+    putTestCase "testMergePairs.reversal" $ \ (map abs -> l) ->
+        null (mergePairs testPredicate l \\ mergePairs testPredicate (reverse l)),
+    putTestCase "testMergePairs.done all" $ \ l -> all isNothing $ map (uncurry testPredicate) $
+        completeEdges $ mergePairs testPredicate l
    ]
-  where
-    p :: Int -> Int -> Maybe [Int]
-    p a b | a == 0 = Nothing
-    p a b = if b `mod` a == 0 then Just [a] else Nothing
+
+testPredicate :: Int -> Int -> Maybe [Int]
+testPredicate a b | a == 0 = Nothing
+testPredicate a b = if b `mod` a == 0 then Just [a] else Nothing
 
 -- | like mergePairs, but only tries to merge adjacent elements (or the first and the last element)
 -- Is idempotent.
