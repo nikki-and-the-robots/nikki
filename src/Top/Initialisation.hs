@@ -27,6 +27,7 @@ import qualified Sorts.Box
 import qualified Sorts.Battery
 import qualified Sorts.Grids
 import qualified Sorts.Switch
+import qualified Sorts.Background
 
 import qualified Sorts.Robots.Jetpack
 import qualified Sorts.Robots.MovingPlatforms
@@ -46,7 +47,8 @@ sortLoaders = [
     Sorts.Robots.Jetpack.sorts,
     Sorts.Robots.MovingPlatforms.sorts,
 
-    Sorts.Grids.sorts
+    Sorts.Grids.sorts,
+    Sorts.Background.sorts
   ]
 
 withAllSorts :: (SelectTree Sort_ -> IO a) -> IO a

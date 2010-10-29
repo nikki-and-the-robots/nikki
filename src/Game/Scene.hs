@@ -203,10 +203,6 @@ immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Object.immutableCopy))
 renderScene :: Ptr QPainter -> Scene Object_ -> IO ()
 renderScene ptr scene@Scene{spaceTime = now, cameraState} = do
 
-    resetMatrix ptr
-    windowSize <- sizeQPainter ptr
-    eraseRect ptr zero windowSize (QtColor 32 64 128 255)
-
     size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
     let center = getCameraPosition cameraState
         offsetVector = - (center - Vector (width / 2) (height / 2))
