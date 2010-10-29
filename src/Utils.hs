@@ -28,10 +28,11 @@ import Control.Concurrent
 
 import Test.QuickCheck
 
-import System
 import System.Directory
 import System.IO.Unsafe
 import System.FilePath
+import System.Cmd
+import System.Exit
 
 import Debug.Trace
 

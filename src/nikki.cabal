@@ -53,7 +53,6 @@ Executable            nikki
 
     build-depends:
           base >= 4 && < 5
-        , haskell98
         , binary
         , syb
         , containers

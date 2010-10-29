@@ -12,8 +12,8 @@ import Foreign (Ptr, FunPtr, nullFunPtr)
 import Foreign.C.String
 import Foreign.Marshal.Alloc (free)
 
-import System
 import System.Directory
+import System.Environment
 
 import Graphics.Qt.Types
 import Graphics.Qt.Events
