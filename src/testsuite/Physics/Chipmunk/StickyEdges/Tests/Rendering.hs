@@ -42,7 +42,7 @@ import Physics.Chipmunk.StickyEdges.Tests.Properties
 
 catcher :: IO () -> IO ()
 catcher cmd =
-    catch (catch cmd (\ x -> drawOffender Nothing x)) (\ (Wrap p, l) -> drawOffender (Just p) l)
+    catch cmd drawOffender
 
 -- | scale a Vector that it will be visible on the screen
 scaleVector :: Size Double -> Vector -> Vector
@@ -54,8 +54,8 @@ scaleVector (Size width height) = (+~ Vector rectLimit rectLimit) >>> (flip scal
     padding = 30
 
 
-drawOffender :: Maybe Vector -> TestPolygons -> IO ()
-drawOffender mPoint (fromTestPolygons -> offender) = do
+drawOffender :: TestPolygons -> IO ()
+drawOffender (fromTestPolygons -> offender) = do
     print $ map vertices offender
     withQApplication $ \ qApp -> do
         window <- newAppWidget 0
@@ -76,20 +76,11 @@ drawOffender mPoint (fromTestPolygons -> offender) = do
         setPenColor ptr 255 255 55 255 1
         drawText ptr (Position 30 30) False (show (length offender))
         mapM_ id $ zipWith (renderShape ptr) randoms $ map (mapVectors (scaleVector ws)) offender
---         mapM_ id $ zipWith (renderShape ptr) (repeat (0, 0, 255)) $ map (mapVectors (scaleVector ws . (+~ Vector (rectLimit * 2) 0))) traversed
---         mapM_ (\ (Edge a b) -> renderStickyVectorLine ptr (scaleVector ws a) (scaleVector ws b))
---             $ concatMap (\ (a, b) -> [a, b]) $
---             filter (uncurry $ stickyEdges offender) $ completeEdges $ concatMap toEdges offender
         resetMatrix ptr
         drawText ptr (Position 60 30) False (show (length traversed))
         mapM_ (mapM_ (uncurry (renderPolygonLine ptr)) . adjacentCyclic . vertices) $
             map (mapVectors (scaleVector ws . (+~ Vector (rectLimit * 2) 0))) $
             traversed
-        whenMaybe mPoint $ \ point -> do
-            resetMatrix ptr
-            setPenColor ptr 255 0 0 255 3
-            drawCircle ptr (vector2QtPosition (scaleVector ws point)) 3
-            drawCircle ptr (vector2QtPosition ((scaleVector ws . (+~ Vector (rectLimit * 2) 0)) point)) 3
 
 generateRandoms :: IO [(Int, Int, Int)]
 generateRandoms =

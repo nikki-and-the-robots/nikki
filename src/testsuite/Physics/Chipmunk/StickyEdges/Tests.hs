@@ -50,13 +50,9 @@ tests = do
         testExamples msg p examples -- test all examples
         quickCheck $ putTestCase msg p -- test arbitrary values
 
-
--- | draw the nth example on the screen
-showExample n =
-    drawOffender Nothing (examples !! n)
-
 -- | show all examples one after the other from n
-showExamples n = forM_ [n .. (length examples - 1)] showExample
+showExamples :: [Int] -> IO ()
+showExamples = mapM_ (\ i -> drawOffender (examples !! i))
 
 -- | shows an arbitrary offending value (if one can be found
 showArbitraryOffender :: Testable p => (TestPolygons -> p) -> IO ()
