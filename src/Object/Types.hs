@@ -38,7 +38,7 @@ type Application = Application_ Sort_
 
 -- | Class that every sort of objects has to implement. This is the interface between
 -- the game and the implemented objects.
--- Minimal complete definition: 'sortId', 'size', 'sortRender', 'initialize', 'chipmunk', 'render'
+-- Minimal complete definition: 'sortId', 'size', 'sortRender', 'initialize', 'immutableCopy', 'chipmunks', 'render'
 
 class (Show sort, Typeable sort, Show object, Typeable object) =>
     Sort sort object |
