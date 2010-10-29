@@ -90,6 +90,11 @@ stickyEdges all a b =
     minB b = min (vectorX (from b)) (vectorX (to b))
     maxB b = max (vectorX (from b)) (vectorX (to b))
 
+    -- | tests if a given alpha is in a given range (excluding both bounds)
+    inside :: Ord a => a -> (a, a) -> Bool
+    inside x (a, b) = x > a && x < b
+
+
 insidePolys :: Bool -> Vector -> [ShapeType] -> Bool
 insidePolys countEdges p polys = any (insidePoly countEdges p) polys
 

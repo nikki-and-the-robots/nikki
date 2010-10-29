@@ -371,10 +371,6 @@ divide a b = (n, f * b)
   where
     (n, f) = properFraction (a / b)
 
--- | tests if a given alpha is in a given range (including both bounds)
-inside :: Ord a => a -> (a, a) -> Bool
-inside x (a, b) = x >= a && x <= b
-
 -- | folds the given number to the given range
 -- range is including lower bound and excluding upper bound
 -- TODO: is O(a), could be constant (using properFraction)
