@@ -58,8 +58,8 @@ modifyWidth f (Rectangle start w h) =
     Rectangle start (f w) h
 
 -- | rotates the given rectangle by 90 degrees
-rotateRectangleHalfPi :: Rectangle -> Rectangle
-rotateRectangleHalfPi (Rectangle (Vector x y) w h) =
+rotateRectangle90 :: Rectangle -> Rectangle
+rotateRectangle90 (Rectangle (Vector x y) w h) =
     Rectangle (Vector (- y - h) x) h w
 
 -- conversions
@@ -102,13 +102,13 @@ removeContained a b =
 -- but with rotating is applied to all sides.
 moveSides :: [Rectangle] -> [Rectangle]
 moveSides =
-    map rotateRectangleHalfPi >>>
+    map rotateRectangle90 >>>
     moveRightSides >>>
-    map rotateRectangleHalfPi >>>
+    map rotateRectangle90 >>>
     moveRightSides >>>
-    map rotateRectangleHalfPi >>>
+    map rotateRectangle90 >>>
     moveRightSides >>>
-    map rotateRectangleHalfPi >>>
+    map rotateRectangle90 >>>
     moveRightSides >>>
     id
 
@@ -142,7 +142,7 @@ moveRightSide a b = Nothing
 
 -- | moves two points (by distance of epsilon) in L-shaped combinations of two shapes to avoid sticky edges
 removeWedges epsilon =
-    foldr1 (>>>) $ replicate 4 (mergePairs moveUpperLeftCorner >>> map rotateShapeTypeHalfPi)
+    foldr1 (>>>) $ replicate 4 (mergePairs moveUpperLeftCorner >>> map rotateShapeType90)
   where
     moveUpperLeftCorner (Polygon [a, b, c, d]) other@(Polygon [p, q, r, s]) =
         if x a == x p && x a == x q && y a > y p && y a < y q && y b <= y q then
@@ -157,11 +157,11 @@ removeWedges epsilon =
             Nothing
 
 -- | rotates rectangles by 90 degrees
-rotateShapeTypeHalfPi :: ShapeType -> ShapeType
-rotateShapeTypeHalfPi (Polygon v) = Polygon $ map rotateVectorHalfPi (tail v +: head v)
+rotateShapeType90 :: ShapeType -> ShapeType
+rotateShapeType90 (Polygon v) = Polygon $ map rotateVector90 (tail v +: head v)
 
-rotateVectorHalfPi :: Vector -> Vector
-rotateVectorHalfPi (Vector x y) = Vector (- y) x
+rotateVector90 :: Vector -> Vector
+rotateVector90 (Vector x y) = Vector (- y) x
 
 rotateDirection :: Direction -> Direction
 rotateDirection DLeft = DUp
@@ -171,16 +171,16 @@ rotateDirection DDown = DLeft
 
 tests :: IO ()
 tests = do
-    quickCheck $ putTestCase "testRotateVectorHalfPi" testRotateVectorHalfPi
-    quickCheck $ putTestCase "testRotateRectangleHalfPi" testRotateRectangleHalfPi
+    quickCheck $ putTestCase "testRotateVector90" testRotateVector90
+    quickCheck $ putTestCase "testRotateRectangle90" testRotateRectangle90
 
-testRotateVectorHalfPi :: Vector -> Bool
-testRotateVectorHalfPi v = v == superApply 4 rotateVectorHalfPi v
+testRotateVector90 :: Vector -> Bool
+testRotateVector90 v = v == superApply 4 rotateVector90 v
 
-testRotateRectangleHalfPi :: Rectangle -> Bool
-testRotateRectangleHalfPi r =
+testRotateRectangle90 :: Rectangle -> Bool
+testRotateRectangle90 r =
     equals r r'
   where
-    r' = superApply 4 rotateRectangleHalfPi r
+    r' = superApply 4 rotateRectangle90 r
     equals (Rectangle (Vector a b) c d) (Rectangle (Vector p q) r s) =
         a ~= p && b ~= q && c ~= r && d ~= s
