@@ -10,6 +10,7 @@
 module Editor.Scene (
     EditorScene(..),
     initEditorScene,
+    setNikkiPosition,
     updateEditorScene,
     renderEditorScene,
   ) where
@@ -70,6 +71,13 @@ initEditorScene sorts mPath pickledObjects = flip evalStateT empty $ do
         clipBoard = []
       }
 
+-- | sets the position of Nikki (more precisely all Nikkis in the EditorScene) to the given value.
+setNikkiPosition :: EditorPosition -> EditorScene Sort_ -> EditorScene Sort_
+setNikkiPosition position =
+    modifyEditorObjects (modifyMainLayer (fmap modifyNikki))
+  where
+    modifyNikki :: EditorObject Sort_ -> EditorObject Sort_
+    modifyNikki o = if isNikki (editorSort o) then o{editorPosition = position} else o
 
 -- * manipulating
 

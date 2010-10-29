@@ -10,6 +10,8 @@ c - cycle through objects under cursor
 + and - - select active layer
 space - activate selection mode
 v - paste selected objects
+t - test the level in game mode
+h - test the level in game mode with nikki at cursor position
 
 selection mode
 ==============

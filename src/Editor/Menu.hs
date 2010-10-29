@@ -57,7 +57,11 @@ editorLoop app play mvar scene = AppState $ do
             return $ editorMenu app play mvar s
           else case (editorMode s, event) of
             (NormalMode, Press (KeyboardButton T _)) ->
+                -- test the level
                 return $ play app (editorLoop app play mvar s) s
+            (normalMode, Press (KeyboardButton H _)) ->
+                -- test the level with Nikki at cursor position
+                return $ play app (editorLoop app play mvar s) (setNikkiPosition (cursor s) s)
             _ -> do
                 -- other events are handled below (in Editor.Scene)
                 modifyState (updateEditorScene event)
