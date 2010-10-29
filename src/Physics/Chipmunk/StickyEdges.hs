@@ -84,7 +84,7 @@ removeStickyEdges :: Double -> [ShapeType] -> [ShapeType]
 removeStickyEdges epsilon =
     map toRectangle >>>
     mergePairs removeContained >>>
-    moveSides >>>
+    fixpoint moveSides >>>
     mergePairs removeContained >>>
     map fromRectangle >>>
     removeWedges epsilon >>>
