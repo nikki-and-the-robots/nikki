@@ -41,7 +41,6 @@ import Object
 
 
 backgrounds = [
-    "test"
   ]
 
 
