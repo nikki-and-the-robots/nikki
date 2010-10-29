@@ -47,7 +47,14 @@ data Edge = Edge {
   }
     deriving Show
 
-rotateEdge (Edge (Vector a b) (Vector x y)) = Edge (Vector (- b) a) (Vector (- y) x)
+-- | rotates and edge by (pi / 2)
+rotateEdge90 (Edge a b) = Edge (rotateVector90 a) (rotateVector90 b)
+
+rotateVector90 :: Vector -> Vector
+rotateVector90 (Vector x y) = Vector (- y) x
+
+rotateShapeType90 :: ShapeType -> ShapeType
+rotateShapeType90 (Polygon vs) = Polygon $ map rotateVector90 vs
 
 swapEdge :: Edge -> Edge
 swapEdge (Edge a b) = Edge b a
@@ -67,10 +74,10 @@ toEdges (Polygon l) = map (uncurry Edge) $ adjacentCyclic l
 stickyEdges :: [ShapeType] -> Edge -> Edge -> Bool
 stickyEdges all a b =
     (edgeAngle a == edgeAngle b &&
-    (inner a b || inner (rotateEdge a) (rotateEdge b)))
+    (inner all a b || inner (map rotateShapeType90 all) (rotateEdge90 a) (rotateEdge90 b)))
   where
-    inner a b = innerHorizontal a b || innerHorizontal b a
-    innerHorizontal a b =
+    inner all a b = innerHorizontal all a b || innerHorizontal all b a
+    innerHorizontal all a b =
         horizontal a &&
         horizontal b &&
         vectorY (from a) == vectorY (from b) &&
@@ -104,6 +111,32 @@ insidePoly countEdges p (Polygon vertices) =
     pointAngle :: Vector -> Angle
     pointAngle = (-~ p) >>> toAngle
 
+
+-- * the two main testing properties
+
+-- | this is the actual predicate, that 'removeStickyEdges' should ensure.
+stickyEdgesRemovable :: TestPolygons -> Bool
+stickyEdgesRemovable = not . hasStickyEdges . removeStickyEdges testEpsilon . fromTestPolygons
+
+-- | tests if the result of removeStickyEdges misses some areas that the input had
+missesArea :: TestPolygons -> Bool
+missesArea testPolys@(fromTestPolygons -> polys) =
+    null offenders
+  where
+    offenders = filter (not . treatedEqually) points
+    treatedEqually :: Vector -> Bool
+    treatedEqually point =
+        withView (insidePolys True point) (==) polys outputPolys
+    outputPolys = removeStickyEdges testEpsilon polys
+    points :: [Vector]
+    points = do
+        let c = [-rectLimit, -rectLimit + 0.1 .. rectLimit]
+        x <- c
+        y <- c
+        return $ Vector x y
+
+
+-- * arbitrary values
 
 -- wrapper type in order to be able to put polygons in class Arbitrary whith special constraints:
 -- ShapeTypes are  Polygons with four points forming a rectangle, starting with the upper left point,
@@ -142,21 +175,3 @@ instance Arbitrary (Wrap ShapeType) where
 rectSize :: Double = 5
 rectLimit :: Double = 10
 testEpsilon :: Double = 0.3
-
-
--- | tests if the result of removeStickyEdges misses some areas that the input had
-missesArea :: TestPolygons -> Bool
-missesArea testPolys@(fromTestPolygons -> polys) =
-    null offenders
-  where
-    offenders = filter (not . treatedEqually) points
-    treatedEqually :: Vector -> Bool
-    treatedEqually point =
-        withView (insidePolys True point) (==) polys outputPolys
-    outputPolys = removeStickyEdges testEpsilon polys
-    points :: [Vector]
-    points = do
-        let c = [-rectLimit, -rectLimit + 0.1 .. rectLimit]
-        x <- c
-        y <- c
-        return $ Vector x y

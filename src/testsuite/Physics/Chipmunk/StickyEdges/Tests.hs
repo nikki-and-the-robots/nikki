@@ -63,10 +63,6 @@ showArbitraryOffender :: Testable p => (TestPolygons -> p) -> IO ()
 showArbitraryOffender p =
     catcher $ quickCheck $ \ a -> whenFail (throwIO a) $ p a
 
--- | this is the actual predicate, that 'removeStickyEdges' should ensure.
-stickyEdgesRemovable :: TestPolygons -> Bool
-stickyEdgesRemovable = not . hasStickyEdges . removeStickyEdges testEpsilon . fromTestPolygons
-
 -- | collection of problematic examples with increasing complexity
 examples :: [TestPolygons]
 examples = map (Wrap . map (Wrap . Polygon)) [
