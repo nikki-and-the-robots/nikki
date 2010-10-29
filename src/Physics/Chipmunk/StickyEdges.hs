@@ -83,7 +83,7 @@ removeStickyEdges :: Double -> [ShapeType] -> [ShapeType]
 removeStickyEdges epsilon =
     map toRectangle >>>
     mergePairs removeContained >>>
-    fixpoint moveSides >>>
+    moveSides >>>
     mergePairs removeContained >>>
     map fromRectangle >>>
     removeWedges epsilon >>>
@@ -130,7 +130,11 @@ moveRightSide a b |
     x (end a) <= x (end b) &&
     y (start a) == y (start b) &&
     y (end a) == y (end b)
-  = Just [Rectangle (start a) (x (end b) - x (start a)) (height a)]
+  = Just [Rectangle s w h]
+    where
+        s = Vector (withView (x . start) min a b) (y (start a))
+        w = (withView (x . end) max a b) - x s
+        h = height a
 
 moveRightSide a b = Nothing
 
