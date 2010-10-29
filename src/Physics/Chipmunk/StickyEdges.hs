@@ -77,18 +77,22 @@ fromRectangle (Rectangle (Vector x y) w h) = Polygon [
         Vector (x + w) y
       ]
 
+withRectangles :: ([Rectangle] -> [Rectangle]) -> [ShapeType] -> [ShapeType]
+withRectangles f =
+    map toRectangle >>>
+    f >>>
+    map fromRectangle
+
 
 -- * actual algorithm
 
 removeStickyEdges :: Double -> [ShapeType] -> [ShapeType]
 removeStickyEdges epsilon =
-    map toRectangle >>>
-    mergePairs removeContained >>>
-    fixpoint moveSides >>>
-    mergePairs removeContained >>>
-    map fromRectangle >>>
-    removeWedges epsilon >>>
-    id
+    withRectangles (
+        fixpoint moveSides >>>
+        mergePairs removeContained
+      ) >>>
+    removeWedges epsilon
 
 -- removes rectangles that are containesd inside others
 removeContained :: Rectangle -> Rectangle -> Maybe [Rectangle]
@@ -102,16 +106,7 @@ removeContained a b =
 -- but with rotating is applied to all sides.
 moveSides :: [Rectangle] -> [Rectangle]
 moveSides =
-    map rotateRectangle90 >>>
-    moveRightSides >>>
-    map rotateRectangle90 >>>
-    moveRightSides >>>
-    map rotateRectangle90 >>>
-    moveRightSides >>>
-    map rotateRectangle90 >>>
-    moveRightSides >>>
-    id
-
+    foldr1 (>>>) (replicate 4 (map rotateRectangle90 >>> moveRightSides))
 
 moveRightSides = mergePairs moveRightSide
 
