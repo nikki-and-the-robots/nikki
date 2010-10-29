@@ -24,7 +24,7 @@ import Control.Arrow
 import Test.QuickCheck
 import Test.QuickCheck.Property
 
-import Physics.Hipmunk (ShapeType(Polygon), Vector(Vector))
+import Physics.Hipmunk (ShapeType(Polygon, vertices), Vector(Vector))
 
 import Utils hiding (tests)
 
@@ -136,24 +136,48 @@ moveRightSide a b = Nothing
 
 
 -- | moves two points (by distance of epsilon) in L-shaped combinations of two shapes to avoid sticky edges
+removeWedges :: Double -> [ShapeType] -> [ShapeType]
 removeWedges epsilon =
-    foldr1 (>>>) $ replicate 4 (mergePairs moveUpperLeftCorner >>> map rotateShapeType90)
+    withModified $
+        foldr1 (>>>) $ replicate 4 (mergePairs moveUpperLeftCorner >>> map rotatePolygon90)
   where
-    moveUpperLeftCorner (Polygon [a, b, c, d]) other@(Polygon [p, q, r, s]) =
-        if x a == x p && x a == x q && y a > y p && y a < y q && y b <= y q then
+    moveUpperLeftCorner :: [Modified Vector] -> [Modified Vector] -> Maybe [[Modified Vector]]
+    moveUpperLeftCorner [Same a, b, c, d] other@[p, q, r, s] =
+        let b_ = unwrap b
+            p_ = unwrap p
+            q_ = unwrap q
+            s_ = unwrap s
+        in if x a == x p_ && x a == x q_ && y a > y p_ && y a < y q_ && y b_ <= y q_ then
             -- a needs to be moved to the right
             let a' = a +~ Vector epsilon 0
-            in Just [Polygon [a', b, c, d], other]
-        else if y a == y p && y a == y s && x a > x p && x a < x s then
+            in Just [[Modified a', b, c, d], other]
+        else if y a == y p_ && y a == y s_ && x a > x p_ && x a < x s_ then
             -- a needs to be moved down
             let a' = a +~ Vector 0 epsilon
-            in Just [Polygon [a', b, c, d], other]
+            in Just [[Modified a', b, c, d], other]
         else
             Nothing
+    moveUpperLeftCorner _ _ = Nothing -- upper left corner is already modified
+
+withModified :: ([[Modified Vector]] -> [[Modified Vector]]) -> [ShapeType] -> [ShapeType]
+withModified f =
+    map vertices >>>
+    map (map Same) >>>
+    f >>>
+    map (map unwrap) >>>
+    map Polygon
+
+data Modified a = Same {unwrap :: a} | Modified {unwrap :: a}
+  deriving Eq
+
+instance Functor Modified where
+    fmap f (Same a) = Same $ f a
+    fmap f (Modified a) = Modified $ f a
+
 
 -- | rotates rectangles by 90 degrees
-rotateShapeType90 :: ShapeType -> ShapeType
-rotateShapeType90 (Polygon v) = Polygon $ map rotateVector90 (tail v +: head v)
+rotatePolygon90 :: [Modified Vector] -> [Modified Vector]
+rotatePolygon90 v = map (fmap rotateVector90) (tail v +: head v)
 
 rotateVector90 :: Vector -> Vector
 rotateVector90 (Vector x y) = Vector (- y) x
