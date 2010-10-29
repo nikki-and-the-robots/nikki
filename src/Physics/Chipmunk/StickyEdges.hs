@@ -22,6 +22,7 @@ import Control.Applicative ((<*>))
 import Control.Arrow
 
 import Test.QuickCheck
+import Test.QuickCheck.Property
 
 import Physics.Hipmunk (ShapeType(Polygon), Vector(Vector))
 
@@ -176,8 +177,7 @@ tests =
 testRotateVectorHalfPi v = v == superApply 4 rotateVectorHalfPi v
 
 testRotateRectangleHalfPi r =
-    label ("rotateRectangleHalfPi: " ++ show (r, r'))
-        (equals r r')
+    equals r r'
   where
     r' = superApply 4 rotateRectangleHalfPi r
     equals (Rectangle (Vector a b) c d) (Rectangle (Vector p q) r s) =
