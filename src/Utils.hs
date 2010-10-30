@@ -36,6 +36,8 @@ import System.Exit
 
 import Debug.Trace
 
+import Paths
+
 
 -- * debugging stuff
 
@@ -514,24 +516,18 @@ ppp = pp >>> putStrLn
 
 -- * File stuff
 
--- | returns unhidden files (files, dirs)
-getFiles :: FilePath -> IO ([FilePath], [FilePath])
-getFiles path = do
-    exists <- doesDirectoryExist path
-    canonicalPath <- canonicalizePath path
-    assertIO exists (canonicalPath ++ " does not exist")
+-- | returns unhidden files with a given extension in a given data directory.
+getDataFiles :: String -> FilePath -> IO [FilePath]
+getDataFiles extension path_ = do
+    path <- getDataFileName path_
+    files <- getDirectoryContents path
+    return $
+        map (path </>) $
+        sort $
+        filter (\ f -> not ("." `isPrefixOf` f)) $
+        filter (\ f -> takeExtension f == extension) $
+        files
 
-    all <- sort <$> filter (\ f -> not ("." `isPrefixOf` f)) <$> getDirectoryContents path
-    files <- filterM (doesFileExist . (path </>)) all
-    dirs <- filterM (doesDirectoryExist . (path </>)) all
-    return (files, dirs)
-
-
-assertDirectoryExists :: FilePath -> IO ()
-assertDirectoryExists path = do
-    exists <- doesDirectoryExist path
-    canonicalPath <- canonicalizePath path
-    assertIO exists (canonicalPath ++ " is not a directory")
 
 -- * tests
 

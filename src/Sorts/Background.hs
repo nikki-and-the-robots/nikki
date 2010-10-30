@@ -57,13 +57,8 @@ mkSort name = do
     sort = sortBy (withView (width . pixmapSize) compare)
 
 getPngPaths :: String -> IO [FilePath]
-getPngPaths n = do
-    dir <- getDataFileName (pngDir </> "backgrounds" </> n)
-    files <- getDirectoryContents dir
-    return $
-        map (dir </>) $
-        filter (\ p -> not ("." `isPrefixOf` p) && ".png" == takeExtension p)
-        files
+getPngPaths n =
+    getDataFiles ".png" (pngDir </> "backgrounds" </> n)
 
 data BSort = BSort {
     name :: String,
