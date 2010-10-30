@@ -159,3 +159,15 @@ askStringRead app parent question follower =
     wrapper s = case readMay s of
         Nothing -> askStringRead app parent question follower -- try again
         Just r -> follower r
+
+-- | waits for any key.
+waitAnyKey :: Application_ s -> IO ()
+waitAnyKey app = do
+    e <- waitForAppEvent $ keyPoller app
+    case e of
+        Press _ -> return ()
+        _ -> waitAnyKey app
+
+drawTextBlock :: Ptr QPainter -> String -> IO ()
+drawTextBlock ptr text = do
+    mapM_ (\ (i, line) -> drawText ptr (Position 0 (i * 15)) False line) $ zip [0..] (lines text)

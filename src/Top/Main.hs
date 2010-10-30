@@ -95,12 +95,27 @@ main = globalCatcher $ do
 applicationStates :: Application -> AppState
 applicationStates app =
     menu app Nothing Nothing [
+        ("story mode", storyMode app),
         ("play", selectLevelPlay app this),
         ("edit", selectLevelEdit app this),
         ("quit", FinalState)
       ]
   where
     this = applicationStates app
+
+storyMode :: Application -> AppState
+storyMode app = AppState $ do
+    storymodeFile <- getDataFileName "data/manual/storyModeIntroduction"
+    text <- System.IO.readFile storymodeFile
+    setDrawingCallbackAppWidget (window app) $ Just $ render text
+    waitAnyKey app
+    return $ applicationStates app
+  where
+    render text ptr = do
+        clearScreen ptr
+        resetMatrix ptr
+        translate ptr (Position 30 40)
+        drawTextBlock ptr text
 
 -- | asks, if the user really wants to quit
 quit :: Application -> AppState -> AppState
