@@ -85,6 +85,7 @@ frameTimes action = case action of
     State Grip HRight -> ("grip_right", singleFrame)
     State EndGripImpulse HLeft -> ("grip_left", singleFrame)
     State EndGripImpulse HRight -> ("grip_right", singleFrame)
+    State UsingTerminal _ -> ("terminal", singleFrame)
 
     x -> es "frameTimes" x
   where
@@ -116,7 +117,6 @@ statePixmaps = fromList [
     ("walk_right", 3),
     ("jump_left", 1),
     ("jump_right", 1),
-    ("terminal", 0),
     ("terminal", 0),
     ("grip_left", 0),
     ("grip_right", 0),

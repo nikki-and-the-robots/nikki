@@ -17,12 +17,11 @@ import Physics.Chipmunk
 import Base.Types
 
 
-
 nikkiCollisionTypes = [NikkiFeetCT, NikkiBodyCT]
 
--- | collision types of objects that cause a collision (that are solid)
+-- | collision types of objects that cause a collision (that are solid) (without Nikkis collision types)
 solidCollisionTypes :: [MyCollisionType]
-solidCollisionTypes = nikkiCollisionTypes ++
+solidCollisionTypes =
   [
     TileCT,
     RobotCT,
