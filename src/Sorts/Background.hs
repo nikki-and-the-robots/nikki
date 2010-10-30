@@ -1,11 +1,11 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable, ViewPatterns, ScopedTypeVariables #-}
 
 -- | backgrounds are rendered statically centered on the screen,
--- no matter which layer they are in. They consist of multiple
+-- no matter which layer they are in. Every background consists of multiple
 -- pixmaps in different sizes. When rendered (in editor mode
 -- and in game mode) they will use the smallest pixmap that will
 -- cover the whole screen area, if one exists. If not, it will
--- use the pixmaps that has the greatest width.
+-- use the pixmap that has the greatest width.
 -- There are some values that are relevant for other objects,
 -- but not for backgrounds: size and position.
 -- Size will be the size of the smallest pixmap (width-wise)
