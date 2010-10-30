@@ -70,11 +70,11 @@ watchedContacts :: [Callback MyCollisionType Contacts]
 watchedContacts =
     -- normal contacts of nikki
     concatMap nikkiSolidCallbacks solidCollisionTypes ++
-    [switchCallback] ++
+    switchCallback :
     nikkiTerminalCallbacks ++
     map terminalSolidCallback solidCollisionTypes ++
     map batteryCallback nikkiCollisionTypes ++
-    [Callback (DontWatch BatteryCT TerminalCT) Permeable] ++
+    Callback (DontWatch BatteryCT TerminalCT) Permeable :
     nikkiFallingTilesCallbacks
 
 
