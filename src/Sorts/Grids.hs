@@ -60,12 +60,6 @@ instance Sort GSort Grid where
         -- render the grid
         windowSize <- fmap fromIntegral <$> sizeQPainter ptr
         renderGrid ptr sort offset windowSize
-        -- render an indicator on the actual objects position
-        let tileSize@(Size w h) = size sort
-        setPenColor ptr 255 255 255 255 3
-        drawCircle ptr 
-            (fmap (/ 2) $ Position w h) 
-            ((min (width tileSize) (height tileSize)) * 0.4)
 
     initialize sort mSpace ep Nothing = do
         let pos = editorPosition2QtPosition sort ep
