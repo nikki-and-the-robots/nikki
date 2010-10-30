@@ -41,6 +41,7 @@ import Object
 
 
 backgrounds = [
+    "blue"
   ]
 
 
