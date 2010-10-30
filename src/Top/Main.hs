@@ -146,11 +146,15 @@ selectLevelEdit app parent = AppState $ do
 
 pickNewLevel :: Application -> AppState -> AppState
 pickNewLevel app parent = AppState $ do
-    let pathToEmptyLevel_ = templateLevelsDir </> "empty.nl"
-    pathToEmptyLevel_ <- getDataFileName pathToEmptyLevel_
+    pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
+    templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
+                          getDataFiles ".nl" templateLevelsDir
     return $ menu app (Just "pick a template to start from") (Just parent) $
-        ("empty level", edit app parent (pathToEmptyLevel_, True)) :
+        map mkMenuItem templateLevelPaths ++
+        ("empty level", edit app parent (pathToEmptyLevel, True)) :
         []
+  where
+    mkMenuItem templatePath = (takeBaseName templatePath, edit app parent (templatePath, True))
 
 
 play :: Application -> AppState -> FilePath -> AppState
