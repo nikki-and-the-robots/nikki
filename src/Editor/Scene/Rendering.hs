@@ -49,7 +49,7 @@ renderGUI ptr offset s = do
 
     renderSelectedIcon ptr (getSelected $ availableSorts s)
     renderCursorPositionOSD ptr $ cursor s
-    renderCursorStepSize ptr $ getCursorStep s
+    renderCursorStepSize ptr s
     renderLayerOSD ptr $ selectedLayer s
     whenMaybe (getSelectedObject s) $ \ o ->
         renderSelectedObject ptr $ editorSort o
@@ -124,8 +124,8 @@ renderCursorPositionOSD ptr (EditorPosition x y) = do
     (Size w h) <- fmap fromIntegral <$> sizeQPainter ptr
     drawText ptr (Position 300 (h - 20)) False ("Cursor: " ++ show (fmap truncate (x, y)))
 
-renderCursorStepSize :: Ptr QPainter -> EditorPosition -> IO ()
-renderCursorStepSize ptr (EditorPosition x y) = do
+renderCursorStepSize :: Ptr QPainter -> EditorScene Sort_ -> IO ()
+renderCursorStepSize ptr (getCursorStep -> EditorPosition x y) = do
     resetMatrix ptr
     (Size w h) <- fmap fromIntegral <$> sizeQPainter ptr
     drawText ptr (Position 500 (h - 20)) False ("Step: " ++ show (x, y))
@@ -142,6 +142,7 @@ renderCopySelection ptr scene endPosition@(EditorPosition x2 y2) = do
     renderObjectScene ptr offset scene
     renderSelectionBox ptr offset scene endPosition
     renderSelectedBoxes ptr offset scene
+    renderCursorStepSize ptr scene
 
 renderSelectionBox ptr offset scene (EditorPosition x2 y2) = do
     let EditorPosition x1 y1 = cursor scene

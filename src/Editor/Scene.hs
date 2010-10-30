@@ -152,15 +152,8 @@ normalModeKeyboard C scene@EditorScene{editorObjects, selected = Just (layerInde
 
 -- change cursor step size
 
-normalModeKeyboard W scene =
-    case cursorStep scene of
-        Nothing -> setCursorStep scene $ Just $ EditorPosition 1 1
-        Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x * 2) (y * 2)
-normalModeKeyboard S scene =
-    case cursorStep scene of
-        Nothing -> setCursorStep scene Nothing
-        Just (EditorPosition 1 1) -> setCursorStep scene Nothing
-        Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x / 2) (y / 2)
+normalModeKeyboard key scene | key `elem` [W, S] =
+    changeCursorStepSize key scene
 
 -- * Layers
 
@@ -199,9 +192,21 @@ selectionMode button scene@EditorScene{editorMode = SelectionMode pos}
     changeSelectionPosition DownButton (EditorPosition x y) = EditorPosition x (y + sy)
     changeSelectionPosition LeftButton (EditorPosition x y) = EditorPosition (x - sx) y
     changeSelectionPosition RightButton (EditorPosition x y) = EditorPosition (x + sx) y
-    sy = 100
-    sx = 100
+    EditorPosition sx sy = getCursorStep scene
 selectionMode (KeyboardButton X _) scene = cutSelection scene
 selectionMode (KeyboardButton C _) scene = copySelection scene
+selectionMode (KeyboardButton key _) scene | key `elem` [W, S] = changeCursorStepSize key scene
 
 selectionMode _ scene = scene
+
+-- | changes the cursor's step size with W and S
+changeCursorStepSize :: Key -> EditorScene Sort_ -> EditorScene Sort_
+changeCursorStepSize W scene =
+    case cursorStep scene of
+        Nothing -> setCursorStep scene $ Just $ EditorPosition 1 1
+        Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x * 2) (y * 2)
+changeCursorStepSize S scene =
+    case cursorStep scene of
+        Nothing -> setCursorStep scene Nothing
+        Just (EditorPosition 1 1) -> setCursorStep scene Nothing
+        Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x / 2) (y / 2)
