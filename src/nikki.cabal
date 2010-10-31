@@ -9,6 +9,7 @@ Extra-source-files:
     README
     data/LICENSE
     data/README
+    data/manual/editor.txt
 
 Build-Type:     Simple
 Cabal-Version:  >= 1.6
