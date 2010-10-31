@@ -105,7 +105,7 @@ applicationStates app =
 
 storyMode :: Application -> AppState
 storyMode app = AppState $ do
-    storymodeFile <- getDataFileName "data/manual/storyModeIntroduction"
+    storymodeFile <- getDataFileName "manual/storyModeIntroduction"
     text <- System.IO.readFile storymodeFile
     setDrawingCallbackAppWidget (window app) $ Just $ render text
     waitAnyKey app

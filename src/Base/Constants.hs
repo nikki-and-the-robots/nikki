@@ -48,13 +48,13 @@ stepQuantum = 0.002
 -- * file directories
 
 soundDir :: FilePath
-soundDir = "data" </> "sounds"
+soundDir = "sounds"
 
 pngDir :: FilePath
-pngDir = "data" </> "png"
+pngDir = "png"
 
 templateLevelsDir :: FilePath
-templateLevelsDir = "data" </> "template_levels"
+templateLevelsDir = "template_levels"
 
 levelDir :: FilePath
 levelDir = "levels"

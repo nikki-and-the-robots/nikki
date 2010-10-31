@@ -14,20 +14,28 @@ Build-Type:     Simple
 Cabal-Version:  >= 1.6
 
 data-dir:
-    ../
+    ../data/
 
 data-files:
-    data/png/nikki/*.png
-    data/png/battery/*.png
-    data/png/terminals/*.png
-    data/png/multilayers/*.png
---    data/png/backgrounds/*.png
-    data/png/objects/*.png
-    data/png/robots/jetpack/*.png
-    data/png/tiles/*.png
-    data/png/robots/platform/*.png
+    png/nikki/*.png
+    png/battery/*.png
+    png/terminals/*.png
+    png/multilayers/*.png
+    png/backgrounds/blue/*.png
+    png/objects/*.png
+    png/robots/jetpack/*.png
+    png/tiles/*.png
+    png/robots/platform/*.png
 
-    data/sounds/nikki/jump.wav
+    sounds/nikki/jump.wav
+
+    template_levels/*.nl
+
+    manual/storyModeIntroduction
+
+    -- not needed at runtime, but in court ;)
+    LICENSE
+    README
 
 
 Executable            nikki
