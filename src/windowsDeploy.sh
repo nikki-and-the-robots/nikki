@@ -23,8 +23,6 @@ echo
 echo ========================================================================
 echo
 
-echo does not work right now
-
 if [ -z "$QT_DIR" ]
 then
     echo QT_DIR not set. Please let QT_DIR point to your Qt SDK.

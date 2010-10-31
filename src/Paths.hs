@@ -6,7 +6,10 @@
 module Paths (getDataFileName) where
 
 
+import Control.Arrow
+
 import System.Info
+import System.FilePath
 
 import qualified Paths_nikki
 
@@ -14,5 +17,5 @@ import qualified Paths_nikki
 getDataFileName :: FilePath -> IO FilePath
 getDataFileName = case os of
     "linux" -> Paths_nikki.getDataFileName
-    "mingw32" -> return -- works if the application is deployed in one folder
+    "mingw32" -> ("data" </>) >>> return -- works if the application is deployed in one folder
     x -> error ("unsupported os: " ++ os)
