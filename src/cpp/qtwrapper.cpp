@@ -21,9 +21,12 @@ void error(QString msg) {
 
 // * AppWidget class
 
+void emptyDrawingCallback(QPainter* ptr) {
+};
+
 AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
 // AppWidget::AppWidget(const QGLFormat& format) : QWidget() {
-    drawingCallback = NULL;
+    drawingCallback = emptyDrawingCallback;
     keyCallback = NULL;
 
     this->setAutoFillBackground(false);
@@ -38,11 +41,9 @@ AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
 void AppWidget::paintEvent(QPaintEvent* event) {
     event->accept();
 
-    if (this->drawingCallback != NULL) {
-        QPainter painter(this);
-        painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
-        this->drawingCallback(&painter);
-    }
+    QPainter painter(this);
+    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
+    this->drawingCallback(&painter);
 };
 
 void AppWidget::keyPressEvent(QKeyEvent* e) {

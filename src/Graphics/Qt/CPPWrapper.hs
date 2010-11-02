@@ -126,8 +126,7 @@ setDrawingCallbackAppWidget ptr (Just cb) =
     wrapDrawingCallback cb >>=
         cppSetDrawingCallbackAppWidget ptr
 setDrawingCallbackAppWidget ptr Nothing =
-    cppSetDrawingCallbackAppWidget ptr nullFunPtr
-
+    cppSetDrawingCallbackAppWidget ptr =<< wrapDrawingCallback (const $ return ())
 
 
 -- event callbacks
