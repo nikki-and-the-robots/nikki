@@ -67,7 +67,7 @@ data Action
         -- state for one frame (when a jump starts)
     | JumpImpulse Seconds Angle (Maybe HorizontalDirection) Velocity
     | Airborne JumpInformation
-    | WallSlide JumpInformation [Cloud]
+    | WallSlide JumpInformation [Angle] [Cloud]
     | UsingTerminal
     | Grip -- when Nikki uses the paws to hold on to something
     | EndGripImpulse -- state for one frame (when grip state is ended)

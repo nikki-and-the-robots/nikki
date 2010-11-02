@@ -58,6 +58,7 @@ updateState now contacts (True, controlData) nikki = do
                                 State Walk newDirection
                           else
                             State (WallSlide (jumpInformation velocity_)
+                                contactNormals
                                 (clouds nikkiPos newDirection))
                                 newDirection
             (_, Nothing) ->
@@ -100,7 +101,9 @@ updateState now contacts (True, controlData) nikki = do
     verticalDirection velocity_ = if vectorY velocity_ <= 0 then VUp else VDown
 
     mContactAngle :: Maybe Angle
-    mContactAngle = jumpAngle $ getContactNormals contacts
+    mContactAngle = jumpAngle contactNormals
+    contactNormals :: [Angle]
+    contactNormals = getContactNormals contacts
 
     jumpInformation velocity =
         JumpInformation jumpStartTime_ buttonDirection velocity (verticalDirection velocity)
@@ -109,7 +112,7 @@ updateState now contacts (True, controlData) nikki = do
     jumpStartTime_ = case action $ state nikki of
         JumpImpulse t _ _ _ -> Just t
         Airborne ji -> if aHeld then jumpStartTime ji else Nothing
-        WallSlide ji _ -> if aHeld then jumpStartTime ji else Nothing
+        WallSlide ji _ _ -> if aHeld then jumpStartTime ji else Nothing
         x -> Nothing
 
     angleDirection :: Angle -> Maybe HorizontalDirection
@@ -123,7 +126,7 @@ updateState now contacts (True, controlData) nikki = do
         (buttonDirection <|> angleDirection angle)
 
     clouds (Vector x y) direction = case action $ state nikki of
-        WallSlide _ (a : r) ->
+        WallSlide _ _ (a : r) ->
             if now - creationTime a > cloudCreationTime then
                 newCloud direction : filtered
               else

@@ -144,7 +144,7 @@ pickPixmap now sort nikki =
         Nothing -> es "problem finding pixmaps in Nikki: " name
 
 renderClouds :: Ptr QPainter -> Offset Double -> Seconds -> NSort -> Action -> IO ()
-renderClouds ptr offset now sort (WallSlide _ clouds) =
+renderClouds ptr offset now sort (WallSlide _ _ clouds) =
     mapM_ render clouds
   where
     render cloud = do
