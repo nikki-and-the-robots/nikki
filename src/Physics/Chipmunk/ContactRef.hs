@@ -89,7 +89,7 @@ initContactRef space empty callbacks = do
         addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
             (shapeA, shapeB) <- shapes
             normal_ <- normal
-            points_ <- points
+            points_ <- return [] -- points
             liftIO $ modifyIORef ref (f shapeA shapeB (Collision normal_ points_))
             return (isSolid permeability)
 
