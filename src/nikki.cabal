@@ -77,7 +77,6 @@ Executable            nikki
         , random
         , StateVar
         , transformers
-        , QuickCheck >= 2
         , time
 
     if os(linux)

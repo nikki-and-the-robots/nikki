@@ -39,6 +39,8 @@ Executable testsuite
 
     ghc-options:
         -O2
+        -Werror
+        -fwarn-unused-imports
 
     build-depends:
         base >= 4 && < 5,
@@ -55,7 +57,8 @@ Executable testsuite
         transformers,
         StateVar,
         QuickCheck,
-        random
+        random,
+        process
 
     extra-libraries:
         qtwrapper, QtOpenGL

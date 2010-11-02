@@ -106,7 +106,7 @@ import qualified Physics.Hipmunk as H
 import Physics.Chipmunk.Types
 import Physics.Chipmunk.DebugGrid
 import Physics.Chipmunk.ContactRef
-import Physics.Chipmunk.StickyEdges
+import Physics.Chipmunk.StickyEdges hiding (Rectangle(..))
 
 
 

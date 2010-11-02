@@ -14,7 +14,6 @@ import Data.Initial
 import Data.List (nub, sort)
 
 import Control.Monad
-import Control.Arrow
 
 import System.FilePath
 

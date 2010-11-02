@@ -10,23 +10,18 @@
 -- There is a quickcheck testing framework for this in the testsuite directory.
 -- The current version does not produce the correct result for every case yet.
 
-module Physics.Chipmunk.StickyEdges (removeStickyEdges, tests) where
+module Physics.Chipmunk.StickyEdges (removeStickyEdges, Rectangle(..), rotateRectangle90) where
 
 
 import Prelude hiding (Left, Right)
 
 import Data.Abelian
-import Data.Map (Map, fromList, (!), insert)
 
-import Control.Applicative ((<*>))
 import Control.Arrow
-
-import Test.QuickCheck
-import Test.QuickCheck.Property
 
 import Physics.Hipmunk (ShapeType(Polygon, vertices), Vector(Vector))
 
-import Utils hiding (tests)
+import Utils
 
 import Physics.Chipmunk.Types (vectorX, vectorY)
 
@@ -45,9 +40,6 @@ data Rectangle
     height :: Double
   }
     deriving (Eq, Show)
-
-instance Arbitrary Rectangle where
-    arbitrary = Rectangle <$> arbitrary <*> arbitrary <*> arbitrary
 
 -- | returns the lower right corner of rectangles
 end :: Rectangle -> Vector
@@ -187,19 +179,3 @@ rotateDirection DLeft = DUp
 rotateDirection DUp = DRight
 rotateDirection DRight = DDown
 rotateDirection DDown = DLeft
-
-tests :: IO ()
-tests = do
-    quickCheck $ putTestCase "testRotateVector90" testRotateVector90
-    quickCheck $ putTestCase "testRotateRectangle90" testRotateRectangle90
-
-testRotateVector90 :: Vector -> Bool
-testRotateVector90 v = v == superApply 4 rotateVector90 v
-
-testRotateRectangle90 :: Rectangle -> Bool
-testRotateRectangle90 r =
-    equals r r'
-  where
-    r' = superApply 4 rotateRectangle90 r
-    equals (Rectangle (Vector a b) c d) (Rectangle (Vector p q) r s) =
-        a ~= p && b ~= q && c ~= r && d ~= s

@@ -8,7 +8,7 @@ import Data.Abelian
 
 import Control.Monad
 
-import Foreign (Ptr, FunPtr, nullFunPtr)
+import Foreign (Ptr, FunPtr)
 import Foreign.C.String
 import Foreign.Marshal.Alloc (free)
 

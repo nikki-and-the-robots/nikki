@@ -28,7 +28,6 @@ import Control.Applicative
 import Control.Monad
 
 import System.FilePath
-import System.Directory
 
 import Graphics.Qt
 

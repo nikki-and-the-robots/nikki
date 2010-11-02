@@ -10,7 +10,6 @@ module Game.Scene (
 import Prelude hiding (foldr)
 
 import Data.Indexable (Indexable, Index, findIndices, fmapMWithIndex, toList)
-import Data.Abelian
 import qualified Data.Set as Set
 import Data.Foldable (foldr)
 import Data.Maybe

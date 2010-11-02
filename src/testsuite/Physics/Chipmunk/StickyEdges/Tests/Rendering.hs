@@ -5,35 +5,17 @@ module Physics.Chipmunk.StickyEdges.Tests.Rendering where
 
 import Prelude hiding (catch)
 
-import Data.Initial
-import qualified Data.Indexable as I
 import Data.Abelian
-import Data.Typeable
-import Data.List
 
-import Control.Monad
-import Control.Applicative ((<$>), (<**>))
-import Control.Concurrent
 import Control.Exception
 
 import System.Random
 
-import Test.QuickCheck
-import Test.QuickCheck.Gen
-
 import Graphics.Qt hiding (scale)
 
 import Physics.Chipmunk
-import Physics.Chipmunk.StickyEdges
 
 import Utils
-
-import Base.Grounds
-import Base.Types
-
-import Object
-
-import Editor.Pickle
 
 import Physics.Chipmunk.StickyEdges.Tests.Properties
 

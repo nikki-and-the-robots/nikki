@@ -3,8 +3,6 @@
 module Base.Constants where
 
 
-import System.FilePath
-
 import Graphics.Qt
 
 

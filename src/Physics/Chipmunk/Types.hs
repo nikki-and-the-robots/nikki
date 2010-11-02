@@ -9,10 +9,6 @@ import Data.Abelian
 import Data.StateVar
 import Data.Typeable
 
-import Control.Applicative ((<*>))
-
-import Test.QuickCheck
-
 import Graphics.Qt (Ptr, QPainter, translate)
 import qualified Graphics.Qt as Qt
 
@@ -37,9 +33,6 @@ instance Abelian Vector where
 
 instance PP Vector where
     pp (Vector a b) = "(Vector " ++ pp a ++ " " ++ pp b ++ ")"
-
-instance Arbitrary Vector where
-    arbitrary = Vector <$> arbitrary <*> arbitrary
 
 deriving instance Typeable ShapeType
 

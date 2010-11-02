@@ -3,13 +3,16 @@
 -- Use this instead to find data files.
 -- Needed for deployment in one folder (e.g. on windows)
 
-module Paths (getDataFileName) where
+module Paths (getDataFileName, getDataFiles) where
 
+
+import Data.List
 
 import Control.Arrow
 
 import System.Info
 import System.FilePath
+import System.Directory
 
 import qualified Paths_nikki
 
@@ -19,3 +22,15 @@ getDataFileName = case os of
     "linux" -> Paths_nikki.getDataFileName
     "mingw32" -> ("data" </>) >>> return -- works if the application is deployed in one folder
     x -> error ("unsupported os: " ++ os)
+
+-- | returns unhidden files with a given extension in a given data directory.
+getDataFiles :: String -> FilePath -> IO [FilePath]
+getDataFiles extension path_ = do
+    path <- getDataFileName path_
+    files <- getDirectoryContents path
+    return $
+        map (path </>) $
+        sort $
+        filter (\ f -> not ("." `isPrefixOf` f)) $
+        filter (\ f -> takeExtension f == extension) $
+        files

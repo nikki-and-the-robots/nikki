@@ -17,7 +17,6 @@ import qualified Data.Foldable
 import qualified Data.Traversable
 import Data.IORef
 import qualified Data.Set as Set
-import Data.Maybe
 
 import Text.Printf
 
@@ -26,8 +25,6 @@ import Control.Monad.State hiding ((>=>))
 import Control.Arrow ((>>>))
 import Control.Concurrent
 
-import Test.QuickCheck
-
 import System.Directory
 import System.IO.Unsafe
 import System.FilePath
@@ -35,8 +32,6 @@ import System.Cmd
 import System.Exit
 
 import Debug.Trace
-
-import Paths
 
 
 -- * debugging stuff
@@ -271,19 +266,6 @@ mergePairs f =
             Just newAs -> Just (newAs ++ r)
     inner a [] = Nothing
 
-testMergePairs :: IO ()
-testMergePairs = mapM_ (quickCheckWith stdArgs{maxSuccess = 1000}) [
-    putTestCase "testMergePairs.isIdempotent" $ \ l -> isIdempotent l (mergePairs testPredicate),
-    putTestCase "testMergePairs.reversal" $ \ (map abs -> l) ->
-        null (mergePairs testPredicate l \\ mergePairs testPredicate (reverse l)),
-    putTestCase "testMergePairs.done all" $ \ l -> all isNothing $ map (uncurry testPredicate) $
-        completeEdges $ mergePairs testPredicate l
-   ]
-
-testPredicate :: Int -> Int -> Maybe [Int]
-testPredicate a b | a == 0 = Nothing
-testPredicate a b = if b `mod` a == 0 then Just [a] else Nothing
-
 -- | like mergePairs, but only tries to merge adjacent elements (or the first and the last element)
 -- Is idempotent.
 mergeAdjacentCyclicPairs :: Eq a => (a -> a -> Maybe a) -> [a] -> [a]
@@ -514,44 +496,3 @@ instance PP Int where
 ppp :: PP p => p -> IO ()
 ppp = pp >>> putStrLn
 
--- * File stuff
-
--- | returns unhidden files with a given extension in a given data directory.
-getDataFiles :: String -> FilePath -> IO [FilePath]
-getDataFiles extension path_ = do
-    path <- getDataFileName path_
-    files <- getDirectoryContents path
-    return $
-        map (path </>) $
-        sort $
-        filter (\ f -> not ("." `isPrefixOf` f)) $
-        filter (\ f -> takeExtension f == extension) $
-        files
-
-
--- * tests
-
-tests :: IO ()
-tests = testMergePairs
-
-isIdempotent :: Eq a => a -> (a -> a) -> Bool
-isIdempotent x f =
-    fx == f fx
-  where
-    fx = f x
-
--- | attaches a message to a property that will be printed in case of failure
-putTestCase :: Testable p => String -> p -> Property
-putTestCase msg p = whenFail (putStrLn msg) p
-
--- | executes a test only once
-quickCheckOnce :: Testable p => p -> IO ()
-quickCheckOnce = quickCheckWith stdArgs{maxSuccess = 1}
-
--- | tests a list of possible offending values
-testExamples :: Testable p => String -> (a -> p) -> [a] -> IO ()
-testExamples msg p examples =
-    mapM_ (\ (i, example) -> quickCheckOnce $
-        putTestCase (msg ++ " element no.: " ++ show i) $
-        p example)
-        (zip [0..] examples)
