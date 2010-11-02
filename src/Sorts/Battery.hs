@@ -32,11 +32,7 @@ import Sorts.Nikki (addBatteryPower, modifyNikki)
 
 batterySize = Size 28 52
 
-batteryOffset = Position (- 25) (- 17) -- offset from upper left corner (in the graphic file)
-
-batteryWidth = 28
-
-batteryHeight = 52
+batteryOffset = Position (- 17) (- 5) -- offset from upper left corner (in the graphic file)
 
 contactHeight = fromUber 1
 contactWidth = fromUber 3
@@ -72,7 +68,7 @@ instance Sort BSort Battery where
 
     -- sort -> Maybe  Space  -> EditorPosition  -> Maybe  String  -> IO  object
     initialize sort (Just space) ep Nothing = do
-        let baryCenterOffset = Vector (batteryWidth / 2) (batteryHeight / 2)
+        let baryCenterOffset = Vector (width batterySize / 2) (height batterySize / 2)
             shapes = fmap (mkShapeDescription shapeAttributes) mkShapes
             pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
@@ -121,10 +117,10 @@ mkShapes =
     body = rectangle bodyTop bodyBottom bodyLeft bodyRight
     contact = rectangle contactTop contactBottom contactLeft contactRight
 
-    bodyTop = - ((batteryHeight / 2) - contactHeight)
-    bodyBottom = batteryHeight / 2
+    bodyTop = - ((height batterySize / 2) - contactHeight)
+    bodyBottom = height batterySize / 2
     bodyLeft = - bodyRight
-    bodyRight = batteryWidth / 2
+    bodyRight = width batterySize / 2
 
     contactTop = - bodyBottom
     contactBottom = bodyTop
