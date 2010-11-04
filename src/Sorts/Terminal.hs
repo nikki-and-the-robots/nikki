@@ -14,8 +14,6 @@ module Sorts.Terminal (
 
 import Safe
 
--- import Data.Map (Map, (!), fromList)
--- import Data.List
 import Data.Abelian
 import Data.Indexable (Index)
 import Data.Dynamic
@@ -396,9 +394,13 @@ renderTerminalOSD ptr scene@Scene{mode = TerminalMode{terminal}} = do
             RobotSelected _ -> " Nikki\n[" ++ cls ++ "]"
     resetMatrix ptr
     setPenColor ptr 255 255 255 255 1
+    let textSize = Size 250 50
+    setFontSize ptr (round (height textSize))
+    windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+    translate ptr (sizeToPosition (fmap (/ 2) (windowSize -~ textSize)))
     forM_ texts $ \ text -> do
-        translate ptr (Position 0 20)
         drawText ptr (Position 10 0) False text
+        translate ptr (Position 0 (height textSize))
 renderTerminalOSD _ _ = return ()
 
 

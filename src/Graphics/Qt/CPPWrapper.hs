@@ -182,6 +182,8 @@ foreign import ccall cppDrawPixmap :: Ptr QPainter -> QtInt -> QtInt -> Ptr QPix
 
 foreign import ccall setPenColor :: Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 
+foreign import ccall setFontSize :: Ptr QPainter -> QtInt -> IO ()
+
 drawRect :: Ptr QPainter -> Position QtReal -> Size QtReal -> IO ()
 drawRect ptr (Position x y) (Size w h) = cppDrawRect ptr x y w h
 foreign import ccall cppDrawRect :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()

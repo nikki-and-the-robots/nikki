@@ -229,6 +229,12 @@ extern "C" void setPenColor(QPainter* painter, int r, int g, int b, int a, int w
     painter->setPen(pen);
 };
 
+extern "C" void setFontSize(QPainter* ptr, int size) {
+    QFont font = QFont(ptr->font());
+    font.setPixelSize(size);
+    ptr->setFont(font);
+};
+
 extern "C" void cppDrawRect(QPainter* painter, qreal x, qreal y, qreal w, qreal h) {
     painter->drawRect(x, y, w, h);
 };
