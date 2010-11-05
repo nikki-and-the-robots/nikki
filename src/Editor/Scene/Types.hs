@@ -41,8 +41,8 @@ getCursorSize s@EditorScene{} =
     size $ getSelected $ availableSorts s
 
 -- | returns an object from the main layer
-getMainObject :: EditorScene Sort_ -> Index -> EditorObject Sort_
-getMainObject scene i = os !!! i
+getMainlayerEditorObject :: EditorScene Sort_ -> Index -> EditorObject Sort_
+getMainlayerEditorObject scene i = os !!! i
   where
     os = mainLayerIndexable $ editorObjects scene
 

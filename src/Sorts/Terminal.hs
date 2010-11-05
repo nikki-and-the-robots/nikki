@@ -439,15 +439,19 @@ swapIsElem needle list = list +: needle
 
 oemRender_ :: Ptr QPainter -> EditorScene Sort_ -> OEMState -> IO ()
 oemRender_ ptr scene state = do
-    offset <- transformation ptr (cursor scene) (getCursorSize scene)
+    offset <- transformation ptr (oemCursor scene state) (getCursorSize scene)
     renderObjectScene ptr offset scene
     renderOEMOSDs ptr offset scene state
+
+oemCursor :: EditorScene Sort_ -> OEMState -> EditorPosition
+oemCursor scene NoRobots = cursor scene
+oemCursor scene (Robots available selected _) = editorPosition (getMainlayerEditorObject scene selected)
 
 renderOEMOSDs :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> OEMState -> IO ()
 renderOEMOSDs ptr offset scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
-    renderRobotBox orange{alphaC = 0.5} (getMainObject scene selected)
-    mapM_ (renderRobotBox yellow{alphaC = 0.3}) $ map (getMainObject scene) $
+    renderRobotBox orange{alphaC = 0.5} (getMainlayerEditorObject scene selected)
+    mapM_ (renderRobotBox yellow{alphaC = 0.3}) $ map (getMainlayerEditorObject scene) $
         attached
   where
     renderRobotBox :: RGBA -> EditorObject Sort_ -> IO ()
