@@ -2,6 +2,8 @@
 
 module Utils (
     (<$>),
+    (<*>),
+    (<|>),
     (>>>),
     trace,
     module Utils,
@@ -20,7 +22,7 @@ import qualified Data.Set as Set
 
 import Text.Printf
 
-import Control.Applicative ((<$>), (<|>))
+import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Monad.State hiding ((>=>))
 import Control.Arrow ((>>>))
 import Control.Concurrent

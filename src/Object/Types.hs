@@ -72,8 +72,8 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     getControlledChipmunk :: object -> Chipmunk
     getControlledChipmunk o = error ("please implement getControlledChipmunk in: " ++ show o)
 
-    startControl :: object -> object
-    startControl = id
+    startControl :: Seconds -> object -> object
+    startControl now = id
 
     update :: object -> sort -> Index -> Seconds -> Contacts -> (Bool, ControlData) -> IO (Scene Object_ -> Scene Object_, object)
     update o sort i now contacts cd = do
@@ -131,7 +131,7 @@ instance Sort Sort_ Object_ where
     immutableCopy (Object_ s o) = Object_ s <$> Object.Types.immutableCopy o
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk (Object_ _ o) = getControlledChipmunk o
-    startControl (Object_ sort o) = Object_ sort $ startControl o
+    startControl now (Object_ sort o) = Object_ sort $ startControl now o
     update (Object_ sort o) DummySort i now contacts cd = do
         (f, o') <- update o sort i now contacts cd
         return (f, Object_ sort o')

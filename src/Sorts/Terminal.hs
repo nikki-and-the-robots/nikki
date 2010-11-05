@@ -4,7 +4,8 @@
 module Sorts.Terminal (
     sorts,
     unwrapTerminal,
-    Terminal(exitMode),
+    Terminal,
+    terminalExitMode,
     hasTerminalShape,
     ExitMode(..),
     renderTerminalOSD,
@@ -19,8 +20,11 @@ import Data.Indexable (Index)
 import Data.Dynamic
 import Data.Initial
 import Data.Color
+import Data.Traversable
+import Data.Foldable (Foldable, foldMap, forM_)
+import Data.Monoid
 
-import Control.Monad
+import Control.Monad (when)
 
 import System.FilePath
 
@@ -35,7 +39,8 @@ import Base.Events
 import Base.Constants
 import Base.Animation
 import Base.Pixmap
-import Base.Types hiding (selected, OEMState)
+import Base.Types hiding (selected, OEMState, Mode(..))
+import qualified Base.Types
 
 import Object
 
@@ -49,13 +54,13 @@ import Editor.Scene.Rendering.Helpers
 blinkenLightSpeed :: Seconds
 blinkenLightSpeed = 0.5
 
-blinkSelectedLightSpeed :: Seconds
-blinkSelectedLightSpeed = 0.2
+blinkLength :: Seconds
+blinkLength = 0.2
 
 
 sorts :: IO [Sort_]
 sorts = do
-    blinkenLights <- mapM (fromPure toPngPath >>>> getDataFileName >>>> loadPixmap 1) [
+    blinkenLights <- fmapM (fromPure toPngPath >>>> getDataFileName >>>> loadPixmap 1) [
         "terminal-main_00",
         "terminal-main_01",
         "terminal-main_02",
@@ -78,32 +83,37 @@ data ColorLights a = ColorLights {
   }
     deriving Show
 
-colorLightList :: ColorLights a -> [a]
-colorLightList (ColorLights a b c d) = [a, b, c, d]
+instance Functor ColorLights where
+    fmap f (ColorLights a b c d) = ColorLights (f a) (f b) (f c) (f d)
 
-mkColorLights :: [a] -> ColorLights a
-mkColorLights [a, b, c, d] = ColorLights a b c d
+instance Foldable ColorLights where
+    foldMap f (ColorLights a b c d) = mconcat $ map f [a, b, c, d]
+
+instance Traversable ColorLights where
+    traverse cmd (ColorLights a b c d) =
+        ColorLights <$> cmd a <*> cmd b <*> cmd c <*> cmd d
+
+toList :: ColorLights a -> [a]
+toList (ColorLights a b c d) = [a, b, c, d]
+
+fromList :: [a] -> ColorLights a
+fromList [a, b, c, d] = ColorLights a b c d
+
+fzipWith :: (a -> b -> c) -> ColorLights a -> ColorLights b -> ColorLights c
+fzipWith f (ColorLights a b c d) (ColorLights p q r s) =
+    ColorLights (f a p) (f b q) (f c r) (f d s)
 
 readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
-readColorLights f = do
-    [r, b, g, y] <- mapM (
-        fromPure f >>>> 
-        getDataFileName >>>>
-        loadPixmap 1
-      ) ["red", "blue", "green", "yellow"]
-    return $ ColorLights r b g y
+readColorLights f =
+    fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap 1) $
+        ColorLights "red" "blue" "green" "yellow"
 
 instance PP (ColorLights Bool) where
-    pp cl = map inner $ colorLightList cl
+    pp cl = map inner $ toList cl
       where
         inner True = '|'
         inner False = 'o'
 
-data ExitMode
-    = DontExit
-    | ExitToNikki
-    | ExitToRobot Index
-  deriving Show
 
 data TSort = TSort {
     pixmaps :: Pixmaps
@@ -113,25 +123,82 @@ data TSort = TSort {
 data Terminal = Terminal {
     chipmunk :: Chipmunk,
     robots :: [Index],
-    selected :: Selected,
-    exitMode :: ExitMode,
-    lightState :: ColorLights Bool,
-    selectedChangedTime :: Seconds
+    state :: State
   }
     deriving (Show, Typeable)
-
-data Selected
-    = NikkiSelected {selectedRobotIndex :: Int}
-    | RobotSelected {selectedRobotIndex :: Int}
-  deriving Show
-
-isNikkiSelected :: Selected -> Bool
-isNikkiSelected (NikkiSelected _) = True
-isNikkiSelected (RobotSelected _) = False
 
 unwrapTerminal :: Object_ -> Maybe Terminal
 unwrapTerminal (Object_ sort o) = cast o
 
+terminalExitMode :: Terminal -> ExitMode
+terminalExitMode = state >>> exitMode
+
+
+data State
+    = State {
+        gameMode :: GameMode,
+        row :: MenuRow,
+        robotIndex :: Int,
+        changedTime :: Seconds,
+        exitMode :: ExitMode
+      }
+  deriving Show
+
+data MenuRow = NikkiRow | RobotRow
+  deriving Show
+
+initialMenuState :: Seconds -> State
+initialMenuState now = State NikkiMode RobotRow 0 now DontExit
+
+isNikkiSelected :: State -> Bool
+isNikkiSelected (State _ NikkiRow _ _ _) = True
+isNikkiSelected (State _ RobotRow _ _ _) = False
+
+-- | resets the terminal state, when it is started to be used.
+reset :: Seconds -> [Index] -> State -> State
+reset t robots (State _ _ i _ _) =
+    State TerminalMode row i t DontExit
+  where
+    row = if null robots then NikkiRow else RobotRow
+
+blinkenLightsState :: Seconds -> [Index] -> State -> ColorLights Bool
+blinkenLightsState now robots state =
+    case row state of
+        NikkiRow -> full
+        RobotRow -> if blinkingOut then fzipWith (\ f s -> f && not s) full selected else full
+  where
+    full = ColorLights (l > 0) (l > 1) (l > 2) (l > 3)
+    selected = ColorLights (i == 0) (i == 1) (i == 2) (i == 3)
+    i = robotIndex state
+    l = length robots
+    blinkingOut = blinkingMode && even (floor ((now - changedTime state) / blinkLength))
+    blinkingMode = case gameMode state of
+        NikkiMode -> False
+        _ -> True
+
+-- | changes the selected robot (if applicable)
+-- and updates the selectedChangedTime (also if applicable)
+modifySelected :: Seconds -> [Index] -> (Int -> Int) -> State -> State
+modifySelected now robots f state =
+    case row state of
+        NikkiRow -> state
+        RobotRow -> state{robotIndex = normalize (f (robotIndex state)), changedTime = now}
+  where
+    normalize = clip (0, length robots - 1)
+
+
+data GameMode = NikkiMode | TerminalMode | RobotMode
+  deriving Show
+
+
+data ExitMode
+    = DontExit
+    | ExitToNikki
+    | ExitToRobot Index
+  deriving Show
+
+
+-- * Sort implementation
 
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
@@ -160,9 +227,7 @@ instance Sort TSort Terminal where
             (polys, baryCenterOffset) = mkPolys $ size sort
             polysAndAttributes = map (mkShapeDescription shapeAttributes) polys
         chip <- initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
-        return $ Terminal chip attached (NikkiSelected 0) DontExit
-                    (mkColorLights $ map (< length attached) [0..3])
-                    0
+        return $ Terminal chip attached (initialMenuState 0)
 
     immutableCopy t =
         CM.immutableCopy (chipmunk t) >>= \ x -> return t{chipmunk = x}
@@ -171,16 +236,15 @@ instance Sort TSort Terminal where
 
     chipmunks = chipmunk >>> return
 
-    startControl t = t{exitMode = DontExit}
+    startControl now t = t{state = reset now (robots t) (state t)}
 
-    updateNoSceneChange sort now contacts (False, cd) =
-        fromPure (blinkSelectedColorLight now)
-    updateNoSceneChange sort now contacts (True, cd) = fromPure (
-        controlTerminal now cd
-        >>> blinkSelectedColorLight now)
+    updateNoSceneChange sort now contacts (False, cd) terminal =
+        return terminal
+    updateNoSceneChange sort now contacts (True, cd) terminal =
+        return terminal{state = updateState now cd (robots terminal) (state terminal)}
 
-    render terminal sort ptr offset seconds =
-        renderTerminal ptr offset seconds terminal sort
+    render terminal sort ptr offset now =
+        renderTerminal ptr offset now terminal sort
 
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
@@ -201,159 +265,62 @@ mkPolys (Size w h) =
 
 -- * controlling
 
-controlTerminal :: Seconds -> ControlData -> Terminal -> Terminal
-controlTerminal now cd t | Press BButton `elem` pressed cd =
---     || Press AButton `elem` pressed cd =
-        case selected t of
-            NikkiSelected _ -> t{exitMode = ExitToNikki}
-            RobotSelected i -> t{exitMode = ExitToRobot (robots t !! i)}
-controlTerminal now cd t | Press RightButton `elem` pressed cd =
-    modifySelected now t (+ 1)
-controlTerminal now cd t | Press LeftButton `elem` pressed cd =
-    modifySelected now t (subtract 1)
-controlTerminal now cd t@Terminal{selected = NikkiSelected i, robots}
-    | Press DownButton `elem` pressed cd
+updateState :: Seconds -> ControlData -> [Index] -> State -> State
+updateState now cd robots state
+    | Press BButton `elem` pressed cd
+    || Press AButton `elem` pressed cd =
+    -- exit terminal mode
+        case row state of
+            NikkiRow -> state{exitMode = ExitToNikki, robotIndex = 0}
+            RobotRow -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
+updateState now cd robots state | Press RightButton `elem` pressed cd =
+    -- go right in robot list
+    modifySelected now robots (+ 1) state
+updateState now cd robots state | Press LeftButton `elem` pressed cd =
+    -- go left in robot list
+    modifySelected now robots (subtract 1) state
+updateState now cd robots state@State{row = NikkiRow}
+    | Press UpButton `elem` pressed cd
+    -- select to robot list
       && not (null robots) =
-        t{selected = RobotSelected i, selectedChangedTime = now}
-controlTerminal now cd t@Terminal{selected = RobotSelected i}
-    | Press UpButton `elem` pressed cd =
-        t{selected = NikkiSelected i}
-controlTerminal _ _ t = t
+        state{row = RobotRow}
+updateState now cd robots state@State{row = RobotRow}
+    | Press DownButton `elem` pressed cd =
+    -- select exit (nikki) menu item (go down)
+        state{row = NikkiRow}
+updateState _ _ _ t = t
 
--- | changes the selected robot (if applicable)
--- and updates the selectedChangedTime (also if applicable)
-modifySelected :: Seconds -> Terminal -> (Int -> Int) -> Terminal
-modifySelected now t f =
-    case selected t of
-        NikkiSelected i -> t
-        RobotSelected i -> t{
-            selected = RobotSelected (clip (0, length (robots t) - 1) (f i)),
-            selectedChangedTime = now
-          }
-
-blinkSelectedColorLight :: Seconds -> Terminal -> Terminal
-blinkSelectedColorLight now t =
-    t{lightState = lightState'}
-  where
-    lightState' = mkColorLights $ map p [0..3]
-    p n = n < length (robots t)
-        && (isNikkiSelected (selected t)
-            || selectedRobotIndex (selected t) /= n
-            || isBlinkTime)
-    isBlinkTime =
-        pickAnimationFrame [False, True] [blinkSelectedLightSpeed] now
-
--- initialTerminal :: Qt.Position Double -> a -> [Index] -> Object_ a Vector
--- initialTerminal p s i =
---     initialTerminalLights $
---         Terminal s (positionToVector p)
---             (State (length i) i 0 False [] 0 UninitializedAnimation)
--- 
--- 
-
--- 
--- initAnimation :: Object -> Object
--- initAnimation =
---     modifyTerminalState (modifyAnimation (const animation))
---   where
---     animation = mkAnimation AnimatedFrameSetType (const inner) 0
---     inner = AnimationPhases $ zip
---         (cycle [0 .. 3])
---         (repeat 0.6)
--- 
--- update :: Scene -> Seconds -> (Bool, ControlData)
---     -> Object -> IO Object
--- update scene now cd =
---     pure (modifyTerminalState (control scene cd)) >=>
---     pure (modifyTerminalState (updateState scene now))
--- 
--- control :: Scene -> (Bool, ControlData) -> State -> State
--- control scene (False, _) state = state
--- control scene (_, cd) state =
---     case mf of
---         Nothing -> state
---         Just f | not (isRobotSelected state) ->
---             modifySelected (const 0) $
---             state{isRobotSelected = True}
---         Just f ->
---             modifySelected f state
---   where
---     right = Press RightButton `elem` pressed cd
---     left = Press LeftButton `elem` pressed cd
---     mf = if right then
---         Just (+ 1)
---       else if left then
---         Just (subtract 1)
---       else
---         Nothing
--- 
--- 
--- updateState :: Scene -> Seconds
---     -> State -> State
--- updateState scene now t@State{terminalLastBlink, isRobotSelected} =
---     modifyMainAnimation now $
---     if shouldSwap then
---         swapSelectedBlinkStatus $ t{terminalLastBlink = now}
---       else
---         t
---   where
---     shouldSwap = stateToBlink && isRobotSelected && timeToBlink
---     timeToBlink = now - terminalLastBlink > blinkLength
---     stateToBlink = isRobotMode scene || isTerminalMode scene
--- 
--- 
--- modifyMainAnimation :: Seconds -> State -> State
--- modifyMainAnimation now = modifyAnimation inner
---   where
---     inner a = updateAnimation now AnimatedFrameSetType a
--- 
--- 
--- blinkLength :: Seconds
--- blinkLength = 0.5
--- 
--- -- | swaps the status of the selected TerminalLight.
--- swapSelectedBlinkStatus :: State -> State
--- swapSelectedBlinkStatus t@State{terminalSelected, terminalLights, terminalLength} =
---     let selected = allTerminalLights !! terminalSelected
---         initialLights = take terminalLength allTerminalLights
---     in if selected `elem` terminalLights then
---         -- switch off
---         t{terminalLights = delete selected initialLights}
---       else
---         -- switch on
---         t{terminalLights = initialLights}
 
 -- * game rendering
 
 renderTerminal :: Ptr QPainter -> Offset Double -> Seconds -> Terminal
     -> TSort -> IO ()
-renderTerminal ptr offset seconds t sort = do
-    renderTerminalBackground ptr offset seconds t sort
-    renderLittleColorLights ptr offset t sort
+renderTerminal ptr offset now t sort = do
+    renderTerminalBackground ptr offset now t sort
+    renderLittleColorLights ptr offset now t sort
 
+-- | renders the main terminal pixmap (with blinkenlights)
 renderTerminalBackground ptr offset now t sort = do
     let pixmap =
             pickAnimationFrame (blinkenLights $ pixmaps sort)
                 [blinkenLightSpeed] now
     renderChipmunk ptr offset pixmap (chipmunk t)
 
-
-renderLittleColorLights ptr offset t sort = do
+-- | renders the little colored lights (for the associated robots) on the terminal in the scene
+renderLittleColorLights ptr offset now t sort = do
     pos <- fst <$> getRenderPosition (chipmunk t)
-    mapM_ (renderLight ptr (offset +~ pos) t (littleColorLights $ pixmaps sort))
+    let colorStates = blinkenLightsState now (robots t) (state t)
+    mapM_ (renderLight ptr (offset +~ pos) (littleColorLights $ pixmaps sort) colorStates)
         [red_, blue_, green_, yellow_]
 
-renderLight :: Ptr QPainter -> Offset Double -> Terminal -> ColorLights Pixmap
-    -> (forall a . (ColorLights a -> a)) -> IO ()
-renderLight ptr offset t pixmaps color =
-    when (color $ lightState t) $ do
+renderLight :: Ptr QPainter -> Offset Double -> ColorLights Pixmap -> ColorLights Bool
+    -> (forall a . (ColorLights a -> a))
+    -> IO ()
+renderLight ptr offset pixmaps colorStates color =
+    when (color colorStates) $ do
         let lightOffset = color littleLightOffsets
             pixmap = color pixmaps
         renderPixmap ptr offset lightOffset Nothing Nothing pixmap
---         resetMatrix ptr
---         translate ptr offset
---         translate ptr lightOffset
---         drawPixmap ptr zero pixmap
 
 littleLightOffsets :: ColorLights (Offset Double)
 littleLightOffsets = ColorLights {
@@ -385,23 +352,23 @@ yellowBoxX = greenBoxX + boxWidth + padding
 boxY = fromUber 7
 
 
-renderTerminalOSD :: Ptr QPainter -> Scene Object_ -> IO ()
-renderTerminalOSD ptr scene@Scene{mode = TerminalMode{terminal}} = do
+renderTerminalOSD :: Ptr QPainter -> Seconds -> Scene Object_ -> IO ()
+renderTerminalOSD ptr now scene@Scene{mode = Base.Types.TerminalMode{Base.Types.terminal}} = do
     let Just t = unwrapTerminal $ getMainlayerObject scene terminal
-        cls = pp $ lightState t
-        texts = lines $ case selected t of
-            NikkiSelected _ -> "[Nikki]\n " ++ cls
-            RobotSelected _ -> " Nikki\n[" ++ cls ++ "]"
+        cls = pp $ blinkenLightsState now (robots t) (state t)
+        texts = case row $ state t of
+            NikkiRow -> cls : "[BACK]" : []
+            RobotRow -> ("[" ++ cls ++ "]") : " BACK" : []
     resetMatrix ptr
     setPenColor ptr 255 255 255 255 1
     let textSize = Size 250 50
     setFontSize ptr (round (height textSize))
     windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-    translate ptr (sizeToPosition (fmap (/ 2) (windowSize -~ textSize)))
+    translate ptr ((sizeToPosition (fmap (/ 2) (windowSize -~ textSize))) +~ Position 0 300)
     forM_ texts $ \ text -> do
         drawText ptr (Position 10 0) False text
         translate ptr (Position 0 (height textSize))
-renderTerminalOSD _ _ = return ()
+renderTerminalOSD _ _ _ = return ()
 
 
 -- * special edit mode (OEM)

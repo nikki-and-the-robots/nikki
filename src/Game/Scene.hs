@@ -49,13 +49,13 @@ stepScene space controlData =
     updateScene controlData >>>>
     stepSpace space >>>>
     updateCamera >>>>
-    fromPure (maybeId (flip transition controlData))
+    fromPure (maybeId (transition controlData))
 
 
 -- * State automaton stuff
 
-transition :: Scene Object_ -> ControlData -> Maybe (Scene Object_)
-transition scene (ControlData pushed _) = runHandler [
+transition :: ControlData -> Scene Object_ -> Maybe (Scene Object_)
+transition (ControlData pushed _) scene = runHandler (spaceTime scene) [
     nikkiToTerminal scene pushed,
     terminalExit scene,
     robotToTerminal scene pushed,
@@ -63,14 +63,14 @@ transition scene (ControlData pushed _) = runHandler [
     levelPassed scene
   ]
 
-runHandler :: Sort s o => [Maybe (Scene o)] -> Maybe (Scene o)
-runHandler (Just scene : _) = Just $ sendStartControl scene
+runHandler :: Sort s o => Seconds -> [Maybe (Scene o)] -> Maybe (Scene o)
+runHandler now (Just scene : _) = Just $ sendStartControl scene
   where
     sendStartControl :: Sort s o => Scene o -> Scene o
     sendStartControl scene = 
-        modifyMainlayerObjectByIndex startControl (getControlledIndex scene) scene
-runHandler (Nothing : r) = runHandler r
-runHandler [] = Nothing
+        modifyMainlayerObjectByIndex (startControl now) (getControlledIndex scene) scene
+runHandler now (Nothing : r) = runHandler now r
+runHandler _ [] = Nothing
 
 
 -- | converts the Scene to TerminalMode, if appropriate
@@ -104,7 +104,7 @@ whichTerminalCollides Scene{objects, contacts} =
 terminalExit :: Scene Object_ -> Maybe (Scene Object_)
 terminalExit scene@Scene{mode = TerminalMode{nikki, terminal}} =
     case unwrapTerminal $ getMainlayerObject scene terminal of
-        Just t -> case exitMode t of
+        Just t -> case terminalExitMode t of
             DontExit -> Nothing
             ExitToNikki ->
                 Just scene{mode = NikkiMode nikki}
@@ -213,7 +213,7 @@ renderScene ptr scene@Scene{spaceTime = now, cameraState} = do
         renderLayer ptr size offset now $ mainLayer os
         fmapM_ (renderLayer ptr size offset now) $ foregrounds os
 
-    renderTerminalOSD ptr scene
+    renderTerminalOSD ptr now scene
 
 
 -- debugging
