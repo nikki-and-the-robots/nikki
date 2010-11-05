@@ -144,7 +144,8 @@ levelPassed scene =
 
 stepSpace :: Space -> Scene Object_ -> IO (Scene Object_)
 
-stepSpace _space s@Scene{mode = TerminalMode{}} = return s
+stepSpace _space s@Scene{mode = TerminalMode{}} =
+    return s{spaceTime = spaceTime s + stepQuantum}
 
 stepSpace space s@Scene{contactRef} = do
     resetContactRef contactRef
