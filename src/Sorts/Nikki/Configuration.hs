@@ -15,33 +15,34 @@ import Base.Directions
 import Sorts.Nikki.Types
 
 
+-- there are some values to fine tune the behaviour of nikki. The aim is to keep the number
+-- of fine tuners small.
+
 -- physic
 
 elasticity_ = 0.0
 
--- there are some values to fine tune the behaviour of nikki. The aim is to keep the number
--- of fine tuners small.
-
-nikkiMass = 2.5
+nikkiMass :: Double
+nikkiMass = 1
 
 -- | friction for nikkis feet. The higher the friction,
 -- the faster nikki will gain maximum walking speed.
-nikkiFeetFriction = 0.35
+nikkiFeetFriction = 0.4
 
 -- | the friction of the head ( and the legs (without the feet))
 headFriction = 0.1
 
 -- | maximum walking speed (pixel per second)
-walkingVelocity = fromUber 100.8 <<? "walkingVelocity"
+walkingVelocity = 390.0
 
--- | how strong the vertical force is while Nikki is airborne
+-- | how strong the horizontal force is while Nikki is airborne
 -- in gravities
-airBorneForceFactor = 1000 / gravity
+airBorneForceFactor = 0.5
 
 -- | minimal jumping height (for calculating the impulse strength)
 -- We have an air drag for nikki and that makes calculating the right forces
 -- difficult. So this variable and maximalJumpingHeight are just estimates.
-minimalJumpingHeight = fromKachel 0.7
+minimalJumpingHeight = fromKachel 0.25
 
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
 maximalJumpingHeight = fromKachel 3.5
