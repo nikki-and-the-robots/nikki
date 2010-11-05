@@ -49,28 +49,35 @@ stepScene space controlData =
     updateScene controlData >>>>
     stepSpace space >>>>
     updateCamera >>>>
-    fromPure (maybeId (transition controlData))
+    transition controlData
 
 
 -- * State automaton stuff
 
-transition :: ControlData -> Scene Object_ -> Maybe (Scene Object_)
-transition (ControlData pushed _) scene = runHandler (spaceTime scene) [
-    nikkiToTerminal scene pushed,
-    terminalExit scene,
-    robotToTerminal scene pushed,
-    gameOver scene,
-    levelPassed scene
-  ]
-
-runHandler :: Sort s o => Seconds -> [Maybe (Scene o)] -> Maybe (Scene o)
-runHandler now (Just scene : _) = Just $ sendStartControl scene
+transition :: ControlData -> Scene Object_ -> IO (Scene Object_)
+transition (ControlData pushed _) scene =
+    case mNew of
+        Nothing -> return scene
+        Just new -> modifyTransitioned new
   where
-    sendStartControl :: Sort s o => Scene o -> Scene o
-    sendStartControl scene = 
-        modifyMainlayerObjectByIndex (startControl now) (getControlledIndex scene) scene
-runHandler now (Nothing : r) = runHandler now r
-runHandler _ [] = Nothing
+    -- | Maybe the new scene
+    mNew :: Maybe (Scene Object_)
+    mNew = foldl1 (<|>) [
+        nikkiToTerminal scene pushed,
+        terminalExit scene,
+        robotToTerminal scene pushed,
+        gameOver scene,
+        levelPassed scene
+      ]
+
+-- | applied to the scene after every transition
+modifyTransitioned :: Scene Object_ -> IO (Scene Object_)
+modifyTransitioned scene = do
+    resetHeldKeys
+    return $ modifyMainlayerObjectByIndex (startControl now) controlledIndex scene
+  where
+    now = spaceTime scene
+    controlledIndex = getControlledIndex scene
 
 
 -- | converts the Scene to TerminalMode, if appropriate

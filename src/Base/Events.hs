@@ -9,6 +9,7 @@ import Data.Set (Set, union, difference, insert, intersection, empty, delete)
 import Data.IORef
 
 import Control.Concurrent
+import Control.Arrow
 
 import System.IO.Unsafe
 
@@ -70,6 +71,10 @@ unpollAppEvents :: [AppEvent] -> IO ()
 unpollAppEvents events = do
     (unpolledEvents, keyState) <- readIORef keyStateRef
     writeIORef keyStateRef (unpolledEvents ++ events, keyState)
+
+resetHeldKeys :: IO ()
+resetHeldKeys = do
+    modifyIORef keyStateRef (second (const empty))
 
 
 -- | Blocking wait for the next event.
