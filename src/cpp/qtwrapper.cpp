@@ -28,6 +28,7 @@ AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
 // AppWidget::AppWidget(const QGLFormat& format) : QWidget() {
     drawingCallback = emptyDrawingCallback;
     keyCallback = NULL;
+    autoRepeat = true;
 
     this->setAutoFillBackground(false);
     this->setCursor(Qt::BlankCursor);
@@ -47,7 +48,7 @@ void AppWidget::paintEvent(QPaintEvent* event) {
 };
 
 void AppWidget::keyPressEvent(QKeyEvent* e) {
-    if ((! e->isAutoRepeat()) && (keyCallback != NULL)) {
+    if (((this->autoRepeat) || (! e->isAutoRepeat())) && (keyCallback != NULL)) {
         this->keyCallback(true, e);
     }
 };
@@ -147,6 +148,11 @@ extern "C" void setWindowIcon(AppWidget* self, QIcon* icon) {
 
 extern "C" void setRenderingLooped(AppWidget* self, bool looped) {
     self->setRenderingLooped(looped);
+};
+
+// sets if auto repeat key events should be processed
+extern "C" void setAutoRepeat(AppWidget* self, bool status) {
+    self->autoRepeat = status;
 };
 
 extern "C" void updateAppWidget(AppWidget* self) {

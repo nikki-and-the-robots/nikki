@@ -14,6 +14,7 @@ import Data.Initial
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
 import Control.Concurrent.TickTimer
+import Control.Exception
 
 import GHC.Conc
 
@@ -75,7 +76,8 @@ gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> AppMonad Ap
 gameLoop app sceneMVar = do
     initializeSceneMVar
     timer <- liftIO $ newTickTimer (stepQuantum / timeFactor)
-    loop timer
+    withAutoRepeat app $
+        loop timer
   where
     loop timer = do
         liftIO $ resetDebugging
@@ -122,3 +124,10 @@ gameLoop app sceneMVar = do
             immutableCopyOfScene <- Game.Scene.immutableCopy s
             swapMVar sceneMVar (immutableCopyOfScene, debugging)
             return ()
+
+withAutoRepeat :: MonadIO m => Application -> m a -> m a
+withAutoRepeat app cmd = do
+    liftIO $ setAutoRepeat (window app) False
+    a <- cmd
+    liftIO $ setAutoRepeat (window app) True
+    return a

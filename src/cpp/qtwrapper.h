@@ -23,6 +23,8 @@ public:
 
     keyCallbackFunction* keyCallback;
 
+    bool autoRepeat;
+
     void paintEvent(QPaintEvent* event);
 
     void keyPressEvent(QKeyEvent* e);
