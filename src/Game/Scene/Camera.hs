@@ -24,7 +24,7 @@ updateCameraState position velocity (CS camPos) =
     CS newPos
   where
     distance = camPos - position
-    xLimit = 300
+    xLimit = 2
     yLimit = 200
     newPos = Vector newX newY
     newX = if abs (vectorX distance) < xLimit then
