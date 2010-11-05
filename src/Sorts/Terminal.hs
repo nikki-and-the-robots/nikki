@@ -182,9 +182,12 @@ modifySelected :: Seconds -> [Index] -> (Int -> Int) -> State -> State
 modifySelected now robots f state =
     case row state of
         NikkiRow -> state
-        RobotRow -> state{robotIndex = normalize (f (robotIndex state)), changedTime = now}
+        RobotRow -> if newIndex /= robotIndex state
+                    then state{robotIndex = newIndex, changedTime = now}
+                    else state -- don't reset changedTime when nothing changed
   where
     normalize = clip (0, length robots - 1)
+    newIndex = normalize (f (robotIndex state))
 
 
 data GameMode = NikkiMode | TerminalMode | RobotMode
