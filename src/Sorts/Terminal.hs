@@ -21,7 +21,7 @@ import Data.Dynamic
 import Data.Initial
 import Data.Color
 import Data.Traversable
-import Data.Foldable (Foldable, foldMap, forM_)
+import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 import Data.List
 

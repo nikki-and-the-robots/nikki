@@ -12,7 +12,7 @@ import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, traverse)
 import Data.Initial
 
-import Control.Applicative ((<*>), pure)
+import Control.Applicative (pure)
 
 import Graphics.Qt
 

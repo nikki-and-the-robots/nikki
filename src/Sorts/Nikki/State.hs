@@ -11,7 +11,6 @@ import Data.Abelian
 import Data.Maybe
 
 import Control.Arrow
-import Control.Applicative ((<|>))
 
 import Graphics.Qt as Qt hiding (rotate, scale)
 

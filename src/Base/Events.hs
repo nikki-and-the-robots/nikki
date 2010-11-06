@@ -15,8 +15,6 @@ import System.IO.Unsafe
 
 import Graphics.Qt
 
-import Utils
-
 
 data AppEvent
     = Press AppButton
