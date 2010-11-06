@@ -152,7 +152,7 @@ renderClouds ptr offset now sort (WallSlide _ _ clouds) =
                     pickLimitedAnimationFrame pixmapList cloudFrameTimes (now - creationTime cloud)
         case mPixmap of
             Just pixmap ->
-                renderPixmap ptr offset (cloudPosition cloud) Nothing Nothing pixmap
+                renderPixmap ptr offset (cloudPosition cloud) Nothing pixmap
             Nothing -> return ()
 renderClouds _ _ _ _ _ = return ()
 

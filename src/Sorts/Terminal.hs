@@ -357,7 +357,7 @@ renderLight ptr offset pixmaps colorStates color =
     when (color colorStates) $ do
         let lightOffset = color littleLightOffsets
             pixmap = color pixmaps
-        renderPixmap ptr offset lightOffset Nothing Nothing pixmap
+        renderPixmap ptr offset lightOffset Nothing pixmap
 
 littleLightOffsets :: ColorLights (Offset Double)
 littleLightOffsets = ColorLights {
@@ -400,7 +400,7 @@ renderTerminalOSD ptr now scene@Scene{mode = Base.Types.TerminalMode{Base.Types.
             windowSize <- fmap fromIntegral <$> sizeQPainter ptr
             let pixmaps = osdPixmaps sort
                 position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)
-            renderPixmap ptr zero position Nothing Nothing (osdBackground pixmaps)
+            renderPixmap ptr zero position Nothing (osdBackground pixmaps)
             renderOsdCenters ptr position pixmaps (blinkenLightsState now (robots terminal) (state terminal))
             renderOsdFrames ptr position pixmaps (state terminal) (selectedColorLights (robotIndex (state terminal)))
             renderOsdExit ptr position now pixmaps (state terminal)
@@ -418,7 +418,7 @@ renderOsdCenters ptr offset pixmaps states =
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
     inner color = when (color states) $
-        renderPixmap ptr offset (color osdLightOffsets) Nothing Nothing (color (osdCenters pixmaps))
+        renderPixmap ptr offset (color osdLightOffsets) Nothing (color (osdCenters pixmaps))
 
 renderOsdFrames ptr offset pixmaps state selected =
     case (row state) of
@@ -427,7 +427,7 @@ renderOsdFrames ptr offset pixmaps state selected =
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
     inner color = when (color selected) $
-        renderPixmap ptr offset (color osdLightOffsets) Nothing Nothing (color (osdFrames pixmaps))
+        renderPixmap ptr offset (color osdLightOffsets) Nothing (color (osdFrames pixmaps))
 
 -- | offsets both for center and frame pixmaps
 osdLightOffsets :: ColorLights (Qt.Position Double)
@@ -447,7 +447,7 @@ renderOsdExit ptr offset now pixmaps state =
         NikkiRow -> renderExit $ pickExitFrame $ osdExit pixmaps
         RobotRow -> renderExit $ head $ osdExit pixmaps
   where
-    renderExit = renderPixmap ptr offset exitOffset Nothing Nothing
+    renderExit = renderPixmap ptr offset exitOffset Nothing
     pickExitFrame frames =
         pickAnimationFrame frames [exitFrameDuration] (now - changedTime state)
     exitOffset = Position 97 89

@@ -116,7 +116,7 @@ instance Sort TSort FallingTile where
 
     render t@FallingTile{chipmunk = ImmutableChipmunk{}} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPosition $ chipmunk t
-        renderPixmap ptr offset position (Just rad) Nothing tilePixmap
+        renderPixmap ptr offset position (Just rad) tilePixmap
 
 
 initializeBox :: Space -> TSort -> EditorPosition -> IO Chipmunk

@@ -99,7 +99,7 @@ instance Sort PSort Platform where
 
     render platform sort ptr offset now = do
         (position, rad) <- getRenderPosition $ chipmunk platform
-        renderPixmap ptr offset position (Just rad) Nothing (pix sort)
+        renderPixmap ptr offset position (Just rad) (pix sort)
 
         debugCmds platform ptr offset
 

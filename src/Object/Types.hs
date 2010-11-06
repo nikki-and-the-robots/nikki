@@ -205,7 +205,7 @@ pickleObject2EditorObject allSorts (PickleObject id position oemState) =
 renderChipmunk :: Ptr QPainter -> Offset Double -> Pixmap -> Chipmunk -> IO ()
 renderChipmunk painter worldOffset p chipmunk = do
     (position, angle) <- getRenderPosition chipmunk
-    renderPixmap painter worldOffset position (Just angle) Nothing p
+    renderPixmap painter worldOffset position (Just angle) p
 
 
 -- * ObjectEditMode

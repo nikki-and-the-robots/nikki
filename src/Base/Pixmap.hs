@@ -44,10 +44,9 @@ renderPixmap :: Ptr QPainter -- ^ painter to be rendered to
     -> Offset Double -- ^ global (camera) offset
     -> Position Double -- ^ position of pixmap
     -> Maybe Double -- ^ rotation
-    -> Maybe (Size Double) -- ^ scaling
     -> Pixmap -- ^ pixmap to be rendered
     -> IO ()
-renderPixmap ptr offset position mAngle Nothing pix = do
+renderPixmap ptr offset position mAngle pix = do
     resetMatrix ptr
     translate ptr offset
 
