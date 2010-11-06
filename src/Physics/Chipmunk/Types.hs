@@ -182,7 +182,7 @@ removeChipmunk c@Chipmunk{} = do
 getPosition :: Chipmunk -> IO Vector
 getPosition Chipmunk{body} = get $ H.position body
 getPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
-    return (Vector x y +~ baryCenterOffset)
+    return (Vector x y +~ rotate baryCenterOffset (fromAngle angle))
 getPosition StaticChipmunk{chipmunkPosition} = return chipmunkPosition
 
 -- returns the angle and the position of the (rotated) left upper corner of the object.
