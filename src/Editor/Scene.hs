@@ -146,7 +146,7 @@ normalModeKeyboard A scene@EditorScene{} =
 
 -- cycle through objects under cursor
 -- (ordering of rendering will be automated)
-normalModeKeyboard C scene@EditorScene{editorObjects, selected = Just (layerIndex, i)} =
+normalModeKeyboard B scene@EditorScene{editorObjects, selected = Just (layerIndex, i)} =
     let editorObjects' = modifySelectedLayer layerIndex (modifyContent (I.toHead i)) editorObjects
     in scene{editorObjects = editorObjects'}
 
