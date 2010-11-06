@@ -63,3 +63,6 @@ levelDir = "levels"
 windowTitle :: String
 windowTitle = "Nikki and the Robots"
 
+goldenRatio :: Double
+goldenRatio = (sqrt 5 + 1) / 2
+

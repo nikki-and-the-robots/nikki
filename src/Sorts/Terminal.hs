@@ -23,6 +23,7 @@ import Data.Color
 import Data.Traversable
 import Data.Foldable (Foldable, foldMap, forM_)
 import Data.Monoid
+import Data.List
 
 import Control.Monad (when)
 
@@ -55,8 +56,12 @@ blinkenLightSpeed :: Seconds
 blinkenLightSpeed = 0.5
 
 blinkLength :: Seconds
-blinkLength = 0.2
+blinkLength = 0.4
 
+exitFrameDuration = blinkLength / 9
+
+
+-- * sort loading
 
 sorts :: IO [Sort_]
 sorts = do
@@ -67,16 +72,33 @@ sorts = do
         "terminal-main_03"
       ]
     littleColors <- readColorLights (\ color -> toPngPath ("terminal-" ++ color))
-    let r = TSort (Pixmaps blinkenLights littleColors)
+    osdPixmaps <- loadOsdPixmaps
+    let r = TSort (Pixmaps blinkenLights littleColors) osdPixmaps
     return [Sort_ r]
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
-data Pixmaps = Pixmaps {
-    blinkenLights :: [Pixmap],
-    littleColorLights :: ColorLights Pixmap
-  }
-    deriving Show
+readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
+readColorLights f =
+    fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap 1) $
+        ColorLights "red" "blue" "green" "yellow"
+
+loadOsdPixmaps :: IO OsdPixmaps
+loadOsdPixmaps = do
+    background <- loadPixmap 1 =<< toOsdPath "background"
+    let colors = ColorLights "red" "blue" "green" "yellow"
+    centers <- fmapM (toOsdPath >>>> loadPixmap 1) colors
+    frames <- fmapM (toOsdPath >>>> loadPixmap 1) $ fmap (++ "-active_01") colors
+    exitFiles <- filter (\ p -> "exit" `isPrefixOf` takeBaseName p) <$> getDataFiles ".png" osdPath
+    exits <- fmapM (loadPixmap 1) exitFiles
+    return $ OsdPixmaps background centers frames exits
+  where
+    osdPath = pngDir </> "terminals" </> "osd"
+    toOsdPath :: String -> IO FilePath
+    toOsdPath name = getDataFileName (osdPath </> name <.> "png")
+
+
+-- | type to bundle things for the four terminal colors: red, blu, green and yellow (in that order)
 
 data ColorLights a = ColorLights {
     red_, blue_, green_, yellow_ :: a
@@ -103,20 +125,28 @@ fzipWith :: (a -> b -> c) -> ColorLights a -> ColorLights b -> ColorLights c
 fzipWith f (ColorLights a b c d) (ColorLights p q r s) =
     ColorLights (f a p) (f b q) (f c r) (f d s)
 
-readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
-readColorLights f =
-    fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap 1) $
-        ColorLights "red" "blue" "green" "yellow"
+selectedColorLights :: Int -> ColorLights Bool
+selectedColorLights i = ColorLights (i == 0) (i == 1) (i == 2) (i == 3)
 
-instance PP (ColorLights Bool) where
-    pp cl = map inner $ toList cl
-      where
-        inner True = '|'
-        inner False = 'o'
+
+data Pixmaps = Pixmaps {
+    blinkenLights :: [Pixmap],
+    littleColorLights :: ColorLights Pixmap
+  }
+    deriving Show
+
+data OsdPixmaps = OsdPixmaps {
+    osdBackground :: Pixmap,
+    osdCenters :: ColorLights Pixmap,
+    osdFrames :: ColorLights Pixmap,
+    osdExit :: [Pixmap]
+  }
+    deriving (Show, Typeable)
 
 
 data TSort = TSort {
-    pixmaps :: Pixmaps
+    pixmaps :: Pixmaps,
+    osdPixmaps :: OsdPixmaps
   }
     deriving (Show, Typeable)
 
@@ -129,6 +159,9 @@ data Terminal = Terminal {
 
 unwrapTerminal :: Object_ -> Maybe Terminal
 unwrapTerminal (Object_ sort o) = cast o
+
+unwrapTerminalSort :: Sort_ -> Maybe TSort
+unwrapTerminalSort (Sort_ sort) = cast sort
 
 terminalExitMode :: Terminal -> ExitMode
 terminalExitMode = state >>> exitMode
@@ -168,7 +201,7 @@ blinkenLightsState now robots state =
         RobotRow -> if blinkingOut then fzipWith (\ f s -> f && not s) full selected else full
   where
     full = ColorLights (l > 0) (l > 1) (l > 2) (l > 3)
-    selected = ColorLights (i == 0) (i == 1) (i == 2) (i == 3)
+    selected = selectedColorLights i
     i = robotIndex state
     l = length robots
     blinkingOut = blinkingMode && even (floor ((now - changedTime state) / blinkLength))
@@ -286,11 +319,11 @@ updateState now cd robots state@State{row = NikkiRow}
     | Press UpButton `elem` pressed cd
     -- select to robot list
       && not (null robots) =
-        state{row = RobotRow}
+        state{row = RobotRow, changedTime = now}
 updateState now cd robots state@State{row = RobotRow}
     | Press DownButton `elem` pressed cd =
     -- select exit (nikki) menu item (go down)
-        state{row = NikkiRow}
+        state{row = NikkiRow, changedTime = now}
 updateState _ _ _ t = t
 
 
@@ -313,7 +346,8 @@ renderTerminalBackground ptr offset now t sort = do
 renderLittleColorLights ptr offset now t sort = do
     pos <- fst <$> getRenderPosition (chipmunk t)
     let colorStates = blinkenLightsState now (robots t) (state t)
-    mapM_ (renderLight ptr (offset +~ pos) (littleColorLights $ pixmaps sort) colorStates)
+    mapM_
+        (renderLight ptr (offset +~ pos) (littleColorLights $ pixmaps sort) colorStates)
         [red_, blue_, green_, yellow_]
 
 renderLight :: Ptr QPainter -> Offset Double -> ColorLights Pixmap -> ColorLights Bool
@@ -355,23 +389,69 @@ yellowBoxX = greenBoxX + boxWidth + padding
 boxY = fromUber 7
 
 
+-- * rendering of game OSD
+
 renderTerminalOSD :: Ptr QPainter -> Seconds -> Scene Object_ -> IO ()
-renderTerminalOSD ptr now scene@Scene{mode = Base.Types.TerminalMode{Base.Types.terminal}} = do
-    let Just t = unwrapTerminal $ getMainlayerObject scene terminal
-        cls = pp $ blinkenLightsState now (robots t) (state t)
-        texts = case row $ state t of
-            NikkiRow -> cls : "[BACK]" : []
-            RobotRow -> ("[" ++ cls ++ "]") : " BACK" : []
-    resetMatrix ptr
-    setPenColor ptr 255 255 255 255 1
-    let textSize = Size 250 50
-    setFontSize ptr (round (height textSize))
-    windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-    translate ptr ((sizeToPosition (fmap (/ 2) (windowSize -~ textSize))) +~ Position 0 300)
-    forM_ texts $ \ text -> do
-        drawText ptr (Position 10 0) False text
-        translate ptr (Position 0 (height textSize))
+renderTerminalOSD ptr now scene@Scene{mode = Base.Types.TerminalMode{Base.Types.terminal}} =
+    let object = getMainlayerObject scene terminal
+        sort = sort_ object
+    in case (unwrapTerminalSort sort, unwrapTerminal object) of
+        (Just sort, Just terminal) -> do
+            windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+            let pixmaps = osdPixmaps sort
+                position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)
+            renderPixmap ptr zero position Nothing Nothing (osdBackground pixmaps)
+            renderOsdCenters ptr position pixmaps (blinkenLightsState now (robots terminal) (state terminal))
+            renderOsdFrames ptr position pixmaps (state terminal) (selectedColorLights (robotIndex (state terminal)))
+            renderOsdExit ptr position now pixmaps (state terminal)
 renderTerminalOSD _ _ _ = return ()
+
+osdPosition :: Size Double -> Pixmap -> Qt.Position Int
+osdPosition windowSize (pixmapSize -> pixSize) =
+    fmap round (position -~ fmap (/ 2) (sizeToPosition pixSize))
+  where
+    position = Position (width windowSize * 0.5) (height windowSize * (1 - recip goldenRatio))
+
+renderOsdCenters :: Ptr QPainter -> Qt.Position Double -> OsdPixmaps -> ColorLights Bool -> IO ()
+renderOsdCenters ptr offset pixmaps states =
+    mapM_ inner [red_, blue_, green_, yellow_]
+  where
+    inner :: (forall a . (ColorLights a -> a)) -> IO ()
+    inner color = when (color states) $
+        renderPixmap ptr offset (color osdLightOffsets) Nothing Nothing (color (osdCenters pixmaps))
+
+renderOsdFrames ptr offset pixmaps state selected =
+    case (row state) of
+        RobotRow -> mapM_ inner [red_, blue_, green_, yellow_]
+        _ -> return ()
+  where
+    inner :: (forall a . (ColorLights a -> a)) -> IO ()
+    inner color = when (color selected) $
+        renderPixmap ptr offset (color osdLightOffsets) Nothing Nothing (color (osdFrames pixmaps))
+
+-- | offsets both for center and frame pixmaps
+osdLightOffsets :: ColorLights (Qt.Position Double)
+osdLightOffsets =
+    ColorLights red blue green yellow
+  where
+    red = Position (fromUber 5) (fromUber 5) -~ centerGlow
+    blue = toLeftFrame red
+    green = toLeftFrame blue
+    yellow = toLeftFrame green
+
+    toLeftFrame = (+~ Position (fromUber 17) 0)
+    centerGlow = Position (fromUber 7 - 1) (fromUber 7 - 1)
+
+renderOsdExit ptr offset now pixmaps state =
+    case row state of
+        NikkiRow -> renderExit $ pickExitFrame $ osdExit pixmaps
+        RobotRow -> renderExit $ head $ osdExit pixmaps
+  where
+    renderExit = renderPixmap ptr offset exitOffset Nothing Nothing
+    pickExitFrame frames =
+        pickAnimationFrame frames [exitFrameDuration] (now - changedTime state)
+    exitOffset = Position 97 89
+
 
 
 -- * special edit mode (OEM)
