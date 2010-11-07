@@ -4,9 +4,7 @@
 
 module Game.MainLoop (
     gameLoop,
-    GameState(..),
-    initialStateRef,
-    initialState
+    GameState(..)
   ) where
 
 
@@ -68,15 +66,6 @@ data GameState = GameState {
 
 setScene :: GameState -> Scene Object_ -> GameState
 setScene s x = s{scene = x}
-
-initialStateRef :: Ptr QApplication -> Ptr AppWidget -> CM.Space -> IO (Scene Object_)
-    -> IO (IORef GameState)
-initialStateRef app widget space scene = initialState app widget space scene >>= newIORef
-
-initialState :: Ptr QApplication -> Ptr AppWidget -> CM.Space -> IO (Scene Object_) -> IO GameState
-initialState app widget space startScene = do
-    scene <- startScene
-    return $ GameState space scene
 
 
 -- | main loop for logic thread in gaming mode

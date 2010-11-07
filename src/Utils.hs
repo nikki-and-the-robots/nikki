@@ -185,6 +185,15 @@ modifyState :: MonadState s m => (s -> s) -> m ()
 modifyState f =
     get >>= (return . f) >>= put
 
+-- | runs a state monad on the content of an IORef
+-- (useful for embedding state monad in e.g callback functions)
+runStateTFromIORef :: IORef s -> StateT s IO a -> IO a
+runStateTFromIORef ref cmd = do
+    s <- readIORef ref
+    (o, s') <- runStateT cmd s
+    writeIORef ref s'
+    return o
+
 
 -- * Monad stuff
 

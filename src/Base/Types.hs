@@ -29,7 +29,6 @@ data Scene object
     = Scene {
         spaceTime :: Seconds,
         objects :: Grounds object,
-        cameraState :: CameraState,
         contactRef :: !(ContactRef Contacts),
         contacts :: !Contacts,
         mode :: Mode

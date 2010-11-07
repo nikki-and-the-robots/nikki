@@ -48,7 +48,6 @@ stepScene :: Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
 stepScene space controlData =
     updateScene controlData >>>>
     stepSpace space >>>>
-    updateCamera >>>>
     transition controlData
 
 
@@ -189,15 +188,6 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     updateMultiLayerObjects :: Index -> Object_ -> IO Object_
     updateMultiLayerObjects i o = update o DummySort i now contacts (False, cd) >>= fromPure snd
 
-updateCamera :: Scene Object_ -> IO (Scene Object_)
-updateCamera scene = do
-    let controlled = getControlledChipmunk $ getControlled scene
-    position <- getPosition controlled
-    velocity <- CM.get $ velocity $ body controlled
-    let cameraState' = updateCameraState position velocity (cameraState scene)
-    return scene{cameraState = cameraState'}
-
-
 
 -- * rendering
 
@@ -207,28 +197,28 @@ immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Object.immutableCopy))
 
 
 -- | well, renders the scene to the screen (to the max :)
-renderScene :: Ptr QPainter -> Scene Object_ -> IO ()
-renderScene ptr scene@Scene{spaceTime = now, cameraState} = do
+renderScene :: Ptr QPainter -> Scene Object_ -> StateT CameraState IO ()
+renderScene ptr scene@Scene{spaceTime = now} = do
+    center <- getCameraPosition ptr scene
+    liftIO $ do
+        size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
+        let offsetVector = - (center - Vector (width / 2) (height / 2))
+            offset = fmap (fromIntegral . truncate) $ vector2QtPosition offsetVector
 
-    size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
-    let center = getCameraPosition cameraState
-        offsetVector = - (center - Vector (width / 2) (height / 2))
-        offset = fmap (fromIntegral . truncate) $ vector2QtPosition offsetVector
+        when (showScene Configuration.development) $ do
+            let os = objects scene
+            fmapM_ (renderLayer ptr size offset now) $ backgrounds os
+            renderLayer ptr size offset now $ mainLayer os
+            fmapM_ (renderLayer ptr size offset now) $ foregrounds os
 
-    when (showScene Configuration.development) $ do
-        let os = objects scene
-        fmapM_ (renderLayer ptr size offset now) $ backgrounds os
-        renderLayer ptr size offset now $ mainLayer os
-        fmapM_ (renderLayer ptr size offset now) $ foregrounds os
-
-    renderTerminalOSD ptr now scene
+        renderTerminalOSD ptr now scene
 
 
--- debugging
-    when (showXYCross Configuration.development) $
-        debugDrawCoordinateSystem ptr offset
-    when (showChipmunkObjects Configuration.development) $
-        fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
+        -- debugging
+        when (showXYCross Configuration.development) $
+            debugDrawCoordinateSystem ptr offset
+        when (showChipmunkObjects Configuration.development) $
+            fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
 
 
 -- | renders the different Layers.

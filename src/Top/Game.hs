@@ -3,11 +3,15 @@
 module Top.Game (playLevel) where
 
 
+import Data.IORef
+
 import Control.Concurrent
 import Control.Monad.State
 
 import Physics.Chipmunk
 import Graphics.Qt
+
+import Utils
 
 import Base.Constants
 import Base.GlobalCatcher
@@ -18,6 +22,7 @@ import Base.Application
 import Object
 
 import Game.Scene
+import Game.Scene.Camera
 import Game.MainLoop
 
 import Top.Initialisation
@@ -25,26 +30,26 @@ import Top.Initialisation
 
 playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
 playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
-    let scene :: IO (Scene Object_) = initScene space (editorObjects editorScene)
-    gameAppState <- initialState (application app) (window app) space scene
+    scene :: Scene Object_ <- initScene space (editorObjects editorScene)
     sceneMVar <- newEmptyMVar
     fpsRef <- initialFPSRef
-    setDrawingCallbackAppWidget (window app) (Just $ render fpsRef sceneMVar)
+    nikkiPos <- getPosition $ getControlledChipmunk $ getControlled scene
+    cameraStateRef <- newIORef $ initialCameraState nikkiPos
+    setDrawingCallbackAppWidget (window app)
+        (Just $ render fpsRef cameraStateRef sceneMVar)
 
     setRenderingLooped (window app) True
-    runStateT (gameLoop app sceneMVar) gameAppState
+    runStateT (gameLoop app sceneMVar) (GameState space scene)
     setRenderingLooped (window app) False
     setDrawingCallbackAppWidget (window app) Nothing
 
     return parent
 
   where
-    render fpsRef sceneMVar ptr = globalCatcher $ do
+    render fpsRef cameraStateRef sceneMVar ptr = globalCatcher $ do
 
         tickFPSRef fpsRef
 
         scene <- readMVar sceneMVar
-        Game.Scene.renderScene ptr scene
-
-
-
+        runStateTFromIORef cameraStateRef $
+            Game.Scene.renderScene ptr scene

@@ -115,7 +115,7 @@ mkScene space objects = do
     let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
     nikkiPosition <- getPosition $ getControlledChipmunk (mainLayerIndexable objects !!! nikki)
     contactRef <- initContactRef space initial watchedContacts
-    return $ Scene 0 objects (initialCameraState nikkiPosition) contactRef initial (NikkiMode nikki)
+    return $ Scene 0 objects contactRef initial (NikkiMode nikki)
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =
