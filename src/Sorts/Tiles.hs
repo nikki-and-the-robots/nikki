@@ -31,6 +31,12 @@ import Object
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
 names = [
+    ("tiles/white-standard", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/black-standard", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/aqua-standard", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/yellow-standard", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/red-standard", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/green-standard", (Position (- 1) (- 1)), Size 64 64),
     ("tiles/tile-standard-white", (Position (- 33) (- 33)), Size 64 64),
     ("tiles/tile-standard-black", (Position (- 1) (- 1)), Size 64 64),
     ("tiles/terminal-frame-editor", (Position (- 1) (- 1)), Size 192 192)
