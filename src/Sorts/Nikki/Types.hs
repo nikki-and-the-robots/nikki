@@ -34,8 +34,7 @@ data Nikki
         feetShape :: Shape,
         state :: State,
         startTime :: Seconds, -- time the State was last changed
-        batteryPower :: Integer, -- makes it possible to have REALLY BIG amounts of power :)
-        debugCmd :: Ptr QPainter -> Offset Double -> IO ()
+        batteryPower :: Integer -- makes it possible to have REALLY BIG amounts of power :)
       }
   deriving (Show, Typeable)
 

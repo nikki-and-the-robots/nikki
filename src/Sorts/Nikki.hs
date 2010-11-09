@@ -109,7 +109,6 @@ instance Sort NSort Nikki where
             initial
             0
             0
-            (const $ const $ return ())
 
     immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
 
@@ -120,17 +119,14 @@ instance Sort NSort Nikki where
     updateNoSceneChange sort now contacts cd nikki = inner nikki
       where
         inner =
-            fromPure resetDebugCmd >>>>
             updateState now contacts cd >>>>
             fromPure (updateStartTime now (state nikki)) >>>>
             controlNikki now contacts cd sort
---             >>>> debugNikki contacts
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
         renderChipmunk ptr offset pixmap (chipmunk nikki)
         renderClouds ptr offset now sort (action $ state nikki)
-        debugCmd nikki ptr offset
 
 
 pickPixmap :: Seconds -> NSort -> Nikki -> Pixmap
@@ -155,49 +151,3 @@ renderClouds ptr offset now sort (WallSlide _ _ clouds) =
                 renderPixmap ptr offset (cloudPosition cloud) Nothing pixmap
             Nothing -> return ()
 renderClouds _ _ _ _ _ = return ()
-
-
-
--- debugging
-
-resetDebugCmd :: Nikki -> Nikki
-resetDebugCmd n = n{debugCmd = const $ const $ return ()}
-
-addDebugCmd :: (Ptr QPainter -> Offset Double -> IO ()) -> Nikki -> Nikki
-addDebugCmd cmd nikki@Nikki{debugCmd} =
-    nikki{debugCmd = \ ptr offset ->
-        debugCmd ptr offset >> cmd ptr offset}
-
-debugNikki :: Contacts -> Nikki -> IO Nikki
-debugNikki contacts nikki = do
-    return $ addDebugCmd (render contacts) nikki
-  where
-    render contacts ptr offset = do
-        resetMatrix ptr
-
-        nikkiPos <- getPosition $ chipmunk nikki
-        drawText ptr (Position 30 30) False $ pp nikkiPos
-
-        let pawContacts = Set.unions $ map (paws nikkiPos) $ (nikkiContacts contacts)
-        mapM_ (drawTextAngles ptr) $ zip [0..] $ sort $ map (rad2deg . toUpAngle) $
-            nub $ map fst $ Set.toList pawContacts
-
-        translate ptr offset
-        setPenColor ptr 0 255 255 255 1
-        nikkiPos <- getPosition $ chipmunk nikki
-        mapM_ (inner ptr) $ Set.toList pawContacts
-    inner ptr (normal, Vector x y) = do
-        when (normal == zero) $
-            print $ Vector x y
-        let pos = Position x y
-            Vector xn yn = scale (normalize normal) 100
-        drawCircle ptr pos 3
-        drawLine ptr pos (pos +~ Position xn yn)
-    drawTextAngles ptr (i, v) = do
-        drawText ptr (Position 30 (60 + i * 30)) False (pp v)
-
-    paws :: CM.Position -> Collision -> Set.Set (Vector, Vector)
-    paws nikkiPos (Collision normal points) = Set.fromList $ map (tuple normal) $ points
-    angleLimit = deg2rad 45
-    a =~= b = abs (a - b) < eps
-    eps = 1
