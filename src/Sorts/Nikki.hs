@@ -31,6 +31,7 @@ import Base.Constants
 import Base.Animation
 import Base.Pixmap
 import Base.Types
+import Base.Debugging
 
 import Object
 
@@ -122,6 +123,7 @@ instance Sort NSort Nikki where
             updateState now contacts cd >>>>
             fromPure (updateStartTime now (state nikki)) >>>>
             controlNikki now contacts cd sort
+--             >>>> passThrough debugNikki
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
@@ -151,3 +153,11 @@ renderClouds ptr offset now sort (WallSlide _ _ clouds) =
                 renderPixmap ptr offset (cloudPosition cloud) Nothing pixmap
             Nothing -> return ()
 renderClouds _ _ _ _ _ = return ()
+
+-- debugging
+
+debugNikki :: Nikki -> IO ()
+debugNikki nikki = do
+    addDebugging $ \ ptr offset -> do
+        resetMatrix ptr
+        drawText ptr (Position 30 30) False "debugging"

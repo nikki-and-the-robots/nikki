@@ -10,6 +10,7 @@ module Game.MainLoop (
 
 import Data.IORef
 import Data.Set (member)
+import Data.Initial
 
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
@@ -27,6 +28,7 @@ import Base.Events
 import Base.Constants
 import Base.Types
 import Base.Application
+import Base.Debugging
 
 import Object
 
@@ -70,13 +72,15 @@ setScene s x = s{scene = x}
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
-gameLoop :: Application -> MVar (Scene Object_) -> AppMonad AppState
+gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> AppMonad AppState
 gameLoop app sceneMVar = do
     initializeSceneMVar
     timer <- liftIO $ newTickTimer stepQuantum
     loop timer
   where
     loop timer = do
+        liftIO $ resetDebugging
+
         -- input events
         controlData <- liftIO $ pollAppEvents $ keyPoller app
 
@@ -86,7 +90,7 @@ gameLoop app sceneMVar = do
         sc' <- liftIO $ stepScene space controlData sc
         puts setScene sc'
 
-        swapSceneMVar
+        swapSceneMVar =<< liftIO getDebugging
 
         case mode sc' of
             LevelFinished _ x -> return FinalState
@@ -102,11 +106,11 @@ gameLoop app sceneMVar = do
         when (not empty) $ fail "sceneMVar has to be empty"
         s <- gets scene
         immutableCopyOfScene <- liftIO $ Game.Scene.immutableCopy s
-        liftIO $ putMVar sceneMVar immutableCopyOfScene
-    swapSceneMVar :: AppMonad ()
-    swapSceneMVar = do
+        liftIO $ putMVar sceneMVar (immutableCopyOfScene, initial)
+    swapSceneMVar :: DebuggingCommand -> AppMonad ()
+    swapSceneMVar debugging= do
         s <- gets scene
         liftIO $ do
             immutableCopyOfScene <- Game.Scene.immutableCopy s
-            swapMVar sceneMVar immutableCopyOfScene
+            swapMVar sceneMVar (immutableCopyOfScene, debugging)
             return ()

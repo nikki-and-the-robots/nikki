@@ -25,6 +25,8 @@ import Base.Events
 
 -- from Game.Scene
 
+-- | representing the scene (both physical and graphical objects) during the game.
+-- A value of this type gets passed from the logic thread to the rendering thread
 data Scene object
     = Scene {
         spaceTime :: Seconds,

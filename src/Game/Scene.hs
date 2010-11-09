@@ -27,6 +27,7 @@ import Base.Grounds
 import Base.Configuration as Configuration
 import Base.Constants
 import Base.Types
+import Base.Debugging
 
 import Object
 
@@ -197,8 +198,8 @@ immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Object.immutableCopy))
 
 
 -- | well, renders the scene to the screen (to the max :)
-renderScene :: Ptr QPainter -> Scene Object_ -> StateT CameraState IO ()
-renderScene ptr scene@Scene{spaceTime = now} = do
+renderScene :: Ptr QPainter -> Scene Object_ -> DebuggingCommand -> StateT CameraState IO ()
+renderScene ptr scene@Scene{spaceTime = now} debugging = do
     center <- getCameraPosition ptr scene
     liftIO $ do
         size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
@@ -215,6 +216,7 @@ renderScene ptr scene@Scene{spaceTime = now} = do
 
 
         -- debugging
+        liftIO $ debugging ptr offset
         when (showXYCross Configuration.development) $
             debugDrawCoordinateSystem ptr offset
         when (showChipmunkObjects Configuration.development) $

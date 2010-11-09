@@ -50,6 +50,6 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
 
         tickFPSRef fpsRef
 
-        scene <- readMVar sceneMVar
+        (scene, debugging) <- readMVar sceneMVar
         runStateTFromIORef cameraStateRef $
-            Game.Scene.renderScene ptr scene
+            Game.Scene.renderScene ptr scene debugging
