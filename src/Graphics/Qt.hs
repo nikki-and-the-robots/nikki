@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Graphics.Qt (
     module Graphics.Qt.Types,
@@ -70,14 +71,14 @@ setWindowSize win FullScreen =
 
 -- * Colors
 
-red :: Color
-red = opaqueColor 1 0 0
-
-black :: Color
-black = opaqueColor 0 0 0
-
-white :: Color
-white = opaqueColor 1 1 1
+black :: Color = opaqueColor 0 0 0
+white :: Color = opaqueColor 1 1 1
+red :: Color = opaqueColor 1 0 0
+green :: Color = opaqueColor 0 1 0
+blue :: Color = opaqueColor 0 0 1
+yellow :: Color = opaqueColor 1 1 0
+magenta :: Color = opaqueColor 1 0 1
+cyan :: Color = opaqueColor 0 1 1
 
 opaqueColor :: Double -> Double -> Double -> Color
 opaqueColor r g b =
