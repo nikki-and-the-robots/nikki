@@ -80,6 +80,12 @@ yellow :: Color = opaqueColor 1 1 0
 magenta :: Color = opaqueColor 1 0 1
 cyan :: Color = opaqueColor 0 1 1
 
+signalRed :: Color = opaqueColor 1 0.216 0.216
+lightYellow :: Color = opaqueColor 1 1 0.216
+pink :: Color = opaqueColor 1 0.196 0.588
+orange ::Color = opaqueColor 1 0.5 0
+
+
 opaqueColor :: Double -> Double -> Double -> Color
 opaqueColor r g b =
     QtColor
@@ -91,6 +97,14 @@ opaqueColor r g b =
 doubleToByteInt :: Double -> QtInt
 doubleToByteInt d | d >= 0 && d <= 1 =
     truncate (d * 255)
+
+byteIntToDouble :: QtInt -> Double
+byteIntToDouble x | x >= 0 && x <= 255 =
+    fromIntegral x / 255
+
+modifyAlpha :: (Double -> Double) -> Color -> Color
+modifyAlpha f (QtColor r g b a) =
+    QtColor r g b (doubleToByteInt $ f $ byteIntToDouble a)
 
 
 -- * convenience drawing

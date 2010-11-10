@@ -84,7 +84,7 @@ menu app mTitle mParent children =
     render items ptr = globalCatcher $ do
         resetMatrix ptr
         clearScreen ptr
-        setPenColor ptr 255 255 255 255 1
+        setPenColor ptr white 1
 
         let nextY = translate ptr (Position 0 yStep)
 
@@ -142,7 +142,7 @@ askString app parent question follower = AppState $ do
     render question answerRef ptr = do
         resetMatrix ptr
         clearScreen ptr
-        setPenColor ptr 255 255 255 255 1
+        setPenColor ptr white 1
 
         let nextY = translate ptr (Position 0 20)
         nextY

@@ -5,7 +5,6 @@ module Editor.Scene.Rendering (renderEditorScene, renderObjectScene, transformat
 import Utils
 
 import Data.SelectTree
-import Data.Color
 import Data.Abelian
 import qualified Data.Indexable as I
 
@@ -69,7 +68,7 @@ renderCursor' ptr offset scene = do
         size_ = size sort
         pos = offset +~ editorPosition2QtPosition sort cursorPos
     resetMatrix ptr
-    drawColoredBox ptr pos size_ 5 pink{alphaC = 0.5}
+    drawColoredBox ptr pos size_ 5 (modifyAlpha (const 0.5) pink)
 
 
 -- calculates the rendering position for all objects (does the clipping, etc.)
@@ -148,7 +147,7 @@ renderSelectionBox ptr offset scene (EditorPosition x2 y2) = do
     let EditorPosition x1 y1 = cursor scene
         boxPosition = offset +~ Position x1 y2
         size = Size (x2 - x1) (y1 - y2)
-    drawColoredBox ptr boxPosition size 3 (RGBA 1 0 0 1)
+    drawColoredBox ptr boxPosition size 3 red
 
 renderSelectedBoxes ptr offset scene =
     mapM_ (drawCopySelectedBox ptr offset) $ 
@@ -158,7 +157,7 @@ renderSelectedBoxes ptr offset scene =
 drawCopySelectedBox ptr offset object = do
     let sort = editorSort object
         p = editorPosition2QtPosition sort (editorPosition object) +~ offset
-    drawColoredBox ptr p (size sort) 3 (RGBA 0 1 0 1)
+    drawColoredBox ptr p (size sort) 3 green
 
 
 

@@ -239,7 +239,7 @@ debugDrawCoordinateSystem :: Ptr QPainter -> Offset Double -> IO ()
 debugDrawCoordinateSystem ptr offset = do
     resetMatrix ptr
     translate ptr offset
-    setPenColor ptr 255 0 0 255 1
+    setPenColor ptr red 1
     mapM_ inner lines
   where
     inner (a, b, c, d) =

@@ -57,6 +57,7 @@ instance Abelian a => Abelian (Size a) where
     (Size a b) -~ (Size x y) = Size (a -~ x) (b -~ y)
 
 data Color = QtColor QtInt QtInt QtInt QtInt
+  deriving Show
 
 
 -- * utils

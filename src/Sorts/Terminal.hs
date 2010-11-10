@@ -19,7 +19,6 @@ import Data.Abelian
 import Data.Indexable (Index)
 import Data.Dynamic
 import Data.Initial
-import Data.Color
 import Data.Traversable
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
@@ -31,7 +30,8 @@ import System.FilePath
 
 import Physics.Chipmunk as CM
 
-import Graphics.Qt as Qt
+import Graphics.Qt hiding (red, blue, green, yellow)
+import qualified Graphics.Qt as Qt
 
 import Paths
 import Utils
@@ -533,11 +533,11 @@ oemCursor scene (Robots available selected _) = editorPosition (getMainlayerEdit
 renderOEMOSDs :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> OEMState -> IO ()
 renderOEMOSDs ptr offset scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
-    renderRobotBox orange{alphaC = 0.5} (getMainlayerEditorObject scene selected)
-    mapM_ (renderRobotBox yellow{alphaC = 0.3}) $ map (getMainlayerEditorObject scene) $
+    renderRobotBox (modifyAlpha (const 0.5) orange) (getMainlayerEditorObject scene selected)
+    mapM_ (renderRobotBox (modifyAlpha (const 0.3) Qt.yellow)) $ map (getMainlayerEditorObject scene) $
         attached
   where
-    renderRobotBox :: RGBA -> EditorObject Sort_ -> IO ()
+    renderRobotBox :: Color -> EditorObject Sort_ -> IO ()
     renderRobotBox color robot = do
         let sort = editorSort robot
             pos = editorPosition2QtPosition sort $ editorPosition robot

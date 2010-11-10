@@ -6,7 +6,6 @@ module Sorts.Robots.MovingPlatforms (sorts) where
 
 import Data.Typeable
 import Data.Abelian
-import Data.Color
 
 import Control.Monad
 
@@ -239,11 +238,11 @@ deb :: Vector -> Ptr QPainter -> Offset Double -> IO ()
 deb v ptr offset = do
     let start = Position 200 400
         drawVector (Vector x y) r g b = do
-            setPenColor ptr r g b 255 3
+            setPenColor ptr (QtColor r g b 255) 3
             drawLine ptr start (start +~ fmap (* 0.2) (Position x y))
 
     resetMatrix ptr
-    setPenColor ptr 255 255 255 255 3
+    setPenColor ptr white 3
     drawCircle ptr start 20
 
 --     drawVector drag 0 179 255
@@ -289,7 +288,7 @@ renderPaths sort ptr scene (Paths cursor paths) = do
     renderObjectScene ptr offset scene
     -- render cursor box
     let rp = editorPosition2QtPosition sort cursor
-    drawColoredBox ptr (rp +~ offset) (size sort) 4 (RGBA 128 128 128 128)
+    drawColoredBox ptr (rp +~ offset) (size sort) 4 (QtColor 128 128 128 128)
 
 
 -- show (Paths (editorPosition2QtPosition sort p

@@ -79,7 +79,7 @@ instance Sort TSort FallingTile where
         renderPixmapSimple ptr (tilePixmap sort)
         let Size w h = fmap (subtract 1) $ size sort
         -- draw a red cross on top
-        setPenColor ptr 255 0 0 255 2
+        setPenColor ptr red 2
         drawLine ptr zero (Position w h)
         drawLine ptr (Position w 0) (Position 0 h)
 
