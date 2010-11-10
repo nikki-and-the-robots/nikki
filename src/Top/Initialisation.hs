@@ -32,24 +32,27 @@ import qualified Sorts.Background
 import qualified Sorts.Robots.Jetpack
 import qualified Sorts.Robots.MovingPlatforms
 
+import qualified Sorts.TestRamp
+
 
 sortLoaders :: [IO [Sort_]]
-sortLoaders = [
-    Sorts.Nikki.sorts,
+sortLoaders =
+    Sorts.Nikki.sorts :
 
-    Sorts.Tiles.sorts,
-    Sorts.FallingTiles.sorts,
-    Sorts.Switch.sorts,
-    Sorts.Terminal.sorts,
-    Sorts.Battery.sorts,
-    Sorts.Box.sorts,
+    Sorts.Tiles.sorts :
+    Sorts.FallingTiles.sorts :
+    Sorts.Switch.sorts :
+    Sorts.Terminal.sorts :
+    Sorts.Battery.sorts :
+    Sorts.Box.sorts :
 
-    Sorts.Robots.Jetpack.sorts,
-    Sorts.Robots.MovingPlatforms.sorts,
+    Sorts.Robots.Jetpack.sorts :
+    Sorts.Robots.MovingPlatforms.sorts :
 
-    Sorts.Grids.sorts,
-    Sorts.Background.sorts
-  ]
+    Sorts.Grids.sorts :
+    Sorts.Background.sorts :
+--     Sorts.TestRamp.sorts :
+    []
 
 withAllSorts :: (SelectTree Sort_ -> IO a) -> IO a
 withAllSorts cmd = do
