@@ -56,7 +56,7 @@ instance Sort RampSort Ramp where
         return $ Ramp chip
 
     updateNoSceneChange _ _ _ _ (Ramp c) = do
---         velocity (body c) $= Vector 0 500
+        velocity (body c) $= Vector 0 0
         return $ Ramp c
 
     chipmunks (Ramp c) = [c]
@@ -78,10 +78,10 @@ shapeAttributes collisionType =
 
 bodyAttributes :: Vector -> BodyAttributes
 bodyAttributes pos =
-    StaticBodyAttributes {
-        CM.position = pos
---         CM.mass = 8000,
---         CM.inertia = infinity
+    BodyAttributes {
+        CM.position = pos,
+        CM.mass = 8000,
+        CM.inertia = infinity
       }
 
 
