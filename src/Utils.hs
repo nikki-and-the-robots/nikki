@@ -59,8 +59,8 @@ a <<? msg = trace (msg ++ ": " ++ show a) a
 -- | useful for temporarily deactivating $<<?$
 a <<| _ = a
 
-traceThis :: Show s => String -> s -> s
-traceThis msg x = trace (msg ++ ": " ++ show x) x
+traceThis :: PP s => String -> s -> s
+traceThis msg x = trace (msg ++ ": " ++ pp x) x
 
 
 
