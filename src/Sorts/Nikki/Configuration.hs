@@ -1,4 +1,4 @@
-
+{-# language ScopedTypeVariables #-}
 
 module Sorts.Nikki.Configuration where
 
@@ -26,10 +26,11 @@ nikkiMass :: Double
 nikkiMass = 1
 
 -- | friction for nikkis feet. The higher the friction,
--- the faster nikki will gain maximum walking speed.
+-- the faster nikki will gain maximum walking speed
+-- and the faster nikki will be able to stop or change direction
 nikkiFeetFriction = 0.4
 
--- | the friction of the head ( and the legs (without the feet))
+-- | the friction of the head (and the legs (without the feet))
 headFriction = 0.1
 
 -- | maximum walking speed (pixel per second)
@@ -40,8 +41,6 @@ walkingVelocity = 390.0
 airBorneForceFactor = 0.5
 
 -- | minimal jumping height (for calculating the impulse strength)
--- We have an air drag for nikki and that makes calculating the right forces
--- difficult. So this variable and maximalJumpingHeight are just estimates.
 minimalJumpingHeight = fromKachel 0.25
 
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
@@ -49,9 +48,9 @@ maximalJumpingHeight = fromKachel 3.5
 
 -- | decides how strong the horizontal impulse is in case of a 90 degree wall jump
 -- 0 - no horizontal impulse
--- 1 - same horizontal impulse as normal jumping impulse (pointing up)
-walljumpHorizontalFactor :: Double
-walljumpHorizontalFactor = 1
+-- 0.5 - same horizontal impulse as normal jumping impulse (pointing up)
+-- 1.0 infinite horizontal impulse
+walljumpHorizontalFactor :: Double = 0.70
 
 -- | Controls how Nikki's velocity gets decreased by wall jumps.
 -- Must be >= 1.
@@ -59,7 +58,7 @@ walljumpHorizontalFactor = 1
 -- bigger - the downwards velocity has more and more influence
 -- No matter how high the value, the downwards velocity gets always clipped, 
 -- to avoid wall jumps that point downwards.
-correctionSteepness = 1.001
+correctionSteepness :: Double = 1.0005
 
 -- | strength of the impulse applied to nikki,
 -- when dropping of a tile nikki hangs on with the paws.

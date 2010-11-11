@@ -39,8 +39,9 @@ updateState now contacts (True, controlData) nikki = do
     state' nikkiPos velocity_ =
         case (aPushed, mContactAngle) of
             -- nikki jumps
-            (True, Just contactAngle) -> State (JumpImpulse now contactAngle buttonDirection velocity_)
-                                            (jumpImpulseDirection contactAngle)
+            (True, Just contactAngle) -> State
+                (JumpImpulse now contactAngle velocity_ buttonDirection)
+                (jumpImpulseDirection contactAngle)
             -- nikki touches something
             (False, Just contactAngle) ->
                 case grips nikkiPos contacts of
@@ -56,12 +57,12 @@ updateState now contacts (True, controlData) nikki = do
                               else
                                 State Walk newDirection
                           else
-                            State (WallSlide (jumpInformation velocity_)
-                                contactNormals
-                                (clouds nikkiPos newDirection))
+                            State (WallSlide (jumpInformation' velocity_)
+                                    contactNormals
+                                    (clouds nikkiPos newDirection))
                                 newDirection
             (_, Nothing) ->
-                State (Airborne (jumpInformation velocity_)) newDirection
+                State (Airborne (jumpInformation' velocity_)) newDirection
 
     newDirection :: HorizontalDirection
     newDirection = case state nikki of
@@ -104,8 +105,8 @@ updateState now contacts (True, controlData) nikki = do
     contactNormals :: [Angle]
     contactNormals = getContactNormals contacts
 
-    jumpInformation velocity =
-        JumpInformation jumpStartTime_ buttonDirection velocity (verticalDirection velocity)
+    jumpInformation' velocity_ =
+        JumpInformation jumpStartTime_ velocity_ buttonDirection
 
     jumpStartTime_ :: Maybe Seconds
     jumpStartTime_ = case action $ state nikki of

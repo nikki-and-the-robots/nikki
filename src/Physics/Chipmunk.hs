@@ -18,6 +18,7 @@ module Physics.Chipmunk (
 
     vectorX,
     vectorY,
+    modifyLen,
 
     modifyPosition,
     modifyVelocity,

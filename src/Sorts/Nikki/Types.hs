@@ -64,7 +64,7 @@ data Action
     = Wait
     | Walk
         -- state for one frame (when a jump starts)
-    | JumpImpulse Seconds Angle (Maybe HorizontalDirection) Velocity
+    | JumpImpulse Seconds Angle Velocity (Maybe HorizontalDirection)
     | Airborne JumpInformation
     | WallSlide JumpInformation [Angle] [Cloud]
     | UsingTerminal
@@ -83,12 +83,16 @@ toActionNumber Grip = 6
 toActionNumber EndGripImpulse = 7
 toActionNumber Touchdown = 8
 
+getJumpInformation :: Action -> Maybe JumpInformation
+getJumpInformation (Airborne x) = Just x
+getJumpInformation (WallSlide x _ _) = Just x
+getJumpInformation _ = Nothing
+
 data JumpInformation =
     JumpInformation {
         jumpStartTime :: Maybe Seconds,
-        jumpButtonDirection :: (Maybe HorizontalDirection),
         jumpNikkiVelocity :: Velocity,
-        jumpVerticalDirection :: VerticalDirection
+        jumpButtonDirection :: (Maybe HorizontalDirection)
       }
   deriving (Show)
 
@@ -107,3 +111,12 @@ toUpAngle v = toAngle v + (pi / 2)
 fromUpAngle :: Angle -> Vector
 fromUpAngle = (subtract (pi / 2)) >>> fromAngle
 
+-- | returns the component of the Vector, that is parallel to the given Angle.
+component :: Angle -> Vector -> Vector
+component alpha b =
+    scale (fromUpAngle alpha) l_c
+  where
+    delta = alpha - beta
+    beta = toUpAngle b
+    l_b = len b
+    l_c = cos delta * l_b

@@ -40,6 +40,7 @@ import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation
 import Sorts.Nikki.State
 import Sorts.Nikki.Control
+import Sorts.Nikki.JumpingImpulse
 
 
 sorts :: IO [Sort_]
@@ -156,8 +157,41 @@ renderClouds _ _ _ _ _ = return ()
 
 -- debugging
 
-debugNikki :: Nikki -> IO ()
-debugNikki nikki = do
+debugNikki :: Seconds -> Contacts -> Nikki -> IO ()
+debugNikki now contacts nikki = do
+    position <- getPosition $ chipmunk nikki
+    velocity <- get $ velocity $ body $ chipmunk nikki
+    let mContact = jumpAngle $ getContactNormals contacts
     addDebugging $ \ ptr offset -> do
         resetMatrix ptr
         drawText ptr (Position 30 30) False "debugging"
+        translate ptr offset
+        translateVector ptr position
+        drawVector ptr red velocity
+        case mContact of
+            Nothing -> return ()
+            Just contactAngle -> do
+                drawAngle ptr yellow contactAngle
+
+                let calculation = calculate contactAngle velocity
+                drawVector ptr black (staticImpulse calculation)
+                drawVector ptr blue $ wallVelocity calculation
+                drawVectorAddition ptr (red, green, magenta)
+                    velocity
+                    (correctedImpulse calculation)
+
+
+drawVector :: Ptr QPainter -> Color -> Vector -> IO ()
+drawVector ptr color v = do
+    setPenColor ptr color 3
+    drawLine ptr zero $ vector2QtPosition $ scale v 0.25
+
+drawVectorAddition :: Ptr QPainter -> (Color, Color, Color) -> Vector -> Vector -> IO ()
+drawVectorAddition ptr (aColor, bColor, cColor) a b = do
+    drawVector ptr aColor a
+    translateVector ptr $ scale a 0.25
+    drawVector ptr bColor b
+    translateVector ptr $ scale (negateAbelian a) 0.25
+    drawVector ptr cColor (a +~ b)
+
+drawAngle ptr color angle = drawVector ptr color $ flip scale 200 $ fromUpAngle angle
