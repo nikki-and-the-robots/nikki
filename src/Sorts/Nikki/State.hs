@@ -39,11 +39,11 @@ updateState now contacts (True, controlData) nikki = do
     state' nikkiPos velocity_ =
         case (aPushed, mContactAngle) of
             -- nikki jumps
-            (True, Just contactAngle) -> State
-                (JumpImpulse now contactAngle velocity_ buttonDirection)
+            (True, Just (shape, contactAngle)) -> State
+                (JumpImpulse now shape contactAngle velocity_ buttonDirection)
                 (jumpImpulseDirection contactAngle)
             -- nikki touches something
-            (False, Just contactAngle) ->
+            (False, Just _) ->
                 case grips nikkiPos contacts of
                     -- nikki grabs something
                     Just HLeft | rightPushed -> State EndGripImpulse HLeft
@@ -58,7 +58,7 @@ updateState now contacts (True, controlData) nikki = do
                                 State Walk newDirection
                           else
                             State (WallSlide (jumpInformation' velocity_)
-                                    contactNormals
+                                    (map snd contactNormals)
                                     (clouds nikkiPos newDirection))
                                 newDirection
             (_, Nothing) ->
@@ -69,10 +69,13 @@ updateState now contacts (True, controlData) nikki = do
         State Grip direction -> swapHorizontalDirection direction
         _ -> fromMaybe oldDirection buttonDirection
     grips :: CM.Position -> Contacts -> Maybe HorizontalDirection
-    grips nikkiPos contacts = case filter (isGripCollision nikkiPos) (nikkiContacts contacts) of
+    grips nikkiPos contacts =
+      case filter (isGripCollision nikkiPos) $ map snd (nikkiContacts contacts) of
         [] -> Nothing
         (Collision _ (p : _) : _) -> Just $
-            if vectorX (p -~ nikkiPos) <= 0 then HLeft else HRight
+            if vectorX (p -~ nikkiPos) <= 0
+            then HLeft
+            else HRight
     isGripCollision nikkiPos (Collision normal points) =
         any (isGripPoint nikkiPos) points && isGripNormal normal
     isGripPoint nikkiPos p = vectorY (p -~ nikkiPos) =~= 19
@@ -100,9 +103,9 @@ updateState now contacts (True, controlData) nikki = do
         Just HRight
     verticalDirection velocity_ = if vectorY velocity_ <= 0 then VUp else VDown
 
-    mContactAngle :: Maybe Angle
+    mContactAngle :: Maybe (Shape, Angle)
     mContactAngle = jumpAngle contactNormals
-    contactNormals :: [Angle]
+    contactNormals :: [(Shape, Angle)]
     contactNormals = getContactNormals contacts
 
     jumpInformation' velocity_ =
@@ -110,7 +113,7 @@ updateState now contacts (True, controlData) nikki = do
 
     jumpStartTime_ :: Maybe Seconds
     jumpStartTime_ = case action $ state nikki of
-        JumpImpulse t _ _ _ -> Just t
+        JumpImpulse t _ _ _ _ -> Just t
         Airborne ji -> if aHeld then jumpStartTime ji else Nothing
         WallSlide ji _ _ -> if aHeld then jumpStartTime ji else Nothing
         x -> Nothing
@@ -141,19 +144,19 @@ updateState now contacts (True, controlData) nikki = do
 
 
 -- | updates the possible jumping angle from the contacts
-getContactNormals :: Contacts -> [Angle]
-getContactNormals = map (foldAngle . toUpAngle . collisionNormal) . nikkiContacts
+getContactNormals :: Contacts -> [(Shape, Angle)]
+getContactNormals = map (second (foldAngle . toUpAngle . collisionNormal)) . nikkiContacts
 
 -- | calculates the angle a possible jump is to be performed in
-jumpAngle :: [Angle] -> Maybe Angle
+jumpAngle :: [(Shape, Angle)] -> Maybe (Shape, Angle)
 jumpAngle angles =
-    let relevantAngles = filter (\ x -> abs x <= 0.5 * pi) $ sortBy (withView abs compare) angles
+    let relevantAngles = filter (\ x -> abs (snd x) <= 0.5 * pi) $ sortBy (withView (abs . snd) compare) angles
     in case relevantAngles of
         [] -> Nothing
         list@(a : _) ->
-            if any (< 0) list && any (> 0) list then
+            if any ((< 0) . snd) list && any ((> 0) . snd) list then
                 -- if nikki's contacts are on both sides of pointing up
-                Just 0
+                Just (fst a, 0)
               else
                 Just a
 

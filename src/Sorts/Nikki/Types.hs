@@ -64,7 +64,7 @@ data Action
     = Wait
     | Walk
         -- state for one frame (when a jump starts)
-    | JumpImpulse Seconds Angle Velocity (Maybe HorizontalDirection)
+    | JumpImpulse Seconds Shape Angle Velocity (Maybe HorizontalDirection)
     | Airborne JumpInformation
     | WallSlide JumpInformation [Angle] [Cloud]
     | UsingTerminal

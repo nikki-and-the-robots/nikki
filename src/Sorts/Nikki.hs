@@ -19,6 +19,7 @@ import Sound.SFML
 
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
+import qualified Physics.Hipmunk as Hip
 
 import Paths
 import Utils
@@ -157,25 +158,35 @@ renderClouds _ _ _ _ _ = return ()
 debugNikki :: Seconds -> Contacts -> Nikki -> IO ()
 debugNikki now contacts nikki = do
     position <- getPosition $ chipmunk nikki
-    velocity <- get $ velocity $ body $ chipmunk nikki
+    nikkiVelocity <- get $ velocity $ body $ chipmunk nikki
     let mContact = jumpAngle $ getContactNormals contacts
-    addDebugging $ \ ptr offset -> do
-        resetMatrix ptr
-        drawText ptr (Position 30 30) False "debugging"
-        translate ptr offset
-        translateVector ptr position
-        drawVector ptr red velocity
-        case mContact of
-            Nothing -> return ()
-            Just contactAngle -> do
-                drawAngle ptr yellow contactAngle
+    case mContact of
+      Nothing -> do
+        addDebugging $ \ ptr offset -> do
+            resetMatrix ptr
+            drawText ptr (Position 30 30) False "debugging"
+            translate ptr offset
+            translateVector ptr position
+            drawVector ptr red nikkiVelocity
 
-                let calculation = calculate contactAngle velocity
-                drawVector ptr black (staticImpulse calculation)
-                drawVector ptr blue $ wallVelocity calculation
-                drawVectorAddition ptr (red, green, magenta)
-                    velocity
-                    (correctedImpulse calculation)
+      Just (shape, contactAngle) -> do
+        collisionObjectVelocity <- get (Hip.velocity (Hip.body shape))
+        addDebugging $ \ ptr offset -> do
+            resetMatrix ptr
+            drawText ptr (Position 30 30) False "debugging"
+            translate ptr offset
+            translateVector ptr position
+            let velocity = nikkiVelocity -~ collisionObjectVelocity
+            drawVector ptr red velocity
+            drawAngle ptr yellow contactAngle
+
+            let calculation = calculate collisionObjectVelocity contactAngle nikkiVelocity
+            drawVector ptr black (staticImpulse calculation)
+            drawVector ptr blue $ wallVelocity calculation
+            drawVectorAddition ptr (red, green, magenta)
+                velocity
+                (correctedImpulse calculation)
+
 
 
 drawVector :: Ptr QPainter -> Color -> Vector -> IO ()

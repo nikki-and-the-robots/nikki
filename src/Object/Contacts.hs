@@ -36,9 +36,9 @@ instance Initial Contacts where
 
 -- * setter (boolean to True)
 
-addNikkiContacts :: Collision -> Contacts -> Contacts
-addNikkiContacts v c =
-    c{nikkiContacts = (v : nikkiContacts c)}
+addNikkiContacts :: Shape -> Collision -> Contacts -> Contacts
+addNikkiContacts s v c =
+    c{nikkiContacts = ((s, v) : nikkiContacts c)}
 
 setNikkiFeetTouchGround :: Contacts -> Contacts
 setNikkiFeetTouchGround c = c{nikkiFeetTouchGround = True}
@@ -79,9 +79,9 @@ watchedContacts =
 
 
 nikkiSolidCallbacks solidCT = [
-    Callback (FullWatch solidCT NikkiBodyCT (\ _ _ -> addNikkiContacts)) Solid,
+    Callback (FullWatch solidCT NikkiBodyCT (\ shape _ -> addNikkiContacts shape)) Solid,
     Callback (FullWatch solidCT NikkiFeetCT
-                (\ _ _ v -> setNikkiFeetTouchGround . addNikkiContacts v)) Solid
+                (\ shape _ v -> setNikkiFeetTouchGround . addNikkiContacts shape v)) Solid
   ]
 
 -- nikki stands in front of a terminal 
@@ -103,9 +103,10 @@ terminalSolidCallback solidCT =
 -- contact with nikki and falling tiles
 nikkiFallingTilesCallbacks = [
     Callback (FullWatch FallingTileCT NikkiBodyCT
-        (\ a b v -> addFallingTileContact a . addNikkiContacts v)) Solid,
+        (\ a b v -> addFallingTileContact a . addNikkiContacts a v)) Solid,
     Callback (FullWatch FallingTileCT NikkiFeetCT
-        (\ a b v -> addFallingTileContact a . setNikkiFeetTouchGround . addNikkiContacts v)) Solid
+        (\ a b v -> addFallingTileContact a . setNikkiFeetTouchGround . addNikkiContacts a v))
+            Solid
   ]
 
 

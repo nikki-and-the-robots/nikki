@@ -11,6 +11,7 @@ import Control.Monad
 import Control.Arrow
 
 import Physics.Chipmunk hiding (position, Position)
+import qualified Physics.Hipmunk as Hip
 
 import Utils
 
@@ -77,10 +78,11 @@ control now contacts (True, cd) nsort nikki =
         -- at the peak of the jump. This function will decide, how high Nikki can
         -- can jump maximally.
         -- (see Sorts.Nikki.JumpingForces)
-        State (JumpImpulse _ contactAngle velocity buttonDirection) direction -> do
+        State (JumpImpulse _ shape contactAngle velocity buttonDirection) direction -> do
             setNikkiSurfaceVelocity nikki (- vectorX velocity)
+            collisionObjectVelocity <- get (Hip.velocity (Hip.body shape))
             modifyApplyImpulse (chipmunk nikki) $
-                getJumpingImpulse contactAngle velocity
+                getJumpingImpulse collisionObjectVelocity contactAngle velocity
             modifyApplyOnlyForce (chipmunk nikki) $
                 getJumpingForces now
                     (JumpInformation (Just 0) velocity buttonDirection)

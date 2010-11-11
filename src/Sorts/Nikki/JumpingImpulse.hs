@@ -27,9 +27,9 @@ jumpingImpulseLength =
 
 -- | returns the initial jumping vector
 -- (responsible for the minimal jump)
-getJumpingImpulse :: Angle -> Vector -> Vector
-getJumpingImpulse contactAngle velocity =
-    correctedImpulse $ calculate contactAngle velocity
+getJumpingImpulse :: Vector -> Angle -> Vector -> Vector
+getJumpingImpulse collisionObjectVelocity contactAngle nikkiVelocity =
+    correctedImpulse $ calculate collisionObjectVelocity contactAngle nikkiVelocity
 
 -- | this type is used to share information
 -- and expose internal details of the calculations for debugging purposes.
@@ -40,8 +40,8 @@ data JumpingImpulseValues = JumpingImpulseValues {
     correctedImpulse :: Vector
   }
 
-calculate :: Angle -> Vector -> JumpingImpulseValues
-calculate contactAngle velocity =
+calculate :: Vector -> Angle -> Vector -> JumpingImpulseValues
+calculate collisionObjectVelocity contactAngle nikkiVelocity =
     JumpingImpulseValues {
         staticImpulse = staticImpulse,
         wallVelocity = wallVelocity,
@@ -49,6 +49,8 @@ calculate contactAngle velocity =
         correctedImpulse = correctedImpulse
       }
   where
+    -- relative velocity
+    velocity = nikkiVelocity -~ collisionObjectVelocity
     -- the impulse that should be applied
     correctedImpulse = staticImpulse +~ wallVelocityCorrection
 
