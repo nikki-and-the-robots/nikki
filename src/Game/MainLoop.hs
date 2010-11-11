@@ -75,7 +75,7 @@ setScene s x = s{scene = x}
 gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> AppMonad AppState
 gameLoop app sceneMVar = do
     initializeSceneMVar
-    timer <- liftIO $ newTickTimer stepQuantum
+    timer <- liftIO $ newTickTimer (stepQuantum / timeFactor)
     loop timer
   where
     loop timer = do

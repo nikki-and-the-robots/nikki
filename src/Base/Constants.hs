@@ -43,6 +43,8 @@ gravity = 1904
 stepQuantum :: Double
 stepQuantum = 0.002
 
+timeFactor :: Double = 1
+
 -- * file directories
 
 soundDir :: FilePath
