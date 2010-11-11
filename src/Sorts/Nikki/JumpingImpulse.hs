@@ -43,9 +43,9 @@ data JumpingImpulseValues = JumpingImpulseValues {
 calculate :: Angle -> Vector -> JumpingImpulseValues
 calculate contactAngle velocity =
     JumpingImpulseValues {
-        staticImpulse = undefined, -- staticImpulse,
-        wallVelocity = undefined, -- wallVelocity,
-        clipVector = undefined, -- clipVector,
+        staticImpulse = staticImpulse,
+        wallVelocity = wallVelocity,
+        clipVector = clipVector,
         correctedImpulse = correctedImpulse
       }
   where
