@@ -8,7 +8,6 @@ import Data.Typeable
 import Data.Abelian
 
 import Physics.Chipmunk as CM
-import Physics.Chipmunk.DebugGrid
 
 import Graphics.Qt as Qt
 

@@ -7,13 +7,9 @@ module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass, walkingVeloc
 import Prelude hiding (lookup)
 
 import Data.Map (Map, fromList, toList, (!), lookup)
-import qualified Data.Set as Set
 import Data.Abelian
 import Data.Generics
 import Data.Initial
-import Data.List (nub, sort)
-
-import Control.Monad
 
 import System.FilePath
 

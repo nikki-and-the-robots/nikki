@@ -2,8 +2,6 @@
 module Editor.Scene.Rendering.Helpers where
 
 
-import Utils
-
 import Data.Abelian
 
 import Graphics.Qt

@@ -6,8 +6,6 @@ module Game.Scene.Camera (
   ) where
 
 
-import Data.Abelian
-
 import Control.Monad.State
 
 import qualified Graphics.Qt as Qt

@@ -10,13 +10,10 @@ module Base.Debugging (
 
 import Data.Initial
 import Data.IORef
-import Data.Monoid
 
 import System.IO.Unsafe
 
 import Graphics.Qt
-
-import Utils
 
 import Base.Constants
 

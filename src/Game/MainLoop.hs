@@ -8,7 +8,6 @@ module Game.MainLoop (
   ) where
 
 
-import Data.IORef
 import Data.Set (member)
 import Data.Initial
 

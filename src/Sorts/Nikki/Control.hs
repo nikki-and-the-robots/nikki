@@ -10,8 +10,6 @@ import Data.Maybe
 import Control.Monad
 import Control.Arrow
 
-import Graphics.Qt as Qt hiding (rotate, scale)
-
 import Physics.Chipmunk hiding (position, Position)
 
 import Utils

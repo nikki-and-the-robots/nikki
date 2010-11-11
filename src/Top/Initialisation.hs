@@ -17,8 +17,6 @@ import Base.Types
 
 import Object
 
-import Game.Scene.Camera
-
 import qualified Sorts.Nikki
 import qualified Sorts.Terminal
 import qualified Sorts.Tiles
