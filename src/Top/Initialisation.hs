@@ -51,7 +51,7 @@ sortLoaders =
 
     Sorts.Grids.sorts :
     Sorts.Background.sorts :
---     Sorts.TestRamp.sorts :
+    Sorts.TestRamp.sorts :
     []
 
 withAllSorts :: (SelectTree Sort_ -> IO a) -> IO a

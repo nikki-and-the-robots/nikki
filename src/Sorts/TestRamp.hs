@@ -53,7 +53,12 @@ instance Sort RampSort Ramp where
                     +~ baryCenterOffset
         chip <- initChipmunk space (bodyAttributes pos)
                     shapesDescriptions baryCenterOffset
+        applyForce (body chip) (Vector 0 gravity) zero
         return $ Ramp chip
+
+    updateNoSceneChange _ _ _ _ (Ramp c) = do
+--         velocity (body c) $= Vector 0 500
+        return $ Ramp c
 
     chipmunks (Ramp c) = [c]
 
@@ -76,6 +81,8 @@ bodyAttributes :: Vector -> BodyAttributes
 bodyAttributes pos =
     StaticBodyAttributes {
         CM.position = pos
+--         CM.mass = 8000,
+--         CM.inertia = infinity
       }
 
 
