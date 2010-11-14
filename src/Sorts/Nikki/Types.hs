@@ -91,6 +91,7 @@ isSlideToGrip state = toActionNumber (action state) == 6
 getJumpInformation :: Action -> Maybe JumpInformation
 getJumpInformation (Airborne x) = Just x
 getJumpInformation (WallSlide x _ _) = Just x
+getJumpInformation (SlideToGrip x) = Just x
 getJumpInformation _ = Nothing
 
 data JumpInformation =

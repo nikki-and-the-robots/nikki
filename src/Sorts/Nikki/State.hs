@@ -133,8 +133,7 @@ updateState now contacts (True, controlData) nikki = do
     jumpStartTime_ :: Maybe Seconds
     jumpStartTime_ = case action $ state nikki of
         JumpImpulse t _ _ _ _ -> Just t
-        Airborne ji -> if aHeld then jumpStartTime ji else Nothing
-        WallSlide ji _ _ -> if aHeld then jumpStartTime ji else Nothing
+        x | aHeld -> jumpStartTime =<< getJumpInformation x
         x -> Nothing
 
     angleDirection :: Angle -> Maybe HorizontalDirection
