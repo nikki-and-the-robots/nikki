@@ -93,6 +93,7 @@ data Contacts
 data MyCollisionType
     = NikkiHeadCT
     | NikkiLegsCT
+    | NikkiLeftPawCT
 
     | TileCT
     | TerminalCT

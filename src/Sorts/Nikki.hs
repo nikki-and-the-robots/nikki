@@ -159,6 +159,8 @@ renderClouds _ _ _ _ _ = return ()
 debugNikki :: Seconds -> Contacts -> Nikki -> IO ()
 debugNikki now contacts nikki = do
     addDebugging $ \ ptr offset -> do
+      resetMatrix ptr
+      drawText ptr (Position 30 30) False $ show $ action $ state nikki
       forM_ (nikkiCollisions contacts) $ \ (NikkiCollision shape normal _) -> do
         resetMatrix ptr
         translate ptr offset

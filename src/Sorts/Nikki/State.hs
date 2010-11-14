@@ -82,18 +82,19 @@ updateState now contacts (True, controlData) nikki = do
     grips nikkiPos =
         nikkiCollisions >>>
         filter isHeadCollision >>>
-        map (nikkiCollisionNormal >>>
-             toUpAngle >>> foldAngle) >>>
-        filter (abs >>> (< deg2rad 18)) >>>
+        filter isGripCollision >>>
         inner
       where
         inner [] = Nothing
-        inner (angle : _) = Just $
-            if angle <= 0
-            then HRight
-            else HLeft
+        inner gripCollisions = Just $
+            if any ((NikkiLeftPawCT ==) . nikkiCollisionType) gripCollisions
+            then HLeft else HRight
     isHeadCollision (NikkiCollision _ normal NikkiHeadCT) = True
+    isHeadCollision (NikkiCollision _ normal NikkiLeftPawCT) = True
     isHeadCollision _ = False
+    isGripCollision c =
+        abs (foldAngle $ toUpAngle $ nikkiCollisionNormal c) < deg2rad 18
+
 
     hasLegsCollisions = not (null legsCollisions)
     legsCollisions = filter isLegsCollision $ nikkiCollisions contacts

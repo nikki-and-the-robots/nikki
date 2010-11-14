@@ -39,12 +39,11 @@ headShapeAttributes = ShapeAttributes {
     CM.collisionType = NikkiHeadCT
   }
 
--- fooShapeAttributes :: ShapeAttributes
--- fooShapeAttributes = ShapeAttributes {
---     elasticity = 0,
---     friction = 0,
---     CM.collisionType = NikkiFooCT
---   }
+leftPawShapeAttributes = ShapeAttributes {
+    elasticity    = elasticity_,
+    friction      = headFriction,
+    CM.collisionType = NikkiLeftPawCT
+  }
 
 mkPolys :: Size Double -> (ShapeDescription, [ShapeDescription], Vector)
 mkPolys (Size w h) =
@@ -55,7 +54,7 @@ mkPolys (Size w h) =
         mkShapeDescription legsShapeAttributes legs
     otherShapes =
         (mkShapeDescription headShapeAttributes headPoly) :
---         (mkShapeDescription fooShapeAttributes fooPoly) :
+        (mkShapeDescription leftPawShapeAttributes leftPawPoly) :
         []
 
     wh = w / 2
@@ -91,9 +90,11 @@ mkPolys (Size w h) =
         Vector legRight (headUp + fromUber 1)
       ]
 
---     fooPoly = Polygon [
---         Vector headLeft (headLow + pawThickness),
---         Vector legLeft low,
---         Vector legRight low,
---         Vector headRight (headLow + pawThickness)
---       ]
+    -- does not provide collisions
+    -- just for position detection
+    leftPawPoly = Polygon [
+        Vector headLeft (headLow + pawThickness - fromUber 1),
+        Vector headLeft (headLow + pawThickness),
+        Vector 0 (headLow + pawThickness),
+        Vector 0 (headLow + pawThickness - fromUber 1)
+      ]
