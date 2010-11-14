@@ -81,8 +81,7 @@ data CameraState
 
 data Contacts
     = Contacts {
-        nikkiContacts :: [(Shape, Collision)],
-        nikkiFeetTouchGround :: !Bool,
+        nikkiCollisions :: [NikkiCollision],
         nikkiTouchesLaser :: !Bool,
         triggers :: Set Shape,
         terminals :: Set Shape,
@@ -92,8 +91,8 @@ data Contacts
   deriving Show
 
 data MyCollisionType
-    = NikkiBodyCT
-    | NikkiFeetCT
+    = NikkiHeadCT
+    | NikkiLegsCT
 
     | TileCT
     | TerminalCT
@@ -102,10 +101,17 @@ data MyCollisionType
     | TriggerCT
     | BatteryCT
     | FallingTileCT
-  deriving (Eq, Enum, Show)
+  deriving (Eq, Ord, Enum, Show)
 
 instance PP MyCollisionType where
     pp = show
+
+data NikkiCollision = NikkiCollision {
+    nikkiCollisionShape :: Shape,
+    nikkiCollisionNormal :: Vector,
+    nikkiCollisionType :: MyCollisionType
+  }
+    deriving (Show)
 
 -- * mode for the game scene
 data Mode

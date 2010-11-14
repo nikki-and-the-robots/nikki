@@ -102,6 +102,11 @@ control now contacts (True, cd) nsort nikki =
           where
             isVerticalSlide = any (abs >>> (== (pi / 2))) contactNormals
 
+        State (SlideToGrip ji) direction -> do
+            setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
+            modifyApplyOnlyForce (chipmunk nikki) $
+                getJumpingForces now ji
+
         State Grip direction -> do
             setNikkiSurfaceVelocity nikki 0
             resetForces $ body $ chipmunk nikki

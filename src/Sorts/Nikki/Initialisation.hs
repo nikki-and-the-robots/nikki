@@ -23,22 +23,28 @@ bodyAttributes pos = BodyAttributes {
   }
 
 
-feetShapeAttributes :: ShapeAttributes
-feetShapeAttributes = ShapeAttributes {
+legsShapeAttributes :: ShapeAttributes
+legsShapeAttributes = ShapeAttributes {
     elasticity          = elasticity_,
     friction            = nikkiFeetFriction,
-    CM.collisionType    = NikkiFeetCT
+    CM.collisionType    = NikkiLegsCT
   }
 
 
 -- Attributes for nikkis body (not to be confused with chipmunk bodies, it's a chipmunk shape)
-bodyShapeAttributes :: ShapeAttributes
-bodyShapeAttributes = ShapeAttributes {
+headShapeAttributes :: ShapeAttributes
+headShapeAttributes = ShapeAttributes {
     elasticity    = elasticity_,
     friction      = headFriction,
-    CM.collisionType = NikkiBodyCT
+    CM.collisionType = NikkiHeadCT
   }
 
+-- fooShapeAttributes :: ShapeAttributes
+-- fooShapeAttributes = ShapeAttributes {
+--     elasticity = 0,
+--     friction = 0,
+--     CM.collisionType = NikkiFooCT
+--   }
 
 mkPolys :: Size Double -> (ShapeDescription, [ShapeDescription], Vector)
 mkPolys (Size w h) =
@@ -46,11 +52,11 @@ mkPolys (Size w h) =
   where
     -- the ones where surface velocity (for walking) is applied
     surfaceVelocityShape =
-        mkShapeDescription feetShapeAttributes feet
-    otherShapes = [
-        (mkShapeDescription bodyShapeAttributes headPoly),
-        (mkShapeDescription bodyShapeAttributes legsPoly)
-      ]
+        mkShapeDescription legsShapeAttributes legs
+    otherShapes =
+        (mkShapeDescription headShapeAttributes headPoly) :
+--         (mkShapeDescription fooShapeAttributes fooPoly) :
+        []
 
     wh = w / 2
     hh = h / 2
@@ -78,15 +84,16 @@ mkPolys (Size w h) =
     legLeft = left + fromUber 7
     legRight = legLeft + fromUber 5
 
-    legsPoly = Polygon [ -- trapeze to avoid touching of walls during grip
-        Vector (legLeft - eps) headLow,
-        Vector (legLeft + eps) (low - eps),
-        Vector (legRight - eps) (low - eps),
-        Vector (legRight + eps) headLow
-      ]
-    feet = Polygon [
-        Vector legLeft headLow,
+    legs = Polygon [
+        Vector legLeft (headUp + fromUber 1),
         Vector legLeft low,
         Vector legRight low,
-        Vector legRight headLow
+        Vector legRight (headUp + fromUber 1)
       ]
+
+--     fooPoly = Polygon [
+--         Vector headLeft (headLow + pawThickness),
+--         Vector legLeft low,
+--         Vector legRight low,
+--         Vector headRight (headLow + pawThickness)
+--       ]

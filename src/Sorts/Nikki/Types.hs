@@ -68,6 +68,7 @@ data Action
     | Airborne JumpInformation
     | WallSlide JumpInformation [Angle] [Cloud]
     | UsingTerminal
+    | SlideToGrip JumpInformation
     | Grip -- when Nikki uses the paws to hold on to something
     | EndGripImpulse -- state for one frame (when grip state is ended)
     | Touchdown
@@ -79,9 +80,13 @@ toActionNumber JumpImpulse{} = 2
 toActionNumber Airborne{} = 3
 toActionNumber WallSlide{} = 4
 toActionNumber UsingTerminal = 5
-toActionNumber Grip = 6
-toActionNumber EndGripImpulse = 7
-toActionNumber Touchdown = 8
+toActionNumber SlideToGrip{} = 6
+toActionNumber Grip = 7
+toActionNumber EndGripImpulse = 8
+toActionNumber Touchdown = 9
+
+isSlideToGrip :: State -> Bool
+isSlideToGrip state = toActionNumber (action state) == 6
 
 getJumpInformation :: Action -> Maybe JumpInformation
 getJumpInformation (Airborne x) = Just x

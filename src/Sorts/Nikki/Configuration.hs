@@ -81,6 +81,8 @@ frameTimes action = case action of
     State Airborne{} HRight -> ("jump_right", airborne)
     State WallSlide{} HLeft -> ("wallslide_left", airborne)
     State WallSlide{} HRight -> ("wallslide_right", airborne)
+    State SlideToGrip{} HLeft -> ("grip_left", singleFrame)
+    State SlideToGrip{} HRight -> ("grip_right", singleFrame)
     State Grip HLeft -> ("grip_left", singleFrame)
     State Grip HRight -> ("grip_right", singleFrame)
     State EndGripImpulse HLeft -> ("grip_left", singleFrame)

@@ -37,7 +37,7 @@ updateState now contacts (True, controlData) nikki = do
     return $ nikki{state = state' nikkiPos velocity_}
   where
     state' nikkiPos velocity_ =
-        case (aPushed, mContactAngle) of
+        case (willJump, mContactAngle) of
             -- nikki jumps
             (True, Just (shape, contactAngle)) -> State
                 (JumpImpulse now shape contactAngle velocity_ buttonDirection)
@@ -51,11 +51,17 @@ updateState now contacts (True, controlData) nikki = do
                     Just gripDirection -> State Grip gripDirection
                     -- nikki grabs nothing
                     Nothing ->
-                        if nikkiFeetTouchGround contacts then
-                            if nothingHeld then
-                                State Wait newDirection
+                        if hasLegsCollisions then
+                        -- something touches the feet
+                            if hasStandingFeetCollisions then
+                                if nothingHeld then
+                                    State Wait newDirection
+                                else
+                                    State Walk newDirection
                               else
-                                State Walk newDirection
+                                State
+                                    (SlideToGrip (jumpInformation' velocity_))
+                                    newDirection
                           else
                             State (WallSlide (jumpInformation' velocity_)
                                     (map snd contactNormals)
@@ -64,27 +70,39 @@ updateState now contacts (True, controlData) nikki = do
             (_, Nothing) ->
                 State (Airborne (jumpInformation' velocity_)) newDirection
 
+    willJump :: Bool
+    willJump = aPushed && not (isSlideToGrip (state nikki))
+
     newDirection :: HorizontalDirection
     newDirection = case state nikki of
         State Grip direction -> swapHorizontalDirection direction
         _ -> fromMaybe oldDirection buttonDirection
+    -- returns if nikki grabs something
     grips :: CM.Position -> Contacts -> Maybe HorizontalDirection
-    grips nikkiPos contacts =
-      case filter (isGripCollision nikkiPos) $ map snd (nikkiContacts contacts) of
-        [] -> Nothing
-        (Collision _ (p : _) : _) -> Just $
-            if vectorX (p -~ nikkiPos) <= 0
-            then HLeft
-            else HRight
-    isGripCollision nikkiPos (Collision normal points) =
-        any (isGripPoint nikkiPos) points && isGripNormal normal
-    isGripPoint nikkiPos p = vectorY (p -~ nikkiPos) =~= 19
-    isGripNormal ((toUpAngle >>> foldAngle) -> angle) =
-        (angle > (- angleLimit)) && (angle < angleLimit)
-    angleLimit = deg2rad 45
-    a =~= b = abs (a - b) < eps
-    eps = 1
+    grips nikkiPos =
+        nikkiCollisions >>>
+        filter isHeadCollision >>>
+        map (nikkiCollisionNormal >>>
+             toUpAngle >>> foldAngle) >>>
+        filter (abs >>> (< deg2rad 18)) >>>
+        inner
+      where
+        inner [] = Nothing
+        inner (angle : _) = Just $
+            if angle <= 0
+            then HRight
+            else HLeft
+    isHeadCollision (NikkiCollision _ normal NikkiHeadCT) = True
+    isHeadCollision _ = False
 
+    hasLegsCollisions = not (null legsCollisions)
+    legsCollisions = filter isLegsCollision $ nikkiCollisions contacts
+    isLegsCollision (NikkiCollision _ _ NikkiLegsCT) = True
+    isLegsCollision _ = False
+
+    hasStandingFeetCollisions = any isStandingFeetCollision legsCollisions
+    isStandingFeetCollision (NikkiCollision _ normal _) =
+        abs (foldAngle $ toUpAngle normal) < deg2rad (90 - 25)
 
     aPushed = Press AButton `elem` pressed controlData
     aHeld = AButton `member` held controlData
@@ -145,7 +163,9 @@ updateState now contacts (True, controlData) nikki = do
 
 -- | updates the possible jumping angle from the contacts
 getContactNormals :: Contacts -> [(Shape, Angle)]
-getContactNormals = map (second (foldAngle . toUpAngle . collisionNormal)) . nikkiContacts
+getContactNormals =
+    nikkiCollisions >>>
+    map (\ nc -> (nikkiCollisionShape nc, foldAngle (toUpAngle (nikkiCollisionNormal nc))))
 
 -- | calculates the angle a possible jump is to be performed in
 jumpAngle :: [(Shape, Angle)] -> Maybe (Shape, Angle)

@@ -6,10 +6,11 @@ module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass, walkingVeloc
 
 import Prelude hiding (lookup)
 
-import Data.Map (Map, fromList, toList, (!), lookup)
+import Data.Map (Map, toList, fromList, (!), lookup)
 import Data.Abelian
 import Data.Generics
 import Data.Initial
+import Data.Foldable hiding (toList)
 
 import System.FilePath
 
@@ -141,7 +142,7 @@ pickPixmap now sort nikki =
 
 renderClouds :: Ptr QPainter -> Offset Double -> Seconds -> NSort -> Action -> IO ()
 renderClouds ptr offset now sort (WallSlide _ _ clouds) =
-    mapM_ render clouds
+    fmapM_ render clouds
   where
     render cloud = do
         let mPixmap = case lookup "dust" (pixmaps sort) of
@@ -156,6 +157,14 @@ renderClouds _ _ _ _ _ = return ()
 -- debugging
 
 debugNikki :: Seconds -> Contacts -> Nikki -> IO ()
+debugNikki now contacts nikki = do
+    addDebugging $ \ ptr offset -> do
+      forM_ (nikkiCollisions contacts) $ \ (NikkiCollision shape normal _) -> do
+        resetMatrix ptr
+        translate ptr offset
+        translateVector ptr =<< getPosition (chipmunk nikki)
+        drawAngle ptr green $ toUpAngle normal
+
 debugNikki now contacts nikki = do
     position <- getPosition $ chipmunk nikki
     nikkiVelocity <- get $ velocity $ body $ chipmunk nikki
