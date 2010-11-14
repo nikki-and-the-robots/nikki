@@ -206,6 +206,8 @@ renderScene ptr scene@Scene{spaceTime = now} debugging = do
         let offsetVector = - (center - Vector (width / 2) (height / 2))
             offset = fmap (fromIntegral . truncate) $ vector2QtPosition offsetVector
 
+        clearScreen ptr
+
         when (showScene Configuration.development) $ do
             let os = objects scene
             fmapM_ (renderLayer ptr size offset now) $ backgrounds os
