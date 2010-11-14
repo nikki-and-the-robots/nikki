@@ -218,11 +218,11 @@ renderScene ptr scene@Scene{spaceTime = now} debugging = do
 
 
         -- debugging
-        liftIO $ debugging ptr offset
         when (showXYCross Configuration.development) $
             debugDrawCoordinateSystem ptr offset
         when (showChipmunkObjects Configuration.development) $
             fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
+        liftIO $ debugging ptr offset
 
 
 -- | renders the different Layers.
