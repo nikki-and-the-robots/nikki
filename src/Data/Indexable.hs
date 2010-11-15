@@ -17,6 +17,7 @@ module Data.Indexable (
     (!!!),
     findIndices,
     filter,
+    sortBy,
 
     fromList,
     (<:),
@@ -82,7 +83,7 @@ instance Foldable Indexable where
 instance Traversable Indexable where
     traverse cmd (Indexable values keys) = Indexable <$> inner keys <*> pure keys
       where
-        inner (k : r) = 
+        inner (k : r) =
             Map.insert (index k) <$> cmd (values ! index k) <*> inner r
         inner [] = pure Map.empty
 
@@ -127,6 +128,16 @@ filter p ixs = Indexable newValues newIndices
   where
     newIndices = findIndices p ixs
     newValues = Map.fromList $ map (\ i -> (index i, ixs !!! i)) newIndices
+
+-- | Stable sorting of Indexables while preserving indices.
+sortBy :: (a -> a -> Ordering) -> Indexable a -> Indexable a
+sortBy ordering (Indexable values keys) =
+    Indexable values (map (Index . fst) sortedPairList)
+  where
+--     sortedPairList :: [(Int, a)]
+    sortedPairList = List.sortBy (withView snd ordering) pairList
+--     pairList :: [(Int, a)]
+    pairList = map (\ i -> (i, values ! i)) $ map index keys
 
 -- | generate an unused Index
 -- (newIndex l) `elem` l == False
@@ -239,6 +250,3 @@ mergeListSome p (a : r) =
 
 
 mergeListSome _ [] = []
-
-
-
