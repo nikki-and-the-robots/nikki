@@ -17,6 +17,8 @@ import Base.Types
 
 import Object
 
+import qualified Editor.Scene.RenderOrdering as RenderOrdering
+
 import qualified Sorts.Nikki
 import qualified Sorts.Terminal
 import qualified Sorts.Tiles
@@ -96,6 +98,7 @@ freeAllSorts sorts = do
 
 initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
 initScene space =
+    fromPure (modifyMainLayer RenderOrdering.sortMainLayer) >>>>
     fromPure groundsMergeTiles >>>>
     initializeObjects space >>>>
     mkScene space

@@ -34,6 +34,7 @@ import Object
 
 import Editor.Scene.Types
 import Editor.Scene.Rendering
+import qualified Editor.Scene.RenderOrdering as RenderOrdering
 
 
 -- | looks, if there is an object under the cursor (and therefore selected)
@@ -118,7 +119,9 @@ normalMode DownButton scene@EditorScene{cursor = (EditorPosition x y)} =
 normalMode AButton scene@EditorScene{cursor, selectedLayer} =
     scene{editorObjects = objects'}
   where
-    objects' = modifySelectedLayer selectedLayer (modifyContent (>: new)) (editorObjects scene)
+    objects' = modifySelectedLayer selectedLayer
+        (modifyContent (RenderOrdering.sortMainLayer . (>: new)))
+        (editorObjects scene)
     new = mkEditorObject selectedSort cursor
     selectedSort = getSelected $ availableSorts scene
 
