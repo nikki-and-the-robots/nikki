@@ -19,3 +19,5 @@ selection mode
 Arrow keys or gamepad hat - move the upper right corner of the selection box
 x - cut selected objects
 c - copy selected objects
+B button or Shift - delete objects in selection (without changing clipboard contents)
+w and s - change the cursor step size

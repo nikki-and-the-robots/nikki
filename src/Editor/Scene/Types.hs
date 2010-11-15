@@ -112,6 +112,11 @@ cutSelection scene =
         map (\ i -> getSelectedLayerContent scene !!! i) cutIndices
     cutIndices = findCopySelectionIndices scene
 
+-- | deletes the selected objects without changing the clipboard contents.
+-- implemented in terms of cutSelection (huzzah for non-destructive updates)
+deleteSelection :: EditorScene Sort_ -> EditorScene Sort_
+deleteSelection scene = (cutSelection scene){clipBoard = clipBoard scene}
+
 copySelection :: EditorScene Sort_ -> EditorScene Sort_
 copySelection scene =
     scene{editorMode = NormalMode, clipBoard = clipBoard}

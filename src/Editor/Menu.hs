@@ -98,6 +98,7 @@ editorMenu app play mvar scene =
             menu app (Just menuTitle) (Just (edit scene)) [
                 ("cut selected objects", edit (cutSelection scene)),
                 ("copy selected objects", edit (copySelection scene)),
+                ("delete selected objects", edit (deleteSelection scene)),
                 ("exit selection mode", edit scene{editorMode = NormalMode})
               ]
   where
@@ -105,7 +106,7 @@ editorMenu app play mvar scene =
         Nothing -> "editing untitled level"
         Just f -> "editing " ++ f
     edit :: EditorScene Sort_ -> AppState
-    edit s = editorLoop app play mvar s
+    edit s = editorLoop app play mvar (updateSelected s)
     this = editorMenu app play mvar scene
 
     lEnterOEM = case enterOEM app play mvar scene of

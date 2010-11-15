@@ -11,6 +11,7 @@ module Editor.Scene (
     EditorScene(..),
     initEditorScene,
     setNikkiPosition,
+    updateSelected,
     updateEditorScene,
     renderEditorScene,
   ) where
@@ -198,6 +199,7 @@ selectionMode button scene@EditorScene{editorMode = SelectionMode pos}
     EditorPosition sx sy = getCursorStep scene
 selectionMode (KeyboardButton X _) scene = cutSelection scene
 selectionMode (KeyboardButton C _) scene = copySelection scene
+selectionMode BButton scene = deleteSelection scene
 selectionMode (KeyboardButton key _) scene | key `elem` [W, S] = changeCursorStepSize key scene
 
 selectionMode _ scene = scene
