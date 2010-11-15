@@ -37,8 +37,8 @@ controlNikki now contacts cd sort =
 
 control :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO ()
 control _ _ (False, _) _ nikki = do
-    forM_ (feetShapes nikki) $ \ fs ->
-        surfaceVel fs $= zero
+    setNikkiSurfaceVelocity nikki zero
+    resetForces $ body $ chipmunk nikki
 control now contacts (True, cd) nsort nikki =
     case state nikki of
 
