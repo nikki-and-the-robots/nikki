@@ -53,7 +53,7 @@ updateState now contacts (True, controlData) nikki = do
                     Nothing ->
                         if hasLegsCollisions then
                         -- something touches the feet
-                            if hasStandingFeetCollisions then
+                            if standsOnFeet then
                                 if nothingHeld then
                                     State Wait newDirection
                                 else
@@ -96,14 +96,26 @@ updateState now contacts (True, controlData) nikki = do
         abs (foldAngle $ toUpAngle $ nikkiCollisionNormal c) < deg2rad 18
 
 
+    standsOnFeet = hasStandingFeetCollisions ||
+        hasCombinedStandingFeetNormal
+
     hasLegsCollisions = not (null legsCollisions)
     legsCollisions = filter isLegsCollision $ nikkiCollisions contacts
     isLegsCollision (NikkiCollision _ _ NikkiLegsCT) = True
     isLegsCollision _ = False
 
-    hasStandingFeetCollisions = any isStandingFeetCollision legsCollisions
-    isStandingFeetCollision (NikkiCollision _ normal _) =
-        abs (foldAngle $ toUpAngle normal) < deg2rad (90 - 25)
+    hasStandingFeetCollisions =
+        any (nikkiCollisionNormal >>> isStandingFeetNormal) legsCollisions
+    isStandingFeetNormal normal =
+        isStandingFeetAngle $ foldAngle $ toUpAngle normal
+    isStandingFeetAngle angle =
+        abs angle < deg2rad (90 - 25)
+
+    -- if two (or more) collisions result in a contactAngle that allows jumping
+    hasCombinedStandingFeetNormal :: Bool
+    hasCombinedStandingFeetNormal = case mContactAngle of
+        Nothing -> False
+        Just (_, contactAngle) -> isStandingFeetAngle contactAngle
 
     aPushed = Press AButton `elem` pressed controlData
     aHeld = AButton `member` held controlData
