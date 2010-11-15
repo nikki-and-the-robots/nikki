@@ -196,7 +196,8 @@ pickleObject2EditorObject allSorts (PickleObject id position oemState) =
   where
     sort = case filter ((== id) . sortId) allSorts of
         [x] -> x
-        [] -> error ("Sort not found: " ++ getSortId id)
+        [] -> error ("sort not found: " ++ getSortId id)
+        _ -> error ("multiple sorts with the same id found: " ++ getSortId id)
 
 
 
