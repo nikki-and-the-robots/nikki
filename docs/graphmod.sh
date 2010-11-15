@@ -8,7 +8,8 @@
 
 
 graphmod ../src/Main.hs -q -i ../src/ \
-    -R Data -R Graphics -R Physics -r Utils \
+    -r Utils -r Paths -R Graphics -R Physics -R Data -R Control \
+    -C Base -C Object -C Top -C Editor -C Sorts -C Game \
     | dot -Tpdf -o mods.pdf
 
 
