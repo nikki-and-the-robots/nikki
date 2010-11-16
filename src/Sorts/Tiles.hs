@@ -1,4 +1,5 @@
-{-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances, DeriveDataTypeable #-}
+{-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances,
+    DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Sorts.Tiles (
     sorts,
@@ -10,8 +11,15 @@ module Sorts.Tiles (
 import Paths
 import Utils
 
+import Safe
+
 import Data.Abelian
 import Data.Generics
+import Data.List
+
+import Text.Parsec
+
+import Control.Monad
 
 import System.FilePath
 
@@ -22,11 +30,14 @@ import Physics.Chipmunk as CM
 import Base.Constants
 import Base.Pixmap
 import Base.Types
+import Base.Animation
 
 import Object
 
 
 -- * Tile configuration
+
+frameDuration :: Double = 1.0
 
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
@@ -54,14 +65,64 @@ sorts = do
 
 mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do
-    pngFile <- getDataFileName (pngDir </> name <.> "png")
-    pixmap <- newQPixmap pngFile
-    return $ Sort_ $ TSort name (Pixmap pixmap size (fmap fromIntegral offset))
+    pngFiles <- getFrameFileNames name
+    when (null pngFiles) $
+        fail ("no png files found for tile: " ++ name)
+    pixmaps <- mapM newQPixmap pngFiles
+    return $ Sort_ $ TSort name $ map mkPixmap pixmaps
+  where
+    mkPixmap pixmap = Pixmap pixmap size (fmap fromIntegral offset)
+
+-- | returns the list of filenames for all the frames with the given name
+getFrameFileNames :: String -> IO [FilePath]
+getFrameFileNames name = do
+    -- paths of all pngs in the corresponding directory
+    absolutePaths <- getDataFiles ".png" (pngDir </> takeDirectory name)
+    -- making them relative again
+    let relativePaths = map ((takeDirectory name </>) . takeFileName) absolutePaths
+    files <- mapM getDataFileName $
+            map (pngDir </>) $
+            map third $
+            sortBy (withView snd3 compare) $
+            filter ((name ==) . fst3) $
+            map parsePath relativePaths
+    return files
+  where
+    parsePath :: String -> (String, Maybe Int, FilePath)
+    parsePath path = case parse parseTileName "" path of
+        Right (a, b) -> (a, b, path)
+        x -> error ("unparseable filename: " ++ path)
+    parseTileName :: Parsec String () (String, Maybe Int)
+    parseTileName = do
+        n <- parseName
+        i <- parseFrameNumber
+        string ".png"
+        eof
+        return (n, i)
+
+    parseName = do
+        a <- name
+        r <- many namePart
+        return (a ++ concat r)
+      where
+        name = many1 (noneOf ['_', '.'])
+        namePart = try $ do
+            char '_'
+            a <- letter
+            r <- name
+            return ('_' : a : r)
+
+    parseFrameNumber :: Parsec String () (Maybe Int)
+    parseFrameNumber = optionMaybe $ do
+        char '_'
+        s <- many1 digit
+        return $ readNote "frameNumber" s
+
 
 data TSort
     = TSort {
         name :: String,
-        tilePixmap :: Pixmap
+        tilePixmaps :: [Pixmap]
       }
     deriving (Show, Typeable)
 
@@ -76,10 +137,10 @@ data Tile
 instance Sort TSort Tile where
     sortId TSort{name} = SortId name
 
-    size (TSort _ pix) = pixmapSize pix
+    size (TSort _ pixmaps) = pixmapSize $ head pixmaps
 
     sortRender sort ptr _ =
-        renderPixmapSimple ptr (tilePixmap sort)
+        renderPixmapSimple ptr $ head $ tilePixmaps sort
 
     initialize sort@TSort{} Nothing editorPosition Nothing = do
         let pos = editorPosition2QtPosition sort editorPosition
@@ -90,7 +151,7 @@ instance Sort TSort Tile where
     render (Tile (ImmutableChipmunk position _ _ _)) sort ptr offset now = do
         resetMatrix ptr
         translate ptr offset
-        let pix = tilePixmap sort
+        let pix = pickAnimationFrame (tilePixmaps sort) [frameDuration] now
         translate ptr (position +~ pixmapOffset pix)
         drawPixmap ptr zero $ pixmap pix
 
@@ -137,9 +198,10 @@ instance Sort AllTilesSort AllTiles where
         mapM_ draw renderables
       where
         draw (sort, position) = do
-            let pixOffset = position +~ pixmapOffset (tilePixmap sort)
+            let pix = pickAnimationFrame (tilePixmaps sort) [frameDuration] now
+                pixOffset = position +~ pixmapOffset pix
             translate ptr pixOffset
-            drawPixmap ptr zero $ pixmap $ tilePixmap sort
+            drawPixmap ptr zero $ pixmap pix
             translate ptr (negateAbelian pixOffset)
 
 mkRenderable :: EditorObject TSort -> (TSort, Qt.Position Double)

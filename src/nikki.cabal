@@ -78,6 +78,7 @@ Executable            nikki
         , StateVar
         , transformers
         , time
+        , parsec == 3.1.0
 
     if os(linux)
         extra-libraries:

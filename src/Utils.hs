@@ -413,6 +413,15 @@ clip (_, upper) x | x > upper = upper
 tuple :: a -> b -> (a, b)
 tuple a b = (a, b)
 
+fst3 :: (a, b, c) -> a
+fst3 (a, _, _) = a
+
+snd3 :: (a, b, c) -> b
+snd3 (_, b, _) = b
+
+third :: (a, b, c) -> c
+third (a, b, c) = c
+
 
 -- * misc
 
