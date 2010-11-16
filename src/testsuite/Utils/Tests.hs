@@ -14,7 +14,9 @@ import Test.QuickCheck
 
 
 tests :: IO ()
-tests = testMergePairs
+tests = do
+    testMergePairs
+    testDuplicates
 
 testMergePairs :: IO ()
 testMergePairs = mapM_ (quickCheckWith stdArgs{maxSuccess = 1000}) [
@@ -28,6 +30,18 @@ testMergePairs = mapM_ (quickCheckWith stdArgs{maxSuccess = 1000}) [
 testPredicate :: Int -> Int -> Maybe [Int]
 testPredicate a b | a == 0 = Nothing
 testPredicate a b = if b `mod` a == 0 then Just [a] else Nothing
+
+testDuplicates = do
+    -- tests the correspondence between duplicates and nub
+    quickCheckIntList (\ list -> ((nub list == list) == null (duplicates list)))
+    -- tests that every duplicate exists more than once in a list
+    quickCheckIntList (\ list -> all (\ dup -> length (filter (== dup) list) > 1) (duplicates list))
+    -- tests that every non-duplicate exists exactly once
+    quickCheckIntList (\ list -> all (\ dup -> length (filter (== dup) list) == 1)
+        (filter (\ e -> not (e `elem` duplicates list)) list))
+  where
+    quickCheckIntList :: Testable p => ([Int] -> p) -> IO ()
+    quickCheckIntList = quickCheck
 
 
 -- * these are test Utils (not tests for the Utils module)

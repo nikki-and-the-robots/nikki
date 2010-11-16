@@ -208,9 +208,21 @@ ignore = (>> return ())
 
 
 -- * list stuff
+
 infixl 4 +:
 (+:) :: [a] -> a -> [a]
 a +: b = a ++ [b]
+
+-- returns the list of items that are in the given list more than once
+duplicates :: (Eq a, Ord a) => [a] -> [a]
+duplicates =
+    nub . inner Set.empty
+  where
+    inner elements (a : r) =
+        if Set.member a elements then a : rest else rest
+      where
+        rest = inner (Set.insert a elements) r
+    inner _ [] = []
 
 chainApp :: (b -> a -> a) -> [b] -> a -> a
 chainApp fun (b : r) a = chainApp fun r (fun b a)

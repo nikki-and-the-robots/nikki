@@ -7,6 +7,7 @@ import Data.Initial
 import Data.SelectTree
 
 import Control.Exception
+import Control.Monad
 
 import Physics.Chipmunk
 
@@ -63,6 +64,7 @@ withAllSorts cmd = do
 getAllSorts :: IO (SelectTree Sort_)
 getAllSorts = do
     sorts <- concat <$> mapM id sortLoaders
+    checkUniqueSortIds sorts
     return $ mkSelectTree sorts
   where
     mkSelectTree :: [Sort_] -> SelectTree Sort_
@@ -90,6 +92,14 @@ getAllSorts = do
         addByPrefix [] x node =
             -- no prefixes left: here the element is added
             addChild (Leaf x) node
+
+checkUniqueSortIds :: [Sort_] -> IO ()
+checkUniqueSortIds sorts =
+    when (not $ null $ ds) $
+        fail ("duplicate sort ids found: " ++ unwords ds)
+  where
+    ds = duplicates $ map (getSortId . sortId) sorts
+
 
 freeAllSorts :: SelectTree Sort_ -> IO ()
 freeAllSorts sorts = do
