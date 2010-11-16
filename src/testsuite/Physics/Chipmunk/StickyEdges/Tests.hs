@@ -9,7 +9,6 @@ import Prelude hiding (catch)
 import Data.Abelian
 import Data.List
 
-import Control.Applicative ((<*>))
 import Control.Exception
 
 import Test.QuickCheck

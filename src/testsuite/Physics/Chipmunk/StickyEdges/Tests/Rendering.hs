@@ -55,7 +55,7 @@ drawOffender (fromTestPolygons -> offender) = do
         windowSize <- sizeQPainter ptr
         let ws = fmap fromIntegral windowSize
         eraseRect ptr zero windowSize (QtColor 55 55 55 255)
-        setPenColor ptr 255 255 55 255 1
+        setPenColor ptr lightYellow 1
         drawText ptr (Position 30 30) False (show (length offender))
         mapM_ id $ zipWith (renderShape ptr) randoms $ map (mapVectors (scaleVector ws)) offender
         resetMatrix ptr
@@ -91,15 +91,15 @@ renderPolygonLine ptr a b = do
     renderVectorLine ptr a b
 
 renderCorner ptr (Vector x y) = do
-    setPenColor ptr 255 255 55 255 1
+    setPenColor ptr lightYellow 1
     drawCircle ptr (Position x y) 3
 
 renderVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
 renderVectorLine ptr (Vector x1 y1) (Vector x2 y2) = do
-    setPenColor ptr 55 255 55 255 1
+    setPenColor ptr green 1
     drawLine ptr (Position x1 y1) (Position x2 y2)
 
 renderStickyVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
 renderStickyVectorLine ptr (Vector x1 y1) (Vector x2 y2) = do
-    setPenColor ptr 255 55 55 255 1
+    setPenColor ptr signalRed 1
     drawLine ptr (Position x1 y1) (Position x2 y2)
