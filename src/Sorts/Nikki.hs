@@ -88,13 +88,18 @@ instance Sort NSort Nikki where
         fmapM_ (fmapM_ freePixmap) pixmaps
         freePolySound sound
 
-    size sort = pixmapSize $ defaultPixmap $ pixmaps sort
+    size sort =
+        if pixSize /= nikkiSize
+        then error "nikkis pixmaps have the wrong size"
+        else nikkiSize
+      where
+        pixSize = pixmapSize $ defaultPixmap $ pixmaps sort
 
     sortRender sort ptr _ =
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
     initialize sort (Just space) editorPosition Nothing = do
-        let (surfaceVelocityShapeType, otherShapes, baryCenterOffset) = mkPolys $ size sort
+        let (surfaceVelocityShapeType, otherShapes, baryCenterOffset) = mkPolys
             pos = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
 

@@ -1,17 +1,26 @@
 
-module Sorts.Nikki.Initialisation where
+module Sorts.Nikki.Initialisation (
+    mkPolys,
+    bodyAttributes,
+    footToHeadAngle,
+  ) where
 
 
 import Prelude hiding (lookup)
 
+import Data.Abelian
+
 import Graphics.Qt as Qt hiding (rotate, scale)
 
 import qualified Physics.Chipmunk as CM
-import Physics.Chipmunk hiding (position, Position)
+import Physics.Chipmunk hiding (position, Position, baryCenterOffset)
+
+import Utils
 
 import Base.Constants
 import Base.Types
 
+import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration
 
 
@@ -45,56 +54,65 @@ leftPawShapeAttributes = ShapeAttributes {
     CM.collisionType = NikkiLeftPawCT
   }
 
-mkPolys :: Size Double -> (ShapeDescription, [ShapeDescription], Vector)
-mkPolys (Size w h) =
+mkPolys :: (ShapeDescription, [ShapeDescription], Vector)
+mkPolys =
     (surfaceVelocityShape, otherShapes, baryCenterOffset)
-  where
-    -- the ones where surface velocity (for walking) is applied
-    surfaceVelocityShape =
-        mkShapeDescription legsShapeAttributes legs
-    otherShapes =
-        (mkShapeDescription headShapeAttributes headPoly) :
-        (mkShapeDescription leftPawShapeAttributes leftPawPoly) :
-        []
 
-    wh = w / 2
-    hh = h / 2
-    baryCenterOffset = Vector wh hh
-    low = hh
-    up = - hh
-    left = (- wh)
+-- tuning variables for polygons
+eps = 1
+pawThickness = fromUber 3
 
-    headLeft = left + fromUber 3
-    headRight = headLeft + fromUber 13
-    headUp = up + fromUber 1.5
-    headLow = headUp + fromUber 13
+-- the ones where surface velocity (for walking) is applied
+surfaceVelocityShape =
+    mkShapeDescription legsShapeAttributes legs
 
-    headPoly = Polygon [
-        Vector headLeft headUp,
-        Vector headLeft (headLow + pawThickness),
-        Vector headRight (headLow + pawThickness),
-        Vector headRight headUp
-      ]
+otherShapes =
+    (mkShapeDescription headShapeAttributes headPoly) :
+    (mkShapeDescription leftPawShapeAttributes leftPawPoly) :
+    []
 
-    -- tuning variables
-    eps = 1
-    pawThickness = fromUber 3
+Size w h = nikkiSize
+wh = w / 2
+hh = h / 2
+baryCenterOffset = Vector wh hh
+low = hh
+up = - hh
+left = (- wh)
 
-    legLeft = left + fromUber 7
-    legRight = legLeft + fromUber 5
+headLeft = left + fromUber 3
+headRight = headLeft + fromUber 13
+headUp = up + fromUber 1.5
+headLow = headUp + fromUber 13
 
-    legs = Polygon [
-        Vector legLeft (headUp + fromUber 1),
-        Vector legLeft low,
-        Vector legRight low,
-        Vector legRight (headUp + fromUber 1)
-      ]
+headPoly = Polygon [
+    Vector headLeft headUp,
+    Vector headLeft (headLow + pawThickness),
+    Vector headRight (headLow + pawThickness),
+    Vector headRight headUp
+    ]
 
-    -- does not provide collisions
-    -- just for position detection
-    leftPawPoly = Polygon [
-        Vector headLeft (headLow + pawThickness - fromUber 1),
-        Vector headLeft (headLow + pawThickness),
-        Vector 0 (headLow + pawThickness),
-        Vector 0 (headLow + pawThickness - fromUber 1)
-      ]
+
+legLeft = left + fromUber 7
+legRight = legLeft + fromUber 5
+
+legs = Polygon [
+    Vector legLeft (headUp + fromUber 1),
+    Vector legLeft low,
+    Vector legRight low,
+    Vector legRight (headUp + fromUber 1)
+    ]
+
+-- does not provide collisions
+-- just for position detection
+leftPawPoly = Polygon [
+    Vector headLeft (headLow + pawThickness - fromUber 1),
+    Vector headLeft (headLow + pawThickness),
+    Vector 0 (headLow + pawThickness),
+    Vector 0 (headLow + pawThickness - fromUber 1)
+    ]
+
+-- | the angle of the line from the edge of the feet to the lower edge of the head
+-- as an upAngle
+footToHeadAngle :: Angle
+footToHeadAngle = abs $ foldAngle $ toUpAngle $
+    (Vector headRight (headLow + pawThickness) -~ Vector legRight low)

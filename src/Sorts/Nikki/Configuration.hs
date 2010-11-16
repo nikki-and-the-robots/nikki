@@ -7,6 +7,10 @@ import Prelude hiding (lookup)
 
 import Data.Map (Map, fromList)
 
+import Physics.Chipmunk
+
+import Graphics.Qt
+
 import Utils
 
 import Base.Constants
@@ -17,6 +21,8 @@ import Sorts.Nikki.Types
 
 -- there are some values to fine tune the behaviour of nikki. The aim is to keep the number
 -- of fine tuners small.
+
+nikkiSize :: Size Double = Size 76 102
 
 -- physic
 

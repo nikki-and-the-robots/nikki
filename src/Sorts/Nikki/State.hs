@@ -26,6 +26,7 @@ import Base.Types
 
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration
+import Sorts.Nikki.Initialisation
 
 
 updateState :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
@@ -109,7 +110,8 @@ updateState now contacts (True, controlData) nikki = do
     isStandingFeetNormal normal =
         isStandingFeetAngle $ foldAngle $ toUpAngle normal
     isStandingFeetAngle angle =
-        abs angle < deg2rad (90 - 25)
+        abs angle < (deg2rad 90 - footToHeadAngle + deg2rad 1)
+                                                    -- angle epsilon
 
     -- if two (or more) collisions result in a contactAngle that allows jumping
     hasCombinedStandingFeetNormal :: Bool
