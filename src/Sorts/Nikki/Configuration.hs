@@ -74,7 +74,7 @@ gripAngleLimit :: Angle = deg2rad 18
 -- | strength of the impulse applied to nikki,
 -- when dropping of a tile nikki hangs on with the paws.
 gripImpulse :: Double
-gripImpulse = 500
+gripImpulse = 200
 
 
 
