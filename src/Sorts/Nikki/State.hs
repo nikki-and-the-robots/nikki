@@ -93,7 +93,7 @@ updateState now contacts (True, controlData) nikki = do
     isHeadCollision (NikkiCollision _ normal NikkiLeftPawCT) = True
     isHeadCollision _ = False
     isGripCollision c =
-        abs (foldAngle $ toUpAngle $ nikkiCollisionNormal c) < deg2rad 18
+        abs (foldAngle $ toUpAngle $ nikkiCollisionNormal c) < gripAngleLimit
 
 
     standsOnFeet = hasStandingFeetCollisions ||

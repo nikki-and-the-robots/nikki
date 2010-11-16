@@ -60,6 +60,11 @@ walljumpHorizontalFactor :: Double = 0.70
 -- to avoid wall jumps that point downwards.
 correctionSteepness :: Double = 1.0005
 
+-- | if the contactAngle is smaller than gripAngleLimit
+-- (and the collision is with nikki's head),
+-- the grip state is activated
+gripAngleLimit :: Angle = deg2rad 18
+
 -- | strength of the impulse applied to nikki,
 -- when dropping of a tile nikki hangs on with the paws.
 gripImpulse :: Double
