@@ -274,9 +274,9 @@ instance Sort TSort Terminal where
 
     startControl now t = t{state = reset now (robots t) (state t)}
 
-    updateNoSceneChange sort now contacts (False, cd) terminal =
+    updateNoSceneChange sort mode now contacts (False, cd) terminal =
         return terminal
-    updateNoSceneChange sort now contacts (True, cd) terminal =
+    updateNoSceneChange sort mode now contacts (True, cd) terminal =
         return terminal{state = updateState now cd (robots terminal) (state terminal)}
 
     render terminal sort ptr offset now =

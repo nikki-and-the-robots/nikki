@@ -55,7 +55,7 @@ instance Sort RampSort Ramp where
         applyForce (body chip) (Vector 0 gravity) zero
         return $ Ramp chip
 
-    updateNoSceneChange _ _ _ _ (Ramp c) = do
+    updateNoSceneChange _ _ _ _ _ (Ramp c) = do
         velocity (body c) $= Vector 0 0
         return $ Ramp c
 

@@ -117,7 +117,7 @@ instance Sort JSort Jetpack where
 
     getControlledChipmunk = chipmunk
 
-    updateNoSceneChange sort now contacts (isControlled, cd) =
+    updateNoSceneChange sort mode now contacts (isControlled, cd) =
         fromPure (jupdate (isControlled, cd)) >>>>
         fromPure (updateRenderState now isControlled) >>>>
         controlToChipmunk

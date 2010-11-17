@@ -95,12 +95,12 @@ instance Sort SwitchSort Switch where
 
     chipmunks (Switch a b c _ _) = [a, b, c]
 
-    updateNoSceneChange sort now contacts cd switch@Switch{triggered = False} = return $
+    updateNoSceneChange sort mode now contacts cd switch@Switch{triggered = False} = return $
         if triggerShape switch `member` triggers contacts then
             switch{triggered = True}
           else
             switch
-    updateNoSceneChange s _ _ _ o = return o
+    updateNoSceneChange s _ _ _ _ o = return o
 
     render switch sort ptr offset now = do
         renderChipmunk ptr offset (stampPix sort) (stampChipmunk switch)

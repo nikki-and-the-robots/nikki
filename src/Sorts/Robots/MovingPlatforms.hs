@@ -91,7 +91,7 @@ instance Sort PSort Platform where
 
 
 --     updateNoSceneChange :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
-    updateNoSceneChange sort now contacts cd =
+    updateNoSceneChange sort mode now contacts cd =
          updateNextPosition >>>>
 --          printNext >>>>
          updatePlatform
