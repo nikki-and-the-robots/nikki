@@ -124,7 +124,7 @@ instance Sort NSort Nikki where
     updateNoSceneChange sort mode now contacts cd nikki = inner nikki
       where
         inner =
-            updateState now contacts cd >>>>
+            updateState mode now contacts cd >>>>
             fromPure (updateStartTime now (state nikki)) >>>>
             controlNikki now contacts cd sort >>>>
 --             passThrough (debugNikki now contacts) >>>>

@@ -29,10 +29,14 @@ import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation
 
 
-updateState :: Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
-updateState _ _ (False, _) nikki =
-    return $ nikki{state = State UsingTerminal (direction $ state nikki)}
-updateState now contacts (True, controlData) nikki = do
+updateState :: Mode -> Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
+updateState mode _ _ (False, _) nikki = do
+    let action = case mode of
+            TerminalMode{} -> UsingTerminal
+            RobotMode{} -> UsingTerminal
+            (LevelFinished _ result) -> NikkiLevelFinished result
+    return $ nikki{state = State action (direction $ state nikki)}
+updateState mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
     nikkiPos <- getPosition $ chipmunk nikki
     return $ nikki{state = state' nikkiPos velocity_}

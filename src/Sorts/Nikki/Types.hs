@@ -17,6 +17,7 @@ import Sound.SFML
 
 import Physics.Chipmunk hiding (position, Position)
 
+import Base.Types
 import Base.Constants
 import Base.Directions
 import Base.Pixmap
@@ -72,6 +73,7 @@ data Action
     | Grip -- when Nikki uses the paws to hold on to something
     | EndGripImpulse -- state for one frame (when grip state is ended)
     | Touchdown
+    | NikkiLevelFinished LevelResult
   deriving (Show)
 
 toActionNumber Wait = 0
@@ -84,6 +86,7 @@ toActionNumber SlideToGrip{} = 6
 toActionNumber Grip = 7
 toActionNumber EndGripImpulse = 8
 toActionNumber Touchdown = 9
+toActionNumber NikkiLevelFinished{} = 10
 
 isSlideToGrip :: State -> Bool
 isSlideToGrip state = toActionNumber (action state) == 6

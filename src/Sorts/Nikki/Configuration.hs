@@ -13,6 +13,7 @@ import Graphics.Qt
 
 import Utils
 
+import Base.Types
 import Base.Constants
 import Base.Directions
 
@@ -99,6 +100,10 @@ frameTimes action = case action of
     State EndGripImpulse HLeft -> ("grip_left", singleFrame)
     State EndGripImpulse HRight -> ("grip_right", singleFrame)
     State UsingTerminal _ -> ("terminal", singleFrame)
+    State (NikkiLevelFinished Passed) HLeft -> ("happy_left", singleFrame)
+    State (NikkiLevelFinished Passed) HRight -> ("happy_right", singleFrame)
+    State (NikkiLevelFinished Failed) HLeft -> ("sad_left", singleFrame)
+    State (NikkiLevelFinished Failed) HRight -> ("sad_right", singleFrame)
 
     x -> es "frameTimes" x
   where
@@ -135,5 +140,9 @@ statePixmaps = fromList [
     ("grip_right", 0),
     ("wallslide_left", 0),
     ("wallslide_right", 0),
-    ("dust", 3)
+    ("dust", 3),
+    ("happy_left", 0),
+    ("happy_right", 0),
+    ("sad_left", 0),
+    ("sad_right", 0)
   ]
