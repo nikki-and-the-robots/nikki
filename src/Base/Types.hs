@@ -40,16 +40,17 @@ data Scene object
 -- * getter
 
 -- | returns the object currently controlled by the gamepad
-getControlled :: Scene o -> o
-getControlled s = s |> getControlledIndex |> getMainlayerObject s
+getControlled :: Scene o -> Maybe o
+getControlled s = s |> getControlledIndex |> fmap (getMainlayerObject s)
 
-getControlledIndex :: Scene o -> Index
+-- | returns the controlled index in game mode
+getControlledIndex :: Scene o -> Maybe Index
 getControlledIndex Scene{mode} =
     case mode of
-        NikkiMode{nikki} -> nikki
-        TerminalMode{terminal} -> terminal
-        RobotMode{robot} -> robot
-        LevelFinished{lastControlled} -> lastControlled
+        NikkiMode{nikki} -> Just nikki
+        TerminalMode{terminal} -> Just terminal
+        RobotMode{robot} -> Just robot
+        LevelFinished{} -> Nothing
 
 -- | returns an object from the mainLayer
 getMainlayerObject :: Scene o -> Index -> o
@@ -129,7 +130,7 @@ data Mode
         robot :: Index
       }
     | LevelFinished {
-        lastControlled :: Index,
+        levelEndTime :: Seconds,
         levelResult :: LevelResult
       }
   deriving Show
@@ -146,6 +147,13 @@ isRobotMode _ = False
 isTerminalMode :: Mode -> Bool
 isTerminalMode TerminalMode{} = True
 isTerminalMode _ = False
+
+isLevelFinishedMode :: Mode -> Bool
+isLevelFinishedMode LevelFinished{} = True
+isLevelFinishedMode _ = False
+
+isGameMode :: Mode -> Bool
+isGameMode = not . isLevelFinishedMode
 
 
 data LevelResult = Passed | Failed

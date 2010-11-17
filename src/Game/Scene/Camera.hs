@@ -37,17 +37,22 @@ initialCameraState = CS
 getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_ -> StateT CameraState IO Position
 getCameraPosition ptr scene = do
     CS oldPosition <- get
-    controlledPosition <- liftIO $ getPosition $ getControlledChipmunk $ getControlled scene
-    windowSize <- fmap fromIntegral <$> liftIO (Qt.sizeQPainter ptr)
-    let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
-        -- vertical distance from the controlled object to the camera's old position
-        controlledToCamera = vectorY oldPosition - vectorY controlledPosition
-        y = if controlledToCamera < (- limit) then 
-                vectorY controlledPosition - limit
-            else if controlledToCamera > limit then
-                vectorY controlledPosition + limit
-            else
-                vectorY oldPosition
-        newPosition = Vector (vectorX controlledPosition) y
-    put $ CS newPosition
-    return newPosition
+    case getControlled scene of
+    -- level is finished, not in game mode anymore
+      Nothing -> return oldPosition
+    -- update via the controlled object
+      Just controlledIndex -> do
+        controlledPosition <- liftIO $ getPosition $ getControlledChipmunk controlledIndex
+        windowSize <- fmap fromIntegral <$> liftIO (Qt.sizeQPainter ptr)
+        let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
+            -- vertical distance from the controlled object to the camera's old position
+            controlledToCamera = vectorY oldPosition - vectorY controlledPosition
+            y = if controlledToCamera < (- limit) then 
+                    vectorY controlledPosition - limit
+                else if controlledToCamera > limit then
+                    vectorY controlledPosition + limit
+                else
+                    vectorY oldPosition
+            newPosition = Vector (vectorX controlledPosition) y
+        put $ CS newPosition
+        return newPosition

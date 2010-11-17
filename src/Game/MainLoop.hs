@@ -91,13 +91,22 @@ gameLoop app sceneMVar = do
 
         swapSceneMVar =<< liftIO getDebugging
 
+        let startPressed = Press StartButton `elem` pressed controlData
         case mode sc' of
-            LevelFinished _ x -> return FinalState
-            _ -> if StartButton `member` held controlData then
+            LevelFinished t _ ->
+                if startPressed then
+                    return FinalState
+                else if spaceTime sc' - t > levelEndDuration then
+                    return FinalState
+                else continue
+            _ -> if startPressed then do
+                liftIO $ putStrLn "NYI: game menu"
                 return FinalState -- TODO: should be a menu
-              else do
-                liftIO $ waitTick timer
-                loop timer
+              else continue
+      where
+        continue = do
+            liftIO $ waitTick timer
+            loop timer
 
     initializeSceneMVar :: AppMonad ()
     initializeSceneMVar = do

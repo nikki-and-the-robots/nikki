@@ -75,10 +75,11 @@ transition (ControlData pushed _) scene =
 modifyTransitioned :: Scene Object_ -> IO (Scene Object_)
 modifyTransitioned scene = do
     resetHeldKeys
-    return $ modifyMainlayerObjectByIndex (startControl now) controlledIndex scene
-  where
-    now = spaceTime scene
-    controlledIndex = getControlledIndex scene
+    return $ case getControlledIndex scene of
+      Just controlledIndex ->
+        let now = spaceTime scene
+        in modifyMainlayerObjectByIndex (startControl now) controlledIndex scene
+      Nothing -> scene
 
 
 -- | converts the Scene to TerminalMode, if appropriate
@@ -138,18 +139,25 @@ robotToNikki scene@Scene{mode = RobotMode{nikki, terminal}} =
 robotToNikki _ = Nothing
 
 gameOver :: Scene Object_ -> Maybe (Scene Object_)
-gameOver scene | nikkiTouchesLaser $ contacts scene =
-    Just $ modifyMode (const $ LevelFinished (getControlledIndex scene) Failed) scene
+gameOver scene | isGameOver =
+    Just $ modifyMode (const $ LevelFinished now Failed) scene
+  where
+    now = spaceTime scene
+    isGameOver =
+        isGameMode (mode scene)
+        && nikkiTouchesLaser (contacts scene)
 gameOver _ = Nothing
 
 levelPassed :: Scene Object_ -> Maybe (Scene Object_)
 levelPassed scene =
-    let allSwitches :: [Switch] = catMaybes $ map unwrapSwitch $ toList $ content $ mainLayer $ objects scene
-        allTriggered = all triggered allSwitches
-    in if allTriggered then
-        Just $ modifyMode (const $ LevelFinished (getControlledIndex scene) Passed) scene
+    if allTriggered && isGameMode (mode scene) then
+        Just $ modifyMode (const $ LevelFinished now Passed) scene
       else
         Nothing
+  where
+    allSwitches :: [Switch] = catMaybes $ map unwrapSwitch $ toList $ content $ mainLayer $ objects scene
+    allTriggered = all triggered allSwitches
+    now = spaceTime scene
 
 
 -- * chipmunk stepping
@@ -187,7 +195,7 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     -- each object has to know, if it's controlled
     updateMainLayer layer@Layer{content = ix} = do
         ix' <- fmapMWithIndex (\ i o ->
-                update o DummySort i now contacts (i == controlled, cd)) ix
+                update o DummySort i now contacts (Just i == controlled, cd)) ix
         let changes = foldr (.) id $ fmap fst ix'
             ix'' = fmap snd ix'
         return $ (changes, layer{content = ix''})

@@ -21,6 +21,10 @@ data AppEvent
     | Release AppButton
   deriving (Eq, Ord, Show)
 
+isPress :: AppEvent -> Bool
+isPress (Press _) = True
+isPress _ = False
+
 data AppButton
     = LeftButton
     | RightButton
