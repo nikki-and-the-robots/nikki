@@ -66,6 +66,7 @@ transition (ControlData pushed _) scene =
         nikkiToTerminal scene pushed,
         terminalExit scene,
         robotToTerminal scene pushed,
+        robotToNikki scene,
         gameOver scene,
         levelPassed scene
       ]
@@ -90,14 +91,13 @@ nikkiToTerminal scene@Scene{mode = (NikkiMode nikki)} pushed
     beforeTerminal = nikkiTouchesTerminal $ contacts scene
 
     mode' = TerminalMode nikki terminal
-    terminal = whichTerminalCollides scene
+    (terminal : _) = whichTerminalCollides scene
 nikkiToTerminal _ _ = Nothing
 
 
-whichTerminalCollides :: Scene Object_ -> Index
+whichTerminalCollides :: Scene Object_ -> [Index]
 whichTerminalCollides Scene{objects, contacts} =
-    case findIndices p allTerminals of
-        (a : _) -> a
+    findIndices p allTerminals
   where
     allTerminals :: Indexable (Maybe Terminal)
     allTerminals = fmap unwrapTerminal $ content $ mainLayer objects
@@ -128,6 +128,14 @@ robotToTerminal scene@Scene{mode = RobotMode{nikki, terminal}} pushed
   where
     bPress = Press BButton `elem` pushed
 robotToTerminal _ _ = Nothing
+
+-- | if nikki gets moved away from the terminal during robot mode...
+robotToNikki :: Scene Object_ -> Maybe (Scene Object_)
+robotToNikki scene@Scene{mode = RobotMode{nikki, terminal}} =
+    if terminal `elem` whichTerminalCollides scene
+    then Nothing
+    else Just $ scene{mode = NikkiMode nikki}
+robotToNikki _ = Nothing
 
 gameOver :: Scene Object_ -> Maybe (Scene Object_)
 gameOver scene | nikkiTouchesLaser $ contacts scene =
