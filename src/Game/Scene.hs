@@ -200,7 +200,7 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     -- each object has to know, if it's controlled
     updateMainLayer layer@Layer{content = ix} = do
         ix' <- fmapMWithIndex (\ i o ->
-                update o DummySort i mode now contacts (Just i == controlled, cd)) ix
+                update DummySort mode now contacts (Just i == controlled, cd) i o) ix
         let changes = foldr (.) id $ fmap fst ix'
             ix'' = fmap snd ix'
         return $ (changes, layer{content = ix''})
@@ -208,7 +208,7 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     -- update function for updates outside the mainLayer
     -- NOTE: SceneChanges currently only affect the main layer
     updateMultiLayerObjects :: Index -> Object_ -> IO Object_
-    updateMultiLayerObjects i o = update o DummySort i mode now contacts (False, cd) >>= fromPure snd
+    updateMultiLayerObjects i o = update DummySort mode now contacts (False, cd) i o >>= fromPure snd
 
 
 -- * rendering

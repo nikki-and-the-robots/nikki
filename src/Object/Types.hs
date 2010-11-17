@@ -75,8 +75,9 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     startControl :: Seconds -> object -> object
     startControl now = id
 
-    update :: object -> sort -> Index -> Mode -> Seconds -> Contacts -> (Bool, ControlData) -> IO (Scene Object_ -> Scene Object_, object)
-    update o sort i mode now contacts cd = do
+    update :: sort -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
+        -> Index -> object -> IO (Scene Object_ -> Scene Object_, object)
+    update sort mode now contacts cd i o = do
         o' <- updateNoSceneChange sort mode now contacts cd o
         return (id, o')
 
@@ -132,8 +133,8 @@ instance Sort Sort_ Object_ where
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk (Object_ _ o) = getControlledChipmunk o
     startControl now (Object_ sort o) = Object_ sort $ startControl now o
-    update (Object_ sort o) DummySort i mode now contacts cd = do
-        (f, o') <- update o sort i mode now contacts cd
+    update DummySort mode now contacts cd i (Object_ sort o) = do
+        (f, o') <- update sort mode now contacts cd i o
         return (f, Object_ sort o')
     updateNoSceneChange DummySort mode now contacts cd (Object_ sort o) =
         Object_ sort <$> updateNoSceneChange sort mode now contacts cd o
