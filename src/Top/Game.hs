@@ -53,4 +53,4 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
 
         (scene, debugging) <- readMVar sceneMVar
         runStateTFromIORef cameraStateRef $
-            Game.Scene.renderScene ptr scene debugging
+            Game.Scene.renderScene app ptr scene debugging

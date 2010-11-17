@@ -10,9 +10,11 @@ module Game.Scene (
 import Prelude hiding (foldr)
 
 import Data.Indexable (Indexable, Index, findIndices, fmapMWithIndex, toList)
+import Data.Map ((!))
 import qualified Data.Set as Set
 import Data.Foldable (foldr)
 import Data.Maybe
+import Data.Abelian
 
 import Control.Monad.State hiding ((>=>), (<=<))
 
@@ -28,6 +30,9 @@ import Base.Configuration as Configuration
 import Base.Constants
 import Base.Types
 import Base.Debugging
+import Base.Pixmap
+import Base.Application
+import Base.Application.Pixmaps
 
 import Object
 
@@ -214,8 +219,9 @@ immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Object.immutableCopy))
 
 
 -- | well, renders the scene to the screen (to the max :)
-renderScene :: Ptr QPainter -> Scene Object_ -> DebuggingCommand -> StateT CameraState IO ()
-renderScene ptr scene@Scene{spaceTime = now} debugging = do
+renderScene :: Application -> Ptr QPainter
+    -> Scene Object_ -> DebuggingCommand -> StateT CameraState IO ()
+renderScene app ptr scene@Scene{spaceTime = now, mode} debugging = do
     center <- getCameraPosition ptr scene
     liftIO $ do
         size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
@@ -231,6 +237,7 @@ renderScene ptr scene@Scene{spaceTime = now} debugging = do
             fmapM_ (renderLayer ptr size offset now) $ foregrounds os
 
         renderTerminalOSD ptr now scene
+        renderLevelFinishedOSD ptr app mode
 
 
         -- debugging
@@ -249,6 +256,18 @@ renderLayer ptr size offset now layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
     fmapM_ (\ o -> render_ o ptr modifiedOffset now) (content layer)
 
+-- | renders the big osd images ("SUCCESS" or "FAILURE") at the end of levels
+renderLevelFinishedOSD :: Ptr QPainter -> Application -> Mode -> IO ()
+renderLevelFinishedOSD ptr app (LevelFinished _ result) = do
+    resetMatrix ptr
+    windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+    let pixmap = finished (applicationPixmaps app) ! result
+        osdSize = pixmapSize pixmap -~ Size (fromUber 1) (fromUber 1)
+                                    -- because they have a shadow of one uberpixel
+        position = fmap (fromIntegral . round . (/ 2)) $ sizeToPosition (windowSize -~ osdSize)
+    translate ptr position
+    renderPixmapSimple ptr pixmap
+renderLevelFinishedOSD ptr _ _ = return ()
 
 
 -- * debugging

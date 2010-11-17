@@ -38,6 +38,7 @@ import Base.GlobalCatcher
 import Base.Types
 import Base.Configuration
 import Base.Application
+import Base.Application.Pixmaps
 import Base.Constants
 
 import Object
@@ -68,10 +69,10 @@ main = globalCatcher $ do
     keyPoller <- newKeyPoller window
 
     -- sort loading (pixmaps and sounds)
-    code <- withAllSorts $ \ sorts -> do
+    code <- withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
 
         -- start state logick
-        let app = Application qApp window keyPoller applicationStates sorts
+        let app = Application qApp window keyPoller applicationStates appPixmaps sorts
         -- there are two main threads:
         -- this is the logick [sick!] thread
         forkOS $ globalCatcher $ do

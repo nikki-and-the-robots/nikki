@@ -17,6 +17,8 @@ import Utils
 import Base.GlobalCatcher
 import Base.Events
 
+import Base.Application.Pixmaps
+
 
 -- from Top.Application
 
@@ -26,6 +28,7 @@ data Application_ sort
         window :: Ptr AppWidget,
         keyPoller :: KeyPoller,
         mainMenu_ :: Application_ sort -> AppState,
+        applicationPixmaps :: ApplicationPixmaps,
         allSorts :: SelectTree sort
       }
 

@@ -157,7 +157,7 @@ isGameMode = not . isLevelFinishedMode
 
 
 data LevelResult = Passed | Failed
-  deriving Show
+  deriving (Eq, Ord, Show)
 
 
 -- * EditorScene types
