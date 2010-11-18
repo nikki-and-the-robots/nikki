@@ -141,6 +141,10 @@ extern "C" AppWidget* newAppWidget(int swapInterval) {
     return new AppWidget(format);
 };
 
+extern "C" void setWindowIcon(AppWidget* self, QIcon* icon) {
+    self->setWindowIcon(*icon);
+};
+
 extern "C" void setRenderingLooped(AppWidget* self, bool looped) {
     self->setRenderingLooped(looped);
 };
@@ -297,6 +301,17 @@ extern "C" int widthQPixmap(QPixmap* ptr) {
 extern "C" int heightQPixmap(QPixmap* ptr) {
     return ptr->height();
 };
+
+
+// * QIcon
+extern "C" QIcon* newQIcon() {
+    return new QIcon();
+};
+
+extern "C" void addFileQIcon(QIcon* ptr, char* path) {
+    ptr->addFile(QString(path));
+};
+
 
 // * QTime
 extern "C" QTime* newQTime() {

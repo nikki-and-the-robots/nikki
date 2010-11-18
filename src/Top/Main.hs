@@ -66,6 +66,7 @@ main = globalCatcher $ do
     -- qt initialisation
     qApp <- newQApplication
     window <- newAppWidget 0
+    loadApplicationIcon window
     keyPoller <- newKeyPoller window
 
     -- sort loading (pixmaps and sounds)
@@ -88,6 +89,10 @@ main = globalCatcher $ do
     case code of
         0 -> exitWith ExitSuccess
         x -> exitWith (ExitFailure x)
+
+loadApplicationIcon qApp = do
+    iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$> getDataFiles ".png" pngDir
+    setApplicationIcon qApp iconPaths
 
 
 -- * states

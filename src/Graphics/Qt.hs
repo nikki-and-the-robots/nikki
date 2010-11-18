@@ -59,6 +59,13 @@ qtRendering app window title windowSize renderCmd catcher = do
         0 -> ExitSuccess
         c -> ExitFailure c
 
+-- | sets a list of files that can be used as application icons (for the window manager)
+setApplicationIcon :: Ptr AppWidget -> [FilePath] -> IO ()
+setApplicationIcon window iconPaths = do
+    qIcon <- newQIcon
+    mapM_ (addFileQIcon qIcon) iconPaths
+    setWindowIcon window qIcon
+
 
 data WindowSize = Windowed (Size QtInt) | FullScreen
 

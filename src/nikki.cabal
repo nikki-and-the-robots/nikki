@@ -18,6 +18,7 @@ data-dir:
     ../data/
 
 data-files:
+    png/*.png
     png/nikki/*.png
     png/battery/*.png
     png/terminals/*.png

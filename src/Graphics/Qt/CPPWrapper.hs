@@ -69,6 +69,8 @@ data AppWidget
 
 foreign import ccall newAppWidget :: Int -> IO (Ptr AppWidget)
 
+foreign import ccall setWindowIcon :: Ptr AppWidget -> Ptr QIcon -> IO ()
+
 foreign import ccall setRenderingLooped :: Ptr AppWidget -> Bool -> IO ()
 
 foreign import ccall updateAppWidget :: Ptr AppWidget -> IO ()
@@ -255,6 +257,18 @@ sizeQPixmap ptr = do
     w <- widthQPixmap ptr
     h <- heightQPixmap ptr
     return $ Size w h
+
+
+-- * QIcon
+
+data QIcon
+
+foreign import ccall newQIcon :: IO (Ptr QIcon)
+
+addFileQIcon :: Ptr QIcon -> FilePath -> IO ()
+addFileQIcon ptr s = withCString s (cppAddFileQIcon ptr)
+
+foreign import ccall "addFileQIcon" cppAddFileQIcon :: Ptr QIcon -> CString -> IO ()
 
 
 -- * QKeyEvent
