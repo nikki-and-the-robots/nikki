@@ -18,26 +18,32 @@ data-dir:
     ../data/
 
 data-files:
-    png/*.png
-    png/nikki/*.png
-    png/battery/*.png
-    png/terminals/*.png
-    png/multilayers/*.png
-    png/backgrounds/blue/*.png
-    png/objects/*.png
-    png/robots/jetpack/*.png
-    png/tiles/*.png
-    png/robots/platform/*.png
-
-    sounds/nikki/jump.wav
-
-    template_levels/*.nl
-
-    manual/storyModeIntroduction
-
     -- not needed at runtime, but in court ;)
     LICENSE
     README
+
+    -- manuals
+    manual/storyModeIntroduction
+
+    -- sounds
+    sounds/nikki/jump.wav
+
+    -- levels
+    template_levels/*.nl
+
+    -- images
+    png/*.png
+    png/nikki/*.png
+    png/tiles/*.png
+    png/objects/*.png
+    png/terminals/*.png
+    png/terminals/osd/*.png
+    png/battery/*.png
+    png/robots/jetpack/*.png
+    png/robots/platform/*.png
+    png/multilayers/*.png
+    png/backgrounds/blue/*.png
+    png/osd/*.png
 
 
 Executable            nikki
