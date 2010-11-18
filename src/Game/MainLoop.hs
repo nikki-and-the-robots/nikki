@@ -37,7 +37,7 @@ import Game.Scene
 -- prints the version number of qt and exits
 debugQtVersion :: IO ()
 debugQtVersion = do
-    v <- qVersion
+    v <- qtVersion
     putStrLn ("Qt-Version: " ++ v)
 
 -- prints the number of HECs (see haskell concurrency)

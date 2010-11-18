@@ -21,10 +21,10 @@ import Graphics.Qt.Events
 
 -- ** Globals
 
-qVersion :: IO String
-qVersion = cppQVersion >>= peekCString
+qtVersion :: IO String
+qtVersion = cppQtVersion >>= peekCString
 
-foreign import ccall cppQVersion :: IO CString
+foreign import ccall "qtVersion" cppQtVersion :: IO CString
 
 
 -- ** Objects
@@ -59,7 +59,7 @@ foreign import ccall processEventsQApplication :: Ptr QApplication -> IO ()
 setApplicationName :: Ptr QApplication -> String -> IO ()
 setApplicationName ptr s = withCString s (cppSetApplicationName ptr)
 
-foreign import ccall cppSetApplicationName :: Ptr QApplication -> CString -> IO ()
+foreign import ccall "setApplicationName" cppSetApplicationName :: Ptr QApplication -> CString -> IO ()
 
 foreign import ccall desktopWidth :: Ptr QApplication -> Ptr AppWidget -> IO Int
 
@@ -171,14 +171,14 @@ foreign import ccall rotate :: Ptr QPainter -> QtReal -> IO ()
 translate :: Ptr QPainter -> Position QtReal -> IO ()
 translate ptr (Position x y) =
     cppTranslate ptr x y
-foreign import ccall cppTranslate :: Ptr QPainter -> QtReal -> QtReal -> IO ()
+foreign import ccall "translate" cppTranslate :: Ptr QPainter -> QtReal -> QtReal -> IO ()
 
 foreign import ccall scale :: Ptr QPainter -> QtReal -> QtReal -> IO ()
 
 drawPixmap :: Ptr QPainter -> Position QtInt -> Ptr QPixmap -> IO ()
 drawPixmap ptr (Position x y) pix = do
     cppDrawPixmap ptr x y pix
-foreign import ccall cppDrawPixmap :: Ptr QPainter -> QtInt -> QtInt -> Ptr QPixmap -> IO ()
+foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtInt -> QtInt -> Ptr QPixmap -> IO ()
 
 -- | sets the pen color and thickness
 setPenColor :: Ptr QPainter -> Color -> QtInt -> IO ()
@@ -190,12 +190,12 @@ foreign import ccall setFontSize :: Ptr QPainter -> QtInt -> IO ()
 
 drawRect :: Ptr QPainter -> Position QtReal -> Size QtReal -> IO ()
 drawRect ptr (Position x y) (Size w h) = cppDrawRect ptr x y w h
-foreign import ccall cppDrawRect :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()
+foreign import ccall "drawRect" cppDrawRect :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()
 
 drawLine :: Ptr QPainter -> Position QtReal -> Position QtReal -> IO ()
 drawLine ptr (Position a b) (Position x y) =
     cppDrawLine ptr a b x y
-foreign import ccall cppDrawLine :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()
+foreign import ccall "drawLine" cppDrawLine :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()
 
 -- | draws a circle using drawEllipse
 drawCircle :: Ptr QPainter -> Position QtReal -> QtReal -> IO ()
@@ -209,13 +209,13 @@ drawEllipse :: Ptr QPainter -> Position QtReal -> Size QtReal -> IO ()
 drawEllipse ptr (Position x y) (Size w h) =
     cppDrawEllipse ptr x y w h
 
-foreign import ccall cppDrawEllipse :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()
+foreign import ccall "drawEllipse" cppDrawEllipse :: Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> IO ()
 
 drawText :: Ptr QPainter -> Position QtReal -> Bool -> String -> IO ()
 drawText ptr (Position x y) highlighted s =
     withCString s $
         cppDrawText ptr x y highlighted
-foreign import ccall cppDrawText :: Ptr QPainter -> QtReal -> QtReal -> Bool -> CString -> IO ()
+foreign import ccall "drawText" cppDrawText :: Ptr QPainter -> QtReal -> QtReal -> Bool -> CString -> IO ()
 
 sizeQPainter :: Ptr QPainter -> IO (Size QtInt)
 sizeQPainter ptr = do

@@ -75,7 +75,7 @@ void AppWidget::setRenderingLoopedSlot(bool looped) {
 
 // * globals
 
-extern "C" const char* cppQVersion() {
+extern "C" const char* qtVersion() {
     return qVersion();
 };
 
@@ -124,7 +124,7 @@ extern "C" void processEventsQApplication() {
     QApplication::flush();
 };
 
-extern "C" void cppSetApplicationName(QApplication* app, char* name) {
+extern "C" void setApplicationName(QApplication* app, char* name) {
     app->setApplicationName(name);
 };
 
@@ -211,7 +211,7 @@ extern "C" void rotate(QPainter* painter, qreal angle) {
     painter->rotate(angle);
 };
 
-extern "C" void cppTranslate(QPainter* painter, qreal x, qreal y) {
+extern "C" void translate(QPainter* painter, qreal x, qreal y) {
     painter->translate(x, y);
 };
 
@@ -219,7 +219,7 @@ extern "C" void scale(QPainter* painter, qreal x, qreal y) {
     painter->scale(x, y);
 };
 
-extern "C" void cppDrawPixmap(QPainter* painter, int x, int y, QPixmap* pixmap) {
+extern "C" void drawPixmap(QPainter* painter, int x, int y, QPixmap* pixmap) {
     painter->drawPixmap(x, y, *pixmap);
 };
 
@@ -235,22 +235,22 @@ extern "C" void setFontSize(QPainter* ptr, int size) {
     ptr->setFont(font);
 };
 
-extern "C" void cppDrawRect(QPainter* painter, qreal x, qreal y, qreal w, qreal h) {
+extern "C" void drawRect(QPainter* painter, qreal x, qreal y, qreal w, qreal h) {
     painter->drawRect(x, y, w, h);
 };
 
-extern "C" void cppDrawLine(QPainter* painter, qreal x1, qreal y1, qreal x2, qreal y2) {
+extern "C" void drawLine(QPainter* painter, qreal x1, qreal y1, qreal x2, qreal y2) {
     QPointF p1 = QPointF(x1, y1);
     QPointF p2 = QPointF(x2, y2);
     painter->drawLine(p1, p2);
 };
 
-extern "C" void cppDrawEllipse(QPainter* painter, qreal x, qreal y, qreal w, qreal h) {
+extern "C" void drawEllipse(QPainter* painter, qreal x, qreal y, qreal w, qreal h) {
     QRectF rect = QRectF(x, y, w, h);
     painter->drawEllipse(rect);
 };
 
-extern "C" void cppDrawText(QPainter* painter, qreal x, qreal y, bool highlighted, char* text) {
+extern "C" void drawText(QPainter* painter, qreal x, qreal y, bool highlighted, char* text) {
     painter->setBackgroundMode(Qt::OpaqueMode);
 
     painter->setBackground(QBrush(QColor(0, 0, 0, 255)));
