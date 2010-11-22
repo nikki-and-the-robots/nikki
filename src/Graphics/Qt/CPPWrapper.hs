@@ -73,7 +73,7 @@ foreign import ccall setWindowIcon :: Ptr AppWidget -> Ptr QIcon -> IO ()
 
 foreign import ccall setRenderingLooped :: Ptr AppWidget -> Bool -> IO ()
 
-foreign import ccall setAutoRepeat :: Ptr AppWidget -> Bool -> IO ()
+foreign import ccall setArrowAutoRepeat :: Ptr AppWidget -> Bool -> IO ()
 
 foreign import ccall updateAppWidget :: Ptr AppWidget -> IO ()
 

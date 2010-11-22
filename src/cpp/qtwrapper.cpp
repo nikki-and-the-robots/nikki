@@ -28,7 +28,7 @@ AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
 // AppWidget::AppWidget(const QGLFormat& format) : QWidget() {
     drawingCallback = emptyDrawingCallback;
     keyCallback = NULL;
-    autoRepeat = true;
+    arrowAutoRepeat = true;
 
     this->setAutoFillBackground(false);
     this->setCursor(Qt::BlankCursor);
@@ -47,8 +47,13 @@ void AppWidget::paintEvent(QPaintEvent* event) {
     this->drawingCallback(&painter);
 };
 
+bool isArrowKey(QKeyEvent* e) {
+    int k = e->key();
+    return (k == Qt::Key_Left || k == Qt::Key_Right || k == Qt::Key_Up || k == Qt::Key_Down);
+};
+
 void AppWidget::keyPressEvent(QKeyEvent* e) {
-    if (((this->autoRepeat) || (! e->isAutoRepeat())) && (keyCallback != NULL)) {
+    if (((this->arrowAutoRepeat && isArrowKey(e)) || (! e->isAutoRepeat())) && (keyCallback != NULL)) {
         this->keyCallback(true, e);
     }
 };
@@ -151,8 +156,8 @@ extern "C" void setRenderingLooped(AppWidget* self, bool looped) {
 };
 
 // sets if auto repeat key events should be processed
-extern "C" void setAutoRepeat(AppWidget* self, bool status) {
-    self->autoRepeat = status;
+extern "C" void setArrowAutoRepeat(AppWidget* self, bool status) {
+    self->arrowAutoRepeat = status;
 };
 
 extern "C" void updateAppWidget(AppWidget* self) {

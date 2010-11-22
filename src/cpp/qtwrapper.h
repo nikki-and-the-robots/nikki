@@ -23,7 +23,7 @@ public:
 
     keyCallbackFunction* keyCallback;
 
-    bool autoRepeat;
+    bool arrowAutoRepeat;
 
     void paintEvent(QPaintEvent* event);
 

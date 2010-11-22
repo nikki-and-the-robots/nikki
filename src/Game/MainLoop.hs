@@ -76,7 +76,7 @@ gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> AppMonad Ap
 gameLoop app sceneMVar = do
     initializeSceneMVar
     timer <- liftIO $ newTickTimer (stepQuantum / timeFactor)
-    withAutoRepeat app $
+    withArrowAutoRepeat app $
         loop timer
   where
     loop timer = do
@@ -125,9 +125,9 @@ gameLoop app sceneMVar = do
             swapMVar sceneMVar (immutableCopyOfScene, debugging)
             return ()
 
-withAutoRepeat :: MonadIO m => Application -> m a -> m a
-withAutoRepeat app cmd = do
-    liftIO $ setAutoRepeat (window app) False
+withArrowAutoRepeat :: MonadIO m => Application -> m a -> m a
+withArrowAutoRepeat app cmd = do
+    liftIO $ setArrowAutoRepeat (window app) False
     a <- cmd
-    liftIO $ setAutoRepeat (window app) True
+    liftIO $ setArrowAutoRepeat (window app) True
     return a
