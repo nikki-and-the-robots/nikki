@@ -61,7 +61,10 @@ updateState mode now contacts (True, controlData) nikki = do
                             if standsOnFeet then
                             -- nikki stands on feet (the angle is not too steep)
                                 if nothingHeld then
-                                    State Wait newDirection
+                                    if touchdown then
+                                        State Touchdown newDirection
+                                    else
+                                        State Wait newDirection
                                 else
                                     State Walk newDirection
                             else
@@ -141,6 +144,19 @@ updateState mode now contacts (True, controlData) nikki = do
     hasCombinedStandingFeetNormal = case mContactAngle of
         Nothing -> False
         Just (_, contactAngle) -> isStandingFeetAngle contactAngle
+
+    -- if nikki should be in touchdown state (as alternative to Wait)
+    touchdown :: Bool
+    touchdown =
+        isAirborneAction oldAction ||
+        (isTouchdownAction oldAction &&
+         stateTime < touchdownDuration)
+
+    -- time nikki was already in the old state
+    stateTime = now - startTime nikki
+
+    -- Action of nikkis last state
+    oldAction = action $ state nikki
 
     -- button events
     aPushed = Press AButton `elem` pressed controlData

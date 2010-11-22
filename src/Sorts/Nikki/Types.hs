@@ -17,6 +17,8 @@ import Sound.SFML
 
 import Physics.Chipmunk hiding (position, Position)
 
+import Utils
+
 import Base.Types
 import Base.Constants
 import Base.Directions
@@ -90,6 +92,13 @@ toActionNumber NikkiLevelFinished{} = 10
 
 isSlideToGrip :: State -> Bool
 isSlideToGrip state = toActionNumber (action state) == 6
+
+isAirborneAction :: Action -> Bool
+isAirborneAction = (3 ==) . toActionNumber
+
+isTouchdownAction :: Action -> Bool
+isTouchdownAction = (9 ==) . toActionNumber
+
 
 getJumpInformation :: Action -> Maybe JumpInformation
 getJumpInformation (Airborne x) = Just x

@@ -81,10 +81,14 @@ gripImpulse = 200
 
 -- * animation times
 
+touchdownDuration = 0.1
+
 frameTimes :: State -> (String, [(Int, Seconds)])
 frameTimes action = case action of
     State Wait HLeft -> ("wait_left", wait)
     State Wait HRight -> ("wait_right", wait)
+    State Touchdown HLeft -> ("touchdown_left", wait)
+    State Touchdown HRight -> ("touchdown_right", wait)
     State Walk HLeft -> ("walk_left", walk)
     State Walk HRight -> ("walk_right", walk)
     State JumpImpulse{} HLeft -> ("jump_left", airborne)
@@ -131,6 +135,8 @@ statePixmaps :: Map String Int
 statePixmaps = fromList [
     ("wait_left", 2),
     ("wait_right", 2),
+    ("touchdown_left", 0),
+    ("touchdown_right", 0),
     ("walk_left", 3),
     ("walk_right", 3),
     ("jump_left", 1),

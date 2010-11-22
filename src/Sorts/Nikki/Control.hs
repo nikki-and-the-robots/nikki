@@ -46,6 +46,10 @@ control now contacts (True, cd) nsort nikki =
             setNikkiSurfaceVelocity nikki zero
             resetForces $ body $ chipmunk nikki
 
+        State Touchdown direction -> do
+            setNikkiSurfaceVelocity nikki zero
+            resetForces $ body $ chipmunk nikki
+
         State Walk direction -> do
             setNikkiSurfaceVelocity nikki (walking direction)
             resetForces $ body $ chipmunk nikki
