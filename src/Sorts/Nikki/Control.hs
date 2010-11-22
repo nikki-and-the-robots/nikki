@@ -92,15 +92,12 @@ control now contacts (True, cd) nsort nikki =
             modifyApplyOnlyForce (chipmunk nikki) $
                 getJumpingForces now ji
 
-        State (WallSlide ji contactNormals _) direction -> do
+        State (WallSlide ji contactAngles _) direction -> do
             setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
             modifyApplyOnlyForce (chipmunk nikki) $
                 getJumpingForces now ji
-            when ((isNothing $ jumpButtonDirection ji) && isVerticalSlide) $
-                -- when wall is exactly vertical, horizontal velocity is set to 0.
+            when (isPushedAwayByLShape contactAngles (jumpButtonDirection ji)) $ do
                 modifyVelocity (chipmunk nikki) (\ (Vector _ y) -> Vector 0 y)
-          where
-            isVerticalSlide = any (abs >>> (== (pi / 2))) contactNormals
 
         State (SlideToGrip ji) direction -> do
             setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
@@ -120,3 +117,22 @@ control now contacts (True, cd) nsort nikki =
             mkGripImpulse HRight = - gripImpulse
 
         x -> es "controlBody" x
+
+
+-- | returns if nikki's horizontal velocity should be set to 0
+-- to prevent nikki from being pushed away from L-shaped tiles.
+-- (This is a hack, but seems to be necessary)
+isPushedAwayByLShape :: [Angle] -> Maybe HorizontalDirection -> Bool
+isPushedAwayByLShape contactAngles buttonDirection =
+    isNothing buttonDirection &&
+    (left || right)
+  where
+    left = touchesWedge (pi / 2)
+    right = touchesWedge (- pi / 2)
+    touchesWedge angle =
+        any (\ a -> a /= angle && abs (a - angle) < angleLimit) contactAngles &&
+        any (== angle) contactAngles
+
+-- maximal angle the wedges should have
+-- (little more than atan (1 / 32), where 32 would be the smallest tile size)
+angleLimit = deg2rad 1.8
