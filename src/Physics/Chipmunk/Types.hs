@@ -241,6 +241,23 @@ modifyLen f v = scale (normalize v) (f (len v))
 foldAngle :: Double -> Double
 foldAngle = foldToRange (- pi, pi)
 
+-- | a chipmunk angles of 0 points east. We need to use angles that point north.
+toUpAngle :: Vector -> Angle
+toUpAngle v = toAngle v + (pi / 2)
+
+fromUpAngle :: Angle -> Vector
+fromUpAngle = (subtract (pi / 2)) >>> fromAngle
+
+-- | returns the component of the Vector, that is parallel to the given Angle.
+component :: Angle -> Vector -> Vector
+component alpha b =
+    scale (fromUpAngle alpha) l_c
+  where
+    delta = alpha - beta
+    beta = toUpAngle b
+    l_b = len b
+    l_c = cos delta * l_b
+
 rotateVector :: Angle -> Vector -> Vector
 rotateVector angle (Vector a b) =
     Vector a' b'

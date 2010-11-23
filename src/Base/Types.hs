@@ -110,7 +110,7 @@ instance PP MyCollisionType where
 
 data NikkiCollision = NikkiCollision {
     nikkiCollisionShape :: Shape,
-    nikkiCollisionNormal :: Vector,
+    nikkiCollisionAngle :: Angle,
     nikkiCollisionType :: MyCollisionType
   }
     deriving (Show)

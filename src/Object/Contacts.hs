@@ -43,7 +43,7 @@ instance Initial Contacts where
 
 addNikkiContacts :: Shape -> MyCollisionType -> Vector -> Contacts -> Contacts
 addNikkiContacts s ct v c =
-    c{nikkiCollisions = (NikkiCollision s v ct : nikkiCollisions c)}
+    c{nikkiCollisions = (NikkiCollision s (foldAngle $ toUpAngle v) ct : nikkiCollisions c)}
 
 setNikkiTouchesLaser :: Contacts -> Contacts
 setNikkiTouchesLaser c = c{nikkiTouchesLaser = True}

@@ -112,7 +112,7 @@ updateState mode now contacts (True, controlData) nikki = do
     isHeadCollision _ = False
     -- if a given head collision should be treated as nikki grabbing something
     isGripCollision c =
-        abs (foldAngle $ toUpAngle $ nikkiCollisionNormal c) < gripAngleLimit
+        abs (nikkiCollisionAngle c) < gripAngleLimit
 
     -- if nikki should be considered standing on feet.
     standsOnFeet = hasStandingFeetCollisions ||
@@ -128,10 +128,7 @@ updateState mode now contacts (True, controlData) nikki = do
 
     -- if one of the leg collisions has the right angle to lead to nikki standing on feet
     hasStandingFeetCollisions =
-        any (nikkiCollisionNormal >>> isStandingFeetNormal) legsCollisions
-    -- if a given collision normal should lead to nikki standing on feet
-    isStandingFeetNormal normal =
-        isStandingFeetAngle $ foldAngle $ toUpAngle normal
+        any (nikkiCollisionAngle >>> isStandingFeetAngle) legsCollisions
     -- if a given collision angle should lead to nikki standing on feet
     isStandingFeetAngle angle =
         abs angle < (deg2rad 90 - footToHeadAngle + deg2rad 1)
@@ -227,7 +224,8 @@ angleDirection angle =
 getContactNormals :: Contacts -> [(Shape, Angle)]
 getContactNormals =
     nikkiCollisions >>>
-    map (\ nc -> (nikkiCollisionShape nc, foldAngle (toUpAngle (nikkiCollisionNormal nc))))
+    filter (\ x -> nikkiCollisionType x /= NikkiGhostCT) >>>
+    map (\ nc -> (nikkiCollisionShape nc, nikkiCollisionAngle nc))
 
 -- | calculates the angle a possible jump is to be performed in
 jumpAngle :: [(Shape, Angle)] -> Maybe (Shape, Angle)

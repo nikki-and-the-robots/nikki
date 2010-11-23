@@ -29,7 +29,6 @@ module Physics.Chipmunk (
     modifyAngle,
     modifyAngVel,
     normalizeAngle,
-    foldAngle,
 
     mkStandardPolys,
 
@@ -45,6 +44,11 @@ module Physics.Chipmunk (
     mkRectFromPositions,
     module Physics.Chipmunk.ContactRef,
     module Physics.Chipmunk.StickyEdges,
+
+    foldAngle,
+    toUpAngle,
+    fromUpAngle,
+    component,
 
     -- re-exports from Physics.Hipmunk
     infinity,
