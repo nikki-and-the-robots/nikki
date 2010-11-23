@@ -76,7 +76,6 @@ data Action
     | SlideToGrip JumpInformation
     | Grip -- when Nikki uses the paws to hold on to something
     | EndGripImpulse -- state for one frame (when grip state is ended)
-    | Touchdown
     | NikkiLevelFinished LevelResult
   deriving (Show)
 
@@ -89,8 +88,7 @@ toActionNumber UsingTerminal        = 5
 toActionNumber SlideToGrip{}        = 6
 toActionNumber Grip                 = 7
 toActionNumber EndGripImpulse       = 8
-toActionNumber Touchdown            = 9
-toActionNumber NikkiLevelFinished{} = 10
+toActionNumber NikkiLevelFinished{} = 9
 
 isJumpImpulseAction :: Action -> Bool
 isJumpImpulseAction = (2 ==) . toActionNumber
@@ -100,9 +98,6 @@ isAirborneAction = (3 ==) . toActionNumber
 
 isSlideToGrip :: Action -> Bool
 isSlideToGrip = (6 ==) . toActionNumber
-
-isTouchdownAction :: Action -> Bool
-isTouchdownAction = (9 ==) . toActionNumber
 
 
 getJumpInformation :: Action -> Maybe JumpInformation

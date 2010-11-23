@@ -96,7 +96,6 @@ touchdownDuration = 0.1
 frameTimes :: State -> (String, [(Int, Seconds)])
 frameTimes action = case action of
     State Wait{} d _ -> (addDirection d "wait", wait)
-    State Touchdown d _ -> (addDirection d "touchdown", wait)
     State Walk{} d _ -> (addDirection d "walk", walk)
     State JumpImpulse{} d _ -> (addDirection d "jump", airborne)
     State Airborne{} d _ -> (addDirection d "jump", airborne)
@@ -138,8 +137,6 @@ statePixmaps :: Map String Int
 statePixmaps = fromList [
     ("wait_left", 2),
     ("wait_right", 2),
-    ("touchdown_left", 0),
-    ("touchdown_right", 0),
     ("walk_left", 3),
     ("walk_right", 3),
     ("jump_left", 1),

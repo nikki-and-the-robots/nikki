@@ -61,10 +61,7 @@ updateState mode now contacts (True, controlData) nikki = do
                         if isLegsCollision c then
                         -- nikki stands on something
                             if nothingHeld then
-                                if touchdown then
-                                    State Touchdown newDirection
-                                else
-                                    State (Wait Nothing) newDirection
+                                State (Wait Nothing) newDirection
                             else
                                 State (Walk Nothing) newDirection
                         else if isGhostCollision c then
@@ -96,6 +93,12 @@ updateState mode now contacts (True, controlData) nikki = do
                 -- nikki touches nothing relevant
                     State (Airborne (jumpInformation' velocity_)) newDirection
 
+    -- Action of nikkis last state
+    oldAction = action $ state nikki
+    -- nikkis previous horizontal direction
+    oldDirection :: HorizontalDirection
+    oldDirection = direction $ state nikki
+
     -- if nikki should jump. Jump button is pushed and nikki is not in slideToGrip mode.
     willJump :: Bool
     willJump = aPushed && not (isSlideToGrip $ action $ state nikki)
@@ -125,19 +128,6 @@ updateState mode now contacts (True, controlData) nikki = do
     -- if nikki has collisions with the legs
     hasLegsCollisions = not $ null $ filter isLegsCollision $ nikkiCollisions contacts
 
-    -- if nikki should be in touchdown state (as alternative to Wait)
-    touchdown :: Bool
-    touchdown =
-        isAirborneAction oldAction ||
-        (isTouchdownAction oldAction &&
-         stateTime < touchdownDuration)
-
-    -- time nikki was already in the old state
-    stateTime = now - startTime nikki
-
-    -- Action of nikkis last state
-    oldAction = action $ state nikki
-
     -- button events
     aPushed = Press AButton `elem` pressed controlData
     aHeld = AButton `member` held controlData
@@ -147,9 +137,6 @@ updateState mode now contacts (True, controlData) nikki = do
     leftHeld = LeftButton `member` held controlData
     nothingHeld = not (rightHeld `xor` leftHeld)
 
-    -- nikkis previous horizontal direction
-    oldDirection :: HorizontalDirection
-    oldDirection = direction $ state nikki
     -- the direction indicated by the buttons (if any)
     buttonDirection :: Maybe HorizontalDirection
     buttonDirection =
