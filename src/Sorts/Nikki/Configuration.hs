@@ -77,6 +77,16 @@ gripAngleLimit :: Angle = deg2rad 18
 gripImpulse :: Double
 gripImpulse = 200
 
+-- | There are two so called ghost shapes around Nikki's legs.
+-- They enable jumping, when there was a leg collision before.
+-- See Sorts.Nikki.State.
+-- One is wider than the legs:
+ghostWidthPadding :: Double = fromUber 3
+
+-- and one is longer:
+ghostHeightPadding :: Double = fromUber 3
+
+
 
 
 -- * animation times

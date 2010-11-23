@@ -128,14 +128,12 @@ ghostShapes =
     []
   where
     wider = mkRectFromPositions
-        (Vector (legLeft - ghostPadding) legUp)
-        (Vector (legRight + ghostPadding) low)
+        (Vector (legLeft - ghostWidthPadding) legUp)
+        (Vector (legRight + ghostWidthPadding) low)
     higher = mkRectFromPositions
         (Vector legLeft legUp)
-        (Vector legRight (low + ghostPadding))
+        (Vector legRight (low + ghostHeightPadding))
 
-    -- config
-    ghostPadding = fromUber 3
 
 -- | the angle of the line from the edge of the feet to the lower edge of the head
 -- as an upAngle
