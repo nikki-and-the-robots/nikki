@@ -67,8 +67,9 @@ data Action
     = Wait
     | Walk
         -- state for one frame (when a jump starts)
-    | JumpImpulse Seconds Shape Angle Velocity (Maybe HorizontalDirection)
-    | Airborne JumpInformation
+    | JumpImpulse Shape Angle JumpInformation
+                               -- ghost jumping impulse
+    | Airborne JumpInformation -- (Maybe (Shape, Angle))
     | WallSlide JumpInformation [Angle] [Cloud]
     | UsingTerminal
     | SlideToGrip JumpInformation
@@ -104,6 +105,7 @@ getJumpInformation :: Action -> Maybe JumpInformation
 getJumpInformation (Airborne x) = Just x
 getJumpInformation (WallSlide x _ _) = Just x
 getJumpInformation (SlideToGrip x) = Just x
+getJumpInformation (JumpImpulse _ _ x) = Just x
 getJumpInformation _ = Nothing
 
 data JumpInformation =

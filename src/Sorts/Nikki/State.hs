@@ -45,7 +45,8 @@ updateState mode now contacts (True, controlData) nikki = do
         case (willJump, mContactAngle) of
             -- nikki jumps
             (True, Just (shape, contactAngle)) -> State
-                (JumpImpulse now shape contactAngle velocity_ buttonDirection)
+                (JumpImpulse shape contactAngle
+                    (JumpInformation (Just now) velocity_ buttonDirection))
                 (jumpImpulseDirection contactAngle)
             (False, Just _) ->
             -- nikki touches something
@@ -190,10 +191,10 @@ updateState mode now contacts (True, controlData) nikki = do
 
     -- when the jump button is held, this saves the time of the jump's start
     jumpStartTime_ :: Maybe Seconds
-    jumpStartTime_ = case action $ state nikki of
-        JumpImpulse t _ _ _ _ -> Just t
-        x | aHeld -> jumpStartTime =<< getJumpInformation x
-        x -> Nothing
+    jumpStartTime_ =
+        if aHeld
+        then getJumpInformation (action $ state nikki) >>= jumpStartTime
+        else Nothing
 
     -- | direction when starting a jump
     jumpImpulseDirection angle = fromMaybe oldDirection
