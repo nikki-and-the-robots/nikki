@@ -88,8 +88,8 @@ left = (- wh)
 
 headLeft = left
 headRight = headLeft + fromUber 13
-headUp = up
-headLow = headUp + fromUber 13
+headUp = up - 0
+headLow = up + fromUber 13
 
 headPoly = Polygon [
     Vector headLeft headUp,
