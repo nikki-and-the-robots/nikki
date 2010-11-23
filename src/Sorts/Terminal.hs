@@ -65,7 +65,11 @@ exitFrameDuration = blinkLength / 9
 
 sorts :: IO [Sort_]
 sorts = do
-    blinkenLights <- fmapM (fromPure toPngPath >>>> getDataFileName >>>> loadPixmap 1) [
+    let nameToPixmap =
+            fromPure toPngPath >>>>
+            getDataFileName >>>>
+            loadPixmap (Position 1 1)
+    blinkenLights <- fmapM nameToPixmap [
         "terminal-main_00",
         "terminal-main_01",
         "terminal-main_02",
@@ -80,17 +84,19 @@ toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
 readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
 readColorLights f =
-    fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap 1) $
+    fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap (Position 1 1)) $
         ColorLights "red" "blue" "green" "yellow"
 
 loadOsdPixmaps :: IO OsdPixmaps
 loadOsdPixmaps = do
-    background <- loadPixmap 1 =<< toOsdPath "background"
+    background <- loadPixmap (Position 1 1) =<< toOsdPath "background"
     let colors = ColorLights "red" "blue" "green" "yellow"
-    centers <- fmapM (toOsdPath >>>> loadPixmap 1) colors
-    frames <- fmapM (toOsdPath >>>> loadPixmap 1) $ fmap (++ "-active_01") colors
-    exitFiles <- filter (\ p -> "exit" `isPrefixOf` takeBaseName p) <$> getDataFiles ".png" osdPath
-    exits <- fmapM (loadPixmap 1) exitFiles
+    centers <- fmapM (toOsdPath >>>> loadPixmap (Position 1 1)) colors
+    frames <- fmapM (toOsdPath >>>> loadPixmap (Position 1 1)) $
+                fmap (++ "-active_01") colors
+    exitFiles <- filter (\ p -> "exit" `isPrefixOf` takeBaseName p) <$>
+                    getDataFiles ".png" osdPath
+    exits <- fmapM (loadPixmap (Position 1 1)) exitFiles
     return $ OsdPixmaps background centers frames exits
   where
     osdPath = pngDir </> "terminals" </> "osd"

@@ -86,9 +86,9 @@ low = hh
 up = - hh
 left = (- wh)
 
-headLeft = left + fromUber 3
+headLeft = left
 headRight = headLeft + fromUber 13
-headUp = up + fromUber 1.5
+headUp = up
 headLow = headUp + fromUber 13
 
 headPoly = Polygon [
@@ -99,7 +99,7 @@ headPoly = Polygon [
     ]
 
 
-legLeft = left + fromUber 7
+legLeft = left + fromUber 4
 legRight = legLeft + fromUber 5
 legUp = headUp + fromUber 1
 

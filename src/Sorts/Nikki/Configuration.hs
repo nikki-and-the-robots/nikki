@@ -23,7 +23,8 @@ import Sorts.Nikki.Types
 -- there are some values to fine tune the behaviour of nikki. The aim is to keep the number
 -- of fine tuners small.
 
-nikkiSize :: Size Double = Size 76 102
+-- nikkiSize :: Size Double = Size 76 102 -- size of pngs
+nikkiSize :: Size Double = Size (fromUber 13) (fromUber 24) -- physics size
 
 -- physic
 

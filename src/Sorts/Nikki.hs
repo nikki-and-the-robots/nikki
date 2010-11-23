@@ -56,8 +56,10 @@ loadPixmaps = do
   where
     load :: (String, Int) -> IO (String, [Pixmap])
     load (name, n) = do
-        pixmaps <- mapM (getDataFileName >>>> loadPixmap 1) $ map (mkPngPath name) [0..n]
+        pixmaps <- mapM (getDataFileName >>>> loadPixmap nikkiPngOffset) $
+                        map (mkPngPath name) [0..n]
         return (name, pixmaps)
+    nikkiPngOffset = Position (1 + fromUber 3) (1 + 6)
 
 mkPngPath name n = nikkiPngDir </> name ++ "_0" ++ show n <.> "png"
 
@@ -88,12 +90,8 @@ instance Sort NSort Nikki where
         fmapM_ (fmapM_ freePixmap) pixmaps
         freePolySound sound
 
-    size sort =
-        if pixSize /= nikkiSize
-        then error "nikkis pixmaps have the wrong size"
-        else nikkiSize
-      where
-        pixSize = pixmapSize $ defaultPixmap $ pixmaps sort
+    size sort = nikkiSize +~ Size (fromUber 1) 0
+                             -- for the back of the head
 
     sortRender sort ptr _ =
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)

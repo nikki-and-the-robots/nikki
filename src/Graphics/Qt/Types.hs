@@ -65,4 +65,5 @@ data Color = QtColor QtInt QtInt QtInt QtInt
 sizeToPosition :: Size a -> Position a
 sizeToPosition (Size x y) = Position x y
 
-
+positionToSize :: Position a -> Size a
+positionToSize (Position x y) = Size x y

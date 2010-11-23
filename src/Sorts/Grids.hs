@@ -34,7 +34,7 @@ sorts = mapM mkSort grids
 mkSort :: String -> IO Sort_
 mkSort name = do
     path <- getDataFileName (pngDir </> name <.> "png")
-    pixmap <- loadPixmap 1 path
+    pixmap <- loadPixmap (Position 1 1) path
     return $ Sort_ $ GSort name pixmap
 
 data GSort = GSort {

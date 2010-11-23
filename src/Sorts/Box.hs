@@ -33,7 +33,7 @@ sorts =
     mkSortId name = SortId ("objects/" ++ name)
     mkSort_ name = do
         pngFile <- getDataFileName $ mkPath name
-        pix <- loadPixmap 1 pngFile
+        pix <- loadPixmap (Position 1 1) pngFile
         return $ Sort_ $ BSort (mkSortId name) pix
 
 mkPath :: String -> FilePath

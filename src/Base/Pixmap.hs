@@ -25,15 +25,15 @@ data Pixmap = Pixmap {
     deriving Show
 
 -- | Loads a pixmap. 
-loadPixmap :: Int -- ^ Size of the padding.
+loadPixmap :: Position Int -- ^ Size of the padding.
     -> FilePath -> IO Pixmap
 loadPixmap padding path = do
     pix <- newQPixmap path
     size <- sizeQPixmap pix
     return $ Pixmap
         pix
-        (fmap (fromIntegral . subtract (2 * padding)) size)
-        (fmap fromIntegral (Position (- padding) (- padding)))
+        (fmap fromIntegral (size -~ fmap (* 2) (positionToSize padding)))
+        (fmap (fromIntegral . negate) padding)
 
 freePixmap :: Pixmap -> IO ()
 freePixmap = pixmap >>> destroyQPixmap

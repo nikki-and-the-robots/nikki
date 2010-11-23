@@ -9,6 +9,7 @@ module Base.Application.Pixmaps (
 
 
 import Data.Map
+import Data.Abelian
 
 import Control.Exception
 
@@ -37,7 +38,7 @@ load = do
     return $ ApplicationPixmaps finished
 
 loadOsd :: String -> IO Pixmap
-loadOsd name = loadPixmap 0 =<< getDataFileName (pngDir </> "osd" </> name <.> "png")
+loadOsd name = loadPixmap zero =<< getDataFileName (pngDir </> "osd" </> name <.> "png")
 
 free :: ApplicationPixmaps -> IO ()
 free (ApplicationPixmaps finished) =

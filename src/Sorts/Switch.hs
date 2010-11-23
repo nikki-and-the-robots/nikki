@@ -32,9 +32,9 @@ import Sorts.Nikki (nikkiMass)
 
 sorts :: IO [Sort_]
 sorts = do
-    boxOffPix <- mkPath "switch-standard-off" >>= loadPixmap 1
-    boxOnPix <- mkPath "switch-standard-on" >>= loadPixmap 1
-    stampPix <- mkPath "switch-platform" >>= loadPixmap 1
+    boxOffPix <- mkPath "switch-standard-off" >>= loadPixmap (Position 1 1)
+    boxOnPix <- mkPath "switch-standard-on" >>= loadPixmap (Position 1 1)
+    stampPix <- mkPath "switch-platform" >>= loadPixmap (Position 1 1)
     return $ map Sort_ [SwitchSort boxOffPix boxOnPix stampPix]
 
 mkPath :: String -> IO FilePath
