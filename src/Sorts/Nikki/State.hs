@@ -35,21 +35,22 @@ updateState mode _ _ (False, _) nikki = do
             TerminalMode{} -> UsingTerminal
             RobotMode{} -> UsingTerminal
             (LevelFinished _ result) -> NikkiLevelFinished result
-    return $ nikki{state = State action (direction $ state nikki)}
+    return $ nikki{state = State action (direction $ state nikki) False}
 updateState mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
     nikkiPos <- getPosition $ chipmunk nikki
-    return $ nikki{state = state' nikkiPos velocity_}
+    return $ nikki{state = state' nikkiPos velocity_ considerGhostsState'}
   where
+    -- function that creates the next state when given the next considerGhosts value.
+    state' :: Vector -> Vector -> (Bool -> State)
     state' nikkiPos velocity_ =
-        case (willJump, mContactAngle) of
+        case (willJump, mJumpImpulseData) of
             -- nikki jumps
-            (True, Just (shape, contactAngle)) -> State
-                (JumpImpulse shape contactAngle
-                    (JumpInformation (Just now) velocity_ buttonDirection))
-                (jumpImpulseDirection contactAngle)
-            (False, Just _) ->
+            (True, Just impulse) -> State
+                (JumpImpulse impulse (JumpInformation (Just now) velocity_ buttonDirection))
+                (jumpImpulseDirection $ nikkiCollisionAngle impulse)
             -- nikki touches something
+            (False, Just c) ->
                 case grips nikkiPos contacts of
                     -- nikki grabs something
                     Just HLeft | rightPushed -> State EndGripImpulse HLeft
@@ -57,41 +58,52 @@ updateState mode now contacts (True, controlData) nikki = do
                     Just gripDirection -> State Grip gripDirection
                     -- nikki grabs nothing
                     Nothing ->
-                        if hasLegsCollisions then
-                        -- something touches the feet
-                            if standsOnFeet then
-                            -- nikki stands on feet (the angle is not too steep)
-                                if nothingHeld then
-                                    if touchdown then
-                                        State Touchdown newDirection
-                                    else
-                                        State Wait newDirection
+                        if isLegsCollision c then
+                        -- nikki stands on something
+                            if nothingHeld then
+                                if touchdown then
+                                    State Touchdown newDirection
                                 else
-                                    State Walk newDirection
+                                    State (Wait Nothing) newDirection
                             else
-                            -- the angle is too steep: nikki slides into grip mode (hopefully)
-                                State
-                                    (SlideToGrip (jumpInformation' velocity_))
-                                    newDirection
+                                State (Walk Nothing) newDirection
+                        else if isGhostCollision c then
+                        -- nikki is a ghost (boo!) (airborne, but can still jump)
+                          case buttonDirection of
+                          -- no direction -> Wait
+                            Nothing -> State
+                                (Wait $ Just $ jumpInformation' velocity_)
+                                newDirection
+                            Just buttonDirection -> State
+                                (Walk $ Just $ jumpInformation' velocity_)
+                                newDirection
                         else
-                        -- something touches the head
+                        -- something touches the head that causes jumping capability
                             State
                                 (WallSlide (jumpInformation' velocity_)
-                                    (map snd contactNormals)
+                                    (map nikkiCollisionAngle collisions)
                                     (clouds nikkiPos newDirection))
                                 newDirection
+            -- nikki cannot jump
             (_, Nothing) ->
-            -- nikki touches nothing, is airborne
-                State (Airborne (jumpInformation' velocity_)) newDirection
+                if hasLegsCollisions then
+                -- nikki cannot jump, but has legs collisions
+                -- the angle is too steep: nikki slides into grip mode (hopefully)
+                    State
+                        (SlideToGrip (jumpInformation' velocity_))
+                        newDirection
+                else
+                -- nikki touches nothing relevant
+                    State (Airborne (jumpInformation' velocity_)) newDirection
 
     -- if nikki should jump. Jump button is pushed and nikki is not in slideToGrip mode.
     willJump :: Bool
-    willJump = aPushed && not (isSlideToGrip (state nikki))
+    willJump = aPushed && not (isSlideToGrip $ action $ state nikki)
 
     -- nikki's new horizontal direction
     newDirection :: HorizontalDirection
     newDirection = case state nikki of
-        State Grip direction -> swapHorizontalDirection direction
+        State Grip direction _ -> swapHorizontalDirection direction
         _ -> fromMaybe oldDirection buttonDirection
 
     -- returns if nikki grabs something (and if yes, which direction)
@@ -106,42 +118,12 @@ updateState mode now contacts (True, controlData) nikki = do
         inner gripCollisions = Just $
             if any ((NikkiLeftPawCT ==) . nikkiCollisionType) gripCollisions
             then HLeft else HRight
-    -- if a given collision is with nikki's head
-    isHeadCollision (NikkiCollision _ normal NikkiHeadCT) = True
-    isHeadCollision (NikkiCollision _ normal NikkiLeftPawCT) = True
-    isHeadCollision _ = False
     -- if a given head collision should be treated as nikki grabbing something
     isGripCollision c =
         abs (nikkiCollisionAngle c) < gripAngleLimit
 
-    -- if nikki should be considered standing on feet.
-    standsOnFeet = hasStandingFeetCollisions ||
-        hasCombinedStandingFeetNormal
-
     -- if nikki has collisions with the legs
-    hasLegsCollisions = not (null legsCollisions)
-    -- list of leg collisions
-    legsCollisions = filter isLegsCollision $ nikkiCollisions contacts
-    -- if a given collision is with nikki's legs
-    isLegsCollision (NikkiCollision _ _ NikkiLegsCT) = True
-    isLegsCollision _ = False
-
-    -- if one of the leg collisions has the right angle to lead to nikki standing on feet
-    hasStandingFeetCollisions =
-        any (nikkiCollisionAngle >>> isStandingFeetAngle) legsCollisions
-    -- if a given collision angle should lead to nikki standing on feet
-    isStandingFeetAngle angle =
-        abs angle < (deg2rad 90 - footToHeadAngle + deg2rad 1)
-                                                    -- angle epsilon
-
-    -- If the collisions together result in a contactAngle that allows jumping.
-    -- (There might be two (or more) angles, that -- if considered individually -- would
-    -- lead to nikki not standing on feet (and sliding to grip mode), but together
-    -- should allow jumping, cause they have differing signs.)
-    hasCombinedStandingFeetNormal :: Bool
-    hasCombinedStandingFeetNormal = case mContactAngle of
-        Nothing -> False
-        Just (_, contactAngle) -> isStandingFeetAngle contactAngle
+    hasLegsCollisions = not $ null $ filter isLegsCollision $ nikkiCollisions contacts
 
     -- if nikki should be in touchdown state (as alternative to Wait)
     touchdown :: Bool
@@ -176,11 +158,11 @@ updateState mode now contacts (True, controlData) nikki = do
         Just HRight
 
     -- the contact angle that should be used for jumping (if there are collisions)
-    mContactAngle :: Maybe (Shape, Angle)
-    mContactAngle = jumpAngle contactNormals
-    -- all collision normals (and their corresponding shapes)
-    contactNormals :: [(Shape, Angle)]
-    contactNormals = getContactNormals contacts
+    mJumpImpulseData :: Maybe NikkiCollision
+    mJumpImpulseData = jumpImpulseData (state nikki) collisions
+    -- all collisions
+    collisions :: [NikkiCollision]
+    collisions = nikkiCollisions contacts
 
     -- while nikki is in the air, this describes the state
     jumpInformation' velocity_ =
@@ -196,6 +178,33 @@ updateState mode now contacts (True, controlData) nikki = do
     -- | direction when starting a jump
     jumpImpulseDirection angle = fromMaybe oldDirection
         (buttonDirection <|> angleDirection angle)
+
+
+    -- | There is a state where nikki's jump impulse will be affected by collisions
+    -- with the ghost shapes. These jumps are called ghost jumps.
+    -- This happens when the following conditions are met:
+    --   1. Nikki had leg collisions.
+    --   2. Nikki has no leg collisions anymore
+    --   3. Nikki still touches something with the ghost shapes (has ghost collisions)
+    --   4. Nikki has not performed a (maybe ghost-) jump since the last real leg collision.
+    -- A ghost jump's impulse will be calculated in the same way a normal jump's impulse
+    -- is. It will however additionally consider all collisions with the ghost shape
+    -- like normal collisions.
+    -- condition 2. is not encoded in State.considerGhostsState,
+    -- but is done in mJumpImpulseData
+    considerGhostsState' :: Bool
+    considerGhostsState' =
+        hasLegsCollisions ||
+        (considerGhostsState (state nikki) &&
+         hasGhostCollisions &&
+         not (isJumpImpulseAction oldAction))
+
+    -- | all collisions with the ghost shapes
+    hasGhostCollisions :: Bool
+    hasGhostCollisions =
+        not $ null $
+        filter isGhostCollision $
+        nikkiCollisions contacts
 
     -- | create nikki's dust
     clouds :: Vector -> HorizontalDirection -> [Cloud]
@@ -213,6 +222,25 @@ updateState mode now contacts (True, controlData) nikki = do
         newCloud HRight = Cloud now (Position x y +~ Position (fromUber (13 / 2)) (fromUber (24 / 2)) +~ cloudRenderCorrection)
         cloudRenderCorrection = Position (- fromUber (5 / 2)) (- fromUber (5 / 2))
 
+
+-- if a given collision is with nikki's head
+isHeadCollision (NikkiCollision _ normal NikkiHeadCT) = True
+isHeadCollision (NikkiCollision _ normal NikkiLeftPawCT) = True
+isHeadCollision _ = False
+
+-- if a given collision is with nikki's legs
+isLegsCollision (NikkiCollision _ _ NikkiLegsCT) = True
+isLegsCollision _ = False
+
+isGhostCollision :: NikkiCollision -> Bool
+isGhostCollision = (NikkiGhostCT ==) . nikkiCollisionType
+
+-- if a given collision angle should lead to nikki standing on feet
+isStandingFeetAngle :: Angle -> Bool
+isStandingFeetAngle angle =
+    abs angle < (deg2rad 90 - footToHeadAngle + deg2rad 1)
+                                                -- angle epsilon
+
 -- | returns the horizontal direction of a given angle
 angleDirection :: Angle -> Maybe HorizontalDirection
 angleDirection angle =
@@ -220,25 +248,49 @@ angleDirection angle =
     then Just $ if angle > 0 then HRight else HLeft
     else Nothing
 
--- | updates the possible jumping angle from the contacts
-getContactNormals :: Contacts -> [(Shape, Angle)]
-getContactNormals =
-    nikkiCollisions >>>
-    filter (\ x -> nikkiCollisionType x /= NikkiGhostCT) >>>
-    map (\ nc -> (nikkiCollisionShape nc, nikkiCollisionAngle nc))
+-- | Calculates the angle for possible jump.
+-- Considers ghost collisions depending on the arguments
+jumpImpulseData :: State -> [NikkiCollision] -> Maybe NikkiCollision
+jumpImpulseData state =
+    -- sort (more upward first)
+    sortBy (withView (abs . nikkiCollisionAngle) compare) >>>
+    -- remove angles pointing downward
+    filter (\ x -> abs (nikkiCollisionAngle x) <= pi / 2) >>>
+    filterGhostCollisions >>>
+    filter causingJumps >>>
+    -- sorting collisions: legs, ghost, head
+    sortLegsCollisions >>>
+    listToMaybe
+  where
+    sortLegsCollisions = sortBy (withView (nikkiCollisionType >>> toNumber) compare)
+    toNumber NikkiLegsCT = 1
+    toNumber NikkiGhostCT = 2
+    toNumber NikkiHeadCT = 3
+    toNumber NikkiLeftPawCT = 3
 
--- | calculates the angle a possible jump is to be performed in
-jumpAngle :: [(Shape, Angle)] -> Maybe (Shape, Angle)
-jumpAngle angles =
-    let relevantAngles = filter (\ x -> abs (snd x) <= 0.5 * pi) $ sortBy (withView (abs . snd) compare) angles
-    in case relevantAngles of
-        [] -> Nothing
-        list@(a : _) ->
-            if any ((< 0) . snd) list && any ((> 0) . snd) list then
-                -- if nikki's contacts are on both sides of pointing up
-                Just (fst a, 0)
-              else
-                Just a
+    causingJumps x =
+        (not $ isHeadCollision x) ~>
+        (isStandingFeetAngle $ nikkiCollisionAngle x)
+    filterGhostCollisions :: [NikkiCollision] -> [NikkiCollision]
+    -- consider only ghost collisions
+    -- that have a so called standing feet angle
+    filterGhostCollisions cs =
+        if considerGhostsState state &&
+           (null $ filter isLegsCollision cs)
+        then cs
+        else filter (not . isGhostCollision) cs
+    listToMaybe [] = Nothing
+    listToMaybe list@(a : _) =
+        -- just take the best (if there are two than it (hopefully) doesn't matter)
+        -- and set the angle to 0 if there are angle greater and smaller than 0.
+        Just $ a{nikkiCollisionAngle = angle}
+      where
+        angle = if any ((< 0) . nikkiCollisionAngle) list &&
+                   any ((> 0) . nikkiCollisionAngle) list
+                    -- if nikki's contacts are on both sides of pointing up
+                then 0
+                else (nikkiCollisionAngle a)
+
 
 -- updates the start time of nikki if applicable
 updateStartTime :: Seconds -> State -> Nikki -> Nikki

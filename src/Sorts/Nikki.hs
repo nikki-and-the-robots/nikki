@@ -161,50 +161,6 @@ renderClouds _ _ _ _ _ = return ()
 
 -- debugging
 
-debugNikki :: Seconds -> Contacts -> Nikki -> IO ()
-debugNikki now contacts nikki = do
-    addDebugging $ \ ptr offset -> do
-      resetMatrix ptr
-      drawText ptr (Position 30 30) False $ show $ action $ state nikki
-      forM_ (nikkiCollisions contacts) $ \ (NikkiCollision shape normal _) -> do
-        resetMatrix ptr
-        translate ptr offset
-        translateVector ptr =<< getPosition (chipmunk nikki)
-        drawAngle ptr green $ toUpAngle normal
-
-debugNikki now contacts nikki = do
-    position <- getPosition $ chipmunk nikki
-    nikkiVelocity <- get $ velocity $ body $ chipmunk nikki
-    let mContact = jumpAngle $ getContactNormals contacts
-    case mContact of
-      Nothing -> do
-        addDebugging $ \ ptr offset -> do
-            resetMatrix ptr
-            drawText ptr (Position 30 30) False "debugging"
-            translate ptr offset
-            translateVector ptr position
-            drawVector ptr red nikkiVelocity
-
-      Just (shape, contactAngle) -> do
-        collisionObjectVelocity <- get (Hip.velocity (Hip.body shape))
-        addDebugging $ \ ptr offset -> do
-            resetMatrix ptr
-            drawText ptr (Position 30 30) False "debugging"
-            translate ptr offset
-            translateVector ptr position
-            let velocity = nikkiVelocity -~ collisionObjectVelocity
-            drawVector ptr red velocity
-            drawAngle ptr yellow contactAngle
-
-            let calculation = calculate collisionObjectVelocity contactAngle nikkiVelocity
-            drawVector ptr black (staticImpulse calculation)
-            drawVector ptr blue $ wallVelocity calculation
-            drawVectorAddition ptr (red, green, magenta)
-                velocity
-                (correctedImpulse calculation)
-
-
-
 drawVector :: Ptr QPainter -> Color -> Vector -> IO ()
 drawVector ptr color v = do
     setPenColor ptr color 3

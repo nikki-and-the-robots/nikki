@@ -56,20 +56,21 @@ addBatteryPower n = n{batteryPower = batteryPower n + 1}
 
 data State = State {
     action :: Action,
-    direction :: HorizontalDirection -- the direction nikki faces
+    direction :: HorizontalDirection, -- the direction nikki faces
+    considerGhostsState :: Bool -- if ghost shapes should be considered
   }
     deriving (Show)
 
 instance Initial State where
-    initial = State Wait HLeft
+    initial = State (Wait Nothing) HLeft False
 
 data Action
-    = Wait
-    | Walk
+           -- for ghost states
+    = Wait (Maybe JumpInformation)
+    | Walk (Maybe JumpInformation)
         -- state for one frame (when a jump starts)
-    | JumpImpulse Shape Angle JumpInformation
-                               -- ghost jumping impulse
-    | Airborne JumpInformation -- (Maybe (Shape, Angle))
+    | JumpImpulse NikkiCollision JumpInformation
+    | Airborne JumpInformation
     | WallSlide JumpInformation [Angle] [Cloud]
     | UsingTerminal
     | SlideToGrip JumpInformation
@@ -79,33 +80,38 @@ data Action
     | NikkiLevelFinished LevelResult
   deriving (Show)
 
-toActionNumber Wait = 0
-toActionNumber Walk = 1
-toActionNumber JumpImpulse{} = 2
-toActionNumber Airborne{} = 3
-toActionNumber WallSlide{} = 4
-toActionNumber UsingTerminal = 5
-toActionNumber SlideToGrip{} = 6
-toActionNumber Grip = 7
-toActionNumber EndGripImpulse = 8
-toActionNumber Touchdown = 9
+toActionNumber Wait{}               = 0
+toActionNumber Walk{}               = 1
+toActionNumber JumpImpulse{}        = 2
+toActionNumber Airborne{}           = 3
+toActionNumber WallSlide{}          = 4
+toActionNumber UsingTerminal        = 5
+toActionNumber SlideToGrip{}        = 6
+toActionNumber Grip                 = 7
+toActionNumber EndGripImpulse       = 8
+toActionNumber Touchdown            = 9
 toActionNumber NikkiLevelFinished{} = 10
 
-isSlideToGrip :: State -> Bool
-isSlideToGrip state = toActionNumber (action state) == 6
+isJumpImpulseAction :: Action -> Bool
+isJumpImpulseAction = (2 ==) . toActionNumber
 
 isAirborneAction :: Action -> Bool
 isAirborneAction = (3 ==) . toActionNumber
+
+isSlideToGrip :: Action -> Bool
+isSlideToGrip = (6 ==) . toActionNumber
 
 isTouchdownAction :: Action -> Bool
 isTouchdownAction = (9 ==) . toActionNumber
 
 
 getJumpInformation :: Action -> Maybe JumpInformation
+getJumpInformation (Wait x) = x
+getJumpInformation (Walk x) = x
 getJumpInformation (Airborne x) = Just x
 getJumpInformation (WallSlide x _ _) = Just x
 getJumpInformation (SlideToGrip x) = Just x
-getJumpInformation (JumpImpulse _ _ x) = Just x
+getJumpInformation (JumpImpulse _ x) = Just x
 getJumpInformation _ = Nothing
 
 data JumpInformation =

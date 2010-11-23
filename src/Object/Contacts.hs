@@ -19,9 +19,10 @@ import Utils
 import Base.Types
 
 
-nikkiCollisionTypes = [NikkiLegsCT, NikkiHeadCT, NikkiLeftPawCT]
+nikkiCollisionTypes = [NikkiLegsCT, NikkiHeadCT, NikkiLeftPawCT, NikkiGhostCT]
 
 nikkiPermeability NikkiLeftPawCT = Permeable
+nikkiPermeability NikkiGhostCT = Permeable
 nikkiPermeability _ = Solid
 
 -- | collision types of objects that cause a collision (that are solid) (without Nikkis collision types)

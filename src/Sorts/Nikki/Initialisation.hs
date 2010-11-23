@@ -54,6 +54,12 @@ leftPawShapeAttributes = ShapeAttributes {
     CM.collisionType = NikkiLeftPawCT
   }
 
+ghostShapeAttributes = ShapeAttributes {
+    elasticity    = elasticity_,
+    friction      = headFriction,
+    CM.collisionType = NikkiGhostCT
+  }
+
 mkPolys :: (ShapeDescription, [ShapeDescription], Vector)
 mkPolys =
     (surfaceVelocityShape, otherShapes, baryCenterOffset)
@@ -67,8 +73,9 @@ surfaceVelocityShape =
     mkShapeDescription legsShapeAttributes legs
 
 otherShapes =
-    (mkShapeDescription headShapeAttributes headPoly) :
-    (mkShapeDescription leftPawShapeAttributes leftPawPoly) :
+    mkShapeDescription headShapeAttributes headPoly :
+    mkShapeDescription leftPawShapeAttributes leftPawPoly :
+    map (mkShapeDescription ghostShapeAttributes) ghostShapes ++
     []
 
 Size w h = nikkiSize
@@ -94,12 +101,13 @@ headPoly = Polygon [
 
 legLeft = left + fromUber 7
 legRight = legLeft + fromUber 5
+legUp = headUp + fromUber 1
 
 legs = Polygon [
-    Vector legLeft (headUp + fromUber 1),
+    Vector legLeft legUp,
     Vector legLeft low,
     Vector legRight low,
-    Vector legRight (headUp + fromUber 1)
+    Vector legRight legUp
     ]
 
 -- does not provide collisions
@@ -110,6 +118,24 @@ leftPawPoly = Polygon [
     Vector 0 (headLow + pawThickness),
     Vector 0 (headLow + pawThickness - fromUber 1)
     ]
+
+-- there are two ghost shapes, one with a bigger height, one with a bigger width
+-- than the feet.
+ghostShapes :: [ShapeType]
+ghostShapes =
+    wider :
+    higher :
+    []
+  where
+    wider = mkRectFromPositions
+        (Vector (legLeft - ghostPadding) legUp)
+        (Vector (legRight + ghostPadding) low)
+    higher = mkRectFromPositions
+        (Vector legLeft legUp)
+        (Vector legRight (low + ghostPadding))
+
+    -- config
+    ghostPadding = fromUber 3
 
 -- | the angle of the line from the edge of the feet to the lower edge of the head
 -- as an upAngle
