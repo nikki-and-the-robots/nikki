@@ -163,12 +163,11 @@ debugNikki :: Seconds -> Contacts -> Nikki -> IO ()
 debugNikki now contacts nikki = do
     addDebugging $ \ ptr offset -> do
         resetMatrix ptr
-        drawText ptr (Position 30 30) False $ show $ action $ state nikki
-        translate ptr offset
-        translateVector ptr =<< getPosition (chipmunk nikki)
-        let mJumpImpulse = jumpImpulseData (state nikki) (nikkiCollisions contacts)
-        whenMaybe mJumpImpulse $ \ i ->
-            drawAngle ptr green (nikkiCollisionAngle i)
+        let boo = drawText ptr (Position 30 30) False "BOO"
+        case action $ state nikki of
+          (Wait (Just _))   -> boo
+          (Walk _ (Just _)) -> boo
+          _ -> return ()
 
 drawVector :: Ptr QPainter -> Color -> Vector -> IO ()
 drawVector ptr color v = do
