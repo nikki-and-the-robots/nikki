@@ -313,13 +313,14 @@ mkPolys (Size w h) =
 -- * controlling
 
 updateState :: Seconds -> ControlData -> [Index] -> State -> State
-updateState now cd robots state
-    | Press BButton `elem` pressed cd
-    || Press AButton `elem` pressed cd =
-    -- exit terminal mode
-        case row state of
-            NikkiRow -> state{exitMode = ExitToNikki, robotIndex = 0}
-            RobotRow -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
+updateState now cd robots state | Press AButton `elem` pressed cd =
+  case row state of
+    NikkiRow -> exitToNikki state
+    RobotRow -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
+updateState now cd robots state | Press BButton `elem` pressed cd =
+  case row state of
+    NikkiRow -> exitToNikki state
+    RobotRow -> state{row = NikkiRow, changedTime = now}
 updateState now cd robots state | Press RightButton `elem` pressed cd =
     -- go right in robot list
     modifySelected now robots (+ 1) state
@@ -336,6 +337,9 @@ updateState now cd robots state@State{row = RobotRow}
     -- select exit (nikki) menu item (go down)
         state{row = NikkiRow, changedTime = now}
 updateState _ _ _ t = t
+
+exitToNikki :: State -> State
+exitToNikki state = state{exitMode = ExitToNikki, robotIndex = 0}
 
 
 -- * game rendering
