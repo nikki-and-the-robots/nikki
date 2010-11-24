@@ -125,7 +125,7 @@ instance Sort NSort Nikki where
             updateState mode now contacts cd >>>>
             fromPure (updateStartTime now (state nikki)) >>>>
             controlNikki now contacts cd sort >>>>
-            passThrough (debugNikki now contacts) >>>>
+--             passThrough (debugNikki now contacts) >>>>
             return
 
     render nikki sort ptr offset now = do
