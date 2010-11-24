@@ -47,54 +47,54 @@ updateState mode now contacts (True, controlData) nikki = do
     -- function that creates the next state when given the next considerGhosts value.
     state' :: Vector -> Vector -> (Bool -> State)
     state' nikkiPos velocity_ =
-        case (willJump, mJumpImpulseData) of
-            -- nikki jumps
-            (True, Just impulse) -> State
-                (JumpImpulse impulse (JumpInformation (Just now) velocity_ buttonDirection))
-                (jumpImpulseDirection $ nikkiCollisionAngle impulse)
-            -- nikki touches something
-            (False, Just c) ->
-                case grips nikkiPos contacts of
-                    -- nikki grabs something
-                    Just HLeft | rightPushed -> State EndGripImpulse HLeft
-                    Just HRight | leftPushed -> State EndGripImpulse HRight
-                    Just gripDirection -> State Grip gripDirection
-                    -- nikki grabs nothing
-                    Nothing ->
-                        if isLegsCollision c then
-                        -- nikki stands on something
-                            if nothingHeld then
-                                State (Wait Nothing) newDirection
-                            else
-                                State (Walk afterAirborne Nothing) newDirection
-                        else if isGhostCollision c then
-                        -- nikki is a ghost (boo!) (airborne, but can still jump)
-                          case buttonDirection of
-                          -- no direction -> Wait
-                            Nothing -> State
-                                (Wait $ Just $ jumpInformation' velocity_)
-                                newDirection
-                            Just buttonDirection -> State
-                                (Walk afterAirborne $ Just $ jumpInformation' velocity_)
-                                newDirection
-                        else
-                        -- something touches the head that causes jumping capability
-                            State
-                                (WallSlide (jumpInformation' velocity_)
-                                    (map nikkiCollisionAngle collisions)
-                                    (clouds nikkiPos newDirection))
-                                (wallSlideDirection $ nikkiCollisionAngle c)
-            -- nikki cannot jump
-            (_, Nothing) ->
-                if hasLegsCollisions then
-                -- nikki cannot jump, but has legs collisions
-                -- the angle is too steep: nikki slides into grip mode (hopefully)
-                    State
-                        (SlideToGrip (jumpInformation' velocity_))
-                        newDirection
+      case (willJump, mJumpImpulseData) of
+        -- nikki jumps
+        (True, Just impulse) ->
+          let specialJumpInformation = JumpInformation (Just now) velocity_ buttonDirection
+          in State
+               (JumpImpulse impulse specialJumpInformation)
+               (jumpImpulseDirection $ nikkiCollisionAngle impulse)
+        -- nikki touches something
+        (False, Just c) ->
+          case grips nikkiPos contacts of
+            -- nikki grabs something
+            Just HLeft | rightPushed -> State EndGripImpulse HLeft
+            Just HRight | leftPushed -> State EndGripImpulse HRight
+            Just gripDirection -> State Grip gripDirection
+            -- nikki grabs nothing
+            Nothing ->
+              if isLegsCollision c then
+              -- nikki stands on something
+                if nothingHeld then
+                  State (Wait Nothing) newDirection
                 else
-                -- nikki touches nothing relevant
-                    State (Airborne (jumpInformation' velocity_)) newDirection
+                  State (Walk afterAirborne Nothing) newDirection
+              else if isGhostCollision c then
+              -- nikki is a ghost (boo!) (airborne, but can still jump)
+                case buttonDirection of
+                  -- no direction -> Wait
+                  Nothing -> State
+                    (Wait $ Just $ jumpInformation' velocity_)
+                    newDirection
+                  Just buttonDirection -> State
+                    (Walk afterAirborne $ Just $ jumpInformation' velocity_)
+                    newDirection
+              else
+              -- something touches the head that causes jumping capability
+                State
+                  (WallSlide (jumpInformation' velocity_)
+                     (map nikkiCollisionAngle collisions)
+                     (clouds nikkiPos newDirection))
+                  (wallSlideDirection $ nikkiCollisionAngle c)
+        -- nikki cannot jump
+        (_, Nothing) ->
+          if hasLegsCollisions then
+          -- nikki cannot jump, but has legs collisions
+          -- the angle is too steep: nikki slides into grip mode (hopefully)
+            State (SlideToGrip (jumpInformation' velocity_)) newDirection
+          else
+            -- nikki touches nothing relevant
+            State (Airborne (jumpInformation' velocity_)) newDirection
 
     -- Action of nikkis last state
     oldAction = action $ state nikki
@@ -298,10 +298,9 @@ jumpImpulseData considerGhostsState =
 -- updates the start time of nikki if applicable
 updateStartTime :: Seconds -> State -> Nikki -> Nikki
 updateStartTime now oldState nikki =
-    if sameState oldState (state nikki) then
-        nikki
-      else
-        nikki{startTime = now}
+    if sameState oldState (state nikki)
+    then nikki
+    else nikki{startTime = now}
 
 -- returns if two given state have the same type of action
 sameState :: State -> State -> Bool
