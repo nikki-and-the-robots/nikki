@@ -89,19 +89,25 @@ readColorLights f =
 
 loadOsdPixmaps :: IO OsdPixmaps
 loadOsdPixmaps = do
-    background <- loadPixmap (Position 1 1) =<< toOsdPath "background"
+    background <- removeUberPixelShadow <$>
+                    (loadPixmap zero =<< toOsdPath "background")
     let colors = ColorLights "red" "blue" "green" "yellow"
-    centers <- fmapM (toOsdPath >>>> loadPixmap (Position 1 1)) colors
-    frames <- fmapM (toOsdPath >>>> loadPixmap (Position 1 1)) $
-                fmap (++ "-active_01") colors
-    exitFiles <- filter (\ p -> "exit" `isPrefixOf` takeBaseName p) <$>
-                    getDataFiles ".png" osdPath
-    exits <- fmapM (loadPixmap (Position 1 1)) exitFiles
-    return $ OsdPixmaps background centers frames exits
+        load :: Int -> Int -> String -> IO Pixmap
+        load xOffset yOffset = toOsdPath >>>> loadPixmap (Position xOffset yOffset)
+    centers <- fmapM (load 27 27) $ fmap (++ "-center") colors
+    frames <- fmapM (load 27 27) $ fmap (++ "-frame") colors
+    exitCenter <- (load 24 23) "exit-center"
+    exitFrame <- (load 27 27) "exit-frame"
+    return $ OsdPixmaps background centers frames exitCenter exitFrame
   where
     osdPath = pngDir </> "terminals" </> "osd"
     toOsdPath :: String -> IO FilePath
     toOsdPath name = getDataFileName (osdPath </> name <.> "png")
+    -- removes the shadow to the right and bottom
+    -- by decreasing the size
+    removeUberPixelShadow :: Pixmap -> Pixmap
+    removeUberPixelShadow p@Pixmap{pixmapSize} =
+        p{pixmapSize = pixmapSize -~ fmap fromUber (Size 1 1)}
 
 
 -- | type to bundle things for the four terminal colors: red, blu, green and yellow (in that order)
@@ -145,7 +151,8 @@ data OsdPixmaps = OsdPixmaps {
     osdBackground :: Pixmap,
     osdCenters :: ColorLights Pixmap,
     osdFrames :: ColorLights Pixmap,
-    osdExit :: [Pixmap]
+    osdExitCenter :: Pixmap,
+    osdExitFrame :: Pixmap
   }
     deriving (Show, Typeable)
 
@@ -184,7 +191,7 @@ data State
   deriving Show
 
 data MenuRow = NikkiRow | RobotRow
-  deriving Show
+  deriving (Eq, Show)
 
 initialMenuState :: Seconds -> State
 initialMenuState now = State NikkiMode RobotRow 0 now DontExit
@@ -424,7 +431,7 @@ renderOsdCenters ptr offset pixmaps states =
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
     inner color = when (color states) $
-        renderPixmap ptr offset (color osdLightOffsets) Nothing (color (osdCenters pixmaps))
+        renderPixmap ptr offset (color osdCenterOffsets) Nothing (color (osdCenters pixmaps))
 
 renderOsdFrames ptr offset pixmaps state selected =
     case (row state) of
@@ -433,31 +440,30 @@ renderOsdFrames ptr offset pixmaps state selected =
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
     inner color = when (color selected) $
-        renderPixmap ptr offset (color osdLightOffsets) Nothing (color (osdFrames pixmaps))
+        renderPixmap ptr offset (color osdFrameOffsets) Nothing (color (osdFrames pixmaps))
 
--- | offsets both for center and frame pixmaps
-osdLightOffsets :: ColorLights (Qt.Position Double)
-osdLightOffsets =
+-- | offsets for frame pixmaps
+osdFrameOffsets :: ColorLights (Qt.Position Double)
+osdFrameOffsets =
     ColorLights red blue green yellow
   where
-    red = Position (fromUber 5) (fromUber 5) -~ centerGlow
+    red = fmap fromUber $ Position 5 5
     blue = toLeftFrame red
     green = toLeftFrame blue
     yellow = toLeftFrame green
 
     toLeftFrame = (+~ Position (fromUber 17) 0)
-    centerGlow = Position (fromUber 7 - 1) (fromUber 7 - 1)
 
-renderOsdExit ptr offset now pixmaps state =
-    case row state of
-        NikkiRow -> renderExit $ pickExitFrame $ osdExit pixmaps
-        RobotRow -> renderExit $ head $ osdExit pixmaps
+osdCenterOffsets :: ColorLights (Qt.Position Double)
+osdCenterOffsets = fmap (+~ fmap fromUber (Position 2 2)) osdFrameOffsets
+
+renderOsdExit ptr offset now pixmaps state = do
+    renderPixmap ptr offset exitCenterOffset Nothing (osdExitCenter pixmaps)
+    when (row state == NikkiRow) $
+        renderPixmap ptr offset exitFrameOffset Nothing (osdExitFrame pixmaps)
   where
-    renderExit = renderPixmap ptr offset exitOffset Nothing
-    pickExitFrame frames =
-        pickAnimationFrame frames [exitFrameDuration] (now - changedTime state)
-    exitOffset = Position 97 89
-
+    exitFrameOffset = fmap fromUber $ Position 33 29
+    exitCenterOffset = exitFrameOffset +~ fmap fromUber (Position 2 2)
 
 
 -- * special edit mode (OEM)
