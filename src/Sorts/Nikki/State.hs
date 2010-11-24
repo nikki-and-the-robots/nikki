@@ -157,7 +157,7 @@ updateState mode now contacts (True, controlData) nikki = do
 
     -- the contact angle that should be used for jumping (if there are collisions)
     mJumpImpulseData :: Maybe NikkiCollision
-    mJumpImpulseData = jumpImpulseData (state nikki) collisions
+    mJumpImpulseData = jumpImpulseData considerGhostsState' collisions
     -- all collisions
     collisions :: [NikkiCollision]
     collisions = nikkiCollisions contacts
@@ -252,9 +252,9 @@ angleDirection angle =
     else Nothing
 
 -- | Calculates the angle for possible jump.
--- Considers ghost collisions depending on the arguments
-jumpImpulseData :: State -> [NikkiCollision] -> Maybe NikkiCollision
-jumpImpulseData state =
+-- Considers ghost collisions depending on the arguments.
+jumpImpulseData :: Bool -> [NikkiCollision] -> Maybe NikkiCollision
+jumpImpulseData considerGhostsState =
     -- sort (more upward first)
     sortBy (withView (abs . nikkiCollisionAngle) compare) >>>
     -- remove angles pointing downward
@@ -278,7 +278,7 @@ jumpImpulseData state =
     -- consider only ghost collisions
     -- that have a so called standing feet angle
     filterGhostCollisions cs =
-        if considerGhostsState state &&
+        if considerGhostsState &&
            (null $ filter isLegsCollision cs)
         then cs
         else filter (not . isGhostCollision) cs
