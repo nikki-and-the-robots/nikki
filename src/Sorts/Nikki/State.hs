@@ -80,7 +80,7 @@ updateState mode now contacts (True, controlData) nikki = do
                                 (WallSlide (jumpInformation' velocity_)
                                     (map nikkiCollisionAngle collisions)
                                     (clouds nikkiPos newDirection))
-                                newDirection
+                                (wallSlideDirection $ nikkiCollisionAngle c)
             -- nikki cannot jump
             (_, Nothing) ->
                 if hasLegsCollisions then
@@ -163,9 +163,14 @@ updateState mode now contacts (True, controlData) nikki = do
         else Nothing
 
     -- | direction when starting a jump
-    jumpImpulseDirection angle = fromMaybe oldDirection
-        (buttonDirection <|> angleDirection angle)
+    jumpImpulseDirection angle =
+        fromMaybe oldDirection
+            (buttonDirection <|> angleDirection angle)
 
+    -- | direction when wallsliding
+    wallSlideDirection angle =
+        fromMaybe oldDirection
+            (fmap swapHorizontalDirection $ angleDirection angle)
 
     -- | There is a state where nikki's jump impulse will be affected by collisions
     -- with the ghost shapes. These jumps are called ghost jumps.
