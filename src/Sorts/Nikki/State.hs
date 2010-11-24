@@ -29,7 +29,7 @@ import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation
 
 
-jumpButton = BButton
+jumpButton = AButton
 
 
 updateState :: Mode -> Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki

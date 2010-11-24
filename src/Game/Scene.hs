@@ -93,7 +93,7 @@ nikkiToTerminal scene@Scene{mode = (NikkiMode nikki)} pushed
     | actionButtonPressed && beforeTerminal
         = Just $ scene {mode = mode'}
   where
-    actionButton = AButton
+    actionButton = BButton
     actionButtonPressed = Press actionButton `elem` pushed
     beforeTerminal = nikkiTouchesTerminal $ contacts scene
 
