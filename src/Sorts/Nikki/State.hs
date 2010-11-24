@@ -259,44 +259,59 @@ angleDirection angle =
 -- Considers ghost collisions depending on the arguments.
 jumpImpulseData :: Bool -> [NikkiCollision] -> Maybe NikkiCollision
 jumpImpulseData considerGhostsState =
-    -- sort (more upward first)
-    sortBy (withView (abs . nikkiCollisionAngle) compare) >>>
-    -- remove angles pointing downward
-    filter (\ x -> abs (nikkiCollisionAngle x) <= pi / 2) >>>
+    filterDownwardAngles >>>
     filterGhostCollisions >>>
-    filter causingJumps >>>
-    -- sorting collisions: legs, ghost, head
     sortLegsCollisions >>>
+    sortByAngle >>>
+    newSpreadCollisions >>>
+    filter causingJumps >>>
     listToMaybe
   where
+    -- | remove angles pointing downward
+    filterDownwardAngles =
+        filter (\ x -> abs (nikkiCollisionAngle x) <= pi / 2)
+
+    -- | consider only ghost collisions
+    -- that have a so called standing feet angle
+    filterGhostCollisions :: [NikkiCollision] -> [NikkiCollision]
+    filterGhostCollisions cs =
+        if considerGhostsState &&
+           (null $ filter isLegsCollision cs)
+        then cs
+        else filter (not . isGhostCollision) cs
+
+    -- | If there are collisions with angles with different signs,
+    -- we want a new artificial collision with angle 0.
+    -- This does not (in no case) consider ghost collisions.
+    newSpreadCollisions collisions =
+        if any ((< 0) . nikkiCollisionAngle) consideredCollisions &&
+           any ((> 0) . nikkiCollisionAngle) consideredCollisions
+        then (head consideredCollisions){nikkiCollisionAngle = 0} : collisions
+             -- Adds the artificial collision.
+             -- Just takes the first collision. The second would probably not be worse, but we have to pick one.
+        else collisions
+      where
+        consideredCollisions = filter (not . isGhostCollision) collisions
+
+    -- | sort (more upward first)
+    sortByAngle =
+        sortBy (withView (abs . nikkiCollisionAngle) compare)
+
+    -- | sorting collisions: legs, ghost, head
     sortLegsCollisions = sortBy (withView (nikkiCollisionType >>> toNumber) compare)
     toNumber NikkiLegsCT = 1
     toNumber NikkiGhostCT = 2
     toNumber NikkiHeadCT = 3
     toNumber NikkiLeftPawCT = 3
 
+    -- | if a single collision would cause a jump. Does (of course) not consider spread collisions.
     causingJumps x =
         (not $ isHeadCollision x) ~>
         (isStandingFeetAngle $ nikkiCollisionAngle x)
-    filterGhostCollisions :: [NikkiCollision] -> [NikkiCollision]
-    -- consider only ghost collisions
-    -- that have a so called standing feet angle
-    filterGhostCollisions cs =
-        if considerGhostsState &&
-           (null $ filter isLegsCollision cs)
-        then cs
-        else filter (not . isGhostCollision) cs
+
+    -- | putting the head in a Just
     listToMaybe [] = Nothing
-    listToMaybe list@(a : _) =
-        -- just take the best (if there are two than it (hopefully) doesn't matter)
-        -- and set the angle to 0 if there are angle greater and smaller than 0.
-        Just $ a{nikkiCollisionAngle = angle}
-      where
-        angle = if any ((< 0) . nikkiCollisionAngle) list &&
-                   any ((> 0) . nikkiCollisionAngle) list
-                    -- if nikki's contacts are on both sides of pointing up
-                then 0
-                else (nikkiCollisionAngle a)
+    listToMaybe (a : _) = Just a
 
 
 -- updates the start time of nikki if applicable
