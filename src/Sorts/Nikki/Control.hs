@@ -48,14 +48,14 @@ control now contacts (True, cd) nsort nikki =
         -- ghost state
         State (Wait (Just ji)) _ _ -> applyAirborneForces now nikki ji
 
-        State (Walk Nothing) direction _ -> do
+        State (Walk afterAirborne Nothing) direction _ -> do
             setNikkiSurfaceVelocity nikki (walking direction)
             resetForces $ body $ chipmunk nikki
           where
             walking HLeft = walkingVelocity
             walking HRight = - walkingVelocity
         -- ghost state
-        State (Walk (Just ji)) _ _ -> applyAirborneForces now nikki ji
+        State (Walk afterAirborne (Just ji)) _ _ -> applyAirborneForces now nikki ji
 
         -- jumping
         -- =======

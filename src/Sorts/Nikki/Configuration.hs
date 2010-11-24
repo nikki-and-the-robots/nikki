@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables #-}
+{-# language ScopedTypeVariables, NamedFieldPuns #-}
 
 module Sorts.Nikki.Configuration where
 
@@ -97,7 +97,7 @@ touchdownDuration = 0.1
 frameTimes :: State -> (String, [(Int, Seconds)])
 frameTimes action = case action of
     State Wait{} d _ -> (addDirection d "wait", wait)
-    State Walk{} d _ -> (addDirection d "walk", walk)
+    State Walk{afterAirborne} d _ -> (addDirection d "walk", walk afterAirborne)
     State JumpImpulse{} d _ -> (addDirection d "jump", airborne)
     State Airborne{} d _ -> (addDirection d "jump", airborne)
     State WallSlide{} d _ -> (addDirection d "wallslide", airborne)
@@ -117,8 +117,12 @@ frameTimes action = case action of
     wait = zip
         (0 : cycle [1, 2, 1, 2, 1, 2, 1])
         (1 : cycle [1.5, 0.15, 3, 0.15, 0.1, 0.15, 1])
-    walk = zip
+    walk False = zip
         (cycle [0..3])
+        (repeat 0.15)
+    -- walking after being airborne
+    walk True = zip
+        (cycle [3, 0, 1, 2])
         (repeat 0.15)
     airborne = zip
        (0 : repeat 1)

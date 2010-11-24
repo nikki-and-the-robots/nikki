@@ -65,9 +65,8 @@ instance Initial State where
     initial = State (Wait Nothing) HLeft False
 
 data Action
-           -- for ghost states
-    = Wait (Maybe JumpInformation)
-    | Walk (Maybe JumpInformation)
+    = Wait {ghostJumpInformation :: (Maybe JumpInformation)}
+    | Walk {afterAirborne :: Bool, ghostJumpInformation :: (Maybe JumpInformation)}
         -- state for one frame (when a jump starts)
     | JumpImpulse NikkiCollision JumpInformation
     | Airborne JumpInformation
@@ -102,7 +101,7 @@ isSlideToGrip = (6 ==) . toActionNumber
 
 getJumpInformation :: Action -> Maybe JumpInformation
 getJumpInformation (Wait x) = x
-getJumpInformation (Walk x) = x
+getJumpInformation (Walk _ x) = x
 getJumpInformation (Airborne x) = Just x
 getJumpInformation (WallSlide x _ _) = Just x
 getJumpInformation (SlideToGrip x) = Just x

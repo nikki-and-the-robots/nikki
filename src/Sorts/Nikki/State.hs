@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, NamedFieldPuns #-}
 
 module Sorts.Nikki.State where
 
@@ -66,7 +66,7 @@ updateState mode now contacts (True, controlData) nikki = do
                             if nothingHeld then
                                 State (Wait Nothing) newDirection
                             else
-                                State (Walk Nothing) newDirection
+                                State (Walk afterAirborne Nothing) newDirection
                         else if isGhostCollision c then
                         -- nikki is a ghost (boo!) (airborne, but can still jump)
                           case buttonDirection of
@@ -75,7 +75,7 @@ updateState mode now contacts (True, controlData) nikki = do
                                 (Wait $ Just $ jumpInformation' velocity_)
                                 newDirection
                             Just buttonDirection -> State
-                                (Walk $ Just $ jumpInformation' velocity_)
+                                (Walk afterAirborne $ Just $ jumpInformation' velocity_)
                                 newDirection
                         else
                         -- something touches the head that causes jumping capability
@@ -101,6 +101,14 @@ updateState mode now contacts (True, controlData) nikki = do
     -- nikkis previous horizontal direction
     oldDirection :: HorizontalDirection
     oldDirection = direction $ state nikki
+
+    -- if the actual action came after being airborne
+    -- (assuming the actual action is Walk)
+    afterAirborne =
+      case oldAction of
+        Walk{afterAirborne} -> afterAirborne
+        Airborne{} -> True
+        _ -> False
 
     -- if nikki should jump. Jump button is pushed and nikki is not in slideToGrip mode.
     willJump :: Bool
