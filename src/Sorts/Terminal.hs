@@ -58,8 +58,6 @@ blinkenLightSpeed = 0.5
 blinkLength :: Seconds
 blinkLength = 0.4
 
-exitFrameDuration = blinkLength / 9
-
 
 -- * sort loading
 
@@ -285,7 +283,7 @@ instance Sort TSort Terminal where
 
     chipmunks = chipmunk >>> return
 
-    startControl now t = t{state = reset now (robots t) (state t)}
+    startControl now t = t{state = reset (now - blinkLength) (robots t) (state t)}
 
     updateNoSceneChange sort mode now contacts (False, cd) terminal =
         return terminal
