@@ -29,6 +29,9 @@ import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation
 
 
+jumpButton = BButton
+
+
 updateState :: Mode -> Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
 updateState mode _ _ (False, _) nikki = do
     let action = case mode of
@@ -101,7 +104,7 @@ updateState mode now contacts (True, controlData) nikki = do
 
     -- if nikki should jump. Jump button is pushed and nikki is not in slideToGrip mode.
     willJump :: Bool
-    willJump = aPushed && not (isSlideToGrip $ action $ state nikki)
+    willJump = jumpButtonPushed && not (isSlideToGrip $ action $ state nikki)
 
     -- nikki's new horizontal direction
     newDirection :: HorizontalDirection
@@ -129,8 +132,8 @@ updateState mode now contacts (True, controlData) nikki = do
     hasLegsCollisions = not $ null $ filter isLegsCollision $ nikkiCollisions contacts
 
     -- button events
-    aPushed = Press AButton `elem` pressed controlData
-    aHeld = AButton `member` held controlData
+    jumpButtonPushed = Press jumpButton `elem` pressed controlData
+    jumpButtonHeld = jumpButton `member` held controlData
     rightPushed = Press RightButton `elem` pressed controlData
     leftPushed = Press LeftButton `elem` pressed controlData
     rightHeld = RightButton `member` held controlData
@@ -158,7 +161,7 @@ updateState mode now contacts (True, controlData) nikki = do
     -- when the jump button is held, this saves the time of the jump's start
     jumpStartTime_ :: Maybe Seconds
     jumpStartTime_ =
-        if aHeld
+        if jumpButtonHeld
         then getJumpInformation (action $ state nikki) >>= jumpStartTime
         else Nothing
 

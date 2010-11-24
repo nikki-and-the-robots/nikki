@@ -90,10 +90,11 @@ modifyTransitioned scene = do
 -- | converts the Scene to TerminalMode, if appropriate
 nikkiToTerminal :: Scene Object_ -> [AppEvent] -> Maybe (Scene Object_)
 nikkiToTerminal scene@Scene{mode = (NikkiMode nikki)} pushed
-    | bPressed && beforeTerminal
+    | actionButtonPressed && beforeTerminal
         = Just $ scene {mode = mode'}
   where
-    bPressed = Press BButton `elem` pushed
+    actionButton = AButton
+    actionButtonPressed = Press actionButton `elem` pushed
     beforeTerminal = nikkiTouchesTerminal $ contacts scene
 
     mode' = TerminalMode nikki terminal
