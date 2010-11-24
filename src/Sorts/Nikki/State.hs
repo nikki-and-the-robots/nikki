@@ -42,21 +42,25 @@ updateState mode _ _ (False, _) nikki = do
 updateState mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
     nikkiPos <- getPosition $ chipmunk nikki
-    return $ nikki{state = state' nikkiPos velocity_ considerGhostsState'}
+    let newState_ = newState now contacts controlData nikki nikkiPos velocity_
+    return $ nikki{state = newState_}
+
+newState now contacts controlData nikki nikkiPos velocity =
+    mkNewState considerGhostsState'
   where
     -- function that creates the next state when given the next considerGhosts value.
-    state' :: Vector -> Vector -> (Bool -> State)
-    state' nikkiPos velocity_ =
+    mkNewState :: (Bool -> State)
+    mkNewState =
       case (willJump, mJumpImpulseData) of
         -- nikki jumps
         (True, Just impulse) ->
-          let specialJumpInformation = JumpInformation (Just now) velocity_ buttonDirection
+          let specialJumpInformation = JumpInformation (Just now) velocity buttonDirection
           in State
                (JumpImpulse impulse specialJumpInformation)
                (jumpImpulseDirection $ nikkiCollisionAngle impulse)
         -- nikki touches something
         (False, Just c) ->
-          case grips nikkiPos contacts of
+          case grips of
             -- nikki grabs something
             Just HLeft | rightPushed -> State EndGripImpulse HLeft
             Just HRight | leftPushed -> State EndGripImpulse HRight
@@ -74,15 +78,15 @@ updateState mode now contacts (True, controlData) nikki = do
                 case buttonDirection of
                   -- no direction -> Wait
                   Nothing -> State
-                    (Wait $ Just $ jumpInformation' velocity_)
+                    (Wait $ Just jumpInformation')
                     newDirection
                   Just buttonDirection -> State
-                    (Walk afterAirborne $ Just $ jumpInformation' velocity_)
+                    (Walk afterAirborne $ Just jumpInformation')
                     newDirection
               else
               -- something touches the head that causes jumping capability
                 State
-                  (WallSlide (jumpInformation' velocity_)
+                  (WallSlide jumpInformation'
                      (map nikkiCollisionAngle collisions)
                      (clouds nikkiPos newDirection))
                   (wallSlideDirection $ nikkiCollisionAngle c)
@@ -91,10 +95,10 @@ updateState mode now contacts (True, controlData) nikki = do
           if hasLegsCollisions then
           -- nikki cannot jump, but has legs collisions
           -- the angle is too steep: nikki slides into grip mode (hopefully)
-            State (SlideToGrip (jumpInformation' velocity_)) newDirection
+            State (SlideToGrip jumpInformation') newDirection
           else
             -- nikki touches nothing relevant
-            State (Airborne (jumpInformation' velocity_)) newDirection
+            State (Airborne jumpInformation') newDirection
 
     -- Action of nikkis last state
     oldAction = action $ state nikki
@@ -121,15 +125,15 @@ updateState mode now contacts (True, controlData) nikki = do
         _ -> fromMaybe oldDirection buttonDirection
 
     -- returns if nikki grabs something (and if yes, which direction)
-    grips :: CM.Position -> Contacts -> Maybe HorizontalDirection
-    grips nikkiPos =
-        nikkiCollisions >>>
-        filter isHeadCollision >>>
-        filter isGripCollision >>>
-        inner
+    grips :: Maybe HorizontalDirection
+    grips =
+        (nikkiCollisions >>>
+         filter isHeadCollision >>>
+         filter isGripCollision >>>
+         toGripCollision) contacts
       where
-        inner [] = Nothing
-        inner gripCollisions = Just $
+        toGripCollision [] = Nothing
+        toGripCollision gripCollisions = Just $
             if any ((NikkiLeftPawCT ==) . nikkiCollisionType) gripCollisions
             then HLeft else HRight
     -- if a given head collision should be treated as nikki grabbing something
@@ -163,8 +167,8 @@ updateState mode now contacts (True, controlData) nikki = do
     collisions = nikkiCollisions contacts
 
     -- while nikki is in the air, this describes the state
-    jumpInformation' velocity_ =
-        JumpInformation jumpStartTime_ velocity_ buttonDirection
+    jumpInformation' =
+        JumpInformation jumpStartTime_ velocity buttonDirection
 
     -- when the jump button is held, this saves the time of the jump's start
     jumpStartTime_ :: Maybe Seconds
