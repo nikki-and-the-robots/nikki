@@ -19,6 +19,8 @@ import Physics.Chipmunk hiding (position, Position)
 
 import Utils
 
+import Object
+
 import Base.Types
 import Base.Constants
 import Base.Directions
@@ -40,6 +42,9 @@ data Nikki
         batteryPower :: Integer -- makes it possible to have REALLY BIG amounts of power :)
       }
   deriving (Show, Typeable)
+
+unwrapNikki :: Object_ -> Maybe Nikki
+unwrapNikki (Object_ sort o) = cast o
 
 -- | just for compatibility (TODO: remove)
 feetShapes :: Nikki -> [Shape]
@@ -89,14 +94,13 @@ toActionNumber Grip                 = 7
 toActionNumber EndGripImpulse       = 8
 toActionNumber NikkiLevelFinished{} = 9
 
-isJumpImpulseAction :: Action -> Bool
+isWaitAction, isWalkAction, isJumpImpulseAction,
+    isAirborneAction, isSlideToGripAction :: Action -> Bool
+isWaitAction        = (0 ==) . toActionNumber
+isWalkAction        = (1 ==) . toActionNumber
 isJumpImpulseAction = (2 ==) . toActionNumber
-
-isAirborneAction :: Action -> Bool
-isAirborneAction = (3 ==) . toActionNumber
-
-isSlideToGrip :: Action -> Bool
-isSlideToGrip = (6 ==) . toActionNumber
+isAirborneAction    = (3 ==) . toActionNumber
+isSlideToGripAction = (6 ==) . toActionNumber
 
 
 getJumpInformation :: Action -> Maybe JumpInformation

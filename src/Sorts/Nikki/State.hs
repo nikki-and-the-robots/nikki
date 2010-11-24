@@ -116,7 +116,7 @@ newState now contacts controlData nikki nikkiPos velocity =
 
     -- if nikki should jump. Jump button is pushed and nikki is not in slideToGrip mode.
     willJump :: Bool
-    willJump = jumpButtonPushed && not (isSlideToGrip $ action $ state nikki)
+    willJump = jumpButtonPushed && not (isSlideToGripAction $ action $ state nikki)
 
     -- nikki's new horizontal direction
     newDirection :: HorizontalDirection
