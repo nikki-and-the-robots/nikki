@@ -102,7 +102,7 @@ frameTimes action = case action of
     State JumpImpulse{} d _ -> (addDirection d "jump", airborne)
     State Airborne{} d _ -> (addDirection d "jump", airborne)
     State WallSlide{} d _ -> (addDirection d "wallslide", airborne)
-    State SlideToGrip{} d _ -> (addDirection d "grip", singleFrame)
+    State SlideToGrip{} d _ -> (addDirection d "jump", singleFrame)
     State Grip d _ -> (addDirection d "grip", singleFrame)
     State EndGripImpulse d _ -> (addDirection d "grip", singleFrame)
     State UsingTerminal _ _ -> ("terminal", singleFrame)
