@@ -39,25 +39,12 @@ Contains helper scripts.
 * cabal-install (tested with 0.8.2)
     http://haskell.org/cabal/download.html
 
-* csfml (and sfml)
-    Tested with the svn version (of sfml 2)
-    get it: svn co https://sfml.svn.sourceforge.net/svnroot/sfml/trunk sfml2-svn
-    how to compile it: http://www.sfml-dev.org/tutorials/1.6/start-linux.php
-    Do something like:
-        make
-        sudo make install
-        cd CSFML
-        make
-        sudo make install
-    Don't forget to install sfml before trying to build csfml.
-	sfml has some dependencies (c-libraries) of its own:
-		* openAL
-
 * homegrown haskell bindings for sfml-audio
     install with e.g.:
         darcs get http://code.joyridelabs.de/sfml-audio/
         cd sfml-audio
         cabal install
+    They ship with their own version of SFML2.
 
 * hipmunk-5.2.0.2 from http://code.joyridelabs.de/Hipmunk-5.2.0.2.tar.gz
     install with e.g.:
