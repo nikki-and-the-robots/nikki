@@ -38,7 +38,7 @@ robotIdleEyeTime = 0.4
 -- * Physics
 
 gravity :: Double
-gravity = 2175 -- 1904
+gravity = 2050 -- 1904
 
 stepQuantum :: Double
 stepQuantum = 0.002

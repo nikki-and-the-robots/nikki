@@ -43,14 +43,14 @@ headFriction = 0.1 -- 0.1
 
 -- | maximum walking speed (pixel per second)
 -- also affects maximal jumping distance
-walkingVelocity :: Double = 410 -- 390.0
+walkingVelocity :: Double = 415 -- 390.0
 
 -- | how strong the horizontal force is while Nikki is airborne
 -- in gravities
 airBorneForceFactor = 0.6 -- 0.5
 
 -- | minimal jumping height (for calculating the impulse strength)
-minimalJumpingHeight = fromKachel 0.26 -- maybe even higher, before: 0.25
+minimalJumpingHeight = fromKachel 0.28 -- maybe even higher, before: 0.25
 
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
 maximalJumpingHeight = fromKachel 3.4 -- very good, before: 3.5
@@ -83,7 +83,7 @@ gripImpulse = 160 -- 200
 -- They enable jumping, when there was a leg collision before.
 -- See Sorts.Nikki.State.
 -- One is wider than the legs:
-ghostWidthPadding :: Double = fromUber 3
+ghostWidthPadding :: Double = fromUber 8 -- 3
 
 -- and one is longer:
 ghostHeightPadding :: Double = fromUber 3
