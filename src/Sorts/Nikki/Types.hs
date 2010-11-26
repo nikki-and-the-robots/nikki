@@ -8,6 +8,7 @@ import Prelude hiding (lookup)
 import Data.Map (Map)
 import Data.Generics
 import Data.Initial
+import Data.Abelian
 
 import Control.Arrow
 
@@ -62,22 +63,23 @@ addBatteryPower n = n{batteryPower = batteryPower n + 1}
 data State = State {
     action :: Action,
     direction :: HorizontalDirection, -- the direction nikki faces
+    jumpInformation :: JumpInformation,
     considerGhostsState :: Bool -- if ghost shapes should be considered
   }
     deriving (Show)
 
 instance Initial State where
-    initial = State (Wait Nothing) HLeft False
+    initial = State (Wait False) HLeft initial False
 
 data Action
-    = Wait {ghostJumpInformation :: (Maybe JumpInformation)}
-    | Walk {afterAirborne :: Bool, ghostJumpInformation :: (Maybe JumpInformation)}
+    = Wait {isGhost :: Bool}
+    | Walk {afterAirborne :: Bool, isGhost :: Bool}
         -- state for one frame (when a jump starts)
-    | JumpImpulse NikkiCollision JumpInformation
-    | Airborne JumpInformation
-    | WallSlide JumpInformation [Angle] [Cloud]
+    | JumpImpulse NikkiCollision
+    | Airborne
+    | WallSlide [Angle] [Cloud]
     | UsingTerminal
-    | SlideToGrip JumpInformation
+    | SlideToGrip
     | Grip -- when Nikki uses the paws to hold on to something
     | EndGripImpulse -- state for one frame (when grip state is ended)
     | NikkiLevelFinished LevelResult
@@ -103,15 +105,6 @@ isAirborneAction    = (3 ==) . toActionNumber
 isSlideToGripAction = (6 ==) . toActionNumber
 
 
-getJumpInformation :: Action -> Maybe JumpInformation
-getJumpInformation (Wait x) = x
-getJumpInformation (Walk _ x) = x
-getJumpInformation (Airborne x) = Just x
-getJumpInformation (WallSlide x _ _) = Just x
-getJumpInformation (SlideToGrip x) = Just x
-getJumpInformation (JumpImpulse _ x) = Just x
-getJumpInformation _ = Nothing
-
 data JumpInformation =
     JumpInformation {
         jumpStartTime :: Maybe Seconds,
@@ -119,6 +112,9 @@ data JumpInformation =
         jumpButtonDirection :: (Maybe HorizontalDirection)
       }
   deriving (Show)
+
+instance Initial JumpInformation where
+    initial = JumpInformation Nothing zero Nothing
 
 data Cloud
     = Cloud {

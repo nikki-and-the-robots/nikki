@@ -144,7 +144,7 @@ pickPixmap now sort nikki =
         Nothing -> es "problem finding pixmaps in Nikki: " name
 
 renderClouds :: Ptr QPainter -> Offset Double -> Seconds -> NSort -> Action -> IO ()
-renderClouds ptr offset now sort (WallSlide _ _ clouds) =
+renderClouds ptr offset now sort (WallSlide _ clouds) =
     fmapM_ render clouds
   where
     render cloud = do
@@ -163,11 +163,10 @@ debugNikki :: Seconds -> Contacts -> Nikki -> IO ()
 debugNikki now contacts nikki = do
     addDebugging $ \ ptr offset -> do
         resetMatrix ptr
-        let boo = drawText ptr (Position 30 30) False "BOO"
-        case action $ state nikki of
-          (Wait (Just _))   -> boo
-          (Walk _ (Just _)) -> boo
-          _ -> return ()
+        translate ptr offset
+        fmapM_ (drawAngle ptr green . nikkiCollisionAngle) $
+            jumpCollision (considerGhostsState (state nikki))
+            (nikkiCollisions contacts)
 
 drawVector :: Ptr QPainter -> Color -> Vector -> IO ()
 drawVector ptr color v = do
