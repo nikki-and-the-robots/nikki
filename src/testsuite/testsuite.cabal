@@ -56,7 +56,7 @@ Executable testsuite
         safe,
         transformers,
         StateVar,
-        QuickCheck,
+        QuickCheck == 2.4.0.1,
         random,
         process
 

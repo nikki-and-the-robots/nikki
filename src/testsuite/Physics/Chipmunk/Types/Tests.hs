@@ -26,9 +26,15 @@ testMassForShape = do
 
 shapeTest :: Gen (ShapeType, Mass) -> Property
 shapeTest shapeGen =
-    forAll shapeGen $ \ (shape, expected) ->
+    forAll shapeGen $ \ (shape, area) ->
     forAll mkMass $ \ mpp ->
-    (massForShape mpp shape == expected * mpp)
+    let result = massForShape mpp shape
+        expected = area * mpp
+    in printTestCase (show (expected, result))
+        (result =~ expected)
+
+a =~ b = abs (a - b) < eps
+eps = 0.000001
 
 mkMass :: Gen Mass
 mkMass = choose (1, 100)
