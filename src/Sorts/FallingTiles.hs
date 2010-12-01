@@ -25,6 +25,8 @@ import Base.Types
 
 import Object
 
+import Sorts.Box (boxMaterialMass)
+
 
 -- * configuration
 
@@ -36,6 +38,8 @@ names = [
 -- | time in seconds, before the tiles start to fall after touching Nikki
 timeBeforeGettingLoose :: Seconds
 timeBeforeGettingLoose = 0.2
+
+fallingTilesMaterialMass = boxMaterialMass
 
 -- * loading
 
@@ -60,7 +64,7 @@ data TSort
 
 data FallingTile
     = FallingTile {
-        tileSize :: Size Double,
+        tileAttributes :: BodyAttributes,
         chipmunk :: Chipmunk,
         status :: Status
       }
@@ -84,9 +88,9 @@ instance Sort TSort FallingTile where
         drawLine ptr (Position w 0) (Position 0 h)
 
     initialize sort@TSort{} (Just space) editorPosition Nothing = do
-        chip <- initializeBox space sort editorPosition
-        modifyApplyForce chip (CM.scale (Vector 0 (- gravity)) (scaleMass (size sort) staticMass))
-        return $ FallingTile (size sort) chip Static
+        (chip, attributes) <- initializeBox space sort editorPosition
+        modifyApplyForce chip (CM.scale (Vector 0 (- gravity)) staticMass)
+        return $ FallingTile attributes chip Static
 
     immutableCopy t@FallingTile{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return t{chipmunk = x}
@@ -104,8 +108,8 @@ instance Sort TSort FallingTile where
                 if now - t >= timeBeforeGettingLoose then do
                     modifyApplyOnlyForce (chipmunk fallingTile) zero
                     let b = body $ chipmunk fallingTile
-                    H.mass b $= scaleMass (tileSize fallingTile) dynamicMass
-                    moment b $= dynamicInertia
+                    H.mass b $= (mass $ tileAttributes fallingTile)
+                    moment b $= (inertia $ tileAttributes fallingTile)
                     angVel <- randomRIO (-2, 2)
                     modifyAngVel (chipmunk fallingTile) (const angVel)
                     return $ fallingTile{status = Loose}
@@ -119,17 +123,23 @@ instance Sort TSort FallingTile where
         renderPixmap ptr offset position (Just rad) tilePixmap
 
 
-initializeBox :: Space -> TSort -> EditorPosition -> IO Chipmunk
+initializeBox :: Space -> TSort -> EditorPosition -> IO (Chipmunk, BodyAttributes)
 initializeBox space sort ep = do
     let (shape, baryCenterOffset) = mkShape sort
         shapeWithAttributes = (mkShapeDescription shapeAttributes shape)
         pos :: Vector
         pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                 +~ baryCenterOffset
-    chip <- initChipmunk space (bodyAttributes pos (size sort))
-                [shapeWithAttributes] baryCenterOffset
-    return $ chip
+        bodyAttributes = mkMaterialBodyAttributes fallingTilesMaterialMass [shape] pos
+        -- this is a hack: mass and inertia set to very large values to simulate static tiles
+        staticBodyAttributes = bodyAttributes{mass = staticMass, inertia = staticInertia}
+    chip <- initChipmunk space staticBodyAttributes [shapeWithAttributes] baryCenterOffset
+    return (chip, bodyAttributes)
 
+staticMass = 1000000000000
+staticInertia = 1000000000000000000
+
+mkShape :: TSort -> (ShapeType, Vector)
 mkShape sort =
     (box, baryCenterOffset)
   where
@@ -170,25 +180,3 @@ shapeAttributes = ShapeAttributes {
     friction      = 2.0,
     collisionType = FallingTileCT
   }
-
-bodyAttributes :: CM.Position -> Size QtReal -> BodyAttributes
-bodyAttributes pos size = BodyAttributes{
-    CM.position         = pos,
-    mass                = scaleMass size staticMass,
-    inertia             = staticInertia
-  }
-
-scaleMass :: Size Double -> Double -> Double
-scaleMass (Size a b) mass = mass * toKachel a * toKachel b
-
-
-staticMass = 6000000000
-dynamicMass = 2.5
-staticInertia = dynamicInertia * staticMass / dynamicMass
-dynamicInertia = 6000
-
-
-
-
-
-

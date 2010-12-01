@@ -1,6 +1,6 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable #-}
 
-module Sorts.Box where
+module Sorts.Box (sorts, boxMaterialMass) where
 
 
 import Data.Typeable
@@ -23,6 +23,8 @@ import Object
 -- Configuration
 
 names = ["box-wood-small", "box-wood-large"]
+
+boxMaterialMass = 1.21875
 
 -- loading
 
@@ -59,21 +61,14 @@ instance Sort BSort Box where
             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
             position = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
                             +~ baryCenterOffset
-        chip <- CM.initChipmunk space (bodyAttributes position (size sort)) 
+            bodyAttributes = mkMaterialBodyAttributes boxMaterialMass shapes position
+        chip <- CM.initChipmunk space bodyAttributes
                     shapesWithAttributes baryCenterOffset
         return $ Box chip
     immutableCopy (Box x) = CM.immutableCopy x >>= return . Box
     chipmunks b = [chipmunk b]
     render o sort ptr offset now =
         renderChipmunk ptr offset (boxPixmap sort) (chipmunk o)
-
-
-bodyAttributes :: CM.Position -> Size QtReal -> BodyAttributes
-bodyAttributes pos (Size a b) = BodyAttributes {
-    CM.position         = pos,
-    mass                = (1 * (toKachel a) * (toKachel b)),
-    inertia             = 6000
-  }
 
 shapeAttributes :: ShapeAttributes
 shapeAttributes = ShapeAttributes {
@@ -101,6 +96,3 @@ mkShapes (Size w h) = ([box],  baryCenterOffset)
     lowerLeft = Vector left low
     lowerRight = Vector right low
     upperRight = Vector right up
-
-
-

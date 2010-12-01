@@ -5,7 +5,7 @@ module Sorts.Battery where
 
 import Data.Data
 import Data.Abelian
-import Data.Set
+import Data.Set (member)
 import Data.Indexable as I
 
 import Control.Arrow
@@ -29,6 +29,8 @@ import Sorts.Nikki (addBatteryPower, modifyNikki)
 
 
 -- * battery config
+
+batteryMaterialMass = 3.588785046728972
 
 batterySize = Size 28 52
 
@@ -72,7 +74,8 @@ instance Sort BSort Battery where
             shapes = fmap (mkShapeDescription shapeAttributes) mkShapes
             pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
-        chip <- initChipmunk space (bodyAttributes pos) shapes baryCenterOffset
+            bodyAttributes = mkMaterialBodyAttributes batteryMaterialMass mkShapes pos
+        chip <- initChipmunk space bodyAttributes shapes baryCenterOffset
         return $ Battery chip
 
     immutableCopy b =
@@ -100,13 +103,6 @@ shapeAttributes = ShapeAttributes {
     elasticity    = 0.1,
     friction      = 0.5,
     collisionType = BatteryCT
-  }
-
-bodyAttributes :: CM.Position -> BodyAttributes
-bodyAttributes pos = BodyAttributes{
-    CM.position = pos,
-    mass        = 1,
-    inertia     = 600
   }
 
 

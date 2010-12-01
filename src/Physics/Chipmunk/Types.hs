@@ -116,6 +116,16 @@ immutableCopy c = do
 
 -- * creation
 
+-- | creates BodyAttributes for shapes that belong to one material
+-- and don't overlap. (otherwise the mass and inertia will be wrong).
+mkMaterialBodyAttributes :: Mass -> [ShapeType] -> Position -> BodyAttributes
+mkMaterialBodyAttributes mpp shapes pos = BodyAttributes {
+    position = pos,
+    mass        = sum (map (massForShape mpp) shapes),
+    inertia     = sum (map (momentForMaterialShape mpp Nothing) shapes)
+  }
+
+
 initChipmunk :: Space -> BodyAttributes -> [ShapeDescription]
     -> Vector -> IO Chipmunk
 initChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenterOffset = do

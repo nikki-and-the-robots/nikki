@@ -13,9 +13,7 @@ import Base.Constants
 -- * physics
 
 -- | robot mass per (square-)pixel
-robotMass :: Double = 64 / kachelArea
-  where
-    kachelArea = fromUber 16 ^ 2
+robotMaterialMass :: Double = 78
 
 robotBodySize :: Size Double = fmap fromUber $ Size 15 15
 

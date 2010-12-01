@@ -1,6 +1,7 @@
 
 module Sorts.Nikki.Initialisation (
     mkPolys,
+    nikkiMass,
     bodyAttributes,
     footToHeadAngle,
   ) where
@@ -30,7 +31,6 @@ bodyAttributes pos = BodyAttributes {
     mass                = nikkiMass,
     inertia             = infinity
   }
-
 
 legsShapeAttributes :: ShapeAttributes
 legsShapeAttributes = ShapeAttributes {

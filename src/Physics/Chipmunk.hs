@@ -4,7 +4,7 @@ module Physics.Chipmunk (
     Chipmunk(..),
     BodyAttributes(..),
     ShapeAttributes(..),
-    ShapeDescription(ShapeDescription),
+    ShapeDescription(ShapeDescription, shapeType),
     mkShapeDescription,
     immutableCopy,
 
@@ -12,8 +12,8 @@ module Physics.Chipmunk (
     getChipmunkPosition,
 
     withSpace,
+    mkMaterialBodyAttributes,
     Physics.Chipmunk.Types.initChipmunk,
---     addInitShape,
     removeChipmunk,
 
     vectorX,

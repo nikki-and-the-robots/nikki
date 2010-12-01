@@ -115,8 +115,8 @@ control now contacts (True, cd) nsort nikki =
             modifyApplyImpulse (chipmunk nikki) (Vector (mkGripImpulse direction) 0)
             resetForces $ body $ chipmunk nikki
           where
-            mkGripImpulse HLeft = gripImpulse
-            mkGripImpulse HRight = - gripImpulse
+            mkGripImpulse HLeft = gripImpulse * nikkiMass
+            mkGripImpulse HRight = - gripImpulse * nikkiMass
 
         x -> es "controlBody" x
 

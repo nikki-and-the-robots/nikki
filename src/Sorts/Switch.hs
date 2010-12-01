@@ -26,9 +26,17 @@ import Base.Types
 
 import Object
 
+import Sorts.Robots.Configuration
 import Sorts.Tiles (tileShapeAttributes)
 import Sorts.Nikki (nikkiMass)
 
+
+-- * configuration
+
+stampMaterialMass = 1.7677053824362605
+
+
+-- * loading
 
 sorts :: IO [Sort_]
 sorts = do
@@ -83,8 +91,10 @@ instance Sort SwitchSort Switch where
 
         let stampPos = Vector (editorX ep) (editorY ep - (height boxSize + fromUber 7))
                        +~ stampBaryCenterOffset
-        stampChip <- initChipmunk space (stampBodyAttributes stampPos) stampShapes stampBaryCenterOffset
-        modifyApplyForce stampChip (Vector 0 (- (gravity * (stampMass + nikkiMass * 0.55))))
+            stampAttributes = stampBodyAttributes stampPos
+        stampChip <- initChipmunk space stampAttributes stampShapes stampBaryCenterOffset
+        modifyApplyForce stampChip
+            (Vector 0 (- (gravity * (mass stampAttributes + nikkiMass * 0.55))))
 
         return $ Switch boxChip stampChip triggerChip triggerShape False
 
@@ -107,8 +117,6 @@ instance Sort SwitchSort Switch where
         let boxPix = if triggered switch then boxOnPix sort else boxOffPix sort
         renderChipmunk ptr offset boxPix (boxChipmunk switch)
 
---         renderGrids ptr offset (chipmunks switch)
-
 
 boxAttributes :: Vector -> BodyAttributes
 boxAttributes pos =
@@ -116,14 +124,15 @@ boxAttributes pos =
         CM.position = pos
       }
 
-stampBodyAttributes :: Vector -> BodyAttributes
-stampBodyAttributes pos = BodyAttributes {
-    CM.position         = pos,
-    mass                = stampMass,
-    inertia             = 6000
-  }
+stampBodyAttributes :: CM.Position -> BodyAttributes
+stampBodyAttributes =
+    mkMaterialBodyAttributes stampMaterialMass stampShapes
+  where
+    (_, _, (stampShapeDescriptions, _)) = switchShapes
+    stampShapes = map shapeType stampShapeDescriptions
 
-stampMass = 3
+
+
 
 innerStampShapeAttributes :: ShapeAttributes
 innerStampShapeAttributes =
@@ -140,7 +149,6 @@ triggerShapeAttributes =
         friction = 1,
         CM.collisionType = TriggerCT
       }
-
 
 
 boxSize = Size (fromUber 31) (fromUber 15)
@@ -210,6 +218,3 @@ switchShapes =
     boxUpper = - boxLower
 
     stampLeftUpper = Position (- width boxSize / 2) (- (height shaftSize + height platformSize))
-
-
-

@@ -39,6 +39,8 @@ animationFrameTimesMap = fromList [
     (Boost, [0.08])
   ]
 
+jetpackSize = fmap fromUber $ Size 27 21
+
 
 -- * loading
 
@@ -100,7 +102,7 @@ instance Sort JSort Jetpack where
         let
             pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
-            bodyAttributes = bodyAttributesConstant{CM.position = pos}
+            bodyAttributes = jetpackBodyAttributes pos
             shapeAttributes = ShapeAttributes{
                 elasticity = 0.8,
                 friction = 0.5,
@@ -126,16 +128,12 @@ instance Sort JSort Jetpack where
 
     render = renderJetpack
 
+jetpackBodyAttributes p =
+    mkMaterialBodyAttributes robotMaterialMass (fst mkPolys) p
 
+jetpackMass = mass $ jetpackBodyAttributes zero
 
-
-
-bodyAttributesConstant :: BodyAttributes
-bodyAttributesConstant = BodyAttributes {
-    CM.position = zero,
-    mass = sum $ map (massForShape robotMass) $ fst mkPolys,
-    inertia = sum $ map (momentForMaterialShape robotMass Nothing) $ fst mkPolys
-  }
+jetpackInertia = inertia $ jetpackBodyAttributes zero
 
 
 mkPolys :: ([ShapeType], Vector)
@@ -158,9 +156,6 @@ mkPolys =
     hh = h / 2
     baryCenterOffset = Vector wh hh
     Size w h = jetpackSize
-
-jetpackSize = fmap fromUber $ Size 27 21
-
 
 
 -- * logick
@@ -246,11 +241,11 @@ hover body angle boost =
       else
         applyOnlyForce body (antiGravity <<| "antiGravity") zero
   where
-    antiGravity = Vector 0 (antiGravityFactor * (- gravity) * mass bodyAttributesConstant)
+    antiGravity = Vector 0 (antiGravityFactor * (- gravity) * jetpackMass)
     antiGravityFactor = 0.8
 
     jetpackForce = rotateVector angle (Vector 0 (- jetpackAmount))
-    jetpackAmount = acceleration * mass bodyAttributesConstant
+    jetpackAmount = acceleration * jetpackMass
     acceleration = gravity - (antiGravityFactor * gravity) + 300
 
 directions :: Maybe HorizontalDirection -> Torque
@@ -259,7 +254,7 @@ directions (Just HLeft) = (- directionForce)
 directions (Just HRight) = directionForce
 
 directionForce :: Torque
-directionForce = (7.5 * inertia bodyAttributesConstant) <<| "directionForce"
+directionForce = (7.5 * jetpackInertia) <<| "directionForce"
 
 frictionTorque angVel =
     if abs angVel < epsilon then

@@ -30,8 +30,14 @@ nikkiSize :: Size Double = Size (fromUber 13) (fromUber 24) -- physics size
 
 elasticity_ = 0.0
 
-nikkiMass :: Double
-nikkiMass = 1
+-- | mass of nikki per pixel.
+-- Should be 1, Nikki's material mass is our mass unit.
+nikkiMaterialMass :: Double
+nikkiMaterialMass = 1
+
+nikkiMass :: Mass
+nikkiMass = nikkiMaterialMass * width nikkiSize * height nikkiSize
+
 
 -- | friction for nikkis feet. The higher the friction,
 -- the faster nikki will gain maximum walking speed
