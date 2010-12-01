@@ -72,7 +72,7 @@ transition (ControlData pushed _) scene =
         nikkiToTerminal scene pushed,
         terminalExit scene,
         robotToTerminal scene pushed,
-        robotToNikki scene,
+        nikkiMovedAwayFromTerminal scene,
         gameOver scene,
         levelPassed scene
       ]
@@ -144,12 +144,16 @@ robotToTerminal scene@Scene{mode = RobotMode{nikki, terminal}} pushed
 robotToTerminal _ _ = Nothing
 
 -- | if nikki gets moved away from the terminal during robot mode...
-robotToNikki :: Scene Object_ -> Maybe (Scene Object_)
-robotToNikki scene@Scene{mode = RobotMode{nikki, terminal}} =
-    if terminal `elem` whichTerminalCollides scene
-    then Nothing
-    else Just $ scene{mode = NikkiMode nikki}
-robotToNikki _ = Nothing
+nikkiMovedAwayFromTerminal :: Scene Object_ -> Maybe (Scene Object_)
+nikkiMovedAwayFromTerminal scene@Scene{mode} =
+    if isRobotMode mode || isTerminalMode mode then
+        if terminal mode `elem` whichTerminalCollides scene then
+            Nothing
+        else
+            Just $ scene{mode = NikkiMode (nikki mode)}
+    else
+        Nothing
+
 
 gameOver :: Scene Object_ -> Maybe (Scene Object_)
 gameOver scene | isGameOver =
@@ -179,9 +183,6 @@ levelPassed scene =
 -- leaves contacts untouched, if no simulation steps are being done
 
 stepSpace :: Space -> Scene Object_ -> IO (Scene Object_)
-
-stepSpace _space s@Scene{mode = TerminalMode{}} =
-    return s{spaceTime = spaceTime s + stepQuantum}
 
 stepSpace space s@Scene{contactRef} = do
     resetContactRef contactRef
