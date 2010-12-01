@@ -84,7 +84,7 @@ getFrameFileNames name = do
             map (pngDir </>) $
             map third $
             sortBy (withView snd3 compare) $
-            filter ((name ==) . fst3) $
+            filter (\ (candidateName, _, _) -> withView splitDirectories (==) name candidateName) $
             map parsePath relativePaths
     return files
   where
