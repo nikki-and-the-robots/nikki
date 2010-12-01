@@ -9,7 +9,7 @@ module Object.Contacts (
   ) where
 
 
-import Data.Set as Set hiding (map)
+import Data.Set as Set hiding (map, filter)
 import Data.Initial
 
 import Physics.Chipmunk
@@ -78,7 +78,8 @@ watchedContacts =
     map terminalSolidCallback solidCollisionTypes ++
     map batteryCallback nikkiCollisionTypes ++
     Callback (DontWatch BatteryCT TerminalCT) Permeable :
-    map nikkiFallingTilesCallbacks nikkiCollisionTypes
+    map nikkiFallingTilesCallbacks
+        (filter (/= NikkiGhostCT) nikkiCollisionTypes)
 
 
 nikkiCallbacks solidCT nikkiCollisionType =
