@@ -42,7 +42,7 @@ getCameraPosition ptr scene = do
       Nothing -> return oldPosition
     -- update via the controlled object
       Just controlledIndex -> do
-        controlledPosition <- liftIO $ getPosition $ getControlledChipmunk controlledIndex
+        controlledPosition <- liftIO $ getPosition $ getControlledChipmunk scene controlledIndex
         windowSize <- fmap fromIntegral <$> liftIO (Qt.sizeQPainter ptr)
         let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
             -- vertical distance from the controlled object to the camera's old position

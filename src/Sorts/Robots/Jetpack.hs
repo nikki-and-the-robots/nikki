@@ -119,7 +119,7 @@ instance Sort JSort Jetpack where
     immutableCopy j@Jetpack{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return j{chipmunk = x}
 
-    getControlledChipmunk = chipmunk
+    getControlledChipmunk _ = chipmunk
 
     updateNoSceneChange sort mode now contacts (isControlled, cd) =
         fromPure (jupdate (isControlled, cd)) >>>>

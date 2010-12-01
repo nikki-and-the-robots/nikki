@@ -40,7 +40,7 @@ import Base.Events
 import Base.Constants
 import Base.Animation
 import Base.Pixmap
-import Base.Types hiding (selected, OEMState, Mode(..))
+import Base.Types hiding (selected, OEMState, Mode(NikkiMode, TerminalMode))
 import qualified Base.Types
 
 import Object
@@ -281,7 +281,9 @@ instance Sort TSort Terminal where
     immutableCopy t =
         CM.immutableCopy (chipmunk t) >>= \ x -> return t{chipmunk = x}
 
-    getControlledChipmunk = chipmunk
+    getControlledChipmunk scene _ =
+        getControlledChipmunk scene $
+        getMainlayerObject scene (nikki $ mode scene)
 
     chipmunks = chipmunk >>> return
 

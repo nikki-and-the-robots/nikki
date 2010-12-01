@@ -69,7 +69,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     chipmunks :: object -> [Chipmunk]
 
     -- | only implemented in Nikki and robots
-    getControlledChipmunk :: object -> Chipmunk
+    getControlledChipmunk :: Scene Object_ -> object -> Chipmunk
     getControlledChipmunk o = error ("please implement getControlledChipmunk in: " ++ show o)
 
     startControl :: Seconds -> object -> object
@@ -131,7 +131,7 @@ instance Sort Sort_ Object_ where
         Object_ sort <$> initialize sort space editorPosition state
     immutableCopy (Object_ s o) = Object_ s <$> Object.Types.immutableCopy o
     chipmunks (Object_ _ o) = chipmunks o
-    getControlledChipmunk (Object_ _ o) = getControlledChipmunk o
+    getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o
     startControl now (Object_ sort o) = Object_ sort $ startControl now o
     update DummySort mode now contacts cd i (Object_ sort o) = do
         (f, o') <- update sort mode now contacts cd i o

@@ -34,7 +34,8 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
     let (NikkiMode nikkiIndex) = mode scene
     sceneMVar <- newEmptyMVar
     fpsRef <- initialFPSRef
-    nikkiPos <- getPosition $ getControlledChipmunk $ getMainlayerObject scene nikkiIndex
+    nikkiPos <- getPosition $ getControlledChipmunk scene $
+                    getMainlayerObject scene nikkiIndex
     cameraStateRef <- newIORef $ initialCameraState nikkiPos
     setDrawingCallbackAppWidget (window app)
         (Just $ render fpsRef cameraStateRef sceneMVar)

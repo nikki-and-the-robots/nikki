@@ -117,7 +117,7 @@ instance Sort NSort Nikki where
 
     chipmunks = return . chipmunk
 
-    getControlledChipmunk = chipmunk
+    getControlledChipmunk _ = chipmunk
 
     updateNoSceneChange sort mode now contacts cd nikki = inner nikki
       where

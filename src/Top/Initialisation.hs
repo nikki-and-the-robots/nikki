@@ -127,7 +127,6 @@ editorObject2Object mspace (EditorObject sort pos state) =
 mkScene :: Space -> Grounds Object_ -> IO (Scene Object_)
 mkScene space objects = do
     let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
-    nikkiPosition <- getPosition $ getControlledChipmunk (mainLayerIndexable objects !!! nikki)
     contactRef <- initContactRef space initial watchedContacts
     return $ Scene 0 objects contactRef initial (NikkiMode nikki)
 
