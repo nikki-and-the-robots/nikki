@@ -127,6 +127,8 @@ missesArea testPolys@(fromTestPolygons -> polys) =
 -- wrapper type in order to be able to put polygons in class Arbitrary whith special constraints:
 -- ShapeTypes are  Polygons with four points forming a rectangle, starting with the upper left point,
 -- continuing counterclockwise.
+-- (this could be done with Test.QuickCheck.Property.forall, but I'm too lazy to
+-- change everything now.)
 newtype Wrap a = Wrap {unwrap :: a}
   deriving (Show, Typeable)
 
