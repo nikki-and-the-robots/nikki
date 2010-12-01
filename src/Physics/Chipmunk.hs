@@ -50,6 +50,8 @@ module Physics.Chipmunk (
     fromUpAngle,
     component,
 
+    massForShape,
+
     -- re-exports from Physics.Hipmunk
     infinity,
 
@@ -78,6 +80,7 @@ module Physics.Chipmunk (
     Velocity,
     velocity,
     Force,
+    Mass,
     applyImpulse,
     applyForce,
     applyOnlyForce,
@@ -91,7 +94,7 @@ module Physics.Chipmunk (
     Torque,
     torque,
 
-    -- re-exports from ?Data.StateVar
+    -- re-exports from Data.StateVar
     ($=),
     get,
 

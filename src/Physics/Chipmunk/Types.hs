@@ -308,6 +308,23 @@ mkRectFromPositions (Vector x1 y1) (Vector x2 y2) =
     minY = min y1 y2
     maxY = max y1 y2
 
+-- | @massForShape mpp shape@ calculates the mass for a given shape.
+-- @mpp@ is the material mass per (square-)pixel.
+massForShape :: Mass -> ShapeType -> Mass
+massForShape mpp (Circle r) = 2 * pi * r * mpp
+massForShape _ (LineSegment _ _ _) = 0
+massForShape _ (Polygon p@(_ : _ : _ : _))
+    | not (isConvex p)
+    = error ("massForShape: not a convex polygon: " ++ show p)
+massForShape mpp (Polygon (p : q : r : rest)) =
+    mpp * triangleArea + massForShape mpp (Polygon (p : r : rest))
+  where
+    triangleArea = abs (len a * len b * sin gamma / 2)
+    a = p -~ q
+    b = p -~ r
+    gamma = abs (toAngle a - toAngle b)
+massForShape _ (Polygon _) = 0
+
 
 -- * chipmunk initialisation
 
