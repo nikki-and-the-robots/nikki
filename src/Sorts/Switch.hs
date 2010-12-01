@@ -167,31 +167,59 @@ switchShapes =
 
 -- Configuration
 platformSize = Size (width boxSize) (fromUber 5)
-wallThickness = 2
+outerWallThickness = 32
 -- size of the shaft, that  can be seen outside the box
-shaftSize = Size (fromUber 11) (yPlatformDistance + wallThickness)
+shaftSize = Size (fromUber 11) yPlatformDistance
 -- y distance between platform and box
 yPlatformDistance = fromUber 3
 innerPadding = 4
 shaftPadding = 0.2
 openingWidth = width shaftSize + 2 * shaftPadding
-triggerFactor = 0.1
+triggerHeight = 0.2
 
 -- calculated
 boxBaryCenterOffset = Vector (width boxSize / 2) (height boxSize / 2)
 -- the stampBaryCenterOffset is exactly below the shaft
 -- and above the innerStampThingie
 stampBaryCenterOffset = Vector (width boxSize / 2)
-    (height platformSize + yPlatformDistance + wallThickness)
+    (height platformSize + yPlatformDistance)
+
+wedgeEpsilon = 1
 
 
-box = [
-    mkRect boxLeftUpper (Size outerToOpening wallThickness),
-    mkRect boxLeftUpper (Size wallThickness (height boxSize)),
-    mkRect (boxLeftLower -~ Position 0 wallThickness) (Size (width boxSize) wallThickness),
-    mkRect (boxRightUpper -~ Position wallThickness 0) (Size wallThickness (height boxSize)),
-    mkRect (boxRightUpper -~ Position outerToOpening 0) (Size outerToOpening wallThickness)
-    ]
+box = (
+    -- left to shaft opening
+    LineSegment
+        (Vector (boxLeft + outerWallThickness) boxUpper)
+        (Vector (boxLeft + outerToOpening) boxUpper)
+        0 :
+    -- right to opening
+    LineSegment
+        (Vector (boxRight - outerToOpening) boxUpper)
+        (Vector (boxRight - outerWallThickness) boxUpper)
+        0 :
+    -- left side
+    Polygon [
+        Vector boxLeft boxUpper,
+        Vector boxLeft boxLower,
+        Vector (boxLeft + outerWallThickness) (boxLower - wedgeEpsilon),
+        Vector (boxLeft + outerWallThickness) boxUpper
+      ] :
+    -- bottom
+    Polygon [
+        Vector (boxLeft + wedgeEpsilon) (boxLower - outerWallThickness),
+        Vector boxLeft boxLower,
+        Vector boxRight boxLower,
+        Vector (boxRight - wedgeEpsilon) (boxLower - outerWallThickness)
+      ] :
+    -- right side
+    Polygon [
+        Vector (boxRight - outerWallThickness) boxUpper,
+        Vector (boxRight - outerWallThickness) (boxLower - wedgeEpsilon),
+        Vector boxRight boxLower,
+        Vector boxRight boxUpper
+      ] :
+    [])
 
 stamp :: [ShapeDescription]
 stamp = [
@@ -202,24 +230,25 @@ stamp = [
 platform = mkRect
     (Position (- width platformSize / 2) (- height shaftSize - height platformSize))
     platformSize
-shaft = mkRect (Position (- (width shaftSize / 2)) (- height shaftSize))
-    shaftSize
+shaft = mkRect
+    (Position (- (width shaftSize / 2)) (- height shaftSize - shaftOverlap))
+    (shaftSize +~ Size 0 (2 * shaftOverlap))
+  where
+    -- The shaft has to overlap the other stamp shapes.
+    -- The shaftOverlap is not taken into consideration in shaftSize.
+    shaftOverlap = fromUber 1
 innerStampThingie = mkRect
-    (Position (- (width boxSize / 2) + wallThickness + innerPadding) 0)
-    (Size (width boxSize - 2 * (wallThickness + innerPadding))
-        (height boxSize - 2 * wallThickness - innerPadding))
+    (Position (- (width boxSize / 2) + outerWallThickness + innerPadding) 0)
+    (Size (width boxSize - 2 * (outerWallThickness + innerPadding))
+        (height boxSize - outerWallThickness - yPlatformDistance))
 
 trigger =
     mkRect (Position
-                (- (wallThickness / 2))
-                (boxLower - wallThickness - triggerFactor * wallThickness))
-            (Size wallThickness (wallThickness * triggerFactor))
+                (- (outerWallThickness / 2))
+                (boxLower - outerWallThickness - triggerHeight))
+            (Size outerWallThickness triggerHeight)
 
 outerToOpening = ((width boxSize - openingWidth) / 2)
-
-boxLeftUpper = Position boxLeft boxUpper
-boxLeftLower = Position boxLeft boxLower
-boxRightUpper = Position boxRight boxUpper
 
 boxLeft = - boxRight
 boxRight = width boxSize / 2
