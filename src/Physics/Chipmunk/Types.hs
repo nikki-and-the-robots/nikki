@@ -8,6 +8,7 @@ import Data.Complex
 import Data.Abelian
 import Data.StateVar
 import Data.Typeable
+import Data.Maybe
 
 import Graphics.Qt (Ptr, QPainter, translate)
 import qualified Graphics.Qt as Qt
@@ -313,9 +314,6 @@ mkRectFromPositions (Vector x1 y1) (Vector x2 y2) =
 massForShape :: Mass -> ShapeType -> Mass
 massForShape mpp (Circle r) = 2 * pi * r * mpp
 massForShape _ (LineSegment _ _ _) = 0
-massForShape _ (Polygon p@(_ : _ : _ : _))
-    | not (isConvex p)
-    = error ("massForShape: not a convex polygon: " ++ show p)
 massForShape mpp (Polygon (p : q : r : rest)) =
     mpp * triangleArea + massForShape mpp (Polygon (p : r : rest))
   where
@@ -324,6 +322,12 @@ massForShape mpp (Polygon (p : q : r : rest)) =
     b = p -~ r
     gamma = abs (toAngle a - toAngle b)
 massForShape _ (Polygon _) = 0
+
+-- | @momentForMaterialShape mpp offset shape@ returns the moment of inertia
+-- for @shape@ at the given @offset@. The shape has a mass per pixel of @mpp@.
+momentForMaterialShape :: Mass -> Maybe Position -> ShapeType -> Moment
+momentForMaterialShape mpp mOffset shape =
+    momentForShape (massForShape mpp shape) shape (fromMaybe zero mOffset)
 
 
 -- * chipmunk initialisation

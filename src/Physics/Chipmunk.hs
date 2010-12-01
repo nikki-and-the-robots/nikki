@@ -51,6 +51,7 @@ module Physics.Chipmunk (
     component,
 
     massForShape,
+    momentForMaterialShape,
 
     -- re-exports from Physics.Hipmunk
     infinity,
@@ -90,6 +91,7 @@ module Physics.Chipmunk (
 
     Angle,
     AngVel,
+    angle,
     angVel,
     Torque,
     torque,

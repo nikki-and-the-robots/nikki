@@ -27,6 +27,8 @@ import Base.Pixmap
 
 import Object
 
+import Sorts.Robots.Configuration
+
 
 -- * Configuration
 
@@ -90,12 +92,12 @@ data Jetpack = Jetpack {
 
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
-    size = pixmapSize . defaultPixmap . pixmaps
+    size = const jetpackSize
     sortRender sort ptr _ =
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
     initialize sort (Just space) ep Nothing = do
-        let 
+        let
             pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
             bodyAttributes = bodyAttributesConstant{CM.position = pos}
@@ -104,7 +106,7 @@ instance Sort JSort Jetpack where
                 friction = 0.5,
                 CM.collisionType = RobotCT
               }
-            (polys, baryCenterOffset) = mkPolys $ size sort
+            (polys, baryCenterOffset) = mkPolys
             shapesAndPolys = map (mkShapeDescription shapeAttributes) polys
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
@@ -120,7 +122,7 @@ instance Sort JSort Jetpack where
     updateNoSceneChange sort mode now contacts (isControlled, cd) =
         fromPure (jupdate (isControlled, cd)) >>>>
         fromPure (updateRenderState now isControlled) >>>>
-        controlToChipmunk
+        passThrough controlToChipmunk
 
     render = renderJetpack
 
@@ -131,31 +133,34 @@ instance Sort JSort Jetpack where
 bodyAttributesConstant :: BodyAttributes
 bodyAttributesConstant = BodyAttributes {
     CM.position = zero,
-    mass = 50,
-    inertia = 6000
+    mass = sum $ map (massForShape robotMass) $ fst mkPolys,
+    inertia = sum $ map (momentForMaterialShape robotMass Nothing) $ fst mkPolys
   }
 
 
-mkPolys :: Size Double -> ([ShapeType], Vector)
-mkPolys (Size w h) =
-     (rects, baryCenterOffset)
+mkPolys :: ([ShapeType], Vector)
+mkPolys =
+    (rects, baryCenterOffset)
   where
-    rects = map (mapVectors (-~ baryCenterOffset)) [
-        bodyRect,
-        legsRect,
-        leftEngine,
-        rightEngine
-      ]
-    bodyRect = mkRect (Position 24 0) (Size 60 68)
-    legsRect = mkRect (Position 28 68) (Size 52 16)
-    leftEngine = mkRect (Position 0 20) engineSize
-    rightEngine = mkRect (Position 84 20) engineSize
-
-    engineSize = Size 24 48
+    rects = map (mapVectors (-~ baryCenterOffset)) (
+        bodyRect :
+        legsRect :
+        leftEngine :
+        rightEngine :
+        [])
+    bodyRect = mkRect (fmap fromUber $ Position 6 0) robotBodySize
+    legsRect = mkRect (fmap fromUber $ Position 7 15) (fmap fromUber $ Size 13 6)
+    leftEngine = mkRect (fmap fromUber $ Position 0 5) engineSize
+    rightEngine = mkRect (fmap fromUber $ Position 21 5) engineSize
+    engineSize = fmap fromUber $ Size 6 12
 
     wh = w / 2
     hh = h / 2
     baryCenterOffset = Vector wh hh
+    Size w h = jetpackSize
+
+jetpackSize = fmap fromUber $ Size 27 21
+
 
 
 -- * logick
@@ -213,7 +218,7 @@ pickPixmap now j sort =
 
 -- * chipmunk control
 
-controlToChipmunk :: Jetpack -> IO Jetpack
+controlToChipmunk :: Jetpack -> IO ()
 controlToChipmunk object@Jetpack{chipmunk, boost, direction} = do
     angle <- normalizeAngle $ body chipmunk
     angVel <- get $ angVel $ body chipmunk
@@ -233,7 +238,6 @@ controlToChipmunk object@Jetpack{chipmunk, boost, direction} = do
 
     torque (body chipmunk) $= (appliedTorque <<| "appliedTorque")
 
-    return object
 
 hover :: Body -> Angle -> Bool -> IO ()
 hover body angle boost =
