@@ -29,9 +29,9 @@ then
     exit 1
 fi
 
-if [ -z "$SFML_DIR" ]
+if [ -z "$SFML_AUDIO_DIR" ]
 then
-    echo SFML_DIR not set. Please let SFML_DIR point to your SFML2 copy.
+    echo SFML_AUDIO_DIR not set. Please let SFML_AUDI_DIR point to your sfml-audio copy.
     exit 1
 fi
 
@@ -48,10 +48,8 @@ echo copying...
 echo ======================
 mkdir -p nikki
 # sfml-dlls
-cp -v $SFML_DIR/CSFML/lib/mingw/csfml-audio.dll nikki
-cp -v $SFML_DIR/CSFML/lib/mingw/csfml-system.dll nikki
-cp -v $SFML_DIR/extlibs/bin/openal32.dll nikki
-cp -v $SFML_DIR/extlibs/bin/libsndfile-1.dll nikki
+cp -v $SFML_AUDIO_DIR/dependencies/sfml2/extlibs/bin/openal32.dll nikki
+cp -v $SFML_AUDIO_DIR/dependencies/sfml2/extlibs/bin/libsndfile-1.dll nikki
 # qt-dlls
 cp -v $QT_DIR/qt/bin/QtCore4.dll nikki
 cp -v $QT_DIR/qt/bin/QtGui4.dll nikki
