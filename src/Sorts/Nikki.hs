@@ -161,24 +161,35 @@ renderClouds _ _ _ _ _ = return ()
 
 debugNikki :: Seconds -> Contacts -> Nikki -> IO ()
 debugNikki now contacts nikki = do
+    vel <- get $ velocity $ body $ chipmunk $ nikki
     addDebugging $ \ ptr offset -> do
         resetMatrix ptr
         translate ptr offset
-        fmapM_ (drawAngle ptr green . nikkiCollisionAngle) $
-            jumpCollision (considerGhostsState (state nikki))
-            (nikkiCollisions contacts)
+        translateVector ptr =<< getPosition (chipmunk nikki)
+        whenMaybe (jumpCollision False $ nikkiCollisions contacts) $ \ collision -> do
+            let impulse = Sorts.Nikki.JumpingImpulse.calculate
+                    zero
+                    (nikkiCollisionAngle collision)
+                    vel
+            drawVector ptr blue $ staticImpulse impulse
+            drawVector ptr green $ correctedImpulse impulse
+            drawVectorAddition ptr (red, green, magenta)
+                (velocityImpulse impulse)
+                (correctedImpulse impulse)
+
+scaleVector v = scale v (0.25 / nikkiMass)
 
 drawVector :: Ptr QPainter -> Color -> Vector -> IO ()
 drawVector ptr color v = do
     setPenColor ptr color 3
-    drawLine ptr zero $ vector2QtPosition $ scale v 0.25
+    drawLine ptr zero $ vector2QtPosition $ scaleVector v
 
 drawVectorAddition :: Ptr QPainter -> (Color, Color, Color) -> Vector -> Vector -> IO ()
 drawVectorAddition ptr (aColor, bColor, cColor) a b = do
     drawVector ptr aColor a
-    translateVector ptr $ scale a 0.25
+    translateVector ptr $ scaleVector a
     drawVector ptr bColor b
-    translateVector ptr $ scale (negateAbelian a) 0.25
+    translateVector ptr $ scaleVector (negateAbelian a)
     drawVector ptr cColor (a +~ b)
 
 drawAngle ptr color angle = drawVector ptr color $ flip scale 200 $ fromUpAngle angle

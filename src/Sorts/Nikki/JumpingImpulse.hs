@@ -34,6 +34,7 @@ getJumpingImpulse collisionObjectVelocity contactAngle nikkiVelocity =
 -- | this type is used to share information
 -- and expose internal details of the calculations for debugging purposes.
 data JumpingImpulseValues = JumpingImpulseValues {
+    velocityImpulse :: Vector,
     staticImpulse :: Vector,
     wallVelocity :: Vector,
     clipVectorImpulse :: Vector,
@@ -43,6 +44,7 @@ data JumpingImpulseValues = JumpingImpulseValues {
 calculate :: Vector -> Angle -> Vector -> JumpingImpulseValues
 calculate collisionObjectVelocity contactAngle nikkiVelocity =
     JumpingImpulseValues {
+        velocityImpulse = velocityImpulse,
         staticImpulse = staticImpulse,
         wallVelocity = wallVelocity,
         clipVectorImpulse = clipVectorImpulse,
@@ -51,6 +53,8 @@ calculate collisionObjectVelocity contactAngle nikkiVelocity =
   where
     -- relative velocity
     velocity = nikkiVelocity -~ collisionObjectVelocity
+    -- impulse of nikki
+    velocityImpulse = scale velocity nikkiMass
     -- the impulse that should be applied
     correctedImpulse = staticImpulse +~ wallVelocityCorrection
 
@@ -78,7 +82,7 @@ calculate collisionObjectVelocity contactAngle nikkiVelocity =
     wallVelocity = component (foldAngle (contactAngle + (pi / 2))) velocity
     -- down component of the wallVelocity
     wallVelocityDownComponent = component pi wallVelocity
-    -- staticImpulse +~ scale velocity nikkiMass +~ clipVectorImpulse = staticImpulse
+    -- staticImpulse +~ velocityImpulse +~ clipVectorImpulse = staticImpulse
     --      for wallAngle == 0
     -- clipVectorImpulse = zero
     --      for wallAngle == pi / 2
@@ -87,7 +91,7 @@ calculate collisionObjectVelocity contactAngle nikkiVelocity =
     clipVectorImpulse = negateAbelian $ component wallAngle $
         scale wallVelocityDownComponent nikkiMass
     -- impulse that would damp the actual velocity to 100%
-    clippedVelocityImpulse = staticImpulse +~ clipVectorImpulse +~ scale velocity nikkiMass
+    clippedVelocityImpulse = staticImpulse +~ clipVectorImpulse +~ velocityImpulse
     -- This is the maximum that the wallVelocity should be re-added after clipping
     unclipMaximum =
         negateAbelian $ component (contactAngle + (pi / 2)) clippedVelocityImpulse
