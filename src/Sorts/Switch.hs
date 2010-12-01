@@ -19,6 +19,7 @@ import Physics.Chipmunk as CM
 import Graphics.Qt hiding (scale)
 
 import Paths
+import Utils
 
 import Base.Constants
 import Base.Pixmap
@@ -89,7 +90,9 @@ instance Sort SwitchSort Switch where
         triggerChip <- initChipmunk space (boxAttributes boxPos) triggerShapes boxBaryCenterOffset
         let [triggerShape] = shapes triggerChip
 
-        let stampPos = Vector (editorX ep) (editorY ep - (height boxSize + fromUber 7))
+        let stampPos =
+                Vector (editorX ep)
+                       (editorY ep - height boxSize - yPlatformDistance - height platformSize)
                        +~ stampBaryCenterOffset
             stampAttributes = stampBodyAttributes stampPos
         stampChip <- initChipmunk space stampAttributes stampShapes stampBaryCenterOffset
@@ -161,60 +164,64 @@ switchShapes =
     ((map (mkShapeDescription tileShapeAttributes) box, boxBaryCenterOffset),
      [mkShapeDescription triggerShapeAttributes trigger],
      (stamp, stampBaryCenterOffset))
-  where
-    -- Configuration
-    platformSize = Size (width boxSize) (fromUber 5)
-    wallThickness = 2
-    -- size of the shaft, that  can be seen outside the box
-    shaftSize = Size (fromUber 11) (fromUber 3)
-    innerPadding = 4
-    shaftPadding = 0.2
-    openingWidth = width shaftSize + 2 * shaftPadding
-    triggerFactor = 0.1
-    bit = fromUber 1
 
-    -- calculated
-    boxBaryCenterOffset = Vector (width boxSize / 2) (height boxSize / 2)
-    stampBaryCenterOffset = Vector (width boxSize / 2) (height platformSize + height shaftSize)
+-- Configuration
+platformSize = Size (width boxSize) (fromUber 5)
+wallThickness = 2
+-- size of the shaft, that  can be seen outside the box
+shaftSize = Size (fromUber 11) (yPlatformDistance + wallThickness)
+-- y distance between platform and box
+yPlatformDistance = fromUber 3
+innerPadding = 4
+shaftPadding = 0.2
+openingWidth = width shaftSize + 2 * shaftPadding
+triggerFactor = 0.1
+
+-- calculated
+boxBaryCenterOffset = Vector (width boxSize / 2) (height boxSize / 2)
+-- the stampBaryCenterOffset is exactly below the shaft
+-- and above the innerStampThingie
+stampBaryCenterOffset = Vector (width boxSize / 2)
+    (height platformSize + yPlatformDistance + wallThickness)
 
 
-    box = [
-      mkRect boxLeftUpper (Size outerToOpening wallThickness),
-      mkRect boxLeftUpper (Size wallThickness (height boxSize)),
-      mkRect (boxLeftLower -~ Position 0 wallThickness) (Size (width boxSize) wallThickness),
-      mkRect (boxRightUpper -~ Position wallThickness 0) (Size wallThickness (height boxSize)),
-      mkRect (boxRightUpper -~ Position outerToOpening 0) (Size outerToOpening wallThickness)
-      ]
+box = [
+    mkRect boxLeftUpper (Size outerToOpening wallThickness),
+    mkRect boxLeftUpper (Size wallThickness (height boxSize)),
+    mkRect (boxLeftLower -~ Position 0 wallThickness) (Size (width boxSize) wallThickness),
+    mkRect (boxRightUpper -~ Position wallThickness 0) (Size wallThickness (height boxSize)),
+    mkRect (boxRightUpper -~ Position outerToOpening 0) (Size outerToOpening wallThickness)
+    ]
 
-    stamp :: [ShapeDescription]
-    stamp = [
-        (mkShapeDescription tileShapeAttributes platform),
-        (mkShapeDescription innerStampShapeAttributes shaft),
-        (mkShapeDescription innerStampShapeAttributes innerStampThingie)
-      ]
-    platform = mkRect stampLeftUpper platformSize
-    shaft = mkRect (Position (- (width shaftSize / 2)) (- height shaftSize))
-                (shaftSize +~ Size 0 wallThickness)
-    innerStampThingie = mkRect
-        (Position (- (width boxSize / 2) + wallThickness + innerPadding) wallThickness)
-        (Size (width boxSize - 2 * (wallThickness + innerPadding))
-            (height boxSize - 2 * wallThickness - height shaftSize + bit))
+stamp :: [ShapeDescription]
+stamp = [
+    (mkShapeDescription tileShapeAttributes platform),
+    (mkShapeDescription innerStampShapeAttributes shaft),
+    (mkShapeDescription innerStampShapeAttributes innerStampThingie)
+    ]
+platform = mkRect
+    (Position (- width platformSize / 2) (- height shaftSize - height platformSize))
+    platformSize
+shaft = mkRect (Position (- (width shaftSize / 2)) (- height shaftSize))
+    shaftSize
+innerStampThingie = mkRect
+    (Position (- (width boxSize / 2) + wallThickness + innerPadding) 0)
+    (Size (width boxSize - 2 * (wallThickness + innerPadding))
+        (height boxSize - 2 * wallThickness - innerPadding))
 
-    trigger =
-        mkRect (Position
-                    (- (wallThickness / 2))
-                    (boxLower - wallThickness - triggerFactor * wallThickness))
-                (Size wallThickness (wallThickness * triggerFactor))
+trigger =
+    mkRect (Position
+                (- (wallThickness / 2))
+                (boxLower - wallThickness - triggerFactor * wallThickness))
+            (Size wallThickness (wallThickness * triggerFactor))
 
-    outerToOpening = ((width boxSize - openingWidth) / 2)
+outerToOpening = ((width boxSize - openingWidth) / 2)
 
-    boxLeftUpper = Position boxLeft boxUpper
-    boxLeftLower = Position boxLeft boxLower
-    boxRightUpper = Position boxRight boxUpper
+boxLeftUpper = Position boxLeft boxUpper
+boxLeftLower = Position boxLeft boxLower
+boxRightUpper = Position boxRight boxUpper
 
-    boxLeft = - boxRight
-    boxRight = width boxSize / 2
-    boxLower = height boxSize / 2
-    boxUpper = - boxLower
-
-    stampLeftUpper = Position (- width boxSize / 2) (- (height shaftSize + height platformSize))
+boxLeft = - boxRight
+boxRight = width boxSize / 2
+boxLower = height boxSize / 2
+boxUpper = - boxLower
