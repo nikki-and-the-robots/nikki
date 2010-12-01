@@ -205,11 +205,13 @@ reset t robots (State _ _ i _ _) =
   where
     row = if null robots then NikkiRow else RobotRow
 
-blinkenLightsState :: Seconds -> [Index] -> State -> ColorLights Bool
+blinkenLightsState :: Seconds -> [Index] -> State -> (ColorLights Bool, Bool)
 blinkenLightsState now robots state =
     case row state of
-        NikkiRow -> full
-        RobotRow -> if blinkingOut then fzipWith (\ f s -> f && not s) full selected else full
+        NikkiRow -> (full, not blinkingOut)
+        RobotRow -> tuple
+            (if blinkingOut then fzipWith (\ f s -> f && not s) full selected else full)
+            True
   where
     full = ColorLights (l > 0) (l > 1) (l > 2) (l > 3)
     selected = selectedColorLights i
@@ -360,7 +362,7 @@ renderTerminalBackground ptr offset now t sort = do
 -- | renders the little colored lights (for the associated robots) on the terminal in the scene
 renderLittleColorLights ptr offset now t sort = do
     pos <- fst <$> getRenderPosition (chipmunk t)
-    let colorStates = blinkenLightsState now (robots t) (state t)
+    let colorStates = fst $ blinkenLightsState now (robots t) (state t)
     mapM_
         (renderLight ptr (offset +~ pos) (littleColorLights $ pixmaps sort) colorStates)
         [red_, blue_, green_, yellow_]
@@ -415,10 +417,13 @@ renderTerminalOSD ptr now scene@Scene{mode = Base.Types.TerminalMode{Base.Types.
             windowSize <- fmap fromIntegral <$> sizeQPainter ptr
             let pixmaps = osdPixmaps sort
                 position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)
+                -- states of lights
+                (colorStates, exitState) =
+                    blinkenLightsState now (robots terminal) (state terminal)
             renderPixmap ptr zero position Nothing (osdBackground pixmaps)
-            renderOsdCenters ptr position pixmaps (blinkenLightsState now (robots terminal) (state terminal))
+            renderOsdCenters ptr position pixmaps colorStates
             renderOsdFrames ptr position pixmaps (state terminal) (selectedColorLights (robotIndex (state terminal)))
-            renderOsdExit ptr position now pixmaps (state terminal)
+            renderOsdExit ptr position now pixmaps (state terminal) exitState
 renderTerminalOSD _ _ _ = return ()
 
 osdPosition :: Size Double -> Pixmap -> Qt.Position Int
@@ -459,10 +464,11 @@ osdFrameOffsets =
 osdCenterOffsets :: ColorLights (Qt.Position Double)
 osdCenterOffsets = fmap (+~ fmap fromUber (Position 2 2)) osdFrameOffsets
 
-renderOsdExit ptr offset now pixmaps state = do
-    renderPixmap ptr offset exitCenterOffset Nothing (osdExitCenter pixmaps)
+renderOsdExit ptr offset now pixmaps state exitState = do
     when (row state == NikkiRow) $
         renderPixmap ptr offset exitFrameOffset Nothing (osdExitFrame pixmaps)
+    when exitState $
+        renderPixmap ptr offset exitCenterOffset Nothing (osdExitCenter pixmaps)
   where
     exitFrameOffset = fmap fromUber $ Position 33 29
     exitCenterOffset = exitFrameOffset +~ fmap fromUber (Position 2 2)
