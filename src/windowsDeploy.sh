@@ -64,15 +64,4 @@ echo copying data...
 cp -r ../data nikki
 # and levels
 echo copying levels...
-cp -r ../levels nikki
-
-# echo ======================
-# echo zipping...
-# echo ======================
-
-# export ZIPFILE="nikki-$(date +%Y-%m-%d-%H-%M-%S).zip"
-# zip -r $ZIPFILE nikki
-# 
-# # scp $ZIPFILE shahn@joyridelabs.de://var//joyride//darcs//alpha-binaries//win32//
-
-# 
+cp -r *.nl nikki
