@@ -119,20 +119,20 @@ toInt Grounds{} (BackGrounds i) =
 toInt Grounds{backgrounds} MainLayer =
     fromIntegral $ I.length backgrounds
 toInt Grounds{backgrounds} (ForeGrounds i) =
-    fromIntegral (I.length backgrounds + 1 + i)
+    fromIntegral (Index (I.length backgrounds) + 1 + i)
 
 -- | reverse of toInt
 -- PRE: isNormalized
 fromInt :: Grounds a -> Int -> GroundsIndex
-fromInt gs@(Grounds backgrounds _ foregrounds) (I.Index -> i)
+fromInt gs@(Grounds backgrounds _ foregrounds) i
     | i < 0
         = fromInt gs (fromIntegral i + numberOfLayers gs)
     | i < bgsLen
-        = BackGrounds i
+        = BackGrounds $ Index i
     | i == bgsLen
         = MainLayer
     | i < (I.length backgrounds + 1 + I.length foregrounds)
-        = ForeGrounds (i - bgsLen - 1)
+        = ForeGrounds $ Index (i - bgsLen - 1)
     | i >= (I.length backgrounds + 1 + I.length foregrounds)
         = fromInt gs (fromIntegral i - numberOfLayers gs)
     | otherwise = e "fromInt"

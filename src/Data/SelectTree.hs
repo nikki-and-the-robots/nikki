@@ -107,7 +107,7 @@ resetSelectedsFirst (Node label children _) = Node label (fmap resetSelectedsFir
 resetSelectedLast :: SelectTree a -> SelectTree a
 resetSelectedLast (Leaf a) = Leaf a
 resetSelectedLast (Node label children _) =
-    Node label (fmap resetSelectedLast children) (I.length children - 1)
+    Node label (fmap resetSelectedLast children) (Index (I.length children - 1))
 
 
 leafs :: SelectTree a -> [a]

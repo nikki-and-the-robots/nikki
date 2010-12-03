@@ -100,8 +100,8 @@ instance Initial (Indexable a) where
 -- * getter
 
 -- | returns the length of the contained list
-length :: Indexable a -> Index
-length = Index . List.length . keys
+length :: Indexable a -> Int
+length = List.length . keys
 
 -- -- | returns, if the Index points to something
 isIndexOf :: Index -> Indexable a -> Bool
