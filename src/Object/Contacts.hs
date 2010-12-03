@@ -97,9 +97,10 @@ nikkiCallbacks solidCT nikkiCollisionType =
 
 -- nikki stands in front of a terminal 
 nikkiTerminalCallbacks =
-    map
-        (\ nct -> Callback (Watch nct TerminalCT (\ _ t -> addTerminal t)) Permeable)
-        nikkiCollisionTypes
+    map (\ nct -> Callback (Watch nct TerminalCT (\ _ t -> addTerminal t)) Permeable)
+        (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
+    map (\ nct -> Callback (DontWatch nct TerminalCT) Permeable)
+        (filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes)
 
 batteryCallback nikkiCT =
     Callback (Watch nikkiCT BatteryCT (\ _ b -> addBattery b)) Permeable
