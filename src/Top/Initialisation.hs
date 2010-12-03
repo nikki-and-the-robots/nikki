@@ -2,7 +2,8 @@
 module Top.Initialisation where
 
 
-import Data.Indexable as I
+import qualified Data.Indexable as I
+import Data.Indexable (Index, Indexable, (>:))
 import Data.Initial
 import Data.SelectTree
 
@@ -110,8 +111,23 @@ initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
 initScene space =
     fromPure (modifyMainLayer RenderOrdering.sortMainLayer) >>>>
     fromPure groundsMergeTiles >>>>
-    initializeObjects space >>>>
+    fromPure selectNikki >>>>
+    secondKleisli (initializeObjects space) >>>>
     mkScene space
+
+-- | select the last set nikki and delete all duplicates
+selectNikki :: Grounds (EditorObject Sort_) -> (Index, Grounds (EditorObject Sort_))
+selectNikki objects = (nikki, modifyMainLayer deleteDuplicateNikkis objects)
+  where
+    nikkiIndices = I.findIndices (isNikki . editorSort) $ mainLayerIndexable objects
+    nikki = case nikkiIndices of
+                    [a] -> a
+                    (_ : _) -> trace "Warning, level containing more than one Nikki" $
+                               last nikkiIndices
+                    [] -> error "no Nikki found"
+    -- delete duplicate nikkis
+    deleteDuplicateNikkis layer =
+        foldr I.deleteByIndex layer (filter (/= nikki) nikkiIndices)
 
 initializeObjects :: Space -> Grounds (EditorObject Sort_) -> IO (Grounds Object_)
 initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
@@ -124,9 +140,8 @@ editorObject2Object :: Maybe Space -> EditorObject Sort_ -> IO Object_
 editorObject2Object mspace (EditorObject sort pos state) =
     initialize sort mspace pos (fmap oemState state)
 
-mkScene :: Space -> Grounds Object_ -> IO (Scene Object_)
-mkScene space objects = do
-    let nikki = single "savedToScene" $ I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
+mkScene :: Space -> (Index, Grounds Object_) -> IO (Scene Object_)
+mkScene space (nikki, objects) = do
     contactRef <- initContactRef space initial watchedContacts
     return $ Scene 0 objects contactRef initial (NikkiMode nikki)
 
@@ -138,5 +153,5 @@ mergeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject 
 mergeEditorObjects ixs =
     otherObjects >: Sorts.Tiles.mkAllTiles tiles
   where
-    tiles = toList $ I.filter (isTile . editorSort) ixs
+    tiles = I.toList $ I.filter (isTile . editorSort) ixs
     otherObjects = I.filter (not . isTile . editorSort) ixs

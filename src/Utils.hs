@@ -138,6 +138,10 @@ passThrough cmd a = cmd a >> return a
 fromPure :: Monad m => (a -> b) -> (a -> m b)
 fromPure = (return .)
 
+secondKleisli :: Monad m => (a -> m b) -> ((x, a) -> m (x, b))
+secondKleisli cmd (x, a) = do
+    b <- cmd a
+    return (x, b)
 
 
 -- * scripting stuff
