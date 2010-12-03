@@ -25,7 +25,7 @@ import Base.Events
 
 import Object
 
-import Sorts.Tiles (tileShapeAttributes)
+import Sorts.Robots.Configuration
 import Sorts.Nikki as Nikki (walkingVelocity, nikkiMass)
 
 import Editor.Scene.Rendering
@@ -73,7 +73,7 @@ instance Sort PSort Platform where
             baryCenterOffset = Vector (width / 2) (height / 2)
 
             shape = mkRect (Position (- width / 2) (- height / 2)) (size sort)
-            shapes = [mkShapeDescription shapeAttributes shape]
+            shapes = [mkShapeDescription robotShapeAttributes shape]
 
             pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
@@ -104,8 +104,6 @@ instance Sort PSort Platform where
 
 down = Vector 0 200
 right = Vector 400 0
-
-shapeAttributes = tileShapeAttributes
 
 bodyAttributes :: Size Double -> Vector -> BodyAttributes
 bodyAttributes size pos = BodyAttributes {

@@ -44,13 +44,8 @@ module Object.Robots.Laser where
 -- initialisation scene space robot@(Robot s p state) = do
 --         let size = defaultPixmapSize s
 --             bodyAttributes = StaticBodyAttributes p
---             shapeAttributes = ShapeAttributes{
---                 elasticity = 0.5,
---                 friction = robotFriction,
---                 collisionType = toCollisionType robot
---               }
 --             (polys, baryCenterOffset) = mkStandardPolys size
---             shapesAndAttributes = map (tuple shapeAttributes) polys
+--             shapesAndAttributes = map (tuple robotShapeAttributes) polys
 -- 
 --         chip <- CM.initStaticChipmunk space bodyAttributes shapesAndAttributes baryCenterOffset
 --         -- adding lasers
@@ -296,11 +291,6 @@ module Object.Robots.Laser where
 -- endInitialisation _ space robot@(Robot s p state) = do
 --         let size = defaultPixmapSize s
 --             bodyAttributes = StaticBodyAttributes p
---             shapeAttributes = ShapeAttributes{
---                 elasticity = 0.5,
---                 friction = robotFriction,
---                 collisionType = toCollisionType robot
---               }
 --             (polys, baryCenterOffset) = mkStandardPolys size
 --             shapesAndAttributes = map (tuple shapeAttributes) polys
 -- 

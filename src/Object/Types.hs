@@ -20,12 +20,6 @@ import Base.Types
 import Base.Application
 
 
--- * Constants
-
-robotFriction :: Double
-robotFriction = 1.0
-
-
 -- * misc
 
 newtype SortId = SortId {getSortId :: FilePath}

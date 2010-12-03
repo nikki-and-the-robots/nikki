@@ -103,13 +103,8 @@ instance Sort JSort Jetpack where
             pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
             bodyAttributes = jetpackBodyAttributes pos
-            shapeAttributes = ShapeAttributes{
-                elasticity = 0.8,
-                friction = 0.5,
-                CM.collisionType = RobotCT
-              }
             (polys, baryCenterOffset) = mkPolys
-            shapesAndPolys = map (mkShapeDescription shapeAttributes) polys
+            shapesAndPolys = map (mkShapeDescription robotShapeAttributes) polys
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
         return $ Jetpack chip False Nothing Idle 0
