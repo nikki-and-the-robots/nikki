@@ -45,6 +45,8 @@ import qualified Base.Types
 
 import Object
 
+import Sorts.Nikki.Configuration (nikkiSize)
+
 import Editor.Scene.Types
 import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
@@ -299,19 +301,23 @@ instance Sort TSort Terminal where
 
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
-mkPolys (Size w h) =
+mkPolys size =
     ([rect], baryCenterOffset)
   where
     rect =
         Polygon [
-            Vector (- wh) (- hh),
-            Vector (- wh) hh,
-            Vector wh hh,
-            Vector wh (- hh)
+            Vector (- wh + padding) (- hh),
+            Vector (- wh + padding) hh,
+            Vector (wh - padding) hh,
+            Vector (wh - padding) (- hh)
           ]
-    wh = w / 2
-    hh = h / 2
+    (Size wh hh) = fmap (/ 2) size
     baryCenterOffset = Vector wh hh
+    -- the physics object is much narrower to simulate,
+    -- nikki being able to use the terminal if nikki is completely
+    -- inside the terminal frame. (With height, there is no such padding,
+    -- as nikki can only jump when standing on the ground.)
+    padding = width nikkiSize
 
 
 -- * controlling
