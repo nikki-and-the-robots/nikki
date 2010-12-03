@@ -91,8 +91,8 @@ modifyTransitioned scene = do
 -- | converts the Scene to TerminalMode, if appropriate
 nikkiToTerminal :: Scene Object_ -> [AppEvent] -> Maybe (Scene Object_)
 nikkiToTerminal scene@Scene{mode = (NikkiMode nikkiIndex)} pushed
-                                               -- nikki must be standing on the ground
-    | actionButtonPressed && beforeTerminal && (waiting || walking)
+                                               -- nikki must be in wait mode
+    | actionButtonPressed && beforeTerminal && waiting
         = Just $ scene {mode = mode'}
   where
     actionButton = BButton
@@ -102,7 +102,6 @@ nikkiToTerminal scene@Scene{mode = (NikkiMode nikkiIndex)} pushed
     Just nikki = unwrapNikki $ getMainlayerObject scene nikkiIndex
     action_ = action $ state $ nikki
     waiting = isWaitAction action_
-    walking = isWalkAction action_
 
     mode' = TerminalMode nikkiIndex terminal
     (terminal : _) = whichTerminalCollides scene
