@@ -21,9 +21,14 @@ import Base.Types
 
 nikkiCollisionTypes = [NikkiLegsCT, NikkiHeadCT, NikkiLeftPawCT, NikkiGhostCT]
 
-nikkiPermeability NikkiLeftPawCT = Permeable
-nikkiPermeability NikkiGhostCT = Permeable
-nikkiPermeability _ = Solid
+isSolidNikkiCollisionType NikkiLegsCT = True
+isSolidNikkiCollisionType NikkiHeadCT = True
+isSolidNikkiCollisionType _ = False
+
+nikkiPermeability nct =
+    if isSolidNikkiCollisionType nct
+    then Solid
+    else Permeable
 
 -- | collision types of objects that cause a collision (that are solid) (without Nikkis collision types)
 solidCollisionTypes :: [MyCollisionType]
@@ -79,7 +84,7 @@ watchedContacts =
     map batteryCallback nikkiCollisionTypes ++
     Callback (DontWatch BatteryCT TerminalCT) Permeable :
     map nikkiFallingTilesCallbacks
-        (filter (/= NikkiGhostCT) nikkiCollisionTypes)
+        (filter isSolidNikkiCollisionType nikkiCollisionTypes)
 
 
 nikkiCallbacks solidCT nikkiCollisionType =
