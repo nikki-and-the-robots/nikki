@@ -265,18 +265,23 @@ angleDirection angle =
 -- Might create an artificial collision if there two or more collisions
 -- with angles with opposite signs.
 jumpCollision :: Bool -> [NikkiCollision] -> Maybe NikkiCollision
-jumpCollision considerGhostsState =
-    filterDownwardAngles >>>
+jumpCollision _ [] = Nothing -- provided for clarity (and efficiency?)
+jumpCollision considerGhostsState collisions =
+  (
+    filter (not . isDownward) >>>
     filterGhostCollisions >>>
     sortLegsCollisions >>>
     sortByAngle >>>
     newSpreadCollisions >>>
+    addEmergencyJumpCollision >>>
     filter causingJumps >>>
     listToMaybe
+  ) collisions -- not best point-free-style, cause addEmergencyJumpCollision needs the
+               -- original list of collisions.
   where
+
     -- | remove angles pointing downward
-    filterDownwardAngles =
-        filter (\ x -> abs (nikkiCollisionAngle x) <= pi / 2)
+    isDownward c = abs (nikkiCollisionAngle c) > pi / 2
 
     -- | consider only ghost collisions
     -- that have a so called standing feet angle
@@ -286,6 +291,17 @@ jumpCollision considerGhostsState =
            (null $ filter isLegsCollision cs)
         then cs
         else filter (not . isGhostCollision) cs
+
+    -- | sorting collisions: legs, ghost, head
+    sortLegsCollisions = sortBy (withView (nikkiCollisionType >>> toNumber) compare)
+    toNumber NikkiLegsCT = 1
+    toNumber NikkiGhostCT = 2
+    toNumber NikkiHeadCT = 3
+    toNumber NikkiLeftPawCT = 3
+
+    -- | sort (more upward first)
+    sortByAngle =
+        sortBy (withView (abs . nikkiCollisionAngle) compare)
 
     -- | If there are collisions with angles with different signs,
     -- we want a new artificial collision with angle 0.
@@ -300,18 +316,33 @@ jumpCollision considerGhostsState =
       where
         consideredCollisions = filter (not . isGhostCollision) collisions
 
-    -- | sort (more upward first)
-    sortByAngle =
-        sortBy (withView (abs . nikkiCollisionAngle) compare)
+    -- | adds a collision in the case that nikki's best collision is a
+    -- leg collision that doesn't count as a standing feet collision
+    -- AND something else touches nikki's head from above.
+    -- This is to prevent Nikki from getting stuck under e.g. boxes
+    addEmergencyJumpCollision :: [NikkiCollision] -> [NikkiCollision]
+    addEmergencyJumpCollision l@(a : _) =
+        if isLegsCollision a &&
+           (not $ isStandingFeetAngle $ nikkiCollisionAngle a) &&
+           (not $ null downwardHeadCollisions)
+        then emergencyJumpCollision : l
+        else l
+      where
+        originalCollisions = collisions
+        downwardHeadCollisions = filter isHeadCollision $ filter isDownward originalCollisions
+        -- (will only be used if (not $ null downwardHeadCollisions)
+        firstDownwardHeadCollision = head downwardHeadCollisions
+        emergencyJumpCollision =
+            a{nikkiCollisionAngle = newAngle}
+        newAngle = mirrorAtHorizon $ nikkiCollisionAngle firstDownwardHeadCollision
+        mirrorAtHorizon =
+            subtract (pi / 2) >>>
+            negate >>>
+            (+ pi / 2)
+    addEmergencyJumpCollision [] = []
 
-    -- | sorting collisions: legs, ghost, head
-    sortLegsCollisions = sortBy (withView (nikkiCollisionType >>> toNumber) compare)
-    toNumber NikkiLegsCT = 1
-    toNumber NikkiGhostCT = 2
-    toNumber NikkiHeadCT = 3
-    toNumber NikkiLeftPawCT = 3
-
-    -- | if a single collision would cause a jump. Does (of course) not consider spread collisions.
+    -- | if a single collision would cause a jump.
+    -- Does (of course) not consider spread collisions.
     causingJumps x =
         (not $ isHeadCollision x) ~>
         (isStandingFeetAngle $ nikkiCollisionAngle x)
