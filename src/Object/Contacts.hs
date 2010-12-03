@@ -81,7 +81,7 @@ watchedContacts =
     switchCallback :
     nikkiTerminalCallbacks ++
     map terminalSolidCallback solidCollisionTypes ++
-    map batteryCallback nikkiCollisionTypes ++
+    batteryCallbacks ++
     Callback (DontWatch BatteryCT TerminalCT) Permeable :
     map nikkiFallingTilesCallbacks
         (filter isSolidNikkiCollisionType nikkiCollisionTypes)
@@ -102,8 +102,11 @@ nikkiTerminalCallbacks =
     map (\ nct -> Callback (DontWatch nct TerminalCT) Permeable)
         (filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes)
 
-batteryCallback nikkiCT =
-    Callback (Watch nikkiCT BatteryCT (\ _ b -> addBattery b)) Permeable
+batteryCallbacks =
+    map (\ nct -> Callback (Watch nct BatteryCT (\ _ b -> addBattery b)) Permeable)
+        (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
+    map (\ nct -> Callback (DontWatch nct BatteryCT) Permeable)
+        (filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes)
 
 -- a trigger (in a switch) is activated
 switchCallback =
