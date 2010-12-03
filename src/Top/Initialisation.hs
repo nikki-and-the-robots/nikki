@@ -33,7 +33,7 @@ import qualified Sorts.Background
 import qualified Sorts.Robots.Jetpack
 import qualified Sorts.Robots.MovingPlatforms
 
-import qualified Sorts.TestRamp
+import qualified Sorts.DebugObject
 
 
 sortLoaders :: [IO [Sort_]]
@@ -52,7 +52,7 @@ sortLoaders =
 
     Sorts.Grids.sorts :
     Sorts.Background.sorts :
-    Sorts.TestRamp.sorts :
+    Sorts.DebugObject.sorts :
     []
 
 withAllSorts :: (SelectTree Sort_ -> IO a) -> IO a
