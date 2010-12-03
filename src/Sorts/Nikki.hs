@@ -66,7 +66,7 @@ mkPngPath name n = nikkiPngDir </> name ++ "_0" ++ show n <.> "png"
 nikkiPngDir = pngDir </> "nikki"
 
 defaultPixmap :: Map String [Pixmap] -> Pixmap
-defaultPixmap pixmaps = head (pixmaps ! "wait_left")
+defaultPixmap pixmaps = head (pixmaps ! "wait_right")
 
 
 modifyNikki :: (Nikki -> Nikki) -> Scene Object_ -> Scene Object_
@@ -90,8 +90,7 @@ instance Sort NSort Nikki where
         fmapM_ (fmapM_ freePixmap) pixmaps
         freePolySound sound
 
-    size sort = nikkiSize +~ Size (fromUber 1) 0
-                             -- for the back of the head
+    size sort = nikkiSize
 
     sortRender sort ptr _ =
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)

@@ -69,7 +69,7 @@ data State = State {
     deriving (Show)
 
 instance Initial State where
-    initial = State (Wait False) HLeft initial False
+    initial = State (Wait False) HRight initial False
 
 data Action
     = Wait {isGhost :: Bool}
