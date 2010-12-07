@@ -86,6 +86,7 @@ Executable            nikki
         , transformers
         , time
         , parsec == 3.1.0
+        , buffer
 
     if os(linux)
         extra-libraries:

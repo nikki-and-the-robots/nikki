@@ -9,6 +9,7 @@ import Data.Map (Map)
 import Data.Generics
 import Data.Initial
 import Data.Abelian
+import Data.Buffer
 
 import Control.Arrow
 
@@ -40,7 +41,9 @@ data Nikki
         feetShape :: Shape,
         state :: State,
         startTime :: Seconds, -- time the State was last changed
-        batteryPower :: Integer -- makes it possible to have REALLY BIG amounts of power :)
+        batteryPower :: Integer, -- makes it possible to have REALLY BIG amounts of power :)
+        positionBuffer :: Buffer Vector,
+        lastPosition :: Vector
       }
   deriving (Show, Typeable)
 
