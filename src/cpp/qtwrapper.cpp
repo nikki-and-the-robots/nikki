@@ -238,6 +238,10 @@ extern "C" void drawPixmap(QPainter* painter, int x, int y, QPixmap* pixmap) {
     painter->drawPixmap(x, y, *pixmap);
 };
 
+extern "C" void drawPoint(QPainter* painter, qreal x, qreal y) {
+    painter->drawPoint(QPointF(x, y));
+};
+
 extern "C" void setPenColor(QPainter* painter, int r, int g, int b, int a, int width) {
     QPen pen = QPen(QColor(r, g, b, a));
     pen.setWidth(width);

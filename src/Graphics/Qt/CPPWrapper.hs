@@ -184,6 +184,11 @@ drawPixmap ptr (Position x y) pix = do
     cppDrawPixmap ptr x y pix
 foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtInt -> QtInt -> Ptr QPixmap -> IO ()
 
+drawPoint :: Ptr QPainter -> Position QtReal -> IO ()
+drawPoint ptr (Position x y) =
+    cppDrawPoint ptr x y
+foreign import ccall "drawPoint" cppDrawPoint :: Ptr QPainter -> QtReal -> QtReal -> IO ()
+
 -- | sets the pen color and thickness
 setPenColor :: Ptr QPainter -> Color -> QtInt -> IO ()
 setPenColor ptr (QtColor r g b a) thickness =
