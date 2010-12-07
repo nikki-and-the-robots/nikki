@@ -113,8 +113,8 @@ instance Sort NSort Nikki where
             initial
             0
             0
-            (mkFullBuffer 2000 zero)
-            zero
+            (mkFullBuffer 2000 (zero, zero))
+            (zero, zero)
 
     immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
 
@@ -128,7 +128,7 @@ instance Sort NSort Nikki where
             updateState mode now contacts cd >>>>
             fromPure (updateStartTime now (state nikki)) >>>>
             controlNikki now contacts cd sort >>>>
---             debugNikki now contacts >>>>
+            debugNikki now contacts >>>>
             return
 
     render nikki sort ptr offset now = do
@@ -170,19 +170,21 @@ debugNikki now contacts nikki@Nikki{positionBuffer} = do
         resetMatrix ptr
         windowSize <- fmap fromIntegral <$> sizeQPainter ptr
         translate ptr (Position (width windowSize - 2000) 0)
-        setPenColor ptr red 2
-        forM_ positionBuffer $ \ p -> do
+        forM_ positionBuffer $ \ (p, v) -> do
+            setPenColor ptr blue 2
             drawPoint ptr (Position 0 (height windowSize + vectorY p / 5))
+            setPenColor ptr red 2
+            drawPoint ptr (Position 0 (height windowSize / 2 + vectorY v / 5))
             translate ptr (Position 1 0)
         resetMatrix ptr
         setPenColor ptr green 1
-        forM_ (localMinima $ map vectorY $ Data.Foldable.toList positionBuffer) $ \ minimum -> do
+        forM_ (localMinima $ map (vectorY . fst) $ Data.Foldable.toList positionBuffer) $ \ minimum -> do
             let y = (height windowSize + minimum / 5)
             drawLine ptr (Position 0 y) (Position (width windowSize) y)
-    return (if not (vectorY (lastPosition nikki) ~= (vectorY p)) then
-        nikki{positionBuffer = fromJust $ enqueue p $ snd $ fromJust $ dequeue positionBuffer}
+    return (if not (vectorY (fst $ lastPosition nikki) ~= (vectorY p)) then
+        nikki{positionBuffer = fromJust $ enqueue (p, vel) $ snd $ fromJust $ dequeue positionBuffer}
       else
-        nikki){lastPosition = p}
+        nikki){lastPosition = (p, vel)}
 
 scaleVector v = scale v (0.25 / nikkiMass)
 

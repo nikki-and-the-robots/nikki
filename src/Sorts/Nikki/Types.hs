@@ -42,8 +42,8 @@ data Nikki
         state :: State,
         startTime :: Seconds, -- time the State was last changed
         batteryPower :: Integer, -- makes it possible to have REALLY BIG amounts of power :)
-        positionBuffer :: Buffer Vector,
-        lastPosition :: Vector
+        positionBuffer :: Buffer (Vector, Vector),
+        lastPosition :: (Vector, Vector)
       }
   deriving (Show, Typeable)
 
