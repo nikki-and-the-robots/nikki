@@ -311,6 +311,14 @@ mergeAdjacentCyclicPairs f =
         Nothing -> l
         Just x -> x : tail (init l)
 
+-- | returns the local minima of a list.
+localMinima :: Ord n => [n] -> [n]
+localMinima (a : b : c : r) =
+    if a > b && c > b then
+        b : localMinima (c : r)
+      else
+        localMinima (b : c : r)
+localMinima _ = []
 
 
 -- * String stuff

@@ -10,8 +10,8 @@ import Data.Map (Map, toList, fromList, (!), lookup)
 import Data.Abelian
 import Data.Generics
 import Data.Initial
-import Data.Foldable hiding (toList)
-import Data.Buffer hiding (toList)
+import Data.Foldable
+import Data.Buffer
 import Data.Maybe
 
 import System.FilePath
@@ -54,7 +54,7 @@ sorts = do
 
 loadPixmaps :: IO (Map String [Pixmap])
 loadPixmaps = do
-    fromList <$> (fmapM load $ toList statePixmaps)
+    fromList <$> (fmapM load $ Data.Map.toList statePixmaps)
   where
     load :: (String, Int) -> IO (String, [Pixmap])
     load (name, n) = do
@@ -174,6 +174,11 @@ debugNikki now contacts nikki@Nikki{positionBuffer} = do
         forM_ positionBuffer $ \ p -> do
             drawPoint ptr (Position 0 (height windowSize + vectorY p / 5))
             translate ptr (Position 1 0)
+        resetMatrix ptr
+        setPenColor ptr green 1
+        forM_ (localMinima $ map vectorY $ Data.Foldable.toList positionBuffer) $ \ minimum -> do
+            let y = (height windowSize + minimum / 5)
+            drawLine ptr (Position 0 y) (Position (width windowSize) y)
     return (if not (vectorY (lastPosition nikki) ~= (vectorY p)) then
         nikki{positionBuffer = fromJust $ enqueue p $ snd $ fromJust $ dequeue positionBuffer}
       else
