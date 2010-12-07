@@ -289,7 +289,7 @@ jumpCollision considerGhostsState collisions =
   where
 
     -- | remove angles pointing downward
-    isDownward c = abs (nikkiCollisionAngle c) > pi / 2
+    isDownward c = abs (nikkiCollisionAngle c) > (pi / 2 + deg2rad 3.5)
 
     -- | consider only ghost collisions
     -- that have a so called standing feet angle
