@@ -4,13 +4,15 @@ module Sorts.Nikki.JumpingImpulse (
     getJumpingImpulse,
     JumpingImpulseValues(..),
     calculate,
-    component,
+    getJumpingFactor,
   ) where
 
 
 import Data.Abelian
 
 import Physics.Chipmunk
+
+import Utils
 
 import Base.Constants
 
@@ -62,7 +64,10 @@ calculate collisionObjectVelocity contactAngle nikkiVelocity =
     -- would be zero (relative to the collision object)
     -- vertical component is static (depends on minimalJumpingHeight)
     -- horizontal component depends on walljumpHorizontalFactor
-    staticImpulse = Vector horizontalImpulse (- jumpingImpulseLength)
+    staticImpulse = scale
+        (Vector horizontalImpulse (- jumpingImpulseLength))
+        (getJumpingFactor contactAngle)
+
     -- angle of the staticImpulse
     staticAngle = walljumpHorizontalFactor * contactAngle
     -- horizontal component of the staticImpulse
@@ -115,3 +120,7 @@ calculate collisionObjectVelocity contactAngle nikkiVelocity =
     -- factor (between 0 and 1) that gets higher the higher the wallVelocity is.
     -- the impact of wallVelocity is controlled by correctionSteepness
     wallVelocityLenFactor = 1 - (correctionSteepness ** (- len wallVelocity))
+
+getJumpingFactor :: Angle -> Double
+getJumpingFactor angle =
+    walljumpFactor + (1 - walljumpFactor) * cos angle

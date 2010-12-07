@@ -61,6 +61,10 @@ minimalJumpingHeight = fromKachel 0.28 -- maybe even higher, before: 0.25
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
 maximalJumpingHeight = fromKachel 3.4 -- very good, before: 3.5
 
+-- | defines how strong the walljump from a vertical will be
+-- (in terms of a normal jump from a horizontal object)
+walljumpFactor :: Double = 0.80
+
 -- | decides how strong the horizontal impulse is in case of a 90 degree wall jump
 -- 0 - no horizontal impulse
 -- 0.5 - same horizontal impulse as normal jumping impulse (pointing up)

@@ -46,6 +46,9 @@ updateState mode now contacts (True, controlData) nikki = do
     let newState_ = newState now contacts controlData nikki nikkiPos velocity_
     return $ nikki{state = newState_}
 
+newState :: Seconds -> Contacts -> ControlData
+    -> Nikki -> CM.Position -> Velocity
+    -> State
 newState now contacts controlData nikki nikkiPos velocity =
     mkNewState considerGhostsState'
   where
@@ -55,7 +58,9 @@ newState now contacts controlData nikki nikkiPos velocity =
       case (willJump, mJumpImpulseData) of
         -- nikki jumps
         (True, Just impulse) ->
-          let specialJumpInformation = JumpInformation (Just now) velocity buttonDirection
+          let specialJumpInformation =
+                JumpInformation (Just now) (Just angle) velocity buttonDirection
+              angle = nikkiCollisionAngle impulse
           in State
                (JumpImpulse impulse)
                (jumpImpulseDirection $ nikkiCollisionAngle impulse)
@@ -173,14 +178,17 @@ newState now contacts controlData nikki nikkiPos velocity =
 
     -- while nikki is in the air, this describes the state
     jumpInformation' =
-        JumpInformation jumpStartTime_ velocity buttonDirection
+        JumpInformation jumpStartTime_ jumpCollisionAngle_ velocity buttonDirection
 
     -- when the jump button is held, this saves the time of the jump's start
     jumpStartTime_ :: Maybe Seconds
-    jumpStartTime_ =
+    jumpCollisionAngle_ :: Maybe Angle
+    (jumpStartTime_, jumpCollisionAngle_) =
         if jumpButtonHeld
-        then jumpStartTime $ jumpInformation $ state nikki
-        else Nothing
+        then (jumpStartTime ji, jumpCollisionAngle ji)
+        else (Nothing, Nothing)
+      where
+        ji = jumpInformation $ state nikki
 
     -- | direction when starting a jump
     jumpImpulseDirection angle =

@@ -6,6 +6,8 @@ import Data.Abelian
 
 import Physics.Chipmunk
 
+import Utils
+
 import Base.Constants
 import Base.Directions
 
@@ -37,10 +39,11 @@ airForce = gravity * nikkiMass * airBorneForceFactor
 -- which will be applied when the jump button is held
 getLongJumpingForce :: Seconds -> JumpInformation -> Double
 getLongJumpingForce now ji =
-    case jumpStartTime ji of
-        Nothing -> zero
-        Just jumpStartTime_ ->
-            longJumpAntiGravity (now - jumpStartTime_)
+    case (jumpStartTime ji, jumpCollisionAngle ji) of
+        (Just jumpStartTime_, Just collisionAngle) ->
+            longJumpAntiGravity (now - jumpStartTime_) *
+            getJumpingFactor collisionAngle
+        _ -> zero
 
 -- | calculates the force that is applied in a maximal jump
 -- depending on the time

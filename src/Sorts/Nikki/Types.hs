@@ -111,13 +111,14 @@ isSlideToGripAction = (6 ==) . toActionNumber
 data JumpInformation =
     JumpInformation {
         jumpStartTime :: Maybe Seconds,
+        jumpCollisionAngle :: Maybe Angle,
         jumpNikkiVelocity :: Velocity,
         jumpButtonDirection :: (Maybe HorizontalDirection)
       }
   deriving (Show)
 
 instance Initial JumpInformation where
-    initial = JumpInformation Nothing zero Nothing
+    initial = JumpInformation Nothing Nothing zero Nothing
 
 data Cloud
     = Cloud {
