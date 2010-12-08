@@ -240,8 +240,8 @@ shaft = mkRect
 innerStampThingie = mkRect
     (Position (- (width boxSize / 2) + outerWallThickness + innerPadding) 0)
     (Size (width boxSize - 2 * (outerWallThickness + innerPadding))
-        (height boxSize - outerWallThickness - yPlatformDistance))
-
+        (height boxSize - outerWallThickness - yPlatformDistance + fromUber 1))
+                                                                 -- stamp doesn't get pushed down all the way
 trigger =
     mkRect (Position
                 (- (outerWallThickness / 2))
