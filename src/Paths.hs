@@ -20,10 +20,11 @@ import qualified Paths_nikki
 
 getDataFileName :: FilePath -> IO FilePath
 getDataFileName p = do
-  (putStrLn . ("DEBUG: path to executable: " ++)) =<< getProgPath
+  progPath <- getProgPath
+  putStrLn ("DEBUG: path to executable: " ++ progPath)
   case os of
-    "linux" -> Paths_nikki.getDataFileName p
-    "mingw32" -> return ("data" </> p) -- works if the application is deployed in one folder
+    "linux" -> Paths_nikki.getDataFileName p -- standard cabal behaviour
+    "mingw32" -> return (progPath </> "data" </> p) -- works if the application is deployed in one folder
     x -> error ("unsupported os: " ++ os)
 
 -- | returns unhidden files with a given extension in a given data directory.
