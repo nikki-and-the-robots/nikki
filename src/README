@@ -13,9 +13,11 @@ Removes all compilation products.
 ./linuxRunInPlace.sh
 Runs the game in place. Run ./linuxCompile.sh first.
 
-./windowsDeploy.sh
-Creates a distributable application on windows. 
-(Compiling on windows is very complicated right now. We are using msys and mingw to do this. The main problem is, that both Qt and the GHC come with their own gcc version. We managed to get the ghc use Qt's gcc, but it seems not very elegant. If you have experience in compiling stuff on windows and have some time to help out, you effort would be highly appreciated.)
+./windowsCompile.sh
+(Compiling on windows is very complicated right now. We are using msys and mingw to do this. The main problem is, that both Qt and the GHC come with their own gcc version. We managed to get the ghc to use Qt's gcc, but it seems not very elegant. If you have experience in compiling stuff on windows and have some time to help out, you effort would be highly appreciated.)
+
+./windowsDeploy.hs
+Creates a distributable application on windows. This will be a folder containing the main binary, all needed dll's and all data. Before calling the script, 
 
 ./haddock.sh
 Builds the Haskell code documentation. Run ./compile.sh first.

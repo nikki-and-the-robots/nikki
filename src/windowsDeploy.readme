@@ -1,0 +1,13 @@
+windowsDeploy.hs is a script to facilitate deployment on windows.
+It tries to copy all needed files into a directory called "nikki".
+There are some files of dependencies, that have to be copied.
+You can give paths to be searched as command line arguments (space separated).
+The script will also look in ../ and in dist/build/nikki.
+The needed files include:
+    libsndfile-1.dll
+    openal32.dll
+    QtCore4.dll
+    QtGui4.dll
+    QtOpenGL4.dll
+    mingwm10.dll
+    libgcc_s_dw2-1.dll
