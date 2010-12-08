@@ -97,7 +97,7 @@ instance Sort SwitchSort Switch where
             stampAttributes = stampBodyAttributes stampPos
         stampChip <- initChipmunk space stampAttributes stampShapes stampBaryCenterOffset
         modifyApplyForce stampChip
-            (Vector 0 (- (gravity * (mass stampAttributes + nikkiMass * 0.55))))
+            (Vector 0 (- (gravity * (mass stampAttributes + nikkiMass * 0.4))))
 
         return $ Switch boxChip stampChip triggerChip triggerShape False
 
