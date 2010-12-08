@@ -24,7 +24,12 @@ getDataFileName p = do
   putStrLn ("DEBUG: path to executable: " ++ progPath)
   case os of
     "linux" -> Paths_nikki.getDataFileName p -- standard cabal behaviour
-    "mingw32" -> return (progPath </> "data" </> p) -- works if the application is deployed in one folder
+    "mingw32" ->
+        -- works if the application is deployed in one folder
+        return (progPath </> "data" </> p)
+    "darwin" ->
+        -- works if the application is bundled in an app
+        return (progPath </> ".." </> "Resources" </> "resources" </> p)
     x -> error ("unsupported os: " ++ os)
 
 -- | returns unhidden files with a given extension in a given data directory.

@@ -11,7 +11,7 @@ Extra-source-files:
     data/README
     data/manual/editor.txt
 
-Build-Type:     Simple
+Build-Type:     Custom
 Cabal-Version:  >= 1.6
 
 data-dir:
