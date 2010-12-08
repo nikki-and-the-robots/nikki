@@ -13,14 +13,17 @@ import Control.Arrow
 import System.Info
 import System.FilePath
 import System.Directory
+import System.Environment.FindBin
 
 import qualified Paths_nikki
 
 
 getDataFileName :: FilePath -> IO FilePath
-getDataFileName = case os of
-    "linux" -> Paths_nikki.getDataFileName
-    "mingw32" -> ("data" </>) >>> return -- works if the application is deployed in one folder
+getDataFileName p = do
+  (putStrLn . ("DEBUG: path to executable: " ++)) =<< getProgPath
+  case os of
+    "linux" -> Paths_nikki.getDataFileName p
+    "mingw32" -> return ("data" </> p) -- works if the application is deployed in one folder
     x -> error ("unsupported os: " ++ os)
 
 -- | returns unhidden files with a given extension in a given data directory.
