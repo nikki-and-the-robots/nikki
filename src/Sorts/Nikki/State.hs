@@ -69,8 +69,8 @@ newState now contacts controlData nikki nikkiPos velocity =
         (False, Just c) ->
           case grips of
             -- nikki grabs something
-            Just HLeft | rightPushed -> State EndGripImpulse HLeft jumpInformation'
-            Just HRight | leftPushed -> State EndGripImpulse HRight jumpInformation'
+            Just HLeft | rightPushed -> State GripImpulse HLeft jumpInformation'
+            Just HRight | leftPushed -> State GripImpulse HRight jumpInformation'
             Just gripDirection -> State Grip gripDirection jumpInformation'
             -- nikki grabs nothing
             Nothing ->

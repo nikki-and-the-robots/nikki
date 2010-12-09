@@ -114,7 +114,7 @@ frameTimes action = case action of
     State WallSlide{} d _ _ -> (addDirection d "wallslide", airborne)
     State SlideToGrip{} d _ _ -> (addDirection d "jump", singleFrame)
     State Grip d _ _ -> (addDirection d "grip", singleFrame)
-    State EndGripImpulse d _ _ -> (addDirection d "grip", singleFrame)
+    State GripImpulse d _ _ -> (addDirection d "grip", singleFrame)
     State UsingTerminal _ _ _ -> ("terminal", singleFrame)
     State (NikkiLevelFinished Passed) d _ _ -> (addDirection d "happy", singleFrame)
     State (NikkiLevelFinished Failed) d _ _ -> (addDirection d "sad", singleFrame)

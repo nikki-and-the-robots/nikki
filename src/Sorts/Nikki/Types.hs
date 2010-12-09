@@ -85,7 +85,7 @@ data Action
     | UsingTerminal
     | SlideToGrip
     | Grip -- when Nikki uses the paws to hold on to something
-    | EndGripImpulse -- state for one frame (when grip state is ended)
+    | GripImpulse -- state for one frame (when grip state is ended)
     | NikkiLevelFinished LevelResult
   deriving (Show)
 
@@ -97,7 +97,7 @@ toActionNumber WallSlide{}          = 4
 toActionNumber UsingTerminal        = 5
 toActionNumber SlideToGrip{}        = 6
 toActionNumber Grip                 = 7
-toActionNumber EndGripImpulse       = 8
+toActionNumber GripImpulse          = 8
 toActionNumber NikkiLevelFinished{} = 9
 
 isWaitAction, isWalkAction, isJumpImpulseAction,
