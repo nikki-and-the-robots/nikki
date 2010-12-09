@@ -32,12 +32,12 @@ macDeploymentHooks = do
 -- | deployment on a mac
 macApp :: [FilePath] -> MacApp
 macApp resourceFiles = MacApp {
-    appName = "Nikki",
+    appName = "nikki",
     appIcon = Just "../data/png/icon-128.png",
     appPlist = Nothing,
     resources = resourceFiles,
     otherBins = [],
-    appDeps = DoNotChase -- ChaseWithDefaults
+    appDeps = ChaseWithDefaults
   }
 
 -- | returns all (unhidden) files in a directory recursively,
