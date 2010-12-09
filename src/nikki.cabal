@@ -105,4 +105,10 @@ Executable            nikki
             cpp/dist/,
             C:/Qt/2010.02.1/qt/lib/
 
-
+    if os(darwin)
+        extra-libraries:
+            qtwrapper
+        extra-lib-dirs:
+            cpp/dist/
+        frameworks:
+            QtOpenGL, QtGui, QtCore

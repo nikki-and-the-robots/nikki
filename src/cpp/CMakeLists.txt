@@ -5,6 +5,9 @@ project(qtRendering)
 # set(CMAKE_VERBOSE_MAKEFILE 1)
 set(CMAKE_BUILD_TYPE "RELEASE") # -O3
 
+set(ARCH i386)
+set(CMAKE_OSX_ARCHITECTURES i386)
+
 message(build-type: ${CMAKE_BUILD_TYPE})
 
 find_package(Qt4 REQUIRED)
@@ -17,9 +20,9 @@ qt4_wrap_cpp(MOCFILES ${HEADERS})
 add_library(qtwrapper qtwrapper.cpp ${MOCFILES})
 
 # added for ghci debugging
-IF(UNIX)
-    add_library(qtwrapper_so SHARED qtwrapper.cpp ${MOCFILES})
-ENDIF(UNIX)
+# IF(UNIX)
+#    add_library(qtwrapper_so SHARED qtwrapper.cpp ${MOCFILES})
+# ENDIF(UNIX)
 
 add_custom_command(TARGET qtwrapper POST_BUILD
                    COMMAND touch
