@@ -130,9 +130,7 @@ newState now contacts controlData nikki nikkiPos velocity =
 
     -- nikki's new horizontal direction
     newDirection :: HorizontalDirection
-    newDirection = case state nikki of
-        State Grip direction _ _ -> swapHorizontalDirection direction
-        _ -> fromMaybe oldDirection buttonDirection
+    newDirection = fromMaybe oldDirection buttonDirection
 
     -- returns if nikki grabs something (and if yes, which direction)
     grips :: Maybe HorizontalDirection
