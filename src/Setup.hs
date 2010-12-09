@@ -32,19 +32,21 @@ macDeploymentHooks = do
 -- | deployment on a mac
 macApp :: [FilePath] -> MacApp
 macApp resourceFiles = MacApp {
-    appName = "Nikki and the Robots",
+    appName = "Nikki",
     appIcon = Just "../data/png/icon-128.png",
     appPlist = Nothing,
     resources = resourceFiles,
     otherBins = [],
-    appDeps = ChaseWithDefaults
+    appDeps = DoNotChase -- ChaseWithDefaults
   }
 
 -- | returns all (unhidden) files in a directory recursively,
--- including the directories (excluding the given directory)
+-- excluding all directories
 getFilesRecursive :: FilePath -> IO [FilePath]
 getFilesRecursive dir = do
     content <- filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
     let here = map (dir </>) content
-    recursive <- mapM getFilesRecursive =<< filterM doesDirectoryExist here
-    return $ sort (here ++ concat recursive)
+    files <- filterM (\ p -> not <$> doesDirectoryExist p) here
+    directories <- filterM doesDirectoryExist here
+    recursive <- mapM getFilesRecursive directories
+    return $ sort (files ++ concat recursive)

@@ -29,7 +29,7 @@ getDataFileName p = do
         return (progPath </> "data" </> p)
     "darwin" ->
         -- works if the application is bundled in an app
-        return (progPath </> ".." </> "Resources" </> "resources" </> p)
+        return (progPath </> ".." </> "Resources" </> p)
     x -> error ("unsupported os: " ++ os)
 
 -- | returns unhidden files with a given extension in a given data directory.
