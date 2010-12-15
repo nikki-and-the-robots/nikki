@@ -47,10 +47,7 @@ names = [
     ("tiles/aqua-standard", (Position (- 1) (- 1)), Size 64 64),
     ("tiles/yellow-standard", (Position (- 1) (- 1)), Size 64 64),
     ("tiles/red-standard", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/green-standard", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/tile-standard-white", (Position (- 33) (- 33)), Size 64 64),
-    ("tiles/tile-standard-black", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/terminal-frame-editor", (Position (- 1) (- 1)), Size 192 192)
+    ("tiles/green-standard", (Position (- 1) (- 1)), Size 64 64)
   ]
 
 -- | points are moved by this distance to avoid sticky edges
