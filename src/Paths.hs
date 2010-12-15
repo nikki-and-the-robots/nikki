@@ -21,7 +21,6 @@ import qualified Paths_nikki
 getDataFileName :: FilePath -> IO FilePath
 getDataFileName p = do
   progPath <- getProgPath
-  putStrLn ("DEBUG: path to executable: " ++ progPath)
   case os of
     "linux" -> Paths_nikki.getDataFileName p -- standard cabal behaviour
     "mingw32" ->
