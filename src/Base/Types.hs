@@ -23,6 +23,12 @@ import Base.Grounds
 import Base.Events
 
 
+-- * type aliases
+
+type Seconds = Double
+
+type Offset a = Graphics.Qt.Position a
+
 -- from Game.Scene
 
 -- | representing the scene (both physical and graphical objects) during the game.

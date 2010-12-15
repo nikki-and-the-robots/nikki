@@ -21,6 +21,7 @@ import Utils
 
 import Base.Directions
 import Base.Constants
+import Base.Types
 import Base.Events
 import Base.Animation
 import Base.Pixmap

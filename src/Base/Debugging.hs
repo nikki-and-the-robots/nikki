@@ -15,7 +15,7 @@ import System.IO.Unsafe
 
 import Graphics.Qt
 
-import Base.Constants
+import Base.Types
 
 
 type DebuggingCommand = (Ptr QPainter -> Offset Double -> IO ())

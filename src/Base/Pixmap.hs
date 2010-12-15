@@ -14,7 +14,7 @@ import Graphics.Qt
 
 import Utils
 
-import Base.Constants
+import Base.Types
 
 
 data Pixmap = Pixmap {

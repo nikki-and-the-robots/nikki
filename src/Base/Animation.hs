@@ -4,7 +4,7 @@ module Base.Animation where
 
 import Utils
 
-import Base.Constants
+import Base.Types
 
 
 -- | should be real-time capable for big nows

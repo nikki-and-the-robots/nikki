@@ -8,6 +8,7 @@ import Physics.Chipmunk
 
 import Utils
 
+import Base.Types
 import Base.Constants
 import Base.Directions
 

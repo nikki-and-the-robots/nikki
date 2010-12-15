@@ -20,7 +20,7 @@ import Paths
 
 import Base.Constants
 import Base.Pixmap
-import Base.Types (ObjectEditModeMethods(..), EditorPosition(..))
+import Base.Types (ObjectEditModeMethods(..), EditorPosition(..), Offset)
 import Base.Events
 
 import Object

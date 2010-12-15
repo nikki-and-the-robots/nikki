@@ -6,12 +6,6 @@ module Base.Constants where
 import Graphics.Qt
 
 
--- * Types
-
-type Seconds = Double
-
-type Offset a = Position a
-
 -- * Graphics
 
 -- | converts uberpixels to pixels
