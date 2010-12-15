@@ -32,7 +32,7 @@ import Sorts.Box (boxMaterialMass)
 
 -- | Tiles that are available as falling tiles. Same format as in Sorts/Tiles.hs
 names = [
-    ("tiles/tile-standard-white", (Position (- 33) (- 33)), Size 64 64)
+    ("tiles/white-falling", (Position (- 1) (- 1)), Size 64 64)
   ]
 
 -- | time in seconds, before the tiles start to fall after touching Nikki
