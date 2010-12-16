@@ -56,20 +56,20 @@ walkingVelocity :: Double = 415 -- 390.0
 airBorneForceFactor = 0.6 -- 0.5
 
 -- | minimal jumping height (for calculating the impulse strength)
-minimalJumpingHeight = fromKachel 0.28 -- maybe even higher, before: 0.25
+minimalJumpingHeight = fromKachel 0.3 -- maybe even higher, before: 0.25 and 0.28
 
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
 maximalJumpingHeight = fromKachel 3.4 -- very good, before: 3.5
 
 -- | defines how strong the walljump from a vertical will be
 -- (in terms of a normal jump from a horizontal object)
-walljumpFactor :: Double = 0.80
+walljumpFactor :: Double = 0.82 -- 0.80
 
 -- | decides how strong the horizontal impulse is in case of a 90 degree wall jump
 -- 0 - no horizontal impulse
 -- 0.5 - same horizontal impulse as normal jumping impulse (pointing up)
 -- 1.0 infinite horizontal impulse
-walljumpHorizontalFactor :: Double = 0.7
+walljumpHorizontalFactor :: Double = 0.69 -- 0.7
 
 -- | Controls how Nikki's velocity gets decreased by wall jumps.
 -- Must be >= 1.
@@ -77,7 +77,7 @@ walljumpHorizontalFactor :: Double = 0.7
 -- bigger - the downwards velocity has more and more influence
 -- No matter how high the value, the downwards velocity gets always clipped, 
 -- to avoid wall jumps that point downwards.
-correctionSteepness :: Double = 1.0005
+correctionSteepness :: Double = 1.0004 -- 1.005
 
 -- | if the contactAngle is smaller than gripAngleLimit
 -- (and the collision is with nikki's head),
