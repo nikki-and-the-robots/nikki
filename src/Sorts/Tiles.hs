@@ -41,14 +41,14 @@ frameDuration :: Double = 1.0
 
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
-names = [
-    ("tiles/white-standard", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/black-standard", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/aqua-standard", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/yellow-standard", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/red-standard", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/green-standard", (Position (- 1) (- 1)), Size 64 64)
-  ]
+names =
+    ("tiles/white-standard", (Position (- 1) (- 1)), Size 64 64) :
+    ("tiles/black-standard", (Position (- 1) (- 1)), Size 64 64) :
+    ("tiles/aqua-standard", (Position (- 1) (- 1)), Size 64 64) :
+    ("tiles/yellow-standard", (Position (- 1) (- 1)), Size 64 64) :
+    ("tiles/red-standard", (Position (- 1) (- 1)), Size 64 64) :
+    ("tiles/green-standard", (Position (- 1) (- 1)), Size 64 64) :
+    []
 
 -- | points are moved by this distance to avoid sticky edges
 tileMergingEpsilon = 1
