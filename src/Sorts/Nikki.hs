@@ -41,6 +41,7 @@ import Sorts.Nikki.Initialisation
 import Sorts.Nikki.State
 import Sorts.Nikki.Control
 import Sorts.Nikki.JumpingImpulse
+import Sorts.Nikki.Dust
 
 
 sorts :: IO [Sort_]
@@ -134,7 +135,7 @@ instance Sort NSort Nikki where
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
         renderChipmunk ptr offset pixmap (chipmunk nikki)
-        renderClouds ptr offset now sort (action $ state nikki)
+        renderDustClouds ptr offset now sort (dustClouds $ state nikki)
 
 
 pickPixmap :: Seconds -> NSort -> Nikki -> Pixmap
@@ -146,19 +147,6 @@ pickPixmap now sort nikki =
             pickAnimationFrameNonLooping pixmapList frameTimes_ (now - startTime nikki)
         Nothing -> es "problem finding pixmaps in Nikki: " name
 
-renderClouds :: Ptr QPainter -> Offset Double -> Seconds -> NSort -> Action -> IO ()
-renderClouds ptr offset now sort (WallSlide _ clouds) =
-    fmapM_ render clouds
-  where
-    render cloud = do
-        let mPixmap = case lookup "dust" (pixmaps sort) of
-                Just pixmapList -> do
-                    pickLimitedAnimationFrame pixmapList cloudFrameTimes (now - creationTime cloud)
-        case mPixmap of
-            Just pixmap ->
-                renderPixmap ptr offset (cloudPosition cloud) Nothing pixmap
-            Nothing -> return ()
-renderClouds _ _ _ _ _ = return ()
 
 -- debugging
 

@@ -107,17 +107,17 @@ touchdownDuration = 0.1
 
 frameTimes :: State -> (String, [(Int, Seconds)])
 frameTimes action = case action of
-    State Wait{} d _ _ -> (addDirection d "wait", wait)
-    State Walk{afterAirborne} d _ _ -> (addDirection d "walk", walk afterAirborne)
-    State JumpImpulse{} d _ _ -> (addDirection d "jump", airborne)
-    State Airborne{} d _ _ -> (addDirection d "jump", airborne)
-    State WallSlide{} d _ _ -> (addDirection d "wallslide", airborne)
-    State SlideToGrip{} d _ _ -> (addDirection d "jump", singleFrame)
-    State Grip d _ _ -> (addDirection d "grip", singleFrame)
-    State GripImpulse d _ _ -> (addDirection d "grip", singleFrame)
-    State UsingTerminal _ _ _ -> ("terminal", singleFrame)
-    State (NikkiLevelFinished Passed) d _ _ -> (addDirection d "happy", singleFrame)
-    State (NikkiLevelFinished Failed) d _ _ -> (addDirection d "sad", singleFrame)
+    State Wait{} d _ _ _ -> (addDirection d "wait", wait)
+    State Walk{afterAirborne} d _ _ _ -> (addDirection d "walk", walk afterAirborne)
+    State JumpImpulse{} d _ _ _ -> (addDirection d "jump", airborne)
+    State Airborne{} d _ _ _ -> (addDirection d "jump", airborne)
+    State WallSlide{} d _ _ _ -> (addDirection d "wallslide", airborne)
+    State SlideToGrip{} d _ _ _ -> (addDirection d "jump", singleFrame)
+    State Grip d _ _ _ -> (addDirection d "grip", singleFrame)
+    State GripImpulse d _ _ _ -> (addDirection d "grip", singleFrame)
+    State UsingTerminal _ _ _ _ -> ("terminal", singleFrame)
+    State (NikkiLevelFinished Passed) d _ _ _ -> (addDirection d "happy", singleFrame)
+    State (NikkiLevelFinished Failed) d _ _ _ -> (addDirection d "sad", singleFrame)
 
     x -> es "frameTimes" x
   where

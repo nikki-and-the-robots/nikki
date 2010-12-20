@@ -68,12 +68,13 @@ data State = State {
     action :: Action,
     direction :: HorizontalDirection, -- the direction nikki faces
     jumpInformation :: JumpInformation,
-    considerGhostsState :: Bool -- if ghost shapes should be considered
+    considerGhostsState :: Bool, -- if ghost shapes should be considered
+    dustClouds :: [DustCloud]
   }
     deriving (Show)
 
 instance Initial State where
-    initial = State (Wait False) HRight initial False
+    initial = State (Wait False) HRight initial False []
 
 data Action
     = Wait {isGhost :: Bool}
@@ -81,7 +82,7 @@ data Action
         -- state for one frame (when a jump starts)
     | JumpImpulse NikkiCollision
     | Airborne
-    | WallSlide [Angle] [Cloud]
+    | WallSlide [Angle]
     | UsingTerminal
     | SlideToGrip
     | Grip -- when Nikki uses the paws to hold on to something
@@ -121,8 +122,8 @@ data JumpInformation =
 instance Initial JumpInformation where
     initial = JumpInformation Nothing Nothing zero Nothing
 
-data Cloud
-    = Cloud {
+data DustCloud
+    = DustCloud {
         creationTime :: Seconds,
         cloudPosition :: Qt.Position Double
       }

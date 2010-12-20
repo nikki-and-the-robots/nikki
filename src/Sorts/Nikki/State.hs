@@ -27,33 +27,36 @@ import Base.Types
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation
+import Sorts.Nikki.Dust
 
 
 jumpButton = AButton
 
 
 updateState :: Mode -> Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
-updateState mode _ _ (False, _) nikki = do
+updateState mode now _ (False, _) nikki = do
     let action = case mode of
             TerminalMode{} -> UsingTerminal
             RobotMode{} -> UsingTerminal
             (LevelFinished _ result) -> NikkiLevelFinished result
         jumpInformation' = jumpInformation $ state nikki
-    return $ nikki{state = State action (direction $ state nikki) jumpInformation' False}
+        State{direction, dustClouds} = state nikki
+        newState = State action direction jumpInformation' False dustClouds
+    addDustClouds now nikki{state = newState}
 updateState mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
     nikkiPos <- getPosition $ chipmunk nikki
     let newState_ = newState now contacts controlData nikki nikkiPos velocity_
-    return $ nikki{state = newState_}
+    addDustClouds now nikki{state = newState_}
 
 newState :: Seconds -> Contacts -> ControlData
     -> Nikki -> CM.Position -> Velocity
     -> State
 newState now contacts controlData nikki nikkiPos velocity =
-    mkNewState considerGhostsState'
+    mkNewState considerGhostsState' (dustClouds $ state nikki)
   where
     -- function that creates the next state when given the next considerGhosts value.
-    mkNewState :: (Bool -> State)
+    mkNewState :: (Bool -> [DustCloud] -> State)
     mkNewState =
       case (willJump, mJumpImpulseData) of
         -- nikki jumps
@@ -95,9 +98,7 @@ newState now contacts controlData nikki nikkiPos velocity =
               else
               -- something touches the head that causes jumping capability
                 State
-                  (WallSlide
-                     (map nikkiCollisionAngle collisions)
-                     (clouds nikkiPos newDirection))
+                  (WallSlide (map nikkiCollisionAngle collisions))
                   (wallSlideDirection $ nikkiCollisionAngle c)
                   jumpInformation'
         -- nikki cannot jump
@@ -223,22 +224,6 @@ newState now contacts controlData nikki nikkiPos velocity =
         not $ null $
         filter isGhostCollision $
         nikkiCollisions contacts
-
-    -- | create nikki's dust
-    clouds :: Vector -> HorizontalDirection -> [Cloud]
-    clouds (Vector x y) direction = case action $ state nikki of
-        WallSlide _ (a : r) ->
-            if now - creationTime a > cloudCreationTime then
-                newCloud direction : filtered
-              else
-                filtered
-          where
-            filtered = filter (\ c -> now - creationTime c < 4 * cloudCreationTime) (a : r)
-        x -> [newCloud direction]
-      where
-        newCloud HLeft = Cloud now (Position x y +~ Position (- fromUber (13 / 2)) (fromUber (24 / 2)) +~ cloudRenderCorrection)
-        newCloud HRight = Cloud now (Position x y +~ Position (fromUber (13 / 2)) (fromUber (24 / 2)) +~ cloudRenderCorrection)
-        cloudRenderCorrection = Position (- fromUber (5 / 2)) (- fromUber (5 / 2))
 
 
 -- if a given collision is with nikki's head
