@@ -43,10 +43,16 @@ Contains helper scripts.
 
 * homegrown haskell bindings for sfml-audio
     install with e.g.:
-        darcs get http://code.joyridelabs.de/sfml-audio/
+        darcs get http://patch-tag.com/r/shahn/sfml-audio 
         cd sfml-audio
         cabal install
     They ship with their own version of SFML2.
+
+* buffer, library for buffers
+    install with e.g.:
+    darcs get http://patch-tag.com/r/shahn/buffer
+    cd buffer
+    cabal install
 
 * hipmunk-5.2.0.2 from http://code.joyridelabs.de/Hipmunk-5.2.0.2.tar.gz
     install with e.g.:
