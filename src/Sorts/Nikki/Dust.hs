@@ -25,6 +25,7 @@ import Sorts.Nikki.Configuration
 
 -- | create nikki's dust
 addDustClouds :: Seconds -> Nikki -> IO Nikki
+addDustClouds _ n = return n
 addDustClouds now nikki = do
     p <- getPosition $ chipmunk nikki
     return nikki{state = newState p}
