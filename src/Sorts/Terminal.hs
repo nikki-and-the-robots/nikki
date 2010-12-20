@@ -65,26 +65,27 @@ blinkLength = 0.4
 
 sorts :: IO [Sort_]
 sorts = do
-    let nameToPixmap =
+    let nameToPixmap offset =
             fromPure toPngPath >>>>
             getDataFileName >>>>
-            loadPixmap (Position 1 1)
-    blinkenLights <- fmapM nameToPixmap [
-        "terminal-main_00",
-        "terminal-main_01",
-        "terminal-main_02",
-        "terminal-main_03"
-      ]
+            loadPixmap (Position offset offset)
+    backgroundPixmap <- (nameToPixmap (1 + fromUber 1)) "terminal-standard"
+    displayBlinkenLights <- fmapM (nameToPixmap (1 - fromUber 13)) (
+        "display_00" :
+        "display_01" :
+        "display_02" :
+        "display_03" :
+      [])
     littleColors <- readColorLights (\ color -> toPngPath ("terminal-" ++ color))
     osdPixmaps <- loadOsdPixmaps
-    let r = TSort (Pixmaps blinkenLights littleColors) osdPixmaps
+    let r = TSort (Pixmaps backgroundPixmap displayBlinkenLights littleColors) osdPixmaps
     return [Sort_ r]
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
 readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
 readColorLights f =
-    fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap (Position 1 1)) $
+    fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap (Position 13 13)) $
         ColorLights "red" "blue" "green" "yellow"
 
 loadOsdPixmaps :: IO OsdPixmaps
@@ -110,8 +111,7 @@ loadOsdPixmaps = do
         p{pixmapSize = pixmapSize -~ fmap fromUber (Size 1 1)}
 
 
--- | type to bundle things for the four terminal colors: red, blu, green and yellow (in that order)
-
+-- | type to bundle things for the four terminal colors: red, blue, green and yellow (in that order)
 data ColorLights a = ColorLights {
     red_, blue_, green_, yellow_ :: a
   }
@@ -142,6 +142,7 @@ selectedColorLights i = ColorLights (i == 0) (i == 1) (i == 2) (i == 3)
 
 
 data Pixmaps = Pixmaps {
+    background :: Pixmap,
     blinkenLights :: [Pixmap],
     littleColorLights :: ColorLights Pixmap
   }
@@ -253,9 +254,9 @@ data ExitMode
 
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
-    size = pixmaps >>> blinkenLights >>> head >>> pixmapSize
+    size = const $ Size (fromUber 48) (fromUber 48)
     sortRender sort ptr _ =
-        renderPixmapSimple ptr (head $ blinkenLights $ pixmaps sort)
+        renderPixmapSimple ptr $ background $ pixmaps sort
 
     objectEditModeMethods _ = Just editMode
 
@@ -296,8 +297,9 @@ instance Sort TSort Terminal where
     updateNoSceneChange sort mode now contacts (True, cd) terminal =
         return terminal{state = updateState now cd (robots terminal) (state terminal)}
 
-    render terminal sort ptr offset now =
-        renderTerminal ptr offset now terminal sort
+    render terminal sort ptr offset now = do
+        pos <- fst <$> getRenderPosition (chipmunk terminal)
+        renderTerminal sort ptr offset now terminal pos
 
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
@@ -354,22 +356,25 @@ exitToNikki state = state{exitMode = ExitToNikki, robotIndex = 0}
 
 -- * game rendering
 
-renderTerminal :: Ptr QPainter -> Offset Double -> Seconds -> Terminal
-    -> TSort -> IO ()
-renderTerminal ptr offset now t sort = do
-    renderTerminalBackground ptr offset now t sort
-    renderLittleColorLights ptr offset now t sort
+renderTerminal :: TSort -> Ptr QPainter -> Offset Double -> Seconds
+    -> Terminal -> Qt.Position Double
+    -> IO ()
+renderTerminal sort ptr offset now t pos = do
+    renderTerminalBackground sort ptr offset pos
+    renderDisplayBlinkenLights sort ptr offset now t pos
+    renderLittleColorLights sort ptr offset now t pos
+
+renderTerminalBackground sort ptr offset pos = do
+    renderPixmap ptr offset pos Nothing $ background $ pixmaps sort
 
 -- | renders the main terminal pixmap (with blinkenlights)
-renderTerminalBackground ptr offset now t sort = do
-    let pixmap =
-            pickAnimationFrame (blinkenLights $ pixmaps sort)
-                [blinkenLightSpeed] now
-    renderChipmunk ptr offset pixmap (chipmunk t)
+renderDisplayBlinkenLights sort ptr offset now t pos = do
+    let pixmap = pickAnimationFrame (blinkenLights $ pixmaps sort)
+                 [blinkenLightSpeed] now
+    renderPixmap ptr offset pos Nothing pixmap
 
 -- | renders the little colored lights (for the associated robots) on the terminal in the scene
-renderLittleColorLights ptr offset now t sort = do
-    pos <- fst <$> getRenderPosition (chipmunk t)
+renderLittleColorLights sort ptr offset now t pos = do
     let colorStates = fst $ blinkenLightsState now (robots t) (state t)
     mapM_
         (renderLight ptr (offset +~ pos) (littleColorLights $ pixmaps sort) colorStates)
@@ -393,32 +398,24 @@ littleLightOffsets = ColorLights {
   }
 
 redX, blueX, greenX, yellowX, lightsY :: Double
-redX = redBoxX - glowDist
-blueX = blueBoxX - glowDist
-greenX = greenBoxX - glowDist
-yellowX = yellowBoxX - glowDist
+redX = lightsY
+blueX = redX + boxWidth + padding
+greenX = blueX + boxWidth + padding
+yellowX = greenX + boxWidth + padding
 
-lightsY = boxY - glowDist
+lightsY = fromUber 15
 
-glowDist, boxWidth, padding :: Double
-glowDist = 12
-boxWidth = 12
-padding = 8
-
-redBoxX, blueBoxX, greenBoxX, yellowBoxX, boxY :: Double
-redBoxX = 28
-blueBoxX = redBoxX + boxWidth + padding
-greenBoxX = blueBoxX + boxWidth + padding
-yellowBoxX = greenBoxX + boxWidth + padding
-
-boxY = fromUber 7
+boxWidth, padding :: Double
+boxWidth = fromUber 3
+padding = fromUber 2
 
 
 -- * rendering of game OSD
 
 renderTerminalOSD :: Ptr QPainter -> Seconds -> Scene Object_ -> IO ()
-renderTerminalOSD ptr now scene@Scene{mode = Base.Types.TerminalMode{Base.Types.terminal}} =
-    let object = getMainlayerObject scene terminal
+renderTerminalOSD ptr now scene@Scene{mode = mode@Base.Types.TerminalMode{}} =
+    let terminal = Base.Types.terminal mode
+        object = getMainlayerObject scene terminal
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
         (Just sort, Just terminal) -> do

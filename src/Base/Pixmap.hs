@@ -50,7 +50,7 @@ renderPixmap ptr offset position mAngle pix = do
     resetMatrix ptr
     translate ptr offset
 
-    translate ptr position 
+    translate ptr position
     whenMaybe mAngle $ \ angle ->
         rotate ptr (rad2deg angle)
     translate ptr (pixmapOffset pix)
