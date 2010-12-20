@@ -39,9 +39,9 @@ import Base.Constants
 import Object
 
 
-backgrounds = [
-    "blue"
-  ]
+backgrounds =
+    "blue" :
+    []
 
 
 sorts :: IO [Sort_]
