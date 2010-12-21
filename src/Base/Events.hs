@@ -12,6 +12,7 @@ import Control.Concurrent
 import Control.Arrow
 
 import System.IO.Unsafe
+import System.Info
 
 import Graphics.Qt
 
@@ -120,7 +121,7 @@ toAppEvent _ (Left (KeyRelease key text)) = [Release (KeyboardButton key text)]
 
 key2button :: Map Key AppButton 
 key2button = fromList [
-      (Ctrl, AButton)
+      (platformCtrl, AButton)
     , (Shift, BButton)
     , (Escape, StartButton)
 
@@ -129,6 +130,12 @@ key2button = fromList [
     , (UpArrow, UpButton)
     , (DownArrow, DownButton)
   ]
+
+-- stick with Ctrl on osx
+-- (Qt::AA_MacDontSwapCtrlAndMeta doesn't seem to work)
+platformCtrl = case System.Info.os of
+    "darwin" -> Meta
+    _ -> Ctrl
 
 
 -- does not contain 

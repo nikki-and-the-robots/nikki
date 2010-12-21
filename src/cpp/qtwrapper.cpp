@@ -100,6 +100,8 @@ extern "C" QApplication* newQApplication(char* progName) {
     // but iirc the c-runtime honours this convention in its arguments to main.
     argv[1] = NULL;
 
+    // setting Qt::AA_MacDontSwapCtrlAndMeta doesn't seem to work when the keys are not used as modifiers
+
     return new QApplication(*argcPtr, argv, true);
 };
 
