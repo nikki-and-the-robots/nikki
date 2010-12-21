@@ -81,7 +81,7 @@ data Key
     | RightArrow
 
     -- modifiers
-    | Mod
+    | Meta
     | Shift
     | Ctrl
     | Alt
@@ -171,25 +171,25 @@ keyMapping = [
     (43, Plus),
 
     -- special keys
-    (16777220, Return),
-    (16777221, Enter),
-    (16777216, Escape),
-    (16777217, Tab),
-    (16777223, Delete),
-    (16777219, BackSpace),
+    (0x01000004, Return),
+    (0x01000005, Enter),
+    (0x01000000, Escape),
+    (0x01000001, Tab),
+    (0x01000007, Delete),
+    (0x01000003, BackSpace),
 
     -- arrow keys
-    (16777235, UpArrow),
-    (16777237, DownArrow),
-    (16777234, LeftArrow),
-    (16777236, RightArrow),
+    (0x1000013, UpArrow),
+    (0x1000015, DownArrow),
+    (0x1000012, LeftArrow),
+    (0x1000014, RightArrow),
 
     -- modifiers
-    (16777250, Mod),
-    (16777248, Shift),
-    (16777249, Ctrl),
-    (16777251, Alt),
-    (16781571, AltGr),
+    (0x1000022, Meta),
+    (0x1000020, Shift),
+    (0x1000021, Ctrl),
+    (0x1000023, Alt),
+    (0x1001103, AltGr),
 
     -- numbers
     (49, K1),
