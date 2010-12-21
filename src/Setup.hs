@@ -47,7 +47,7 @@ macPostBuild args buildFlags packageDescription localBuildInfo =
 macApp :: [FilePath] -> MacApp
 macApp resourceFiles = MacApp {
     appName = "nikki",
-    appIcon = Just (macResourcesDir </> "png/icon-128.png"),
+    appIcon = Just (macResourcesDir </> "png/icon.icns"),
     appPlist = Nothing,
     resources = resourceFiles,
     otherBins = [],
