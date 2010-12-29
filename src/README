@@ -55,6 +55,12 @@ Contains helper scripts.
     cd buffer
     cabal install
 
+* clocked, library for timing IO actions
+    install with e.g.:
+    darcs get http://patch-tag.com/r/shahn/clocked
+    cd clocked
+    cabal install
+
 * hipmunk-5.2.0.2 from http://code.joyridelabs.de/Hipmunk-5.2.0.2.tar.gz
     install with e.g.:
         wget http://code.joyridelabs.de/Hipmunk-5.2.0.2.tar.gz

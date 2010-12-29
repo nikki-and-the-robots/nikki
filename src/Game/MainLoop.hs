@@ -13,8 +13,8 @@ import Data.Initial
 
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
-import Control.Concurrent.TickTimer
 import Control.Exception
+import Clocked
 
 import GHC.Conc
 
@@ -75,7 +75,7 @@ setScene s x = s{scene = x}
 gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> AppMonad AppState
 gameLoop app sceneMVar = do
     initializeSceneMVar
-    timer <- liftIO $ newTickTimer (stepQuantum / timeFactor)
+    timer <- liftIO $ newTimer
     withArrowAutoRepeat app $
         loop timer
   where
@@ -107,7 +107,7 @@ gameLoop app sceneMVar = do
               else continue
       where
         continue = do
-            liftIO $ waitTick timer
+            liftIO $ waitTimer timer (stepQuantum / timeFactor)
             loop timer
 
     initializeSceneMVar :: AppMonad ()

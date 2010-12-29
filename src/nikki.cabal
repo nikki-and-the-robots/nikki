@@ -88,6 +88,7 @@ Executable            nikki
         , parsec == 3.1.0
         , buffer
         , FindBin
+        , clocked == 0.2
 
     if os(linux)
         extra-libraries:
