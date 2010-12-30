@@ -30,7 +30,7 @@ getDataFileName p = do
         progPath <- io getProgPath
         case os of
             "linux" ->
-                error "linux deployment not yet implemented"
+                return (progPath </> "data" </> p)
             "mingw32" ->
                 -- works if the application is deployed in one folder
                 return (progPath </> "data" </> p)

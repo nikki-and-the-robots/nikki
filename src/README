@@ -8,11 +8,12 @@ This directory contains all source files for Nikki and the Robots. Building is a
 Compiles everything in place.
 linuxCompile.sh works on mac, too. It should create an app bundle (in dist/build/).
 
-./clean.sh
-Removes all compilation products.
-
 ./linuxRunInPlace.sh
 Runs the game in place. Run ./linuxCompile.sh first.
+
+./linuxDeploy.sh
+Deploys the application in one folder on linux.
+(This does not deploy the shared libraries yet!)
 
 ./windowsCompile.sh
 (Compiling on windows is very complicated right now. We are using msys and mingw to do this. The main problem is, that both Qt and the GHC come with their own gcc version. We managed to get the ghc to use Qt's gcc, but it seems not very elegant. If you have experience in compiling stuff on windows and have some time to help out, you effort would be highly appreciated.)
@@ -22,6 +23,9 @@ Creates a distributable application on windows. This will be a folder containing
 
 ./haddock.hs
 Builds the Haskell code documentation.
+
+./clean.sh
+Removes all compilation products.
 
 ./testsuite
 Contains a testsuite (which covers only very selected parts of the code).
