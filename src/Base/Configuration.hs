@@ -17,6 +17,7 @@ data Configuration = Configuration {
     fullscreen :: Bool,
 
     -- development
+    runInPlace :: Bool,
     graphicsProfiling :: Bool,
     omitPixmapRendering :: Bool,
     renderXYCross :: Bool,
@@ -34,8 +35,10 @@ options =
         fullscreen = False
             &= help "start the game in fullscreen mode",
 
-        graphicsProfiling = False
+        runInPlace = False
             &= groupname "Development flags"
+            &= help "causes the game to look for the data files in ../data",
+        graphicsProfiling = False
             &= help "output FPS for the rendering thread",
         omitPixmapRendering = False
             &= help "omit the normal pixmaps when rendering objects",

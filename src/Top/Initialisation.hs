@@ -7,7 +7,7 @@ import Data.Indexable (Index, Indexable, (>:))
 import Data.Initial
 import Data.SelectTree
 
-import Control.Exception
+import Control.Monad.CatchIO
 import Control.Monad
 
 import Physics.Chipmunk
@@ -36,7 +36,7 @@ import qualified Sorts.Robots.MovingPlatforms
 import qualified Sorts.DebugObject
 
 
-sortLoaders :: [IO [Sort_]]
+sortLoaders :: [M [Sort_]]
 sortLoaders =
     Sorts.Nikki.sorts :
 
@@ -55,16 +55,16 @@ sortLoaders =
     Sorts.DebugObject.sorts :
     []
 
-withAllSorts :: (SelectTree Sort_ -> IO a) -> IO a
+withAllSorts :: (SelectTree Sort_ -> M a) -> M a
 withAllSorts cmd = do
     sorts <- getAllSorts
-    cmd sorts `finally` freeAllSorts sorts
+    cmd sorts `finally` (io $ freeAllSorts sorts)
 
 -- | returns all sorts in a nicely sorted SelectTree
-getAllSorts :: IO (SelectTree Sort_)
+getAllSorts :: M (SelectTree Sort_)
 getAllSorts = do
     sorts <- concat <$> mapM id sortLoaders
-    checkUniqueSortIds sorts
+    io $ checkUniqueSortIds sorts
     return $ mkSelectTree sorts
   where
     mkSelectTree :: [Sort_] -> SelectTree Sort_

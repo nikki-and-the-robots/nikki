@@ -25,11 +25,11 @@ grids = [
   ]
 
 
-sorts :: IO [Sort_]
+sorts :: M [Sort_]
 sorts = mapM mkSort grids
 
 
-mkSort :: String -> IO Sort_
+mkSort :: String -> M Sort_
 mkSort name = do
     path <- getDataFileName (pngDir </> name <.> "png")
     pixmap <- loadPixmap (Position 1 1) path

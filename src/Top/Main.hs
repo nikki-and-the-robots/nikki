@@ -46,25 +46,18 @@ import Top.Editor (editLevel)
 import Top.Game (playLevel)
 
 
--- prints the number of HECs (see haskell concurrency)
-debugNumberOfHecs :: IO ()
-debugNumberOfHecs =
-    putStrLn ("Number of HECs: " ++ show numCapabilities)
+main = globalCatcher $ withStaticConfiguration $ do
 
-main = globalCatcher $ do
-
-    configuration <- getConfiguration
-
---     debugNumberOfHecs
-
-    hSetBuffering stdout NoBuffering
-    putStrLn "\nstarted..."
+    io $ hSetBuffering stdout NoBuffering
+    io $ putStrLn "\nstarted..."
 
     -- qt initialisation
-    qApp <- newQApplication
-    window <- newAppWidget 0
+    qApp <- io newQApplication
+    window <- io $ newAppWidget 0
     loadApplicationIcon window
-    keyPoller <- newKeyPoller window
+    keyPoller <- io $ newKeyPoller window
+
+    configuration <- ask
 
     -- sort loading (pixmaps and sounds)
     code <- withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
@@ -73,8 +66,9 @@ main = globalCatcher $ do
         let app = Application qApp window keyPoller applicationStates appPixmaps sorts
         -- there are two main threads:
         -- this is the logick [sick!] thread
-        forkOS $ globalCatcher $ do
-            runReaderT (executeStates (applicationStates app)) configuration
+        -- dynamic changes of the configuration take place in this thread!
+        io $ forkOS $ globalCatcher $ do
+            withDynamicConfiguration configuration $ executeStates (applicationStates app)
             quitQApplication
 
         -- start app
@@ -84,13 +78,13 @@ main = globalCatcher $ do
         -- this is the rendering thread (will be quit by the logick thread)
         execQApplication qApp
 
-    case code of
+    io $ case code of
         0 -> exitWith ExitSuccess
         x -> exitWith (ExitFailure x)
 
 loadApplicationIcon qApp = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$> getDataFiles ".png" pngDir
-    setApplicationIcon qApp iconPaths
+    io $ setApplicationIcon qApp iconPaths
 
 
 -- * states
@@ -108,11 +102,11 @@ applicationStates app =
     this = applicationStates app
 
 storyMode :: Application -> AppState
-storyMode app = ioAppState $ do
+storyMode app = AppState $ do
     storymodeFile <- getDataFileName "manual/storyModeIntroduction"
-    text <- System.IO.readFile storymodeFile
-    setDrawingCallbackAppWidget (window app) $ Just $ render text
-    waitAnyKey app
+    text <- io $ System.IO.readFile storymodeFile
+    io $ setDrawingCallbackAppWidget (window app) $ Just $ render text
+    io $ waitAnyKey app
     return $ applicationStates app
   where
     render text ptr = do
@@ -149,7 +143,7 @@ selectLevelEdit app parent = ioAppState $ do
         map (\ path -> (path, edit app parent (path, False))) levelFiles
 
 pickNewLevel :: Application -> AppState -> AppState
-pickNewLevel app parent = ioAppState $ do
+pickNewLevel app parent = AppState $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles ".nl" templateLevelsDir

@@ -39,20 +39,20 @@ import Sorts.Nikki.JumpingImpulse
 import Sorts.Nikki.Dust
 
 
-sorts :: IO [Sort_]
+sorts :: M [Sort_]
 sorts = do
     pixmaps <- loadPixmaps
-    psize <- fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
+    psize <- io $ fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
     soundFile <- getDataFileName (soundDir </> "nikki/jump.wav")
-    jumpSound <- newPolySound soundFile 4
+    jumpSound <- io $ newPolySound soundFile 4
     let r = NSort pixmaps jumpSound
     return [Sort_ r]
 
-loadPixmaps :: IO (Map String [Pixmap])
+loadPixmaps :: M (Map String [Pixmap])
 loadPixmaps = do
     fromList <$> (fmapM load $ Data.Map.toList statePixmaps)
   where
-    load :: (String, Int) -> IO (String, [Pixmap])
+    load :: (String, Int) -> M (String, [Pixmap])
     load (name, n) = do
         pixmaps <- mapM (getDataFileName >>>> loadPixmap nikkiPngOffset) $
                         map (mkPngPath name) [0..n]

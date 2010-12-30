@@ -58,7 +58,7 @@ blinkLength = 0.4
 
 -- * sort loading
 
-sorts :: IO [Sort_]
+sorts :: M [Sort_]
 sorts = do
     let nameToPixmap offset =
             fromPure toPngPath >>>>
@@ -78,17 +78,17 @@ sorts = do
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
-readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
+readColorLights :: (String -> FilePath) -> M (ColorLights Pixmap)
 readColorLights f =
     fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap (Position 13 13)) $
         ColorLights "red" "blue" "green" "yellow"
 
-loadOsdPixmaps :: IO OsdPixmaps
+loadOsdPixmaps :: M OsdPixmaps
 loadOsdPixmaps = do
     background <- removeUberPixelShadow <$>
                     (loadPixmap zero =<< toOsdPath "background")
     let colors = ColorLights "red" "blue" "green" "yellow"
-        load :: Int -> Int -> String -> IO Pixmap
+        load :: Int -> Int -> String -> M Pixmap
         load xOffset yOffset = toOsdPath >>>> loadPixmap (Position xOffset yOffset)
     centers <- fmapM (load 27 27) $ fmap (++ "-center") colors
     frames <- fmapM (load 27 27) $ fmap (++ "-frame") colors
@@ -97,7 +97,7 @@ loadOsdPixmaps = do
     return $ OsdPixmaps background centers frames exitCenter exitFrame
   where
     osdPath = pngDir </> "terminals" </> "osd"
-    toOsdPath :: String -> IO FilePath
+    toOsdPath :: String -> M FilePath
     toOsdPath name = getDataFileName (osdPath </> name <.> "png")
     -- removes the shadow to the right and bottom
     -- by decreasing the size

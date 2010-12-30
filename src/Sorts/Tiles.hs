@@ -52,22 +52,22 @@ tileMergingEpsilon = 1
 
 -- * Tile loading
 
-sorts :: IO [Sort_]
+sorts :: M [Sort_]
 sorts = do
     mapM (\ (a, b, c) -> mkSort a b c) names
 
-mkSort :: String -> Offset Int -> Size Double -> IO Sort_
+mkSort :: String -> Offset Int -> Size Double -> M Sort_
 mkSort name offset size = do
     pngFiles <- getFrameFileNames name
     when (null pngFiles) $
         fail ("no png files found for tile: " ++ name)
-    pixmaps <- mapM newQPixmap pngFiles
+    pixmaps <- io $ mapM newQPixmap pngFiles
     return $ Sort_ $ TSort name $ map mkPixmap pixmaps
   where
     mkPixmap pixmap = Pixmap pixmap size (fmap fromIntegral offset)
 
 -- | returns the list of filenames for all the frames with the given name
-getFrameFileNames :: String -> IO [FilePath]
+getFrameFileNames :: String -> M [FilePath]
 getFrameFileNames name = do
     -- paths of all pngs in the corresponding directory
     absolutePaths <- getDataFiles ".png" (pngDir </> takeDirectory name)

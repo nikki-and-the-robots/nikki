@@ -39,10 +39,10 @@ contactWidth = fromUber 3
 
 -- * loading
 
-sorts :: IO [Sort_]
+sorts :: M [Sort_]
 sorts = do
     pngFile <- getDataFileName (pngDir </> "battery/standard.png")
-    ptr <- newQPixmap pngFile
+    ptr <- io $ newQPixmap pngFile
     return $ return $ Sort_ $ BSort $ Pixmap ptr batterySize batteryOffset
 
 data BSort

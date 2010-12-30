@@ -41,15 +41,15 @@ fallingTilesMaterialMass = boxMaterialMass
 
 -- * loading
 
-sorts :: IO [Sort_]
+sorts :: M [Sort_]
 sorts = do
     tiles <- mapM (\ (a, b, c) -> mkSort a b c) names
     return tiles
 
-mkSort :: String -> Offset Int -> Size Double -> IO Sort_
+mkSort :: String -> Offset Int -> Size Double -> M Sort_
 mkSort name offset size = do
     pngFile <- getDataFileName (pngDir </> name <.> "png")
-    pixmap <- newQPixmap pngFile
+    pixmap <- io $ newQPixmap pngFile
     return $ Sort_ $ TSort name (Pixmap pixmap size (fmap fromIntegral offset))
 
 

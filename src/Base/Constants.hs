@@ -5,7 +5,6 @@ module Base.Constants where
 
 import Graphics.Qt
 
-
 -- * Graphics
 
 -- | converts uberpixels to pixels

@@ -8,7 +8,4 @@ exit 1
 }
 trap error ERR
 
-cd ..
-export nikki_datadir=$(pwd)/data
-cd src
-dist/build/nikki/nikki $@ +RTS -C
+dist/build/nikki/nikki $@ --runinplace +RTS -C

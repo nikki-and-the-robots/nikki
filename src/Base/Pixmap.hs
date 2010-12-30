@@ -27,9 +27,9 @@ data Pixmap = Pixmap {
     deriving Show
 
 -- | Loads a pixmap. 
-loadPixmap :: Position Int -- ^ Size of the padding.
-    -> FilePath -> IO Pixmap
-loadPixmap padding path = do
+loadPixmap :: MonadIO m => Position Int -- ^ Size of the padding.
+    -> FilePath -> m Pixmap
+loadPixmap padding path = io $ do
     pix <- newQPixmap path
     size <- sizeQPixmap pix
     return $ Pixmap
@@ -37,18 +37,19 @@ loadPixmap padding path = do
         (fmap fromIntegral (size -~ fmap (* 2) (positionToSize padding)))
         (fmap (fromIntegral . negate) padding)
 
-freePixmap :: Pixmap -> IO ()
-freePixmap = pixmap >>> destroyQPixmap
+freePixmap :: MonadIO m => Pixmap -> m ()
+freePixmap = pixmap >>> io . destroyQPixmap
 
 
 -- | renders the pixmap
-renderPixmap :: Ptr QPainter -- ^ painter to be rendered to
+renderPixmap :: MonadIO m =>
+    Ptr QPainter -- ^ painter to be rendered to
     -> Offset Double -- ^ global (camera) offset
     -> Position Double -- ^ position of pixmap
     -> Maybe Double -- ^ rotation
     -> Pixmap -- ^ pixmap to be rendered
-    -> IO ()
-renderPixmap ptr offset position mAngle pix = do
+    -> m ()
+renderPixmap ptr offset position mAngle pix = io $ do
     resetMatrix ptr
     translate ptr offset
 
@@ -60,7 +61,6 @@ renderPixmap ptr offset position mAngle pix = do
     drawPixmap ptr zero (pixmap pix)
 
 
-renderPixmapSimple :: Ptr QPainter -> Pixmap -> IO ()
-renderPixmapSimple ptr pix = do
+renderPixmapSimple :: MonadIO m => Ptr QPainter -> Pixmap -> m ()
+renderPixmapSimple ptr pix = io $ do
     drawPixmap ptr (fmap round $ pixmapOffset pix) (pixmap pix)
-

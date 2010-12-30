@@ -36,14 +36,14 @@ stampMaterialMass = 1.7677053824362605
 
 -- * loading
 
-sorts :: IO [Sort_]
+sorts :: M [Sort_]
 sorts = do
     boxOffPix <- mkPath "switch-standard-off" >>= loadPixmap (Position 1 1)
     boxOnPix <- mkPath "switch-standard-on" >>= loadPixmap (Position 1 1)
     stampPix <- mkPath "switch-platform" >>= loadPixmap (Position 1 1)
     return $ map Sort_ [SwitchSort boxOffPix boxOnPix stampPix]
 
-mkPath :: String -> IO FilePath
+mkPath :: String -> M FilePath
 mkPath name = getDataFileName (pngDir </> "objects" </> name <.> "png")
 
 

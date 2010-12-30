@@ -40,12 +40,12 @@ jetpackSize = fmap fromUber $ Size 27 21
 
 -- * loading
 
-sorts :: IO [Sort_]
+sorts :: M [Sort_]
 sorts = do
     pixmaps <- fmapM (fmapM (
                     fromPure mkJetpackPngPath >>>> 
                     getDataFileName >>>>
-                    loadJetpackPixmap
+                    (io . loadJetpackPixmap)
                 )) pngMap
     let r = JSort pixmaps
     return $ map Sort_ [r]
