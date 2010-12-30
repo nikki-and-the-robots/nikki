@@ -74,10 +74,10 @@ Executable            nikki
         , containers
         , directory
         , filepath
-        , mtl
+        , mtl >= 2
         , process
         , zlib
-        , Hipmunk == 5.2.0.2
+        , Hipmunk >= 5.2.0.2
         , sfml-audio
         , safe
         , array
@@ -85,10 +85,12 @@ Executable            nikki
         , StateVar
         , transformers
         , time
-        , parsec == 3.1.0
+        , parsec >= 3.1.0
         , buffer
         , FindBin
         , clocked == 0.2
+        , cmdargs >= 0.6.5
+        , MonadCatchIO-transformers >= 0.2.2.2
 
     if os(linux)
         extra-libraries:

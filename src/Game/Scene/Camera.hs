@@ -15,6 +15,7 @@ import Physics.Chipmunk hiding (get)
 import Utils
 
 import Base.Types
+import Base.Monad
 
 import Object
 
@@ -42,8 +43,8 @@ getCameraPosition ptr scene = do
       Nothing -> return oldPosition
     -- update via the controlled object
       Just controlledIndex -> do
-        controlledPosition <- liftIO $ getPosition $ getControlledChipmunk scene controlledIndex
-        windowSize <- fmap fromIntegral <$> liftIO (Qt.sizeQPainter ptr)
+        controlledPosition <- io $ getPosition $ getControlledChipmunk scene controlledIndex
+        windowSize <- fmap fromIntegral <$> io (Qt.sizeQPainter ptr)
         let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
             -- vertical distance from the controlled object to the camera's old position
             controlledToCamera = vectorY oldPosition - vectorY controlledPosition

@@ -21,6 +21,7 @@ module Top.Main where
 import Data.List as List
 
 import Control.Concurrent
+import Control.Monad.Trans.Reader
 
 import System.FilePath
 import System.IO
@@ -58,6 +59,8 @@ debugNumberOfHecs =
 
 main = globalCatcher $ do
 
+    configuration <- getConfiguration
+
 --     debugNumberOfHecs
 
     hSetBuffering stdout NoBuffering
@@ -77,11 +80,12 @@ main = globalCatcher $ do
         -- there are two main threads:
         -- this is the logick [sick!] thread
         forkOS $ globalCatcher $ do
-            executeStates (applicationStates app)
+            runReaderT (executeStates (applicationStates app)) configuration
             quitQApplication
 
         -- start app
-        setWindowSize window (windowSize Base.Configuration.development)
+        let windowSize = if fullscreen configuration then FullScreen else programWindowSize
+        setWindowSize window windowSize
         showAppWidget window
         -- this is the rendering thread (will be quit by the logick thread)
         execQApplication qApp
@@ -110,7 +114,7 @@ applicationStates app =
     this = applicationStates app
 
 storyMode :: Application -> AppState
-storyMode app = AppState $ do
+storyMode app = ioAppState $ do
     storymodeFile <- getDataFileName "manual/storyModeIntroduction"
     text <- System.IO.readFile storymodeFile
     setDrawingCallbackAppWidget (window app) $ Just $ render text
@@ -133,7 +137,7 @@ quit app parent =
 
 -- | select a saved level.
 selectLevelPlay :: Application -> AppState -> AppState
-selectLevelPlay app parent = AppState $ do
+selectLevelPlay app parent = ioAppState $ do
     levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
     if null levelFiles then
         return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
@@ -144,14 +148,14 @@ selectLevelPlay app parent = AppState $ do
 
 
 selectLevelEdit :: Application -> AppState -> AppState
-selectLevelEdit app parent = AppState $ do
+selectLevelEdit app parent = ioAppState $ do
     levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
     return $ menu app (Just "pick a level to edit") (Just parent) $
         ("new level", pickNewLevel app parent) :
         map (\ path -> (path, edit app parent (path, False))) levelFiles
 
 pickNewLevel :: Application -> AppState -> AppState
-pickNewLevel app parent = AppState $ do
+pickNewLevel app parent = ioAppState $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles ".nl" templateLevelsDir
@@ -173,7 +177,7 @@ edit app parent file = loadingEditorScene app file (editLevel app playLevel)
 -- This AppState involves is a hack to do things from the logic thread 
 -- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
 loadingEditorScene :: Application -> (FilePath, Bool) -> (EditorScene Sort_ -> AppState) -> AppState
-loadingEditorScene app (file, isTemplateFile) follower = AppState $ do
+loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
     cmdChannel <- newChan
     setDrawingCallbackAppWidget (window app) (Just $ showProgress cmdChannel)
     grounds <- loadByFilePath file

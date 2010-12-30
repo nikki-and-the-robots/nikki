@@ -25,6 +25,7 @@ import System.IO
 import Utils
 
 import Base.Configuration as Configuration
+import Base.Monad
 
 
 -- | returns the seconds since epoch start
@@ -45,9 +46,10 @@ data FpsState
 logFile = "fps.dat"
 
 -- creates the initial FpsState
-initialFPSState :: IO FpsState
-initialFPSState =
-    if graphicsProfiling Configuration.development then do
+initialFPSState :: M FpsState
+initialFPSState = do
+    graphicsProfiling_ <- asks graphicsProfiling
+    if graphicsProfiling_ then do
 --         logHandle <- openFile logFile WriteMode
 --         return $ FpsState 0 Nothing Nothing logHandle
         return $ FpsState 0 Nothing Nothing Nothing
@@ -111,9 +113,9 @@ calculateDistribution list =
 
 newtype FPSRef = FPSRef (IORef FpsState)
 
-initialFPSRef :: IO FPSRef
+initialFPSRef :: M FPSRef
 initialFPSRef =
-    initialFPSState >>= newIORef >>= return . FPSRef
+    initialFPSState >>= io . newIORef >>= return . FPSRef
 
 tickFPSRef :: FPSRef -> IO ()
 tickFPSRef (FPSRef ref) =

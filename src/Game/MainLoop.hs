@@ -75,23 +75,23 @@ setScene s x = s{scene = x}
 gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> AppMonad AppState
 gameLoop app sceneMVar = do
     initializeSceneMVar
-    timer <- liftIO $ newTimer
+    timer <- io $ newTimer
     withArrowAutoRepeat app $
         loop timer
   where
     loop timer = do
-        liftIO $ resetDebugging
+        io $ resetDebugging
 
         -- input events
-        controlData <- liftIO $ pollAppEvents $ keyPoller app
+        controlData <- io $ pollAppEvents $ keyPoller app
 
         -- stepping of the scene (includes rendering)
         space <- gets cmSpace
         sc <- gets scene
-        sc' <- liftIO $ stepScene space controlData sc
+        sc' <- io $ stepScene space controlData sc
         puts setScene sc'
 
-        swapSceneMVar =<< liftIO getDebugging
+        swapSceneMVar =<< io getDebugging
 
         let startPressed = Press StartButton `elem` pressed controlData
         case mode sc' of
@@ -102,32 +102,32 @@ gameLoop app sceneMVar = do
                     return FinalState
                 else continue
             _ -> if startPressed then do
-                liftIO $ putStrLn "NYI: game menu"
+                io $ putStrLn "NYI: game menu"
                 return FinalState -- TODO: should be a menu
               else continue
       where
         continue = do
-            liftIO $ waitTimer timer (stepQuantum / timeFactor)
+            io $ waitTimer timer (stepQuantum / timeFactor)
             loop timer
 
     initializeSceneMVar :: AppMonad ()
     initializeSceneMVar = do
-        empty <- liftIO $ isEmptyMVar sceneMVar
+        empty <- io $ isEmptyMVar sceneMVar
         when (not empty) $ fail "sceneMVar has to be empty"
         s <- gets scene
-        immutableCopyOfScene <- liftIO $ Game.Scene.immutableCopy s
-        liftIO $ putMVar sceneMVar (immutableCopyOfScene, initial)
+        immutableCopyOfScene <- io $ Game.Scene.immutableCopy s
+        io $ putMVar sceneMVar (immutableCopyOfScene, initial)
     swapSceneMVar :: DebuggingCommand -> AppMonad ()
     swapSceneMVar debugging= do
         s <- gets scene
-        liftIO $ do
+        io $ do
             immutableCopyOfScene <- Game.Scene.immutableCopy s
             swapMVar sceneMVar (immutableCopyOfScene, debugging)
             return ()
 
 withArrowAutoRepeat :: MonadIO m => Application -> m a -> m a
 withArrowAutoRepeat app cmd = do
-    liftIO $ setArrowAutoRepeat (window app) False
+    io $ setArrowAutoRepeat (window app) False
     a <- cmd
-    liftIO $ setArrowAutoRepeat (window app) True
+    io $ setArrowAutoRepeat (window app) True
     return a

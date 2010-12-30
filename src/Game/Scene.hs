@@ -16,7 +16,8 @@ import Data.Foldable (foldr)
 import Data.Maybe
 import Data.Abelian
 
-import Control.Monad.State hiding ((>=>), (<=<))
+import Control.Monad
+import Control.Monad.State (StateT(..))
 
 import Graphics.Qt as Qt
 
@@ -33,6 +34,7 @@ import Base.Debugging
 import Base.Pixmap
 import Base.Application
 import Base.Application.Pixmaps
+import Base.Monad
 
 import Object
 
@@ -227,18 +229,18 @@ immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Object.immutableCopy))
 
 
 -- | well, renders the scene to the screen (to the max :)
-renderScene :: Application -> Ptr QPainter
+renderScene :: Application -> Configuration -> Ptr QPainter
     -> Scene Object_ -> DebuggingCommand -> StateT CameraState IO ()
-renderScene app ptr scene@Scene{spaceTime = now, mode} debugging = do
+renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging = do
     center <- getCameraPosition ptr scene
-    liftIO $ do
+    io $ do
         size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
         let offsetVector = - (center - Vector (width / 2) (height / 2))
             offset = fmap (fromIntegral . truncate) $ vector2QtPosition offsetVector
 
         clearScreen ptr
 
-        when (showScene Configuration.development) $ do
+        when (showScene configuration) $ do
             let os = objects scene
             fmapM_ (renderLayer ptr size offset now) $ backgrounds os
             renderLayer ptr size offset now $ mainLayer os
@@ -249,11 +251,11 @@ renderScene app ptr scene@Scene{spaceTime = now, mode} debugging = do
 
 
         -- debugging
-        when (showXYCross Configuration.development) $
+        when (showXYCross configuration) $
             debugDrawCoordinateSystem ptr offset
-        when (showChipmunkObjects Configuration.development) $
+        when (showChipmunkObjects configuration) $
             fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
-        liftIO $ debugging ptr offset
+        io $ debugging ptr offset
 
 
 -- | renders the different Layers.

@@ -16,6 +16,7 @@ import Utils
 
 import Base.GlobalCatcher
 import Base.Events
+import Base.Monad
 
 import Base.Application.Pixmaps
 
@@ -36,11 +37,15 @@ mainMenu :: Application_ sort -> AppState
 mainMenu app = mainMenu_ app app
 
 data AppState
-    = AppState (IO AppState)
+    = AppState (M AppState)
     | FinalState
 
+-- | if you don't need the M monad, just IO
+ioAppState :: IO AppState -> AppState
+ioAppState = AppState . io
 
-executeStates :: AppState -> IO ()
+
+executeStates :: AppState -> M ()
 executeStates (AppState cmd) =
     cmd >>= executeStates
 executeStates FinalState = return ()
@@ -68,7 +73,7 @@ menu :: Application_ sort -> Maybe String -> Maybe AppState -> [(String, AppStat
 menu app mTitle mParent children =
     inner $ mkMenuItems children
   where
-    inner items = AppState $ do
+    inner items = ioAppState $ do
         setDrawingCallbackAppWidget (window app) (Just $ render items)
         event <- waitForAppEvent $ keyPoller app
         case event of
@@ -124,7 +129,7 @@ treeToMenu app parent (Node label children i) f =
 -- | Gets a string from the user.
 -- returns the parent if Escape is pressed.
 askString :: Application_ sort -> AppState -> String -> (String -> AppState) -> AppState
-askString app parent question follower = AppState $ do
+askString app parent question follower = ioAppState $ do
     answerRef <- newMVar ""
     setDrawingCallbackAppWidget (window app) (Just $ render question answerRef)
     loop answerRef

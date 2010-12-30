@@ -91,7 +91,7 @@ assertIO True _ = return ()
 assertIO False msg = error ("ASSERTION ERROR: " ++ msg)
 
 warn :: MonadIO m => String -> m ()
-warn m = liftIO $ putStrLn ("WARNING: " ++ m)
+warn m = io $ putStrLn ("WARNING: " ++ m)
 
 toDebug :: Show s => String -> s -> String
 toDebug msg s = msg ++ ": " ++ show s
@@ -209,6 +209,9 @@ chainAppM _ [] a = return a
 
 ignore :: Monad m => m a -> m ()
 ignore = (>> return ())
+
+io :: MonadIO m => IO a -> m a
+io = liftIO
 
 
 -- * list stuff
@@ -441,11 +444,6 @@ readE :: Read r => String -> r
 readE r = case readM r of
     Right x -> x
     Left msg -> error msg
-
-instance Monad (Either String) where
-    (>>=) = error ">>="
-    return = Right
-    fail = Left
 
 readM :: (Monad m, Read r) => String -> m r
 readM x = unsafePerformIO $

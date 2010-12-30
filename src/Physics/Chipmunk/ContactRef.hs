@@ -23,6 +23,8 @@ import Control.Monad.IO.Class
 import Physics.Hipmunk as H hiding (Callback)
 import Physics.Hipmunk.Callbacks ()
 
+import Utils
+
 
 -- * collisionTypes
 

@@ -18,6 +18,7 @@ import Base.GlobalCatcher
 import Base.FPSState
 import Base.Types
 import Base.Application
+import Base.Monad
 
 import Object
 
@@ -30,28 +31,30 @@ import Top.Initialisation
 
 playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
 playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
-    scene :: Scene Object_ <- initScene space (editorObjects editorScene)
+    scene :: Scene Object_ <- io $ initScene space (editorObjects editorScene)
     let (NikkiMode nikkiIndex) = mode scene
-    sceneMVar <- newEmptyMVar
+    sceneMVar <- io newEmptyMVar
     fpsRef <- initialFPSRef
-    nikkiPos <- getPosition $ getControlledChipmunk scene $
-                    getMainlayerObject scene nikkiIndex
-    cameraStateRef <- newIORef $ initialCameraState nikkiPos
-    setDrawingCallbackAppWidget (window app)
-        (Just $ render fpsRef cameraStateRef sceneMVar)
+    configuration <- ask
+    io $ do
+        nikkiPos <- getPosition $ getControlledChipmunk scene $
+                        getMainlayerObject scene nikkiIndex
+        cameraStateRef <- io $ newIORef $ initialCameraState nikkiPos
+        setDrawingCallbackAppWidget (window app)
+            (Just $ render fpsRef cameraStateRef sceneMVar configuration)
 
-    setRenderingLooped (window app) True
-    runStateT (gameLoop app sceneMVar) (GameState space scene)
-    setRenderingLooped (window app) False
-    setDrawingCallbackAppWidget (window app) Nothing
+        setRenderingLooped (window app) True
+        runStateT (gameLoop app sceneMVar) (GameState space scene)
+        setRenderingLooped (window app) False
+        setDrawingCallbackAppWidget (window app) Nothing
 
-    return parent
+        return parent
 
   where
-    render fpsRef cameraStateRef sceneMVar ptr = globalCatcher $ do
+    render fpsRef cameraStateRef sceneMVar configuration ptr = globalCatcher $ do
 
         tickFPSRef fpsRef
 
         (scene, debugging) <- readMVar sceneMVar
         runStateTFromIORef cameraStateRef $
-            Game.Scene.renderScene app ptr scene debugging
+            Game.Scene.renderScene app configuration ptr scene debugging

@@ -35,7 +35,7 @@ type MM o = StateT (EditorScene Sort_) IO o
 updateSceneMVar :: Application -> MVar (EditorScene Sort_) -> MM ()
 updateSceneMVar app mvar = do
     s <- get
-    liftIO $ do
+    io $ do
         swapMVar mvar s
         updateAppWidget $ window app
 
@@ -44,14 +44,14 @@ updateSceneMVar app mvar = do
 
 editorLoop :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorLoop app play mvar scene = AppState $ do
+editorLoop app play mvar scene = ioAppState $ do
     setDrawingCallbackAppWidget (window app) (Just $ render mvar)
     evalStateT worker scene
   where
     worker :: MM AppState
     worker = do
         updateSceneMVar app mvar
-        event <- liftIO $ waitForAppEvent $ keyPoller app
+        event <- io $ waitForAppEvent $ keyPoller app
         s <- get
         if event == Press StartButton then
             return $ editorMenu app play mvar s
@@ -115,11 +115,11 @@ editorMenu app play mvar scene =
 
 
 saveLevel :: Application -> AppState -> AppState -> EditorScene Sort_ -> AppState
-saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects} = AppState $ do
+saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects} = ioAppState $ do
     writeObjectsToDisk path editorObjects
     return follower
 saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects} =
-    askString app parent "level name:" $ \ name -> AppState $ do
+    askString app parent "level name:" $ \ name -> ioAppState $ do
         let path = name <..> "nl"
         exists <- doesFileExist path
         if exists then
@@ -136,7 +136,7 @@ fileExists app save path objects =
         ("yes", writeAnyway)
       ]
   where
-    writeAnyway = AppState $ do
+    writeAnyway = ioAppState $ do
         writeObjectsToDisk path objects
         return $ mainMenu app
 

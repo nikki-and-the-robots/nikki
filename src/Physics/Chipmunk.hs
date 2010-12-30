@@ -108,7 +108,8 @@ import Utils
 import Data.Abelian
 import Data.StateVar
 
-import Control.Exception
+import Control.Monad.Trans
+import Control.Monad.CatchIO
 
 import Physics.Hipmunk hiding (body)
 import qualified Physics.Hipmunk as H
@@ -119,13 +120,11 @@ import Physics.Chipmunk.ContactRef
 import Physics.Chipmunk.StickyEdges hiding (Rectangle(..))
 
 
-
-
 -- * Initial values
 
-withSpace :: CpFloat -> (Space -> IO a) -> IO a
+withSpace :: MonadCatchIO m => CpFloat -> (Space -> m a) -> m a
 withSpace gravity cmd =
-    bracket mkSpace freeSpace cmd
+    bracket (io mkSpace) (io . freeSpace) cmd
   where
     mkSpace :: IO Space
     mkSpace = do
