@@ -18,8 +18,7 @@ import Physics.Chipmunk hiding (position, Position, baryCenterOffset)
 
 import Utils
 
-import Base.Constants
-import Base.Types
+import Base
 
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration

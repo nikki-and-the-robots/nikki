@@ -1,5 +1,5 @@
 
-module Base.Directions where
+module Data.Directions where
 
 
 import Utils

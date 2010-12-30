@@ -10,9 +10,7 @@ import qualified Data.Indexable as I
 
 import Graphics.Qt
 
-import Base.Grounds
-import Base.Constants
-import Base.Types
+import Base
 
 import Object
 

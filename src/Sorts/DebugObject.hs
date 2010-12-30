@@ -17,7 +17,7 @@ import Graphics.Qt as Qt
 
 import Utils
 
-import Base.Constants
+import Base
 
 import Object
 

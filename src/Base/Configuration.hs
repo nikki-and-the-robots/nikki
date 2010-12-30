@@ -10,11 +10,6 @@ import Graphics.Qt
 import Version
 
 
--- * static configuration
-
--- | initial window size, when not in fullscreen mode
-programWindowSize = Windowed (Size 1000 650)
-
 -- * dynamic configuration
 
 data Configuration = Configuration {

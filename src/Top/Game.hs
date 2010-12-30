@@ -13,12 +13,7 @@ import Graphics.Qt
 
 import Utils
 
-import Base.Constants
-import Base.GlobalCatcher
-import Base.FPSState
-import Base.Types
-import Base.Application
-import Base.Monad
+import Base
 
 import Object
 

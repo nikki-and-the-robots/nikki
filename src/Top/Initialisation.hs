@@ -14,8 +14,7 @@ import Physics.Chipmunk
 
 import Utils
 
-import Base.Grounds
-import Base.Types
+import Base
 
 import Object
 

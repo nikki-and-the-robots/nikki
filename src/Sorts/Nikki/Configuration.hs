@@ -6,6 +6,7 @@ module Sorts.Nikki.Configuration where
 import Prelude hiding (lookup)
 
 import Data.Map (Map, fromList)
+import Data.Directions
 
 import Physics.Chipmunk
 
@@ -13,9 +14,7 @@ import Graphics.Qt
 
 import Utils
 
-import Base.Types
-import Base.Constants
-import Base.Directions
+import Base
 
 import Sorts.Nikki.Types
 

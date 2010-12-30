@@ -10,6 +10,8 @@ module Base.Pixmap where
 
 import Data.Abelian
 
+import Control.Monad.IO.Class
+
 import Graphics.Qt
 
 import Utils

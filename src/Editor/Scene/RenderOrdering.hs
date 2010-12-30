@@ -15,7 +15,7 @@ import Data.List (isPrefixOf)
 
 import Utils
 
-import Base.Types
+import Base
 
 import Object
 

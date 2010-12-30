@@ -14,8 +14,7 @@ module Editor.Pickle.Types (
 
 import Data.Indexable
 
-import Base.Grounds
-import Base.Types
+import Base
 
 import Object
 

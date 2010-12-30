@@ -32,9 +32,8 @@ import System.FilePath
 import Graphics.Qt
 
 import Utils
-import Paths
-import Base.Pixmap
-import Base.Constants
+
+import Base hiding (backgrounds)
 
 import Object
 

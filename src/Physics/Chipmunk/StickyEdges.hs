@@ -16,16 +16,15 @@ module Physics.Chipmunk.StickyEdges (removeStickyEdges, Rectangle(..), rotateRec
 import Prelude hiding (Left, Right)
 
 import Data.Abelian
+import Data.Directions
 
 import Control.Arrow
 
 import Physics.Hipmunk (ShapeType(Polygon, vertices), Vector(Vector))
 
-import Utils
-
 import Physics.Chipmunk.Types (vectorX, vectorY)
 
-import Base.Directions
+import Utils
 
 
 x = vectorX

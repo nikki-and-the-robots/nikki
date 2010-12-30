@@ -8,7 +8,9 @@ module Base.Monad (
   ) where
 
 
-import Control.Monad.Reader
+import Control.Monad.Trans.Reader
+
+import Utils
 
 import Base.Configuration
 

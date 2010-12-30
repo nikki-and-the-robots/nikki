@@ -15,12 +15,13 @@ import Control.Exception
 
 import System.FilePath
 
-import Paths
 import Utils
 
+import Base.Paths
 import Base.Types
 import Base.Constants
 import Base.Pixmap
+import Base.Monad
 
 
 data ApplicationPixmaps = ApplicationPixmaps {

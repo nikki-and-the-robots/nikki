@@ -14,7 +14,7 @@ import Physics.Chipmunk
 
 import Utils
 
-import Base.Constants
+import Base
 
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration

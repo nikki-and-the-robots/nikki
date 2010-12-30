@@ -16,7 +16,7 @@ import Physics.Chipmunk
 
 import Utils
 
-import Base.Types
+import Base
 
 
 nikkiCollisionTypes = [NikkiLegsCT, NikkiHeadCT, NikkiLeftPawCT, NikkiGhostCT]

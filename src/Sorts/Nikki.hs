@@ -24,14 +24,9 @@ import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
 import qualified Physics.Hipmunk as Hip
 
-import Paths
 import Utils
 
-import Base.Constants
-import Base.Animation
-import Base.Pixmap
-import Base.Types
-import Base.Debugging
+import Base
 
 import Object
 

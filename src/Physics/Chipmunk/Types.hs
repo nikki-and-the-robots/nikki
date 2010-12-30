@@ -2,8 +2,6 @@
 
 module Physics.Chipmunk.Types where
 
-import Utils
-
 import Data.Complex
 import Data.Abelian
 import Data.StateVar
@@ -17,6 +15,8 @@ import Physics.Hipmunk hiding (shapes, position, mass, body)
 import qualified Physics.Hipmunk as H
 
 import Physics.Chipmunk.ContactRef
+
+import Utils
 
 
 -- * external instances

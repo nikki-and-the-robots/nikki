@@ -15,8 +15,10 @@ import System.FilePath
 import System.Directory
 import System.Environment.FindBin
 
-import qualified Paths_nikki
+import Utils
 
+import Base.Monad
+import Base.Configuration
 
 getDataFileName :: FilePath -> IO FilePath
 getDataFileName p = do

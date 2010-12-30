@@ -33,15 +33,10 @@ import Physics.Chipmunk as CM
 import Graphics.Qt hiding (red, blue, green, yellow)
 import qualified Graphics.Qt as Qt
 
-import Paths
 import Utils
 
-import Base.Events
-import Base.Constants
-import Base.Animation
-import Base.Pixmap
-import Base.Types hiding (selected, OEMState, Mode(NikkiMode, TerminalMode))
-import qualified Base.Types
+import Base hiding (Mode(..), OEMState(..))
+import qualified Base
 
 import Object
 
@@ -286,7 +281,7 @@ instance Sort TSort Terminal where
 
     getControlledChipmunk scene _ =
         getControlledChipmunk scene $
-        getMainlayerObject scene (nikki $ mode scene)
+        getMainlayerObject scene (Base.nikki $ mode scene)
 
     chipmunks = chipmunk >>> return
 
@@ -413,8 +408,8 @@ padding = fromUber 2
 -- * rendering of game OSD
 
 renderTerminalOSD :: Ptr QPainter -> Seconds -> Scene Object_ -> IO ()
-renderTerminalOSD ptr now scene@Scene{mode = mode@Base.Types.TerminalMode{}} =
-    let terminal = Base.Types.terminal mode
+renderTerminalOSD ptr now scene@Scene{mode = mode@Base.TerminalMode{}} =
+    let terminal = Base.terminal mode
         object = getMainlayerObject scene terminal
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of

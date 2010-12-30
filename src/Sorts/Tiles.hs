@@ -8,9 +8,6 @@ module Sorts.Tiles (
   ) where
 
 
-import Paths
-import Utils
-
 import Safe
 
 import Data.Abelian
@@ -27,10 +24,9 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Base.Constants
-import Base.Pixmap
-import Base.Types
-import Base.Animation
+import Utils
+
+import Base
 
 import Object
 

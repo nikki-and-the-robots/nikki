@@ -27,9 +27,7 @@ import Control.Monad.State
 
 import Graphics.Qt
 
-import Base.Grounds
-import Base.Types
-import Base.Events
+import Base
 
 import Object
 

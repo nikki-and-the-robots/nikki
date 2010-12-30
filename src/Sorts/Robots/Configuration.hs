@@ -9,8 +9,7 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
-import Base.Types
-import Base.Constants
+import Base
 
 
 -- * physics

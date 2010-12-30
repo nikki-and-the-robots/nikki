@@ -9,6 +9,7 @@ import Data.List (sortBy)
 import Data.Set (member)
 import Data.Abelian
 import Data.Maybe
+import Data.Directions
 
 import Control.Arrow
 
@@ -19,10 +20,7 @@ import Physics.Chipmunk hiding (position, Position)
 
 import Utils
 
-import Base.Constants
-import Base.Events
-import Base.Directions
-import Base.Types
+import Base
 
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration

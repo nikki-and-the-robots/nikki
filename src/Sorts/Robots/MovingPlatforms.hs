@@ -16,12 +16,13 @@ import Physics.Chipmunk as CM hiding (Position, radius)
 import Graphics.Qt hiding (scale)
 
 import Utils
-import Paths
 
+import Base.Paths
+import Base.Types (EditorPosition(..), ObjectEditModeMethods(..), Offset)
 import Base.Constants
-import Base.Pixmap
-import Base.Types (ObjectEditModeMethods(..), EditorPosition(..), Offset)
 import Base.Events
+import Base.Pixmap
+import Base.Monad
 
 import Object
 

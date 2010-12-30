@@ -33,14 +33,8 @@ import GHC.Conc
 import Graphics.Qt
 
 import Utils
-import Paths
 
-import Base.GlobalCatcher
-import Base.Types
-import Base.Configuration
-import Base.Application
-import Base.Application.Pixmaps
-import Base.Constants
+import Base
 
 import Object
 

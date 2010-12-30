@@ -6,8 +6,7 @@ import Data.Abelian
 
 import Graphics.Qt
 
-import Base.Constants
-import Base.Types
+import Base
 
 import Object
 

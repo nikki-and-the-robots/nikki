@@ -6,6 +6,7 @@ import Prelude hiding (lookup)
 
 import Data.Abelian
 import Data.Maybe
+import Data.Directions
 
 import Control.Monad
 import Control.Arrow
@@ -15,10 +16,7 @@ import qualified Physics.Hipmunk as Hip
 
 import Utils
 
-import Base.Constants
-import Base.Events
-import Base.Directions
-import Base.Types
+import Base
 
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration

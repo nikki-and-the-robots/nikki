@@ -3,14 +3,13 @@ module Sorts.Nikki.JumpingForces where
 
 
 import Data.Abelian
+import Data.Directions
 
 import Physics.Chipmunk
 
 import Utils
 
-import Base.Types
-import Base.Constants
-import Base.Directions
+import Base
 
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration

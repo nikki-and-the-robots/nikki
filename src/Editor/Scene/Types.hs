@@ -11,8 +11,7 @@ import Data.Initial
 
 import Graphics.Qt
 
-import Base.Grounds
-import Base.Types
+import Base
 
 import Object
 

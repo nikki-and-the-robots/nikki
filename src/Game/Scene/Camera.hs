@@ -14,8 +14,7 @@ import Physics.Chipmunk hiding (get)
 
 import Utils
 
-import Base.Types
-import Base.Monad
+import Base
 
 import Object
 

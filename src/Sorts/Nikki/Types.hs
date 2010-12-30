@@ -10,6 +10,7 @@ import Data.Generics
 import Data.Initial
 import Data.Abelian
 import Data.Buffer
+import Data.Directions
 
 import Control.Arrow
 
@@ -23,10 +24,7 @@ import Utils
 
 import Object
 
-import Base.Types
-import Base.Constants
-import Base.Directions
-import Base.Pixmap
+import Base
 
 
 data NSort = NSort {

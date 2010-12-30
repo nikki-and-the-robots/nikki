@@ -12,11 +12,9 @@ import System.FilePath
 
 import Graphics.Qt
 
-import Paths
 import Utils
 
-import Base.Constants
-import Base.Pixmap
+import Base
 
 import Object
 

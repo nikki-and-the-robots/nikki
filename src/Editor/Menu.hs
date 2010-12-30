@@ -15,10 +15,7 @@ import Graphics.Qt
 
 import Utils
 
-import Base.Types
-import Base.Events
-import Base.Grounds
-import Base.Application hiding (selected)
+import Base
 
 import Object
 

@@ -24,11 +24,8 @@ import Graphics.Qt
 
 import Utils
 
-import Base.Events
-import Base.Constants
-import Base.Types
+import Base
 import Base.Application
-import Base.Debugging
 
 import Object
 

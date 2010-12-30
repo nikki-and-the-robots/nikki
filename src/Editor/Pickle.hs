@@ -12,8 +12,7 @@ import System.Directory
 
 import Utils
 
-import Base.Grounds
-import Base.Types
+import Base
 
 import Object as Object
 

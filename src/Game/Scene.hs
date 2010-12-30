@@ -25,16 +25,7 @@ import Physics.Chipmunk as CM
 
 import Utils
 
-import Base.Events
-import Base.Grounds
-import Base.Configuration as Configuration
-import Base.Constants
-import Base.Types
-import Base.Debugging
-import Base.Pixmap
-import Base.Application
-import Base.Application.Pixmaps
-import Base.Monad
+import Base
 
 import Object
 

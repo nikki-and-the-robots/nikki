@@ -9,6 +9,7 @@ import Data.Maybe
 import Data.Generics
 import Data.Map hiding (size, map, member)
 import Data.Set (member)
+import Data.Directions
 
 import System.FilePath
 
@@ -16,15 +17,9 @@ import Graphics.Qt as Qt
 
 import Physics.Chipmunk as CM
 
-import Paths
 import Utils
 
-import Base.Directions
-import Base.Constants
-import Base.Types
-import Base.Events
-import Base.Animation
-import Base.Pixmap
+import Base
 
 import Object
 

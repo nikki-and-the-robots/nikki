@@ -13,11 +13,7 @@ import Graphics.Qt
 
 import Utils
 
-import Base.Types
-import Base.Constants
-import Base.Pixmap
-import Base.Directions
-import Base.Animation
+import Base
 
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration

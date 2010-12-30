@@ -103,8 +103,6 @@ module Physics.Chipmunk (
   ) where
 
 
-import Utils
-
 import Data.Abelian
 import Data.StateVar
 
@@ -118,6 +116,8 @@ import Physics.Chipmunk.Types
 import Physics.Chipmunk.DebugGrid
 import Physics.Chipmunk.ContactRef
 import Physics.Chipmunk.StickyEdges hiding (Rectangle(..))
+
+import Utils
 
 
 -- * Initial values
