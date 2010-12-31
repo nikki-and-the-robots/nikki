@@ -45,42 +45,41 @@ import Top.Initialisation
 import Top.Editor (editLevel)
 import Top.Game (playLevel)
 
-
+main :: IO ()
 main = globalCatcher $ withStaticConfiguration $ do
 
     io $ hSetBuffering stdout NoBuffering
-    io $ putStrLn "\nstarted..."
+
+    configuration <- ask
 
     -- qt initialisation
     qApp <- io newQApplication
     window <- io $ newAppWidget 0
     loadApplicationIcon window
     keyPoller <- io $ newKeyPoller window
-
-    configuration <- ask
+    -- showing main window
+    let windowSize = if fullscreen configuration then FullScreen else programWindowSize
+    io $ setWindowSize window windowSize
+    io $ showAppWidget window
 
     -- sort loading (pixmaps and sounds)
-    code <- withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
+    withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
 
         -- start state logick
         let app = Application qApp window keyPoller applicationStates appPixmaps sorts
         -- there are two main threads:
         -- this is the logick [sick!] thread
         -- dynamic changes of the configuration take place in this thread!
-        io $ forkOS $ globalCatcher $ do
+        forkOS $ globalCatcher $ do
             withDynamicConfiguration configuration $ executeStates (applicationStates app)
             quitQApplication
 
-        -- start app
-        let windowSize = if fullscreen configuration then FullScreen else programWindowSize
-        setWindowSize window windowSize
-        showAppWidget window
         -- this is the rendering thread (will be quit by the logick thread)
-        execQApplication qApp
+        code <- execQApplication qApp
 
-    io $ case code of
-        0 -> exitWith ExitSuccess
-        x -> exitWith (ExitFailure x)
+        case code of
+            0 -> exitWith ExitSuccess
+            x -> exitWith (ExitFailure x)
 
 loadApplicationIcon qApp = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$> getDataFiles ".png" pngDir
