@@ -114,7 +114,7 @@ extern "C" int execQApplication(QApplication* ptr) {
 }
 
 extern "C" void quitQApplication() {
-    qApp->quit();
+    emit qApp->quit();
 };
 
 extern "C" char* applicationFilePath() {

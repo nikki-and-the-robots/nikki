@@ -22,6 +22,7 @@ import Data.List as List
 
 import Control.Concurrent
 import Control.Monad.Trans.Reader
+import Control.Exception
 
 import System.FilePath
 import System.IO
@@ -71,8 +72,9 @@ main = globalCatcher $ withStaticConfiguration $ do
         -- this is the logick [sick!] thread
         -- dynamic changes of the configuration take place in this thread!
         forkOS $ globalCatcher $ do
-            withDynamicConfiguration configuration $ executeStates (applicationStates app)
-            quitQApplication
+            (withDynamicConfiguration configuration $ executeStates (applicationStates app))
+                `finally`
+                quitQApplication
 
         -- this is the rendering thread (will be quit by the logick thread)
         code <- execQApplication qApp

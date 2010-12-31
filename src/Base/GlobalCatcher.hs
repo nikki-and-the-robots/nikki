@@ -3,7 +3,9 @@
 module Base.GlobalCatcher where
 
 
-import Control.Exception as E
+import Prelude hiding (catch)
+
+import Control.Exception
 
 import System.Exit
 
@@ -11,13 +13,12 @@ import Graphics.Qt
 
 
 globalCatcher :: IO () -> IO ()
-globalCatcher cmd = flip E.catch handler cmd
+globalCatcher cmd = flip catch catchAll cmd
   where
-    handler :: SomeException -> IO ()
-    handler (show -> "ExitSuccess") = return ()
-    handler e = do
-        putStrLn ("error message:\n\n" ++ show e ++ "\n")
-        quitQApplication
-        exitWith (ExitFailure 42)
-
-
+    catchAll :: SomeException -> IO ()
+    catchAll e =
+        if fromException e == Just ExitSuccess
+        then return ()
+        else do
+            putStrLn ("error message:\n\n" ++ show e ++ "\n")
+            exitWith (ExitFailure 1)
