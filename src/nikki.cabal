@@ -89,7 +89,7 @@ Executable            nikki
         , buffer
         , FindBin
         , clocked == 0.2
-        , cmdargs >= 0.6.5
+        , cmdargs >= 0.6.6
         , MonadCatchIO-transformers >= 0.2.2.2
 
     if os(linux)

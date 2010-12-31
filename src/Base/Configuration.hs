@@ -52,7 +52,8 @@ options =
     &= program "nikki"
     &= summary ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
     &= help "run the game"
-    &= helpArg [explicit, name "h", name "help"]
+    &= helpArg [explicit, name "h", name "help", groupname "Common flags"]
+    &= versionArg [explicit, name "v", name "version"]
     &= details (
         "Nikki and the Robots is a 2D platformer from Joyride Laboratories." :
         "http://www.joyridelabs.de/" :
