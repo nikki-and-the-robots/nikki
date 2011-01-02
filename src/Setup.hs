@@ -21,6 +21,8 @@ import Distribution.Simple.Setup
 import Distribution.Simple.LocalBuildInfo
 import Distribution.MacOSX
 
+import Utils
+
 
 main =
   case os of
@@ -57,35 +59,6 @@ macApp resourceFiles = MacApp {
 
 -- * utils
 
--- | returns all (unhidden) files in a directory recursively
-getFilesRecursive :: FilePath -> IO [FilePath]
-getFilesRecursive dir =
-    withWorkingDirectory dir $ do
-        map normalise <$> inner "."
-  where
-    inner dir = do
-        content <- map (dir </>) <$> filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
-        (directories, files) <- partitionM doesDirectoryExist content
-        recursive <- mapM inner $ directories
-        return $ sort (files ++ concat recursive)
-
--- | change the workingdirectory during the execution of the given action
-withWorkingDirectory :: FilePath -> IO a -> IO a
-withWorkingDirectory dir action = do
-    wd <- getCurrentDirectory
-    (changeWorkingDirectory dir >> action) `finally` changeWorkingDirectory wd
-
--- | copy a whole directory recursively
--- excluding hidden files
-copyDirectory :: FilePath -> FilePath -> IO ()
-copyDirectory src dst = do
-    allFiles <- getFilesRecursive src
-    forM_ allFiles copy
-  where
-    copy file = do
-        createDirectoryIfMissing True (takeDirectory (dst </> file))
-        copyFile (src </> file) (dst </> file)
-
 -- | copy a directory, perform a given action, then delete the copy
 withTemporaryDirectoryCopy :: FilePath -> FilePath -> IO a -> IO a
 withTemporaryDirectoryCopy original copy action = do
@@ -93,17 +66,7 @@ withTemporaryDirectoryCopy original copy action = do
     eFile <- doesFileExist copy
     when (eDir || eFile) $
         fail ("directory (or file?) already exists: " ++ copy)
-    (copyDirectory original copy >> action) ` finally` removeDirectoryRecursive copy
-
-partitionM :: (a -> IO Bool) -> [a] -> IO ([a], [a])
-partitionM p (a : r) = do
-    condition <- p a
-    (yes, no) <- partitionM p r
-    return $ if condition then
-        (a : yes, no)
-      else
-        (yes, a : no)
-partitionM _ [] = return ([], [])
+    (copyDirectory original copy >> action) `finally` removeDirectoryRecursive copy
 
 -- | remove surrounding whitespaces
 trim :: String -> String

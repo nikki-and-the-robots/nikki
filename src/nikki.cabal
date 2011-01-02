@@ -91,6 +91,8 @@ Executable            nikki
         , clocked == 0.2
         , cmdargs >= 0.6.6
         , MonadCatchIO-transformers >= 0.2.2.2
+        -- unix has to be removed (windows, remember?)
+        , unix >= 2.4.0.2
 
     if os(linux)
         extra-libraries:

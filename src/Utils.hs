@@ -11,6 +11,9 @@ module Utils (
 
 -- imports
 
+import Prelude hiding (catch)
+import qualified Prelude
+
 import Safe
 
 import Data.List
@@ -19,6 +22,7 @@ import qualified Data.Foldable
 import qualified Data.Traversable
 import Data.IORef
 import qualified Data.Set as Set
+import Data.Char
 
 import Text.Printf
 
@@ -26,8 +30,10 @@ import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Monad.State hiding ((>=>))
 import Control.Arrow ((>>>))
 import Control.Concurrent
+import Control.Exception
 
 import System.Directory
+import System.Posix.Directory (changeWorkingDirectory)
 import System.IO.Unsafe
 import System.FilePath
 import System.Cmd
@@ -166,6 +172,37 @@ withCurrentDirectory path cmd = do
     putStrLn ("Leaving directory " ++ path)
     return x
 
+-- | copy a whole directory recursively
+-- excluding hidden files
+-- give full paths to both directories, e.g. (copyDirectory "src/dir" "dest/dir")
+copyDirectory :: FilePath -> FilePath -> IO ()
+copyDirectory src dst = do
+    allFiles <- getFilesRecursive src
+    forM_ allFiles copy
+  where
+    copy file = do
+        createDirectoryIfMissing True (takeDirectory (dst </> file))
+        copyFile (src </> file) (dst </> file)
+
+-- | returns all (unhidden) files in a directory recursively
+getFilesRecursive :: FilePath -> IO [FilePath]
+getFilesRecursive dir =
+    withWorkingDirectory dir $ do
+        map normalise <$> inner "."
+  where
+    inner dir = do
+        content <- map (dir </>) <$> filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
+        (directories, files) <- partitionM doesDirectoryExist content
+        recursive <- mapM inner $ directories
+        return $ sort (files ++ concat recursive)
+
+-- | change the workingdirectory during the execution of the given action
+withWorkingDirectory :: FilePath -> IO a -> IO a
+withWorkingDirectory dir action = do
+    wd <- getCurrentDirectory
+    (changeWorkingDirectory dir >> action) `finally` changeWorkingDirectory wd
+
+
 -- * State monad stuff
 
 puts :: MonadState s m => (s -> a -> s) -> a -> m ()
@@ -212,6 +249,16 @@ ignore = (>> return ())
 
 io :: MonadIO m => IO a -> m a
 io = liftIO
+
+partitionM :: (a -> IO Bool) -> [a] -> IO ([a], [a])
+partitionM p (a : r) = do
+    condition <- p a
+    (yes, no) <- partitionM p r
+    return $ if condition then
+        (a : yes, no)
+      else
+        (yes, a : no)
+partitionM _ [] = return ([], [])
 
 
 -- * list stuff
@@ -447,7 +494,7 @@ readE r = case readM r of
 
 readM :: (Monad m, Read r) => String -> m r
 readM x = unsafePerformIO $
-    catch
+    Prelude.catch
         (return <$> readIO x)
         (\ e -> return (fail ("readM: no parse: " ++ take 100000 x)))
 
