@@ -51,7 +51,7 @@ options =
 
 main = withTempDirectory "." "nikki-release" $ \ (normalise -> tmpDir) -> do
     config <- getConfiguration
-    let zipName = "nikki-42." ++ showVersion nikkiVersion <.> "zip"
+    let zipName = "nikki-" ++ showVersion nikkiVersion <.> "zip"
     trySystem ("mkdir -p " ++ tmpDir </> repoPath)
     trySystem ("zip -r " ++ tmpDir </> repoPath </> zipName ++ " " ++ localDeployedFolder config)
     trySystem ("scp -r " ++ tmpDir </> "*" ++ " " ++ remoteRepo config)
