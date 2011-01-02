@@ -13,6 +13,7 @@ import Version
 data Configuration = Configuration {
     -- user config
     fullscreen :: Bool,
+    noUpdate :: Bool,
 
     -- development
     runInPlace :: Bool,
@@ -35,6 +36,8 @@ options =
     Configuration {
         fullscreen = False
             &= help "start the game in fullscreen mode",
+        noUpdate = False
+            &= help "don't attempt to update the game from the web",
 
         runInPlace = False
             &= groupname "Development flags"

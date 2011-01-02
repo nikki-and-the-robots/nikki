@@ -26,6 +26,8 @@ import System.IO.Temp (createTempDirectory)
 import Version
 import Utils
 
+import Base
+
 import Distribution.AutoUpdate.Download
 import Distribution.AutoUpdate.Zip
 
@@ -99,25 +101,34 @@ isDeployed = do
         Nothing
 
 -- | doing the auto update (wrapping the logic thread)
-autoUpdate :: IO a -> IO a
+autoUpdate :: M a -> M a
 autoUpdate game = do
-    mDeployed <- isDeployed
+    config <- ask
+    if noUpdate config then do
+        io $ putStrLn "not updating"
+        game
+      else
+        doAutoUpdate game
+
+doAutoUpdate :: M a -> M a
+doAutoUpdate game = do
+    mDeployed <- io $ isDeployed
     case mDeployed of
         Nothing -> do
-            putStrLn "not deployed: not updating"
+            io $ putStrLn "not deployed: not updating"
             game
         Just path -> do
-            putStrLn "deployed: looking for updates..."
-            result <- attemptUpdate path
+            io $ putStrLn "deployed: looking for updates..."
+            result <- io $ attemptUpdate path
             case result of
                 (Left message) -> do
-                    putStrLn ("update failed: " ++ message)
+                    io $ putStrLn ("update failed: " ++ message)
                     game
                 (Right True) -> do
-                    putStrLn "game updated"
-                    exitWith $ ExitFailure 143
+                    io $ putStrLn "game updated"
+                    io $ exitWith $ ExitFailure 143
                 (Right False) -> do
-                    putStrLn ("version up to date")
+                    io $ putStrLn ("version up to date")
                     game
 
 -- | Looks for updates on the server.
