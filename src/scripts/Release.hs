@@ -56,5 +56,9 @@ main = withTempDirectory "." "nikki-release" $ \ (normalise -> tmpDir) -> do
     trySystem ("zip -r " ++ tmpDir </> repoPath </> zipName ++ " " ++ localDeployedFolder config)
     trySystem ("scp -r " ++ tmpDir </> "*" ++ " " ++ remoteRepo config)
 
+    -- updating the version (making sure the version file gets updated after the zip file)
+    writeFile (tmpDir </> repoPath </> "version") (showVersion nikkiVersion ++ "\n")
+    trySystem ("scp " ++ tmpDir </> repoPath </> "version" ++ " " ++ remoteRepo config </> repoPath)
+
 -- | just for development
 trySystem_ = putStrLn
