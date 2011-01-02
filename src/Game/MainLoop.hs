@@ -16,7 +16,7 @@ import Control.Concurrent
 import Control.Exception
 import Clocked
 
-import GHC.Conc
+import System.Exit
 
 import Physics.Chipmunk as CM
 
@@ -37,12 +37,6 @@ debugQtVersion :: IO ()
 debugQtVersion = do
     v <- qtVersion
     putStrLn ("Qt-Version: " ++ v)
-
--- prints the number of HECs (see haskell concurrency)
-debugNumberOfHecs :: IO ()
-debugNumberOfHecs =
-    putStrLn ("Number of HECs: " ++ show numCapabilities)
-
 
 
 -- * running the state monad inside the render IO command
@@ -76,6 +70,7 @@ gameLoop app sceneMVar = do
     withArrowAutoRepeat app $
         loop timer
   where
+    loop :: Timer -> StateT GameState IO AppState
     loop timer = do
         io $ resetDebugging
 
