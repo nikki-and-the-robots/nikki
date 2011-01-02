@@ -25,7 +25,10 @@ data Configuration = Configuration {
 
 
 getConfiguration :: IO Configuration
-getConfiguration = cmdArgs options
+getConfiguration = do
+    r <- cmdArgs options
+    putStrLn ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
+    return r
 
 options :: Configuration
 options =

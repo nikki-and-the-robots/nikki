@@ -31,6 +31,8 @@ import System.Directory
 
 import Graphics.Qt
 
+import Version
+
 import Utils
 
 import Distribution.AutoUpdate
