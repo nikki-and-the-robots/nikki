@@ -2,7 +2,7 @@
 
 -- | auto-updating for Nikki
 
-module Distribution.AutoUpdate (autoUpdate) where
+module Distribution.AutoUpdate (autoUpdate, repoPath) where
 
 
 import Prelude hiding (catch)
@@ -59,12 +59,15 @@ mkUrl :: FilePath -> String
 mkUrl path =
     "http://updates.joyridelabs.de" </>
     repo </>
-    "nikki" </>
-    System.Info.os </>
-    System.Info.arch </>
+    repoPath </>
     path
   where
-    repo = "current"
+    repo = "current/nikki"
+
+-- | path in a repo to a certain file
+repoPath :: FilePath
+repoPath = System.Info.os </> System.Info.arch
+
 
 -- * introduced for more type safety
 
@@ -216,18 +219,6 @@ withBackup (DeployPath deployPath) action = do
             io $ renameDirectory src dest
           else
             throwError ("file not found: " ++ src)
-    -- | removes file and directories if they exist
-    removeIfExists f = io $ do
-        isFile <- doesFileExist f
-        isDirectory <- doesDirectoryExist f
-        when (isFile || isDirectory) $
-            putStrLn ("removing: " ++ f)
-        if isFile then
-            removeFile f
-          else if isDirectory then
-            removeDirectoryRecursive f
-          else
-            return ()
 
 -- | installs the update
 installUpdate :: NewVersionDir -> DeployPath -> ErrorT String IO ()

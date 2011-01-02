@@ -202,6 +202,19 @@ withWorkingDirectory dir action = do
     wd <- getCurrentDirectory
     (changeWorkingDirectory dir >> action) `finally` changeWorkingDirectory wd
 
+-- | removes file and directories if they exist
+removeIfExists f = io $ do
+    isFile <- doesFileExist f
+    isDirectory <- doesDirectoryExist f
+    when (isFile || isDirectory) $
+        putStrLn ("removing: " ++ f)
+    if isFile then
+        removeFile f
+      else if isDirectory then
+        removeDirectoryRecursive f
+      else
+        return ()
+
 
 -- * State monad stuff
 
