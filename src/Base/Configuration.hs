@@ -13,14 +13,14 @@ import Version
 data Configuration = Configuration {
     -- user config
     fullscreen :: Bool,
-    noUpdate :: Bool,
+    no_update :: Bool,
 
     -- development
-    runInPlace :: Bool,
-    graphicsProfiling :: Bool,
-    omitPixmapRendering :: Bool,
-    renderXYCross :: Bool,
-    renderChipmunkObjects :: Bool
+    run_in_place :: Bool,
+    graphics_profiling :: Bool,
+    omit_pixmap_rendering :: Bool,
+    render_xy_cross :: Bool,
+    render_chipmunk_objects :: Bool
   }
     deriving (Show, Data, Typeable)
 
@@ -36,20 +36,20 @@ options =
     Configuration {
         fullscreen = False
             &= help "start the game in fullscreen mode",
-        noUpdate = False
+        no_update = False
             &= help "don't attempt to update the game from the web",
 
-        runInPlace = False
+        run_in_place = False
             &= groupname "Development flags"
             &= help "causes the game to look for the data files in ../data",
-        graphicsProfiling = False
+        graphics_profiling = False
             &= help "output FPS statistics for the rendering thread",
-        omitPixmapRendering = False
+        omit_pixmap_rendering = False
             &= help "omit the normal pixmaps when rendering objects",
-        renderXYCross = False
+        render_xy_cross = False
             &= name "X"
             &= help "render x and y axis",
-        renderChipmunkObjects = False
+        render_chipmunk_objects = False
             &= name "c"
             &= help "render red lines for physical objects"
       }

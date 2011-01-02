@@ -48,7 +48,7 @@ logFile = "fps.dat"
 -- creates the initial FpsState
 initialFPSState :: M FpsState
 initialFPSState = do
-    graphicsProfiling_ <- asks graphicsProfiling
+    graphicsProfiling_ <- asks graphics_profiling
     if graphicsProfiling_ then do
 --         logHandle <- openFile logFile WriteMode
 --         return $ FpsState 0 Nothing Nothing logHandle

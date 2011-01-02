@@ -21,7 +21,7 @@ import Base.Configuration
 
 getDataFileName :: FilePath -> M FilePath
 getDataFileName p = do
-    inPlace <- asks runInPlace
+    inPlace <- asks run_in_place
     if inPlace then
         return (".." </> "data" </> p)
       else do

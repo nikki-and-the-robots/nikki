@@ -104,7 +104,7 @@ isDeployed = do
 autoUpdate :: M a -> M a
 autoUpdate game = do
     config <- ask
-    if noUpdate config then do
+    if no_update config then do
         io $ putStrLn "not updating"
         game
       else

@@ -231,7 +231,7 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
 
         clearScreen ptr
 
-        when (not $ omitPixmapRendering configuration) $ do
+        when (not $ omit_pixmap_rendering configuration) $ do
             let os = objects scene
             fmapM_ (renderLayer ptr size offset now) $ backgrounds os
             renderLayer ptr size offset now $ mainLayer os
@@ -242,9 +242,9 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
 
 
         -- debugging
-        when (renderXYCross configuration) $
+        when (render_xy_cross configuration) $
             debugDrawCoordinateSystem ptr offset
-        when (renderChipmunkObjects configuration) $
+        when (render_chipmunk_objects configuration) $
             fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
         io $ debugging ptr offset
 
