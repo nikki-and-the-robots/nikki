@@ -127,7 +127,9 @@ autoUpdate game = do
 -- (Left message) if an error occurs.
 attemptUpdate :: DeployPath -> IO (Either String Bool)
 attemptUpdate deployPath = runErrorT $ do
+    io $ putStrLn ("local version: " ++ showVersion Version.nikkiVersion)
     serverVersion <- parse =<< downloadContent (mkUrl "version")
+    io $ putStrLn ("remote version: " ++ showVersion serverVersion)
     if serverVersion > Version.nikkiVersion then do
         update serverVersion deployPath
         return True
