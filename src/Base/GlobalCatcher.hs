@@ -18,7 +18,9 @@ globalCatcher mainThread cmd = flip catch catchAll cmd
     catchAll e =
         case fromException e of
             (Just ExitSuccess) -> return ()
-            (Just failure) -> throwTo mainThread e
+            (Just failure) -> do
+                putStrLn ("error message:\n\n" ++ show e ++ "\n")
+                throwTo mainThread e
             Nothing -> do
                 putStrLn ("error message:\n\n" ++ show e ++ "\n")
                 throwTo mainThread e
