@@ -106,7 +106,6 @@ module Physics.Chipmunk (
 import Data.Abelian
 import Data.StateVar
 
-import Control.Monad.Trans
 import Control.Monad.CatchIO
 
 import Physics.Hipmunk hiding (body)

@@ -12,15 +12,11 @@ import Data.Abelian
 import Data.Buffer
 import Data.Directions
 
-import Control.Arrow
-
 import Graphics.Qt as Qt hiding (rotate, scale)
 
 import Sound.SFML
 
 import Physics.Chipmunk hiding (position, Position)
-
-import Utils
 
 import Object
 

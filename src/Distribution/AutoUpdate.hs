@@ -5,7 +5,6 @@
 module Distribution.AutoUpdate (autoUpdate) where
 
 
-import Safe
 import Prelude hiding (catch)
 
 import Data.Version
@@ -15,7 +14,6 @@ import Text.ParserCombinators.ReadP
 
 import Control.Monad
 import Control.Monad.Trans.Error
-import Control.Monad.IO.Class
 import Control.Monad.CatchIO
 
 import System.Environment.FindBin

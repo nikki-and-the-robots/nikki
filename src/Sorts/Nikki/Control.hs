@@ -9,7 +9,6 @@ import Data.Maybe
 import Data.Directions
 
 import Control.Monad
-import Control.Arrow
 
 import Physics.Chipmunk hiding (position, Position)
 import qualified Physics.Hipmunk as Hip

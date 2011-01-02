@@ -12,11 +12,8 @@ import Data.Abelian
 
 import Physics.Chipmunk
 
-import Utils
-
 import Base
 
-import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration
 
 

@@ -29,8 +29,6 @@ import System.IO
 import System.Exit
 import System.Directory
 
-import GHC.Conc
-
 import Graphics.Qt
 
 import Utils

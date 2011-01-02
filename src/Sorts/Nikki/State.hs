@@ -7,13 +7,10 @@ import Prelude hiding (lookup)
 
 import Data.List (sortBy)
 import Data.Set (member)
-import Data.Abelian
 import Data.Maybe
 import Data.Directions
 
 import Control.Arrow
-
-import Graphics.Qt as Qt hiding (rotate, scale)
 
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)

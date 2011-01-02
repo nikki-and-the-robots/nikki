@@ -22,7 +22,6 @@ import Sound.SFML
 
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)
-import qualified Physics.Hipmunk as Hip
 
 import Utils
 
@@ -35,7 +34,6 @@ import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation
 import Sorts.Nikki.State
 import Sorts.Nikki.Control
-import Sorts.Nikki.JumpingImpulse
 import Sorts.Nikki.Dust
 
 

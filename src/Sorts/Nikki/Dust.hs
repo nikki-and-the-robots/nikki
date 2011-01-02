@@ -4,7 +4,6 @@
 module Sorts.Nikki.Dust where
 
 
-import Data.Abelian
 import Data.Map (lookup)
 
 import Physics.Chipmunk

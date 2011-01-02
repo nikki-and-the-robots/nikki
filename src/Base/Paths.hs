@@ -8,8 +8,6 @@ module Base.Paths (getDataFileName, getDataFiles) where
 
 import Data.List
 
-import Control.Arrow
-
 import System.Info
 import System.FilePath
 import System.Directory

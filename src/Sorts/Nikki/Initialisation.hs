@@ -16,11 +16,8 @@ import Graphics.Qt as Qt hiding (rotate, scale)
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position, baryCenterOffset)
 
-import Utils
-
 import Base
 
-import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration
 
 

@@ -11,8 +11,6 @@ module Base.Monad (
 
 import Control.Monad.Trans.Reader
 
-import Utils
-
 import Base.Configuration
 
 

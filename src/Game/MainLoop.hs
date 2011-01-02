@@ -8,15 +8,11 @@ module Game.MainLoop (
   ) where
 
 
-import Data.Set (member)
 import Data.Initial
 
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
-import Control.Exception
 import Clocked
-
-import System.Exit
 
 import Physics.Chipmunk as CM
 
@@ -25,7 +21,6 @@ import Graphics.Qt
 import Utils
 
 import Base
-import Base.Application
 
 import Object
 

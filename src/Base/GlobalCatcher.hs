@@ -10,8 +10,6 @@ import Control.Concurrent
 
 import System.Exit
 
-import Graphics.Qt
-
 
 globalCatcher :: ThreadId -> IO () -> IO ()
 globalCatcher mainThread cmd = flip catch catchAll cmd

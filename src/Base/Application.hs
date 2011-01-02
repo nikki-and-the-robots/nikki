@@ -22,9 +22,6 @@ import qualified Data.Indexable as I
 
 import Control.Monad
 import Control.Concurrent
-import Control.Concurrent.MVar
-
-import System.Exit
 
 import Graphics.Qt
 

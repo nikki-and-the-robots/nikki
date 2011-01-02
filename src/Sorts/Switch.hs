@@ -18,13 +18,10 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt hiding (scale)
 
-import Utils
-
 import Base
 
 import Object
 
-import Sorts.Robots.Configuration
 import Sorts.Tiles (tileShapeAttributes)
 import Sorts.Nikki (nikkiMass)
 

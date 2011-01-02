@@ -8,13 +8,6 @@ import qualified Data.ByteString.Lazy as BS
 
 import Control.Monad.Trans.Error
 
-import System.IO
-
-import Foreign.C
-import Foreign.Ptr
-import Foreign.Storable
-import Foreign.Marshal.Array
-
 import Network.Curl.Download
 import Network.Curl.Download.Lazy
 

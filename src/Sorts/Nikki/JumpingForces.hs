@@ -7,8 +7,6 @@ import Data.Directions
 
 import Physics.Chipmunk
 
-import Utils
-
 import Base
 
 import Sorts.Nikki.Types

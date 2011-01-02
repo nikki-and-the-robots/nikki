@@ -18,7 +18,6 @@ import Graphics.Qt
 
 import Utils
 
-import Base.Constants
 import Base.Grounds
 import Base.Events
 

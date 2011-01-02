@@ -5,8 +5,6 @@ module Base.Configuration where
 
 import System.Console.CmdArgs
 
-import Graphics.Qt
-
 import Version
 
 

@@ -22,7 +22,6 @@ import Data.Initial
 import Data.Traversable
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
-import Data.List
 
 import Control.Monad (when)
 
