@@ -111,7 +111,6 @@ autoUpdate game = do
             case result of
                 (Left message) -> do
                     putStrLn ("update failed: " ++ message)
-                    error "would run game now -> aborting"
                     game
                 (Right True) -> do
                     putStrLn "game updated"
