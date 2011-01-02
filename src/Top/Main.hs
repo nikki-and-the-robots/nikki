@@ -53,8 +53,6 @@ main = do
   mainThread <- myThreadId
   globalCatcher mainThread $ withStaticConfiguration $ do
 
-    io $ hSetBuffering stdout NoBuffering
-
     configuration <- ask
 
     -- qt initialisation
@@ -71,7 +69,8 @@ main = do
     withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
 
         -- start state logick
-        let app = Application qApp window keyPoller applicationStates appPixmaps sorts
+        let app :: Application
+            app = Application mainThread qApp window keyPoller applicationStates appPixmaps sorts
         -- there are two main threads:
         -- this is the logick [sick!] thread
         -- dynamic changes of the configuration take place in this thread!
