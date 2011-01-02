@@ -47,7 +47,9 @@ import Top.Editor (editLevel)
 import Top.Game (playLevel)
 
 main :: IO ()
-main = globalCatcher $ withStaticConfiguration $ do
+main = do
+  mainThread <- myThreadId
+  globalCatcher mainThread $ withStaticConfiguration $ do
 
     io $ hSetBuffering stdout NoBuffering
 
@@ -71,10 +73,11 @@ main = globalCatcher $ withStaticConfiguration $ do
         -- there are two main threads:
         -- this is the logick [sick!] thread
         -- dynamic changes of the configuration take place in this thread!
-        forkOS $ globalCatcher $ do
-            (withDynamicConfiguration configuration $ executeStates (applicationStates app))
-                `finally`
-                quitQApplication
+            logicThread =
+                withDynamicConfiguration configuration $
+                executeStates (applicationStates app)
+        forkOS $ globalCatcher mainThread $ do
+            logicThread `finally` quitQApplication
 
         -- this is the rendering thread (will be quit by the logick thread)
         code <- execQApplication qApp
@@ -174,7 +177,7 @@ loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
     editorScene <- initEditorScene (allSorts app) mFile grounds
     return $ follower editorScene
   where
-    showProgress cmdChannel ptr = globalCatcher $ do
+    showProgress cmdChannel ptr = globalCatcher (mainThread app) $ do
         cmds <- pollChannel cmdChannel
         mapM_ id cmds
         resetMatrix ptr

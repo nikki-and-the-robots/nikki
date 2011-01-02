@@ -21,7 +21,10 @@ import Data.SelectTree hiding (selectPrevious, selectNext)
 import qualified Data.Indexable as I
 
 import Control.Monad
+import Control.Concurrent
 import Control.Concurrent.MVar
+
+import System.Exit
 
 import Graphics.Qt
 
@@ -38,6 +41,7 @@ import Base.Application.Pixmaps
 
 data Application_ sort
     = Application {
+        mainThread :: ThreadId,
         application :: Ptr QApplication,
         window :: Ptr AppWidget,
         keyPoller :: KeyPoller,
@@ -102,7 +106,7 @@ menu app mTitle mParent children =
     isBackButton StartButton = True
     isBackButton _  = False
 
-    render items ptr = globalCatcher $ do
+    render items ptr = globalCatcher (mainThread app) $ do
         resetMatrix ptr
         clearScreen ptr
         setPenColor ptr white 1

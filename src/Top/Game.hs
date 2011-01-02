@@ -46,7 +46,7 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
         return parent
 
   where
-    render fpsRef cameraStateRef sceneMVar configuration ptr = globalCatcher $ do
+    render fpsRef cameraStateRef sceneMVar configuration ptr = globalCatcher (mainThread app) $ do
 
         tickFPSRef fpsRef
 
