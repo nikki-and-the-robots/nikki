@@ -13,7 +13,7 @@ import System.Info
 -- | default repo for updates
 defaultRepo = "http://updates.joyridelabs.de/current/nikki"
 
-osError = error ("unsupported os for updates: " ++ System.Info.os)
+osError msg = error ("unsupported os for updates: " ++ System.Info.os ++ " (" ++ msg ++ ")")
 
 -- | Find the core executable (using FindBin).
 -- The core executable has to reside in the same directory as the restarter (called "nikki")
@@ -30,22 +30,23 @@ findCoreExecutable = do
 relativeDeployPath :: FilePath
 relativeDeployPath = case System.Info.os of
     "linux" -> "."
-    x -> osError
+    x -> osError "relativeDeployPath"
 
 -- | relative path from the root of the deployed directory to the directory that
 -- contains the executables
 deployRootToExecutables :: FilePath
 deployRootToExecutables = case System.Info.os of
     "linux" -> "."
-    x -> osError
+    x -> osError "deployRootToExecutables"
 
 restarterExecutable = mkExecutable "nikki"
 
 coreExecutable = mkExecutable "core"
 
+mkExecutable :: String -> String
 mkExecutable = case System.Info.os of
     "linux" -> id
-    x -> osError
+    x -> osError "mkExecutable"
 --     "linux" -> id
 --     "mingw32" -> (<.> "exe")
 --     "darwin" -> id
