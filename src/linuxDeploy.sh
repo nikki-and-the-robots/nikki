@@ -17,7 +17,9 @@ then
 fi
 
 mkdir nikki
-echo copying executable...
+echo copying executables...
 cp dist/build/nikki/nikki nikki/
+cp dist/build/core/core nikki/
 echo copying data...
 cp -r ../data nikki/
+touch nikki/deployed

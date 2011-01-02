@@ -35,6 +35,8 @@ import Graphics.Qt
 
 import Utils
 
+import Distribution.AutoUpdate
+
 import Base
 
 import Object
@@ -74,6 +76,7 @@ main = do
         -- this is the logick [sick!] thread
         -- dynamic changes of the configuration take place in this thread!
             logicThread =
+                autoUpdate $
                 withDynamicConfiguration configuration $
                 executeStates (applicationStates app)
         forkOS $ globalCatcher mainThread $ do

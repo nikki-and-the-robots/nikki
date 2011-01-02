@@ -380,6 +380,9 @@ path <..> ext =
   where
     dotExt = if Just '.' == headMay ext then ext else '.' : ext
 
+stripWhiteSpaces :: String -> String
+stripWhiteSpaces = dropWhile isSpace . reverse . dropWhile isSpace . reverse
+
 
 -- * Map stuff
 
