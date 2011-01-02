@@ -2,7 +2,7 @@
 
 -- | auto-updating for Nikki
 
-module Distribution.AutoUpdate (autoUpdate, repoPath) where
+module Distribution.AutoUpdate (autoUpdate) where
 
 
 import Prelude hiding (catch)
@@ -26,49 +26,12 @@ import System.IO.Temp (createTempDirectory)
 import Version
 import Utils
 
-import Base
+import Base.Monad
+import Base.Configuration
 
+import Distribution.AutoUpdate.Paths
 import Distribution.AutoUpdate.Download
 import Distribution.AutoUpdate.Zip
-
-
-osError = error ("unsupported os for updates: " ++ System.Info.os)
-
--- | relative path from the core executable to the data directory
-relativeDeployPath :: FilePath
-relativeDeployPath = case System.Info.os of
-    "linux" -> "."
-    x -> osError
-
--- | relative path from the root of the deployed directory to the directory that
--- contains the executables
-deployRootToExecutables :: FilePath
-deployRootToExecutables = case System.Info.os of
-    "linux" -> "."
-    x -> osError
-
-restarterExecutable = mkExecutable "nikki"
-
-coreExecutable = mkExecutable "core"
-
-mkExecutable = case System.Info.os of
-    "linux" -> id
-    x -> osError
-
--- | Full URLs gets constructed by
--- "http://updates.joyridelabs.de" </> repo </> "nikki" </> System.Info.os </> given path
-mkUrl :: FilePath -> String
-mkUrl path =
-    "http://updates.joyridelabs.de" </>
-    repo </>
-    repoPath </>
-    path
-  where
-    repo = "current/nikki"
-
--- | path in a repo to a certain file
-repoPath :: FilePath
-repoPath = System.Info.os </> System.Info.arch
 
 
 -- * introduced for more type safety
@@ -103,8 +66,8 @@ isDeployed = do
 -- | doing the auto update (wrapping the logic thread)
 autoUpdate :: M a -> M a
 autoUpdate game = do
-    config <- ask
-    if no_update config then do
+    no_update_ <- asks no_update
+    if no_update_ then do
         io $ putStrLn "not updating"
         game
       else
@@ -112,6 +75,7 @@ autoUpdate game = do
 
 doAutoUpdate :: M a -> M a
 doAutoUpdate game = do
+    repoString <- asks update_repo
     mDeployed <- io $ isDeployed
     case mDeployed of
         Nothing -> do
@@ -119,7 +83,7 @@ doAutoUpdate game = do
             game
         Just path -> do
             io $ putStrLn "deployed: looking for updates..."
-            result <- io $ attemptUpdate path
+            result <- io $ attemptUpdate (Repo repoString) path
             case result of
                 (Left message) -> do
                     io $ putStrLn ("update failed: " ++ message)
@@ -136,13 +100,13 @@ doAutoUpdate game = do
 -- Returns (Right True) if an update was successfully installed,
 -- (Right False) if there is no newer version and
 -- (Left message) if an error occurs.
-attemptUpdate :: DeployPath -> IO (Either String Bool)
-attemptUpdate deployPath = runErrorT $ do
+attemptUpdate :: Repo -> DeployPath -> IO (Either String Bool)
+attemptUpdate repo deployPath = runErrorT $ do
     io $ putStrLn ("local version: " ++ showVersion Version.nikkiVersion)
-    serverVersion <- parse =<< downloadContent (mkUrl "version")
+    serverVersion <- parse =<< downloadContent (mkUrl repo "version")
     io $ putStrLn ("remote version: " ++ showVersion serverVersion)
     if serverVersion > Version.nikkiVersion then do
-        update serverVersion deployPath
+        update repo serverVersion deployPath
         return True
       else
         return False
@@ -153,19 +117,19 @@ attemptUpdate deployPath = runErrorT $ do
         x -> throwError ("version parse error: " ++ show (s, x))
 
 -- | the actual updating procedure
-update :: Version -> DeployPath -> ErrorT String IO ()
-update newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
-    zipFile <- downloadUpdate newVersion downloadDir
+update :: Repo -> Version -> DeployPath -> ErrorT String IO ()
+update repo newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
+    zipFile <- downloadUpdate repo newVersion downloadDir
     newVersionDir <- unzipFile zipFile
     -- (withBackup creates its own temporary directory.)
     withBackup deployPath $
         installUpdate newVersionDir deployPath
 
 -- | downloads the update to 
-downloadUpdate :: Version -> FilePath -> ErrorT String IO ZipFilePath
-downloadUpdate newVersion tmpDir = do
+downloadUpdate :: Repo -> Version -> FilePath -> ErrorT String IO ZipFilePath
+downloadUpdate repo newVersion tmpDir = do
     let zipFile = ("nikki-" ++ showVersion newVersion) <.> "zip"
-    downloadFile (mkUrl zipFile) (tmpDir </> zipFile)
+    downloadFile (mkUrl repo zipFile) (tmpDir </> zipFile)
     return $ ZipFilePath (tmpDir </> zipFile)
 
 -- | unzips a given zipFile (in the same directory) and returns the path to the unzipped directory

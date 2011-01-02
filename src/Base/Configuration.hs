@@ -7,6 +7,8 @@ import System.Console.CmdArgs
 
 import Version
 
+import Distribution.AutoUpdate.Paths
+
 
 -- * dynamic configuration
 
@@ -17,6 +19,7 @@ data Configuration = Configuration {
 
     -- development
     run_in_place :: Bool,
+    update_repo :: String,
     graphics_profiling :: Bool,
     omit_pixmap_rendering :: Bool,
     render_xy_cross :: Bool,
@@ -42,6 +45,9 @@ options =
         run_in_place = False
             &= groupname "Development flags"
             &= help "causes the game to look for the data files in ../data",
+        update_repo = defaultRepo
+            &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
+            &= typ "REPOSITORY",
         graphics_profiling = False
             &= help "output FPS statistics for the rendering thread",
         omit_pixmap_rendering = False
