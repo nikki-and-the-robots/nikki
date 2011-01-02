@@ -28,6 +28,7 @@ import Text.Printf
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Monad.State hiding ((>=>))
+import Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))
 import Control.Concurrent
 import Control.Exception
