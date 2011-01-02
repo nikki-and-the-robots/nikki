@@ -4,7 +4,6 @@ module Main where
 
 
 import Control.Monad
-import Control.Concurrent
 
 import System.Environment
 import System.Process
@@ -27,5 +26,4 @@ main = do
                 loop (n - 1) action
             _ -> do
                 putStrLn (show exitCode ++ " -> not restarting")
-                threadDelay 10000000
                 exitWith exitCode
