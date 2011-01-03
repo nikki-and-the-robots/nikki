@@ -55,7 +55,7 @@ mkExecutable = case System.Info.os of
 mkDeployedFolder :: String -> String
 mkDeployedFolder = case System.Info.os of
     "darwin" -> (<.> "app")
-    x -> osError "mkDeployedFolder"
+    x -> id
 
 data Repo = Repo String
 
