@@ -81,8 +81,8 @@ doAutoUpdate game = do
         Nothing -> do
             io $ putStrLn "not deployed: not updating"
             game
-        Just path -> do
-            io $ putStrLn "deployed: looking for updates..."
+        Just path@(DeployPath dp) -> do
+            io $ putStrLn ("deployed in " ++ dp ++ "\nlooking for updates...")
             result <- io $ attemptUpdate (Repo repoString) path
             case result of
                 (Left message) -> do
