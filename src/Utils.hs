@@ -28,7 +28,7 @@ import Text.Printf
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Monad.State hiding ((>=>))
-import Control.Monad.Trans.Error () -- Monad (Either e)
+import Control.Monad.Trans.Error
 import Control.Arrow ((>>>))
 import Control.Concurrent
 import Control.Exception
@@ -248,6 +248,11 @@ runStateTFromIORef ref cmd = do
     (o, s') <- runStateT cmd s
     writeIORef ref s'
     return o
+
+-- | puts an Either a b into an ErrorT Monad (just look at the type, willya?)
+liftError :: (Error e, Monad m) => Either e a -> ErrorT e m a
+liftError (Right o) = return o
+liftError (Left e) = throwError e
 
 
 -- * Monad stuff

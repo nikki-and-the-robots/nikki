@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, ScopedTypeVariables #-}
 
 -- | auto-updating for Nikki
 
@@ -7,7 +7,6 @@ module Distribution.AutoUpdate (autoUpdate) where
 
 import Prelude hiding (catch)
 
-import Data.Version
 import Data.List
 
 import Text.ParserCombinators.ReadP
@@ -107,18 +106,14 @@ doAutoUpdate app game = do
 attemptUpdate :: Application_ sort -> Repo -> DeployPath -> IO (Either String Bool)
 attemptUpdate app repo deployPath = runErrorT $ do
     io $ guiLog app ("local version: " ++ showVersion Version.nikkiVersion)
-    serverVersion <- parse =<< downloadContent (mkUrl repo "version")
+    serverVersion :: Version <- join
+        (liftError <$> parseVersion <$> downloadContent (mkUrl repo "version"))
     io $ guiLog app ("remote version: " ++ showVersion serverVersion)
     if serverVersion > Version.nikkiVersion then do
         update app repo serverVersion deployPath
         return True
       else
         return False
-  where
-    parse :: Monad m => String -> ErrorT String m Version
-    parse (stripWhiteSpaces -> s) = case readP_to_S parseVersion s of
-        (last -> (v, "")) -> return v
-        x -> throwError ("version parse error: " ++ show (s, x))
 
 -- | the actual updating procedure
 update :: Application_ sort -> Repo -> Version -> DeployPath -> ErrorT String IO ()

@@ -1,7 +1,9 @@
-{-# language DeriveDataTypeable, ViewPatterns #-}
+{-# language DeriveDataTypeable, ViewPatterns, ScopedTypeVariables #-}
 
 module Main where
 
+
+import Control.Monad
 
 import System.Console.CmdArgs
 import System.FilePath
@@ -9,7 +11,6 @@ import System.Exit
 import System.Process
 import System.IO.Temp
 
-import Distribution.AutoUpdate
 import Distribution.AutoUpdate.Paths
 
 import Version
@@ -52,6 +53,7 @@ options =
 
 main = withTempDirectory "." "nikki-release" $ \ (normalise -> tmpDir) -> do
     config <- getConfiguration
+    checkNewerVersion config
     let zipName = "nikki-" ++ showVersion nikkiVersion <.> "zip"
     trySystem ("mkdir -p " ++ tmpDir </> repoPath)
     trySystem ("zip -r " ++ tmpDir </> repoPath </> zipName ++ " " ++ localDeployedFolder config)
@@ -60,6 +62,24 @@ main = withTempDirectory "." "nikki-release" $ \ (normalise -> tmpDir) -> do
     -- updating the version (making sure the version file gets updated after the zip file)
     writeFile (tmpDir </> repoPath </> "version") (showVersion nikkiVersion ++ "\n")
     trySystem ("scp " ++ tmpDir </> repoPath </> "version" ++ " " ++ remoteRepo config </> repoPath)
+
+-- | checks if the current version was already uploaded (exits in case it was).
+checkNewerVersion :: Configuration -> IO ()
+checkNewerVersion config = withTempDirectory "." "serverVersion" $ \ tempDir -> do
+    trySystem ("scp " ++
+        remoteRepo config </> repoPath </> "version" ++ " " ++
+        tempDir)
+    eServerVersion :: Either String Version <- parseVersion <$> readFile (tempDir </> "version")
+    case eServerVersion of
+        (Left m) -> do
+            putStrLn ("error downloading remote version: " ++ m)
+            putStrLn "uploading anyway"
+        (Right serverVersion) -> do
+            when (nikkiVersion <= serverVersion) $
+                error $ unlines ("This version was already uploaded." :
+                                ("local version: " ++ showVersion nikkiVersion) :
+                                ("remote version: " ++ showVersion serverVersion) :
+                                [])
 
 -- | just for development
 trySystem_ = putStrLn
