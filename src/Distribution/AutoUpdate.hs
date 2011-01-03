@@ -106,8 +106,8 @@ doAutoUpdate app game = do
 attemptUpdate :: Application_ sort -> Repo -> DeployPath -> IO (Either String Bool)
 attemptUpdate app repo deployPath = runErrorT $ do
     io $ guiLog app ("local version: " ++ showVersion Version.nikkiVersion)
-    serverVersion :: Version <- join
-        (liftError <$> parseVersion <$> downloadContent (mkUrl repo "version"))
+    serverVersion :: Version <-
+        (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
     io $ guiLog app ("remote version: " ++ showVersion serverVersion)
     if serverVersion > Version.nikkiVersion then do
         update app repo serverVersion deployPath

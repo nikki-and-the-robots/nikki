@@ -21,12 +21,12 @@ import Base.Application.GUILog
 -- Returns the content of the downloaded file.
 downloadContent :: String -> ErrorT String IO String
 downloadContent url = do
-    liftError =<< io (openURIString url)
+    ErrorT $ io (openURIString url)
 
 -- | Tries to download the file with the given path into a given file on disc.
 -- Uses mkUrl.
 downloadFile :: Application_ sort -> String -> FilePath -> ErrorT String IO ()
 downloadFile app url destFile = do
     io $ guiLog app ("downloading " ++ url)
-    content <- liftError =<< io (openLazyURI url)
+    content <- ErrorT $ io (openLazyURI url)
     io $ BS.writeFile destFile content

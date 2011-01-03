@@ -249,11 +249,6 @@ runStateTFromIORef ref cmd = do
     writeIORef ref s'
     return o
 
--- | puts an Either a b into an ErrorT Monad (just look at the type, willya?)
-liftError :: (Error e, Monad m) => Either e a -> ErrorT e m a
-liftError (Right o) = return o
-liftError (Left e) = throwError e
-
 
 -- * Monad stuff
 
