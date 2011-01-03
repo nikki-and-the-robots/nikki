@@ -11,7 +11,7 @@ import System.Info
 
 
 -- | default repo for updates
-defaultRepo = "http://updates.joyridelabs.de/current/nikki"
+defaultRepo = "http://updates.joyridelabs.de/nikki/current"
 
 osError msg = error ("unsupported os for updates: " ++ System.Info.os ++ " (" ++ msg ++ ")")
 

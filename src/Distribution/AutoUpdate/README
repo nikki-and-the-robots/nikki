@@ -56,16 +56,16 @@ Problems and questions:
     -> use FindBin
 
 How to look for new versions?
-    http://joyridelabs.de/current/nikki/$OS/version contains a string representing the current stable version. (e.g. 1.2.13)
+    http://joyridelabs.de/nikki/current/$OS/version contains a string representing the current stable version. (e.g. 1.2.13)
     the executable needs to know its version
 
 Where to find updater?
-    http://joyridelabs.de/current/nikki/$OS/$VERSION/updater
+    http://joyridelabs.de/nikki/current/$OS/$VERSION/updater
     and
-    http://joyridelabs.de/current/nikki/$OS/$VERSION/updater.exe
+    http://joyridelabs.de/nikki/current/$OS/$VERSION/updater.exe
 
 Where does the updater find files?
-    http://joyridelabs.de/current/nikki/$OS/$VERSION/
+    http://joyridelabs.de/nikki/current/$OS/$VERSION/
 
     old versions have to stay available (and could be downloaded manually (with "--update-to...")
 
@@ -96,7 +96,7 @@ overview of communication between processes:
 ===========================================
 
 client to server:
-http://joyridelabs.de/current/nikki/$OS/
+http://joyridelabs.de/nikki/current/$OS/
 restarter restarts if exit code of inner process is 143, otherwise not.
 inner process tries an update if given "--look-for-updates".
 inner process updates to specified version with "--update-to=12.3.99"
