@@ -9,4 +9,4 @@ trap error ERR
 
 echo running in place \(without auto-updating\)
 
-dist/build/core/core --runinplace $@ +RTS -C
+dist/build/core/core --run-in-place $@ +RTS -C
