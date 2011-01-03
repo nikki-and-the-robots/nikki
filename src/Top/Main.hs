@@ -99,7 +99,7 @@ loadApplicationIcon qApp = do
 -- | top level application state (main menu)
 applicationStates :: Application -> AppState
 applicationStates app =
-    menu app Nothing Nothing [
+    menu app (Just title) Nothing [
         ("story mode", storyMode app),
         ("play", selectLevelPlay app this),
         ("edit", selectLevelEdit app this),
@@ -107,6 +107,7 @@ applicationStates app =
       ]
   where
     this = applicationStates app
+    title = "Nikki and the robots (" ++ showVersion nikkiVersion ++ ")"
 
 storyMode :: Application -> AppState
 storyMode app = AppState $ do
@@ -186,5 +187,3 @@ loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
         resetMatrix ptr
         clearScreen ptr
         drawText ptr (Position 100 100) False "loading..."
-
-
