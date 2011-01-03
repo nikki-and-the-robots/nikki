@@ -3,11 +3,18 @@
 module Base.Configuration where
 
 
+import Data.List
+
+import System.Environment
 import System.Console.CmdArgs
+import System.Info
 
 import Version
 
+import Utils
+
 import Distribution.AutoUpdate.Paths
+import Distribution.AutoUpdate.CmdArgs
 
 
 -- * dynamic configuration
@@ -30,9 +37,18 @@ data Configuration = Configuration {
 
 getConfiguration :: IO Configuration
 getConfiguration = do
-    r <- cmdArgs options
+    r <- cmdTheseArgs options =<< (filterUnwantedArgs <$> getArgs)
     putStrLn ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
     return r
+
+-- | on OS X there is a default command line argument
+-- (-psn_SOMETHING_WITH_THE_PID) passed to the application
+-- when launched in application bundle mode.
+-- We remove this from the arguments before processing via CmdArgs.
+filterUnwantedArgs :: [String] -> [String]
+filterUnwantedArgs = case System.Info.os of
+    "darwin" -> filter (\ arg -> not ("-psn_" `isPrefixOf` arg))
+    _ -> id
 
 options :: Configuration
 options =
