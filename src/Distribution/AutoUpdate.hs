@@ -55,7 +55,7 @@ isDeployed = do
     progPath <- getProgPath
     let coreExecutable = progPath </> "core"
     coreExists <- doesFileExist coreExecutable
-    let deployDirectory = progPath </> relativeDeployPath
+    deployDirectory <- canonicalizePath (progPath </> relativeDeployPath)
     deployExists <- doesDirectoryExist deployDirectory
     hasDeployFile <- doesFileExist (deployDirectory </> "deployed")
     return $ if coreExists && deployExists && hasDeployFile then
@@ -136,7 +136,7 @@ downloadUpdate repo newVersion tmpDir = do
 unzipFile :: ZipFilePath -> ErrorT String IO NewVersionDir
 unzipFile (ZipFilePath path) = do
     io $ unzipArchive path (takeDirectory path)
-    let nikkiDir = takeDirectory path </> "nikki"
+    let nikkiDir = takeDirectory path </> mkDeployedFolder "nikki"
     nikkiExists <- io $ doesDirectoryExist nikkiDir
     when (not nikkiExists) $ throwError ("directory not found: " ++ nikkiDir)
     return $ NewVersionDir nikkiDir

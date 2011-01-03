@@ -30,6 +30,7 @@ findCoreExecutable = do
 relativeDeployPath :: FilePath
 relativeDeployPath = case System.Info.os of
     "linux" -> "."
+    "darwin" -> "../.."
     x -> osError "relativeDeployPath"
 
 -- | relative path from the root of the deployed directory to the directory that
@@ -37,6 +38,7 @@ relativeDeployPath = case System.Info.os of
 deployRootToExecutables :: FilePath
 deployRootToExecutables = case System.Info.os of
     "linux" -> "."
+    "darwin" -> "Contents/MacOS"
     x -> osError "deployRootToExecutables"
 
 restarterExecutable = mkExecutable "nikki"
@@ -46,10 +48,14 @@ coreExecutable = mkExecutable "core"
 mkExecutable :: String -> String
 mkExecutable = case System.Info.os of
     "linux" -> id
-    x -> osError "mkExecutable"
---     "linux" -> id
 --     "mingw32" -> (<.> "exe")
---     "darwin" -> id
+    "darwin" -> id
+    x -> osError "mkExecutable"
+
+mkDeployedFolder :: String -> String
+mkDeployedFolder = case System.Info.os of
+    "darwin" -> (<.> "app")
+    x -> osError "mkDeployedFolder"
 
 data Repo = Repo String
 

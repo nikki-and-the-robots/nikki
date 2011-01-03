@@ -10,6 +10,7 @@ import System.Process
 import System.IO.Temp
 
 import Distribution.AutoUpdate
+import Distribution.AutoUpdate.Paths
 
 import Version
 

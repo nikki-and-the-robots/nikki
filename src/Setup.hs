@@ -32,7 +32,8 @@ main =
 -- * mac deployment
 
 macMain :: IO ()
-macMain = defaultMainWithHooks simpleUserHooks{postBuild = macPostBuild}
+macMain = do
+    defaultMainWithHooks simpleUserHooks{postBuild = macPostBuild}
 
 macResourcesDir = "resources"
 
@@ -44,11 +45,20 @@ macPostBuild args buildFlags packageDescription localBuildInfo =
         copyDirectory qtNibDir (macResourcesDir </> "qt_menu.nib")
         resources <- map (macResourcesDir </>) <$> getFilesRecursive macResourcesDir
         appBundleBuildHook [macApp resources] args buildFlags packageDescription localBuildInfo
+        
+        let app = "dist/build/core.app"
+            appExecutableDir = app </> "Contents/MacOS"
+        copyFile "dist/build/nikki/nikki" (appExecutableDir </> "nikki")
+        writeFile (app </> "deployed") ""
+        copyDirectory app "./nikki.app"
 
 -- | deployment on a mac
 macApp :: [FilePath] -> MacApp
 macApp resourceFiles = MacApp {
-    appName = "nikki",
+    -- use core executable for now (this results in correct dependency chasing,
+    -- but the game gets started with the wrong executable, restarting after updates
+    -- will not work)
+    appName = "core",
     appIcon = Just (macResourcesDir </> "png/icon.icns"),
     appPlist = Nothing,
     resources = resourceFiles,
