@@ -15,6 +15,7 @@ import Text.ParserCombinators.ReadP
 import Control.Monad
 import Control.Monad.Trans.Error
 import Control.Monad.CatchIO
+import Control.Concurrent
 
 import System.Environment.FindBin
 import System.FilePath
@@ -28,6 +29,8 @@ import Utils
 
 import Base.Monad
 import Base.Configuration
+import Base.Application
+import Base.Application.GUILog
 
 import Distribution.AutoUpdate.Paths
 import Distribution.AutoUpdate.Download
@@ -64,35 +67,36 @@ isDeployed = do
         Nothing
 
 -- | doing the auto update (wrapping the logic thread)
-autoUpdate :: M a -> M a
-autoUpdate game = do
+autoUpdate :: Application_ sort -> M a -> M a
+autoUpdate app game = do
     no_update_ <- asks no_update
     if no_update_ then do
-        io $ putStrLn "not updating"
+        io $ guiLog app "not updating"
         game
       else
-        doAutoUpdate game
+        doAutoUpdate app game
 
-doAutoUpdate :: M a -> M a
-doAutoUpdate game = do
+doAutoUpdate :: Application_ sort -> M a -> M a
+doAutoUpdate app game = do
     repoString <- asks update_repo
     mDeployed <- io $ isDeployed
     case mDeployed of
         Nothing -> do
-            io $ putStrLn "not deployed: not updating"
+            io $ guiLog app "not deployed: not updating"
             game
         Just path@(DeployPath dp) -> do
-            io $ putStrLn ("deployed in " ++ dp ++ "\nlooking for updates...")
-            result <- io $ attemptUpdate (Repo repoString) path
+            io $ guiLog app ("deployed in " ++ dp ++ "\nlooking for updates...")
+            result <- io $ attemptUpdate app (Repo repoString) path
             case result of
                 (Left message) -> do
-                    io $ putStrLn ("update failed: " ++ message)
+                    io $ guiLog app ("update failed: " ++ message)
                     game
-                (Right True) -> do
-                    io $ putStrLn "game updated"
-                    io $ exitWith $ ExitFailure 143
+                (Right True) -> io $ do
+                    guiLog app "game updated...\nrestarting..."
+                    threadDelay 5000000
+                    exitWith $ ExitFailure 143
                 (Right False) -> do
-                    io $ putStrLn ("version up to date")
+                    io $ guiLog app ("version up to date")
                     game
 
 -- | Looks for updates on the server.
@@ -100,13 +104,13 @@ doAutoUpdate game = do
 -- Returns (Right True) if an update was successfully installed,
 -- (Right False) if there is no newer version and
 -- (Left message) if an error occurs.
-attemptUpdate :: Repo -> DeployPath -> IO (Either String Bool)
-attemptUpdate repo deployPath = runErrorT $ do
-    io $ putStrLn ("local version: " ++ showVersion Version.nikkiVersion)
+attemptUpdate :: Application_ sort -> Repo -> DeployPath -> IO (Either String Bool)
+attemptUpdate app repo deployPath = runErrorT $ do
+    io $ guiLog app ("local version: " ++ showVersion Version.nikkiVersion)
     serverVersion <- parse =<< downloadContent (mkUrl repo "version")
-    io $ putStrLn ("remote version: " ++ showVersion serverVersion)
+    io $ guiLog app ("remote version: " ++ showVersion serverVersion)
     if serverVersion > Version.nikkiVersion then do
-        update repo serverVersion deployPath
+        update app repo serverVersion deployPath
         return True
       else
         return False
@@ -117,25 +121,25 @@ attemptUpdate repo deployPath = runErrorT $ do
         x -> throwError ("version parse error: " ++ show (s, x))
 
 -- | the actual updating procedure
-update :: Repo -> Version -> DeployPath -> ErrorT String IO ()
-update repo newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
-    zipFile <- downloadUpdate repo newVersion downloadDir
-    newVersionDir <- unzipFile zipFile
+update :: Application_ sort -> Repo -> Version -> DeployPath -> ErrorT String IO ()
+update app repo newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
+    zipFile <- downloadUpdate app repo newVersion downloadDir
+    newVersionDir <- unzipFile app zipFile
     -- (withBackup creates its own temporary directory.)
-    withBackup deployPath $
+    withBackup app deployPath $
         installUpdate newVersionDir deployPath
 
 -- | downloads the update to 
-downloadUpdate :: Repo -> Version -> FilePath -> ErrorT String IO ZipFilePath
-downloadUpdate repo newVersion tmpDir = do
+downloadUpdate :: Application_ sort -> Repo -> Version -> FilePath -> ErrorT String IO ZipFilePath
+downloadUpdate app repo newVersion tmpDir = do
     let zipFile = ("nikki-" ++ showVersion newVersion) <.> "zip"
-    downloadFile (mkUrl repo zipFile) (tmpDir </> zipFile)
+    downloadFile app (mkUrl repo zipFile) (tmpDir </> zipFile)
     return $ ZipFilePath (tmpDir </> zipFile)
 
 -- | unzips a given zipFile (in the same directory) and returns the path to the unzipped directory
-unzipFile :: ZipFilePath -> ErrorT String IO NewVersionDir
-unzipFile (ZipFilePath path) = do
-    io $ unzipArchive path (takeDirectory path)
+unzipFile :: Application_ sort -> ZipFilePath -> ErrorT String IO NewVersionDir
+unzipFile app (ZipFilePath path) = do
+    io $ unzipArchive app path (takeDirectory path)
     let nikkiDir = takeDirectory path </> mkDeployedFolder "nikki"
     nikkiExists <- io $ doesDirectoryExist nikkiDir
     when (not nikkiExists) $ throwError ("directory not found: " ++ nikkiDir)
@@ -146,8 +150,8 @@ unzipFile (ZipFilePath path) = do
 -- Deletes the backup in case of a successful action (except the executables).
 -- Catches every exception and every ErrorT error.
 -- In any case: the executables don't get deleted.
-withBackup :: DeployPath -> ErrorT String IO a -> ErrorT String IO a
-withBackup (DeployPath deployPath) action = do
+withBackup :: Application_ sort -> DeployPath -> ErrorT String IO a -> ErrorT String IO a
+withBackup app (DeployPath deployPath) action = do
   deployedFiles <- sort <$> filter isContentFile <$> io (getDirectoryContents deployPath)
   withTempDirectory deployPath "backup" $ \ tmpDir -> do
 
@@ -157,7 +161,7 @@ withBackup (DeployPath deployPath) action = do
                 rename (deployPath </> f) (tmpDir </> f)
         restore :: ErrorT String IO ()
         restore = do
-            io $ putStrLn "restoring"
+            io $ guiLog app "restoring"
             forM_ deployedFiles $ \ f -> do
                 let dest = deployPath </> f
                 removeIfExists dest
@@ -187,7 +191,7 @@ withBackup (DeployPath deployPath) action = do
 
     -- | renaming directories and files
     rename src dest = do
-        io $ putStrLn ("renaming: " ++ src ++ " -> " ++ dest)
+        io $ guiLog app ("renaming: " ++ src ++ " -> " ++ dest)
         isFile <- io $ doesFileExist src
         isDirectory <- io $ doesDirectoryExist src
         if isFile then

@@ -5,6 +5,7 @@ module Base (
     module Base.Types,
     module Base.Application,
     module Base.Application.Pixmaps,
+    module Base.Application.GUILog,
     module Base.Events,
     module Base.Pixmap,
     module Base.Monad,
@@ -22,6 +23,7 @@ module Base (
 import Base.Types
 import Base.Application
 import Base.Application.Pixmaps
+import Base.Application.GUILog
 import Base.Events
 import Base.Pixmap
 import Base.Monad

@@ -14,11 +14,14 @@ import System.FilePath
 
 import Utils
 
+import Base.Application
+import Base.Application.GUILog
+
 
 -- | unzips a given archive into a given directory
-unzipArchive :: FilePath -> FilePath -> IO ()
-unzipArchive zipFile directory = do
-  putStrLn ("unzipping " ++ zipFile)
+unzipArchive :: Application_ sort -> FilePath -> FilePath -> IO ()
+unzipArchive app zipFile directory = do
+  guiLog app ("unzipping " ++ zipFile)
   withArchive [CheckConsFlag] zipFile $ do
     files <- fileNames []
     mapM_ (\ f -> unzipSingleFile f directory) files

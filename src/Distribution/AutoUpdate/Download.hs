@@ -13,6 +13,9 @@ import Network.Curl.Download.Lazy
 
 import Utils
 
+import Base.Application
+import Base.Application.GUILog
+
 
 -- | Tries to fetch the file with the given path.
 -- Returns the content of the downloaded file.
@@ -22,9 +25,9 @@ downloadContent url = do
 
 -- | Tries to download the file with the given path into a given file on disc.
 -- Uses mkUrl.
-downloadFile :: String -> FilePath -> ErrorT String IO ()
-downloadFile url destFile = do
-    io $ putStrLn ("downloading " ++ url)
+downloadFile :: Application_ sort -> String -> FilePath -> ErrorT String IO ()
+downloadFile app url destFile = do
+    io $ guiLog app ("downloading " ++ url)
     content <- reverseStack $ openLazyURI url
     io $ BS.writeFile destFile content
 

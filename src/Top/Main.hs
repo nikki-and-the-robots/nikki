@@ -74,10 +74,11 @@ main = do
         -- there are two main threads:
         -- this is the logick [sick!] thread
         -- dynamic changes of the configuration take place in this thread!
-            logicThread =
+            logicThread = do
+                guiLog app "loading..."
                 withDynamicConfiguration configuration $
-                autoUpdate $
-                executeStates (applicationStates app)
+                    autoUpdate app $
+                    executeStates (applicationStates app)
         forkOS $ globalCatcher mainThread $ do
             logicThread `finally` quitQApplication
 
