@@ -22,4 +22,4 @@ cp dist/build/nikki/nikki nikki/
 cp dist/build/core/core nikki/
 echo copying data...
 cp -r ../data nikki/
-touch nikki/deployed
+touch nikki/yes_nikki_is_deployed

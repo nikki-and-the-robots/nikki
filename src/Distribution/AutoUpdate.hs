@@ -57,7 +57,7 @@ isDeployed = do
     coreExists <- doesFileExist coreExecutable
     deployDirectory <- canonicalizePath (progPath </> relativeDeployPath)
     deployExists <- doesDirectoryExist deployDirectory
-    hasDeployFile <- doesFileExist (deployDirectory </> "deployed")
+    hasDeployFile <- doesFileExist (deployDirectory </> "yes_nikki_is_deployed")
     return $ if coreExists && deployExists && hasDeployFile then
         Just $ DeployPath deployDirectory
       else

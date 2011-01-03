@@ -49,7 +49,7 @@ macPostBuild args buildFlags packageDescription localBuildInfo =
         let app = "dist/build/core.app"
             appExecutableDir = app </> "Contents/MacOS"
         copyFile "dist/build/nikki/nikki" (appExecutableDir </> "nikki")
-        writeFile (app </> "deployed") ""
+        writeFile (app </> "yes_nikki_is_deployed") ""
         copyDirectory app "./nikki.app"
 
 -- | deployment on a mac
