@@ -21,6 +21,7 @@ import Base.Application
 -- Adds the given message to the log.
 guiLog :: Application_ sort -> String -> IO ()
 guiLog app msg = do
+    putStrLn msg
     addMsg msg
     setDrawingCallbackAppWidget (window app) (Just renderLog)
 
