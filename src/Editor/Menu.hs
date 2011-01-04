@@ -10,6 +10,7 @@ import Control.Concurrent
 import Control.Monad.State
 
 import System.Directory
+import System.FilePath
 
 import Graphics.Qt
 
@@ -116,13 +117,14 @@ saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObject
     writeObjectsToDisk path editorObjects
     return follower
 saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects} =
-    askString app parent "level name:" $ \ name -> ioAppState $ do
-        let path = name <..> "nl"
-        exists <- doesFileExist path
+    askString app parent "level name" $ \ name -> AppState $ do
+        levelDirectory <- getFreeLevelsDirectory
+        let path = levelDirectory </> name <..> "nl"
+        exists <- io $ doesFileExist path
         if exists then
             return $ fileExists app this path editorObjects
           else do
-            writeObjectsToDisk path editorObjects
+            io $ writeObjectsToDisk path editorObjects
             return follower
   where
     this = saveLevel app parent follower scene

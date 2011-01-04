@@ -60,7 +60,7 @@ options =
 
         run_in_place = False
             &= groupname "Development flags"
-            &= help "causes the game to look for the data files in ../data",
+            &= help "causes the game to look for the data files in ../data and use ../data/standard_levels to load and save levels",
         update_repo = defaultRepo
             &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
             &= typ "REPOSITORY",

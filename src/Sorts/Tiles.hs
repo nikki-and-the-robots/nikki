@@ -70,7 +70,7 @@ mkSort name offset size = do
 getFrameFileNames :: String -> M [FilePath]
 getFrameFileNames name = do
     -- paths of all pngs in the corresponding directory
-    absolutePaths <- getDataFiles ".png" (pngDir </> takeDirectory name)
+    absolutePaths <- getDataFiles (pngDir </> takeDirectory name) (Just ".png")
     -- making them relative again
     let relativePaths = map ((takeDirectory name </>) . takeFileName) absolutePaths
     files <- mapM getDataFileName $

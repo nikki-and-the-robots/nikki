@@ -48,6 +48,7 @@ import Top.Initialisation
 import Top.Editor (editLevel)
 import Top.Game (playLevel)
 
+
 main :: IO ()
 main = do
   mainThread <- myThreadId
@@ -90,7 +91,8 @@ main = do
             x -> exitWith (ExitFailure x)
 
 loadApplicationIcon qApp = do
-    iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$> getDataFiles ".png" pngDir
+    iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
+        getDataFiles pngDir (Just ".png")
     io $ setApplicationIcon qApp iconPaths
 
 
@@ -133,28 +135,27 @@ quit app parent =
 
 -- | select a saved level.
 selectLevelPlay :: Application -> AppState -> AppState
-selectLevelPlay app parent = ioAppState $ do
-    levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
+selectLevelPlay app parent = AppState $ do
+    levelFiles <- lookupLevels
     if null levelFiles then
         return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
       else do
         return $ menu app (Just "pick a level to play") (Just parent) $
-            map (\ path -> (path, play app parent path)) levelFiles
-
-
+            map (\ path -> (takeBaseName path, play app parent path)) levelFiles
 
 selectLevelEdit :: Application -> AppState -> AppState
-selectLevelEdit app parent = ioAppState $ do
-    levelFiles <- sort <$> filter (\ p -> takeExtension p == ".nl") <$> getDirectoryContents "."
+selectLevelEdit app parent = AppState $ do
+    freeLevelsPath <- getFreeLevelsDirectory
+    levelFiles <- map (freeLevelsPath </>) <$> io (getFiles freeLevelsPath (Just "nl"))
     return $ menu app (Just "pick a level to edit") (Just parent) $
         ("new level", pickNewLevel app parent) :
-        map (\ path -> (path, edit app parent (path, False))) levelFiles
+        map (\ path -> (takeBaseName path, edit app parent (path, False))) levelFiles
 
 pickNewLevel :: Application -> AppState -> AppState
 pickNewLevel app parent = AppState $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
-                          getDataFiles ".nl" templateLevelsDir
+                          getDataFiles templateLevelsDir (Just ".nl")
     return $ menu app (Just "pick a template to start from") (Just parent) $
         map mkMenuItem templateLevelPaths ++
         ("empty level", edit app parent (pathToEmptyLevel, True)) :

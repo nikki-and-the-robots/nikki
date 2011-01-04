@@ -216,6 +216,34 @@ removeIfExists f = io $ do
       else
         return ()
 
+-- | Returns all files and directories in a given directory.
+-- Omit "." and "..".
+getDirectoryRealContents :: FilePath -> IO [FilePath]
+getDirectoryRealContents path =
+    filter isContent <$> io (getDirectoryContents path)
+  where
+    isContent "." = False
+    isContent ".." = False
+    isContent _ = True
+
+-- | Returns if a path starts with a dot.
+isHiddenOnUnix :: FilePath -> Bool
+isHiddenOnUnix = headMay >>> (== Just '.')
+
+-- | Returns all unhidden (unix) files in a given directory.
+-- @getFiles dir (Just extension)@ returns all files with the given extension.
+getFiles :: FilePath -> Maybe String -> IO [FilePath]
+getFiles dir mExtension =
+    sort <$> filter hasRightExtension <$> filter (not . isHiddenOnUnix) <$>
+        getDirectoryRealContents dir
+  where
+    hasRightExtension :: FilePath -> Bool
+    hasRightExtension = case mExtension of
+        (Just ('.' : '.' : r)) -> error ("don't give extensions that start with two dots: " ++ r)
+        (Just extension@('.' : _)) -> takeExtension >>> (== extension)
+        (Just extension) -> takeExtension >>> (== ('.' : extension))
+        Nothing -> const True
+
 
 -- * State monad stuff
 

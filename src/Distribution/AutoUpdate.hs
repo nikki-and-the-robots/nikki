@@ -147,7 +147,7 @@ unzipFile app (ZipFilePath path) = do
 -- In any case: the executables don't get deleted.
 withBackup :: Application_ sort -> DeployPath -> ErrorT String IO a -> ErrorT String IO a
 withBackup app (DeployPath deployPath) action = do
-  deployedFiles <- sort <$> filter isContentFile <$> io (getDirectoryContents deployPath)
+  deployedFiles <- io $ getDirectoryRealContents deployPath
   withTempDirectory deployPath "backup" $ \ tmpDir -> do
 
     let backup :: ErrorT String IO ()
@@ -179,10 +179,6 @@ withBackup app (DeployPath deployPath) action = do
     conserveExecutables
     return result
   where
-
-    isContentFile "." = False
-    isContentFile ".." = False
-    isContentFile _ = True
 
     -- | renaming directories and files
     rename src dest = do

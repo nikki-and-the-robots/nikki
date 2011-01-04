@@ -56,7 +56,7 @@ mkSort name = do
 
 getPngPaths :: String -> M [FilePath]
 getPngPaths n =
-    getDataFiles ".png" (pngDir </> "backgrounds" </> n)
+    getDataFiles (pngDir </> "backgrounds" </> n) (Just ".png")
 
 data BSort = BSort {
     name :: String,

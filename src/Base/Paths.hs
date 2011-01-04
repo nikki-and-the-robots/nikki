@@ -38,13 +38,7 @@ getDataFileName p = do
             x -> error ("unsupported os: " ++ os)
 
 -- | returns unhidden files with a given extension in a given data directory.
-getDataFiles :: String -> FilePath -> M [FilePath]
-getDataFiles extension path_ = do
+getDataFiles :: FilePath -> (Maybe String) -> M [FilePath]
+getDataFiles path_ extension = do
     path <- getDataFileName path_
-    files <- io $ getDirectoryContents path
-    return $
-        map (path </>) $
-        sort $
-        filter (\ f -> not ("." `isPrefixOf` f)) $
-        filter (\ f -> takeExtension f == extension) $
-        files
+    map (path </>) <$> io (getFiles path extension)

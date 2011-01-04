@@ -17,6 +17,7 @@ module Base (
     module Base.Configuration,
     module Base.FPSState,
     module Base.GlobalCatcher,
+    module Base.LevelLoading,
   ) where
 
 
@@ -35,3 +36,4 @@ import Base.Debugging
 import Base.Configuration
 import Base.FPSState
 import Base.GlobalCatcher
+import Base.LevelLoading
