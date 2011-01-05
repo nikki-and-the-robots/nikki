@@ -101,8 +101,6 @@ Executable core
         , temporary >= 1.1.1
         , LibZip >= 0.2.0.1
         , bytestring >= 0.9.1.7
-        -- unix has to be removed (windows, remember?)
-        , unix >= 2.4.0.2
 
     if os(linux)
         extra-libraries:

@@ -34,7 +34,6 @@ import Control.Concurrent
 import Control.Exception
 
 import System.Directory
-import System.Posix.Directory (changeWorkingDirectory)
 import System.IO.Unsafe
 import System.FilePath
 import System.Cmd
@@ -185,23 +184,17 @@ copyDirectory src dst = do
         createDirectoryIfMissing True (takeDirectory (dst </> file))
         copyFile (src </> file) (dst </> file)
 
--- | returns all (unhidden) files in a directory recursively
+-- | returns all (unhidden) files in a directory recursively, sorted.
+-- Omits the directories.
 getFilesRecursive :: FilePath -> IO [FilePath]
 getFilesRecursive dir =
-    withWorkingDirectory dir $ do
-        map normalise <$> inner "."
+    map normalise <$> inner dir "."
   where
-    inner dir = do
-        content <- map (dir </>) <$> filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
-        (directories, files) <- partitionM doesDirectoryExist content
-        recursive <- mapM inner $ directories
+    inner root dir = do
+        content <- map (dir </>) <$> sort <$> getFiles (root </> dir) Nothing
+        (directories, files) <- partitionM (doesDirectoryExist . (root </>)) content
+        recursive <- mapM (inner root) $ directories
         return $ sort (files ++ concat recursive)
-
--- | change the workingdirectory during the execution of the given action
-withWorkingDirectory :: FilePath -> IO a -> IO a
-withWorkingDirectory dir action = do
-    wd <- getCurrentDirectory
-    (changeWorkingDirectory dir >> action) `finally` changeWorkingDirectory wd
 
 -- | removes file and directories if they exist
 removeIfExists f = io $ do
