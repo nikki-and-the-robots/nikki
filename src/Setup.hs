@@ -10,7 +10,6 @@ import Control.Monad
 import Control.Exception
 
 import System.Directory
-import System.Posix.Directory (changeWorkingDirectory)
 import System.FilePath
 import System.Info
 import System.Process
