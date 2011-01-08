@@ -22,7 +22,7 @@ import Base.Application
 guiLog :: Application_ sort -> String -> IO ()
 guiLog app msg = do
     putStrLn msg
-    addMsg msg
+    mapM_ addMsg $ lines msg
     setDrawingCallbackAppWidget (window app) (Just renderLog)
 
 renderLog :: Ptr QPainter -> IO ()
