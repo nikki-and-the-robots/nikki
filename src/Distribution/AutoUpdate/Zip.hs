@@ -14,9 +14,11 @@ import System.Directory
 
 import Utils
 
+import Base
+
 -- | unzips a given archive into a given directory
 unzipArchive :: Application_ sort -> FilePath -> FilePath -> IO ()
-unzipArchive zipFile directory = do
+unzipArchive app zipFile directory = do
     guiLog app ("unzipping " ++ zipFile)
     archive <- toArchive <$> BS.readFile zipFile
     forM_ (zEntries archive) $ \ entry -> do
