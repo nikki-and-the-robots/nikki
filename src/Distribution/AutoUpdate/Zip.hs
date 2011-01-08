@@ -3,47 +3,23 @@
 module Distribution.AutoUpdate.Zip (unzipArchive) where
 
 
-import Data.Word
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BS
 
-import Codec.Archive.LibZip
+import Codec.Archive.Zip
 
-import System.IO
-import System.Directory
+import Control.Monad
+
 import System.FilePath
+import System.Directory
 
 import Utils
 
-import Base.Application
-import Base.Application.GUILog
-
-
 -- | unzips a given archive into a given directory
 unzipArchive :: Application_ sort -> FilePath -> FilePath -> IO ()
-unzipArchive app zipFile directory = do
-  guiLog app ("unzipping " ++ zipFile)
-  withArchive [CheckConsFlag] zipFile $ do
-    files <- fileNames []
-    mapM_ (\ f -> unzipSingleFile f directory) files
-
-unzipSingleFile :: FilePath -> FilePath -> Archive ()
-unzipSingleFile file directory =
-    if isDir file then
-        io $ createDirectory (directory </> file)
-      else do
-        handle <- io $ openFile (directory </> file) WriteMode
-        fromFile [] file $ copy handle
-        io $ hClose handle
-
-isDir "" = False
-isDir p = last p == '/'
-
-copy :: Handle -> Entry ()
-copy handle = do
-    chunk :: [Word8] <- readBytes 1024 -- 1024 is pretty arbitrary...
-             -- using Word8 for binary files.
-    if not $ null chunk then do
-        io $ BS.hPutStr handle $ BS.pack chunk
-        copy handle
-      else
-        return ()
+unzipArchive zipFile directory = do
+    guiLog app ("unzipping " ++ zipFile)
+    archive <- toArchive <$> BS.readFile zipFile
+    forM_ (zEntries archive) $ \ entry -> do
+        -- modifying the path of the entry to unpack in a given folder.
+        let unpackPath = directory </> normalise (eRelativePath entry)
+        writeEntry [] entry{eRelativePath = unpackPath}
