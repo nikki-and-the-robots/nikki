@@ -142,13 +142,13 @@ unzipFile app (ZipFilePath path) = do
 
 -- | Backups all files to a temporary directory.
 -- Restores them in case anything goes wrong.
--- Deletes the backup in case of a successful action (except the executables).
 -- Catches every exception and every ErrorT error.
--- In any case: the executables don't get deleted.
+-- Leaves the backup where it is (in a folder called "temporaryBackupSOMETHING",
+-- which will be deleted by the restarter at a later launch.)
 withBackup :: Application_ sort -> DeployPath -> ErrorT String IO a -> ErrorT String IO a
 withBackup app (DeployPath deployPath) action = do
-  deployedFiles <- io $ getDirectoryRealContents deployPath
-  withTempDirectory deployPath "backup" $ \ tmpDir -> do
+    deployedFiles <- io $ sort <$> getDirectoryRealContents deployPath
+    tmpDir <- io $ createTempDirectory deployPath "temporaryBackup"
 
     let backup :: ErrorT String IO ()
         backup = do
@@ -161,22 +161,11 @@ withBackup app (DeployPath deployPath) action = do
                 let dest = deployPath </> f
                 removeIfExists dest
                 rename (tmpDir </> f) dest
-        conserveExecutables :: ErrorT String IO ()
-        conserveExecutables = io $ do
-            -- create a temp dir for the executables
-            executableTempDirectory <- createTempDirectory deployPath "temporaryExecutables"
-            -- move the executables to the new temp dir
-            let backupedExecutableDir = tmpDir </> deployRootToExecutables
-            renameFile (backupedExecutableDir </> restarterExecutable)
-                       (executableTempDirectory </> restarterExecutable)
-            renameFile (backupedExecutableDir </> coreExecutable)
-                       (executableTempDirectory </> coreExecutable)
 
     backup
     result <- catchError
                 (action `onException` restore)
                 (\ errorMessage -> restore >> throwError errorMessage)
-    conserveExecutables
     return result
   where
 
