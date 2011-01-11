@@ -7,11 +7,14 @@ import Control.Monad
 
 import System.Console.CmdArgs
 import System.FilePath
+import System.Directory
 import System.Exit
 import System.Process
+import System.IO
 import System.IO.Temp
 
 import Distribution.AutoUpdate.Paths
+import Distribution.AutoUpdate.Zip
 
 import Version
 
@@ -52,34 +55,45 @@ options =
 
 
 main = withTempDirectory "." "nikki-release" $ \ (normalise -> tmpDir) -> do
+    hSetBuffering stdout NoBuffering
     config <- getConfiguration
+    putStrLn ("remote repository: " ++ remoteRepo config)
     checkNewerVersion config
     let zipName = "nikki-" ++ showVersion nikkiVersion <.> "zip"
-    trySystem ("mkdir -p " ++ tmpDir </> repoPath)
-    trySystem ("zip -r " ++ tmpDir </> repoPath </> zipName ++ " " ++ localDeployedFolder config)
+    createDirectoryIfMissing True (tmpDir </> osRepoPath)
+    zipArchive putStrLn (tmpDir </> osRepoPath </> zipName) (localDeployedFolder config)
     trySystem ("scp -r " ++ tmpDir </> "*" ++ " " ++ remoteRepo config)
 
     -- updating the version (making sure the version file gets updated after the zip file)
-    writeFile (tmpDir </> repoPath </> "version") (showVersion nikkiVersion ++ "\n")
-    trySystem ("scp " ++ tmpDir </> repoPath </> "version" ++ " " ++ remoteRepo config </> repoPath)
+    writeFile (tmpDir </> osRepoPath </> "version") (showVersion nikkiVersion ++ "\n")
+    trySystem ("scp " ++ tmpDir </> osRepoPath </> "version" ++ " " ++ remoteRepo config <//> unixRepoPath)
 
 -- | checks if the current version was already uploaded (exits in case it was).
 checkNewerVersion :: Configuration -> IO ()
 checkNewerVersion config = withTempDirectory "." "serverVersion" $ \ tempDir -> do
-    trySystem ("scp " ++
-        remoteRepo config </> repoPath </> "version" ++ " " ++
+    system ("scp " ++
+        remoteRepo config <//> unixRepoPath <//> "version" ++ " " ++
         tempDir)
-    eServerVersion :: Either String Version <- parseVersion <$> readFile (tempDir </> "version")
-    case eServerVersion of
-        (Left m) -> do
-            putStrLn ("error downloading remote version: " ++ m)
-            putStrLn "uploading anyway"
-        (Right serverVersion) -> do
-            when (nikkiVersion <= serverVersion) $
-                error $ unlines ("This version was already uploaded." :
-                                ("local version: " ++ showVersion nikkiVersion) :
-                                ("remote version: " ++ showVersion serverVersion) :
-                                [])
+    let versionFile = (tempDir </> "version")
+    exists <- doesFileExist versionFile
+    if not exists then do
+        -- couldn't download version file
+        putStrLn "warning: couldn't download version file, repo seems to be empty."
+        putStrLn "press Ctrl+C to abort."
+        getLine
+        return ()
+      else do
+        eServerVersion :: Either String Version <- parseVersion <$> readFile versionFile
+        case eServerVersion of
+            (Left m) -> do
+                putStrLn ("error downloading remote version: " ++ m)
+                putStrLn "uploading anyway"
+            (Right serverVersion) -> do
+                when (nikkiVersion <= serverVersion) $
+                    error $ unlines ("This version was already uploaded." :
+                                    ("local version: " ++ showVersion nikkiVersion) :
+                                    ("remote version: " ++ showVersion serverVersion) :
+                                    [])
 
 -- | just for development
 trySystem_ = putStrLn
