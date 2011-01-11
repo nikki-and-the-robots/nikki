@@ -38,7 +38,6 @@ import Base.Application.Pixmaps
 
 data Application_ sort
     = Application {
-        mainThread :: ThreadId,
         application :: Ptr QApplication,
         window :: Ptr AppWidget,
         keyPoller :: KeyPoller,
@@ -103,7 +102,7 @@ menu app mTitle mParent children =
     isBackButton StartButton = True
     isBackButton _  = False
 
-    render items ptr = globalCatcher (mainThread app) $ do
+    render items ptr = do
         resetMatrix ptr
         clearScreen ptr
         setPenColor ptr white 1

@@ -51,8 +51,7 @@ import Top.Game (playLevel)
 
 main :: IO ()
 main = do
-  mainThread <- myThreadId
-  globalCatcher mainThread $ withStaticConfiguration $ do
+  withStaticConfiguration $ do
 
     configuration <- ask
 
@@ -71,7 +70,7 @@ main = do
 
         -- start state logick
         let app :: Application
-            app = Application mainThread qApp window keyPoller applicationStates appPixmaps sorts
+            app = Application qApp window keyPoller applicationStates appPixmaps sorts
         -- there are two main threads:
         -- this is the logick [sick!] thread
         -- dynamic changes of the configuration take place in this thread!
@@ -80,15 +79,18 @@ main = do
                 withDynamicConfiguration configuration $
                     autoUpdate app $
                     executeStates (applicationStates app)
-        forkOS $ globalCatcher mainThread $ do
+        exitCodeMVar <- forkLogicThread $ do
             logicThread `finally` quitQApplication
 
         -- this is the rendering thread (will be quit by the logick thread)
-        code <- execQApplication qApp
+        exitCodeFromQApplication <- execQApplication qApp
+        exitCodeFromLogicThread <- takeMVar exitCodeMVar
 
-        case code of
-            0 -> exitWith ExitSuccess
-            x -> exitWith (ExitFailure x)
+        case exitCodeFromLogicThread of
+            ExitFailure x -> exitWith $ ExitFailure x
+            ExitSuccess -> case exitCodeFromQApplication of
+                0 -> return ()
+                x -> exitWith $ ExitFailure x
 
 loadApplicationIcon qApp = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
@@ -182,7 +184,7 @@ loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
     editorScene <- initEditorScene (allSorts app) mFile grounds
     return $ follower editorScene
   where
-    showProgress cmdChannel ptr = globalCatcher (mainThread app) $ do
+    showProgress cmdChannel ptr = do
         cmds <- pollChannel cmdChannel
         mapM_ id cmds
         resetMatrix ptr
