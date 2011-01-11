@@ -12,12 +12,12 @@ import System.Exit
 
 main = do
     args <- filterM warnWhenNotDirectory =<< getArgs
-    let searchPath = args ++ ["dist/build/nikki/", "../"]
+    let searchPath = args ++ ["dist/build/nikki/", "dist/build/core/", "../"]
     clean
     copy searchPath
-
-    putStrLn "TODO: level copying should be different"
-    system "cp *.nl nikki"
+    let deploymentIndicator = "nikki" </> "yes_nikki_is_deployed"
+    putStrLn ("touching " ++ deploymentIndicator)
+    writeFile deploymentIndicator ""
 
 failWithUsage = do
     putStrLn ""
@@ -85,6 +85,7 @@ doesExist path = do
 deploymentFiles :: [FilePath]
 deploymentFiles = (
     "nikki.exe" :
+    "core.exe" :
     "data" :
 
     -- sfml deps
