@@ -50,12 +50,12 @@ data NewVersionDir = NewVersionDir FilePath
 -- This is indicated by the existence of
 -- 1. the core executable (as found with FindBin),
 -- 2. the root of the deployed directory (whose path is platform dependent (see relativeDeployPath)
--- 3. and a (possibly empty) file called "deployed"
+-- 3. and a (possibly empty) file called "yes_nikki_is_deployed"
 --    (residing in the root of the deployed directory).
 isDeployed :: IO (Maybe DeployPath)
 isDeployed = do
     progPath <- getProgPath
-    let coreExecutable = progPath </> "core"
+    let coreExecutable = progPath </> mkExecutable "core"
     coreExists <- doesFileExist coreExecutable
     deployDirectory <- canonicalizePath (progPath </> relativeDeployPath)
     deployExists <- doesDirectoryExist deployDirectory
@@ -134,7 +134,7 @@ downloadUpdate app repo newVersion tmpDir = do
 -- | unzips a given zipFile (in the same directory) and returns the path to the unzipped directory
 unzipFile :: Application_ sort -> ZipFilePath -> ErrorT String IO NewVersionDir
 unzipFile app (ZipFilePath path) = do
-    io $ unzipArchive app path (takeDirectory path)
+    io $ unzipArchive (guiLog app) path (takeDirectory path)
     let nikkiDir = takeDirectory path </> mkDeployedFolder "nikki"
     nikkiExists <- io $ doesDirectoryExist nikkiDir
     when (not nikkiExists) $ throwError ("directory not found: " ++ nikkiDir)

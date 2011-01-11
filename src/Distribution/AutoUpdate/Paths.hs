@@ -30,6 +30,7 @@ findCoreExecutable = do
 relativeDeployPath :: FilePath
 relativeDeployPath = case System.Info.os of
     "linux" -> "."
+    "mingw32" -> "."
     "darwin" -> "../.."
     x -> osError "relativeDeployPath"
 
@@ -38,6 +39,7 @@ relativeDeployPath = case System.Info.os of
 deployRootToExecutables :: FilePath
 deployRootToExecutables = case System.Info.os of
     "linux" -> "."
+    "mingw32" -> "."
     "darwin" -> "Contents/MacOS"
     x -> osError "deployRootToExecutables"
 
@@ -48,7 +50,7 @@ coreExecutable = mkExecutable "core"
 mkExecutable :: String -> String
 mkExecutable = case System.Info.os of
     "linux" -> id
---     "mingw32" -> (<.> "exe")
+    "mingw32" -> (<.> "exe")
     "darwin" -> id
     x -> osError "mkExecutable"
 
@@ -60,13 +62,23 @@ mkDeployedFolder = case System.Info.os of
 data Repo = Repo String
 
 -- | Full URLs gets constructed by
--- repo </> "nikki" </> System.Info.os </> given path
+-- repo <//> "nikki" <//> System.Info.os <//> given path
 mkUrl :: Repo -> FilePath -> String
 mkUrl (Repo repo) path =
-    repo </>
-    repoPath </>
+    repo <//>
+    unixRepoPath <//>
     path
 
--- | path in a repo to a certain file
-repoPath :: FilePath
-repoPath = System.Info.os </> System.Info.arch
+-- | path in a repo to the zip files (platform dependent) (with slashes as path separators)
+unixRepoPath :: FilePath
+unixRepoPath = foldr1 (<//>) repoPaths
+
+-- | like unixRepoPath, but with platform specific path separators
+osRepoPath :: FilePath
+osRepoPath = foldr1 (</>) repoPaths
+
+repoPaths :: [String]
+repoPaths = System.Info.os : System.Info.arch : []
+
+-- unix style slashes
+a <//> b = a ++ "/" ++ b
