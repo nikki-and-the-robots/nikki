@@ -209,11 +209,11 @@ removeIfExists f = io $ do
       else
         return ()
 
--- | Returns all files and directories in a given directory.
+-- | Returns all files and directories in a given directory, sorted.
 -- Omit "." and "..".
 getDirectoryRealContents :: FilePath -> IO [FilePath]
 getDirectoryRealContents path =
-    filter isContent <$> io (getDirectoryContents path)
+    io $ sort <$> filter isContent <$> getDirectoryContents path
   where
     isContent "." = False
     isContent ".." = False
