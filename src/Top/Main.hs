@@ -84,6 +84,7 @@ main = do
 
         -- this is the rendering thread (will be quit by the logick thread)
         exitCodeFromQApplication <- execQApplication qApp
+
         exitCodeFromLogicThread <- takeMVar exitCodeMVar
 
         case exitCodeFromLogicThread of
