@@ -8,7 +8,7 @@ import Data.Abelian
 
 import Control.Monad
 
-import Foreign (Ptr, FunPtr)
+import Foreign (Ptr, FunPtr, nullPtr)
 import Foreign.C.String
 import Foreign.Marshal.Alloc (free)
 
@@ -148,12 +148,15 @@ setKeyCallbackAppWidget ptr cmd =
         cppSetKeyCallbackAppWidget ptr
   where
     preWrap :: (Bool -> Ptr QKeyEvent -> IO ())
-    preWrap isPress ptr = do
-        key <- keyQKeyEvent ptr
-        text <- textQKeyEvent ptr
-        let constructor = if isPress then KeyPress else KeyRelease
-            event = constructor (translateQtKey key) text
-        cmd event
+    preWrap isPress ptr =
+        if (nullPtr == ptr) then
+            cmd CloseWindow
+          else do
+            key <- keyQKeyEvent ptr
+            text <- textQKeyEvent ptr
+            let constructor = if isPress then KeyPress else KeyRelease
+                event = constructor (translateQtKey key) text
+            cmd event
 
 
 -- * QPainter

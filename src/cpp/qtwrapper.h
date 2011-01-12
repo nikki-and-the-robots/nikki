@@ -5,6 +5,7 @@
 // * function pointer types
 typedef void (drawingCallbackFunction)(QPainter*);
 
+                                          // nullptr for window close event
 typedef void (keyCallbackFunction) (bool, QKeyEvent*);
 
 
@@ -30,6 +31,8 @@ public:
     void keyPressEvent(QKeyEvent* e);
 
     void keyReleaseEvent(QKeyEvent* e);
+
+    void closeEvent(QCloseEvent* e);
 
     void setRenderingLooped(bool b);
 

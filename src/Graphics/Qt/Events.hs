@@ -15,6 +15,7 @@ import Graphics.Qt.Types
 data QtEvent
     = KeyPress Key String
     | KeyRelease Key String
+    | CloseWindow
   deriving (Eq, Show)
 
 data Key

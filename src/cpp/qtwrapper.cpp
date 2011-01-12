@@ -64,6 +64,13 @@ void AppWidget::keyReleaseEvent(QKeyEvent* e) {
     }
 };
 
+void AppWidget::closeEvent(QCloseEvent* e) {
+    e->ignore();
+    if (keyCallback != NULL) {
+        this->keyCallback(true, NULL);
+    }
+};
+
 void AppWidget::setRenderingLooped(bool looped) {
     emit setRenderingLoopedSignal(looped);
 };

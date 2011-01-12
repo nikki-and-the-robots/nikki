@@ -20,6 +20,7 @@ import Graphics.Qt
 data AppEvent
     = Press AppButton
     | Release AppButton
+    | Quit
   deriving (Eq, Ord, Show)
 
 isPress :: AppEvent -> Bool
@@ -97,6 +98,7 @@ waitForAppEvent poller = do
 updateKeyState :: AppEvent -> Set AppButton -> Set AppButton
 updateKeyState (Press   k) ll = insert k ll
 updateKeyState (Release k) ll = delete k ll
+updateKeyState Quit ll = ll
 
 
 toAppEvent :: Set AppButton -> Either QtEvent JJ_Event -> [AppEvent]
@@ -107,6 +109,8 @@ toAppEvent _ (Left (KeyRelease key _)) | key `member` key2button =
     [Release (key2button ! key)]
 toAppEvent _ (Left (KeyPress key text)) = [Press (KeyboardButton key text)]
 toAppEvent _ (Left (KeyRelease key text)) = [Release (KeyboardButton key text)]
+
+toAppEvent _ (Left CloseWindow) = [Quit]
 
 -- joystick
 -- toAppEvent _ (Right (JoyButtonDown 0 jbutton)) | jbutton `member` jbutton2button =
