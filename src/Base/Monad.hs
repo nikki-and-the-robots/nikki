@@ -41,3 +41,12 @@ withDynamicConfiguration configuration action = do
     (o, newConfig) <- runStateT action configuration
     -- TODO: save config
     return o
+
+
+-- * changing the dynamic configuration
+
+swapFullScreen :: Application_ s -> M ()
+swapFullScreen app = do
+    fullscreen' <- not <$> gets fullscreen
+    modify (\ c -> c{fullscreen = fullscreen'})
+    io $ setFullscreenAppWidget (window app) fullscreen'

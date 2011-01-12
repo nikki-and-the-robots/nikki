@@ -27,4 +27,5 @@ handler app x =
 shortcuts :: Application_ s -> AppEvent -> Maybe (M ())
 shortcuts app x = case x of
     Quit -> Just $ io $ exitWith ExitSuccess
+    (Press (KeyboardButton F _)) -> Just $ swapFullScreen app
     _ -> Nothing
