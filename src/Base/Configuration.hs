@@ -35,8 +35,8 @@ data Configuration = Configuration {
     deriving (Show, Data, Typeable)
 
 
-getConfiguration :: IO Configuration
-getConfiguration = do
+loadConfiguration :: IO Configuration
+loadConfiguration = do
     r <- cmdTheseArgs options =<< (filterUnwantedArgs <$> getArgs)
     putStrLn ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
     return r

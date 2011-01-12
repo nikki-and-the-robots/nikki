@@ -21,7 +21,7 @@ import Base.Configuration
 
 -- | Returns all files that can be played.
 -- Looks in the freeLevelsDirectory and in data/standard_levels
-lookupLevels :: M [FilePath]
+lookupLevels :: RM [FilePath]
 lookupLevels = do
     standardLevels <- getDataFiles "standard_levels" (Just ".nl")
     run_in_place_ <- asks run_in_place
@@ -37,7 +37,7 @@ lookupLevels = do
 -- Otherwise a standard directory is returned (using getAppUserDataDirectory "nikki-free-levels").
 -- If the standard directory does not exist, it will be initialised
 -- with a set of standard levels.
-getFreeLevelsDirectory :: M FilePath
+getFreeLevelsDirectory :: RM FilePath
 getFreeLevelsDirectory = do
     run_in_place_ <- asks run_in_place
     if run_in_place_ then

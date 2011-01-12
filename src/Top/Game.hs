@@ -30,7 +30,7 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
     let (NikkiMode nikkiIndex) = mode scene
     sceneMVar <- io newEmptyMVar
     fpsRef <- initialFPSRef
-    configuration <- ask
+    configuration <- getConfiguration
     io $ do
         nikkiPos <- getPosition $ getControlledChipmunk scene $
                         getMainlayerObject scene nikkiIndex

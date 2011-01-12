@@ -43,7 +43,7 @@ polyLines = norm $ convertAll fromKachel (
 
 -- * loading
 
-sorts :: M [Sort_]
+sorts :: RM [Sort_]
 sorts = do
     return [Sort_ DebugSort]
 

@@ -43,10 +43,10 @@ backgrounds =
     []
 
 
-sorts :: M [Sort_]
+sorts :: RM [Sort_]
 sorts = map Sort_ <$> mapM mkSort backgrounds
 
-mkSort :: String -> M BSort
+mkSort :: String -> RM BSort
 mkSort name = do
                                 -- zeropadding :)
     pixmaps <- mapM (loadPixmap zero) =<< getPngPaths name
@@ -54,7 +54,7 @@ mkSort name = do
   where
     sort = sortBy (withView (width . pixmapSize) compare)
 
-getPngPaths :: String -> M [FilePath]
+getPngPaths :: String -> RM [FilePath]
 getPngPaths n =
     getDataFiles (pngDir </> "backgrounds" </> n) (Just ".png")
 

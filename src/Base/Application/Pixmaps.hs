@@ -28,17 +28,17 @@ data ApplicationPixmaps = ApplicationPixmaps {
     finished :: Map LevelResult Pixmap
   }
 
-withApplicationPixmaps :: (ApplicationPixmaps -> IO a) -> M a
+withApplicationPixmaps :: (ApplicationPixmaps -> IO a) -> RM a
 withApplicationPixmaps cmd = do
     pixmaps <- load
     io (cmd pixmaps `finally` free pixmaps)
 
-load :: M ApplicationPixmaps
+load :: RM ApplicationPixmaps
 load = do
     finished <- fmapM loadOsd finishedMap
     return $ ApplicationPixmaps finished
 
-loadOsd :: String -> M Pixmap
+loadOsd :: String -> RM Pixmap
 loadOsd name = io . loadPixmap zero =<< getDataFileName (pngDir </> "osd" </> name <.> "png")
 
 free :: ApplicationPixmaps -> IO ()

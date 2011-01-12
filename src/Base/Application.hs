@@ -3,6 +3,7 @@ module Base.Application (
     Application_(..),
     AppState(..),
     ioAppState,
+    staticConfigAppState,
     executeStates,
 
     menu,
@@ -58,6 +59,10 @@ data AppState
 -- | if you don't need the M monad, just IO
 ioAppState :: IO AppState -> AppState
 ioAppState = AppState . io
+
+-- | if you want to only read the configuration
+staticConfigAppState :: RM AppState -> AppState
+staticConfigAppState = AppState . rm2m
 
 
 executeStates :: AppState -> M ()

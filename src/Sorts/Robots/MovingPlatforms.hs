@@ -33,7 +33,7 @@ import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
 
 
-sorts :: M [Sort_]
+sorts :: RM [Sort_]
 sorts = do
     path <- getDataFileName (pngDir </> "robots" </> "platform" </> "horizontal-standard_idle_00" <.> "png")
     pix <- loadPixmap (Position 1 1) path

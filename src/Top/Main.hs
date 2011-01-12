@@ -21,7 +21,6 @@ module Top.Main where
 import Data.List as List
 
 import Control.Concurrent
-import Control.Monad.Trans.Reader
 import Control.Exception
 
 import System.FilePath
@@ -93,10 +92,11 @@ main = do
                 0 -> return ()
                 x -> exitWith $ ExitFailure x
 
-loadApplicationIcon qApp = do
+loadApplicationIcon :: Ptr AppWidget -> RM ()
+loadApplicationIcon qWidget = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
         getDataFiles pngDir (Just ".png")
-    io $ setApplicationIcon qApp iconPaths
+    io $ setApplicationIcon qWidget iconPaths
 
 
 -- * states
@@ -116,7 +116,7 @@ applicationStates app =
 
 storyMode :: Application -> AppState
 storyMode app = AppState $ do
-    storymodeFile <- getDataFileName "manual/storyModeIntroduction"
+    storymodeFile <- rm2m $ getDataFileName "manual/storyModeIntroduction"
     text <- io $ System.IO.readFile storymodeFile
     io $ setDrawingCallbackAppWidget (window app) $ Just $ render text
     waitAnyKey app
@@ -138,7 +138,7 @@ quit app parent =
 
 -- | select a saved level.
 selectLevelPlay :: Application -> AppState -> AppState
-selectLevelPlay app parent = AppState $ do
+selectLevelPlay app parent = staticConfigAppState $ do
     levelFiles <- lookupLevels
     if null levelFiles then
         return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
@@ -147,7 +147,7 @@ selectLevelPlay app parent = AppState $ do
             map (\ path -> (takeBaseName path, play app parent path)) levelFiles
 
 selectLevelEdit :: Application -> AppState -> AppState
-selectLevelEdit app parent = AppState $ do
+selectLevelEdit app parent = staticConfigAppState $ do
     freeLevelsPath <- getFreeLevelsDirectory
     levelFiles <- map (freeLevelsPath </>) <$> io (getFiles freeLevelsPath (Just "nl"))
     return $ menu app (Just "pick a level to edit") (Just parent) $
@@ -155,7 +155,7 @@ selectLevelEdit app parent = AppState $ do
         map (\ path -> (takeBaseName path, edit app parent (path, False))) levelFiles
 
 pickNewLevel :: Application -> AppState -> AppState
-pickNewLevel app parent = AppState $ do
+pickNewLevel app parent = staticConfigAppState $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles templateLevelsDir (Just ".nl")

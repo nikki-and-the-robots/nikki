@@ -37,7 +37,7 @@ import Sorts.Nikki.Control
 import Sorts.Nikki.Dust
 
 
-sorts :: M [Sort_]
+sorts :: RM [Sort_]
 sorts = do
     pixmaps <- loadPixmaps
     psize <- io $ fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
@@ -46,11 +46,11 @@ sorts = do
     let r = NSort pixmaps jumpSound
     return [Sort_ r]
 
-loadPixmaps :: M (Map String [Pixmap])
+loadPixmaps :: RM (Map String [Pixmap])
 loadPixmaps = do
     fromList <$> (fmapM load $ Data.Map.toList statePixmaps)
   where
-    load :: (String, Int) -> M (String, [Pixmap])
+    load :: (String, Int) -> RM (String, [Pixmap])
     load (name, n) = do
         pixmaps <- mapM (getDataFileName >>>> loadPixmap nikkiPngOffset) $
                         map (mkPngPath name) [0..n]

@@ -25,7 +25,7 @@ boxMaterialMass = 1.21875
 
 -- loading
 
-sorts :: M [Sort_]
+sorts :: RM [Sort_]
 sorts =
     mapM mkSort_ names
   where

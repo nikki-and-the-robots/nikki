@@ -117,7 +117,7 @@ saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObject
     writeObjectsToDisk path editorObjects
     return follower
 saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects} =
-    askString app parent "level name" $ \ name -> AppState $ do
+    askString app parent "level name" $ \ name -> staticConfigAppState $ do
         levelDirectory <- getFreeLevelsDirectory
         let path = levelDirectory </> name <..> "nl"
         exists <- io $ doesFileExist path

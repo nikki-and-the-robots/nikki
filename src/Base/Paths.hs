@@ -19,7 +19,7 @@ import Base.Monad
 import Base.Configuration
 
 
-getDataFileName :: FilePath -> M FilePath
+getDataFileName :: FilePath -> RM FilePath
 getDataFileName p = do
     inPlace <- asks run_in_place
     if inPlace then
@@ -38,7 +38,7 @@ getDataFileName p = do
             x -> error ("unsupported os: " ++ os)
 
 -- | returns unhidden files with a given extension in a given data directory.
-getDataFiles :: FilePath -> (Maybe String) -> M [FilePath]
+getDataFiles :: FilePath -> (Maybe String) -> RM [FilePath]
 getDataFiles path_ extension = do
     path <- getDataFileName path_
     map (path </>) <$> io (getFiles path extension)

@@ -40,7 +40,7 @@ jetpackSize = fmap fromUber $ Size 27 21
 
 -- * loading
 
-sorts :: M [Sort_]
+sorts :: RM [Sort_]
 sorts = do
     pixmaps <- fmapM (fmapM (
                     fromPure mkJetpackPngPath >>>> 
@@ -207,7 +207,7 @@ pickPixmap now j sort =
 controlToChipmunk :: Jetpack -> IO ()
 controlToChipmunk object@Jetpack{chipmunk, boost, direction} = do
     angle <- normalizeAngle $ body chipmunk
-    angVel <- get $ angVel $ body chipmunk
+    angVel <- CM.get $ angVel $ body chipmunk
 
     -- hovering
     hover (body chipmunk) angle boost

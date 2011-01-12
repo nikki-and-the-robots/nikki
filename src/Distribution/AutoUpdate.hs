@@ -68,7 +68,7 @@ isDeployed = do
 -- | doing the auto update (wrapping the logic thread)
 autoUpdate :: Application_ sort -> M a -> M a
 autoUpdate app game = do
-    no_update_ <- asks no_update
+    no_update_ <- gets no_update
     if no_update_ then do
         io $ guiLog app "not updating"
         game
@@ -77,7 +77,7 @@ autoUpdate app game = do
 
 doAutoUpdate :: Application_ sort -> M a -> M a
 doAutoUpdate app game = do
-    repoString <- asks update_repo
+    repoString <- gets update_repo
     mDeployed <- io $ isDeployed
     case mDeployed of
         Nothing -> do

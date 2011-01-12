@@ -36,7 +36,7 @@ import qualified Sorts.Robots.MovingPlatforms
 import qualified Sorts.DebugObject
 
 
-sortLoaders :: [M [Sort_]]
+sortLoaders :: [RM [Sort_]]
 sortLoaders =
     Sorts.Nikki.sorts :
 
@@ -55,13 +55,13 @@ sortLoaders =
     Sorts.DebugObject.sorts :
     []
 
-withAllSorts :: (SelectTree Sort_ -> M a) -> M a
+withAllSorts :: (SelectTree Sort_ -> RM a) -> RM a
 withAllSorts cmd = do
     sorts <- getAllSorts
     cmd sorts `finally` (io $ freeAllSorts sorts)
 
 -- | returns all sorts in a nicely sorted SelectTree
-getAllSorts :: M (SelectTree Sort_)
+getAllSorts :: RM (SelectTree Sort_)
 getAllSorts = do
     sorts <- concat <$> mapM id sortLoaders
     io $ checkUniqueSortIds sorts
