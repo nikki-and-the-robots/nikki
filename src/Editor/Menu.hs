@@ -57,7 +57,7 @@ editorLoop app play mvar scene = ioAppState $ do
             (NormalMode, Press (KeyboardButton T _)) ->
                 -- test the level
                 return $ play app (editorLoop app play mvar s) s
-            (normalMode, Press (KeyboardButton H _)) ->
+            (NormalMode, Press (KeyboardButton H _)) ->
                 -- test the level with Nikki at cursor position
                 return $ play app (editorLoop app play mvar s) (setNikkiPosition (cursor s) s)
             _ -> do
