@@ -6,7 +6,6 @@ module Base (
     module Base.Application,
     module Base.Application.Pixmaps,
     module Base.Application.GUILog,
-    module Base.Events,
     module Base.Pixmap,
     module Base.Monad,
     module Base.Paths,
@@ -17,7 +16,9 @@ module Base (
     module Base.Configuration,
     module Base.FPSState,
     module Base.GlobalCatcher,
+    module Base.GlobalShortcuts,
     module Base.LevelLoading,
+    module Base.Polling,
   ) where
 
 
@@ -25,7 +26,6 @@ import Base.Types
 import Base.Application
 import Base.Application.Pixmaps
 import Base.Application.GUILog
-import Base.Events
 import Base.Pixmap
 import Base.Monad
 import Base.Paths
@@ -36,4 +36,6 @@ import Base.Debugging
 import Base.Configuration
 import Base.FPSState
 import Base.GlobalCatcher
+import Base.GlobalShortcuts
 import Base.LevelLoading
+import Base.Polling

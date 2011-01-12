@@ -27,7 +27,7 @@ import Editor.Pickle
 
 type PlayLevel = Application -> AppState -> EditorScene Sort_ -> AppState
 
-type MM o = StateT (EditorScene Sort_) IO o
+type MM o = StateT (EditorScene Sort_) M o
 
 
 updateSceneMVar :: Application -> MVar (EditorScene Sort_) -> MM ()
@@ -42,14 +42,14 @@ updateSceneMVar app mvar = do
 
 editorLoop :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorLoop app play mvar scene = ioAppState $ do
-    setDrawingCallbackAppWidget (window app) (Just $ render mvar)
+editorLoop app play mvar scene = AppState $ do
+    io $ setDrawingCallbackAppWidget (window app) (Just $ render mvar)
     evalStateT worker scene
   where
     worker :: MM AppState
     worker = do
         updateSceneMVar app mvar
-        event <- io $ waitForAppEvent $ keyPoller app
+        event <- lift $ waitForAppEvent $ keyPoller app
         s <- get
         if event == Press StartButton then
             return $ editorMenu app play mvar s

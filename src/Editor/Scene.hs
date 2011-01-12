@@ -85,7 +85,7 @@ updateEditorScene :: AppEvent -> EditorScene Sort_ -> EditorScene Sort_
 updateEditorScene (Press button) scene =
     updateSelected $
     keyPress button scene
-updateEditorScene (Release button) s = s
+updateEditorScene _ s = s
 
 
 -- * gamepad buttons

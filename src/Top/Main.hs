@@ -119,7 +119,7 @@ storyMode app = AppState $ do
     storymodeFile <- getDataFileName "manual/storyModeIntroduction"
     text <- io $ System.IO.readFile storymodeFile
     io $ setDrawingCallbackAppWidget (window app) $ Just $ render text
-    io $ waitAnyKey app
+    waitAnyKey app
     return $ applicationStates app
   where
     render text ptr = do

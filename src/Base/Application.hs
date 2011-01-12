@@ -28,7 +28,9 @@ import Graphics.Qt
 import Utils
 
 import Base.GlobalCatcher
-import Base.Events
+import Base.GlobalShortcuts
+import Base.Types hiding (selected)
+import Base.Polling
 import Base.Monad
 
 import Base.Application.Pixmaps
@@ -86,8 +88,8 @@ menu :: Application_ sort -> Maybe String -> Maybe AppState -> [(String, AppStat
 menu app mTitle mParent children =
     inner $ mkMenuItems children
   where
-    inner items = ioAppState $ do
-        setDrawingCallbackAppWidget (window app) (Just $ render items)
+    inner items = AppState $ do
+        io $ setDrawingCallbackAppWidget (window app) (Just $ render items)
         event <- waitForAppEvent $ keyPoller app
         case event of
             Press UpButton -> return $ inner $ selectPrevious items
@@ -142,21 +144,21 @@ treeToMenu app parent (Node label children i) f =
 -- | Gets a string from the user.
 -- returns the parent if Escape is pressed.
 askString :: Application_ sort -> AppState -> String -> (String -> AppState) -> AppState
-askString app parent question follower = ioAppState $ do
-    answerRef <- newMVar ""
-    setDrawingCallbackAppWidget (window app) (Just $ render question answerRef)
+askString app parent question follower = AppState $ do
+    answerRef <- io $ newMVar ""
+    io $ setDrawingCallbackAppWidget (window app) (Just $ render question answerRef)
     loop answerRef
   where
     loop answerRef = do
-        updateAppWidget $ window app
+        io $ updateAppWidget $ window app
         event <- waitForAppEvent $ keyPoller app
         case event of
             Press StartButton ->
                 return parent
             Press (KeyboardButton k _) | k == Return || k == Enter ->
-                follower <$> readMVar answerRef
+                io $ follower <$> readMVar answerRef
             Press (KeyboardButton k text) -> do
-                modifyMVar_ answerRef (\ x -> return $ modifyTextField k text x)
+                io $ modifyMVar_ answerRef (\ x -> return $ modifyTextField k text x)
                 loop answerRef
             _ -> loop answerRef
     render :: String -> MVar String -> Ptr QPainter -> IO ()
@@ -182,7 +184,7 @@ askStringRead app parent question follower =
         Just r -> follower r
 
 -- | waits for any key.
-waitAnyKey :: Application_ s -> IO ()
+waitAnyKey :: Application_ s -> M ()
 waitAnyKey app = do
     e <- waitForAppEvent $ keyPoller app
     case e of

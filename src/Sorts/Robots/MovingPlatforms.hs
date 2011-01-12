@@ -19,8 +19,8 @@ import Utils
 
 import Base.Paths
 import Base.Types (EditorPosition(..), ObjectEditModeMethods(..), Offset)
+import Base.Types.Events
 import Base.Constants
-import Base.Events
 import Base.Pixmap
 import Base.Monad
 

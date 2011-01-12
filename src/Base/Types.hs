@@ -3,7 +3,10 @@
 
 -- module for often used types (in one Base module, to avoid module import cycles.)
 
-module Base.Types where
+module Base.Types (
+    module Base.Types,
+    module Base.Types.Events,
+  ) where
 
 
 import Data.Set
@@ -19,7 +22,8 @@ import Graphics.Qt
 import Utils
 
 import Base.Grounds
-import Base.Events
+
+import Base.Types.Events
 
 
 -- * type aliases

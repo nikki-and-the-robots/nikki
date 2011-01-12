@@ -45,7 +45,7 @@ debugQtVersion = do
 
 -- Application Monad and State
 
-type AppMonad o = StateT GameState IO o
+type GameMonad o = StateT GameState M o
 
 data GameState = GameState {
     cmSpace :: CM.Space,
@@ -58,19 +58,19 @@ setScene s x = s{scene = x}
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
-gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> AppMonad AppState
+gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> GameMonad AppState
 gameLoop app sceneMVar = do
     initializeSceneMVar
     timer <- io $ newTimer
     withArrowAutoRepeat app $
         loop timer
   where
-    loop :: Timer -> StateT GameState IO AppState
+    loop :: Timer -> GameMonad AppState
     loop timer = do
         io $ resetDebugging
 
         -- input events
-        controlData <- io $ pollAppEvents $ keyPoller app
+        controlData <- lift $ pollAppEvents $ keyPoller app
 
         -- stepping of the scene (includes rendering)
         space <- gets cmSpace
@@ -97,14 +97,14 @@ gameLoop app sceneMVar = do
             io $ waitTimer timer (stepQuantum / timeFactor)
             loop timer
 
-    initializeSceneMVar :: AppMonad ()
+    initializeSceneMVar :: GameMonad ()
     initializeSceneMVar = do
         empty <- io $ isEmptyMVar sceneMVar
         when (not empty) $ fail "sceneMVar has to be empty"
         s <- gets scene
         immutableCopyOfScene <- io $ Game.Scene.immutableCopy s
         io $ putMVar sceneMVar (immutableCopyOfScene, initial)
-    swapSceneMVar :: DebuggingCommand -> AppMonad ()
+    swapSceneMVar :: DebuggingCommand -> GameMonad ()
     swapSceneMVar debugging= do
         s <- gets scene
         io $ do
