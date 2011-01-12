@@ -14,6 +14,7 @@ import System.Directory
 
 import Utils
 
+import Base.Types
 import Base.Monad
 import Base.Paths
 import Base.Configuration

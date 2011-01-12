@@ -13,16 +13,12 @@ module Base.Monad (
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 
+import Graphics.Qt
+
 import Utils
 
 import Base.Configuration
-
-
-type ConfigurationReader = ReaderT Configuration IO
-type RM = ConfigurationReader
-
-type ConfigurationState = StateT Configuration IO
-type M = ConfigurationState
+import Base.Types
 
 
 getConfiguration :: M Configuration

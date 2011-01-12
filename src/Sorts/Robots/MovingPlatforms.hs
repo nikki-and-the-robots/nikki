@@ -18,7 +18,7 @@ import Graphics.Qt hiding (scale)
 import Utils
 
 import Base.Paths
-import Base.Types (EditorPosition(..), ObjectEditModeMethods(..), Offset)
+import Base.Types (EditorPosition(..), ObjectEditModeMethods(..), Offset, RM, Pixmap(..))
 import Base.Types.Events
 import Base.Constants
 import Base.Pixmap

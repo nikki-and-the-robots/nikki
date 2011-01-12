@@ -14,23 +14,69 @@ import Data.Indexable
 import Data.Abelian
 import Data.SelectTree
 import Data.Typeable
+import Data.Map
+
+import Control.Monad.Reader
+import Control.Monad.State.Strict
 
 import Physics.Chipmunk as CM
 
-import Graphics.Qt
+import Graphics.Qt as Qt
 
 import Utils
 
 import Base.Grounds
 
 import Base.Types.Events
+import Base.Configuration
 
 
 -- * type aliases
 
 type Seconds = Double
 
-type Offset a = Graphics.Qt.Position a
+type Offset a = Qt.Position a
+
+type ConfigurationReader = ReaderT Configuration IO
+type RM = ConfigurationReader
+
+type ConfigurationState = StateT Configuration IO
+type M = ConfigurationState
+
+
+-- * from Base.Application
+
+data Application_ sort
+    = Application {
+        application :: Ptr QApplication,
+        window :: Ptr AppWidget,
+        keyPoller :: KeyPoller,
+        mainMenu_ :: Application_ sort -> AppState,
+        applicationPixmaps :: ApplicationPixmaps,
+        allSorts :: SelectTree sort
+      }
+
+mainMenu :: Application_ sort -> AppState
+mainMenu app = mainMenu_ app app
+
+data AppState
+    = AppState (M AppState)
+    | FinalState
+
+data ApplicationPixmaps = ApplicationPixmaps {
+    finished :: Map LevelResult Pixmap
+  }
+
+
+-- * from Base.Pixmap
+
+data Pixmap = Pixmap {
+    pixmap :: Ptr QPixmap,
+    pixmapSize :: Size Double,
+    pixmapOffset :: Qt.Position Double
+  }
+    deriving Show
+
 
 -- from Game.Scene
 

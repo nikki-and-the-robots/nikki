@@ -19,13 +19,6 @@ import Utils
 import Base.Types
 
 
-data Pixmap = Pixmap {
-    pixmap :: Ptr QPixmap,
-    pixmapSize :: Size Double,
-    pixmapOffset :: Position Double
-  }
-    deriving Show
-
 -- | Loads a pixmap. 
 loadPixmap :: MonadIO m => Position Int -- ^ Size of the padding.
     -> FilePath -> m Pixmap

@@ -15,6 +15,7 @@ import System.Environment.FindBin
 
 import Utils
 
+import Base.Types
 import Base.Monad
 import Base.Configuration
 

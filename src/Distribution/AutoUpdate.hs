@@ -26,6 +26,7 @@ import System.IO.Temp (createTempDirectory)
 import Version
 import Utils
 
+import Base.Types
 import Base.Monad
 import Base.Configuration
 import Base.Application

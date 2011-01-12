@@ -3,7 +3,6 @@
 -- like menus, general OSDs, etc.
 
 module Base.Application.Pixmaps (
-    ApplicationPixmaps(..),
     withApplicationPixmaps,
   ) where
 
@@ -23,10 +22,6 @@ import Base.Constants
 import Base.Pixmap
 import Base.Monad
 
-
-data ApplicationPixmaps = ApplicationPixmaps {
-    finished :: Map LevelResult Pixmap
-  }
 
 withApplicationPixmaps :: (ApplicationPixmaps -> IO a) -> RM a
 withApplicationPixmaps cmd = do

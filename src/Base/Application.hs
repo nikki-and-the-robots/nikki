@@ -1,13 +1,10 @@
 
 module Base.Application (
-    Application_(..),
-    AppState(..),
     ioAppState,
     staticConfigAppState,
     executeStates,
 
     menu,
-    mainMenu,
     treeToMenu,
     askStringRead,
     askString,
@@ -36,25 +33,6 @@ import Base.Monad
 
 import Base.Application.Pixmaps
 
-
--- from Top.Application
-
-data Application_ sort
-    = Application {
-        application :: Ptr QApplication,
-        window :: Ptr AppWidget,
-        keyPoller :: KeyPoller,
-        mainMenu_ :: Application_ sort -> AppState,
-        applicationPixmaps :: ApplicationPixmaps,
-        allSorts :: SelectTree sort
-      }
-
-mainMenu :: Application_ sort -> AppState
-mainMenu app = mainMenu_ app app
-
-data AppState
-    = AppState (M AppState)
-    | FinalState
 
 -- | if you don't need the M monad, just IO
 ioAppState :: IO AppState -> AppState

@@ -25,6 +25,7 @@ import System.IO
 import Utils
 
 import Base.Configuration as Configuration
+import Base.Types
 import Base.Monad
 
 

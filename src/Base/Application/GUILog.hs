@@ -13,7 +13,7 @@ import Graphics.Qt
 
 import Utils
 
-import Base.Application
+import Base.Types
 
 
 -- | Shows log messages in the GUI.
