@@ -34,6 +34,10 @@ forkLogicThread action = do
     return exitCodeMVar
 
 -- | standard handling of exceptions
-handleException e = do
-    let msg = "error message:\n\n" ++ show e ++ "\n"
-    putStrLn msg
+handleException :: SomeException -> IO ()
+handleException e =
+    case fromException e of
+        (Just ExitSuccess) -> return ()
+        _ -> do
+            let msg = "error message:\n\n" ++ show e ++ "\n"
+            putStrLn msg
