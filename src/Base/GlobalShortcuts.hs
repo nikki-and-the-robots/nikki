@@ -14,17 +14,17 @@ import Base.Types
 import Base.Monad
 
 
-handleGlobalShortcuts :: [AppEvent] -> M [AppEvent]
-handleGlobalShortcuts =
-    filterM handler
+handleGlobalShortcuts :: Application_ s -> [AppEvent] -> M [AppEvent]
+handleGlobalShortcuts app =
+    filterM (handler app)
 
-handler :: AppEvent -> M Bool
-handler x =
-    case shortcuts x of
+handler :: Application_ s -> AppEvent -> M Bool
+handler app x =
+    case shortcuts app x of
         Nothing -> return True
         (Just h) -> h >> return False
 
-shortcuts :: AppEvent -> Maybe (M ())
-shortcuts x = case x of
+shortcuts :: Application_ s -> AppEvent -> Maybe (M ())
+shortcuts app x = case x of
     Quit -> Just $ io $ exitWith ExitSuccess
     _ -> Nothing

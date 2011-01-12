@@ -70,7 +70,7 @@ gameLoop app sceneMVar = do
         io $ resetDebugging
 
         -- input events
-        controlData <- lift $ pollAppEvents $ keyPoller app
+        controlData <- lift $ pollAppEvents app $ keyPoller app
 
         -- stepping of the scene (includes rendering)
         space <- gets cmSpace

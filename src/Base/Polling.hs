@@ -32,11 +32,11 @@ keyStateRef = unsafePerformIO $ newIORef ([], empty)
 
 -- | non-blocking polling of AppEvents
 -- Also handles global shortcuts.
-pollAppEvents :: KeyPoller -> M ControlData
-pollAppEvents poller = do
+pollAppEvents :: Application_ s -> KeyPoller -> M ControlData
+pollAppEvents app poller = do
     (unpolledEvents, keyState) <- io $ readIORef keyStateRef
     qEvents <- io $ pollEvents poller
-    appEvents <- handleGlobalShortcuts $
+    appEvents <- handleGlobalShortcuts app $
         concatMap (toAppEvent keyState) (map Left qEvents)
     let keyState' = foldr (>>>) id (map updateKeyState appEvents) keyState
     io $ writeIORef keyStateRef ([], keyState')
@@ -55,16 +55,16 @@ resetHeldKeys = do
 
 -- | Blocking wait for the next event.
 -- waits between polls
-waitForAppEvent :: KeyPoller -> M AppEvent
-waitForAppEvent poller = do
-    ControlData events _ <- pollAppEvents poller
+waitForAppEvent :: Application_ s -> KeyPoller -> M AppEvent
+waitForAppEvent app poller = do
+    ControlData events _ <- pollAppEvents app poller
     case events of
         (a : r) -> io $ do
             unpollAppEvents r
             return a
         [] -> do
             io $ threadDelay (round (0.01 * 10 ^ 6))
-            waitForAppEvent poller
+            waitForAppEvent app poller
 
 
 updateKeyState :: AppEvent -> Set AppButton -> Set AppButton

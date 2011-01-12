@@ -73,7 +73,7 @@ menu app mTitle mParent children =
   where
     inner items = AppState $ do
         io $ setDrawingCallbackAppWidget (window app) (Just $ render items)
-        event <- waitForAppEvent $ keyPoller app
+        event <- waitForAppEvent app $ keyPoller app
         case event of
             Press UpButton -> return $ inner $ selectPrevious items
             Press DownButton -> return $ inner $ selectNext items
@@ -134,7 +134,7 @@ askString app parent question follower = AppState $ do
   where
     loop answerRef = do
         io $ updateAppWidget $ window app
-        event <- waitForAppEvent $ keyPoller app
+        event <- waitForAppEvent app $ keyPoller app
         case event of
             Press StartButton ->
                 return parent
@@ -169,7 +169,7 @@ askStringRead app parent question follower =
 -- | waits for any key.
 waitAnyKey :: Application_ s -> M ()
 waitAnyKey app = do
-    e <- waitForAppEvent $ keyPoller app
+    e <- waitForAppEvent app $ keyPoller app
     case e of
         Press _ -> return ()
         _ -> waitAnyKey app
