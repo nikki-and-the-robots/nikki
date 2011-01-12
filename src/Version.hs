@@ -22,7 +22,7 @@ import Utils
 nikkiVersion :: Version
 nikkiVersion = Version version tags
   where
-    version = 0 : 2 : 7 : []
+    version = 0 : 2 : 8 : []
     tags = []
 
 parseVersion :: String -> Either String Version
