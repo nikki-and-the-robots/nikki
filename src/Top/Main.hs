@@ -110,6 +110,7 @@ applicationStates app =
     menu app (Just title) Nothing [
         ("story mode", storyMode app),
         ("play", selectLevelPlay app this),
+        ("help", mainMenuHelp app this),
         ("edit", selectLevelEdit app this),
         ("quit", FinalState)
       ]
@@ -186,3 +187,9 @@ loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
         resetMatrix ptr
         clearScreen ptr
         drawText ptr (Position 100 100) False "loading..."
+
+mainMenuHelp :: Application -> AppState -> AppState
+mainMenuHelp app parent = AppState $ do
+    file <- rm2m $ getDataFileName "manual/mainMenuHelp.txt"
+    text <- io $ Prelude.readFile file
+    return $ showText app text parent
