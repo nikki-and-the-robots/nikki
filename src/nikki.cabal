@@ -49,6 +49,10 @@ data-files:
 Executable  nikki
     main-is:
         Distribution/AutoUpdate/Restarter.hs
+    if os(mingw32)
+        ld-options:
+            -- omit the console on windows. You can't use stdout without causing errors then...
+            -mwindows
 
 
 Executable core
@@ -110,6 +114,9 @@ Executable core
 
     -- * windows linking :(
     if os(mingw32)
+        ld-options:
+            -- omit the console on windows. You can't use stdout without causing errors then...
+            -mwindows
         ghc-options:
             -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
         extra-libraries:
