@@ -93,22 +93,24 @@ menu app mTitle mParent children =
         clearScreen ptr
         setPenColor ptr white 1
 
-        let nextY = translate ptr (Position 0 yStep)
+        let newLine :: IO ()
+            newLine = translate ptr (Position 0 yStep)
+            drawLine :: String -> IO ()
+            drawLine l = do
+                newLine
+                drawText ptr (Position x 0) False l
+            drawLines :: [String] -> IO ()
+            drawLines = mapM_ drawLine
 
-        nextY
-        whenMaybe mTitle $ \ title ->
-            drawText ptr (Position x 0) False title
-        nextY
-        nextY
+        whenMaybe mTitle (drawLines . lines)
+
+        newLine
 
         forM_ (before items) $ \ i -> do
-            nextY
-            drawText ptr (Position x 0) False (" " ++ fst i ++ " ")
-        nextY
-        drawText ptr (Position x 0) False ("[" ++ fst (selected items) ++ "]")
+            drawLine (" " ++ fst i ++ " ")
+        drawLine ("[" ++ fst (selected items) ++ "]")
         forM_ (after items) $ \ i -> do
-            nextY
-            drawText ptr (Position x 0) False (" " ++ fst i ++ " ")
+            drawLine (" " ++ fst i ++ " ")
 
     yStep = 20
     x = 10
