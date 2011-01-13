@@ -119,17 +119,9 @@ applicationStates app =
 
 storyMode :: Application -> AppState
 storyMode app = AppState $ do
-    storymodeFile <- rm2m $ getDataFileName "manual/storyModeIntroduction"
-    text <- io $ System.IO.readFile storymodeFile
-    io $ setDrawingCallbackAppWidget (window app) $ Just $ render text
-    waitAnyKey app
-    return $ applicationStates app
-  where
-    render text ptr = do
-        clearScreen ptr
-        resetMatrix ptr
-        translate ptr (Position 30 40)
-        drawTextBlock ptr text
+    file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
+    text <- io $ System.IO.readFile file
+    return $ showText app text (applicationStates app)
 
 -- | asks, if the user really wants to quit
 quit :: Application -> AppState -> AppState

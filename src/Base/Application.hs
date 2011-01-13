@@ -10,6 +10,7 @@ module Base.Application (
     askString,
     drawTextBlock,
     waitAnyKey,
+    showText,
   ) where
 
 
@@ -177,3 +178,15 @@ waitAnyKey app = do
 drawTextBlock :: Ptr QPainter -> String -> IO ()
 drawTextBlock ptr text = do
     mapM_ (\ (i, line) -> drawText ptr (Position 0 (i * 15)) False line) $ zip [0..] (lines text)
+
+showText :: Application_ sort -> String -> AppState -> AppState
+showText app text follower = AppState $ do
+    io $ setDrawingCallbackAppWidget (window app) $ Just $ render text
+    waitAnyKey app
+    return follower
+  where
+    render text ptr = do
+        clearScreen ptr
+        resetMatrix ptr
+        translate ptr (Position 30 40)
+        drawTextBlock ptr text
