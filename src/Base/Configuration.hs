@@ -1,7 +1,9 @@
 {-# language DeriveDataTypeable #-}
 
-module Base.Configuration where
-
+module Base.Configuration (
+    Configuration(..),
+    loadConfiguration,
+  ) where
 
 import Data.List
 
@@ -29,6 +31,7 @@ data Configuration = Configuration {
     -- development
     run_in_place :: Bool,
     update_repo :: String,
+    stdout_on_windows :: Bool,
     graphics_profiling :: Bool,
     omit_pixmap_rendering :: Bool,
     render_xy_cross :: Bool,
@@ -36,12 +39,25 @@ data Configuration = Configuration {
   }
     deriving (Show, Data, Typeable)
 
-
+-- | loads the configuration and initialises the logging command.
+-- (before calling loadConfiguration, nothing should be logged.)
 loadConfiguration :: IO Configuration
 loadConfiguration = do
-    r <- cmdTheseArgs options =<< (filterUnwantedArgs <$> getArgs)
+    config <- cmdTheseArgs options =<< (filterUnwantedArgs <$> getArgs)
+    initialiseLogging config
     logInfo ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
-    return r
+    return config
+
+-- | initialises the logging module
+initialiseLogging :: Configuration -> IO ()
+initialiseLogging config = do
+    setLogCommand logCommand
+  where
+    logCommand =
+        if System.Info.os == "mingw32" && not (stdout_on_windows config) then
+            appendFile "nikkiLog"
+          else
+            putStrLn
 
 -- | on OS X there is a default command line argument
 -- (-psn_SOMETHING_WITH_THE_PID) passed to the application
@@ -66,6 +82,8 @@ options =
         update_repo = defaultRepo
             &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
             &= typ "REPOSITORY",
+        stdout_on_windows = False
+            &= help "On windows, log messages get written to the file \"nikkiLog\". Use this flag to switch to stdout.",
         graphics_profiling = False
             &= help "output FPS statistics for the rendering thread",
         omit_pixmap_rendering = False
