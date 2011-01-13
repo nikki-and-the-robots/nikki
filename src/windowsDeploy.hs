@@ -88,6 +88,9 @@ deploymentFiles = (
     "core.exe" :
     "data" :
 
+    -- curl
+    "libcurl-4.dll" :
+    
     -- sfml deps
     "libsndfile-1.dll" :
     "openal32.dll" :
