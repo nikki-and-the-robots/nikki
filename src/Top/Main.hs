@@ -51,7 +51,7 @@ import Top.Game (playLevel)
 
 
 main :: IO ()
-main = do
+main =
   withStaticConfiguration $ do
     logInfo ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
 
