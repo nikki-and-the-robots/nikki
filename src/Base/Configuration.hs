@@ -54,7 +54,7 @@ initialiseLogging config = do
   where
     logCommand =
         if System.Info.os == "mingw32" && not (stdout_on_windows config) then
-            appendFile "nikkiLog"
+            appendFile "nikkiLog" . (++ "\n")
           else
             putStrLn
 
