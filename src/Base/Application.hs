@@ -107,10 +107,10 @@ menu app mTitle mParent children =
         newLine
 
         forM_ (before items) $ \ i -> do
-            drawLine (" " ++ fst i ++ " ")
-        drawLine ("[" ++ fst (selected items) ++ "]")
+            drawLine ("   " ++ fst i)
+        drawLine ("> " ++ fst (selected items))
         forM_ (after items) $ \ i -> do
-            drawLine (" " ++ fst i ++ " ")
+            drawLine ("   " ++ fst i)
 
     yStep = 20
     x = 10
