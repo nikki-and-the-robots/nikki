@@ -84,6 +84,7 @@ editorMenu app play mvar scene =
                 ("edit layers", editLayers app play mvar scene),
                 ("activate selection mode (for copy, cut and paste)", edit (toSelectionMode scene)),
                 ("try playing the level", play app (edit scene) scene),
+                ("show help", showEditorHelp app this),
                 ("return to editing", edit scene),
                 ("save level", saveLevel app this (edit scene) scene),
                 ("save level and exit editor", saveLevel app this (mainMenu app) scene),
@@ -198,3 +199,9 @@ changeLayerDistance app parent scene follower =
     askStringRead app parent "y distance" $ \ y -> AppState $
         return $ follower
             (modifyEditorObjects (modifySelectedLayer (selectedLayer scene) (setYDistance y . setXDistance x)) scene)
+
+showEditorHelp :: Application -> AppState -> AppState
+showEditorHelp app parent = AppState $ do
+    file <- rm2m $ getDataFileName "manual/editor.txt"
+    text <- io $ Prelude.readFile file
+    return $ showText app text parent
