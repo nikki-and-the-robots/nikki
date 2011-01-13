@@ -45,7 +45,6 @@ loadConfiguration :: IO Configuration
 loadConfiguration = do
     config <- cmdTheseArgs options =<< (filterUnwantedArgs <$> getArgs)
     initialiseLogging config
-    logInfo ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
     return config
 
 -- | initialises the logging module

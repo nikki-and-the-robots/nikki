@@ -20,6 +20,8 @@ module Top.Main where
 
 import Data.List as List
 
+import Text.Logging
+
 import Control.Concurrent
 import Control.Exception
 
@@ -51,6 +53,7 @@ import Top.Game (playLevel)
 main :: IO ()
 main = do
   withStaticConfiguration $ do
+    logInfo ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
 
     configuration <- ask
 
