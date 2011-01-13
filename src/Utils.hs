@@ -25,6 +25,7 @@ import qualified Data.Set as Set
 import Data.Char
 
 import Text.Printf
+import Text.Logging
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Monad.State hiding ((>=>))
@@ -83,21 +84,21 @@ nm msg = es ("Non-exhaustive patterns: " ++ msg)
 {-# NOINLINE debug #-}
 debug :: String -> a -> a
 debug msg x = unsafePerformIO $ do
-    putStrLn ("DEBUG: " ++ msg)
+    logInfo ("DEBUG: " ++ msg)
     return x
 
 debugs :: Show s => String -> s -> a -> a
 debugs msg s = debug (msg ++ ": " ++ show s)
 
 printDebug :: String -> IO ()
-printDebug msg = putStrLn ("\tDEBUG: " ++ msg)
+printDebug msg = logInfo ("\tDEBUG: " ++ msg)
 
 assertIO :: Bool -> String -> IO ()
 assertIO True _ = return ()
 assertIO False msg = error ("ASSERTION ERROR: " ++ msg)
 
 warn :: MonadIO m => String -> m ()
-warn m = io $ putStrLn ("WARNING: " ++ m)
+warn m = io $ logInfo ("WARNING: " ++ m)
 
 toDebug :: Show s => String -> s -> String
 toDebug msg s = msg ++ ": " ++ show s
@@ -155,7 +156,7 @@ secondKleisli cmd (x, a) = do
 -- | executes a unix command on the shell and exits if it does not succeed.
 trySystem :: String -> IO ()
 trySystem cmd = do
-    putStrLn ("Executing \"" ++ cmd ++ "\" ...")
+    logInfo ("Executing \"" ++ cmd ++ "\" ...")
     exitcode <- system cmd
     case exitcode of
         ExitSuccess -> return ()
@@ -164,12 +165,12 @@ trySystem cmd = do
 -- | changes the working directory temporarily.
 withCurrentDirectory :: FilePath -> IO () -> IO ()
 withCurrentDirectory path cmd = do
-    putStrLn ("Entering directory " ++ path)
+    logInfo ("Entering directory " ++ path)
     oldWorkingDirectory <- getCurrentDirectory
     setCurrentDirectory path
     x <- cmd
     setCurrentDirectory oldWorkingDirectory
-    putStrLn ("Leaving directory " ++ path)
+    logInfo ("Leaving directory " ++ path)
     return x
 
 -- | copy a whole directory recursively
@@ -201,7 +202,7 @@ removeIfExists f = io $ do
     isFile <- doesFileExist f
     isDirectory <- doesDirectoryExist f
     when (isFile || isDirectory) $
-        putStrLn ("removing: " ++ f)
+        logInfo ("removing: " ++ f)
     if isFile then
         removeFile f
       else if isDirectory then
@@ -621,5 +622,5 @@ instance PP Int where
     pp = show
 
 ppp :: PP p => p -> IO ()
-ppp = pp >>> putStrLn
+ppp = pp >>> logInfo
 

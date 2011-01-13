@@ -4,6 +4,8 @@ module Base.Application.GUILog (guiLog) where
 
 import Data.Abelian
 
+import Text.Logging
+
 import Control.Monad
 import Control.Concurrent.MVar
 
@@ -21,7 +23,7 @@ import Base.Types
 -- Adds the given message to the log.
 guiLog :: Application_ sort -> String -> IO ()
 guiLog app msg = do
-    putStrLn msg
+    logInfo msg
     mapM_ addMsg $ lines msg
     setDrawingCallbackAppWidget (window app) (Just renderLog)
 

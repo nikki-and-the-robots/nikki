@@ -18,6 +18,8 @@ import Prelude hiding ((.))
 import Data.IORef
 import Data.Time.Clock.POSIX
 
+import Text.Logging
+
 import Control.Category
 
 import System.IO
@@ -71,8 +73,8 @@ tickFPS (FpsState counter avg (Just oldTime) logHandle) = do
         handle (FpsState (counter + 1) (Just avg') (Just now) logHandle)
   where
     handle x@(FpsState 10 (Just avg) qtime lf) = do
-        putStrLn ("(FPS: " ++ show (1 / avg) ++ ") | ")
---         putStrLn "terminating application for profiling purposes." >> quitQApplication
+        logInfo ("(FPS: " ++ show (1 / avg) ++ ") | ")
+--         logInfo "terminating application for profiling purposes." >> quitQApplication
         return $ FpsState 0 Nothing qtime lf
     handle x = return x
 

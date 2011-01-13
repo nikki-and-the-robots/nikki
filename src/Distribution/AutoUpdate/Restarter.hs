@@ -3,6 +3,8 @@
 module Main where
 
 
+import Text.Logging
+
 import Control.Monad
 
 import System.Environment
@@ -22,8 +24,8 @@ main = do
         exitCode <- action
         case exitCode of
             ExitFailure 143 -> do
-                putStrLn (show exitCode ++ " -> restarting")
+                logInfo (show exitCode ++ " -> restarting")
                 loop (n - 1) action
             _ -> do
-                putStrLn (show exitCode ++ " -> not restarting")
+                logInfo (show exitCode ++ " -> not restarting")
                 exitWith exitCode

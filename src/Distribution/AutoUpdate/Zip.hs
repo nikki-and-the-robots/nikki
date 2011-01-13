@@ -5,6 +5,8 @@ module Distribution.AutoUpdate.Zip (unzipArchive, zipArchive) where
 
 import qualified Data.ByteString.Lazy as BS
 
+import Text.Logging
+
 import Codec.Archive.Zip
 
 import Control.Monad
@@ -26,7 +28,7 @@ unzipArchive logCommand zipFile directory = do
         forM_ (zEntries archive) $ \ entry -> do
             -- modifying the path of the entry to unpack in a given folder.
             let unpackPath = directory </> normalise (eRelativePath entry)
-            print unpackPath
+            printInfo unpackPath
             if isZippedDirectory unpackPath then
                 createDirectoryIfMissing True unpackPath
               else
@@ -44,7 +46,7 @@ unzipArchive logCommand zipFile directory = do
             action =<< BS.hGetContents handle
       where
         open = openBinaryFile file ReadMode
-        close h = hClose h >> putStrLn "closed!!!"
+        close h = hClose h >> logInfo "closed!!!"
 
 
 -- | zips a given folder recursively into the given zipFile

@@ -5,6 +5,8 @@ module Base.Configuration where
 
 import Data.List
 
+import Text.Logging
+
 import System.Environment
 import System.Console.CmdArgs
 import System.Info
@@ -38,7 +40,7 @@ data Configuration = Configuration {
 loadConfiguration :: IO Configuration
 loadConfiguration = do
     r <- cmdTheseArgs options =<< (filterUnwantedArgs <$> getArgs)
-    putStrLn ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
+    logInfo ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
     return r
 
 -- | on OS X there is a default command line argument

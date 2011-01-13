@@ -7,6 +7,8 @@ module Sorts.Robots.MovingPlatforms (sorts) where
 import Data.Typeable
 import Data.Abelian
 
+import Text.Logging
+
 import Control.Monad
 
 import System.FilePath
@@ -117,7 +119,7 @@ bodyAttributes size pos = BodyAttributes {
 
 printNext :: Platform -> IO Platform
 printNext p = do
-    putStrLn (pp (take 3 (nodes (mode p))))
+    logInfo (pp (take 3 (nodes (mode p))))
     return p
 
 -- | updates the currently next position

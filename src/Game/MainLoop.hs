@@ -10,6 +10,8 @@ module Game.MainLoop (
 
 import Data.Initial
 
+import Text.Logging
+
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
 import Clocked
@@ -31,7 +33,7 @@ import Game.Scene
 debugQtVersion :: IO ()
 debugQtVersion = do
     v <- qtVersion
-    putStrLn ("Qt-Version: " ++ v)
+    logInfo ("Qt-Version: " ++ v)
 
 
 -- * running the state monad inside the render IO command
@@ -89,7 +91,7 @@ gameLoop app sceneMVar = do
                     return FinalState
                 else continue
             _ -> if startPressed then do
-                io $ putStrLn "NYI: game menu"
+                io $ logInfo "NYI: game menu"
                 return FinalState -- TODO: should be a menu
               else continue
       where

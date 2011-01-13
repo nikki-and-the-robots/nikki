@@ -7,6 +7,8 @@ module Base.GlobalCatcher (
 
 import Prelude hiding (catch)
 
+import Text.Logging
+
 import Control.Exception
 import Control.Concurrent
 
@@ -23,7 +25,7 @@ forkLogicThread action = do
     exitCodeMVar <- newEmptyMVar
     let catchAll :: SomeException -> IO ()
         catchAll e = do
-            putStrLn "caught"
+            logInfo "caught"
             handleException e
             let exitCode = case fromException e of
                     (Just x) -> x
@@ -40,4 +42,4 @@ handleException e =
         (Just ExitSuccess) -> return ()
         _ -> do
             let msg = "error message:\n\n" ++ show e ++ "\n"
-            putStrLn msg
+            logInfo msg
