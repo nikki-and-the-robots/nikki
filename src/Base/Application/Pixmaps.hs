@@ -20,7 +20,6 @@ import Base.Paths
 import Base.Types
 import Base.Constants
 import Base.Pixmap
-import Base.Monad
 
 
 withApplicationPixmaps :: (ApplicationPixmaps -> IO a) -> RM a

@@ -14,7 +14,6 @@ import Network.Curl.Download.Lazy
 import Utils
 
 import Base.Types
-import Base.Application
 import Base.Application.GUILog
 
 

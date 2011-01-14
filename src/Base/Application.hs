@@ -26,13 +26,9 @@ import Graphics.Qt
 
 import Utils
 
-import Base.GlobalCatcher
-import Base.GlobalShortcuts
 import Base.Types hiding (selected)
 import Base.Polling
 import Base.Monad
-
-import Base.Application.Pixmaps
 
 
 -- | if you don't need the M monad, just IO

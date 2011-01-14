@@ -2,17 +2,8 @@
 module Base.Types.Events where
 
 
-import Data.Map (Map, fromList, member, (!))
-import Data.Word
 import qualified Data.Set as Set
-import Data.Set (Set, union, difference, insert, intersection, empty, delete)
-import Data.IORef
-
-import Control.Concurrent
-import Control.Arrow
-
-import System.IO.Unsafe
-import System.Info
+import Data.Set (Set)
 
 import Graphics.Qt
 

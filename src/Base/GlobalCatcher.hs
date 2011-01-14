@@ -12,10 +12,7 @@ import Text.Logging
 import Control.Exception
 import Control.Concurrent
 
-import System.IO
 import System.Exit
-
-import Utils
 
 
 -- | Runs the given action. Catches any exception and saves them

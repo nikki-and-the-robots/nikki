@@ -9,8 +9,6 @@ import Prelude hiding (catch)
 
 import Data.List
 
-import Text.ParserCombinators.ReadP
-
 import Control.Monad
 import Control.Monad.Trans.Error
 import Control.Monad.CatchIO
@@ -19,7 +17,6 @@ import Control.Concurrent
 import System.Environment.FindBin
 import System.FilePath
 import System.Directory
-import System.Info
 import System.Exit
 import System.IO.Temp (createTempDirectory)
 
@@ -29,7 +26,6 @@ import Utils
 import Base.Types
 import Base.Monad
 import Base.Configuration
-import Base.Application
 import Base.Application.GUILog
 
 import Distribution.AutoUpdate.Paths

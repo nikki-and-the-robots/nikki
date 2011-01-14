@@ -7,7 +7,6 @@ module Distribution.AutoUpdate.CmdArgs where
 
 import System.IO
 import System.Exit
-import System.Environment
 import System.Console.CmdArgs
 import System.Console.CmdArgs.Explicit
 

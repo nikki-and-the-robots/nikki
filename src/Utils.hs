@@ -29,10 +29,9 @@ import Text.Logging
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Monad.State hiding ((>=>))
-import Control.Monad.Trans.Error
+import Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))
 import Control.Concurrent
-import Control.Exception
 
 import System.Directory
 import System.IO.Unsafe

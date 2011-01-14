@@ -28,7 +28,6 @@ import Control.Exception
 import System.FilePath
 import System.IO
 import System.Exit
-import System.Directory
 
 import Graphics.Qt
 

@@ -6,11 +6,8 @@
 module Base.Paths (getDataFileName, getDataFiles) where
 
 
-import Data.List
-
 import System.Info
 import System.FilePath
-import System.Directory
 import System.Environment.FindBin
 
 import Utils

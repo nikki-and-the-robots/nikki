@@ -19,7 +19,6 @@ import Graphics.Qt
 import Utils
 
 import Base.Types
-import Base.Monad
 import Base.GlobalShortcuts
 
 

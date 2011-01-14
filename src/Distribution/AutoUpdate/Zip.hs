@@ -16,8 +16,6 @@ import System.IO
 import System.FilePath
 import System.Directory
 
-import Utils
-
 
 -- | unzips a given archive into a given directory
 unzipArchive :: (String -> IO ()) -> FilePath -> FilePath -> IO ()

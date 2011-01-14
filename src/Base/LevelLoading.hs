@@ -5,8 +5,6 @@ module Base.LevelLoading (
   ) where
 
 
-import Data.List
-
 import Control.Monad
 
 import System.FilePath

@@ -9,8 +9,6 @@ import Safe
 import Data.Typeable
 import Data.Abelian
 
-import Text.Logging
-
 import Control.Monad
 
 import System.FilePath
@@ -26,7 +24,6 @@ import Base.Types (EditorPosition(..), ObjectEditModeMethods(..), Offset, RM, Pi
 import Base.Types.Events
 import Base.Constants
 import Base.Pixmap
-import Base.Monad
 
 import Object
 
