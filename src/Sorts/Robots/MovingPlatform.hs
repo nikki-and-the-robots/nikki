@@ -1,7 +1,7 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable, ScopedTypeVariables, FlexibleInstances,
     ViewPatterns, NamedFieldPuns #-}
 
-module Sorts.Robots.MovingPlatforms (sorts) where
+module Sorts.Robots.MovingPlatform (sorts) where
 
 
 import Data.Typeable

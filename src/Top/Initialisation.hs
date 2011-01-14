@@ -31,7 +31,7 @@ import qualified Sorts.Switch
 import qualified Sorts.Background
 
 import qualified Sorts.Robots.Jetpack
-import qualified Sorts.Robots.MovingPlatforms
+import qualified Sorts.Robots.MovingPlatform
 
 import qualified Sorts.DebugObject
 
@@ -48,7 +48,7 @@ sortLoaders =
     Sorts.Box.sorts :
 
     Sorts.Robots.Jetpack.sorts :
-    Sorts.Robots.MovingPlatforms.sorts :
+    Sorts.Robots.MovingPlatform.sorts :
 
     Sorts.Grids.sorts :
     Sorts.Background.sorts :
