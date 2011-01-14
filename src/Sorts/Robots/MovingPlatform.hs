@@ -1,8 +1,10 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable, ScopedTypeVariables, FlexibleInstances,
-    ViewPatterns, NamedFieldPuns #-}
+{-# language MultiParamTypeClasses, ScopedTypeVariables, FlexibleInstances,
+    ViewPatterns, NamedFieldPuns, DeriveDataTypeable #-}
 
 module Sorts.Robots.MovingPlatform (sorts) where
 
+
+import Safe
 
 import Data.Typeable
 import Data.Abelian
@@ -28,8 +30,8 @@ import Base.Monad
 
 import Object
 
-import Sorts.Robots.Configuration
 import Sorts.Nikki as Nikki (walkingVelocity, nikkiMass)
+import Sorts.Robots.Configuration
 
 import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
@@ -50,17 +52,14 @@ data Platform
     = Platform {
         platformSize :: Size Double,
         chipmunk :: Chipmunk,
-        mode :: Mode,
+        path :: Path,
         lastNode :: Vector,
         debugCmds :: Ptr QPainter -> Offset Double -> IO ()
       }
   deriving (Show, Typeable)
 
+type Path = [Vector]
 
-data Mode
-    = Still Vector
-    | Path {nodes :: [Vector]}
-  deriving (Show)
 
 instance Sort PSort Platform where
     sortId _ = SortId "robots/platform/standard"
@@ -71,7 +70,7 @@ instance Sort PSort Platform where
     sortRender sort ptr _ =
         renderPixmapSimple ptr (pix sort)
 
-    initialize sort (Just space) ep Nothing = do
+    initialize sort (Just space) ep (Just oemState) = do
         let Size width height = size sort
             baryCenterOffset = Vector (width / 2) (height / 2)
 
@@ -83,20 +82,17 @@ instance Sort PSort Platform where
         chip <- initChipmunk space (bodyAttributes (size sort) pos) shapes baryCenterOffset
         modifyApplyForce chip (antiGravity (size sort))
 
-        let (a : r) = (cycle [pos, pos +~ down, pos +~ right +~ down, pos +~ right])
---         let path = Still pos
-        return $ Platform (size sort) chip (Path r) a (const $ const $ return ())
+        let path = mkPath sort oemState
+            lastNode = head path
+        return $ Platform (size sort) chip path lastNode (const $ const $ return ())
 
     chipmunks p = [chipmunk p]
 
     immutableCopy p@Platform{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
-
---     updateNoSceneChange :: object -> Seconds -> Contacts -> (Bool, ControlData) -> IO object
     updateNoSceneChange sort mode now contacts cd =
          updateNextPosition >>>>
---          printNext >>>>
          updatePlatform
 
     render platform sort ptr offset now = do
@@ -115,20 +111,13 @@ bodyAttributes size pos = BodyAttributes {
     inertia             = infinity
   }
 
-
-
-printNext :: Platform -> IO Platform
-printNext p = do
-    logInfo (pp (take 3 (nodes (mode p))))
-    return p
-
 -- | updates the currently next position
 updateNextPosition :: Platform -> IO Platform
-updateNextPosition p@(mode -> Still _) = return p
-updateNextPosition p@Platform{chipmunk, mode = Path (a : r)} = do
+updateNextPosition p@(path -> [_]) = return p
+updateNextPosition p@Platform{chipmunk, path = (a : r)} = do
     cp <- getPosition chipmunk
     if len (cp -~ a) < eps then
-        return p{mode = Path r, lastNode = a}
+        return p{path = r, lastNode = a}
       else
         return p
   where
@@ -136,8 +125,7 @@ updateNextPosition p@Platform{chipmunk, mode = Path (a : r)} = do
 
 -- | returns the position that is actually intended to be the platform's position
 getNextPosition :: Platform -> Vector
-getNextPosition (mode -> Still v) = v
-getNextPosition p@(mode -> Path (a : _)) = a
+getNextPosition p@(path -> (a : _)) = a
 
 updatePlatform platform = do
     let nextPosition = getNextPosition platform
@@ -252,55 +240,93 @@ deb v ptr offset = do
 
 
 
+
+
+
+
+
+
+
+
+
 -- * object edit mode
 
 oem :: PSort -> ObjectEditModeMethods Sort_
 oem sort = ObjectEditModeMethods {
     oemInitialState = \ ep -> show $ initialState ep,
     oemEnterMode = \ scene -> id,
-    oemUpdate = \ scene key state -> show $ updatePaths key (read state),
-    oemRender = \ ptr scene state -> renderPaths sort ptr scene (read state)
+    oemUpdate = \ scene key state -> show $ updateOEMPath key (read state),
+    oemRender = \ ptr scene state -> renderOEMPath sort ptr scene (read state)
   }
 
-data Paths = Paths {
-    cursor :: EditorPosition,
-    paths :: [EditorPosition]
+data OEMPath = OEMPath {
+    oemCursor :: EditorPosition,
+    oemPath :: [EditorPosition]
   }
     deriving (Show, Read)
 
-modifyCursor :: (EditorPosition -> EditorPosition) -> Paths -> Paths
-modifyCursor f p = p{cursor = f (cursor p)}
+-- | reads an OEMPath and returns the path for the game
+mkPath :: PSort -> String -> Path
+mkPath sort s =
+    let (OEMPath cursor path) = readNote "expected: Sorts.Robots.MovingPlatform.OEMPath" s
+    in map (epToCenterVector sort) path
+
+modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
+modifyCursor f p = p{oemCursor = f (oemCursor p)}
 
 -- | use the position of the object as first node in Path
-initialState :: EditorPosition -> Paths
-initialState p = Paths p [p]
+initialState :: EditorPosition -> OEMPath
+initialState p = OEMPath p [p]
 
 
-updatePaths :: AppButton -> Paths -> Paths
-updatePaths RightButton p = modifyCursor (+~ EditorPosition cursorStep 0) p
-updatePaths _ p = p
+updateOEMPath :: AppButton -> OEMPath -> OEMPath
+updateOEMPath button = case button of
+    LeftButton -> modifyCursor (-~ EditorPosition cursorStep 0)
+    RightButton -> modifyCursor (+~ EditorPosition cursorStep 0)
+    UpButton -> modifyCursor (-~ EditorPosition 0 cursorStep)
+    DownButton -> modifyCursor (+~ EditorPosition 0 cursorStep)
+    -- append new path node
+    AButton -> (\ (OEMPath cursor path) -> OEMPath cursor (path +: cursor))
+    -- delete path node
+    BButton -> (\ (OEMPath cursor path) -> OEMPath cursor (filter (/= cursor) path))
+    _ -> id
 
 cursorStep = fromKachel 1
 
 
-renderPaths sort ptr scene (Paths cursor paths) = do
-    -- render the scene
+renderOEMPath sort ptr scene (OEMPath cursor paths) = do
     offset <- transformation ptr cursor (size sort)
-    renderObjectScene ptr offset scene
-    -- render cursor box
-    let rp = editorPosition2QtPosition sort cursor
-    drawColoredBox ptr (rp +~ offset) (size sort) 4 (QtColor 128 128 128 128)
+    renderScene offset
+    renderPath offset
+    renderCursor offset
+  where
+    renderScene offset = do
+        renderObjectScene ptr offset scene
 
+    renderPath offset = do
+        resetMatrix ptr
+        translate ptr offset
+        setPenColor ptr green 4
+        mapM_ renderLine (adjacentCyclic paths)
+        setPenColor ptr red 4
+        mapM_ drawPathNode paths
+    renderLine :: (EditorPosition, EditorPosition) -> IO ()
+    renderLine (a, b) =
+        drawLine ptr (epToCenterPosition sort a) (epToCenterPosition sort b)
+    drawPathNode n =
+        drawCircle ptr (epToCenterPosition sort n) 5
 
--- show (Paths (editorPosition2QtPosition sort p
+    renderCursor offset =
+        drawColoredBox ptr (epToPosition sort cursor +~ offset) (size sort) 4 yellow
 
+-- * position conversions
 
+-- from lower left to upper left
+epToPosition :: PSort -> EditorPosition -> Position Double
+epToPosition = editorPosition2QtPosition
 
+epToCenterPosition :: PSort -> EditorPosition -> Position Double
+epToCenterPosition sort ep = epToPosition sort ep +~ fmap (/ 2) (sizeToPosition $ size sort)
 
-
-
-
-
-
-
-
+epToCenterVector :: PSort -> EditorPosition -> Vector
+epToCenterVector sort = qtPosition2Vector . epToCenterPosition sort
