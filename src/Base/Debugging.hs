@@ -5,6 +5,9 @@ module Base.Debugging (
     resetDebugging,
     addDebugging,
     getDebugging,
+
+    debugPoint,
+    debugLine,
   ) where
 
 
@@ -14,6 +17,8 @@ import Data.IORef
 import System.IO.Unsafe
 
 import Graphics.Qt
+
+import Physics.Chipmunk
 
 import Base.Types
 
@@ -38,3 +43,19 @@ addDebugging cmd = modifyIORef debuggingCommandRef (<> cmd)
 
 getDebugging :: IO DebuggingCommand
 getDebugging = readIORef debuggingCommandRef
+
+-- * convenience
+
+debugPoint :: Color -> Vector -> IO ()
+debugPoint color p = addDebugging $ \ ptr offset -> do
+    resetMatrix ptr
+    translate ptr offset
+    setPenColor ptr color 2
+    drawCircle ptr (vector2QtPosition p) 5
+
+debugLine :: Color -> Vector -> Vector -> IO ()
+debugLine color a b = addDebugging $ \ ptr offset -> do
+    resetMatrix ptr
+    translate ptr offset
+    setPenColor ptr color 4
+    drawLine ptr (vector2QtPosition a) (vector2QtPosition b)
