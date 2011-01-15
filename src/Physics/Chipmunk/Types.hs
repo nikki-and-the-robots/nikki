@@ -254,20 +254,30 @@ foldAngle = foldToRange (- pi, pi)
 
 -- | a chipmunk angles of 0 points east. We need to use angles that point north.
 toUpAngle :: Vector -> Angle
+toUpAngle (Vector 0 0) = 0
 toUpAngle v = toAngle v + (pi / 2)
 
 fromUpAngle :: Angle -> Vector
 fromUpAngle = (subtract (pi / 2)) >>> fromAngle
 
 -- | returns the component of the Vector, that is parallel to the given Angle.
+-- angle == 0 means upwards
+componentUpAngle :: Angle -> Vector -> Vector
+componentUpAngle = componentWithToAngle (toUpAngle, fromUpAngle)
+
+-- | same as componentUpAngle, but angle == 0 means east (chipmunk standard)
 component :: Angle -> Vector -> Vector
-component alpha b =
-    scale (fromUpAngle alpha) l_c
+component = componentWithToAngle (toAngle, fromAngle)
+
+componentWithToAngle :: (Vector -> Angle, Angle -> Vector) -> Angle -> Vector -> Vector
+componentWithToAngle (toAngleFunction, fromAngleFunction) alpha b =
+    scale (fromAngleFunction alpha) l_c
   where
     delta = alpha - beta
-    beta = toUpAngle b
+    beta = toAngleFunction b
     l_b = len b
     l_c = cos delta * l_b
+
 
 rotateVector :: Angle -> Vector -> Vector
 rotateVector angle (Vector a b) =

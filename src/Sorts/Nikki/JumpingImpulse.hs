@@ -81,22 +81,22 @@ calculate collisionObjectVelocity contactAngle nikkiVelocity =
     -- angle of the surface of the collision object
     wallAngle = foldAngle $ toUpAngle wallVelocity
     -- velocity of nikki parallel to the surface of the collision object
-    wallVelocity = component (foldAngle (contactAngle + (pi / 2))) velocity
+    wallVelocity = componentUpAngle (foldAngle (contactAngle + (pi / 2))) velocity
     -- down component of the wallVelocity
-    wallVelocityDownComponent = component pi wallVelocity
+    wallVelocityDownComponent = componentUpAngle pi wallVelocity
     -- staticImpulse +~ velocityImpulse +~ clipVectorImpulse = staticImpulse
     --      for wallAngle == 0
     -- clipVectorImpulse = zero
     --      for wallAngle == pi / 2
     -- clipVectorImpulse will clip the wallVelocity maximally (if added to the staticImpulse)
     -- (dependent on the wallAngle)
-    clipVectorImpulse = negateAbelian $ component wallAngle $
+    clipVectorImpulse = negateAbelian $ componentUpAngle wallAngle $
         scale wallVelocityDownComponent nikkiMass
     -- impulse that would damp the actual velocity to 100%
     clippedVelocityImpulse = staticImpulse +~ clipVectorImpulse +~ velocityImpulse
     -- This is the maximum that the wallVelocity should be re-added after clipping
     unclipMaximum =
-        negateAbelian $ component (contactAngle + (pi / 2)) clippedVelocityImpulse
+        negateAbelian $ componentUpAngle (contactAngle + (pi / 2)) clippedVelocityImpulse
 
     -- factor (between 0 and 1):
     -- how much should the wallVelocity be unclipped

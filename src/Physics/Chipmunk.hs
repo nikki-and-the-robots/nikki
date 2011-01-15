@@ -48,6 +48,7 @@ module Physics.Chipmunk (
     foldAngle,
     toUpAngle,
     fromUpAngle,
+    componentUpAngle,
     component,
 
     massForShape,
