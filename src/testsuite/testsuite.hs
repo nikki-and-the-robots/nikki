@@ -11,3 +11,5 @@ main = do
     Utils.Tests.tests
     Physics.Chipmunk.Types.Tests.tests
     Physics.Chipmunk.StickyEdges.Tests.tests
+
+i = const $ return ()
