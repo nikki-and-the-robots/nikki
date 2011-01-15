@@ -12,10 +12,13 @@ import Physics.Chipmunk.Tests ()
 
 import Utils
 
+import Utils.Tests
+
 
 tests :: IO ()
 tests = do
     testMassForShape
+    testComponent
 
 -- * massForShape
 
@@ -75,3 +78,36 @@ mkSquare = do
         area = a * b
     randomized <- Polygon <$> randomizePolygon normalized
     return (randomized, area)
+
+
+-- * component
+
+testComponent = do
+    quickCheckOnce $ toUpAngleZero
+    quickCheck $ componentSameAngle
+    quickCheck $ componentUpAngleSameAngle
+
+toUpAngleZero =
+    printTestCase "toUpAngleZero" $
+    (toUpAngle zero == 0 &&
+     toUpAngle (Vector 0 (- 0)) == 0)
+
+componentUpAngleSameAngle angle vector =
+    printTestCase "componentUpAngleSameAngle" $
+    let expected = foldAngle angle
+        result = foldAngle (toUpAngle (componentUpAngle angle vector))
+    in printTestCase (show expected ++ " /~%= " ++ show result) $
+        (expected ~~= result ||
+        (expected + (deg2rad 180)) ~~= result)
+  where
+    (~~=) = withView foldAngle (~=)
+
+componentSameAngle angle vector =
+    printTestCase "componentSameAngle" $
+    let expected = foldAngle angle
+        result = foldAngle (toAngle (component angle vector))
+    in printTestCase (show expected ++ " /~%= " ++ show result) $
+        (expected ~~= result ||
+        (expected + (deg2rad 180)) ~~= result)
+  where
+    (~~=) = withView foldAngle (~=)

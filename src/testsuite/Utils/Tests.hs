@@ -68,3 +68,16 @@ testExamples msg p examples =
         putTestCase (msg ++ " element no.: " ++ show i) $
         p example)
         (zip [0..] examples)
+
+testEquals :: (Show e, Eq e) => e -> e -> Property
+testEquals a b =
+    printTestCase (show a ++ " /= " ++ show b) $
+    a == b
+
+(?=) :: (Show e, Eq e) => e -> e -> Property
+(?=) = testEquals
+
+(?~=) :: (Show e, Ord e, Fractional e) => e -> e -> Property
+a ?~= b =
+    printTestCase (show a ++ " /~= " ++ show b) $
+    a ~= b
