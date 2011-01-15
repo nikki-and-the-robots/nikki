@@ -158,10 +158,16 @@ sendDebugInitials c = ignore $ forkOS $ do
         threadDelay $ round (0.1 * 10 ^ 6)
         writeChan c (KeyPress k (text k))
         writeChan c (KeyRelease k (text k))
-
-    signals = [DownArrow, Ctrl, DownArrow, Ctrl, Escape, DownArrow, Ctrl, DownArrow, Ctrl,
-               Minus, A, Ctrl, Escape, DownArrow, Ctrl, Ctrl, K0, Dot, K5, Enter, K0, Dot, K5, Enter]
     text K0 = "0"
     text K5 = "5"
     text Dot = "."
     text x = return $ head (show x)
+
+    signals =   play 1 ++
+--                 replicate 6 RightArrow ++ replicate 2 DownArrow ++
+--                 Escape : Ctrl :
+                []
+    edit n = DownArrow : DownArrow : DownArrow : Ctrl :
+             replicate n DownArrow ++ Ctrl : []
+    play n =    DownArrow : Ctrl :
+                replicate (n - 1) DownArrow ++ Ctrl : []
