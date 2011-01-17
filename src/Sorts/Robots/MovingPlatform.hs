@@ -175,7 +175,7 @@ applyEdgeImpulse platform last next = do
 applyPlatformForce :: Platform -> IO ()
 applyPlatformForce platform = do
     antiGravity <- getAntiGravity platform
-    motion <- getMotion platform
+    motion <- getPathForce platform
 
     let force = antiGravity +~ motion
     applyOnlyForce (body $ chipmunk platform) force zero
@@ -193,7 +193,7 @@ getPathForce platform = do
     m <- get $ Hipmunk.mass $ body $ chipmunk platform
     p <- getPosition $ chipmunk platform
     v <- get $ velocity $ body $ chipmunk platform
-    return $ mkForce platform m p v
+    return $ mkPathForce platform m p v
 
 -- | (pure) calculation of the path force.
 mkPathForce :: Platform -> Double -> Vector -> Vector -> Vector
