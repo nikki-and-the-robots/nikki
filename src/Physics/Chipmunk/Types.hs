@@ -260,6 +260,10 @@ toUpAngle v = toAngle v + (pi / 2)
 fromUpAngle :: Angle -> Vector
 fromUpAngle = (subtract (pi / 2)) >>> fromAngle
 
+-- | like normalize but return zero if argument is zero
+normalizeIfNotZero (Vector 0 0) = zero
+normalizeIfNotZero x = normalize x
+
 -- | returns the component of the Vector, that is parallel to the given Angle.
 -- angle == 0 means upwards
 componentUpAngle :: Angle -> Vector -> Vector

@@ -45,6 +45,7 @@ module Physics.Chipmunk (
     module Physics.Chipmunk.ContactRef,
     module Physics.Chipmunk.StickyEdges,
 
+    normalizeIfNotZero,
     foldAngle,
     toUpAngle,
     fromUpAngle,
