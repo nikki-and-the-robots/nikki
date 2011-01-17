@@ -115,7 +115,7 @@ applicationStates app =
       ]
   where
     this = applicationStates app
-    title = unlines (("Nikki and the robots (" ++ showVersion nikkiVersion ++ ")") :
+    title = unlines (("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")") :
                      "(Use arrow keys and Ctrl key to select menu item.)" :
                      [])
 
