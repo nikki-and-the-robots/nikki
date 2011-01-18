@@ -40,7 +40,7 @@ macPostBuild :: Args -> BuildFlags -> PackageDescription -> LocalBuildInfo -> IO
 macPostBuild args buildFlags packageDescription localBuildInfo =
     withTemporaryDirectoryCopy "../data" macResourcesDir $ do
         qtLibDir <- trim <$> readProcess "qmake" ["-query", "QT_INSTALL_LIBS"] ""
-        let qtNibDir = qtLibDir </> macResourcesDir </> "qt_menu.nib"
+        qtNibDir <- lookupQtNibDir qtLibDir
         copyDirectory qtNibDir (macResourcesDir </> "qt_menu.nib")
         resources <- map (macResourcesDir </>) <$> getFilesRecursive macResourcesDir
         appBundleBuildHook [macApp resources] args buildFlags packageDescription localBuildInfo
@@ -65,6 +65,20 @@ macApp resourceFiles = MacApp {
     appDeps = ChaseWithDefaults
   }
 
+-- | searches the qt_menu.nib in both standard locations for
+-- qt being installed via macports or binary distribution
+lookupQtNibDir :: FilePath -> IO FilePath
+lookupQtNibDir qtLibDir = do
+    mPath <- searchInPaths qtMenuNibDirs "qt_menu.nib"
+    return $ case mPath of
+        Nothing -> error ("qt_menu.nib not found, looked in: \n" ++ unlines qtMenuNibDirs)
+        Just x -> x
+  where
+    qtMenuNibDirs = map (qtLibDir </>) (
+        "QtGui.framework/Versions/4/Resources" :
+        "resources" :
+        [])
+
 
 -- * utils
 
@@ -80,3 +94,15 @@ withTemporaryDirectoryCopy original copy action = do
 -- | remove surrounding whitespaces
 trim :: String -> String
 trim = dropWhile isSpace . reverse . dropWhile isSpace . reverse
+
+-- | searches for a file or directory in a given list of paths
+searchInPaths :: [FilePath] -> FilePath -> IO (Maybe FilePath)
+searchInPaths [] _ = return Nothing
+searchInPaths (a : r) file = do
+    let candidate = a </> file
+    fileExists <- doesFileExist candidate
+    dirExists <- doesDirectoryExist candidate
+    if fileExists || dirExists then
+        return $ Just candidate
+      else
+        searchInPaths r file
