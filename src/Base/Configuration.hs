@@ -18,7 +18,6 @@ import Version
 import Utils
 
 import Distribution.AutoUpdate.Paths
-import Distribution.AutoUpdate.CmdArgs
 
 
 -- * dynamic configuration
@@ -43,7 +42,8 @@ data Configuration = Configuration {
 -- (before calling loadConfiguration, nothing should be logged.)
 loadConfiguration :: IO Configuration
 loadConfiguration = do
-    config <- cmdTheseArgs options =<< (filterUnwantedArgs <$> getArgs)
+    filteredArgs <- filterUnwantedArgs <$> getArgs
+    config <- withArgs filteredArgs $ cmdArgs options
     initialiseLogging config
     return config
 
