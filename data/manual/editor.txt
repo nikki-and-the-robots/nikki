@@ -1,9 +1,16 @@
 These are the keyboard shortcuts for the editor (advanced mode):
 
-Arrow keys or gamepad hat - move the cursor
-A button or CTRL - set an object
-B button or Shift - delete an object
-Start button or Escape - bring up the menu
+General
+=======
+
+Escape - bring up the menu
+
+Editing Mode
+============
+
+Arrow keys - move the cursor
+CTRL - set an object
+Shift - delete an object
 a and d - select another object
 w and s - change the cursor step size
 b - send object under cursor to the back of the layer
@@ -11,13 +18,29 @@ b - send object under cursor to the back of the layer
 space - activate selection mode
 v - paste selected objects
 t - test the level in game mode
-h - test the level in game mode with nikki at cursor position
+h - test the level in game mode with Nikki at cursor position
 
-selection mode
+As the objective in every level is to switch on all the switches, you should place
+at least one switch in your level. Also don't forget to put Nikki in it.
+
+Selection Mode
 ==============
 
-Arrow keys or gamepad hat - move the upper right corner of the selection box
+Arrow keys - move the upper right corner of the selection box
 x - cut selected objects
 c - copy selected objects
 B button or Shift - delete objects in selection (without changing clipboard contents)
 w and s - change the cursor step size
+
+Object Edit Mode
+================
+
+Some objects allow you to edit special attributes. To do that, select the
+object by placing the cursor above it (correct selection of an object will be
+indicated in the lower right corner) and go to the menu and select
+"edit object". What you can configure depends on the object you're editing. At
+the moment you can edit:
+ - Terminals
+    Configure which robots will be accessible via the terminal
+ - Moving Platforms
+    Configure the path of the platform.

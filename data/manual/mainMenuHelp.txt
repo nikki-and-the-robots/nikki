@@ -9,23 +9,28 @@ level editor.
 
 1. The game
 
-We tried to make the controls of the game intuitive. Remember: In the game you
-can use the arrow keys and two other buttons: Ctrl and Shift. So we hope you
-will be able to figure it all out. But here are the controls anyway:
+We tried to make the controls of the game intuitive. So we hope you will be
+able to figure it all out by yourselves. One thing you need to now: While in
+the game you can use the arrow keys and two buttons: Ctrl and Shift. Escape
+will end the level.
 
-Nikki controls:
+But here are the controls anyway:
+
+Nikki Controls:
 arrow keys - move around
 Ctrl - jump
 Shift - Use a terminal.
 
-Terminal controls:
+Terminal Menu Controls:
 arrow keys - select robot (or eject)
 Ctrl - confirm choice
 
-Robot controls:
+Robot Controls:
 Well, that depends on the robot.
 Try the arrow keys and Ctrl.
-Shift always brings you back to the terminal.
+Shift always brings you back to the terminal menu.
+
+The objective in each level is to switch on all the switches you can find.
 
 2. The level editor
 
