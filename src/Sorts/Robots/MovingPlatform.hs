@@ -22,32 +22,14 @@ import Base hiding (cursorStep)
 
 import Object
 
-import Sorts.Nikki as Nikki (walkingVelocity, nikkiMass)
-import Sorts.Robots.Configuration
 import Sorts.Tiles (tileShapeAttributes)
+import Sorts.Robots.Configuration
+
+import Sorts.Robots.MovingPlatform.Configuration
+import Sorts.Robots.MovingPlatform.Path
 
 import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
-
-
--- * configuration
-
--- | The mass of platforms.
--- (gravity has no effect on platforms
-platformMass = nikkiMass * 4
--- | the acceleration that can will applied to a platform
--- to let it follow its path
-platformAcceleration = 1300
--- | the maximal velocity a platform can accelerate to
-maximumPlatformVelocity = 180
--- | the minimal velocity a platform will decelerate to
--- at path nodes
-minimumPlatformVelocity = 10
--- | sets the epsilon range for the velocity correction
-velocityEpsilon = 5
--- | how much the platform tries to get back on its path
--- (as opposed to going to the end point of the active segment directly)
-pathWeight = 0.66
 
 
 -- * loading
@@ -67,19 +49,9 @@ data Platform
     = Platform {
         platformSize :: Size Double,
         chipmunk :: Chipmunk,
-        path :: Path,
-        lastNode :: Vector
+        path :: Path
       }
   deriving (Show, Typeable)
-
--- | returns the next path node
-nextNode :: Platform -> Vector
-nextNode p@(path -> (a : _)) = a
-
--- | Describes the path of a platform.
--- A platform path can be thought of as a cycle of nodes
--- (that make up a cycle of segments).
-type Path = [Vector]
 
 
 instance Sort PSort Platform where
@@ -103,8 +75,7 @@ instance Sort PSort Platform where
         chip <- initChipmunk space (bodyAttributes sort pos) shapes baryCenterOffset
 
         let path = mkPath sort oemState
-            lastNode = head path
-        return $ Platform (size sort) chip path lastNode
+        return $ Platform (size sort) chip path
 
     chipmunks p = [chipmunk p]
 
@@ -112,7 +83,7 @@ instance Sort PSort Platform where
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
     updateNoSceneChange sort mode now contacts cd =
-        updateSegment >>>>
+        updatePath >>>>
         passThrough applyPlatformForce
 
     render platform sort ptr offset now = do
@@ -137,37 +108,10 @@ shapeAttributes = robotShapeAttributes{friction = friction tileShapeAttributes}
 
 -- * physics behaviour
 
--- | The platform has an active segment at any time,
--- between (lastNode platform) and (nextNode platform).
--- This operation switches to the next segment if needed.
--- If a switch takes place, an impulse is applied to
--- smoothen behaviour at path nodes.
-updateSegment :: Platform -> IO (Platform)
-updateSegment p@(path -> [_]) = return p
-updateSegment platform@Platform{chipmunk, path = (next : r)} = do
-    p <- getPosition chipmunk
-    let last = lastNode platform
-        closestPathPoint = closestPointOnLineSegment (last, next) p
-    if closestPathPoint == next then do
-        let newPlatform = platform{path = r +: next, lastNode = next}
-        applyEdgeImpulse platform
-                (foldAngle $ toAngle (next -~ last))
-                (foldAngle $ toAngle (nextNode newPlatform -~ next))
-        return newPlatform
-      else
-        return platform
-
--- | calculates the impulse to apply when switching path segments
-applyEdgeImpulse :: Platform -> Angle -> Angle -> IO ()
-applyEdgeImpulse platform last next = do
-    let b = body $ chipmunk platform
-    m <- get $ Hipmunk.mass b
-    v <- get $ velocity b
-    let delta = foldAngle (next - last)
-        wantedVelocity = rotateVector delta v
-        velocityDeviation = wantedVelocity -~ v
-        impulse = scale velocityDeviation m
-    applyImpulse b impulse zero
+updatePath :: Platform -> IO Platform
+updatePath platform@Platform{chipmunk, path} = do
+    path' <- updateSegment chipmunk path
+    return $ platform{path = path'}
 
 -- | Applies a force to the platform.
 -- The force is composed of an antiGravity and a path force
@@ -193,87 +137,7 @@ getPathForce platform = do
     m <- get $ Hipmunk.mass $ body $ chipmunk platform
     p <- getPosition $ chipmunk platform
     v <- get $ velocity $ body $ chipmunk platform
-    return $ mkPathForce platform m p v
-
--- | (pure) calculation of the path force.
-mkPathForce :: Platform -> Double -> Vector -> Vector -> Vector
-mkPathForce platform m p v =
-    -- the force will always have the same length (or 0)
-    scale force forceLen
-  where
-    forceLen = m * platformAcceleration
-
-    -- | point on the active segment that is closest to
-    -- the platform's position
-    closestPathPoint =
-        closestPointOnLineSegment (lastNode platform, nextNode platform) p
-
-    -- | point where the platform is headed.
-    aim = addWeightedVectors
-        (closestPathPoint, pathWeight)
-        (nextNode platform, (1 - pathWeight))
-    -- | from the platform to the aim
-    toAim = aim -~ p
-    lenToAim = len toAim
-    wantedVelocityLen :: Double
-    wantedVelocityLen = mkWantedVelocityLen $ len (nextNode platform -~ p)
-    -- | this would be the ideal velocity for the platform's position
-    -- relative to the aim
-    wantedVelocity = scale (normalizeIfNotZero toAim) wantedVelocityLen
-    -- | deviation between wantedVelocity and actual velocity
-    velocityDeviation = wantedVelocity -~ v
-    -- | normalized force to be applied
-    force =
-        if len velocityDeviation < velocityEpsilon then
-            zero
-          else
-            normalizeIfNotZero velocityDeviation
-
--- | if the platform is closer to the next path node
--- than the decelerationDistance the platform should decelerate
--- at full force to reach minimumPlatformVelocity when reaching the
--- next path node.
-decelerationDistance =
-    abs( - (minimumPlatformVelocity ^ 2 - maximumPlatformVelocity ^ 2) /
-         (2 * (- platformAcceleration)))
-
--- | The length of the wanted velocity.
-mkWantedVelocityLen distance =
-    if distance > decelerationDistance then
-        maximumPlatformVelocity
-      else
-        -- deceleration
-        slopeH * distance + minimumPlatformVelocity
-slopeH =
-    (maximumPlatformVelocity - minimumPlatformVelocity) /
-    decelerationDistance
-
--- | adds two vectors with the given weights
-addWeightedVectors :: (Vector, Double) -> (Vector, Double) -> Vector
-addWeightedVectors (a, aw) (b, bw) =
-    scale a aw +~
-    scale b bw
-
-
-
--- * geometry
-
--- | calculates the closest point on a line segment to a given point.
-closestPointOnLineSegment :: (Vector, Vector) -> Vector -> Vector
-closestPointOnLineSegment (a, b) p =
-    if a == b then a else
-    if f <= 0 then a else if f >= 1 then b else
-    a +~ scale (b -~ a) f
-  where
-    f = ((x p - x a) * (x b - x a) + (y p - y a) * (y b - y a)) /
-        (len (b -~ a) ^ 2)
-    x = vectorX
-    y = vectorY
-
--- | mirrors an angle at a given angle
-mirrorAngle :: Angle -> Angle -> Angle
-mirrorAngle mirror angle =
-    mirror - (angle - mirror)
+    mkPathForce (path platform) m p v
 
 
 -- * object edit mode
@@ -296,7 +160,8 @@ data OEMPath = OEMPath {
 mkPath :: PSort -> String -> Path
 mkPath sort s =
     let (OEMPath cursor path) = readNote "expected: Sorts.Robots.MovingPlatform.OEMPath" s
-    in map (epToCenterVector sort) path
+        nodes = map (epToCenterVector sort) path
+    in Path nodes (last nodes)
 
 modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
 modifyCursor f p = p{oemCursor = f (oemCursor p)}
