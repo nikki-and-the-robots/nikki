@@ -203,5 +203,5 @@ changeLayerDistance app parent scene follower =
 showEditorHelp :: Application -> AppState -> AppState
 showEditorHelp app parent = AppState $ do
     file <- rm2m $ getDataFileName "manual/editor.txt"
-    text <- io $ Prelude.readFile file
+    text <- io $ pFile file
     return $ showText app text parent

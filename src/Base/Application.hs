@@ -27,8 +27,11 @@ import Graphics.Qt
 import Utils
 
 import Base.Types
+import Base.Constants
 import Base.Polling
 import Base.Monad
+import Base.Prose
+import Base.Font
 
 import Base.Application.Menu
 
@@ -100,11 +103,12 @@ waitAnyKey app = do
         Press _ -> return ()
         _ -> waitAnyKey app
 
-drawTextBlock :: Ptr QPainter -> String -> IO ()
-drawTextBlock ptr text = do
-    mapM_ (\ (i, line) -> drawText ptr (Position 0 (i * 15)) False line) $ zip [0..] (lines text)
+drawTextBlock :: Font -> Ptr QPainter -> [Prose] -> IO ()
+drawTextBlock font ptr = mapM_ $ \ line -> do
+    fst (renderLine font line) ptr
+    translate ptr (Position 0 (fontHeight font))
 
-showText :: Application_ sort -> String -> AppState -> AppState
+showText :: Application_ sort -> [Prose] -> AppState -> AppState
 showText app text follower = AppState $ do
     io $ setDrawingCallbackAppWidget (window app) $ Just $ render text
     waitAnyKey app
@@ -113,5 +117,6 @@ showText app text follower = AppState $ do
     render text ptr = do
         clearScreen ptr
         resetMatrix ptr
-        translate ptr (Position 30 40)
-        drawTextBlock ptr text
+        translate ptr (Position (fromUber 4) (fromUber 4))
+        let font = alphaNumericFont $ applicationPixmaps app
+        drawTextBlock font ptr text

@@ -119,11 +119,12 @@ applicationStates app =
                      "(Use arrow keys and Ctrl key to select menu item.)" :
                      [])
 
+-- | shows a text describing our plans with the story mode
 storyMode :: Application -> AppState
 storyMode app = AppState $ do
     file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
-    text <- io $ System.IO.readFile file
-    return $ showText app text (applicationStates app)
+    prose <- io $ pFile file
+    return $ showText app prose (applicationStates app)
 
 -- | asks, if the user really wants to quit
 quit :: Application -> AppState -> AppState
@@ -192,5 +193,5 @@ loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
 mainMenuHelp :: Application -> AppState -> AppState
 mainMenuHelp app parent = AppState $ do
     file <- rm2m $ getDataFileName "manual/mainMenuHelp.txt"
-    text <- io $ Prelude.readFile file
+    text <- io $ pFile file
     return $ showText app text parent

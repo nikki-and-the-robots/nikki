@@ -3,6 +3,7 @@
 
 module Base (
     module Base.Types,
+    module Base.Prose,
     module Base.Application,
     module Base.Application.Pixmaps,
     module Base.Application.GUILog,
@@ -23,6 +24,7 @@ module Base (
 
 
 import Base.Types
+import Base.Prose
 import Base.Application
 import Base.Application.Pixmaps
 import Base.Application.GUILog
