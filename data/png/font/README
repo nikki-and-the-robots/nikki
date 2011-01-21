@@ -1,0 +1,2 @@
+
+These are images for the font rendering. The names of the images correspond to unicode values, in decimal. You can give multiple numbers, separated by '_' to give images for ligatures, e.g. "102_102.png" for "ff". The directory needs to contain one file "NONE.png" that will be printed for missing characters.
