@@ -15,6 +15,7 @@ import Data.Abelian
 import Data.SelectTree
 import Data.Typeable
 import Data.Map
+import Data.ByteString (ByteString)
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -64,8 +65,16 @@ data AppState
     | FinalState
 
 data ApplicationPixmaps = ApplicationPixmaps {
+    alphaNumericFont :: Font,
     finished :: Map LevelResult Pixmap
   }
+
+data Font =
+    Font {
+        -- ordered: longer keys first
+        letters :: [(ByteString, Pixmap)],
+        errorSymbol :: Pixmap
+      }
 
 
 -- * from Base.Pixmap
