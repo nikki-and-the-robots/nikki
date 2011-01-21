@@ -95,7 +95,7 @@ Executable core
         , StateVar
         , transformers
         , time
-        , parsec >= 3.1.0
+        , parsec3 >= 1.0.0.0
         , buffer
         , FindBin
         , clocked == 0.2
