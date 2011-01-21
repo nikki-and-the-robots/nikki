@@ -5,13 +5,17 @@ module Base.Application.Menu where
 import Data.SelectTree (SelectTree(..))
 import Data.Indexable as I
 import Data.Foldable (forM_)
+import Data.Abelian
 
 import Graphics.Qt
 
 import Utils
 
 import Base.Types hiding (selected)
+import Base.Constants
 import Base.Polling
+import Base.Font
+import Base.Prose
 
 
 data MenuItems
@@ -52,33 +56,49 @@ menu app mTitle mParent children =
     isBackButton StartButton = True
     isBackButton _  = False
 
+    font_ = alphaNumericFont $ applicationPixmaps app
     render items ptr = do
         resetMatrix ptr
         clearScreen ptr
-        setPenColor ptr white 1
 
         let newLine :: IO ()
-            newLine = translate ptr (Position 0 yStep)
-            drawLine :: String -> IO ()
+            newLine = translate ptr (Position 0 (fontHeight font_ + fromUber 1))
+            -- | draws a line (centered)
+            drawLine :: Prose -> IO ()
             drawLine l = do
+                let (renderAction, lineSize) = renderLine font_ l
+                centerHorizontally ptr lineSize renderAction
                 newLine
-                drawText ptr (Position x 0) False l
-            drawLines :: [String] -> IO ()
+            drawLines :: [Prose] -> IO ()
             drawLines = mapM_ drawLine
 
-        whenMaybe mTitle (drawLines . lines)
-
+        newLine
+        newLine
+        whenMaybe mTitle (drawLines . map p . lines)
+        newLine
         newLine
 
-        forM_ (before items) $ \ i -> do
-            drawLine ("   " ++ fst i)
-        drawLine ("> " ++ fst (selected items))
+        forM_ (before items) $ \ i ->
+            drawLine $ p $ fst i
+        drawLine $ p ("> " ++ fst (selected items) ++ " <")
         forM_ (after items) $ \ i -> do
-            drawLine ("   " ++ fst i)
+            drawLine $ p $ fst i
 
     yStep = 20
     x = 10
 
+-- | Perform a rendering action centered horizontally
+-- (without anti-aliasing).
+-- Restores the matrix after performing the rendering action.
+centerHorizontally :: Ptr QPainter -> Size Double -> (Ptr QPainter -> IO ()) -> IO ()
+centerHorizontally ptr size action = do
+    windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+    let translation = Position (fromIntegral $ round ((width windowSize - width size) / 2)) 0
+    translate ptr translation
+    action ptr
+    translate ptr (negateAbelian translation)
+
+-- | convert a SelectTree to a menu
 treeToMenu :: Application_ sort -> AppState -> SelectTree String -> (String -> AppState)
     -> AppState
 treeToMenu app parent (Leaf n) f = f n
