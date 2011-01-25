@@ -3,7 +3,6 @@
 module Utils (
     (<$>),
     (<*>),
-    (<|>),
     (>>>),
     trace,
     module Utils,

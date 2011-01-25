@@ -11,6 +11,7 @@ import Data.Maybe
 import Data.Directions
 
 import Control.Arrow
+import Control.Applicative ((<|>))
 
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position)

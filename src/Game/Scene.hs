@@ -18,6 +18,7 @@ import Data.Abelian
 
 import Control.Monad
 import Control.Monad.State (StateT(..))
+import Control.Applicative ((<|>))
 
 import Graphics.Qt as Qt
 

@@ -25,7 +25,7 @@ import System.FilePath
 
 import Graphics.Qt
 
-import Utils hiding ((<|>))
+import Utils
 
 import Base.Types
 import Base.Constants
