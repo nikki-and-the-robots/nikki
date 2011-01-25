@@ -7,6 +7,7 @@ module Utils (
     trace,
     forM,
     forM_,
+    when,
     module Utils,
   ) where
 

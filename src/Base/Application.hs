@@ -16,10 +16,6 @@ module Base.Application (
 
 import Safe
 
-import Data.SelectTree hiding (selectPrevious, selectNext)
-import qualified Data.Indexable as I
-
-import Control.Monad
 import Control.Concurrent
 
 import Graphics.Qt

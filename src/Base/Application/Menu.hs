@@ -4,7 +4,6 @@ module Base.Application.Menu where
 
 import Data.SelectTree (SelectTree(..))
 import Data.Indexable as I
-import Data.Foldable (forM_)
 import Data.Abelian
 
 import Graphics.Qt

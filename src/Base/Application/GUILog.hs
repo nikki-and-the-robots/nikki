@@ -7,7 +7,6 @@ import Data.Abelian
 import Text.Logging
 
 import Control.Concurrent.MVar
-import Control.Monad (when)
 
 import System.IO.Unsafe
 

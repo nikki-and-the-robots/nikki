@@ -23,8 +23,6 @@ import Data.Traversable
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 
-import Control.Monad (when)
-
 import System.FilePath
 
 import Physics.Chipmunk as CM

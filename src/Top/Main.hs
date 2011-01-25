@@ -26,7 +26,6 @@ import Control.Concurrent
 import Control.Exception
 
 import System.FilePath
-import System.IO
 import System.Exit
 
 import Graphics.Qt

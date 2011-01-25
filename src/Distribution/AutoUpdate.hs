@@ -9,7 +9,6 @@ import Prelude hiding (catch)
 
 import Data.List
 
-import Control.Monad (when)
 import Control.Monad.Trans.Error
 import Control.Monad.CatchIO
 import Control.Concurrent

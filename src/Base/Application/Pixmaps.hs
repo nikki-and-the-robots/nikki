@@ -10,8 +10,6 @@ module Base.Application.Pixmaps (
 import Data.Map
 import Data.Abelian
 
-import Codec.Binary.UTF8.Light
-
 import Control.Exception
 
 import System.FilePath
