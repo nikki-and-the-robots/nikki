@@ -80,7 +80,7 @@ menu app mTitle mParent children =
 
         forM_ (before items) $ \ i ->
             drawLine $ p $ fst i
-        drawLine $ p ("> " ++ fst (selected items) ++ " <")
+        drawLine $ p ("⇨ " ++ fst (selected items) ++ " ⇦")
         forM_ (after items) $ \ i -> do
             drawLine $ p $ fst i
 
