@@ -109,7 +109,9 @@ parseFileName name = do
 
 -- | frees the memory taken by a font
 freeFont :: Font -> IO ()
-freeFont = error "freeFont"
+freeFont (Font letters errorSymbol) = do
+    mapM_ (freePixmap . snd) letters
+    freePixmap errorSymbol
 
 
 -- * rendering
