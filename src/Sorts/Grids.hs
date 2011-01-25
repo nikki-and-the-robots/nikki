@@ -6,8 +6,6 @@ module Sorts.Grids where
 import Data.Generics
 import Data.Abelian
 
-import Control.Monad
-
 import System.FilePath
 
 import Graphics.Qt

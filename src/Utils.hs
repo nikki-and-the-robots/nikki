@@ -5,6 +5,8 @@ module Utils (
     (<*>),
     (>>>),
     trace,
+    forM,
+    forM_,
     module Utils,
   ) where
 
@@ -17,8 +19,8 @@ import Safe
 
 import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault, toList)
-import qualified Data.Foldable
-import qualified Data.Traversable
+import Data.Foldable (Foldable, mapM_, forM_)
+import Data.Traversable (Traversable, mapM)
 import Data.IORef
 import qualified Data.Set as Set
 import Data.Char
@@ -27,7 +29,7 @@ import Text.Printf
 import Text.Logging
 
 import Control.Applicative ((<$>), (<|>), (<*>))
-import Control.Monad.State hiding ((>=>))
+import Control.Monad.State hiding (forM_)
 import Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))
 import Control.Concurrent
@@ -192,7 +194,7 @@ getFilesRecursive dir =
     inner root dir = do
         content <- map (dir </>) <$> sort <$> getFiles (root </> dir) Nothing
         (directories, files) <- partitionM (doesDirectoryExist . (root </>)) content
-        recursive <- mapM (inner root) $ directories
+        recursive <- fmapM (inner root) $ directories
         return $ sort (files ++ concat recursive)
 
 -- | removes file and directories if they exist
