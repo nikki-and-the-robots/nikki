@@ -40,6 +40,22 @@ copyPixmap (Pixmap pix size offset) = do
     pixCopy <- copyQPixmap pix
     return $ Pixmap pixCopy size offset
 
+-- | Change the pixel colors of a given pixmap using the given function.
+-- Not very efficient, since the Pixmap is converted to a QImage in between.
+mapPixels :: (Color -> Color) -> Pixmap -> IO Pixmap
+mapPixels f (Pixmap pix size offset) = do
+    image <- toImageQPixmap pix
+    destroyQPixmap pix
+    imageSize <- sizeQImage image
+    let xs = [0 .. (width imageSize - 1)]
+        ys = [0 .. (height imageSize - 1)]
+    forM_ (cartesian ys xs)  $ \ (y, x) -> do
+        c <- pixelQImage image (x, y)
+        setPixelQImage image (x, y) (f c)
+    newPix <- fromImageQPixmap image
+    destroyQImage image
+    return $ Pixmap newPix size offset
+
 -- | renders the pixmap
 renderPixmap :: MonadIO m =>
     Ptr QPainter -- ^ painter to be rendered to
