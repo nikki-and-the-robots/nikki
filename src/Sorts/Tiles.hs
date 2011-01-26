@@ -38,20 +38,22 @@ frameDuration :: Double = 1.0
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
 names =
-    ("tiles/white-standard", (Position (- 1) (- 1)), Size 64 64) :
     ("tiles/black-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/aqua-standard", (Position (- 1) (- 1)), Size 64 64) :
+    ("tiles/white-standard", (Position (- 1) (- 1)), Size 64 64) :
     ("tiles/yellow-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/red-standard", (Position (- 1) (- 1)), Size 64 64) :
     ("tiles/green-standard", (Position (- 1) (- 1)), Size 64 64) :
+    ("tiles/aqua-standard", (Position (- 1) (- 1)), Size 64 64) :
+    ("tiles/blue-standard", (Position (- 1) (- 1)), Size 64 64) :
     ("tiles/pink-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/white-small", (Position (- 1) (- 1)), Size 32 32) :
+    ("tiles/red-standard", (Position (- 1) (- 1)), Size 64 64) :
     ("tiles/black-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/aqua-small", (Position (- 1) (- 1)), Size 32 32) :
+    ("tiles/white-small", (Position (- 1) (- 1)), Size 32 32) :
     ("tiles/yellow-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/red-small", (Position (- 1) (- 1)), Size 32 32) :
     ("tiles/green-small", (Position (- 1) (- 1)), Size 32 32) :
+    ("tiles/aqua-small", (Position (- 1) (- 1)), Size 32 32) :
+    ("tiles/blue-small", (Position (- 1) (- 1)), Size 32 32) :
     ("tiles/pink-small", (Position (- 1) (- 1)), Size 32 32) :
+    ("tiles/red-small", (Position (- 1) (- 1)), Size 32 32) :
     []
 
 -- | points are moved by this distance to avoid sticky edges
