@@ -30,17 +30,19 @@ withApplicationPixmaps cmd = do
 
 load :: RM ApplicationPixmaps
 load = do
-    finished <- fmapM loadOsd finishedMap
     alphaNumericFont <- loadAlphaNumericFont
-    return $ ApplicationPixmaps alphaNumericFont finished
+    menuTitlePixmap <- loadOsd "menuTitle"
+    finished <- fmapM loadOsd finishedMap
+    return $ ApplicationPixmaps alphaNumericFont menuTitlePixmap finished
 
 loadOsd :: String -> RM Pixmap
 loadOsd name = io . loadPixmap zero =<< getDataFileName (pngDir </> "osd" </> name <.> "png")
 
 free :: ApplicationPixmaps -> IO ()
-free (ApplicationPixmaps font finished) = do
-    fmapM_ freePixmap finished
+free (ApplicationPixmaps font menuTitle finished) = do
     freeFont font
+    freePixmap menuTitle
+    fmapM_ freePixmap finished
 
 finishedMap :: Map LevelResult String
 finishedMap = fromList (

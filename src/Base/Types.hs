@@ -66,6 +66,7 @@ data AppState
 
 data ApplicationPixmaps = ApplicationPixmaps {
     alphaNumericFont :: Font,
+    menuTitlePixmap :: Pixmap,
     finished :: Map LevelResult Pixmap
   }
 

@@ -11,6 +11,7 @@ import Graphics.Qt
 import Utils
 
 import Base.Types hiding (selected)
+import Base.Pixmap
 import Base.Constants
 import Base.Polling
 import Base.Font
@@ -60,7 +61,13 @@ menu app mTitle mParent children =
         resetMatrix ptr
         clearScreen ptr lightBlue
 
-        let newLine :: IO ()
+        let renderMenuTitlePixmap = do
+                let pix = menuTitlePixmap $ applicationPixmaps app
+                                                          -- uber pixel shadow
+                centerHorizontally ptr (pixmapSize pix -~ fmap fromUber (Size 1 1)) $ \ ptr ->
+                    renderPixmapSimple ptr pix
+                translate ptr (Position 0 (height $ pixmapSize pix))
+            newLine :: IO ()
             newLine = translate ptr (Position 0 (fontHeight font_ + fromUber 1))
             -- | draws a line (centered)
             drawLine :: Prose -> IO ()
@@ -72,6 +79,7 @@ menu app mTitle mParent children =
             drawLines = mapM_ drawLine
 
         newLine
+        renderMenuTitlePixmap
         newLine
         whenMaybe mTitle (drawLines . map p . lines)
         newLine
