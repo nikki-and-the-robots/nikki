@@ -30,9 +30,15 @@ loadPixmap padding path = io $ do
         (fmap fromIntegral (size -~ fmap (* 2) (positionToSize padding)))
         (fmap (fromIntegral . negate) padding)
 
+-- | release the resource
 freePixmap :: MonadIO m => Pixmap -> m ()
 freePixmap = pixmap >>> io . destroyQPixmap
 
+-- | copy a pixmap
+copyPixmap :: Pixmap -> IO Pixmap
+copyPixmap (Pixmap pix size offset) = do
+    pixCopy <- copyQPixmap pix
+    return $ Pixmap pixCopy size offset
 
 -- | renders the pixmap
 renderPixmap :: MonadIO m =>
