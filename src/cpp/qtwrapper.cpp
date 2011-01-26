@@ -318,6 +318,10 @@ extern "C" void destroyQPixmap(QPixmap* ptr) {
     return delete ptr;
 };
 
+extern "C" QPixmap* copyQPixmap(QPixmap* self) {
+    return new QPixmap(*self);
+};
+
 extern "C" int widthQPixmap(QPixmap* ptr) {
     return ptr->width();
 };
@@ -325,6 +329,45 @@ extern "C" int widthQPixmap(QPixmap* ptr) {
 extern "C" int heightQPixmap(QPixmap* ptr) {
     return ptr->height();
 };
+
+extern "C" QImage* toImageQPixmap(QPixmap* self) {
+    QImage::Format preferred_format = QImage::Format_ARGB32_Premultiplied;
+    return new QImage(self->toImage().convertToFormat(preferred_format));
+};
+
+extern "C" QPixmap* fromImageQPixmap(QImage* image) {
+    return new QPixmap(QPixmap::fromImage(*image));
+};
+
+
+// * QImage
+extern "C" void destroyQImage(QImage* self) {
+    delete self;
+};
+
+extern "C" int widthQImage(QImage* ptr) {
+    return ptr->width();
+};
+
+extern "C" int heightQImage(QImage* ptr) {
+    return ptr->height();
+};
+
+extern "C" QRgb pixelQImage(QImage* self, int x, int y) {
+    return self->pixel(x, y);
+};
+
+extern "C" void setPixelQImage(QImage* self, int x, int y, QRgb rgb) {
+    self->setPixel(x, y, rgb);
+};
+
+
+// * QRgb
+extern "C" int c_qRed(QRgb x) {return qRed(x);};
+extern "C" int c_qGreen(QRgb x) {return qGreen(x);};
+extern "C" int c_qBlue(QRgb x) {return qBlue(x);};
+extern "C" int c_qAlpha(QRgb x) {return qAlpha(x);};
+extern "C" QRgb c_qRgba(int r, int g, int b, int a) {return qRgba(r, g, b, a);};
 
 
 // * QIcon
