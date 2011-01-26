@@ -101,7 +101,8 @@ waitAnyKey app = do
 
 drawTextBlock :: Font -> Ptr QPainter -> [Prose] -> IO ()
 drawTextBlock font ptr = mapM_ $ \ line -> do
-    fst (renderLine font line) ptr
+    (render, _) <- renderLine font white line
+    render ptr
     translate ptr (Position 0 (fontHeight font))
 
 showText :: Application_ sort -> [Prose] -> AppState -> AppState

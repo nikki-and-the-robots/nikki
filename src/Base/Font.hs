@@ -14,6 +14,7 @@ import qualified Data.ByteString as BS
 import Data.Either
 import Data.List
 import Data.Abelian
+import Data.Map
 
 import Text.Parsec
 
@@ -32,30 +33,34 @@ import Base.Constants
 import Base.Paths
 import Base.Pixmap
 import Base.Prose
+import Base.Font.ColorVariant
 
 
 standardFontDir :: FilePath
 standardFontDir = "png" </> "font"
 
+standardFontColor :: Color
+standardFontColor = white
+
 -- * querying
 
 -- | returns the standard height of the font
 fontHeight :: Font -> Double
-fontHeight = height . pixmapSize . errorSymbol
+fontHeight = height . pixmapSize . errorSymbol . (! standardFontColor) . colorVariants
 
 -- | returns a list of pixmaps that represent the given Prose text.
-selectLetterPixmaps :: Font -> Prose -> [Pixmap]
-selectLetterPixmaps font prose =
-    inner (letters font) (getByteString prose)
+selectLetterPixmaps :: ColorVariant -> Prose -> [Pixmap]
+selectLetterPixmaps variant prose =
+    inner (glyphs variant) (getByteString prose)
   where
     inner :: [(BS.ByteString, Pixmap)] -> BS.ByteString -> [Pixmap]
     inner _ string | BS.null string = []
     inner ((key, pixmap) : r) string =
         if key `BS.isPrefixOf` string then
-            pixmap : inner (letters font) (BS.drop (BS.length key) string)
+            pixmap : inner (glyphs variant) (BS.drop (BS.length key) string)
         else
             inner r string
-    inner [] string = errorSymbol font : inner (letters font) (BS.tail string)
+    inner [] string = errorSymbol variant : inner (glyphs variant) (BS.tail string)
 
 
 -- * loading
@@ -64,20 +69,37 @@ selectLetterPixmaps font prose =
 loadAlphaNumericFont :: RM Font
 loadAlphaNumericFont = do
     letterFiles <- getDataFiles standardFontDir (Just "png")
-    io $ toFont <$> mapM loadLetter letterFiles
+    io $ toFont =<< mapM loadLetter letterFiles
 
 -- | Converts loaded pixmaps to a font.
 -- Also sorts the letter pixmaps (longest keys first).
-toFont :: [(Either BS.ByteString ErrorSymbol, Pixmap)] -> Font
+-- Does only load the standard color variant at the moment.
+toFont :: [(Either BS.ByteString ErrorSymbol, Pixmap)] -> IO Font
 toFont m =
-    Font sortedLetters errorSymbol
+    toStandardColorVariant $ ColorVariant sortedLetters errorSymbol
   where
-    letters = map (\ k -> (k, lookupJust (Left k) m)) $ lefts $ map fst m
+    letters = fmap (\ k -> (k, lookupJust (Left k) m)) $ lefts $ fmap fst m
     sortedLetters = reverse $ sortBy shortestKeyFirst letters
     errorSymbol = lookupJustNote "error symbol not found" (Right ErrorSymbol) m
 
     shortestKeyFirst :: (BS.ByteString, b) -> (BS.ByteString, b) -> Ordering
     shortestKeyFirst = withView (BS.length . fst) compare
+
+-- | converts the loaded color variant (white/black) to
+-- the standardColorVariant (standardFontColor/transparent)
+-- and returns the initial Font.
+-- Also frees the loaded colorVariant.
+toStandardColorVariant :: ColorVariant -> IO Font
+toStandardColorVariant loadedVariant = do
+    standardColorVariant <- newColorVariant colorMapping loadedVariant
+    freeColorVariant loadedVariant
+    return $ Font $ fromList [(standardFontColor, standardColorVariant)]
+  where
+    colorMapping :: Color -> Color
+    colorMapping c =
+        if c == black then transparent else
+        if c == white then standardFontColor else
+        error "font pixmaps should consist of black and white only."
 
 data ErrorSymbol = ErrorSymbol
   deriving (Eq, Ord)
@@ -102,16 +124,14 @@ parseFileName name = do
 
     numbers = do
         numberStrings :: [String] <- sepBy1 (many1 digit) (char '_')
-        return $ Left $ map read numberStrings
+        return $ Left $ fmap read numberStrings
 
 
 -- * unloading
 
 -- | frees the memory taken by a font
 freeFont :: Font -> IO ()
-freeFont (Font letters errorSymbol) = do
-    mapM_ (freePixmap . snd) letters
-    freePixmap errorSymbol
+freeFont (Font variants) = forM_ variants freeColorVariant
 
 
 -- * rendering
@@ -119,17 +139,19 @@ freeFont (Font letters errorSymbol) = do
 -- | Returns a rendering action to render a line of text
 -- and the size of the renderings.
 -- Does not alter the painter matrix.
-renderLine :: Font -> Prose -> (Ptr QPainter -> IO (), Size Double)
-renderLine font text =
-    (\ ptr -> action ptr 0 textPixmaps, size)
+renderLine :: Font -> Color -> Prose -> IO (Ptr QPainter -> IO (), Size Double)
+renderLine font color text = do
+    variant <- getColorVariant font color
+    let pixs = textPixmaps variant
+    return (\ ptr -> action ptr 0 pixs, size pixs)
   where
-    size =
-        Size textWidth textHeight
-    textWidth =
+    size pixs =
+        Size (textWidth pixs) textHeight
+    textWidth pixs =
         -- letters themselves
-        sum (map (width . pixmapSize) textPixmaps) +
+        sum (fmap (width . pixmapSize) pixs) +
         -- gaps in between
-        max 0 (fromIntegral (Prelude.length textPixmaps - 1)) * fromUber 1
+        max 0 (fromIntegral (Prelude.length pixs - 1)) * fromUber 1
     textHeight = fontHeight font
 
     action :: Ptr QPainter -> Int -> [Pixmap] -> IO ()
@@ -140,5 +162,12 @@ renderLine font text =
         action ptr (widthOffset + round (width (pixmapSize pix)) + fromUber 1) r
     action _ _ [] = return ()
     -- sequence of pixmaps to be rendered
-    textPixmaps :: [Pixmap]
-    textPixmaps = selectLetterPixmaps font text
+    textPixmaps :: ColorVariant -> [Pixmap]
+    textPixmaps variant = selectLetterPixmaps variant text
+
+
+-- | Returns the colorvariant for the given color.
+getColorVariant :: Font -> Color -> IO ColorVariant
+getColorVariant (Font m) color = case Data.Map.lookup color m of
+    Just v -> return v
+    Nothing -> error ("font color variant missing: " ++ show color)

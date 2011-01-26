@@ -69,10 +69,14 @@ data ApplicationPixmaps = ApplicationPixmaps {
     finished :: Map LevelResult Pixmap
   }
 
-data Font =
-    Font {
+data Font = Font {
+    colorVariants :: (Map Color ColorVariant)
+  }
+
+-- | save pixmaps in one color on transparent background.
+data ColorVariant = ColorVariant {
         -- ordered: longer keys first
-        letters :: [(ByteString, Pixmap)],
+        glyphs :: [(ByteString, Pixmap)],
         errorSymbol :: Pixmap
       }
 
