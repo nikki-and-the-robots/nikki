@@ -72,7 +72,7 @@ askString app parent question follower = AppState $ do
     render :: String -> MVar String -> Ptr QPainter -> IO ()
     render question answerRef ptr = do
         resetMatrix ptr
-        clearScreen ptr
+        clearScreen ptr lightBlue
         setPenColor ptr white 1
 
         let nextY = translate ptr (Position 0 20)
@@ -111,7 +111,7 @@ showText app text follower = AppState $ do
     return follower
   where
     render text ptr = do
-        clearScreen ptr
+        clearScreen ptr lightBlue
         resetMatrix ptr
         translate ptr (Position (fromUber 4) (fromUber 4))
         let font = alphaNumericFont $ applicationPixmaps app

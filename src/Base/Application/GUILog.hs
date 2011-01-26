@@ -28,7 +28,7 @@ guiLog app msg = do
 
 renderLog :: Ptr QPainter -> IO ()
 renderLog ptr = do
-    clearScreen ptr
+    clearScreen ptr lightBlue
     log <- readMVar logRef
     when (not $ null log) $ do
         size  <- fmap fromIntegral <$> sizeQPainter ptr

@@ -230,7 +230,7 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
         let offsetVector = - (center - Vector (width / 2) (height / 2))
             offset = fmap (fromIntegral . truncate) $ vector2QtPosition offsetVector
 
-        clearScreen ptr
+        clearScreen ptr black
 
         when (not $ omit_pixmap_rendering configuration) $ do
             let os = objects scene

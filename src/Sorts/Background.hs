@@ -83,7 +83,7 @@ instance Sort BSort () where
             offset = sizeToPosition $ fmap (round . (/ 2)) (windowSize -~ pixmapSize pix)
         when (isNothing mPix) $
             -- background image is too small
-            clearScreen ptr
+            clearScreen ptr black
         drawPixmap ptr offset (pixmap pix)
 
 -- | returns the smallest pixmap that can cover the whole window, if it exists

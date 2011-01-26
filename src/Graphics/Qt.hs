@@ -121,11 +121,11 @@ modifyAlpha f (QtColor r g b a) =
 -- * convenience drawing
 
 -- | clears the whole screen
-clearScreen :: Ptr QPainter -> IO ()
-clearScreen ptr = do
+clearScreen :: Ptr QPainter -> Color -> IO ()
+clearScreen ptr color = do
     resetMatrix ptr
     windowSize <- sizeQPainter ptr
-    eraseRect ptr zero windowSize (QtColor 0 0 0 255)
+    eraseRect ptr zero windowSize color
 
 
 -- * Key Polling

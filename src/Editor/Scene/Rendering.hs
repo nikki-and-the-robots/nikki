@@ -34,7 +34,7 @@ renderEditorScene ptr scene = do
 renderObjectScene :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()
 renderObjectScene ptr offset s = do
     size <- fmap fromIntegral <$> sizeQPainter ptr
-    clearScreen ptr
+    clearScreen ptr black
     let -- the layers behind the currently selected Layer
         currentBackgrounds = belowSelected (selectedLayer s) (editorObjects s)
         currentLayer = editorObjects s !|| selectedLayer s

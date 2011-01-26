@@ -186,7 +186,7 @@ loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
         cmds <- pollChannel cmdChannel
         mapM_ id cmds
         resetMatrix ptr
-        clearScreen ptr
+        clearScreen ptr black
         drawText ptr (Position 100 100) False "loading..."
 
 mainMenuHelp :: Application -> AppState -> AppState

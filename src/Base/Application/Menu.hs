@@ -58,7 +58,7 @@ menu app mTitle mParent children =
     font_ = alphaNumericFont $ applicationPixmaps app
     render items ptr = do
         resetMatrix ptr
-        clearScreen ptr
+        clearScreen ptr lightBlue
 
         let newLine :: IO ()
             newLine = translate ptr (Position 0 (fontHeight font_ + fromUber 1))
