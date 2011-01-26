@@ -10,6 +10,7 @@ import Control.Monad
 
 import Foreign (Ptr, FunPtr, nullPtr)
 import Foreign.C.String
+import Foreign.C.Types
 import Foreign.Marshal.Alloc (free)
 
 import System.Directory
@@ -17,6 +18,8 @@ import System.Environment
 
 import Graphics.Qt.Types
 import Graphics.Qt.Events
+
+import Utils
 
 
 -- ** Globals
@@ -254,20 +257,65 @@ newQPixmap file_ = do
         error ("file does not exist: " ++ file)
     withCString file cppNewQPixmap
 
+foreign import ccall "newQPixmap" cppNewQPixmap :: CString -> IO (Ptr QPixmap)
+
 foreign import ccall destroyQPixmap :: Ptr QPixmap -> IO ()
 
-foreign import ccall "newQPixmap" cppNewQPixmap :: CString -> IO (Ptr QPixmap)
+foreign import ccall copyQPixmap :: Ptr QPixmap -> IO (Ptr QPixmap)
 
 foreign import ccall widthQPixmap :: Ptr QPixmap -> IO QtInt
 
 foreign import ccall heightQPixmap :: Ptr QPixmap -> IO QtInt
 
 sizeQPixmap :: Ptr QPixmap -> IO (Size QtInt)
-sizeQPixmap ptr = do
-    w <- widthQPixmap ptr
-    h <- heightQPixmap ptr
-    return $ Size w h
+sizeQPixmap ptr = Size <$> widthQPixmap ptr <*> heightQPixmap ptr
 
+foreign import ccall toImageQPixmap :: Ptr QPixmap -> IO (Ptr QImage)
+
+foreign import ccall fromImageQPixmap :: Ptr QImage -> IO (Ptr QPixmap)
+
+
+-- * QImage
+
+data QImage
+
+foreign import ccall destroyQImage :: Ptr QImage -> IO ()
+
+foreign import ccall widthQImage :: Ptr QImage -> IO QtInt
+
+foreign import ccall heightQImage :: Ptr QImage -> IO QtInt
+
+sizeQImage :: Ptr QImage -> IO (Size QtInt)
+sizeQImage ptr = Size <$> widthQImage ptr <*> heightQImage ptr
+
+pixelQImage :: Ptr QImage -> (QtInt, QtInt) -> IO Color
+pixelQImage ptr (x, y) = qRgbToColor =<< cppPixelQImage ptr x y
+foreign import ccall "pixelQImage" cppPixelQImage ::
+    Ptr QImage -> QtInt -> QtInt -> IO QRgb
+
+setPixelQImage :: Ptr QImage -> (QtInt, QtInt) -> Color -> IO ()
+setPixelQImage ptr (x, y) color =
+    cppSetPixelQImage ptr x y =<< colorToQRgb color
+foreign import ccall "setPixelQImage" cppSetPixelQImage ::
+    Ptr QImage -> QtInt -> QtInt -> QRgb -> IO ()
+
+
+-- * QRgb
+
+type QRgb = CUInt
+
+qRgbToColor :: QRgb -> IO Color
+qRgbToColor qrgb =
+    QtColor <$> c_qRed qrgb <*> c_qGreen qrgb <*> c_qBlue qrgb <*> c_qAlpha qrgb
+
+colorToQRgb :: Color -> IO QRgb
+colorToQRgb (QtColor r g b a) = c_qRgba r g b a
+
+foreign import ccall c_qRed :: QRgb -> IO QtInt
+foreign import ccall c_qGreen :: QRgb -> IO QtInt
+foreign import ccall c_qBlue :: QRgb -> IO QtInt
+foreign import ccall c_qAlpha :: QRgb -> IO QtInt
+foreign import ccall c_qRgba :: QtInt -> QtInt -> QtInt -> QtInt -> IO QRgb
 
 -- * QIcon
 
