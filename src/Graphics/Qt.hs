@@ -91,8 +91,10 @@ signalRed :: Color = opaqueColor 1 0.216 0.216
 lightYellow :: Color = opaqueColor 1 1 0.216
 pink :: Color = opaqueColor 1 0.196 0.588
 orange :: Color = opaqueColor 1 0.5 0
-lightBlue :: Color = opaqueColor 0.33 0.66 1
+lightBlue :: Color = opaqueColor 0.28 0.63 0.79
 lightGreen :: Color = opaqueColor 0.66 1 0.66
+
+transparent :: Color = QtColor 0 0 0 0
 
 
 opaqueColor :: Double -> Double -> Double -> Color
