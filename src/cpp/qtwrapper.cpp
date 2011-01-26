@@ -16,7 +16,7 @@ char* QStringToCString(QString x) {
 
 void error(QString msg) {
     qDebug() << "ERROR:" << msg;
-    qApp->exit(23);
+    exit(1);
 };
 
 // * AppWidget class
