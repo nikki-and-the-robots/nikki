@@ -56,8 +56,11 @@ instance Abelian a => Abelian (Size a) where
     (Size a b) +~ (Size x y) = Size (a +~ x) (b +~ y)
     (Size a b) -~ (Size x y) = Size (a -~ x) (b -~ y)
 
+instance PP p => PP (Size p) where
+    pp (Size x y) = unwords ["Size", pp x, pp y]
+
 data Color = QtColor QtInt QtInt QtInt QtInt
-  deriving Show
+  deriving (Eq, Ord, Show)
 
 
 -- * utils
