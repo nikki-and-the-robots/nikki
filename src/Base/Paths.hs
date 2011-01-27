@@ -8,7 +8,7 @@ module Base.Paths (getDataFileName, getDataFiles) where
 
 import System.Info
 import System.FilePath
-import System.Environment.FindBin
+import System.Environment.FindBin.Fixed
 
 import Utils
 
