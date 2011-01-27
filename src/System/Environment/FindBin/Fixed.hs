@@ -20,7 +20,8 @@ import Foreign.Storable
 
 import Utils
 
-
+-- | this works around the issue of hackage's FindBin, but it doesn't work
+-- when the program is searched executed via $PATH.
 getProgPath :: IO FilePath
 getProgPath = case System.Info.os of
     "linux" -> do
