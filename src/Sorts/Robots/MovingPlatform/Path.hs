@@ -66,10 +66,10 @@ applyEdgeImpulse chip last next = do
 -- | (pure) calculation of the path force.
 mkPathForce :: Path -> Double -> Vector -> Vector -> IO Vector
 mkPathForce path m p v = do
-    mapM_ (uncurry $ debugLine lightGreen) $ adjacentCyclic $ nodes path
-    debugLine green (lastNode path) (nextNode path)
-    debugPoint white closestPathPoint
-    debugPoint yellow aim
+--     mapM_ (uncurry $ debugLine lightGreen) $ adjacentCyclic $ nodes path
+--     debugLine green (lastNode path) (nextNode path)
+--     debugPoint white closestPathPoint
+--     debugPoint yellow aim
 --     debugPoint red $ guidePoint path
 
     return $
