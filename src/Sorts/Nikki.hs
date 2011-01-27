@@ -65,8 +65,10 @@ defaultPixmap :: Map String [Pixmap] -> Pixmap
 defaultPixmap pixmaps = head (pixmaps ! "wait_right")
 
 
+-- | Modifies our beloved main character in the game scene.
+-- Doesn't do anything, if the level is finished.
 modifyNikki :: (Nikki -> Nikki) -> Scene Object_ -> Scene Object_
-modifyNikki f scene =
+modifyNikki f scene | isGameMode (mode scene) =
     modifyMainlayerObjectByIndex inner (nikki (mode scene)) scene
   where
     inner :: Object_ -> Object_
@@ -76,6 +78,7 @@ modifyNikki f scene =
         Just s' = cast s
         Just castO = cast o
         o' = f castO
+modifyNikki _ scene = scene
 
 
 instance Sort NSort Nikki where
