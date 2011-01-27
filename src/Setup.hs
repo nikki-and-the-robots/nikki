@@ -26,13 +26,18 @@ import Utils
 main =
   case os of
     "darwin" -> macMain
-    _ -> defaultMain
+    _ -> defaultMainWithHooks simpleUserHooks{instHook = installHook}
+
+-- | prevent cabal install
+installHook :: a -> b -> c -> d -> IO ()
+installHook _ _ _ _ = error "\"cabal install\" is not supported."
+
 
 -- * mac deployment
 
 macMain :: IO ()
 macMain = do
-    defaultMainWithHooks simpleUserHooks{postBuild = macPostBuild}
+    defaultMainWithHooks simpleUserHooks{postBuild = macPostBuild, instHook = installHook}
 
 macResourcesDir = "resources"
 
