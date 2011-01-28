@@ -78,6 +78,7 @@ module Physics.Chipmunk (
     -- physics (and modification thereof)
     Position,
     Physics.Chipmunk.Types.getPosition,
+    getMass,
     moment,
 
     Velocity,

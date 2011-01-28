@@ -258,7 +258,7 @@ boxUpper = - boxLower
 -- | switches the anti-gravity on or off that pushes the switch stamp up.
 updateAntiGravity :: Switch -> IO ()
 updateAntiGravity switch = do
-    stampMass <- get $ Hipmunk.mass $ body $ stampChipmunk switch
+    stampMass <- getMass $ stampChipmunk switch
     applyOnlyForce (body $ stampChipmunk switch) (force stampMass) zero
   where
     force stampMass =

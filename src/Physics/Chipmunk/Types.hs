@@ -218,6 +218,9 @@ getChipmunkPosition StaticChipmunk{chipmunkPosition} =
 getChipmunkPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
     return (Vector x y +~ rotateVector angle baryCenterOffset, angle)
 
+getMass :: Chipmunk -> IO Mass
+getMass = get . H.mass . body
+
 
 -- * conversion
 

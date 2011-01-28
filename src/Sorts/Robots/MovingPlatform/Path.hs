@@ -54,7 +54,7 @@ updateSegment chip path@(Path (next : r) lastNode) = do
 applyEdgeImpulse :: Chipmunk -> Angle -> Angle -> IO ()
 applyEdgeImpulse chip last next = do
     let b = body chip
-    m <- get $ Hipmunk.mass b
+    m <- getMass chip
     v <- get $ velocity b
     let delta = foldAngle (next - last)
         wantedVelocity = rotateVector delta v

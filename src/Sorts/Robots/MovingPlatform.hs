@@ -128,13 +128,13 @@ applyPlatformForce platform = do
 -- | calculates the force that lets the platform hover
 getAntiGravity :: Platform -> IO Vector
 getAntiGravity p = do
-    m <- get $ Hipmunk.mass $ body $ chipmunk p
+    m <- getMass $ chipmunk p
     return (Vector 0 (- gravity * m))
 
 -- | calculates the force that moves the platform to the next path node
 getPathForce :: Platform -> IO Vector
 getPathForce platform = do
-    m <- get $ Hipmunk.mass $ body $ chipmunk platform
+    m <- getMass $ chipmunk platform
     p <- getPosition $ chipmunk platform
     v <- get $ velocity $ body $ chipmunk platform
     mkPathForce (path platform) m p v
