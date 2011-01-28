@@ -148,7 +148,7 @@ triggerShapeAttributes =
       }
 
 
-boxSize = Size (fromUber 31) (fromUber 15)
+boxSize = Size (fromUber 30) (fromUber 15)
 
 
 switchShapes :: (([ShapeDescription], Vector),
@@ -165,7 +165,7 @@ outerWallThickness = 32
 -- size of the shaft, that  can be seen outside the box
 shaftSize = Size (fromUber 11) yPlatformDistance
 -- y distance between platform and box
-yPlatformDistance = fromUber 3
+yPlatformDistance = fromUber 2
 innerPadding = 4
 shaftPadding = 0.2
 openingWidth = width shaftSize + 2 * shaftPadding
@@ -234,8 +234,7 @@ shaft = mkRect
 innerStampThingie = mkRect
     (Position (- (width boxSize / 2) + outerWallThickness + innerPadding) 0)
     (Size (width boxSize - 2 * (outerWallThickness + innerPadding))
-        (height boxSize - outerWallThickness - yPlatformDistance + fromUber 1))
-                                                                 -- stamp doesn't get pushed down all the way
+        (height boxSize - outerWallThickness - yPlatformDistance))
 trigger =
     mkRect (Position
                 (- (outerWallThickness / 2))
