@@ -1,5 +1,9 @@
 {-# language DeriveDataTypeable, ViewPatterns, ScopedTypeVariables #-}
 
+-- | Tries to push a deployed folder to an update server.
+-- On OSX, I had problems with too many open files,
+-- "ulimit -n 10240" solved that.
+
 module Main where
 
 
