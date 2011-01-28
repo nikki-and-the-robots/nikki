@@ -316,15 +316,12 @@ mkPolys size =
 
 -- * controlling
 
+-- | controls the terminal in terminal mode
 updateState :: Seconds -> ControlData -> [Index] -> State -> State
 updateState now cd robots state | Press AButton `elem` pressed cd =
   case row state of
     NikkiRow -> exitToNikki state
     RobotRow -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
-updateState now cd robots state | Press BButton `elem` pressed cd =
-  case row state of
-    NikkiRow -> exitToNikki state
-    RobotRow -> state{row = NikkiRow, changedTime = now}
 updateState now cd robots state | Press RightButton `elem` pressed cd =
     -- go right in robot list
     modifySelected now robots (+ 1) state
