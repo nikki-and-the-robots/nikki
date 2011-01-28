@@ -54,6 +54,8 @@ names =
     ("tiles/blue-small", (Position (- 1) (- 1)), Size 32 32) :
     ("tiles/pink-small", (Position (- 1) (- 1)), Size 32 32) :
     ("tiles/red-small", (Position (- 1) (- 1)), Size 32 32) :
+    ("tutorial/robots-01", (Position (- 1) (- 1)), Size 416 268) :
+    ("tutorial/robots-02", (Position (- 1) (- 1)), Size 920 124) :
     []
 
 -- | points are moved by this distance to avoid sticky edges
