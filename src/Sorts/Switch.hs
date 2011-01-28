@@ -14,6 +14,7 @@ import Data.Set (member)
 
 import System.FilePath
 
+import qualified Physics.Hipmunk as Hipmunk
 import Physics.Chipmunk as CM
 
 import Graphics.Qt hiding (scale)
@@ -90,10 +91,11 @@ instance Sort SwitchSort Switch where
                        +~ stampBaryCenterOffset
             stampAttributes = stampBodyAttributes stampPos
         stampChip <- initChipmunk space stampAttributes stampShapes stampBaryCenterOffset
-        modifyApplyForce stampChip
-            (Vector 0 (- (gravity * (mass stampAttributes + nikkiMass * 0.4))))
 
-        return $ Switch boxChip stampChip triggerChip triggerShape False
+        let switch = Switch boxChip stampChip triggerChip triggerShape False
+        updateAntiGravity switch
+
+        return switch 
 
     immutableCopy s@Switch{boxChipmunk, stampChipmunk} = do
         newBoxChipmunk <- CM.immutableCopy boxChipmunk
@@ -102,11 +104,13 @@ instance Sort SwitchSort Switch where
 
     chipmunks (Switch a b c _ _) = [a, b, c]
 
-    updateNoSceneChange sort mode now contacts cd switch@Switch{triggered = False} = return $
-        if triggerShape switch `member` triggers contacts then
-            switch{triggered = True}
+    updateNoSceneChange sort mode now contacts cd switch@Switch{triggered = False} =
+        if triggerShape switch `member` triggers contacts then do
+            let new = switch{triggered = True}
+            updateAntiGravity new
+            return new
           else
-            switch
+            return switch
     updateNoSceneChange s _ _ _ _ o = return o
 
     render switch sort ptr offset now = do
@@ -247,3 +251,18 @@ boxLeft = - boxRight
 boxRight = width boxSize / 2
 boxLower = height boxSize / 2
 boxUpper = - boxLower
+
+
+-- * Physics
+
+-- | switches the anti-gravity on or off that pushes the switch stamp up.
+updateAntiGravity :: Switch -> IO ()
+updateAntiGravity switch = do
+    stampMass <- get $ Hipmunk.mass $ body $ stampChipmunk switch
+    applyOnlyForce (body $ stampChipmunk switch) (force stampMass) zero
+  where
+    force stampMass =
+        if not $ triggered switch then
+            (Vector 0 (- (gravity * (stampMass + nikkiMass * 0.4))))
+        else
+            zero
