@@ -36,6 +36,7 @@ AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
     this->repaintTimer = new QTimer(this);
     QObject::connect(this->repaintTimer, SIGNAL(timeout()), this, SLOT(update()));
 
+    QObject::connect(this, SIGNAL(postGUISignal(guiAction*)), this, SLOT(postGUISlot(guiAction*)));
     QObject::connect(this, SIGNAL(setRenderingLoopedSignal(bool)), this, SLOT(setRenderingLoopedSlot(bool)));
 };
 
@@ -69,6 +70,14 @@ void AppWidget::closeEvent(QCloseEvent* e) {
     if (keyCallback != NULL) {
         this->keyCallback(true, NULL);
     }
+};
+
+void AppWidget::postGUI(guiAction* action) {
+    emit postGUISignal(action);
+};
+
+void AppWidget::postGUISlot(guiAction* action) {
+    action();
 };
 
 void AppWidget::setRenderingLooped(bool looped) {
@@ -158,6 +167,10 @@ extern "C" AppWidget* newAppWidget(int swapInterval) {
 
 extern "C" void setWindowIcon(AppWidget* self, QIcon* icon) {
     self->setWindowIcon(*icon);
+};
+
+extern "C" void postGUI(AppWidget* self, guiAction* action) {
+    self->postGUI(action);
 };
 
 extern "C" void setRenderingLooped(AppWidget* self, bool looped) {

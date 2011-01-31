@@ -1,9 +1,10 @@
 {-# language ScopedTypeVariables #-}
 
 module Graphics.Qt (
+    module Graphics.Qt,
     module Graphics.Qt.Types,
     module Graphics.Qt.CPPWrapper,
-    module Graphics.Qt,
+    module Graphics.Qt.PostGUI,
     QtEvent(..),
     modifyTextField,
     Key(..),
@@ -19,6 +20,7 @@ import Control.Exception
 import Graphics.Qt.Types
 import Graphics.Qt.CPPWrapper
 import Graphics.Qt.Events
+import Graphics.Qt.PostGUI
 
 import Foreign.Ptr
 

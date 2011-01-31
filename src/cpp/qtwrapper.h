@@ -3,11 +3,13 @@
 #include <QGLWidget>
 
 // * function pointer types
-typedef void (drawingCallbackFunction)(QPainter*);
+typedef void (drawingCallbackFunction) (QPainter*);
 
                                           // nullptr for window close event
 typedef void (keyCallbackFunction) (bool, QKeyEvent*);
 
+// type for arbitrary actions to be performed in the GUI thread
+typedef void (guiAction) ();
 
 
 class AppWidget : public QGLWidget {
@@ -36,10 +38,16 @@ public:
 
     void setRenderingLooped(bool b);
 
+    void postGUI(guiAction* action);
+
 signals:
+    void postGUISignal(guiAction* action);
+
     void setRenderingLoopedSignal(bool b);
 
 public slots:
+    void postGUISlot(guiAction* action);
+
     void setRenderingLoopedSlot(bool b);
 
 };
