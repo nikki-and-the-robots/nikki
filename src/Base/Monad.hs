@@ -49,4 +49,5 @@ swapFullScreen :: Application_ s -> M ()
 swapFullScreen app = do
     fullscreen' <- not <$> gets fullscreen
     modify (\ c -> c{fullscreen = fullscreen'})
-    io $ setFullscreenAppWidget (window app) fullscreen'
+    io $ postGUI (window app) $ do
+        setFullscreenAppWidget (window app) fullscreen'
