@@ -25,7 +25,7 @@ import Utils
 import Base.Types
 import Base.Monad
 import Base.Configuration
-import Base.Application.GUILog
+import Base.Application.Widgets.GUILog
 
 import Distribution.AutoUpdate.Paths
 import Distribution.AutoUpdate.Download

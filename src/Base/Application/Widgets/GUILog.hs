@@ -1,5 +1,5 @@
 
-module Base.Application.GUILog (guiLog) where
+module Base.Application.Widgets.GUILog (guiLog) where
 
 
 import Data.Abelian

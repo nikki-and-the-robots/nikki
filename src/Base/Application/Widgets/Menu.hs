@@ -1,5 +1,5 @@
 
-module Base.Application.Menu where
+module Base.Application.Widgets.Menu where
 
 
 import Data.SelectTree (SelectTree(..))

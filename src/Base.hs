@@ -6,7 +6,7 @@ module Base (
     module Base.Prose,
     module Base.Application,
     module Base.Application.Pixmaps,
-    module Base.Application.GUILog,
+    module Base.Application.Widgets.GUILog,
     module Base.Pixmap,
     module Base.Monad,
     module Base.Paths,
@@ -27,7 +27,7 @@ import Base.Types
 import Base.Prose
 import Base.Application
 import Base.Application.Pixmaps
-import Base.Application.GUILog
+import Base.Application.Widgets.GUILog
 import Base.Pixmap
 import Base.Monad
 import Base.Paths

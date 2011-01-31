@@ -9,7 +9,6 @@ module Base.Application (
     askStringRead,
     askString,
     drawTextBlock,
-    waitAnyKey,
     showText,
   ) where
 
@@ -29,7 +28,8 @@ import Base.Monad
 import Base.Prose
 import Base.Font
 
-import Base.Application.Menu
+import Base.Application.Widgets.Menu
+import Base.Application.Widgets.TextListing
 
 
 -- | if you don't need the M monad, just IO
@@ -90,30 +90,3 @@ askStringRead app parent question follower =
     wrapper s = case readMay s of
         Nothing -> askStringRead app parent question follower -- try again
         Just r -> follower r
-
--- | waits for any key.
-waitAnyKey :: Application_ s -> M ()
-waitAnyKey app = do
-    e <- waitForAppEvent app $ keyPoller app
-    case e of
-        Press _ -> return ()
-        _ -> waitAnyKey app
-
-drawTextBlock :: Font -> Ptr QPainter -> [Prose] -> IO ()
-drawTextBlock font ptr = mapM_ $ \ line -> do
-    (render, _) <- renderLine font white line
-    render ptr
-    translate ptr (Position 0 (fontHeight font))
-
-showText :: Application_ sort -> [Prose] -> AppState -> AppState
-showText app text follower = AppState $ do
-    io $ setDrawingCallbackAppWidget (window app) $ Just $ render text
-    waitAnyKey app
-    return follower
-  where
-    render text ptr = do
-        clearScreen ptr lightBlue
-        resetMatrix ptr
-        translate ptr (Position (fromUber 4) (fromUber 4))
-        let font = alphaNumericFont $ applicationPixmaps app
-        drawTextBlock font ptr text

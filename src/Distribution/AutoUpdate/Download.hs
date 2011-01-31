@@ -14,7 +14,7 @@ import Network.Curl.Download.Lazy
 import Utils
 
 import Base.Types
-import Base.Application.GUILog
+import Base.Application.Widgets.GUILog
 
 
 -- | Tries to fetch the file with the given path.
