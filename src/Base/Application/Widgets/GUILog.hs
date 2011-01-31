@@ -1,5 +1,5 @@
 
-module Base.Application.Widgets.GUILog (guiLog) where
+module Base.Application.Widgets.GUILog (guiLog, resetGuiLog) where
 
 
 import Data.Abelian
@@ -50,3 +50,7 @@ logRef = unsafePerformIO $ newMVar []
 
 addMsg :: Prose -> IO ()
 addMsg msg = modifyMVar_ logRef (return . (msg :))
+
+-- | Empty the gui log queue
+resetGuiLog :: IO ()
+resetGuiLog = modifyMVar_ logRef (const $ return [])

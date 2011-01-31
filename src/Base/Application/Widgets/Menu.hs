@@ -16,6 +16,7 @@ import Base.Constants
 import Base.Polling
 import Base.Font
 import Base.Prose
+import Base.Application.Widgets.GUILog
 
 
 data MenuItems
@@ -42,6 +43,7 @@ menu app mTitle mParent children =
   where
     inner items = AppState $ do
         io $ setDrawingCallbackAppWidget (window app) (Just $ render items)
+        io $ resetGuiLog
         event <- waitForAppEvent app $ keyPoller app
         case event of
             Press UpButton -> return $ inner $ selectPrevious items
