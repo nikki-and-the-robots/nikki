@@ -16,10 +16,11 @@ import Data.Either
 import Data.List
 import Data.Abelian
 import Data.Map
+import Data.Char
 
 import Text.Parsec
 
-import Codec.Binary.UTF8.Light
+import Codec.Binary.UTF8.Light (Word32, encodeUTF8, decode)
 
 import Control.Arrow (left)
 
@@ -52,31 +53,78 @@ fontHeight = height . pixmapSize . errorSymbol . (! standardFontColor) . colorVa
 -- | returns a list of pixmaps that represent the given Prose text.
 selectLetterPixmaps :: ColorVariant -> Maybe Int -> Prose -> [[Pixmap]]
 selectLetterPixmaps variant wordWrapWidth prose =
+    fmap (fmap glyphPixmap) $
     wordWrap wordWrapWidth $
     inner (glyphs variant) (getByteString prose)
   where
-    inner :: [(BS.ByteString, Pixmap)] -> BS.ByteString -> [Pixmap]
+    inner :: [(BS.ByteString, Pixmap)] -> BS.ByteString -> [Glyph]
     inner _ string | BS.null string = []
     inner ((key, pixmap) : r) string =
         if key `BS.isPrefixOf` string then
-            pixmap : inner (glyphs variant) (BS.drop (BS.length key) string)
+            Glyph key pixmap : inner (glyphs variant) (BS.drop (BS.length key) string)
         else
             inner r string
-    inner [] string = errorSymbol variant : inner (glyphs variant) (BS.tail string)
+    inner [] string = ErrorGlyph (errorSymbol variant) : inner (glyphs variant) (BS.tail string)
+
+-- | Returns the width of the given sequence of pixmaps,
+-- including 1 üp for kerning
+pixmapsWidth :: [Pixmap] -> Double
+pixmapsWidth pixs =
+    -- letters themselves
+    sum (fmap (width . pixmapSize) pixs) +
+    -- gaps in between
+    max 0 (fromIntegral (Prelude.length pixs - 1)) * fromUber 1
+
+
+-- * word wrap
+
+data Word = Word {
+    wordPixmaps :: [Glyph], -- word glyphs including following white space characters
+    wordWidth :: Double, -- word width without counting white spaces, and counting
+                         -- separating kerning pixels.
+    wordYOffsetDelta :: Double -- word width including white spaces and
+                               -- one kerning pixel for each character.
+  }
+
+data Glyph
+    = Glyph {
+        character :: BS.ByteString,
+        glyphPixmap :: Pixmap
+      }
+    | ErrorGlyph {glyphPixmap :: Pixmap}
+
+isSpaceGlyph :: Glyph -> Bool
+isSpaceGlyph (Glyph c _) = all isSpace $ decode c
+
+toWords :: [Glyph] -> [Word]
+toWords [] = []
+toWords glyphs =
+    word : toWords rest
+  where
+    word = Word (nonSpaces ++ followingSpaces) wordWidth wordYOffsetDelta
+    (nonSpaces, afterWord) = span (not . isSpaceGlyph) glyphs
+    (followingSpaces, rest) = span isSpaceGlyph afterWord
+    wordWidth = pixmapsWidth $ fmap glyphPixmap nonSpaces
+    wordYOffsetDelta = pixmapsWidth (fmap glyphPixmap (nonSpaces ++ followingSpaces))
+                       +~ fromUber 1
+
+fromWords :: [Word] -> [Glyph]
+fromWords = concatMap wordPixmaps
 
 -- | implements a word wrap on a list of glyph pixmaps
-wordWrap :: Maybe Int -> [Pixmap] -> [[Pixmap]]
-wordWrap Nothing pixs = [pixs]
-wordWrap (fmap fromIntegral -> Just wrapWidth) pixs =
-    inner 0 [] pixs
+wordWrap :: Maybe Int -> [Glyph] -> [[Glyph]]
+wordWrap Nothing = (: [])
+wordWrap (fmap fromIntegral -> Just wrapWidth) =
+    toWords >>>
+    inner 0 [] >>>
+    fmap fromWords
   where
-    inner :: Double -> [Pixmap] -> [Pixmap] -> [[Pixmap]]
+    inner :: Double -> [Word] -> [Word] -> [[Word]]
     inner w akk (a : r) =
-        let w' = w + width (pixmapSize a)
-        in if w' > wrapWidth then
+        if w + wordWidth a > wrapWidth then
             reverse akk : inner 0 [] (a : r)
           else
-            inner (w' + fromUber 1) (a : akk) r
+            inner (w + wordYOffsetDelta a + fromUber 1) (a : akk) r
     inner _ akk [] = reverse akk : []
 
 
@@ -173,11 +221,7 @@ renderLine font wordWrapWidth color text = do
     size pixs =
         Size (maximum $ fmap lineWidth pixs) (textHeight * fromIntegral (length pixs))
     lineWidth :: [Pixmap] -> Double
-    lineWidth pixs =
-        -- letters themselves
-        sum (fmap (width . pixmapSize) pixs) +
-        -- gaps in between
-        max 0 (fromIntegral (Prelude.length pixs - 1)) * fromUber 1
+    lineWidth pixs = pixmapsWidth pixs
     textHeight = fontHeight font
 
     action :: Ptr QPainter -> Offset Int -> [[Pixmap]] -> IO ()
