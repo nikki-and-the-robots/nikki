@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables #-}
+{-# language ScopedTypeVariables, ViewPatterns #-}
 
 module Base.Font (
     loadAlphaNumericFont,
@@ -50,8 +50,9 @@ fontHeight :: Font -> Double
 fontHeight = height . pixmapSize . errorSymbol . (! standardFontColor) . colorVariants
 
 -- | returns a list of pixmaps that represent the given Prose text.
-selectLetterPixmaps :: ColorVariant -> Prose -> [Pixmap]
-selectLetterPixmaps variant prose =
+selectLetterPixmaps :: ColorVariant -> Maybe Int -> Prose -> [[Pixmap]]
+selectLetterPixmaps variant wordWrapWidth prose =
+    wordWrap wordWrapWidth $
     inner (glyphs variant) (getByteString prose)
   where
     inner :: [(BS.ByteString, Pixmap)] -> BS.ByteString -> [Pixmap]
@@ -62,6 +63,21 @@ selectLetterPixmaps variant prose =
         else
             inner r string
     inner [] string = errorSymbol variant : inner (glyphs variant) (BS.tail string)
+
+-- | implements a word wrap on a list of glyph pixmaps
+wordWrap :: Maybe Int -> [Pixmap] -> [[Pixmap]]
+wordWrap Nothing pixs = [pixs]
+wordWrap (fmap fromIntegral -> Just wrapWidth) pixs =
+    inner 0 [] pixs
+  where
+    inner :: Double -> [Pixmap] -> [Pixmap] -> [[Pixmap]]
+    inner w akk (a : r) =
+        let w' = w + width (pixmapSize a)
+        in if w' > wrapWidth then
+            reverse akk : inner 0 [] (a : r)
+          else
+            inner (w' + fromUber 1) (a : akk) r
+    inner _ akk [] = reverse akk : []
 
 
 -- * loading
@@ -139,39 +155,44 @@ freeFont (Font variants) = forM_ variants freeColorVariant
 
 -- | Like renderLine, but renders with the current GL matrix.
 -- Does not alter the GL matrix.
-renderLineSimple :: Font -> Color -> Prose -> Ptr QPainter -> IO ()
-renderLineSimple font color text ptr = do
-    (action, _) <- renderLine font color text
+renderLineSimple :: Font -> Maybe Int -> Color -> Prose -> Ptr QPainter -> IO (Size Double)
+renderLineSimple font wordWrapWidth color text ptr = do
+    (action, size) <- renderLine font wordWrapWidth color text
     action ptr
+    return size
 
 -- | Returns a rendering action to render a line of text
 -- and the size of the renderings.
 -- Does not alter the painter matrix.
-renderLine :: Font -> Color -> Prose -> IO (Ptr QPainter -> IO (), Size Double)
-renderLine font color text = do
+renderLine :: Font -> Maybe Int -> Color -> Prose -> IO (Ptr QPainter -> IO (), Size Double)
+renderLine font wordWrapWidth color text = do
     variant <- getColorVariant font color
     let pixs = textPixmaps variant
-    return (\ ptr -> action ptr 0 pixs, size pixs)
+    return (\ ptr -> action ptr zero pixs, size pixs)
   where
     size pixs =
-        Size (textWidth pixs) textHeight
-    textWidth pixs =
+        Size (maximum $ fmap lineWidth pixs) (textHeight * fromIntegral (length pixs))
+    lineWidth :: [Pixmap] -> Double
+    lineWidth pixs =
         -- letters themselves
         sum (fmap (width . pixmapSize) pixs) +
         -- gaps in between
         max 0 (fromIntegral (Prelude.length pixs - 1)) * fromUber 1
     textHeight = fontHeight font
 
-    action :: Ptr QPainter -> Int -> [Pixmap] -> IO ()
-    action ptr widthOffset (pix : r) = do
+    action :: Ptr QPainter -> Offset Int -> [[Pixmap]] -> IO ()
+    action ptr offset ((pix : restLine) : restText) = do
         drawPixmap ptr
-            (Position widthOffset 0 +~ fmap round (pixmapOffset pix))
+            (offset +~ fmap round (pixmapOffset pix))
             (pixmap pix)
-        action ptr (widthOffset + round (width (pixmapSize pix)) + fromUber 1) r
+        let newOffset = offset +~ Position (round (width (pixmapSize pix)) + fromUber 1) 0
+        action ptr newOffset (restLine : restText)
+    action ptr (Position _ yOffset) ([] : restText) =
+        action ptr (Position 0 (yOffset + round (fontHeight font))) restText
     action _ _ [] = return ()
     -- sequence of pixmaps to be rendered
-    textPixmaps :: ColorVariant -> [Pixmap]
-    textPixmaps variant = selectLetterPixmaps variant text
+    textPixmaps :: ColorVariant -> [[Pixmap]]
+    textPixmaps variant = selectLetterPixmaps variant wordWrapWidth text
 
 
 -- | Returns the colorvariant for the given color.

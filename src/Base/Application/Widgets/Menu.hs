@@ -74,7 +74,7 @@ menu app mTitle mParent children =
             -- | draws a line (centered)
             drawLine :: Prose -> IO ()
             drawLine l = do
-                (renderAction, lineSize) <- renderLine font_ white l
+                (renderAction, lineSize) <- renderLine font_ Nothing white l
                 centerHorizontally ptr lineSize renderAction
                 newLine
             drawLines :: [Prose] -> IO ()

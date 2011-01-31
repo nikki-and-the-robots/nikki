@@ -23,8 +23,10 @@ import Base.Font
 
 drawTextBlock :: Font -> Ptr QPainter -> [Prose] -> IO ()
 drawTextBlock font ptr = mapM_ $ \ line -> do
-    renderLineSimple font white line ptr
-    translate ptr (Position 0 (fontHeight font))
+    windowSize <- sizeQPainter ptr
+    let wordWrapWidth = width windowSize - (2 * fromUber 4)
+    renderSize <- renderLineSimple font (Just wordWrapWidth) white line ptr
+    translate ptr (Position 0 (height renderSize))
 
 showText :: Application_ sort -> [Prose] -> AppState -> AppState
 showText app text follower =
