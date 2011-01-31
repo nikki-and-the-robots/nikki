@@ -85,7 +85,7 @@ menu app mTitle mParent children =
         newLine
         newLine
 
-        forM_ (before items) $ \ i ->
+        forM_ (mkScrolling $ before items) $ \ i ->
             drawLine $ p $ fst i
         drawLine $ p ("⇨ " ++ fst (selected items) ++ " ⇦")
         forM_ (after items) $ \ i -> do
@@ -93,6 +93,10 @@ menu app mTitle mParent children =
 
     yStep = 20
     x = 10
+
+-- | modify the items before the selected to implement simple scrolling
+mkScrolling :: [(String, AppState)] -> [(String, AppState)]
+mkScrolling before = drop (max 0 (Prelude.length before - 4)) before
 
 -- | Perform a rendering action centered horizontally
 -- (without anti-aliasing).
@@ -104,6 +108,9 @@ centerHorizontally ptr size action = do
     translate ptr translation
     action ptr
     translate ptr (negateAbelian translation)
+
+
+-- * automatic creation
 
 -- | convert a SelectTree to a menu
 treeToMenu :: Application_ sort -> AppState -> SelectTree String -> (String -> AppState)
