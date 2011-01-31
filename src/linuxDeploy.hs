@@ -1,11 +1,13 @@
 #!/usr/bin/env runhaskell
 
+{-# language PackageImports #-}
+
 
 import Data.List
 import Data.Char
 import Data.Maybe
 
-import Text.Parsec
+import "parsec3" Text.Parsec
 
 import System.FilePath
 import System.Directory
