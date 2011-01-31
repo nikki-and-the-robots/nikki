@@ -22,7 +22,6 @@ forkLogicThread action = do
     exitCodeMVar <- newEmptyMVar
     let catchAll :: SomeException -> IO ()
         catchAll e = do
-            logInfo "caught"
             handleException e
             let exitCode = case fromException e of
                     (Just x) -> x
