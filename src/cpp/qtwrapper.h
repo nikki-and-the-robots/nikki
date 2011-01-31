@@ -36,19 +36,13 @@ public:
 
     void closeEvent(QCloseEvent* e);
 
-    void setRenderingLooped(bool b);
-
     void postGUI(guiAction* action);
 
 signals:
     void postGUISignal(guiAction* action);
 
-    void setRenderingLoopedSignal(bool b);
-
 public slots:
     void postGUISlot(guiAction* action);
-
-    void setRenderingLoopedSlot(bool b);
 
 };
 

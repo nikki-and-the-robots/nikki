@@ -38,9 +38,9 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
         setDrawingCallbackAppWidget (window app)
             (Just $ render fpsRef cameraStateRef sceneMVar configuration)
 
-        setRenderingLooped (window app) True
+        postGUI (window app)$ setRenderingLooped (window app) True
     runStateT (gameLoop app sceneMVar) (GameState space scene)
-    io $ setRenderingLooped (window app) False
+    io $ postGUI (window app) $ setRenderingLooped (window app) False
     io $ setDrawingCallbackAppWidget (window app) Nothing
 
     return parent

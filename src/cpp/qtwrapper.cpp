@@ -37,7 +37,6 @@ AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
     QObject::connect(this->repaintTimer, SIGNAL(timeout()), this, SLOT(update()));
 
     QObject::connect(this, SIGNAL(postGUISignal(guiAction*)), this, SLOT(postGUISlot(guiAction*)));
-    QObject::connect(this, SIGNAL(setRenderingLoopedSignal(bool)), this, SLOT(setRenderingLoopedSlot(bool)));
 };
 
 void AppWidget::paintEvent(QPaintEvent* event) {
@@ -79,19 +78,6 @@ void AppWidget::postGUI(guiAction* action) {
 void AppWidget::postGUISlot(guiAction* action) {
     action();
 };
-
-void AppWidget::setRenderingLooped(bool looped) {
-    emit setRenderingLoopedSignal(looped);
-};
-
-void AppWidget::setRenderingLoopedSlot(bool looped) {
-    if (looped) {
-        this->repaintTimer->start();
-    } else {
-        this->repaintTimer->stop();
-    }
-};
-
 
 // ** stuff called by haskell
 
@@ -174,7 +160,11 @@ extern "C" void postGUI(AppWidget* self, guiAction* action) {
 };
 
 extern "C" void setRenderingLooped(AppWidget* self, bool looped) {
-    self->setRenderingLooped(looped);
+    if (looped) {
+        self->repaintTimer->start();
+    } else {
+        self->repaintTimer->stop();
+    }
 };
 
 // sets if auto repeat key events should be processed
