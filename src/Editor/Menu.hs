@@ -86,8 +86,8 @@ editorMenu app play mvar scene =
                 ("try playing the level", play app (edit scene) scene),
                 ("show help", showEditorHelp app this),
                 ("return to editing", edit scene),
-                ("save level", saveLevel app this (edit scene) scene),
-                ("save level and exit editor", saveLevel app this (mainMenu app) scene),
+                ("save level", saveLevel app this editWithFilePath scene),
+                ("save level and exit editor", saveLevel app this (const $ mainMenu app) scene),
                 ("exit editor without saving", reallyExitEditor app this)
               ])
         ObjectEditMode{} ->
@@ -107,16 +107,19 @@ editorMenu app play mvar scene =
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app play mvar (updateSelected s)
     this = editorMenu app play mvar scene
+    -- | edit the scene, but set a given filepath for the level file
+    editWithFilePath :: FilePath -> AppState
+    editWithFilePath path = edit scene{levelPath = Just path}
 
     lEnterOEM = case enterOEM app play mvar scene of
         Nothing -> []
         Just x -> [("edit object", x)]
 
 
-saveLevel :: Application -> AppState -> AppState -> EditorScene Sort_ -> AppState
+saveLevel :: Application -> AppState -> (FilePath -> AppState) -> EditorScene Sort_ -> AppState
 saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects} = ioAppState $ do
     writeObjectsToDisk path editorObjects
-    return follower
+    return $ follower path
 saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects} =
     askString app parent "level name" $ \ name -> staticConfigAppState $ do
         levelDirectory <- getFreeLevelsDirectory
@@ -126,7 +129,7 @@ saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjec
             return $ fileExists app this path editorObjects
           else do
             io $ writeObjectsToDisk path editorObjects
-            return follower
+            return $ follower path
   where
     this = saveLevel app parent follower scene
 
