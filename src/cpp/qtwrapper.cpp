@@ -71,6 +71,8 @@ void AppWidget::closeEvent(QCloseEvent* e) {
     }
 };
 
+// the postGUI signal-slot-pair is necessary to execute a command in the
+// GUI thread.
 void AppWidget::postGUI(guiAction* action) {
     emit postGUISignal(action);
 };
