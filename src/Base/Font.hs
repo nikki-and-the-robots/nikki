@@ -15,7 +15,7 @@ import qualified Data.ByteString as BS
 import Data.Either
 import Data.List
 import Data.Abelian
-import Data.Map
+import Data.Map ((!), lookup, fromList)
 import Data.Char
 
 import Text.Parsec
@@ -121,10 +121,10 @@ wordWrap (fmap fromIntegral -> Just wrapWidth) =
   where
     inner :: Double -> [Word] -> [Word] -> [[Word]]
     inner w akk (a : r) =
-        if w + wordWidth a > wrapWidth then
-            reverse akk : inner 0 [] (a : r)
-          else
+        if null akk || (w + wordWidth a <= wrapWidth) then
             inner (w + wordYOffsetDelta a + fromUber 1) (a : akk) r
+          else
+            reverse akk : inner 0 [] (a : r)
     inner _ akk [] = reverse akk : []
 
 
