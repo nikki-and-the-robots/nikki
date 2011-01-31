@@ -8,6 +8,7 @@ module Distribution.AutoUpdate (autoUpdate) where
 import Prelude hiding (catch)
 
 import Data.List
+import Data.Monoid
 
 import Control.Monad.Trans.Error
 import Control.Monad.CatchIO
@@ -23,6 +24,7 @@ import Version
 import Utils
 
 import Base.Types
+import Base.Prose
 import Base.Monad
 import Base.Configuration
 import Base.Application.Widgets.GUILog
@@ -66,7 +68,7 @@ autoUpdate :: Application_ sort -> M a -> M a
 autoUpdate app game = do
     no_update_ <- gets no_update
     if no_update_ then do
-        io $ guiLog app "not updating"
+        io $ guiLog app (p "not updating")
         game
       else
         doAutoUpdate app game
@@ -77,21 +79,24 @@ doAutoUpdate app game = do
     mDeployed <- io $ isDeployed
     case mDeployed of
         Nothing -> do
-            io $ guiLog app "not deployed: not updating"
+            io $ guiLog app (p "not deployed: not updating")
             game
         Just path@(DeployPath dp) -> do
-            io $ guiLog app ("deployed in " ++ dp ++ "\nlooking for updates...")
+            io $ do
+                guiLog app (p "deployed in " `mappend` pVerbatim dp)
+                guiLog app (p "looking for updates...")
             result <- io $ attemptUpdate app (Repo repoString) path
             case result of
                 (Left message) -> do
-                    io $ guiLog app ("update failed: " ++ message)
+                    io $ guiLog app (p "update failed: " `mappend` pVerbatim message)
                     game
                 (Right True) -> io $ do
-                    guiLog app "game updated...\nrestarting..."
+                    guiLog app $ p "game updated..."
+                    guiLog app $ p "restarting..."
                     threadDelay 5000000
                     exitWith $ ExitFailure 143
                 (Right False) -> do
-                    io $ guiLog app ("version up to date")
+                    io $ guiLog app (p "version up to date")
                     game
 
 -- | Looks for updates on the server.
@@ -101,10 +106,10 @@ doAutoUpdate app game = do
 -- (Left message) if an error occurs.
 attemptUpdate :: Application_ sort -> Repo -> DeployPath -> IO (Either String Bool)
 attemptUpdate app repo deployPath = runErrorT $ do
-    io $ guiLog app ("local version: " ++ showVersion Version.nikkiVersion)
+    io $ guiLog app (p "local version: " `mappend` pVerbatim (showVersion Version.nikkiVersion))
     serverVersion :: Version <-
         (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
-    io $ guiLog app ("remote version: " ++ showVersion serverVersion)
+    io $ guiLog app (p "remote version: " `mappend` pVerbatim (showVersion serverVersion))
     if serverVersion > Version.nikkiVersion then do
         update app repo serverVersion deployPath
         return True
@@ -152,7 +157,7 @@ withBackup app (DeployPath deployPath) action = do
                 rename (deployPath </> f) (tmpDir </> f)
         restore :: ErrorT String IO ()
         restore = do
-            io $ guiLog app "restoring"
+            io $ guiLog app (p "restoring backup")
             forM_ deployedFiles $ \ f -> do
                 let dest = deployPath </> f
                 removeIfExists dest
@@ -167,7 +172,6 @@ withBackup app (DeployPath deployPath) action = do
 
     -- | renaming directories and files
     rename src dest = do
-        io $ guiLog app ("renaming: " ++ src ++ " -> " ++ dest)
         isFile <- io $ doesFileExist src
         isDirectory <- io $ doesDirectoryExist src
         if isFile then

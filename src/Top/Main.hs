@@ -75,7 +75,7 @@ main =
         -- this is the logick [sick!] thread
         -- dynamic changes of the configuration take place in this thread!
             logicThread = do
-                guiLog app "loading..."
+                guiLog app (p "loading...")
                 withDynamicConfiguration configuration $
                     autoUpdate app $
                     executeStates (applicationStates app)
@@ -175,19 +175,11 @@ edit app parent file = loadingEditorScene app file (editLevel app playLevel)
 -- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
 loadingEditorScene :: Application -> (FilePath, Bool) -> (EditorScene Sort_ -> AppState) -> AppState
 loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
-    cmdChannel <- newChan
-    setDrawingCallbackAppWidget (window app) (Just $ showProgress cmdChannel)
+    guiLog app (p "loading...")
     grounds <- loadByFilePath file
     let mFile = if isTemplateFile then Nothing else Just file
     editorScene <- initEditorScene (allSorts app) mFile grounds
     return $ follower editorScene
-  where
-    showProgress cmdChannel ptr = do
-        cmds <- pollChannel cmdChannel
-        mapM_ id cmds
-        resetMatrix ptr
-        clearScreen ptr black
-        drawText ptr (Position 100 100) False "loading..."
 
 mainMenuHelp :: Application -> AppState -> AppState
 mainMenuHelp app parent = AppState $ do

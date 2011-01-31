@@ -5,6 +5,7 @@ module Base.Font (
     freeFont,
     fontHeight,
     renderLine,
+    renderLineSimple,
   ) where
 
 
@@ -135,6 +136,13 @@ freeFont (Font variants) = forM_ variants freeColorVariant
 
 
 -- * rendering
+
+-- | Like renderLine, but renders with the current GL matrix.
+-- Does not alter the GL matrix.
+renderLineSimple :: Font -> Color -> Prose -> Ptr QPainter -> IO ()
+renderLineSimple font color text ptr = do
+    (action, _) <- renderLine font color text
+    action ptr
 
 -- | Returns a rendering action to render a line of text
 -- and the size of the renderings.

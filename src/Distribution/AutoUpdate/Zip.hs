@@ -3,6 +3,7 @@
 module Distribution.AutoUpdate.Zip (unzipArchive, zipArchive) where
 
 
+import Data.Monoid
 import qualified Data.ByteString.Lazy as BS
 
 import Text.Logging
@@ -16,11 +17,13 @@ import System.IO
 import System.FilePath
 import System.Directory
 
+import Base.Prose
+
 
 -- | unzips a given archive into a given directory
-unzipArchive :: (String -> IO ()) -> FilePath -> FilePath -> IO ()
+unzipArchive :: (Prose -> IO ()) -> FilePath -> FilePath -> IO ()
 unzipArchive logCommand zipFile directory = do
-    logCommand ("unzipping " ++ zipFile)
+    logCommand (p "unzipping " `mappend` pVerbatim zipFile)
     withBinaryFile zipFile $ \ content -> do
         let archive = toArchive content
         forM_ (zEntries archive) $ \ entry -> do

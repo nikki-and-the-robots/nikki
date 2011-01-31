@@ -5,6 +5,7 @@ module Distribution.AutoUpdate.Download where
 
 
 import qualified Data.ByteString.Lazy as BS
+import Data.Monoid
 
 import Control.Monad.Trans.Error
 
@@ -14,6 +15,7 @@ import Network.Curl.Download.Lazy
 import Utils
 
 import Base.Types
+import Base.Prose
 import Base.Application.Widgets.GUILog
 
 
@@ -27,6 +29,6 @@ downloadContent url = do
 -- Uses mkUrl.
 downloadFile :: Application_ sort -> String -> FilePath -> ErrorT String IO ()
 downloadFile app url destFile = do
-    io $ guiLog app ("downloading " ++ url)
+    io $ guiLog app (p "downloading " `mappend` pVerbatim url)
     content <- ErrorT $ io (openLazyURI url)
     io $ BS.writeFile destFile content

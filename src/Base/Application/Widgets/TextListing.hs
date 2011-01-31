@@ -23,8 +23,7 @@ import Base.Font
 
 drawTextBlock :: Font -> Ptr QPainter -> [Prose] -> IO ()
 drawTextBlock font ptr = mapM_ $ \ line -> do
-    (render, _) <- renderLine font white line
-    render ptr
+    renderLineSimple font white line ptr
     translate ptr (Position 0 (fontHeight font))
 
 showText :: Application_ sort -> [Prose] -> AppState -> AppState
