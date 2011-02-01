@@ -20,9 +20,9 @@ qt4_wrap_cpp(MOCFILES ${HEADERS})
 add_library(qtwrapper qtwrapper.cpp ${MOCFILES})
 
 # added for ghci debugging
-# IF(UNIX)
-#    add_library(qtwrapper_so SHARED qtwrapper.cpp ${MOCFILES})
-# ENDIF(UNIX)
+IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+   add_library(qtwrapper_so SHARED qtwrapper.cpp ${MOCFILES})
+ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
 
 add_custom_command(TARGET qtwrapper POST_BUILD
                    COMMAND touch
