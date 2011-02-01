@@ -5,8 +5,6 @@ module Main where
 
 import Text.Logging
 
-import Control.Monad
-
 import System.Environment
 import System.Process
 import System.Exit

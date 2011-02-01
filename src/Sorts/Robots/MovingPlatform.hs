@@ -11,7 +11,6 @@ import Data.Abelian
 
 import System.FilePath
 
-import qualified Physics.Hipmunk as Hipmunk
 import Physics.Chipmunk as CM hiding (Position, radius)
 
 import Graphics.Qt hiding (scale)

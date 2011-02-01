@@ -22,11 +22,8 @@ import Graphics.Qt
 import Utils
 
 import Base.Types
-import Base.Constants
 import Base.Polling
 import Base.Monad
-import Base.Prose
-import Base.Font
 
 import Base.Application.Widgets.Menu
 import Base.Application.Widgets.TextListing

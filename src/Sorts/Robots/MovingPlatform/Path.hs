@@ -6,14 +6,9 @@ module Sorts.Robots.MovingPlatform.Path where
 import Data.Abelian
 import Data.Typeable
 
-import qualified Physics.Hipmunk as Hipmunk
 import Physics.Chipmunk
 
-import Graphics.Qt hiding (scale)
-
 import Utils
-
-import Base
 
 import Sorts.Robots.MovingPlatform.Configuration
 

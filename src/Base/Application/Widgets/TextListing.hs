@@ -5,10 +5,6 @@
 module Base.Application.Widgets.TextListing where
 
 
-import Safe
-
-import Control.Concurrent
-
 import Graphics.Qt
 
 import Utils
@@ -16,7 +12,6 @@ import Utils
 import Base.Types
 import Base.Constants
 import Base.Polling
-import Base.Monad
 import Base.Prose
 import Base.Font
 

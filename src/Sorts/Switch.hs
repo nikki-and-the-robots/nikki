@@ -14,7 +14,6 @@ import Data.Set (member)
 
 import System.FilePath
 
-import qualified Physics.Hipmunk as Hipmunk
 import Physics.Chipmunk as CM
 
 import Graphics.Qt hiding (scale)

@@ -2,13 +2,9 @@
 module Base.Application.Widgets.GUILog (guiLog, resetGuiLog) where
 
 
-import Data.Abelian
-
 import Text.Logging
 
-import Control.Monad (join)
 import Control.Concurrent
-import Control.Concurrent.MVar
 
 import System.IO.Unsafe
 
