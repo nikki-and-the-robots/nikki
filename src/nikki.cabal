@@ -49,6 +49,17 @@ data-files:
 Executable  nikki
     main-is:
         Distribution/AutoUpdate/Restarter.hs
+
+    ghc-options:
+        -Werror
+        -fwarn-missing-fields
+        -fwarn-dodgy-imports
+        -fwarn-missing-methods
+        -fno-warn-overlapping-patterns
+        -fwarn-unused-imports
+        -fno-warn-missing-signatures
+--        -fwarn-unused-do-bind -- does not work with ghc 6.10
+
     if os(mingw32)
         ld-options:
             -- omit the console on windows. You can't use stdout without causing errors then...
