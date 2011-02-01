@@ -86,11 +86,9 @@ Executable core
         , filepath
         , mtl >= 2
         , process
-        , zlib
         , Hipmunk >= 5.2.0.2
         , sfml-audio
         , safe
-        , array
         , random
         , StateVar
         , transformers
