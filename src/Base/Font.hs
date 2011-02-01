@@ -1,6 +1,7 @@
 {-# language ScopedTypeVariables, ViewPatterns #-}
 
 module Base.Font (
+    standardFontColor,
     loadAlphaNumericFont,
     freeFont,
     fontHeight,
@@ -42,7 +43,7 @@ standardFontDir :: FilePath
 standardFontDir = "png" </> "font"
 
 standardFontColor :: Color
-standardFontColor = white
+standardFontColor = turquoise
 
 -- * querying
 

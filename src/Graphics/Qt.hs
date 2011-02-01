@@ -95,6 +95,8 @@ pink :: Color = opaqueColor 1 0.196 0.588
 orange :: Color = opaqueColor 1 0.5 0
 lightBlue :: Color = opaqueColor 0.28 0.63 0.79
 lightGreen :: Color = opaqueColor 0.66 1 0.66
+darkGrey :: Color = QtColor 64 64 64 255
+turquoise :: Color = QtColor 72 214 242 255
 
 transparent :: Color = QtColor 0 0 0 0
 

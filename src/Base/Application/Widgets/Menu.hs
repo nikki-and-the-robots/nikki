@@ -85,7 +85,7 @@ menuWithPreChoice app mTitle mParent children preChoice =
     font_ = alphaNumericFont $ applicationPixmaps app
     render items ptr = do
         resetMatrix ptr
-        clearScreen ptr lightBlue
+        clearScreen ptr darkGrey
 
         let renderMenuTitlePixmap = do
                 let pix = menuTitlePixmap $ applicationPixmaps app
@@ -98,7 +98,7 @@ menuWithPreChoice app mTitle mParent children preChoice =
             -- | draws a line (centered)
             drawLine :: Prose -> IO ()
             drawLine l = do
-                (renderAction, lineSize) <- renderLine font_ Nothing white l
+                (renderAction, lineSize) <- renderLine font_ Nothing standardFontColor l
                 centerHorizontally ptr lineSize renderAction
                 newLine
             drawLines :: [Prose] -> IO ()

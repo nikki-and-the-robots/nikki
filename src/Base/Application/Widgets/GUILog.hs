@@ -29,7 +29,7 @@ guiLog app msg = do
 
 renderLog :: Application_ s -> Ptr QPainter -> IO ()
 renderLog app ptr = do
-    clearScreen ptr lightBlue
+    clearScreen ptr darkGrey
     let font = alphaNumericFont $ applicationPixmaps app
     log <- readMVar logRef
     when (not $ null log) $ do
@@ -37,7 +37,7 @@ renderLog app ptr = do
         translate ptr (Position (fromUber 3) (height size - fromUber 1))
         forM_ log $ \ line -> do
             translate ptr (Position 0 (- fontHeight font))
-            renderLineSimple font Nothing white line ptr
+            renderLineSimple font Nothing standardFontColor line ptr
 
 -- | global MVar for the log
 {-# NOINLINE logRef #-}

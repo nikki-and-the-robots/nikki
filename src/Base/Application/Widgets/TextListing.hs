@@ -20,7 +20,7 @@ drawTextBlock :: Font -> Ptr QPainter -> [Prose] -> IO ()
 drawTextBlock font ptr = mapM_ $ \ line -> do
     windowSize <- sizeQPainter ptr
     let wordWrapWidth = width windowSize - (2 * fromUber 4)
-    renderSize <- renderLineSimple font (Just wordWrapWidth) white line ptr
+    renderSize <- renderLineSimple font (Just wordWrapWidth) standardFontColor line ptr
     translate ptr (Position 0 (height renderSize))
 
 showText :: Application_ sort -> [Prose] -> AppState -> AppState
@@ -39,7 +39,7 @@ showText app text follower =
             _ -> inner scrolling
 
     render text ptr = do
-        clearScreen ptr lightBlue
+        clearScreen ptr darkGrey
         resetMatrix ptr
         translate ptr (Position (fromUber 4) (fromUber 4))
         let font = alphaNumericFont $ applicationPixmaps app

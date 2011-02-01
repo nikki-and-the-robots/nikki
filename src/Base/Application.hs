@@ -70,7 +70,7 @@ askString app parent question follower = AppState $ do
     render :: String -> MVar String -> Ptr QPainter -> IO ()
     render question answerRef ptr = do
         resetMatrix ptr
-        clearScreen ptr lightBlue
+        clearScreen ptr darkGrey
         setPenColor ptr white 1
 
         let nextY = translate ptr (Position 0 20)
