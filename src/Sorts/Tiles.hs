@@ -3,6 +3,7 @@
 
 module Sorts.Tiles (
     sorts,
+    isTileSort,
     tileShapeAttributes,
     mkAllTiles,
   ) where
@@ -135,6 +136,10 @@ data TSort
       }
     deriving (Show, Typeable)
 
+isTileSort :: Sort_ -> Bool
+isTileSort (Sort_ x) = case (cast x) :: Maybe TSort of
+    Nothing -> False
+    Just _ -> True
 
 data Tile
     = Tile {

@@ -19,6 +19,7 @@ import Base
 import Object
 
 import qualified Editor.Scene.RenderOrdering as RenderOrdering
+import Sorts.Tiles (isTileSort)
 
 import qualified Sorts.Nikki
 import qualified Sorts.Terminal
@@ -152,5 +153,5 @@ mergeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject 
 mergeEditorObjects ixs =
     otherObjects >: Sorts.Tiles.mkAllTiles tiles
   where
-    tiles = I.toList $ I.filter (isTile . editorSort) ixs
-    otherObjects = I.filter (not . isTile . editorSort) ixs
+    tiles = I.toList $ I.filter (isTileSort . editorSort) ixs
+    otherObjects = I.filter (not . isTileSort . editorSort) ixs

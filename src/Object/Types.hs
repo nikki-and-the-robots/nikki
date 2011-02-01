@@ -152,9 +152,6 @@ isRobot (sortId -> (SortId s)) = "robots/" `isPrefixOf` s
 isNikki :: Sort_ -> Bool
 isNikki s = (SortId "nikki" == sortId s)
 
-isTile :: Sort_ -> Bool
-isTile (sortId -> (SortId s)) = "tiles/" `isPrefixOf` s
-
 -- * EditorObject
 
 mkEditorObject :: Sort_ -> EditorPosition -> EditorObject Sort_

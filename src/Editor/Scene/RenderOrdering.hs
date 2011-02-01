@@ -19,6 +19,8 @@ import Base
 
 import Object
 
+import Sorts.Tiles
+
 
 -- | sorts the objects in the main layer
 sortMainLayer :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
@@ -29,11 +31,9 @@ sortShadowedTiles :: Indexable (EditorObject Sort_) -> Indexable (EditorObject S
 sortShadowedTiles = sortBy tilesReadOrdering
 
 tilesReadOrdering :: EditorObject Sort_ -> EditorObject Sort_ -> Ordering
-tilesReadOrdering a b | isTileSort a && isTileSort b=
+tilesReadOrdering a b | isTileSort (editorSort a) && isTileSort (editorSort b) =
     withView (editorY . editorPosition) compare a b `before`
     withView (editorX . editorPosition) compare a b
-  where
-    isTileSort x = "tiles/" `isPrefixOf` getSortId (sortId $ editorSort x)
 tilesReadOrdering _ _ = EQ
 
 -- | combines two Orderings. The first given Ordering takes precedence over the second.
