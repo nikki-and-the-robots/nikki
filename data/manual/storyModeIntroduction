@@ -1,5 +1,6 @@
-"Nikki and the Robots" is a 2D platformer written in Haskell and produced by Joyride Laboratories. Nikki, the protagonist, walks and jumps around the levels wearing a cute ninja/cat costume. Nikki refrains from using any tools or weapons, with one exception: the Robots. These come in various types with different abilities and can be used by Nikki to solve puzzles, overcome obstacles and complete the level tasks. The game will feature an integrated level editor.
+WELCOME TO NIKKI AND THE ROBOTS
 
+"Nikki and the Robots" is a 2D platformer written in Haskell and developed by Joyride Laboratories. The current alpha version lets you play a few short demo levels, as well as build your own levels with the integrated level editor.
 
 
 PUBLISHING
@@ -11,13 +12,11 @@ Simultaneously, we are working on a story mode with 4 episodes that we plan to s
 (Just to clarify: The licensing is very permissive. It allows others to create their own episodes and distribute them freely or sell them. This would be very welcome. If anybody is interested in this, we propose to join forces and sell all our episodes through one system.)
 
 
-
 USED TECHNOLOGIES
 
 - Qt for user input and rendering
 - OpenGL as an efficient rendering backend for Qt. Everything will remain 2D, though - we promise!
 - Hipmunk, the Haskell bindings to the chipmunk physics engine
-
 
 
 GETTING INVOLVED

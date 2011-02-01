@@ -1,46 +1,44 @@
-These are the keyboard shortcuts for the editor (advanced mode):
+These are the keyboard shortcuts for the editor:
 
-General
-=======
+GENERAL:
 
-Escape - bring up the menu
+ESC - bring up the menu
 
-Editing Mode
-============
 
-Arrow keys - move the cursor
-CTRL - set an object
-Shift - delete an object
-a and d - select another object
-w and s - change the cursor step size
-b - send object under cursor to the back of the layer
+EDITING MODE:
+
+ARROW KEYS - move the cursor
+CTRL - place an object
+SHIFT - delete an object
+A and D - select previous/next object
+W and S - change the cursor step size
+B - send object under cursor to the back of the current layer
 + and - - select active layer
-space - activate selection mode
-v - paste selected objects
-t - test the level in game mode
-h - test the level in game mode with Nikki at cursor position
+SPACE - activate selection mode
+V - paste objects from clipboard
+T - switch to game mode for testing
+H - switch to game mode with Nikki starting at current cursor position
 
-As the objective in every level is to switch on all the switches, you should place
-at least one switch in your level. Also don't forget to put Nikki in it.
+As the objective in every level is to switch on all the switches, you should place at least one switch in your level. Also don't forget to put Nikki in it.
 
-Selection Mode
-==============
 
-Arrow keys - move the upper right corner of the selection box
-x - cut selected objects
-c - copy selected objects
-B button or Shift - delete objects in selection (without changing clipboard contents)
-w and s - change the cursor step size
+SELECTION MODE:
 
-Object Edit Mode
-================
+ARROW KEYS - move the upper right corner of the selection box
+C - copy highlighted objects
+X - cut highlighted objects
+SHIFT - delete objects in selection (without changing clipboard contents)
+W and S - change the cursor step size
 
-Some objects allow you to edit special attributes. To do that, select the
-object by placing the cursor above it (correct selection of an object will be
-indicated in the lower right corner) and go to the menu and select
-"edit object". What you can configure depends on the object you're editing. At
-the moment you can edit:
+
+OBJECT EDIT MODE:
+
+Some objects allow you to edit special attributes. To do that, select the object by hovering the cursor over it (the according object under the cursor will be indicated in the lower right corner of the screen), go to the menu with ESC and select "edit object".
+
+Depending on the object you can configure different attributes. At the moment you can edit:
+
  - Terminals
     Configure which robots will be accessible via the terminal
+
  - Moving Platforms
-    Configure the path of the platform.
+    Configure the path of the platform

@@ -1,37 +1,28 @@
+CONTROLS
 
-Welcome to "Nikki and the Robots"
+We are trying to make the controls of the game as intuitive as possible. So, we hope you will be able to figure it out by yourselves for the most part.
 
-http://joyridelabs.de/
+The keys that are used for playing are the ARROW KEYS, CTRL, SHIFT and ESC.
 
-
-This is a 2D-Platformer. The program consists of two parts: The game and a
-level editor.
-
-1. The game
-
-We tried to make the controls of the game intuitive. So we hope you will be
-able to figure it all out by yourselves. One thing you need to now: While in
-the game you can use the arrow keys and two buttons: Ctrl and Shift. Escape
-will end the level.
-
-But here are the controls anyway:
-
-Nikki Controls:
-arrow keys - move around
-Ctrl - jump
-Shift - Use a terminal.
+Nikki's Controls:
+ARROW KEYS - move left and right
+CTRL - jump
+SHIFT - use a terminal
 
 Terminal Menu Controls:
-arrow keys - select robot (or eject)
-Ctrl - confirm choice
+ARROW KEYS - select a robot (or eject)
+CTRL - confirm your choice
 
 Robot Controls:
-Well, that depends on the robot.
-Try the arrow keys and Ctrl.
-Shift always brings you back to the terminal menu.
+ARROW KEYS - depending on the robot
+CTRL - depending on the robot
+SHIFT - will bring up the terminal menu again
 
-The objective in each level is to switch on all the switches you can find.
+General Game Menu Controls:
+ARROW KEYS - move cursor
+CTRL - confirm
+SHIFT or ESC - go back
 
-2. The level editor
+Further, ESC will let you quit a level at anytime.
 
-The level editor has its own help. You can find it in the editor menu.
+There is also an additional help for the more complex level editor. You can find it in the menu of the editor.
