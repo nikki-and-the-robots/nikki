@@ -4,18 +4,15 @@ module Distribution.AutoUpdate.Zip (unzipArchive, zipArchive) where
 
 
 import Data.Monoid
-import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString as BS
+import Data.Word
 
-import Text.Logging
+import Codec.Archive.LibZip
 
-import Codec.Archive.Zip
-
-import Control.Monad
-import Control.Exception
-
-import System.IO
 import System.FilePath
 import System.Directory
+
+import Utils
 
 import Base.Prose
 
@@ -24,35 +21,57 @@ import Base.Prose
 unzipArchive :: (Prose -> IO ()) -> FilePath -> FilePath -> IO ()
 unzipArchive logCommand zipFile directory = do
     logCommand (p "unzipping " `mappend` pVerbatim zipFile)
-    withBinaryFile zipFile $ \ content -> do
-        let archive = toArchive content
-        forM_ (zEntries archive) $ \ entry -> do
-            -- modifying the path of the entry to unpack in a given folder.
-            let unpackPath = directory </> normalise (eRelativePath entry)
-            printInfo unpackPath
-            if isZippedDirectory unpackPath then
-                createDirectoryIfMissing True unpackPath
-              else
-                writeEntry [] entry{eRelativePath = unpackPath}
+    withArchive [] zipFile $ do
+        files <- fileNames []
+        forM_ files $ extract directory
+
+-- | Extracts a file from an archive to a given directory,
+-- including full path. Creates parent directories if necessary.
+extract :: FilePath -> FilePath -> Archive ()
+extract destination fileInArchive = do
+    let fullPath = destination </> fileInArchive
+        parent = joinPath $ init $ splitDirectories fullPath
+    io $ assertNonExistance fullPath
+    io $ createDirectoryIfMissing True parent
+    if isDir fileInArchive then
+        io $ createDirectory fullPath
+      else do
+        contents :: [Word8] <- fileContents [] fileInArchive
+        io $ BS.writeFile fullPath (BS.pack contents)
   where
-    isZippedDirectory :: FilePath -> Bool
-    isZippedDirectory "" = True
-    isZippedDirectory f = last f `elem` pathSeparators
-
-    -- Opens a file and performs the given action on the content.
-    -- Makes sure the file handle will be closed.
-    withBinaryFile :: FilePath -> (BS.ByteString -> IO a) -> IO a
-    withBinaryFile file action = do
-        bracket open close $ \ handle -> do
-            action =<< BS.hGetContents handle
-      where
-        open = openBinaryFile file ReadMode
-        close h = hClose h >> logInfo "closed!!!"
-
+    isDir = (== '/') . last
 
 -- | zips a given folder recursively into the given zipFile
 zipArchive :: (String -> IO ()) -> FilePath -> FilePath -> IO ()
 zipArchive logCommand zipFile directory = do
     logCommand ("zipping " ++ directory ++ " to " ++ zipFile)
-    archive <- addFilesToArchive [OptRecursive] emptyArchive [directory]
-    BS.writeFile zipFile (fromArchive archive)
+    assertNonExistance zipFile
+    withArchive [CreateFlag] zipFile $ putInZip directory
+
+-- | asserts that a file or directory does not exist.
+assertNonExistance :: FilePath -> IO ()
+assertNonExistance file = do
+    isFile <- doesFileExist file
+    isDir <- doesDirectoryExist file
+    when (isFile || isDir) $
+        error ("file already exists: " ++ file)
+
+-- | puts the given file or directory (recursively) into the current archive
+putInZip :: FilePath -> Archive ()
+putInZip file =
+    inner (takeDirectory file) (takeFileName file)
+  where
+    inner root file = do
+        let fullPath = root </> file
+        isDir <- io $ doesDirectoryExist fullPath
+        isFile <- io $ doesFileExist fullPath
+        if isDir then do
+            addDirectory file
+            subDirFiles <- io $ getFiles fullPath Nothing
+            mapM_ (inner root) $ map (file </>) subDirFiles
+          else if isFile then do
+            content <- sourceFile fullPath 0 0
+            addFile file content
+            return ()
+          else
+            error ("file not found: " ++ file)
