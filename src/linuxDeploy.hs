@@ -30,6 +30,9 @@ main = do
     copy coreExe
     copy (".." </> "data")
     mapM_ copy =<< getDynamicDependencies
+    let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
+    putStrLn ("touching " ++ deploymentIndicator)
+    writeFile deploymentIndicator ""
 
 -- | ensure that an empty deploymentDir exists
 prepareDeploymentDir = do
