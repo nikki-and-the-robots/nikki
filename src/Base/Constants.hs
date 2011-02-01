@@ -51,7 +51,7 @@ levelDir = "levels"
 -- * misc
 
 -- | initial window size, when not in fullscreen mode
-programWindowSize = Windowed (Size 1000 650)
+programWindowSize = Windowed (Size 1024 640)
 
 windowTitle :: String
 windowTitle = "Nikki and the Robots"
