@@ -5,6 +5,7 @@ module Base.Application (
     executeStates,
 
     menu,
+    menuWithPreChoice,
     treeToMenu,
     askStringRead,
     askString,

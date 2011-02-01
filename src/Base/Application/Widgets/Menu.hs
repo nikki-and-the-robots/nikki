@@ -3,8 +3,10 @@ module Base.Application.Widgets.Menu where
 
 
 import Data.SelectTree (SelectTree(..))
-import Data.Indexable as I
+import qualified Data.Indexable as I
 import Data.Abelian
+
+import Control.Arrow
 
 import Graphics.Qt
 
@@ -26,8 +28,18 @@ data MenuItems
         after :: [(String, AppState)]
       }
 
-mkMenuItems :: [(String, AppState)] -> MenuItems
-mkMenuItems (a : r) = MenuItems [] a r
+mkMenuItems :: [(String, Int -> AppState)] -> Int -> MenuItems
+mkMenuItems items =
+    inner $ zipWith (\ (label, appStateFun) n -> (label, appStateFun n)) items [0..]
+  where
+    inner items n =
+        if n < 0 then
+            inner items 0
+          else if n > length items - 1 then
+            inner items (length items - 1)
+          else
+            let (before, selected : after) = splitAt n items
+            in MenuItems before selected after
 
 selectNext :: MenuItems -> MenuItems
 selectNext (MenuItems b s (a : r)) = MenuItems (b +: s) a r
@@ -37,9 +49,21 @@ selectPrevious :: MenuItems -> MenuItems
 selectPrevious m@(MenuItems [] _ _) = m
 selectPrevious (MenuItems b s a) = MenuItems (init b) (last b) (s : a)
 
-menu :: Application_ sort -> Maybe String -> Maybe AppState -> [(String, AppState)] -> AppState
-menu app mTitle mParent children =
-    inner $ mkMenuItems children
+-- | like menuWithPreChoice but without the prechoice.
+menu :: Application_ sort -> Maybe String -> Maybe AppState
+    -> [(String, AppState)] -> AppState
+menu app title parent children =
+    menuWithPreChoice app title parent children' 0
+  where
+    children' = map (second const) children
+
+-- | Creates a menu with a title, if given.
+-- If a parent is given, the menu can be aborted to go to the parent state.
+-- The prechoice will determine the initially selected menu item.
+menuWithPreChoice :: Application_ sort -> Maybe String -> Maybe AppState
+    -> [(String, Int -> AppState)] -> Int -> AppState
+menuWithPreChoice app mTitle mParent children preChoice =
+    inner $ mkMenuItems children preChoice
   where
     inner items = AppState $ do
         io $ setDrawingCallbackAppWidget (window app) (Just $ render items)
@@ -98,7 +122,7 @@ menu app mTitle mParent children =
 
 -- | modify the items before the selected to implement simple scrolling
 mkScrolling :: [(String, AppState)] -> [(String, AppState)]
-mkScrolling before = drop (max 0 (Prelude.length before - 4)) before
+mkScrolling before = drop (max 0 (length before - 4)) before
 
 -- | Perform a rendering action centered horizontally
 -- (without anti-aliasing).

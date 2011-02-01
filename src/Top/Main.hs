@@ -140,8 +140,13 @@ selectLevelPlay app parent = staticConfigAppState $ do
     if null levelFiles then
         return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
       else do
-        return $ menu app (Just "pick a level to play") (Just parent) $
-            map (\ path -> (takeBaseName path, play app parent path)) levelFiles
+            -- menu with the given selected item.
+        let this preChoice = menuWithPreChoice
+                app (Just "pick a level to play") (Just parent)
+                (map (\ path -> (takeBaseName path, \ n -> play app (this n) path))
+                    levelFiles)
+                preChoice
+        return $ this 0
 
 selectLevelEdit :: Application -> AppState -> AppState
 selectLevelEdit app parent = staticConfigAppState $ do
