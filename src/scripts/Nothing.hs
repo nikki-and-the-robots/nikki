@@ -1,0 +1,5 @@
+
+-- | do nothing
+
+main = return ()
+
