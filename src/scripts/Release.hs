@@ -27,7 +27,8 @@ import Utils hiding (ignore)
 
 data Configuration = Configuration {
     localDeployedFolder :: FilePath,
-    remoteRepo :: String
+    remoteRepo :: String,
+    force :: Bool
   }
     deriving (Show, Data, Typeable)
 
@@ -44,6 +45,8 @@ options =
         , remoteRepo = def
             &= argPos 1
             &= typ "RELEASE_REPO"
+        , force = False
+            &= help "force creation of remote repo"
       }
     &= program "Release.hs"
     &= summary ("script to push a deployed folder of \"Nikki and the Robots\" to a server for the auto-updating system to fetch.")
@@ -82,12 +85,14 @@ checkNewerVersion config = withTempDirectory "." "serverVersion" $ \ tempDir -> 
         tempDir)
     let versionFile = (tempDir </> "version")
     exists <- doesFileExist versionFile
-    if not exists then do
+    if not exists && force config then do
+        putStrLn emptyRepoWarning
+        putStrLn "will create new repo..."
+      else if not exists && (not $ force config) then do
         -- couldn't download version file
-        putStrLn "warning: couldn't download version file, repo seems to be empty."
-        putStrLn "press Ctrl+C to abort."
-        getLine
-        return ()
+        error $ unlines (
+            emptyRepoWarning :
+            "use --force to create new repo." : [])
       else do
         eServerVersion :: Either String Version <- parseVersion <$> readFile versionFile
         case eServerVersion of
@@ -100,6 +105,8 @@ checkNewerVersion config = withTempDirectory "." "serverVersion" $ \ tempDir -> 
                                     ("local version: " ++ showVersion nikkiVersion) :
                                     ("remote version: " ++ showVersion serverVersion) :
                                     [])
+  where
+    emptyRepoWarning = "couldn't download version file, repo seems to be empty."
 
 -- | just for development
 trySystem_ = putStrLn
