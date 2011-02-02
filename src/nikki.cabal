@@ -12,7 +12,7 @@ Extra-source-files:
     data/manual/editor.txt
 
 Build-Type:     Custom
-Cabal-Version:  >= 1.6
+Cabal-Version:  >= 1.8
 
 data-dir:
     ../data/
@@ -59,6 +59,17 @@ Executable  nikki
         -fwarn-unused-imports
         -fno-warn-missing-signatures
 --        -fwarn-unused-do-bind -- does not work with ghc 6.10
+
+    build-depends:
+        base >= 4 && < 5
+        , directory
+        , process
+        , filepath
+        , transformers
+        , mtl
+        , containers
+        , safe
+        , FindBin
 
     if os(mingw32)
         ld-options:
