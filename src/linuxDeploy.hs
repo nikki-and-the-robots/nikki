@@ -3,9 +3,9 @@
 {-# language PackageImports #-}
 
 
-import Data.List
 import Data.Char
 import Data.Maybe
+import Data.Set
 
 import "parsec3" Text.Parsec
 
@@ -29,7 +29,7 @@ main = do
     copy nikkiExe
     copy coreExe
     copy (".." </> "data")
-    mapM_ copy =<< getDynamicDependencies
+    fmapM_ copy =<< getDynamicDependencies
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
     putStrLn ("touching " ++ deploymentIndicator)
     writeFile deploymentIndicator ""
@@ -42,11 +42,11 @@ prepareDeploymentDir = do
     createDirectory deploymentDir
 
 -- | return all dynamically linked dependencies for both executables
-getDynamicDependencies :: IO [FilePath]
+getDynamicDependencies :: IO (Set FilePath)
 getDynamicDependencies = do
     a <- getDeps nikkiExe
     b <- getDeps coreExe
-    return $ nub (a ++ b)
+    return $ union a b
 
 -- | copy the given file to the deploymentDir
 copy :: FilePath -> IO ()
@@ -68,7 +68,7 @@ data LDDDep = LDDDep {dep :: FilePath, location :: Maybe FilePath}
   deriving Show
 
 -- | return the dynamically linked dependencies for the given executables
-getDeps :: FilePath -> IO [FilePath]
+getDeps :: FilePath -> IO (Set FilePath)
 getDeps exe = do
     lddOutput <- readProcess "ldd" [exe] ""
     return $ case parse lddParser ("ldd-output: " ++ lddOutput) lddOutput of
@@ -76,8 +76,8 @@ getDeps exe = do
         Right x -> filterWantedDeps x
   where
     -- filter for all the dependency we really want to deploy
-    filterWantedDeps :: [LDDDep] -> [FilePath]
-    filterWantedDeps = catMaybes . map convert
+    filterWantedDeps :: [LDDDep] -> (Set FilePath)
+    filterWantedDeps = fromList . catMaybes . fmap convert
     convert :: LDDDep -> Maybe FilePath
     convert (LDDDep dep (Just location)) = Just location
     convert (LDDDep dep Nothing) = Nothing
