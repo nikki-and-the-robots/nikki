@@ -37,22 +37,25 @@ initialCameraState = CS
 getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_ -> StateT CameraState IO Position
 getCameraPosition ptr scene = do
     CS oldPosition <- get
-    case getControlled scene of
-    -- level is finished, not in game mode anymore
-      Nothing -> return oldPosition
-    -- update via the controlled object
-      Just controlledIndex -> do
-        controlledPosition <- io $ getPosition $ getControlledChipmunk scene controlledIndex
-        windowSize <- fmap fromIntegral <$> io (Qt.sizeQPainter ptr)
-        let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
-            -- vertical distance from the controlled object to the camera's old position
-            controlledToCamera = vectorY oldPosition - vectorY controlledPosition
-            y = if controlledToCamera < (- limit) then 
-                    vectorY controlledPosition - limit
-                else if controlledToCamera > limit then
-                    vectorY controlledPosition + limit
-                else
-                    vectorY oldPosition
-            newPosition = Vector (vectorX controlledPosition) y
-        put $ CS newPosition
-        return newPosition
+    if isTerminalMode $ mode scene then
+        -- don't move camera in terminal mode
+        return oldPosition
+      else case getControlled scene of
+        -- level is finished, not in game mode anymore
+        Nothing -> return oldPosition
+        -- update via the controlled object
+        Just controlledIndex -> do
+            controlledPosition <- io $ getPosition $ getControlledChipmunk scene controlledIndex
+            windowSize <- fmap fromIntegral <$> io (Qt.sizeQPainter ptr)
+            let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
+                -- vertical distance from the controlled object to the camera's old position
+                controlledToCamera = vectorY oldPosition - vectorY controlledPosition
+                y = if controlledToCamera < (- limit) then 
+                        vectorY controlledPosition - limit
+                    else if controlledToCamera > limit then
+                        vectorY controlledPosition + limit
+                    else
+                        vectorY oldPosition
+                newPosition = Vector (vectorX controlledPosition) y
+            put $ CS newPosition
+            return newPosition
