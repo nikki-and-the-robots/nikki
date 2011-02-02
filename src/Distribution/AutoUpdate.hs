@@ -135,7 +135,8 @@ downloadUpdate app repo newVersion tmpDir = do
 -- | unzips a given zipFile (in the same directory) and returns the path to the unzipped directory
 unzipFile :: Application_ sort -> ZipFilePath -> ErrorT String IO NewVersionDir
 unzipFile app (ZipFilePath path) = do
-    io $ unzipArchive (guiLog app) path (takeDirectory path)
+    io $ guiLog app (p "unzipping " `mappend` pVerbatim path)
+    io $ unzipArchive path (takeDirectory path)
     let nikkiDir = takeDirectory path </> mkDeployedFolder "nikki"
     nikkiExists <- io $ doesDirectoryExist nikkiDir
     when (not nikkiExists) $ throwError ("directory not found: " ++ nikkiDir)

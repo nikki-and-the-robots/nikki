@@ -65,7 +65,9 @@ main = withTempDirectory "." "nikki-release" $ \ (normalise -> tmpDir) -> do
     checkNewerVersion config
     let zipName = "nikki-" ++ showVersion nikkiVersion <.> "zip"
     createDirectoryIfMissing True (tmpDir </> osRepoPath)
-    zipArchive putStrLn (tmpDir </> osRepoPath </> zipName) (localDeployedFolder config)
+    let zipFile = tmpDir </> osRepoPath </> zipName
+    putStrLn ("zipping " ++ localDeployedFolder config ++ " to " ++ zipFile)
+    zipArchive zipFile (localDeployedFolder config)
     trySystem ("scp -r " ++ tmpDir </> "*" ++ " " ++ remoteRepo config)
 
     -- updating the version (making sure the version file gets updated after the zip file)

@@ -18,9 +18,8 @@ import Base.Prose
 
 
 -- | unzips a given archive into a given directory
-unzipArchive :: (Prose -> IO ()) -> FilePath -> FilePath -> IO ()
-unzipArchive logCommand zipFile directory = do
-    logCommand (p "unzipping " `mappend` pVerbatim zipFile)
+unzipArchive :: FilePath -> FilePath -> IO ()
+unzipArchive zipFile directory = do
     withArchive [] zipFile $ do
         files <- fileNames []
         forM_ files $ extract directory
@@ -42,9 +41,8 @@ extract destination fileInArchive = do
     isDir = (== '/') . last
 
 -- | zips a given folder recursively into the given zipFile
-zipArchive :: (String -> IO ()) -> FilePath -> FilePath -> IO ()
-zipArchive logCommand zipFile directory = do
-    logCommand ("zipping " ++ directory ++ " to " ++ zipFile)
+zipArchive :: FilePath -> FilePath -> IO ()
+zipArchive zipFile directory = do
     assertNonExistance zipFile
     withArchive [CreateFlag] zipFile $ putInZip directory
 
