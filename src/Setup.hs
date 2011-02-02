@@ -30,7 +30,7 @@ main =
 
 -- | prevent cabal install
 installHook :: a -> b -> c -> d -> IO ()
-installHook _ _ _ _ = error "\"cabal install\" is not supported."
+installHook _ _ _ _ = putStrLn "\"cabal install\" is not supported. The game compiled fine, though."
 
 
 -- * mac deployment

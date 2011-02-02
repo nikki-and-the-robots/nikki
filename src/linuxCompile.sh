@@ -15,5 +15,5 @@ cmake ..
 make
 cd ../..
 
-cabal configure $@
-cabal build
+cabal install $@
+

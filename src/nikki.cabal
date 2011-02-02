@@ -45,6 +45,27 @@ data-files:
     png/backgrounds/blue/*.png
     png/osd/*.png
 
+-- Useful for declaring setup-script dependencies
+-- (cabal will only resolve these automatically during "cabal install")
+Executable dummy
+    main-is:
+        -- this is meant:
+        -- Setup.hs
+        -- this is compiled, because cabal-install compiles the
+        -- the setup script on its own:
+        scripts/Nothing.hs
+    build-depends:
+        base >= 4 && < 5
+        , cabal-macosx
+        , process
+        , filepath
+        , directory
+        , transformers
+        , mtl
+        , containers
+        , safe
+        , Cabal >= 1.8
+
 
 Executable  nikki
     main-is:
