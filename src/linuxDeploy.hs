@@ -9,6 +9,8 @@ import Data.Set
 
 import "parsec3" Text.Parsec
 
+import Control.Exception
+
 import System.FilePath
 import System.Directory
 import System.Process
@@ -44,9 +46,63 @@ prepareDeploymentDir = do
 -- | return all dynamically linked dependencies for both executables
 getDynamicDependencies :: IO (Set FilePath)
 getDynamicDependencies = do
-    a <- getDeps nikkiExe
-    b <- getDeps coreExe
-    return $ union a b
+    restarterDeps <- getDeps nikkiExe
+    forM_ restarterDeps $ \ l ->
+        assertLabel ("not a standard library: " ++ l) (isStandardLibrary l)
+    coreDeps <- getDeps coreExe
+    let allDeps = Data.Set.filter (not . isStandardLibrary) coreDeps
+    return allDeps
+  where
+    assertLabel :: String -> Bool -> IO ()
+    assertLabel msg False = error msg
+    assertLabel _ True = return ()
+
+-- | Tries to guess, if a library will be present on a standard linux system.
+-- The library is given with its full path on the current system.
+isStandardLibrary :: FilePath -> Bool
+isStandardLibrary s =
+    libName `member` standardLibraries
+  where
+    libName = takeWhile (/= '.') $ takeFileName s
+
+-- | Set of libraries expected to be on a standard linux system
+-- or expected to be replaced by another library on a standard linux system.
+standardLibraries :: Set String
+standardLibraries = union lsbLibraries $ fromList (
+    "librt" :
+    "libgmp" :
+    "libstdc++" :
+    "libxcb" :
+
+    -- X stuff
+    "libXau" :
+    "libXdmcp" :
+    "libXrender" :
+    "libXt" :
+
+    -- nvidia stuff
+    "libnvidia-glcore" :
+    "libnvidia-tls" :
+    [])
+
+-- | set of libraries expected to be on any LSB-compliant system
+lsbLibraries :: Set String
+lsbLibraries = fromList (
+    "libc" :
+    "libdl" :
+    "libm" :
+    "libutil" :
+    "libcrypt" :
+    "libz" :
+    "libpthread" :
+    "libncurses" :
+    "libX11" :
+    "libXext" :
+    "LibXt" :
+    "libICE" :
+    "libSM" :
+    "libGL" :
+    [])
 
 -- | copy the given file to the deploymentDir
 copy :: FilePath -> IO ()
