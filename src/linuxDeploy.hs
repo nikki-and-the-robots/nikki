@@ -61,47 +61,24 @@ getDynamicDependencies = do
 -- The library is given with its full path on the current system.
 isStandardLibrary :: FilePath -> Bool
 isStandardLibrary s =
-    libName `member` standardLibraries
+    not (libName `member` nonStandardLibraries)
   where
     libName = takeWhile (/= '.') $ takeFileName s
 
--- | Set of libraries expected to be on a standard linux system
--- or expected to be replaced by another library on a standard linux system.
-standardLibraries :: Set String
-standardLibraries = union lsbLibraries $ fromList (
-    "librt" :
-    "libgmp" :
-    "libstdc++" :
-    "libxcb" :
+-- | Set of libraries expected not to be on every standard linux system.
+nonStandardLibraries :: Set String
+nonStandardLibraries = fromList (
+    -- Qt
+    "libQtOpenGL" :
+    "libQtCore" :
+    "libQtGui" :
+    "libQtDBus" :
+    "libQtXml" :
 
-    -- X stuff
-    "libXau" :
-    "libXdmcp" :
-    "libXrender" :
-    "libXt" :
-
-    -- nvidia stuff
-    "libnvidia-glcore" :
-    "libnvidia-tls" :
-    [])
-
--- | set of libraries expected to be on any LSB-compliant system
-lsbLibraries :: Set String
-lsbLibraries = fromList (
-    "libc" :
-    "libdl" :
-    "libm" :
-    "libutil" :
-    "libcrypt" :
-    "libz" :
-    "libpthread" :
-    "libncurses" :
-    "libX11" :
-    "libXext" :
-    "LibXt" :
-    "libICE" :
-    "libSM" :
-    "libGL" :
+    -- other
+    "libopenal" :
+    "libzip" :
+    "libaudio" :
     [])
 
 -- | copy the given file to the deploymentDir
