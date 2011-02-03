@@ -11,9 +11,11 @@ import System.Exit
 import System.Info
 
 import Distribution.AutoUpdate.Paths
+import Distribution.AutoUpdate.LibraryPath
 
 
 main = do
+    setLibraryPath
     executable <- findCoreExecutable
     args <- getArgs
     loop 5 $ rawSystem executable args
@@ -33,3 +35,4 @@ main = do
 log = case System.Info.os of
     "mingw32" -> appendFile "nikkiLog" . (++ "\n")
     _ -> putStrLn
+

@@ -91,6 +91,10 @@ Executable  nikki
         , containers
         , safe
         , FindBin
+    if os(linux)
+        build-depends:
+            -- for setting LD_LIBRARY_PATH
+            unix >= 2.4.0.2
 
     if os(mingw32)
         ld-options:
