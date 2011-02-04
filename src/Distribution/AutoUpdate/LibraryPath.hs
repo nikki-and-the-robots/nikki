@@ -12,6 +12,7 @@ import System.Environment.FindBin.Fixed
 
 import System.Posix.Env
 
+setLibraryPath :: IO ()
 setLibraryPath = do
     progPath <- getProgPath
     let libraryPathKey = "LD_LIBRARY_PATH"
@@ -22,6 +23,7 @@ setLibraryPath = do
 
 #else
 
+setLibraryPath :: IO ()
 setLibraryPath = return ()
 
 #endif
