@@ -9,6 +9,8 @@ import System.Process
 import System.FilePath
 import System.Exit
 
+import Utils
+
 
 main = do
     args <- filterM warnWhenNotDirectory =<< getArgs
@@ -58,7 +60,7 @@ searchAndCopy searchPath file destinationFolder = do
     case mSrc of
         Just src -> do
             putStrLn ("found " ++ file ++ " in " ++ takeDirectory src)
-            system ("cp -r " ++ src ++ " " ++ destinationFolder)
+            trySystem ("cp -r " ++ src ++ " " ++ destinationFolder)
             return ()
         Nothing -> do
             putStrLn ("ERROR: file not found in searched paths: " ++ file)
