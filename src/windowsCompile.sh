@@ -25,5 +25,4 @@ cmake -G "MSYS Makefiles" ..
 make
 cd ../..
 
-cabal configure --with-ar=ar --with-gcc=gcc --with-ld=ld --ghc-options=" -pgmc gcc -pgml gcc -pgma gcc -pgmwindres windres -pgmP \"gcc -E -undef -traditional\"" $@
-cabal build
+cabal install --with-ar=ar --with-gcc=gcc --with-ld=ld --ghc-options=" -pgmc gcc -pgml gcc -pgma gcc -pgmwindres windres -pgmP \"gcc -E -undef -traditional\"" $@
