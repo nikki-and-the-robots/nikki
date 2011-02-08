@@ -1,0 +1,60 @@
+We wish to express our gratitude to the following projects, that helped realizing this game (among others):
+
+Cabal
+    Common Architecture for Building Applications and Libraries in Haskell
+    http://www.haskell.org/cabal/
+
+Chipmunk
+    Fast and lightweight 2D rigid body physics library in C
+    http://code.google.com/p/chipmunk-physics/
+
+CMake
+    the cross-platform, open-source build system
+    http://www.cmake.org/
+
+darcs
+    a free, open source source code management system.
+    http://darcs.net/
+
+GHC
+    The Glasgow Haskell Compiler
+    http://www.haskell.org/ghc/
+
+Gimp
+    The GNU Image Manipulation Program
+    http://www.gimp.org/
+
+GNU/Linux
+    Our main development OS
+    http://www.gnu.org/
+    http://en.wikipedia.org/wiki/Linux
+
+Hackage
+    A collection of releases of Haskell packages
+    http://hackage.haskell.org/packages/hackage.html
+
+Haskell
+    An advanced purely-functional programming language,
+    which the game is written in.
+    http://www.haskell.org/
+
+Hipmunk
+    Haskell bindings to Chipmunk
+    http://hackage.haskell.org/package/Hipmunk
+
+Inkscape
+    Open Source vector graphics editor
+    http://inkscape.org/
+
+KDE SC
+    Open Source desktop workspace and applications
+    http://www.kde.org/
+
+MinGW
+    a minimalist development environment for native Microsoft Windows applications
+    http://www.mingw.org/
+
+SFML
+    SFML is a free multimedia C++ API that provides you low and high level access to graphics, input, audio, etc.
+    We use it for audio only.
+    http://www.sfml-dev.org/

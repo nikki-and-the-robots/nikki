@@ -1,0 +1,74 @@
+
+The executables of the game "Nikki and the Robots", namely "nikki" and "core" are licensed under the LGPL-3.0 (see "LICENSES/lgpl-3.0.txt").
+
+The resources contained in the "data" directory are licensed under the "Creative Commons Attribution-Share Alike 3.0 Germany License" (see "data/LICENSE").
+
+The libraries used in this distribution are as follows:
+(Some are contained as dynamically linked libraries in binary form in this distribution. Some are only used on certain platforms)
+
+libaudio
+    Copyright 1995 Network Computing Devices, Inc.
+    custom license, see "LICENSES/libaudio.txt"
+    http://downloads.sourceforge.net/nas/nas-1.9.1.src.tar.gz
+
+openal
+    OpenAL Soft is Copyright © 1999-2008 by the OpenAL team
+    LGPL-3, see "LICENSES/lgpl-3.0.txt"
+    http://kcat.strangesoft.net/openal.html
+
+Qt
+    © 2008-2009 Nokia Corporation and/or its subsidiary(-ies).
+    © 1994-2008 Trolltech ASA.
+    LGPL-2.1, see "LICENSES/lgpl-2.1.txt"
+    http://qt.nokia.com/downloads
+
+libzip
+    Copyright (C) 1999-2008 Dieter Baron and Thomas Klausner
+    custom license, see "LICENSES/libzip.txt"
+    http://www.nih.at/libzip/
+
+buffer
+    LGPL-3, see "LICENSES/lgpl-3.0.txt"
+    https://patch-tag.com/r/shahn/buffer/home
+
+clocked
+    LGPL-3, see "LICENSES/lgpl-3.0.txt"
+    https://patch-tag.com/r/shahn/clocked/home
+
+curl
+    Copyright (c) 1996 - 2010, Daniel Stenberg, <daniel@haxx.se>.
+    custom license, see "LICENSES/libcurl.txt"
+    http://curl.haxx.se
+
+libgcc
+    GCC is Copyright (C) 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+    GPL-3, see "LICENSES/gpl-3.0.txt" with the "GCC Runtime Library Exception", see "LICENSES/gcc-runtime-exception-3.1.txt")
+    http://gcc.gnu.org/
+
+libsndfile
+    Copyright (c) Copyright 1999-2009 Erik de Castro Lopo
+    Copyright (c) 2002 Xiph.org Foundation
+    Copyright (C) 2003 Ross Bencina <rbencina@iprimus.com.au>
+    Copyright (C) 2004 Paavo Jumppanen
+    Copyright (C) 2004 Tobias Gehrig <tgehrig@ira.uka.de>
+    Copyright (C) 2004-2005 David Viens <davidv@plogue.com>
+    Copyright (C) 2006 Paul Davis <paul@linuxaudiosystems.com>
+    Copyright (C) 2007 John ffitch
+    Copyright (C) 2007 Reuben Thomas
+    Copyright (c) 2007 <robs@users.sourceforge.net>
+    LGPL-3, see "LICENSES/lgpl-3.0.txt"
+    http://www.mega-nerd.com/libsndfile/
+
+mingwm10.dll
+    public domain
+    http://www.mingw.org/
+
+zlib
+    Copyright (C) 1995-1998 Jean-loup Gailly and Mark Adler
+    custom license, see "LICENSES/zlib.txt"
+    http://www.gzip.org/zlib/
+
+chipmunk
+    Copyright (c) 2007 Scott Lembcke and Howling Moon Software
+    custom license, see "LICENSES/chipmunk.txt"
+    http://code.google.com/p/chipmunk-physics/
