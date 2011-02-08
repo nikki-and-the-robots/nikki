@@ -54,6 +54,10 @@ Executable dummy
         -- this is compiled, because cabal-install compiles the
         -- the setup script on its own:
         scripts/Nothing.hs
+
+    ghc-options:
+        -O0
+
     build-depends:
         base >= 4 && < 5
         , cabal-macosx
@@ -72,14 +76,17 @@ Executable  nikki
         Distribution/AutoUpdate/Restarter.hs
 
     ghc-options:
+        -O1
+
         -Werror
         -fwarn-missing-fields
         -fwarn-dodgy-imports
         -fwarn-missing-methods
-        -fno-warn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
         -fwarn-unused-imports
+        -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
---        -fwarn-unused-do-bind -- does not work with ghc 6.10
 
     build-depends:
         base >= 4 && < 5
@@ -119,10 +126,11 @@ Executable core
         -fwarn-missing-fields
         -fwarn-dodgy-imports
         -fwarn-missing-methods
-        -fno-warn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
         -fno-warn-unused-imports
+        -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
---        -fwarn-unused-do-bind -- does not work with ghc 6.10
 
     build-depends:
           base >= 4 && < 5
