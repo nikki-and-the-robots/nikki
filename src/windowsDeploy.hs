@@ -12,12 +12,17 @@ import System.Exit
 import Utils
 
 
+deploymentDir = "nikki"
+
+
 main = do
     args <- filterM warnWhenNotDirectory =<< getArgs
     let searchPath = args ++ ["dist/build/nikki/", "dist/build/core/", "../"]
     clean
     copy searchPath
-    let deploymentIndicator = "nikki" </> "yes_nikki_is_deployed"
+    strip (deploymentDir </> "nikki.exe")
+    strip (deploymentDir </> "core.exe")
+    let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
     putStrLn ("touching " ++ deploymentIndicator)
     writeFile deploymentIndicator ""
 
@@ -40,17 +45,23 @@ warnWhenNotDirectory p = do
 clean :: IO ()
 clean = do
     putStrLn "cleaning..."
-    exists <- doesDirectoryExist "nikki"
+    exists <- doesDirectoryExist deploymentDir
     if exists then
-        system "rm -rf nikki/*" >> return ()
+        void $ system ("rm -rf " ++ deploymentDir ++ "/*")
       else
-        createDirectory "nikki"
+        createDirectory deploymentDir
+
+-- | strip an executable
+strip :: FilePath -> IO ()
+strip file = do
+    putStrLn ("stripping " ++ file)
+    trySystem ("strip " ++ file)
 
 -- | copies all files to the deployment folder
 copy :: [FilePath] -> IO ()
 copy searchPath = do
     putStrLn "copying..."
-    mapM_ (\ file -> searchAndCopy searchPath file "nikki") deploymentFiles
+    mapM_ (\ file -> searchAndCopy searchPath file deploymentDir) deploymentFiles
 
 -- | searches for a files in the given searchpath and copies it to the destination folder
 
