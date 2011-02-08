@@ -22,7 +22,7 @@ import Distribution.AutoUpdate.Zip
 
 import Version
 
-import Utils hiding (ignore)
+import Utils
 
 
 data Configuration = Configuration {
