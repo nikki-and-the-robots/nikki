@@ -23,6 +23,7 @@ main = do
     strip (deploymentDir </> "nikki.exe")
     strip (deploymentDir </> "core.exe")
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
+    copyLicenses
     putStrLn ("touching " ++ deploymentIndicator)
     writeFile deploymentIndicator ""
 
@@ -117,3 +118,9 @@ deploymentFiles = (
     "mingwm10.dll" :
     "libgcc_s_dw2-1.dll" :
     [])
+    
+-- | copy the needed licenses to the deployment folder
+copyLicenses :: IO ()
+copyLicenses = do
+    putStrLn "copying license files"
+    copyDirectory (".." </> "deploymentLicenses") deploymentDir
