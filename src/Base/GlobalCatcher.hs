@@ -14,6 +14,8 @@ import Control.Concurrent
 
 import System.Exit
 
+import Utils
+
 
 -- | Runs the given action. Catches any exception and saves them
 -- in the returned MVar.
@@ -27,7 +29,7 @@ forkLogicThread action = do
                     (Just x) -> x
                     Nothing -> ExitFailure 1
             putMVar exitCodeMVar exitCode
-    forkOS $ catch (action >> putMVar exitCodeMVar ExitSuccess) catchAll
+    void $ forkOS $ catch (action >> putMVar exitCodeMVar ExitSuccess) catchAll
     return exitCodeMVar
 
 -- | standard handling of exceptions

@@ -29,5 +29,5 @@ logCommandRef = unsafePerformIO $ newMVar putStrLn
 -- | sets a new log command.
 setLogCommand :: MonadIO m => (String -> IO ()) -> m ()
 setLogCommand logCommand = liftIO $ do
-    swapMVar logCommandRef logCommand
+    modifyMVar_ logCommandRef (const $ return logCommand)
     return ()

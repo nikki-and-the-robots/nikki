@@ -158,7 +158,7 @@ waitForEvent (KeyPoller c) = readChan c
 
 
 sendDebugInitials :: Chan QtEvent -> IO ()
-sendDebugInitials c = ignore $ forkOS $ do
+sendDebugInitials c = void $ forkOS $ do
     mapM_ worker signals
   where
     worker k = do

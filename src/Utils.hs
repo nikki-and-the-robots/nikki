@@ -281,8 +281,8 @@ chainAppM cmd (b : r) a = do
     chainAppM cmd r a'
 chainAppM _ [] a = return a
 
-ignore :: Monad m => m a -> m ()
-ignore = (>> return ())
+void :: Monad m => m a -> m ()
+void = (>> return ())
 
 io :: MonadIO m => IO a -> m a
 io = liftIO

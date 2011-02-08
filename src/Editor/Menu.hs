@@ -34,7 +34,7 @@ updateSceneMVar :: Application -> MVar (EditorScene Sort_) -> MM ()
 updateSceneMVar app mvar = do
     s <- get
     io $ do
-        swapMVar mvar s
+        modifyMVar_ mvar (const $ return s)
         updateAppWidget $ window app
 
 

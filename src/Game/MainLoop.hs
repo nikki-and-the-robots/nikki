@@ -111,7 +111,7 @@ gameLoop app sceneMVar = do
         s <- gets scene
         io $ do
             immutableCopyOfScene <- Game.Scene.immutableCopy s
-            swapMVar sceneMVar (immutableCopyOfScene, debugging)
+            modifyMVar_ sceneMVar (const $ return (immutableCopyOfScene, debugging))
             return ()
 
 withArrowAutoRepeat :: MonadIO m => Application -> m a -> m a
