@@ -29,7 +29,9 @@ coreExe = executables </> "core" </> "core"
 main = do
     prepareDeploymentDir
     copy nikkiExe
+    strip (deploymentDir </> takeBaseName nikkiExe)
     copy coreExe
+    strip (deploymentDir </> takeBaseName coreExe)
     copy (".." </> "data")
     fmapM_ copy =<< getDynamicDependencies
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
@@ -103,6 +105,11 @@ copy path = do
       else
         error ("not found: " ++ path)
 
+-- | strip an executable
+strip :: FilePath -> IO ()
+strip exe = do
+    putStrLn ("stripping " ++ exe)
+    trySystem ("strip " ++ exe)
 
 -- * ldd output parsing
 
