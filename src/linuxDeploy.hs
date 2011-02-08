@@ -33,6 +33,7 @@ main = do
     copy (".." </> "data")
     fmapM_ copy =<< getDynamicDependencies
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
+    copyDeploymentLicenses
     putStrLn ("touching " ++ deploymentIndicator)
     writeFile deploymentIndicator ""
 
@@ -80,6 +81,14 @@ nonStandardLibraries = fromList (
     "libzip" :
     "libaudio" :
     [])
+
+
+-- | copy the licenses to the deploymentDir
+copyDeploymentLicenses :: IO ()
+copyDeploymentLicenses = do
+    let licenseDir = ".." </> "deploymentLicenses"
+    files <- fmap (licenseDir </>) <$> getFiles licenseDir Nothing
+    forM_ files copy
 
 -- | copy the given file to the deploymentDir
 copy :: FilePath -> IO ()
