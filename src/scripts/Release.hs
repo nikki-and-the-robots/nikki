@@ -1,3 +1,5 @@
+#!/usr/bin/env runhaskell
+
 {-# language DeriveDataTypeable, ViewPatterns, ScopedTypeVariables #-}
 
 -- | Tries to push a deployed folder to an update server.
