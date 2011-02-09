@@ -408,6 +408,7 @@ renderTerminalOSD ptr now scene@Scene{mode = mode@Base.TerminalMode{}} =
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
         (Just sort, Just terminal) -> do
+            clearScreen ptr $ modifyAlpha (const $ 0.6) black
             windowSize <- fmap fromIntegral <$> sizeQPainter ptr
             let pixmaps = osdPixmaps sort
                 position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)

@@ -59,8 +59,13 @@ instance Abelian a => Abelian (Size a) where
 instance PP p => PP (Size p) where
     pp (Size x y) = unwords ["Size", pp x, pp y]
 
-data Color = QtColor QtInt QtInt QtInt QtInt
-  deriving (Eq, Ord, Show)
+data Color = QtColor {
+    redComponent :: QtInt,
+    greenComponent :: QtInt,
+    blueComponent :: QtInt,
+    alphaComponent :: QtInt
+  }
+    deriving (Eq, Ord, Show)
 
 
 -- * utils
