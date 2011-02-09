@@ -41,8 +41,10 @@ initialCameraState = CS (- 1) zero
 getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_ -> StateT CameraState IO Position
 getCameraPosition ptr scene = do
     CS oldIndex oldPosition <- get
-    if isTerminalMode $ mode scene then
+    if isTerminalMode $ mode scene then do
         -- don't move camera in terminal mode
+        -- (and reset the controlled index (to center camera anew))
+        put $ CS (- 1) oldPosition
         return oldPosition
       else case getControlledIndex scene of
         -- level is finished, not in game mode anymore
