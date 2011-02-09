@@ -145,7 +145,7 @@ modifyMode f s@Scene{mode} = s{mode = f mode}
 
 
 data CameraState
-    = CS Vector
+    = CS Index Vector
   deriving Show
 
 

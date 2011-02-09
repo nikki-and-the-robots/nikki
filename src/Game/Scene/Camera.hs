@@ -1,10 +1,14 @@
 
+-- | module to compute the camera position
+
 module Game.Scene.Camera (
     CameraState,
     initialCameraState,
     getCameraPosition,
   ) where
 
+
+import Data.Abelian
 
 import Control.Monad.State
 
@@ -31,31 +35,38 @@ partialLimit = 1 / 3
 maximumLimit = 200
 
 
-initialCameraState :: Position -> CameraState
-initialCameraState = CS
+initialCameraState :: CameraState
+initialCameraState = CS (- 1) zero
 
 getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_ -> StateT CameraState IO Position
 getCameraPosition ptr scene = do
-    CS oldPosition <- get
+    CS oldIndex oldPosition <- get
     if isTerminalMode $ mode scene then
         -- don't move camera in terminal mode
         return oldPosition
-      else case getControlled scene of
+      else case getControlledIndex scene of
         -- level is finished, not in game mode anymore
         Nothing -> return oldPosition
         -- update via the controlled object
         Just controlledIndex -> do
-            controlledPosition <- io $ getPosition $ getControlledChipmunk scene controlledIndex
-            windowSize <- fmap fromIntegral <$> io (Qt.sizeQPainter ptr)
-            let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
-                -- vertical distance from the controlled object to the camera's old position
-                controlledToCamera = vectorY oldPosition - vectorY controlledPosition
-                y = if controlledToCamera < (- limit) then 
-                        vectorY controlledPosition - limit
-                    else if controlledToCamera > limit then
-                        vectorY controlledPosition + limit
-                    else
-                        vectorY oldPosition
-                newPosition = Vector (vectorX controlledPosition) y
-            put $ CS newPosition
-            return newPosition
+            let controlledObject = getMainlayerObject scene controlledIndex
+            controlledPosition <- io $ getPosition $ getControlledChipmunk scene controlledObject
+            if controlledIndex /= oldIndex then do
+                -- controlled objects has changed -> center object on screen
+                put $ CS controlledIndex controlledPosition
+                return controlledPosition
+              else do
+                -- same object -> bounding box behaviour                
+                windowSize <- fmap fromIntegral <$> io (Qt.sizeQPainter ptr)
+                let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
+                    -- vertical distance from the controlled object to the camera's old position
+                    controlledToCamera = vectorY oldPosition - vectorY controlledPosition
+                    y = if controlledToCamera < (- limit) then 
+                            vectorY controlledPosition - limit
+                        else if controlledToCamera > limit then
+                            vectorY controlledPosition + limit
+                        else
+                            vectorY oldPosition
+                    newPosition = Vector (vectorX controlledPosition) y
+                put $ CS controlledIndex newPosition
+                return newPosition
