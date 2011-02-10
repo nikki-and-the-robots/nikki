@@ -1,7 +1,7 @@
 
-This directory contains all source files for Nikki and the Robots. Building is a bit more complicated than a simple "cabal install", though. For compiling on OS X, there is much more comprehensive documentation here:
+This directory contains all source files for Nikki and the Robots. Building is a bit more complicated than a simple "cabal install", though. For compiling on OS X and windows, look at our wiki, which is much more up to date:
 
-http://www.patch-tag.com/r/shahn/nikki-wiki/wiki/Compiling+on+OS+X
+https://patch-tag.com/r/shahn/nikki-wiki/wiki/
 
 We have some helper scripts:
 
