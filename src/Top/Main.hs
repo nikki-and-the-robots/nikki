@@ -62,6 +62,7 @@ main =
     keyPoller <- io $ newKeyPoller window
     -- showing main window
     let windowSize = if fullscreen configuration then FullScreen else programWindowSize
+    io $ setWindowTitle window "Nikki and the Robots"
     io $ setWindowSize window windowSize
     io $ showGLContext window
 
