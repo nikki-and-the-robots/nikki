@@ -2,6 +2,7 @@
 #include <QtGui>
 #include <QGLWidget>
 
+
 // * function pointer types
 typedef void (drawingCallbackFunction) (QPainter*);
 
@@ -12,13 +13,15 @@ typedef void (keyCallbackFunction) (bool, QKeyEvent*);
 typedef void (guiAction) ();
 
 
-class AppWidget : public QGLWidget {
+class GLContext : public QGLWidget {
 
 Q_OBJECT
 
 public:
 
-    AppWidget(const QGLFormat& format);
+    QWidget* mainWindow;
+
+    GLContext(const QGLFormat& format);
 
     QTimer* repaintTimer;
 

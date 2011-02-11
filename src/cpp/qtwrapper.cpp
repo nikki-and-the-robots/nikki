@@ -1,87 +1,22 @@
 
-#include "qtwrapper.h"
+// * This module contains functions to interact with Qt objects through
+// the c calling convention. They are intended to be called by haskell code.
+// The Objects are:
+//      QApplication
+//      QPainter
+//      QPixmap
+//      QImage
+//      QRGB
+//      QIcon
+//      QTime
+//      QString
+//      QKeyEvent
+//
+// The exported functions are far from comprehensive.
 
-// * utils
 
-char* QStringToCString(QString x) {
-    char* arr = (char*) malloc(sizeof(char) * (x.size() + 1));
-    for (int i = 0; i < x.size(); i++) {
-        arr[i] = x.at(i).toAscii();
-    };
-    arr[x.size()] = 0;
-    return arr;
-};
+#include <QtGui>
 
-// * debugging
-
-void error(QString msg) {
-    qDebug() << "ERROR:" << msg;
-    exit(1);
-};
-
-// * AppWidget class
-
-void emptyDrawingCallback(QPainter* ptr) {
-};
-
-AppWidget::AppWidget(const QGLFormat& format) : QGLWidget(format) {
-// AppWidget::AppWidget(const QGLFormat& format) : QWidget() {
-    drawingCallback = emptyDrawingCallback;
-    keyCallback = NULL;
-    arrowAutoRepeat = true;
-
-    this->setAutoFillBackground(false);
-    this->setCursor(Qt::BlankCursor);
-
-    this->repaintTimer = new QTimer(this);
-    QObject::connect(this->repaintTimer, SIGNAL(timeout()), this, SLOT(update()));
-
-    QObject::connect(this, SIGNAL(postGUISignal(guiAction*)), this, SLOT(postGUISlot(guiAction*)));
-};
-
-void AppWidget::paintEvent(QPaintEvent* event) {
-    event->accept();
-
-    QPainter painter(this);
-    painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
-    this->drawingCallback(&painter);
-};
-
-bool isArrowKey(QKeyEvent* e) {
-    int k = e->key();
-    return (k == Qt::Key_Left || k == Qt::Key_Right || k == Qt::Key_Up || k == Qt::Key_Down);
-};
-
-void AppWidget::keyPressEvent(QKeyEvent* e) {
-    if (((this->arrowAutoRepeat && isArrowKey(e)) || (! e->isAutoRepeat())) && (keyCallback != NULL)) {
-        this->keyCallback(true, e);
-    }
-};
-
-void AppWidget::keyReleaseEvent(QKeyEvent* e) {
-    if ((! e->isAutoRepeat()) && (keyCallback != NULL)) {
-        this->keyCallback(false, e);
-    }
-};
-
-void AppWidget::closeEvent(QCloseEvent* e) {
-    e->ignore();
-    if (keyCallback != NULL) {
-        this->keyCallback(true, NULL);
-    }
-};
-
-// the postGUI signal-slot-pair is necessary to execute a command in the
-// GUI thread.
-void AppWidget::postGUI(guiAction* action) {
-    emit postGUISignal(action);
-};
-
-void AppWidget::postGUISlot(guiAction* action) {
-    action();
-};
-
-// ** stuff called by haskell
 
 // * globals
 
@@ -138,90 +73,6 @@ extern "C" void processEventsQApplication() {
 
 extern "C" void setApplicationName(QApplication* app, char* name) {
     app->setApplicationName(name);
-};
-
-extern "C" int desktopWidth(QApplication* app, AppWidget* w) {
-    return app->desktop()->availableGeometry(w).width();
-};
-
-
-// * AppWidget
-
-extern "C" AppWidget* newAppWidget(int swapInterval) {
-    QGLFormat format = QGLFormat::defaultFormat();
-    format.setSwapInterval(swapInterval);
-    return new AppWidget(format);
-};
-
-extern "C" void setWindowIcon(AppWidget* self, QIcon* icon) {
-    self->setWindowIcon(*icon);
-};
-
-extern "C" void postGUI(AppWidget* self, guiAction* action) {
-    self->postGUI(action);
-};
-
-extern "C" void setRenderingLooped(AppWidget* self, bool looped) {
-    if (looped) {
-        self->repaintTimer->start();
-    } else {
-        self->repaintTimer->stop();
-    }
-};
-
-// sets if auto repeat key events should be processed
-extern "C" void setArrowAutoRepeat(AppWidget* self, bool status) {
-    self->arrowAutoRepeat = status;
-};
-
-extern "C" void updateAppWidget(AppWidget* self) {
-    self->update();
-};
-
-
-// sets the window to fullscreen mode.
-// In fullscreen mode the mouse cursor is hidden
-extern "C" void setFullscreenAppWidget(AppWidget* ptr, bool fullscreen) {
-    // flags are low level but easy: Just think!
-    if (fullscreen) {
-        ptr->setWindowState(ptr->windowState() | Qt::WindowFullScreen);
-    } else {
-        ptr->setWindowState(ptr->windowState() & ~Qt::WindowFullScreen);
-    };
-};
-
-extern "C" void setWindowTitle(AppWidget* ptr, char* title) {
-    ptr->setWindowTitle(QString(title));
-}
-
-extern "C" void resizeAppWidget(AppWidget* ptr, int x, int y) {
-    ptr->resize(x, y);
-};
-
-extern "C" void showAppWidget(AppWidget* ptr) {
-    ptr->show();
-};
-
-extern "C" void hideAppWidget(AppWidget* ptr) {
-    ptr->hide();
-};
-
-extern "C" bool directRenderingAppWidget(AppWidget* ptr) {
-    return ptr->format().directRendering();
-};
-
-extern "C" int paintEngineTypeAppWidget(AppWidget* widget) {
-    return widget->paintEngine()->type();
-};
-
-extern "C" void setDrawingCallbackAppWidget(AppWidget* ptr, drawingCallbackFunction cb) {
-    ptr->drawingCallback = cb;
-    // since we have a new drawing callback, we might want to use it ;)
-    ptr->update();
-};
-
-extern "C" void setKeyCallbackAppWidget(AppWidget* ptr, keyCallbackFunction cb) {
-    ptr->keyCallback = cb;
 };
 
 
@@ -388,6 +239,17 @@ extern "C" void addFileQIcon(QIcon* ptr, char* path) {
 // * QTime
 extern "C" QTime* newQTime() {
     return new QTime();
+};
+
+// * QString
+
+char* QStringToCString(QString x) {
+    char* arr = (char*) malloc(sizeof(char) * (x.size() + 1));
+    for (int i = 0; i < x.size(); i++) {
+        arr[i] = x.at(i).toAscii();
+    };
+    arr[x.size()] = 0;
+    return arr;
 };
 
 // * QKeyEvent
