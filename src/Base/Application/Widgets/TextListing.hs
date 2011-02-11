@@ -30,7 +30,7 @@ showText app text follower =
     -- Sets a renderer, that renders the given text with the given scrolling.
     -- Calls itself with another scrolling, if needed.
     inner scrolling = do
-        io $ setDrawingCallbackAppWidget (window app) $ Just $ render (drop scrolling text)
+        io $ setDrawingCallbackGLContext (window app) $ Just $ render (drop scrolling text)
         e <- waitForAppEvent app $ keyPoller app
         case e of
             Press DownButton -> inner (min (succ scrolling) (length text))

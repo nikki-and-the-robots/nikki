@@ -25,7 +25,7 @@ guiLog :: Application_ sort -> Prose -> IO ()
 guiLog app msg = do
     logInfo $ p' msg
     mapM_ addMsg $ proseLines msg
-    setDrawingCallbackAppWidget (window app) (Just $ renderLog app)
+    setDrawingCallbackGLContext (window app) (Just $ renderLog app)
 
 renderLog :: Application_ s -> Ptr QPainter -> IO ()
 renderLog app ptr = do

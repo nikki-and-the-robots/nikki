@@ -66,7 +66,7 @@ menuWithPreChoice app mTitle mParent children preChoice =
     inner $ mkMenuItems children preChoice
   where
     inner items = AppState $ do
-        io $ setDrawingCallbackAppWidget (window app) (Just $ render items)
+        io $ setDrawingCallbackGLContext (window app) (Just $ render items)
         io $ resetGuiLog
         event <- waitForAppEvent app $ keyPoller app
         case event of

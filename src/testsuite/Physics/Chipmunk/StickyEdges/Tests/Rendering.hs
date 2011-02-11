@@ -40,12 +40,12 @@ drawOffender :: TestPolygons -> IO ()
 drawOffender (fromTestPolygons -> offender) = do
     print $ map vertices offender
     withQApplication $ \ qApp -> do
-        window <- newAppWidget 0
+        window <- newGLContext 0
         keyPoller <- newKeyPoller window
         randoms <- generateRandoms
-        setDrawingCallbackAppWidget window $ Just (render (cycle randoms))
+        setDrawingCallbackGLContext window $ Just (render (cycle randoms))
         setWindowSize window $ Windowed (Size 1000 500)
-        showAppWidget window
+        showGLContext window
         execQApplication qApp
         return ()
   where

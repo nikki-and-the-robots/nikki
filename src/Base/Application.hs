@@ -52,11 +52,11 @@ executeStates FinalState = return ()
 askString :: Application_ sort -> AppState -> String -> (String -> AppState) -> AppState
 askString app parent question follower = AppState $ do
     answerRef <- io $ newMVar ""
-    io $ setDrawingCallbackAppWidget (window app) (Just $ render question answerRef)
+    io $ setDrawingCallbackGLContext (window app) (Just $ render question answerRef)
     loop answerRef
   where
     loop answerRef = do
-        io $ updateAppWidget $ window app
+        io $ updateGLContext $ window app
         event <- waitForAppEvent app $ keyPoller app
         case event of
             Press StartButton ->

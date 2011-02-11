@@ -50,7 +50,7 @@ type M = ConfigurationState
 data Application_ sort
     = Application {
         application :: Ptr QApplication,
-        window :: Ptr AppWidget,
+        window :: Ptr GLContext,
         keyPoller :: KeyPoller,
         mainMenu_ :: Application_ sort -> AppState,
         applicationPixmaps :: ApplicationPixmaps,

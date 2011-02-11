@@ -37,7 +37,7 @@ withQApplication cmd = do
     cmd app `finally` destroyQApplication app
 
 qtRendering :: Ptr QApplication
-    -> Ptr AppWidget
+    -> Ptr GLContext
     -> String
     -> WindowSize
     -> ([QtEvent] -> Ptr QPainter -> IO ())
@@ -52,9 +52,9 @@ qtRendering app window title windowSize renderCmd catcher = do
             events <- pollEvents keyPoller
             renderCmd events qPainter
 
-    setDrawingCallbackAppWidget window (Just loop)
+    setDrawingCallbackGLContext window (Just loop)
 
-    showAppWidget window
+    showGLContext window
     code <- execQApplication app
 
     return $ case code of
@@ -62,7 +62,7 @@ qtRendering app window title windowSize renderCmd catcher = do
         c -> ExitFailure c
 
 -- | sets a list of files that can be used as application icons (for the window manager)
-setApplicationIcon :: Ptr AppWidget -> [FilePath] -> IO ()
+setApplicationIcon :: Ptr GLContext -> [FilePath] -> IO ()
 setApplicationIcon window iconPaths = do
     qIcon <- newQIcon
     mapM_ (addFileQIcon qIcon) iconPaths
@@ -71,11 +71,11 @@ setApplicationIcon window iconPaths = do
 
 data WindowSize = Windowed (Size QtInt) | FullScreen
 
-setWindowSize :: Ptr AppWidget -> WindowSize -> IO ()
+setWindowSize :: Ptr GLContext -> WindowSize -> IO ()
 setWindowSize win (Windowed (Size width height)) =
-    resizeAppWidget win width height
+    resizeGLContext win width height
 setWindowSize win FullScreen =
-    setFullscreenAppWidget win True
+    setFullscreenGLContext win True
 
 
 -- * Colors
@@ -136,10 +136,10 @@ clearScreen ptr color = do
 
 newtype KeyPoller = KeyPoller (Chan QtEvent)
 
-newKeyPoller :: Ptr AppWidget -> IO KeyPoller
+newKeyPoller :: Ptr GLContext -> IO KeyPoller
 newKeyPoller widget = do
     chan <- newChan
-    setKeyCallbackAppWidget widget (writeChan chan)
+    setKeyCallbackGLContext widget (writeChan chan)
 --     sendDebugInitials chan
     return $ KeyPoller chan
 

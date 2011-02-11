@@ -10,7 +10,7 @@
 -- 1. The logic thread. This will do the physics simulation as well as game logic
 -- 2. The rendering thread (which is also the bound main thread). 
 --    This will just render to the widget.
---    Most of the states will use 'setDrawingCallbackAppWidget' to set the rendering function.
+--    Most of the states will use 'setDrawingCallbackGLContext' to set the rendering function.
 --    This is the way, to let the rendering thread do stuff.
 --
 -- Forking takes place once in 'Top.main' forking the logic thread.
@@ -57,13 +57,13 @@ main =
 
     -- qt initialisation
     qApp <- io newQApplication
-    window <- io $ newAppWidget 0
+    window <- io $ newGLContext 0
     loadApplicationIcon window
     keyPoller <- io $ newKeyPoller window
     -- showing main window
     let windowSize = if fullscreen configuration then FullScreen else programWindowSize
     io $ setWindowSize window windowSize
-    io $ showAppWidget window
+    io $ showGLContext window
 
     -- sort loading (pixmaps and sounds)
     withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
@@ -93,7 +93,7 @@ main =
                 0 -> return ()
                 x -> exitWith $ ExitFailure x
 
-loadApplicationIcon :: Ptr AppWidget -> RM ()
+loadApplicationIcon :: Ptr GLContext -> RM ()
 loadApplicationIcon qWidget = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
         getDataFiles pngDir (Just ".png")

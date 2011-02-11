@@ -64,47 +64,45 @@ setApplicationName ptr s = withCString s (cppSetApplicationName ptr)
 
 foreign import ccall "setApplicationName" cppSetApplicationName :: Ptr QApplication -> CString -> IO ()
 
-foreign import ccall desktopWidth :: Ptr QApplication -> Ptr AppWidget -> IO Int
+-- * GLContext
 
--- * AppWidget
+data GLContext
 
-data AppWidget
+foreign import ccall newGLContext :: Int -> IO (Ptr GLContext)
 
-foreign import ccall newAppWidget :: Int -> IO (Ptr AppWidget)
+foreign import ccall setWindowIcon :: Ptr GLContext -> Ptr QIcon -> IO ()
 
-foreign import ccall setWindowIcon :: Ptr AppWidget -> Ptr QIcon -> IO ()
+foreign import ccall setRenderingLooped :: Ptr GLContext -> Bool -> IO ()
 
-foreign import ccall setRenderingLooped :: Ptr AppWidget -> Bool -> IO ()
+foreign import ccall setArrowAutoRepeat :: Ptr GLContext -> Bool -> IO ()
 
-foreign import ccall setArrowAutoRepeat :: Ptr AppWidget -> Bool -> IO ()
+foreign import ccall updateGLContext :: Ptr GLContext -> IO ()
 
-foreign import ccall updateAppWidget :: Ptr AppWidget -> IO ()
-
--- | sets the AppWidget fullscreen mode.
+-- | sets the GLContext fullscreen mode.
 -- In fullscreen mode the mouse cursor is hidden
-foreign import ccall setFullscreenAppWidget :: Ptr AppWidget -> Bool -> IO ()
+foreign import ccall setFullscreenGLContext :: Ptr GLContext -> Bool -> IO ()
 
-foreign import ccall resizeAppWidget :: Ptr AppWidget -> QtInt -> QtInt -> IO ()
+foreign import ccall resizeGLContext :: Ptr GLContext -> QtInt -> QtInt -> IO ()
 
 foreign import ccall "setWindowTitle" cppSetWindowTitle ::
-    Ptr AppWidget -> CString -> IO ()
+    Ptr GLContext -> CString -> IO ()
 
-setWindowTitle :: Ptr AppWidget -> String -> IO ()
+setWindowTitle :: Ptr GLContext -> String -> IO ()
 setWindowTitle ptr t = withCString t (cppSetWindowTitle ptr)
 
-foreign import ccall showAppWidget :: Ptr AppWidget -> IO ()
+foreign import ccall showGLContext :: Ptr GLContext -> IO ()
 
-foreign import ccall hideAppWidget :: Ptr AppWidget -> IO ()
+foreign import ccall hideGLContext :: Ptr GLContext -> IO ()
 
-foreign import ccall directRenderingAppWidget :: Ptr AppWidget -> IO Bool
+foreign import ccall directRenderingGLContext :: Ptr GLContext -> IO Bool
 
-paintEngineTypeAppWidget :: Ptr AppWidget -> IO PaintEngineType
-paintEngineTypeAppWidget ptr = do
-    i <- cppPaintEngineTypeAppWidget ptr
+paintEngineTypeGLContext :: Ptr GLContext -> IO PaintEngineType
+paintEngineTypeGLContext ptr = do
+    i <- cppPaintEngineTypeGLContext ptr
     return $ int2PaintEngineType i
 
-foreign import ccall "paintEngineTypeAppWidget" cppPaintEngineTypeAppWidget ::
-    Ptr AppWidget -> IO QtInt
+foreign import ccall "paintEngineTypeGLContext" cppPaintEngineTypeGLContext ::
+    Ptr GLContext -> IO QtInt
 
 data PaintEngineType
     = X11
@@ -119,36 +117,36 @@ int2PaintEngineType 7 = OpenGL
 int2PaintEngineType 14 = OpenGL2
 int2PaintEngineType x = error ("NYI: int2PaintEngineType: " ++ show x)
 
--- drawing callbacks (AppWidget)
+-- drawing callbacks (GLContext)
 
-foreign import ccall "setDrawingCallbackAppWidget" cppSetDrawingCallbackAppWidget ::
-    Ptr AppWidget -> FunPtr (Ptr QPainter -> IO ()) -> IO ()
+foreign import ccall "setDrawingCallbackGLContext" cppSetDrawingCallbackGLContext ::
+    Ptr GLContext -> FunPtr (Ptr QPainter -> IO ()) -> IO ()
 
 foreign import ccall "wrapper" wrapDrawingCallback ::
     (Ptr QPainter -> IO ()) -> IO (FunPtr (Ptr QPainter -> IO ()))
 
-setDrawingCallbackAppWidget ::
-    Ptr AppWidget -> Maybe (Ptr QPainter -> IO ()) -> IO ()
-setDrawingCallbackAppWidget ptr (Just cb) =
+setDrawingCallbackGLContext ::
+    Ptr GLContext -> Maybe (Ptr QPainter -> IO ()) -> IO ()
+setDrawingCallbackGLContext ptr (Just cb) =
     wrapDrawingCallback cb >>=
-        cppSetDrawingCallbackAppWidget ptr
-setDrawingCallbackAppWidget ptr Nothing =
-    cppSetDrawingCallbackAppWidget ptr =<< wrapDrawingCallback (const $ return ())
+        cppSetDrawingCallbackGLContext ptr
+setDrawingCallbackGLContext ptr Nothing =
+    cppSetDrawingCallbackGLContext ptr =<< wrapDrawingCallback (const $ return ())
 
 
 -- event callbacks
 
-foreign import ccall "setKeyCallbackAppWidget" cppSetKeyCallbackAppWidget ::
-    Ptr AppWidget -> FunPtr (Bool -> Ptr QKeyEvent -> IO ()) -> IO ()
+foreign import ccall "setKeyCallbackGLContext" cppSetKeyCallbackGLContext ::
+    Ptr GLContext -> FunPtr (Bool -> Ptr QKeyEvent -> IO ()) -> IO ()
 
 foreign import ccall "wrapper" wrapKeyCallback ::
     (Bool -> Ptr QKeyEvent -> IO ()) -> IO (FunPtr (Bool -> Ptr QKeyEvent -> IO ()))
 -- True means Press, False means Release
 
-setKeyCallbackAppWidget :: Ptr AppWidget -> (QtEvent -> IO ()) -> IO ()
-setKeyCallbackAppWidget ptr cmd =
+setKeyCallbackGLContext :: Ptr GLContext -> (QtEvent -> IO ()) -> IO ()
+setKeyCallbackGLContext ptr cmd =
     wrapKeyCallback preWrap >>=
-        cppSetKeyCallbackAppWidget ptr
+        cppSetKeyCallbackGLContext ptr
   where
     preWrap :: (Bool -> Ptr QKeyEvent -> IO ())
     preWrap isPress ptr =
