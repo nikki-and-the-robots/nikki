@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances,
-    DeriveDataTypeable, ScopedTypeVariables #-}
+    DeriveDataTypeable, ScopedTypeVariables, ViewPatterns #-}
 
 module Sorts.Tiles (
     sorts,
@@ -136,10 +136,10 @@ data TSort
       }
     deriving (Show, Typeable)
 
-isTileSort :: Sort_ -> Bool
-isTileSort (Sort_ x) = case (cast x) :: Maybe TSort of
-    Nothing -> False
-    Just _ -> True
+isTileSort :: Sort s o => s -> Bool
+isTileSort (cast -> Just _ :: Maybe TSort) = True
+isTileSort (cast -> Just (Sort_ inner) :: Maybe Sort_) = isTileSort inner
+isTileSort _ = False
 
 data Tile
     = Tile {

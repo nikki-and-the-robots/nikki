@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
-    DeriveDataTypeable #-}
+    DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Sorts.Robots.MovingPlatform (sorts) where
 
@@ -57,13 +57,14 @@ instance Sort PSort Platform where
     sortId _ = SortId "robots/platform/standard"
     size = pix >>> pixmapSize
 
-    objectEditModeMethods s = Just (oem s)
+    objectEditMode s = Just $ oemMethods s
 
     sortRender sort ptr _ =
         renderPixmapSimple ptr (pix sort)
 
-    initialize sort (Just space) ep (Just oemState) = do
-        let Size width height = size sort
+    initialize sort (Just space) ep (Just (OEMState oemState_)) = do
+        let Just oemState = cast oemState_
+            Size width height = size sort
             baryCenterOffset = Vector (width / 2) (height / 2)
 
             shape = mkPoly sort
@@ -141,33 +142,43 @@ getPathForce platform = do
 
 -- * object edit mode
 
-oem :: PSort -> ObjectEditModeMethods Sort_
-oem sort = ObjectEditModeMethods {
-    oemInitialState = \ ep -> show $ initialState ep,
-    oemEnterMode = \ scene -> id,
-    oemUpdate = \ scene key state -> show $ updateOEMPath key (read state),
-    oemRender = \ ptr scene state -> renderOEMPath sort ptr scene (read state)
-  }
+oemMethods :: PSort -> OEMMethods
+oemMethods sort = OEMMethods
+    (OEMState . initialState sort)
+    (OEMState . unpickle sort)
+
 
 data OEMPath = OEMPath {
+    oemPSort :: PSort,
     oemCursor :: EditorPosition,
     oemPath :: [EditorPosition]
   }
-    deriving (Show, Read)
+    deriving (Show, Typeable)
+
+type PickleType = (EditorPosition, [EditorPosition])
+
+unpickle :: PSort -> String -> OEMPath
+unpickle sort (readMay -> Just (cursor, path)) =
+    OEMPath sort cursor path
+
+instance IsOEMState OEMPath where
+    oemEnterMode _ = id
+    oemUpdate _ = updateOEMPath
+    oemRender = renderOEMPath
+    oemPickle (OEMPath _ a b) = show ((a, b) :: PickleType)
 
 -- | reads an OEMPath and returns the path for the game
-mkPath :: PSort -> String -> Path
-mkPath sort s =
-    let (OEMPath cursor path) = readNote "expected: Sorts.Robots.MovingPlatform.OEMPath" s
-        nodes = map (epToCenterVector sort) path
+mkPath :: PSort -> OEMPath -> Path
+mkPath sort (OEMPath _ cursor path) =
+    let nodes = map (epToCenterVector sort) path
     in Path nodes (last nodes)
 
 modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
 modifyCursor f p = p{oemCursor = f (oemCursor p)}
 
 -- | use the position of the object as first node in Path
-initialState :: EditorPosition -> OEMPath
-initialState p = OEMPath p [p]
+initialState :: PSort -> EditorPosition -> OEMPath
+initialState sort p = OEMPath sort p [p]
 
 
 updateOEMPath :: AppButton -> OEMPath -> OEMPath
@@ -177,15 +188,16 @@ updateOEMPath button = case button of
     UpButton -> modifyCursor (-~ EditorPosition 0 cursorStep)
     DownButton -> modifyCursor (+~ EditorPosition 0 cursorStep)
     -- append new path node
-    AButton -> (\ (OEMPath cursor path) -> OEMPath cursor (path +: cursor))
+    AButton -> (\ (OEMPath sort cursor path) -> OEMPath sort cursor (path +: cursor))
     -- delete path node
-    BButton -> (\ (OEMPath cursor path) -> OEMPath cursor (filter (/= cursor) path))
+    BButton -> (\ (OEMPath sort cursor path) -> OEMPath sort cursor (filter (/= cursor) path))
     _ -> id
 
 cursorStep = fromKachel 1
 
 
-renderOEMPath sort ptr scene (OEMPath cursor paths) = do
+renderOEMPath :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()
+renderOEMPath ptr scene (OEMPath sort cursor paths) = do
     offset <- transformation ptr cursor (size sort)
     renderScene offset
     renderPath offset

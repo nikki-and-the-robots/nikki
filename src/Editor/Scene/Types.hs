@@ -31,16 +31,16 @@ getSelectedObject scene =
         \ (layerIndex, i) -> content (editorObjects scene !|| layerIndex) !!! i
 
 -- | returns all Indices (to the mainLayer) for robots
-getRobotIndices :: EditorScene Sort_ -> [Index]
+getRobotIndices :: Sort sort o => EditorScene sort -> [Index]
 getRobotIndices EditorScene{editorObjects} =
     I.findIndices (isRobot . editorSort) $ content $ mainLayer editorObjects
 
-getCursorSize :: EditorScene Sort_ -> (Size Double)
+getCursorSize :: Sort sort o => EditorScene sort -> (Size Double)
 getCursorSize s@EditorScene{} =
     size $ getSelected $ availableSorts s
 
 -- | returns an object from the main layer
-getMainlayerEditorObject :: EditorScene Sort_ -> Index -> EditorObject Sort_
+getMainlayerEditorObject :: EditorScene sort -> Index -> EditorObject sort
 getMainlayerEditorObject scene i = os !!! i
   where
     os = mainLayerIndexable $ editorObjects scene

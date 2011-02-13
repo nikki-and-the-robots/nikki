@@ -95,7 +95,7 @@ keyPress :: AppButton -> EditorScene Sort_ -> EditorScene Sort_
 keyPress button scene =
     case editorMode scene of
         NormalMode -> normalMode button scene
-        ObjectEditMode{} -> objectEditMode button scene
+        ObjectEditMode{} -> objectEditModeUpdate button scene
         SelectionMode{} -> selectionMode button scene
 
 -- * Main Editor mode
@@ -175,12 +175,12 @@ normalModeKeyboard _ scene = scene
 
 -- * object edit mode
 
-objectEditMode x s@EditorScene{editorMode = ObjectEditMode i} =
+objectEditModeUpdate x s@EditorScene{editorMode = ObjectEditMode i} =
     s{editorObjects = objects'}
   where
     objects' = modifyMainLayer (modifyByIndex (modifyOEMState mod) i) $ editorObjects s
-    mod :: OEMState Sort_ -> OEMState Sort_
-    mod = updateOEM s x
+    mod :: OEMState -> OEMState
+    mod = oemUpdate s x
 
 
 -- * selection mode

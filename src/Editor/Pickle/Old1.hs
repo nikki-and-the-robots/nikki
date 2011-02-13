@@ -98,7 +98,7 @@ convertOEMStates :: String -> String
 convertOEMStates s =
     case readM s :: Maybe TerminalOEMState of
         Nothing -> s
-        Just x -> show $ ((convert x) :: Sorts.Terminal.OEMState)
+        Just x -> show $ ((convert x) :: Sorts.Terminal.TerminalOEMState)
 
 
 data TerminalOEMState
@@ -110,11 +110,7 @@ data TerminalOEMState
       }
   deriving (Read, Show)
 
-instance Convertable TerminalOEMState Sorts.Terminal.OEMState where
+instance Convertable TerminalOEMState Sorts.Terminal.TerminalOEMState where
     convert NoRobots = Sorts.Terminal.NoRobots
     convert (Robots a b c) =
         Sorts.Terminal.Robots (convert a) (convert b) (convert c)
-
-
-
-

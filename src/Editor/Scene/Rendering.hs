@@ -27,11 +27,11 @@ renderEditorScene ptr scene = do
             renderGUI ptr offset scene
         ObjectEditMode index -> do
             let Just oemState = editorOEMState $ getMainlayerEditorObject scene index
-            renderOEM ptr scene oemState
+            oemRender ptr scene oemState
         SelectionMode endPosition -> renderCopySelection ptr scene endPosition
 
 
-renderObjectScene :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()
+renderObjectScene :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sort -> IO ()
 renderObjectScene ptr offset s = do
     size <- fmap fromIntegral <$> sizeQPainter ptr
     clearScreen ptr black
@@ -52,8 +52,8 @@ renderGUI ptr offset s = do
         renderSelectedObject ptr $ editorSort o
 
 
-renderLayer :: Ptr QPainter -> Size Double -> Offset Double 
-    -> Layer (EditorObject Sort_) -> IO ()
+renderLayer :: Sort sort o => Ptr QPainter -> Size Double -> Offset Double 
+    -> Layer (EditorObject sort) -> IO ()
 renderLayer ptr size offset layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
     fmapM_ (renderEditorObject ptr modifiedOffset) (content layer)

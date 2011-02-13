@@ -18,8 +18,6 @@ import Sound.SFML
 
 import Physics.Chipmunk hiding (position, Position)
 
-import Object
-
 import Base
 
 

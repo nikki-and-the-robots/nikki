@@ -8,8 +8,6 @@ import Graphics.Qt
 
 import Base
 
-import Object
-
 
 -- draw a box at the given position with the given size
 drawBox :: Ptr QPainter -> Position Double -> Size Double -> Double -> IO ()
@@ -27,7 +25,7 @@ drawColoredBox ptr position size thickness color = do
     drawBox ptr position size thickness
 
 -- | renders the given object (with the given Transformation)
-renderEditorObject :: Ptr QPainter -> Offset Double -> EditorObject Sort_ -> IO ()
+renderEditorObject :: Sort sort o => Ptr QPainter -> Offset Double -> EditorObject sort -> IO ()
 renderEditorObject ptr offset eo =
     sortRenderTransformed (editorSort eo) ptr offset (editorPosition eo) Nothing
 

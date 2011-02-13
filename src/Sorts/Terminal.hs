@@ -9,7 +9,7 @@ module Sorts.Terminal (
     hasTerminalShape,
     ExitMode(..),
     renderTerminalOSD,
-    OEMState(..),
+    TerminalOEMState(..),
   ) where
 
 
@@ -18,7 +18,6 @@ import Safe
 import Data.Abelian
 import Data.Indexable (Index)
 import Data.Dynamic
-import Data.Initial
 import Data.Traversable
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
@@ -32,7 +31,7 @@ import qualified Graphics.Qt as Qt
 
 import Utils
 
-import Base hiding (Mode(..), OEMState(..))
+import Base hiding (Mode(..))
 import qualified Base
 
 import Object
@@ -250,10 +249,10 @@ instance Sort TSort Terminal where
     sortRender sort ptr _ =
         renderPixmapSimple ptr $ background $ pixmaps sort
 
-    objectEditModeMethods _ = Just editMode
+    objectEditMode _ = Just oemMethods
 
-    initialize sort (Just space) editorPosition (Just state_) = do
-        let oemState = readNote "Terminal.initialize" state_
+    initialize sort (Just space) editorPosition (Just (OEMState oemState_)) = do
+        let Just oemState :: Maybe TerminalOEMState = cast oemState_
             attached = case oemState of
                 NoRobots -> []
                 Robots _ _ x -> x
@@ -472,32 +471,28 @@ renderOsdExit ptr offset now pixmaps state exitState = do
 -- * special edit mode (OEM)
 -- how to attach robots to Terminals
 
-editMode :: ObjectEditModeMethods Sort_
-editMode = ObjectEditModeMethods {
-    oemInitialState = \ _ -> show (initial :: OEMState),
-    oemEnterMode = \ scene state_ ->
-        show $ enterMode scene
-            (readNote "Terminal.editMode.oemEnterMode" state_),
-    oemUpdate = \ scene key ->
-        readNote "Terminal.editMode.oemUpdate" >>> editorUpdate scene key >>> show,
-    oemRender = \ ptr scene
-        (readNote  "Terminal.editMode.oemRender" -> state :: OEMState) ->
-            oemRender_ ptr scene state
-  }
+oemMethods :: OEMMethods
+oemMethods = OEMMethods
+    (const $ OEMState NoRobots)
+    (\ s -> OEMState (readNote "terminal OEM" s :: TerminalOEMState))
 
-data OEMState
+
+data TerminalOEMState
     = NoRobots
     | Robots {
         availableRobots :: [Index], -- INV: not null
         selectedRobot :: Index,
         attachedRobots :: [Index]
       }
-  deriving (Read, Show)
+  deriving (Read, Show, Typeable)
 
-instance Initial OEMState where
-    initial = NoRobots
+instance IsOEMState TerminalOEMState where
+    oemEnterMode = enterMode
+    oemUpdate = editorUpdate
+    oemRender = oemRender_
+    oemPickle = show
 
-enterMode :: EditorScene Sort_ -> OEMState -> OEMState
+enterMode :: Sort sort o => EditorScene sort -> TerminalOEMState -> TerminalOEMState
 enterMode scene NoRobots =
     case getRobotIndices scene of
         [] -> NoRobots
@@ -510,7 +505,7 @@ enterMode scene (Robots _ selected attached) =
           where
             selected' = if selected `elem` available then selected else first
 
-editorUpdate :: EditorScene Sort_ -> AppButton -> OEMState -> OEMState
+editorUpdate :: EditorScene sort -> AppButton -> TerminalOEMState -> TerminalOEMState
 editorUpdate scene key NoRobots = NoRobots
 editorUpdate scene key state@(Robots available selected attached) =
   case key of
@@ -535,24 +530,25 @@ swapIsElem needle list = list +: needle
 
 -- * rendering of OEM
 
-oemRender_ :: Ptr QPainter -> EditorScene Sort_ -> OEMState -> IO ()
+oemRender_ :: Sort sort o => Ptr QPainter -> EditorScene sort -> TerminalOEMState -> IO ()
 oemRender_ ptr scene state = do
     offset <- transformation ptr (oemCursor scene state) (getCursorSize scene)
     renderObjectScene ptr offset scene
     renderOEMOSDs ptr offset scene state
 
-oemCursor :: EditorScene Sort_ -> OEMState -> EditorPosition
+oemCursor :: Sort sort o => EditorScene sort -> TerminalOEMState -> EditorPosition
 oemCursor scene NoRobots = cursor scene
 oemCursor scene (Robots available selected _) = editorPosition (getMainlayerEditorObject scene selected)
 
-renderOEMOSDs :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> OEMState -> IO ()
+renderOEMOSDs :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sort -> TerminalOEMState
+    -> IO ()
 renderOEMOSDs ptr offset scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
     renderRobotBox (modifyAlpha (const 0.5) orange) (getMainlayerEditorObject scene selected)
     mapM_ (renderRobotBox (modifyAlpha (const 0.3) Qt.yellow)) $ map (getMainlayerEditorObject scene) $
         attached
   where
-    renderRobotBox :: Color -> EditorObject Sort_ -> IO ()
+    renderRobotBox :: Sort sort o => Color -> EditorObject sort -> IO ()
     renderRobotBox color robot = do
         let sort = editorSort robot
             pos = editorPosition2QtPosition sort $ editorPosition robot

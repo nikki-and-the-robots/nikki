@@ -7,7 +7,6 @@ import Utils
 
 import Data.Dynamic
 import Data.List
-import Data.Indexable (Index)
 
 import Graphics.Qt as Qt
 
@@ -18,71 +17,7 @@ import Base
 
 -- * misc
 
-newtype SortId = SortId {getSortId :: FilePath}
-  deriving (Show, Read, Eq)
-
 type Application = Application_ Sort_
-
-
--- * Sort class
-
--- | Class that every sort of objects has to implement. This is the interface between
--- the game and the implemented objects.
--- Minimal complete definition: 'sortId', 'size', 'sortRender', 'initialize', 'immutableCopy', 'chipmunks', 'render'
-
-class (Show sort, Typeable sort, Show object, Typeable object) =>
-    Sort sort object |
-        sort -> object, object -> sort where
-
-    sortId :: sort -> SortId
-
-    -- free memory for allocated resources
-    freeSort :: sort -> IO ()
-    freeSort _ = return ()
-
-    size :: sort -> Size Double
-    objectEditModeMethods :: sort -> Maybe (ObjectEditModeMethods Sort_)
-    objectEditModeMethods _ = Nothing
-    sortRender :: sort -> Ptr QPainter -> RenderMode -> IO ()
-    editorPosition2QtPosition :: sort -> EditorPosition -> Position Double
-    editorPosition2QtPosition sort (EditorPosition x y) =
-        Position x (y - height)
-      where
-        Size _ height = size sort
-
-    -- if Nothing is passed as space, this should be an object 
-    -- that is not added to the chipmunk space (i.e. background tiles)
-    initialize :: sort -> Maybe Space -> EditorPosition -> Maybe String -> IO object
-
-    immutableCopy :: object -> IO object
-
-    chipmunks :: object -> [Chipmunk]
-
-    -- | only implemented in Nikki and robots
-    getControlledChipmunk :: Scene Object_ -> object -> Chipmunk
-    getControlledChipmunk o = error ("please implement getControlledChipmunk in: " ++ show o)
-
-    startControl :: Seconds -> object -> object
-    startControl now = id
-
-    update :: sort -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
-        -> Index -> object -> IO (Scene Object_ -> Scene Object_, object)
-    update sort mode now contacts cd i o = do
-        o' <- updateNoSceneChange sort mode now contacts cd o
-        return (id, o')
-
-    updateNoSceneChange :: sort -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
-        -> object -> IO object
-    updateNoSceneChange _ _ _ _ _ o = return o
-
-    render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
-
-
-data RenderMode
-    = Iconified
-    | InScene {
-        offset :: Position Double
-      }
 
 -- * Sort class wrappers
 
@@ -99,27 +34,16 @@ instance Show Sort_ where
 instance Eq Sort_ where
     a == b = sortId a == sortId b
 
-data Object_
-    = forall sort object .
-        (Sort sort object,
-            Show sort, Typeable sort, 
-            Show object, Typeable object) =>
-                Object_ sort object
-  deriving (Typeable)
-
-instance Show Object_ where
-    show (Object_ s o) = "Object_ (" ++ show o ++ ")"
-
 instance Sort Sort_ Object_ where
     sortId (Sort_ s) = sortId s
     freeSort (Sort_ s) = freeSort s
     size (Sort_ s) = size s
-    objectEditModeMethods (Sort_ s) = objectEditModeMethods s
+    objectEditMode (Sort_ s) = objectEditMode s
     sortRender (Sort_ s) = sortRender s
     editorPosition2QtPosition (Sort_ s) = editorPosition2QtPosition s
     initialize (Sort_ sort) space editorPosition state =
         Object_ sort <$> initialize sort space editorPosition state
-    immutableCopy (Object_ s o) = Object_ s <$> Object.Types.immutableCopy o
+    immutableCopy (Object_ s o) = Object_ s <$> Base.immutableCopy o
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o
     startControl now (Object_ sort o) = Object_ sort $ startControl now o
@@ -146,7 +70,7 @@ wrapObjectModifier f (Object_ s o) =
 isTerminal :: Sort_ -> Bool
 isTerminal sort = SortId "terminal" == sortId sort
 
-isRobot :: Sort_ -> Bool
+isRobot :: Sort sort o => sort -> Bool
 isRobot (sortId -> (SortId s)) = "robots/" `isPrefixOf` s
 
 isNikki :: Sort_ -> Bool
@@ -155,9 +79,12 @@ isNikki s = (SortId "nikki" == sortId s)
 -- * EditorObject
 
 mkEditorObject :: Sort_ -> EditorPosition -> EditorObject Sort_
-mkEditorObject sort pos = EditorObject sort pos (mkOEMState sort pos)
+mkEditorObject sort pos =
+    EditorObject sort pos oemState
+  where
+    oemState = fmap (\ methods -> oemInitialize methods pos) $ objectEditMode sort
 
-modifyOEMState :: (OEMState sort -> OEMState sort) -> EditorObject sort -> EditorObject sort
+modifyOEMState :: (OEMState -> OEMState) -> EditorObject sort -> EditorObject sort
 modifyOEMState f eo =
     case editorOEMState eo of
          Just x -> eo{editorOEMState = Just $ f x}
@@ -174,7 +101,7 @@ data PickleObject = PickleObject {
 
 editorObject2PickleObject :: EditorObject Sort_ -> PickleObject
 editorObject2PickleObject (EditorObject sort p oemState) =
-    PickleObject (sortId sort) p (fmap pickleOEM oemState)
+    PickleObject (sortId sort) p (fmap oemPickle oemState)
 
 -- | converts pickled objects to editor objects
 -- needs all available sorts
@@ -197,37 +124,7 @@ renderChipmunk painter worldOffset p chipmunk = do
     renderPixmap painter worldOffset position (Just angle) p
 
 
--- * ObjectEditMode
+-- * Object edit mode
 
-mkOEMState :: Sort_ -> EditorPosition -> Maybe (OEMState Sort_)
-mkOEMState sort editorPosition =
-    case objectEditModeMethods sort of
-        Nothing -> Nothing
-        Just oem -> Just $ OEMState oem (oemInitialState oem editorPosition)
-
-enterModeOEM :: EditorScene Sort_ -> OEMState Sort_ -> OEMState Sort_
-enterModeOEM scene (OEMState oem state) =
-    OEMState oem (oemEnterMode oem scene state)
-
-updateOEM :: EditorScene Sort_ -> AppButton -> OEMState Sort_ -> OEMState Sort_
-updateOEM scene k (OEMState oem state) =
-    OEMState oem (oemUpdate oem scene k state)
-
-renderOEM :: Ptr QPainter -> EditorScene Sort_ -> OEMState Sort_ -> IO ()
-renderOEM ptr scene (OEMState oem state) =
-    oemRender oem ptr scene state
-
-pickleOEM :: OEMState Sort_ -> String
-pickleOEM (OEMState _ state) = state
-
-unpickleOEM :: Sort_ -> String -> OEMState Sort_
-unpickleOEM sort state =
-    case objectEditModeMethods sort of
-        Just x -> OEMState x state
-
-
-
-
-
-
-
+unpickleOEM :: Sort_ -> String -> OEMState
+unpickleOEM (objectEditMode -> Just methods) = oemUnpickle methods

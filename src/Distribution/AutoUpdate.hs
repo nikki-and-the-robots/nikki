@@ -23,7 +23,7 @@ import System.IO.Temp (createTempDirectory)
 import Version
 import Utils
 
-import Base.Types
+import Base.Types hiding (update)
 import Base.Prose
 import Base.Monad
 import Base.Configuration

@@ -138,7 +138,7 @@ initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
 
 editorObject2Object :: Maybe Space -> EditorObject Sort_ -> IO Object_
 editorObject2Object mspace (EditorObject sort pos state) =
-    initialize sort mspace pos (fmap oemState state)
+    initialize sort mspace pos state
 
 mkScene :: Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene space (nikki, objects) = do

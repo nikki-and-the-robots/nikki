@@ -1,4 +1,5 @@
-{-# language NamedFieldPuns, FlexibleInstances, DeriveDataTypeable #-}
+{-# language NamedFieldPuns, FlexibleInstances, DeriveDataTypeable, ExistentialQuantification,
+    MultiParamTypeClasses, FunctionalDependencies #-}
 
 
 -- module for often used types (in one Base module, to avoid module import cycles.)
@@ -9,12 +10,12 @@ module Base.Types (
   ) where
 
 
-import Data.Set
+import Data.Set hiding (size)
 import Data.Indexable
 import Data.Abelian
 import Data.SelectTree
 import Data.Typeable
-import Data.Map
+import Data.Map hiding (size)
 import Data.ByteString (ByteString)
 
 import Control.Monad.Reader
@@ -290,7 +291,7 @@ data EditorObject sort
     = EditorObject {
         editorSort :: sort,
         editorPosition :: EditorPosition,
-        editorOEMState :: Maybe (OEMState sort)
+        editorOEMState :: Maybe OEMState
       }
   deriving Show
 
@@ -304,22 +305,102 @@ modifyEditorPosition f o@EditorObject{editorPosition} = o{editorPosition = f edi
 
 -- * object edit mode
 
-data ObjectEditModeMethods sort
-    = ObjectEditModeMethods {
-        oemInitialState :: EditorPosition -> String,
-        oemEnterMode :: EditorScene sort -> String -> String,
-        oemUpdate :: EditorScene sort -> AppButton -> String -> String,
-        oemRender :: Ptr QPainter -> EditorScene sort -> String -> IO () -- more args
+class Typeable a => IsOEMState a where
+    oemEnterMode :: Sort sort o => EditorScene sort -> a -> a
+    oemUpdate :: EditorScene sort -> AppButton -> a -> a
+    oemRender :: Sort sort o => Ptr QPainter -> EditorScene sort -> a -> IO ()
+    oemPickle :: a -> String
+
+data OEMState = forall a . IsOEMState a => OEMState a
+  deriving Typeable
+
+instance Show OEMState where
+    show = const "<OEMState>"
+
+instance IsOEMState OEMState where
+    oemEnterMode scene (OEMState a) = OEMState $ oemEnterMode scene a
+    oemUpdate scene button (OEMState a) = OEMState $ oemUpdate scene button a
+    oemRender ptr scene (OEMState a) = oemRender ptr scene a
+    oemPickle (OEMState a) = oemPickle a
+
+data OEMMethods = OEMMethods {
+    oemInitialize :: EditorPosition -> OEMState,
+    oemUnpickle :: String -> OEMState
+  }
+
+
+-- * Objects
+
+newtype SortId = SortId {getSortId :: FilePath}
+  deriving (Show, Read, Eq)
+
+data RenderMode
+    = Iconified
+    | InScene {
+        offset :: Qt.Position Double
       }
 
-instance Show (ObjectEditModeMethods sort) where
-    show = const "<ObjectEditModeMethods>"
+-- * Sort class
 
-data OEMState sort
-    = OEMState {
-        methods :: ObjectEditModeMethods sort,
-        oemState :: String
-      }
-  deriving Show
+-- | Class that every sort of objects has to implement. This is the interface between
+-- the game and the implemented objects.
+-- Minimal complete definition: 'sortId', 'size', 'sortRender', 'initialize', 'immutableCopy', 'chipmunks', 'render'
 
+class (Show sort, Typeable sort, Show object, Typeable object) =>
+    Sort sort object |
+        sort -> object, object -> sort where
 
+    sortId :: sort -> SortId
+
+    -- free memory for allocated resources
+    freeSort :: sort -> IO ()
+    freeSort _ = return ()
+
+    size :: sort -> Size Double
+    -- Sorts that support an object edit mode have to return Just (initial, unpickle) here.
+    objectEditMode :: sort -> Maybe OEMMethods
+    objectEditMode _ = Nothing
+    sortRender :: sort -> Ptr QPainter -> RenderMode -> IO ()
+    editorPosition2QtPosition :: sort -> EditorPosition -> Qt.Position Double
+    editorPosition2QtPosition sort (EditorPosition x y) =
+        Position x (y - height)
+      where
+        Size _ height = size sort
+
+    -- if Nothing is passed as space, this should be an object 
+    -- that is not added to the chipmunk space (i.e. background tiles)
+    initialize :: sort -> Maybe Space -> EditorPosition -> Maybe OEMState -> IO object
+
+    immutableCopy :: object -> IO object
+
+    chipmunks :: object -> [Chipmunk]
+
+    -- | only implemented in Nikki and robots
+    getControlledChipmunk :: Scene Object_ -> object -> Chipmunk
+    getControlledChipmunk o = error ("please implement getControlledChipmunk in: " ++ show o)
+
+    startControl :: Seconds -> object -> object
+    startControl now = id
+
+    update :: sort -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
+        -> Index -> object -> IO (Scene Object_ -> Scene Object_, object)
+    update sort mode now contacts cd i o = do
+        o' <- updateNoSceneChange sort mode now contacts cd o
+        return (id, o')
+
+    updateNoSceneChange :: sort -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
+        -> object -> IO object
+    updateNoSceneChange _ _ _ _ _ o = return o
+
+    render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
+
+data Object_
+    = forall sort object .
+        (Sort sort object,
+            Show sort, Typeable sort, 
+            Show object, Typeable object) =>
+                Object_ sort object
+  deriving (Typeable)
+
+instance Show Object_ where
+    show (Object_ s o) = "Object_ (" ++ show o ++ ")"

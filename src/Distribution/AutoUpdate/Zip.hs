@@ -3,7 +3,6 @@
 module Distribution.AutoUpdate.Zip (unzipArchive, zipArchive) where
 
 
-import Data.Monoid
 import qualified Data.ByteString as BS
 import Data.Word
 
@@ -13,8 +12,6 @@ import System.FilePath
 import System.Directory
 
 import Utils
-
-import Base.Prose
 
 
 -- | unzips a given archive into a given directory

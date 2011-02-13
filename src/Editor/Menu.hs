@@ -168,10 +168,10 @@ enterOEM :: Application -> PlayLevel -> MVar (EditorScene Sort_)
 enterOEM app play mvar scene = do -- maybe monad
     (layerIndex, i) <- selected scene
     selectedObject <- getSelectedObject scene
-    _ <- objectEditModeMethods $ editorSort $ selectedObject
+    _ <- objectEditMode $ editorSort $ selectedObject
     let objects' = modifySelectedLayer layerIndex (modifyContent (modifyByIndex (modifyOEMState mod) i)) $ editorObjects scene
-        mod :: OEMState Sort_ -> OEMState Sort_
-        mod = enterModeOEM scene
+        mod :: OEMState -> OEMState
+        mod = oemEnterMode scene
     Just $ edit scene{editorMode = ObjectEditMode i, editorObjects = objects'}
   where
     edit :: EditorScene Sort_ -> AppState

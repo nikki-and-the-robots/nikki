@@ -217,7 +217,7 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
 
 -- | immutable copy (for the rendering thread)
 immutableCopy :: Scene Object_ -> IO (Scene Object_)
-immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Object.immutableCopy))
+immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Base.immutableCopy))
 
 
 -- | well, renders the scene to the screen (to the max :)
