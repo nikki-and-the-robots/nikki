@@ -65,17 +65,6 @@ wrapObjectModifier f (Object_ s o) =
     case (cast s, cast o) of
         (Just s_, Just o_) -> Object_ s_ (f o_)
 
--- * Discriminators
-
-isTerminal :: Sort_ -> Bool
-isTerminal sort = SortId "terminal" == sortId sort
-
-isRobot :: Sort sort o => sort -> Bool
-isRobot (sortId -> (SortId s)) = "robots/" `isPrefixOf` s
-
-isNikki :: Sort_ -> Bool
-isNikki s = (SortId "nikki" == sortId s)
-
 -- * EditorObject
 
 mkEditorObject :: Sort_ -> EditorPosition -> EditorObject Sort_

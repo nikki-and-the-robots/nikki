@@ -31,6 +31,8 @@ import Base
 
 import Object
 
+import Sorts.Nikki
+
 import Editor.Scene.Types
 import Editor.Scene.Rendering
 import qualified Editor.Scene.RenderOrdering as RenderOrdering

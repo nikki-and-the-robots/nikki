@@ -155,6 +155,11 @@ data TSort = TSort {
   }
     deriving (Show, Typeable)
 
+isTerminal :: Sort sort o => sort -> Bool
+isTerminal (cast -> Just _ :: Maybe TSort) = True
+isTerminal (cast -> Just (Sort_ inner) :: Maybe Sort_) = isTerminal inner
+isTerminal _ = False
+
 data Terminal = Terminal {
     chipmunk :: Chipmunk,
     robots :: [Index],

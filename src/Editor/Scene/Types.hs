@@ -15,6 +15,8 @@ import Base
 
 import Object
 
+import Sorts.Robots
+
 
 -- type SceneMonad = StateT (EditorScene Sort_) IO
 

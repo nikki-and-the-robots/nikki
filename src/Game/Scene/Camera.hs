@@ -24,6 +24,8 @@ import Base
 
 import Object
 
+import Sorts.Nikki
+
 
 -- * camera configuration
 

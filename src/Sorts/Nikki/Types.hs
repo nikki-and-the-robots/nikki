@@ -1,4 +1,4 @@
-{-# language FlexibleInstances, DeriveDataTypeable #-}
+{-# language FlexibleInstances, DeriveDataTypeable, ViewPatterns, ScopedTypeVariables #-}
 
 module Sorts.Nikki.Types where
 
@@ -20,12 +20,19 @@ import Physics.Chipmunk hiding (position, Position)
 
 import Base
 
+import Object
+
 
 data NSort = NSort {
     pixmaps :: Map String [Pixmap],
     jumpSound :: PolySound
   }
     deriving (Show, Typeable)
+
+isNikki :: Sort sort o => sort -> Bool
+isNikki (cast -> Just _ :: Maybe NSort) = True
+isNikki (cast -> Just (Sort_ inner) :: Maybe Sort_) = isNikki inner
+isNikki _ = False
 
 data Nikki
     = Nikki {

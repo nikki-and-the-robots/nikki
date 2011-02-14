@@ -1,7 +1,7 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
     FlexibleInstances, DeriveDataTypeable, ScopedTypeVariables #-}
 
-module Sorts.Nikki (sorts, addBatteryPower, modifyNikki, nikkiMass, walkingVelocity) where
+module Sorts.Nikki (sorts, isNikki, addBatteryPower, modifyNikki, nikkiMass, walkingVelocity) where
 
 
 import Prelude hiding (lookup)

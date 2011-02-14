@@ -119,7 +119,7 @@ initScene space =
 selectNikki :: Grounds (EditorObject Sort_) -> (Index, Grounds (EditorObject Sort_))
 selectNikki objects = (nikki, modifyMainLayer deleteDuplicateNikkis objects)
   where
-    nikkiIndices = I.findIndices (isNikki . editorSort) $ mainLayerIndexable objects
+    nikkiIndices = I.findIndices (Sorts.Nikki.isNikki . editorSort) $ mainLayerIndexable objects
     nikki = case nikkiIndices of
                     [a] -> a
                     (_ : _) -> trace "Warning, level containing more than one Nikki" $
