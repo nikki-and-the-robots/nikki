@@ -8,6 +8,7 @@ import Safe
 
 import Data.Typeable
 import Data.Abelian
+import Data.Generics
 
 import System.FilePath
 
@@ -42,7 +43,7 @@ sorts = do
 data PSort = PSort {
     pix :: Pixmap
   }
-    deriving (Show, Typeable)
+    deriving (Show, Typeable, Data)
 
 data Platform
     = Platform {
@@ -147,13 +148,12 @@ oemMethods sort = OEMMethods
     (OEMState . initialState sort)
     (OEMState . unpickle sort)
 
-
 data OEMPath = OEMPath {
     oemPSort :: PSort,
     oemCursor :: EditorPosition,
     oemPath :: [EditorPosition]
   }
-    deriving (Show, Typeable)
+    deriving (Show, Typeable, Data)
 
 type PickleType = (EditorPosition, [EditorPosition])
 

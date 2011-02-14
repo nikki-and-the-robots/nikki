@@ -17,7 +17,7 @@ import Safe
 
 import Data.Abelian
 import Data.Indexable (Index)
-import Data.Dynamic
+import Data.Generics
 import Data.Traversable
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
@@ -489,7 +489,7 @@ data TerminalOEMState
         selectedRobot :: Index,
         attachedRobots :: [Index]
       }
-  deriving (Read, Show, Typeable)
+  deriving (Read, Show, Typeable, Data)
 
 instance IsOEMState TerminalOEMState where
     oemEnterMode = enterMode

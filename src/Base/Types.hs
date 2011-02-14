@@ -17,6 +17,8 @@ import Data.SelectTree
 import Data.Typeable
 import Data.Map hiding (size)
 import Data.ByteString (ByteString)
+import Data.Generics
+import Data.Generics.Uniplate.Data
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -90,7 +92,7 @@ data Pixmap = Pixmap {
     pixmapSize :: Size Double,
     pixmapOffset :: Qt.Position Double
   }
-    deriving Show
+    deriving (Show, Typeable, Data)
 
 
 -- from Game.Scene
@@ -275,7 +277,7 @@ data EditorPosition = EditorPosition {
     editorX :: Double,
     editorY :: Double
   }
-  deriving (Show, Read, Eq)
+  deriving (Show, Read, Eq, Typeable, Data)
 
 instance Abelian EditorPosition where
     zero = EditorPosition 0 0
@@ -298,14 +300,21 @@ data EditorObject sort
 instance Functor EditorObject where
     fmap f (EditorObject sort pos Nothing) = EditorObject (f sort) pos Nothing
 
+-- | modify the EditorPosition of an EditorObject
 modifyEditorPosition :: (EditorPosition -> EditorPosition)
     -> EditorObject s -> EditorObject s
 modifyEditorPosition f o@EditorObject{editorPosition} = o{editorPosition = f editorPosition}
 
+-- | modifies all EditorPositions of the OEMState of EditorObjects
+modifyOEMEditorPositions :: (EditorPosition -> EditorPosition)
+    -> EditorObject s -> EditorObject s
+modifyOEMEditorPositions f o@EditorObject{editorOEMState = Just (OEMState state)} =
+    o{editorOEMState = Just $ OEMState $ transformBi f state}
+
 
 -- * object edit mode
 
-class Typeable a => IsOEMState a where
+class (Typeable a, Data a) => IsOEMState a where
     oemEnterMode :: Sort sort o => EditorScene sort -> a -> a
     oemUpdate :: EditorScene sort -> AppButton -> a -> a
     oemRender :: Sort sort o => Ptr QPainter -> EditorScene sort -> a -> IO ()
@@ -316,6 +325,14 @@ data OEMState = forall a . IsOEMState a => OEMState a
 
 instance Show OEMState where
     show = const "<OEMState>"
+
+instance Data OEMState where
+    gfoldl = oemStateDataInstanceError
+    gunfold = oemStateDataInstanceError
+    toConstr = oemStateDataInstanceError
+    dataTypeOf = oemStateDataInstanceError
+
+oemStateDataInstanceError = error "don't use Data instance of OEMState"
 
 instance IsOEMState OEMState where
     oemEnterMode scene (OEMState a) = OEMState $ oemEnterMode scene a

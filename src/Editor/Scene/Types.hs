@@ -11,6 +11,8 @@ import Data.Initial
 
 import Graphics.Qt
 
+import Utils
+
 import Base
 
 import Object
@@ -133,7 +135,8 @@ findCopySelectionIndices scene =
 
 moveSelectionToZero :: EditorScene Sort_ -> EditorObject Sort_ -> EditorObject Sort_
 moveSelectionToZero scene@EditorScene{editorMode = SelectionMode (EditorPosition x2 y2)} =
-    modifyEditorPosition (-~ EditorPosition x y)
+    modifyEditorPosition (-~ EditorPosition x y) >>>
+    modifyOEMEditorPositions (-~ EditorPosition x y)
   where
     x = min x1 x2
     y = max y1 y2
@@ -150,4 +153,5 @@ pasteClipboard scene =
     addClipboard = 
         foldr (.) id $ map (\ o ix -> ix >: o) $
         map (modifyEditorPosition (+~ cursor scene)) $
+        map (modifyOEMEditorPositions (+~ cursor scene)) $
         clipBoard scene

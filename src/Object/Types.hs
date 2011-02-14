@@ -6,7 +6,6 @@ module Object.Types where
 import Utils
 
 import Data.Dynamic
-import Data.List
 
 import Graphics.Qt as Qt
 

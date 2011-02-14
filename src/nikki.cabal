@@ -159,6 +159,7 @@ Executable core
         , bytestring >= 0.9.1.7
         , utf8-light >= 0.4
         , LibZip >= 0.2.0.1
+        , uniplate >= 1.6
 
     if os(linux)
         extra-libraries:
