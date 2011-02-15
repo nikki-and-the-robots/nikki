@@ -308,6 +308,7 @@ modifyEditorPosition f o@EditorObject{editorPosition} = o{editorPosition = f edi
 -- | modifies all EditorPositions of the OEMState of EditorObjects
 modifyOEMEditorPositions :: (EditorPosition -> EditorPosition)
     -> EditorObject s -> EditorObject s
+modifyOEMEditorPositions f o@EditorObject{editorOEMState = Nothing} = o
 modifyOEMEditorPositions f o@EditorObject{editorOEMState = Just (OEMState state)} =
     o{editorOEMState = Just $ OEMState $ transformBi f state}
 
