@@ -151,26 +151,37 @@ oemMethods sort = OEMMethods
 data OEMPath = OEMPath {
     oemPSort :: PSort,
     oemCursor :: EditorPosition,
-    oemPath :: [EditorPosition]
+    oemPath :: OEMPathPositions
   }
     deriving (Show, Typeable, Data)
 
 type PickleType = (EditorPosition, [EditorPosition])
 
 unpickle :: PSort -> String -> OEMPath
-unpickle sort (readMay -> Just (cursor, path)) =
-    OEMPath sort cursor path
+unpickle sort (readMay -> Just (cursor, (start : path))) =
+    OEMPath sort cursor (OEMPathPositions start path)
 
 instance IsOEMState OEMPath where
     oemEnterMode _ = id
     oemUpdate _ = updateOEMPath
     oemRender = renderOEMPath
-    oemPickle (OEMPath _ a b) = show ((a, b) :: PickleType)
+    oemPickle (OEMPath _ cursor path) =
+        show ((cursor, getPathList path) :: PickleType)
+
+data OEMPathPositions =
+    OEMPathPositions {
+        startPosition :: EditorPosition,
+        pathPositions :: [EditorPosition]
+      }
+  deriving (Show, Typeable, Data)
+
+getPathList :: OEMPathPositions -> [EditorPosition]
+getPathList (OEMPathPositions start path) = start : path
 
 -- | reads an OEMPath and returns the path for the game
 mkPath :: PSort -> OEMPath -> Path
 mkPath sort (OEMPath _ cursor path) =
-    let nodes = map (epToCenterVector sort) path
+    let nodes = map (epToCenterVector sort) (getPathList path)
     in Path nodes (last nodes)
 
 modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
@@ -178,7 +189,7 @@ modifyCursor f p = p{oemCursor = f (oemCursor p)}
 
 -- | use the position of the object as first node in Path
 initialState :: PSort -> EditorPosition -> OEMPath
-initialState sort p = OEMPath sort p [p]
+initialState sort p = OEMPath sort p (OEMPathPositions p [])
 
 
 updateOEMPath :: AppButton -> OEMPath -> OEMPath
@@ -188,16 +199,18 @@ updateOEMPath button = case button of
     UpButton -> modifyCursor (-~ EditorPosition 0 cursorStep)
     DownButton -> modifyCursor (+~ EditorPosition 0 cursorStep)
     -- append new path node
-    AButton -> (\ (OEMPath sort cursor path) -> OEMPath sort cursor (path +: cursor))
+    AButton -> (\ (OEMPath sort cursor (OEMPathPositions start path)) ->
+        OEMPath sort cursor (OEMPathPositions start (path +: cursor)))
     -- delete path node
-    BButton -> (\ (OEMPath sort cursor path) -> OEMPath sort cursor (filter (/= cursor) path))
+    BButton -> (\ (OEMPath sort cursor (OEMPathPositions start path)) ->
+        OEMPath sort cursor (OEMPathPositions start (filter (/= cursor) path)))
     _ -> id
 
 cursorStep = fromKachel 1
 
 
 renderOEMPath :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()
-renderOEMPath ptr scene (OEMPath sort cursor paths) = do
+renderOEMPath ptr scene (OEMPath sort cursor (getPathList -> paths)) = do
     offset <- transformation ptr cursor (size sort)
     renderScene offset
     renderPath offset
