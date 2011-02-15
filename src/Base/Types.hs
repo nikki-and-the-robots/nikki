@@ -378,11 +378,6 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     objectEditMode :: sort -> Maybe OEMMethods
     objectEditMode _ = Nothing
     sortRender :: sort -> Ptr QPainter -> RenderMode -> IO ()
-    editorPosition2QtPosition :: sort -> EditorPosition -> Qt.Position Double
-    editorPosition2QtPosition sort (EditorPosition x y) =
-        Position x (y - height)
-      where
-        Size _ height = size sort
 
     -- if Nothing is passed as space, this should be an object 
     -- that is not added to the chipmunk space (i.e. background tiles)
@@ -410,6 +405,12 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     updateNoSceneChange _ _ _ _ _ o = return o
 
     render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
+
+editorPosition2QtPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
+editorPosition2QtPosition sort (EditorPosition x y) =
+    Position x (y - height)
+  where
+    Size _ height = size sort
 
 data Object_
     = forall sort object .

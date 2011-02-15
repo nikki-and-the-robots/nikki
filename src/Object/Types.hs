@@ -39,7 +39,6 @@ instance Sort Sort_ Object_ where
     size (Sort_ s) = size s
     objectEditMode (Sort_ s) = objectEditMode s
     sortRender (Sort_ s) = sortRender s
-    editorPosition2QtPosition (Sort_ s) = editorPosition2QtPosition s
     initialize (Sort_ sort) space editorPosition state =
         Object_ sort <$> initialize sort space editorPosition state
     immutableCopy (Object_ s o) = Object_ s <$> Base.immutableCopy o
