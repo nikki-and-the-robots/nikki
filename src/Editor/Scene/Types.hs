@@ -151,7 +151,7 @@ pasteClipboard scene =
                     (editorObjects scene)
     addClipboard :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
     addClipboard = 
-        foldr (.) id $ map (\ o ix -> ix >: o) $
+        foldr (>>>) id $ map (\ o ix -> ix >: o) $
         map (modifyEditorPosition (+~ cursor scene)) $
         map (modifyOEMEditorPositions (+~ cursor scene)) $
         clipBoard scene
