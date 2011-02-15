@@ -150,23 +150,37 @@ oemMethods sort = OEMMethods
 
 data OEMPath = OEMPath {
     oemPSort :: PSort,
+    oemStepSize :: Int,
     oemCursor :: EditorPosition,
     oemPath :: OEMPathPositions
   }
     deriving (Show, Typeable, Data)
 
-type PickleType = (EditorPosition, [EditorPosition])
-
-unpickle :: PSort -> String -> OEMPath
-unpickle sort (readMay -> Just (cursor, (start : path))) =
-    OEMPath sort cursor (OEMPathPositions start path)
-
 instance IsOEMState OEMPath where
     oemEnterMode _ = id
     oemUpdate _ = updateOEMPath
     oemRender = renderOEMPath
-    oemPickle (OEMPath _ cursor path) =
+    oemPickle (OEMPath _ _ cursor path) =
         show ((cursor, getPathList path) :: PickleType)
+
+type PickleType = (EditorPosition, [EditorPosition])
+
+unpickle :: PSort -> String -> OEMPath
+unpickle sort (readMay -> Just (cursor, (start : path))) =
+    OEMPath sort (fromKachel 1) cursor (OEMPathPositions start path)
+
+-- | reads an OEMPath and returns the path for the game
+mkPath :: PSort -> OEMPath -> Path
+mkPath sort (OEMPath _ _ cursor path) =
+    let nodes = map (epToCenterVector sort) (getPathList path)
+    in Path nodes (last nodes)
+
+modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
+modifyCursor f p = p{oemCursor = f (oemCursor p)}
+
+-- | use the position of the object as first node in Path
+initialState :: PSort -> EditorPosition -> OEMPath
+initialState sort p = OEMPath sort (fromKachel 1) p (OEMPathPositions p [])
 
 data OEMPathPositions =
     OEMPathPositions {
@@ -178,43 +192,32 @@ data OEMPathPositions =
 getPathList :: OEMPathPositions -> [EditorPosition]
 getPathList (OEMPathPositions start path) = start : path
 
--- | reads an OEMPath and returns the path for the game
-mkPath :: PSort -> OEMPath -> Path
-mkPath sort (OEMPath _ cursor path) =
-    let nodes = map (epToCenterVector sort) (getPathList path)
-    in Path nodes (last nodes)
-
-modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
-modifyCursor f p = p{oemCursor = f (oemCursor p)}
-
--- | use the position of the object as first node in Path
-initialState :: PSort -> EditorPosition -> OEMPath
-initialState sort p = OEMPath sort p (OEMPathPositions p [])
-
-
 updateOEMPath :: AppButton -> OEMPath -> OEMPath
-updateOEMPath button = case button of
-    LeftButton -> modifyCursor (-~ EditorPosition cursorStep 0)
-    RightButton -> modifyCursor (+~ EditorPosition cursorStep 0)
-    UpButton -> modifyCursor (-~ EditorPosition 0 cursorStep)
-    DownButton -> modifyCursor (+~ EditorPosition 0 cursorStep)
-    -- append new path node
-    AButton -> (\ (OEMPath sort cursor (OEMPathPositions start path)) ->
-        OEMPath sort cursor (OEMPathPositions start (path +: cursor)))
-    -- delete path node
-    BButton -> (\ (OEMPath sort cursor (OEMPathPositions start path)) ->
-        OEMPath sort cursor (OEMPathPositions start (filter (/= cursor) path)))
-    _ -> id
-
-cursorStep = fromKachel 1
+updateOEMPath button oem@(OEMPath sort cursorStep cursor (OEMPathPositions start path)) =
+    case button of
+        LeftButton -> modifyCursor (-~ EditorPosition cursorStepF 0) oem
+        RightButton -> modifyCursor (+~ EditorPosition cursorStepF 0) oem
+        UpButton -> modifyCursor (-~ EditorPosition 0 cursorStepF) oem
+        DownButton -> modifyCursor (+~ EditorPosition 0 cursorStepF) oem
+        -- append new path node
+        AButton -> OEMPath sort cursorStep cursor (OEMPathPositions start (path +: cursor))
+        -- delete path node
+        BButton -> OEMPath sort cursorStep cursor (OEMPathPositions start (filter (/= cursor) path))
+        (KeyboardButton W _) -> oem{oemStepSize = cursorStep * 2}
+        (KeyboardButton S _) -> oem{oemStepSize = max 1 (cursorStep `div` 2)}
+        _ -> oem
+  where
+    cursorStepF :: Double = fromIntegral cursorStep
 
 
 renderOEMPath :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()
-renderOEMPath ptr scene (OEMPath sort cursor (getPathList -> paths)) = do
+renderOEMPath ptr scene (OEMPath sort stepSize cursor (getPathList -> paths)) = do
     offset <- transformation ptr cursor (size sort)
     renderScene offset
     renderPath offset
     renderCursor offset
+    let stepSizeF = fromIntegral stepSize
+    renderCursorStepSize ptr $ EditorPosition stepSizeF stepSizeF
   where
     renderScene offset = do
         renderObjectScene ptr offset scene
