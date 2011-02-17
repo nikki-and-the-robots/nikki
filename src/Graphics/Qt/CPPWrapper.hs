@@ -68,7 +68,7 @@ foreign import ccall "setApplicationName" cppSetApplicationName :: Ptr QApplicat
 
 data GLContext
 
-foreign import ccall newGLContext :: Int -> IO (Ptr GLContext)
+foreign import ccall newGLContext :: Int -> Int -> Int -> IO (Ptr GLContext)
 
 foreign import ccall setWindowIcon :: Ptr GLContext -> Ptr QIcon -> IO ()
 

@@ -57,13 +57,15 @@ main =
 
     -- qt initialisation
     qApp <- io newQApplication
-    window <- io $ newGLContext 0
+    let Windowed windowSize = programWindowSize
+    window <- io $ newGLContext 0 (width windowSize) (height windowSize)
     loadApplicationIcon window
     keyPoller <- io $ newKeyPoller window
+
     -- showing main window
-    let windowSize = if fullscreen configuration then FullScreen else programWindowSize
+    let windowMode = if fullscreen configuration then FullScreen else programWindowSize
     io $ setWindowTitle window "Nikki and the Robots"
-    io $ setWindowSize window windowSize
+    io $ setWindowSize window windowMode
     io $ showGLContext window
 
     -- sort loading (pixmaps and sounds)
@@ -72,9 +74,9 @@ main =
         -- start state logick
         let app :: Application
             app = Application qApp window keyPoller applicationStates appPixmaps sorts
-        -- there are two main threads:
-        -- this is the logick [sick!] thread
-        -- dynamic changes of the configuration take place in this thread!
+            -- there are two main threads:
+            -- this is the logick [sick!] thread
+            -- dynamic changes of the configuration take place in this thread!
             logicThread = do
                 guiLog app (p "loading...")
                 withDynamicConfiguration configuration $

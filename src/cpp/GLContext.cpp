@@ -63,10 +63,12 @@ void GLContext::postGUISlot(guiAction* action) {
 
 // * external C
 
-extern "C" GLContext* newGLContext(int swapInterval) {
+extern "C" GLContext* newGLContext(int swapInterval, int width, int height) {
     QGLFormat format = QGLFormat::defaultFormat();
     format.setSwapInterval(swapInterval);
-    return new GLContext(format);
+    GLContext* result = new GLContext(format);
+    result->mainWindow->resize(width, height);
+    return result;
 };
 
 extern "C" void setWindowIcon(GLContext* self, QIcon* icon) {
