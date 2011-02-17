@@ -176,6 +176,7 @@ data OEMPath = OEMPath {
 instance IsOEMState OEMPath where
     oemEnterMode _ = id
     oemUpdate _ = updateOEMPath
+    oemNormalize _ = id
     oemRender = renderOEMState
     oemPickle (OEMPath _ _ cursor path) =
         show ((cursor, getPathList path) :: PickleType)

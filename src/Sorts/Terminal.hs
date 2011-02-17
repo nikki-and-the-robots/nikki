@@ -494,6 +494,7 @@ data TerminalOEMState
 instance IsOEMState TerminalOEMState where
     oemEnterMode = enterMode
     oemUpdate = editorUpdate
+    oemNormalize = removeDeletedRobots
     oemRender = oemRender_
     oemPickle = show
 
@@ -531,6 +532,13 @@ searchNext needle list | needle `elem` list =
 swapIsElem :: Eq e => e -> [e] -> [e]
 swapIsElem needle list | needle `elem` list = filter (/= needle) list
 swapIsElem needle list = list +: needle
+
+-- | removes the attached robots from the terminal, that have been deleted
+removeDeletedRobots :: Sort sort o => EditorScene sort
+    -> TerminalOEMState -> TerminalOEMState
+removeDeletedRobots scene NoRobots = NoRobots
+removeDeletedRobots scene (Robots a b attached) =
+    Robots a b (filter (`elem` getRobotIndices scene) attached)
 
 
 -- * rendering of OEM

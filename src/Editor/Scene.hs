@@ -27,6 +27,8 @@ import Control.Monad.State
 
 import Graphics.Qt
 
+import Utils
+
 import Base
 
 import Object
@@ -84,10 +86,11 @@ setNikkiPosition position =
 -- * manipulating
 
 updateEditorScene :: AppEvent -> EditorScene Sort_ -> EditorScene Sort_
-updateEditorScene (Press button) scene =
-    updateSelected $
-    keyPress button scene
-updateEditorScene _ s = s
+updateEditorScene (Press button) =
+    keyPress button >>>
+    updateSelected >>>
+    normalizeOEMStates
+updateEditorScene _ = id
 
 
 -- * gamepad buttons
@@ -215,3 +218,17 @@ changeCursorStepSize S scene =
         Nothing -> setCursorStep scene Nothing
         Just (EditorPosition 1 1) -> setCursorStep scene Nothing
         Just (EditorPosition x y) -> setCursorStep scene $ Just $ EditorPosition (x / 2) (y / 2)
+
+
+-- * normalization of OEMStates
+normalizeOEMStates :: Sort sort o => EditorScene sort -> EditorScene sort
+normalizeOEMStates scene@EditorScene{editorObjects} =
+    scene{editorObjects = newEditorObjects}
+  where
+    newEditorObjects = fmap modEditorObject editorObjects
+    modEditorObject :: EditorObject sort -> EditorObject sort
+    modEditorObject o@EditorObject{editorOEMState} =
+        case editorOEMState of
+            Nothing -> o
+            Just oemState ->
+                o{editorOEMState = Just $ oemNormalize scene oemState}

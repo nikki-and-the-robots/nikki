@@ -318,6 +318,7 @@ modifyOEMEditorPositions f o@EditorObject{editorOEMState = Just (OEMState state)
 class (Typeable a, Data a) => IsOEMState a where
     oemEnterMode :: Sort sort o => EditorScene sort -> a -> a
     oemUpdate :: EditorScene sort -> AppButton -> a -> a
+    oemNormalize :: Sort sort o => EditorScene sort -> a -> a
     oemRender :: Sort sort o => Ptr QPainter -> EditorScene sort -> a -> IO ()
     oemPickle :: a -> String
 
@@ -338,6 +339,7 @@ oemStateDataInstanceError = error "don't use Data instance of OEMState"
 instance IsOEMState OEMState where
     oemEnterMode scene (OEMState a) = OEMState $ oemEnterMode scene a
     oemUpdate scene button (OEMState a) = OEMState $ oemUpdate scene button a
+    oemNormalize scene (OEMState a) = OEMState $ oemNormalize scene a
     oemRender ptr scene (OEMState a) = oemRender ptr scene a
     oemPickle (OEMState a) = oemPickle a
 
