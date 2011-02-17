@@ -258,18 +258,21 @@ renderOEMState ptr scene (OEMPath sort stepSize cursor (getPathList -> paths)) =
     renderCursor offset =
         drawColoredBox ptr (epToPosition sort cursor +~ offset) (size sort) 4 yellow
 
+renderOEMPath :: PSort -> Ptr QPainter -> Offset Double -> [EditorPosition]
+    -> IO ()
 renderOEMPath sort ptr offset paths = do
     setPenColor ptr green 4
     mapM_ (renderLine sort ptr) (adjacentCyclic paths)
-    setPenColor ptr red 4
+    setPenColor ptr (modifyAlpha (* 0.4) yellow) 4
     mapM_ (drawPathNode sort ptr) paths
 
--- renderLine :: (EditorPosition, EditorPosition) -> IO ()
+renderLine :: PSort -> Ptr QPainter -> (EditorPosition, EditorPosition) -> IO ()
 renderLine sort ptr (a, b) =
     drawLine ptr (epToCenterPosition sort a) (epToCenterPosition sort b)
 
+drawPathNode :: PSort -> Ptr QPainter -> EditorPosition -> IO ()
 drawPathNode sort ptr n =
-    drawCircle ptr (epToCenterPosition sort n) 5
+    drawRect ptr (epToPosition sort n) (size sort)
 
 
 -- * position conversions
