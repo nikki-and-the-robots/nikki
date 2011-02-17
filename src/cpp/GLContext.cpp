@@ -102,9 +102,11 @@ extern "C" void updateGLContext(GLContext* self) {
 extern "C" void setFullscreenGLContext(GLContext* ptr, bool fullscreen) {
     // flags are low level but easy: Just think!
     if (fullscreen) {
-        ptr->mainWindow->showFullScreen();
+        ptr->mainWindow->setWindowState(
+            ptr->mainWindow->windowState() | Qt::WindowFullScreen);
     } else {
-        ptr->mainWindow->showNormal();
+        ptr->mainWindow->setWindowState(
+            ptr->mainWindow->windowState() & ~(Qt::WindowFullScreen));
     };
 };
 
