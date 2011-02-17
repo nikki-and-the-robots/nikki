@@ -77,7 +77,7 @@ instance Sort TSort FallingTile where
 
     size (TSort _ pix) = pixmapSize pix
 
-    sortRender sort ptr _ = do
+    sortRender sort ptr _ _ = do
         renderPixmapSimple ptr (tilePixmap sort)
         let Size w h = fmap (subtract 1) $ size sort
         -- draw a red cross on top

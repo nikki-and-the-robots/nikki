@@ -60,7 +60,7 @@ instance Sort PSort Platform where
 
     objectEditMode s = Just $ oemMethods s
 
-    sortRender sort ptr _ =
+    sortRender sort ptr _ _ =
         renderPixmapSimple ptr (pix sort)
 
     initialize sort (Just space) ep (Just (OEMState oemState_)) = do

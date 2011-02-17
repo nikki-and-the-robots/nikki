@@ -153,7 +153,7 @@ instance Sort TSort Tile where
 
     size (TSort _ pixmaps) = pixmapSize $ head pixmaps
 
-    sortRender sort ptr _ =
+    sortRender sort ptr _ _ =
         renderPixmapSimple ptr $ head $ tilePixmaps sort
 
     initialize sort@TSort{} Nothing editorPosition Nothing = do

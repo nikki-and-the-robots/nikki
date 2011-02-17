@@ -50,9 +50,9 @@ instance Sort GSort Grid where
     size s = pixmapSize $ gridPixmap s
 
     -- if rendered without scaling, the grid will be multiplied
-    sortRender sort ptr Iconified = 
+    sortRender sort ptr Iconified _ =
         renderPixmapSimple ptr (gridPixmap sort)
-    sortRender sort ptr (InScene offset) = do
+    sortRender sort ptr (InScene offset) _ = do
         -- render the grid
         windowSize <- fmap fromIntegral <$> sizeQPainter ptr
         renderGrid ptr sort offset windowSize

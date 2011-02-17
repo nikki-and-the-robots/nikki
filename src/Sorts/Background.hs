@@ -68,9 +68,9 @@ instance Sort BSort () where
     sortId s = SortId $ ("background/" ++ name s)
     size s = pixmapSize $ head $ pixmaps s -- does not make much sense
                                            -- (except for the cursor and iconified rendering)
-    sortRender sort ptr Iconified =
+    sortRender sort ptr Iconified _ =
         renderPixmapSimple ptr (head $ pixmaps sort)
-    sortRender sort ptr (InScene offset) =
+    sortRender sort ptr (InScene offset) _ =
         render () sort ptr offset 0
     initialize sort mSpace ep Nothing = return ()
     immutableCopy = return

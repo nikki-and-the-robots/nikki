@@ -378,7 +378,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     -- Sorts that support an object edit mode have to return Just (initial, unpickle) here.
     objectEditMode :: sort -> Maybe OEMMethods
     objectEditMode _ = Nothing
-    sortRender :: sort -> Ptr QPainter -> RenderMode -> IO ()
+    sortRender :: sort -> Ptr QPainter -> RenderMode -> Maybe OEMState -> IO ()
 
     -- if Nothing is passed as space, this should be an object 
     -- that is not added to the chipmunk space (i.e. background tiles)

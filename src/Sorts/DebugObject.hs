@@ -58,7 +58,7 @@ instance Sort DebugSort Debug where
 
     size = const $ objectSize
 
-    sortRender sort ptr renderMode = do
+    sortRender sort ptr renderMode _ = do
         case renderMode of
             Iconified -> return ()
             InScene offset -> do

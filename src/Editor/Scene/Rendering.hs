@@ -98,8 +98,8 @@ transformation ptr (EditorPosition x y) (Size cw ch) = do
 renderSelectedIcon :: Ptr QPainter -> Sort_ -> IO ()
 renderSelectedIcon ptr sort = do
     screenSize <- fmap fromIntegral <$> sizeQPainter ptr
-    sortRenderTransformed sort ptr zero
-        (EditorPosition 0 (height screenSize)) (Just $ Size 64 64)
+    let fakeObject = EditorObject sort (EditorPosition 0 (height screenSize)) Nothing
+    sortRenderTransformed ptr zero fakeObject (Just $ Size 64 64)
 
 -- | renders the selected object (if any) in the right lower corner
 renderSelectedObject :: Ptr QPainter ->  Sort_ -> IO ()
@@ -109,8 +109,9 @@ renderSelectedObject ptr sort = do
             EditorPosition screenWidth screenHeight -~ EditorPosition boxWidth 0
         Size screenWidth screenHeight = screenSize
         boxSize@(Size boxWidth _) = Size 64 64
+        fakeObject = EditorObject sort position Nothing
 
-    sortRenderTransformed sort ptr zero position (Just boxSize)
+    sortRenderTransformed ptr zero fakeObject (Just boxSize)
 
 -- | renders the currently selected Layer in the right lower corner
 renderLayerOSD :: Ptr QPainter -> GroundsIndex -> IO ()

@@ -51,7 +51,7 @@ data Box = Box {chipmunk :: Chipmunk}
 instance Sort BSort Box where
     sortId = sortId_
     size = pixmapSize . boxPixmap
-    sortRender sort ptr _ =
+    sortRender sort ptr _ _ =
         renderPixmapSimple ptr (boxPixmap sort)
     initialize sort (Just space) editorPosition Nothing = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort

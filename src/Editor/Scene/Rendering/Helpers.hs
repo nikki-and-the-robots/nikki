@@ -27,26 +27,30 @@ drawColoredBox ptr position size thickness color = do
 -- | renders the given object (with the given Transformation)
 renderEditorObject :: Sort sort o => Ptr QPainter -> Offset Double -> EditorObject sort -> IO ()
 renderEditorObject ptr offset eo =
-    sortRenderTransformed (editorSort eo) ptr offset (editorPosition eo) Nothing
+    sortRenderTransformed ptr offset eo Nothing
 
 -- | renders a sort with the given transformations in the scene
-sortRenderTransformed :: Sort s o => s -> Ptr QPainter -> Offset Double -> EditorPosition
+sortRenderTransformed :: Sort sort o => Ptr QPainter -> Offset Double -> EditorObject sort
     -> Maybe (Size Double) -> IO ()
-sortRenderTransformed sort ptr offset ep Nothing = do
+sortRenderTransformed ptr offset eo Nothing = do
     resetMatrix ptr
-    let pos = editorPosition2QtPosition sort ep
+    let ep = editorPosition eo
+        sort = editorSort eo
+        pos = editorPosition2QtPosition sort ep
         offsetPlusPosition = offset +~ pos
     translate ptr offsetPlusPosition
-    sortRender sort ptr (InScene offsetPlusPosition)
+    sortRender sort ptr (InScene offsetPlusPosition) (editorOEMState eo)
 
-sortRenderTransformed sort ptr offset ep (Just boxSize) = do
+sortRenderTransformed ptr offset eo (Just boxSize) = do
     resetMatrix ptr
     translate ptr offset
 
-    let pos = Position (editorX ep) (editorY ep - height boxSize)
+    let ep = editorPosition eo
+        pos = Position (editorX ep) (editorY ep - height boxSize)
     translate ptr pos
 
-    let factor = min (height boxSize / height (size sort))
+    let sort = editorSort eo
+        factor = min (height boxSize / height (size sort))
                      (width boxSize / width (size sort))
         xScalingOffset = max 0 ((width boxSize - factor * width (size sort)) / 2)
         yScalingOffset = max 0 ((height boxSize - factor * height (size sort)) / 2)
@@ -55,5 +59,5 @@ sortRenderTransformed sort ptr offset ep (Just boxSize) = do
     translate ptr scalingOffset
     scale ptr factor factor
 
-    sortRender sort ptr Iconified
+    sortRender sort ptr Iconified (editorOEMState eo)
 
