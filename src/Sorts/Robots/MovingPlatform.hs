@@ -197,17 +197,35 @@ data OEMPathPositions =
 getPathList :: OEMPathPositions -> [EditorPosition]
 getPathList (OEMPathPositions start path) = start : path
 
+-- | Adds a point to the path.
+addPathPoint :: EditorPosition -> OEMPathPositions -> OEMPathPositions
+addPathPoint point (OEMPathPositions start path) =
+    OEMPathPositions start (path +: point)
+
+-- | removes the last added point at the given position, if it exists.
+removePathPoint :: EditorPosition -> OEMPathPositions -> OEMPathPositions
+removePathPoint point (OEMPathPositions start path) =
+    OEMPathPositions start (reverse $ deleteNeedle point $ reverse path)
+  where
+    -- deletes the first occurence of a given element
+    deleteNeedle :: Eq a => a -> [a] -> [a]
+    deleteNeedle needle list = case span (/= needle) list of
+        (before, _needle : after) -> before ++ after
+        (before, []) -> before
+
+-- * oem logic
+
 updateOEMPath :: AppButton -> OEMPath -> OEMPath
-updateOEMPath button oem@(OEMPath sort cursorStep cursor (OEMPathPositions start path)) =
+updateOEMPath button oem@(OEMPath sort cursorStep cursor path) =
     case button of
         LeftButton -> modifyCursor (-~ EditorPosition cursorStepF 0) oem
         RightButton -> modifyCursor (+~ EditorPosition cursorStepF 0) oem
         UpButton -> modifyCursor (-~ EditorPosition 0 cursorStepF) oem
         DownButton -> modifyCursor (+~ EditorPosition 0 cursorStepF) oem
         -- append new path node
-        AButton -> OEMPath sort cursorStep cursor (OEMPathPositions start (path +: cursor))
+        AButton -> OEMPath sort cursorStep cursor (addPathPoint cursor path)
         -- delete path node
-        BButton -> OEMPath sort cursorStep cursor (OEMPathPositions start (filter (/= cursor) path))
+        BButton -> OEMPath sort cursorStep cursor (removePathPoint cursor path)
         (KeyboardButton W _) -> oem{oemStepSize = cursorStep * 2}
         (KeyboardButton S _) -> oem{oemStepSize = max 1 (cursorStep `div` 2)}
         _ -> oem
