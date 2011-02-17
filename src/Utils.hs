@@ -380,7 +380,8 @@ mergePairs f =
             Just newAs -> Just (newAs ++ r)
     inner a [] = Nothing
 
--- | like mergePairs, but only tries to merge adjacent elements (or the first and the last element)
+-- | like mergePairs, but only tries to merge adjacent elements
+-- (or the first and the last element)
 -- Is idempotent.
 mergeAdjacentCyclicPairs :: Eq a => (a -> a -> Maybe a) -> [a] -> [a]
 mergeAdjacentCyclicPairs f =
