@@ -24,24 +24,10 @@ drawColoredBox ptr position size thickness color = do
     setPenColor ptr color 1
     drawBox ptr position size thickness
 
--- | renders the given object (with the given Transformation)
-renderEditorObject :: Sort sort o => Ptr QPainter -> Offset Double -> EditorObject sort -> IO ()
-renderEditorObject ptr offset eo =
-    sortRenderTransformed ptr offset eo Nothing
-
--- | renders a sort with the given transformations in the scene
-sortRenderTransformed :: Sort sort o => Ptr QPainter -> Offset Double -> EditorObject sort
-    -> Maybe (Size Double) -> IO ()
-sortRenderTransformed ptr offset eo Nothing = do
-    resetMatrix ptr
-    let ep = editorPosition eo
-        sort = editorSort eo
-        pos = editorPosition2QtPosition sort ep
-        offsetPlusPosition = offset +~ pos
-    translate ptr offsetPlusPosition
-    sortRender sort ptr (InScene offsetPlusPosition) (editorOEMState eo)
-
-sortRenderTransformed ptr offset eo (Just boxSize) = do
+-- | Renders a sort icon in the given size.
+sortRenderIconified :: Sort sort o => Ptr QPainter -> Offset Double
+    -> EditorObject sort -> Size Double -> IO ()
+sortRenderIconified ptr offset eo boxSize = do
     resetMatrix ptr
     translate ptr offset
 
@@ -59,5 +45,5 @@ sortRenderTransformed ptr offset eo (Just boxSize) = do
     translate ptr scalingOffset
     scale ptr factor factor
 
-    sortRender sort ptr Iconified (editorOEMState eo)
+    renderIconified sort ptr
 

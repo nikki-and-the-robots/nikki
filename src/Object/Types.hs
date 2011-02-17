@@ -38,7 +38,11 @@ instance Sort Sort_ Object_ where
     freeSort (Sort_ s) = freeSort s
     size (Sort_ s) = size s
     objectEditMode (Sort_ s) = objectEditMode s
-    sortRender (Sort_ s) = sortRender s
+    renderIconified (Sort_ s) = renderIconified s
+    renderEditorObject ptr offset editorObject =
+        case editorSort editorObject of
+            (Sort_ innerSort) ->
+                renderEditorObject ptr offset editorObject{editorSort = innerSort}
     initialize (Sort_ sort) space editorPosition state =
         Object_ sort <$> initialize sort space editorPosition state
     immutableCopy (Object_ s o) = Object_ s <$> Base.immutableCopy o

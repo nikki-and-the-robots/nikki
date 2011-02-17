@@ -62,7 +62,7 @@ instance Sort BSort Battery where
 
     size (BSort p) = pixmapSize p
 
-    sortRender sort ptr _ _ =
+    renderIconified sort ptr =
         renderPixmapSimple ptr (batteryPixmap sort)
 
     -- sort -> Maybe  Space  -> EditorPosition  -> Maybe  String  -> IO  object

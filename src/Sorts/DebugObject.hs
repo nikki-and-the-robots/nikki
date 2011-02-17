@@ -58,12 +58,7 @@ instance Sort DebugSort Debug where
 
     size = const $ objectSize
 
-    sortRender sort ptr renderMode _ = do
-        case renderMode of
-            Iconified -> return ()
-            InScene offset -> do
-                resetMatrix ptr
-                translate ptr offset
+    renderIconified sort ptr = do
         setPenColor ptr red 2
         mapM_ renderLine $ polyLines
         drawRect ptr zero objectSize

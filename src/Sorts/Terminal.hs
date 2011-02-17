@@ -251,7 +251,7 @@ data ExitMode
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
     size = const $ Size (fromUber 48) (fromUber 48)
-    sortRender sort ptr _ _ =
+    renderIconified sort ptr =
         renderPixmapSimple ptr $ background $ pixmaps sort
 
     objectEditMode _ = Just oemMethods

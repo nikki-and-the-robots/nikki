@@ -153,7 +153,7 @@ instance Sort TSort Tile where
 
     size (TSort _ pixmaps) = pixmapSize $ head pixmaps
 
-    sortRender sort ptr _ _ =
+    renderIconified sort ptr =
         renderPixmapSimple ptr $ head $ tilePixmaps sort
 
     initialize sort@TSort{} Nothing editorPosition Nothing = do
@@ -194,7 +194,7 @@ mkAllTiles tiles = EditorObject (Sort_ (AllTilesSort (fmap (fmap unwrapTSort) ti
 instance Sort AllTilesSort AllTiles where
     sortId _ = SortId "allTiles"
     size = error "size: not in use for AllTiles"
-    sortRender = error "sortRender: not in use for AllTiles"
+    renderIconified = error "renderIconified: not in use for AllTiles"
     initialize (AllTilesSort editorObjects) (Just space) (EditorPosition 0 0) Nothing = do
         let renderables = map mkRenderable editorObjects
         chipmunks <- initChipmunks space editorObjects

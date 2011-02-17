@@ -69,7 +69,7 @@ instance Sort SwitchSort Switch where
     sortId _ = SortId "switch/levelExit"
     size _ = boxSize +~ Size 0 (fromUber 7)
 
-    sortRender sort ptr _ _ = do
+    renderIconified sort ptr = do
         renderPixmapSimple ptr (stampPix sort)
         translate ptr (Position 0 (fromUber 7))
         renderPixmapSimple ptr (boxOffPix sort)

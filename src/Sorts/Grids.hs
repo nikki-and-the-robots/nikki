@@ -50,12 +50,14 @@ instance Sort GSort Grid where
     size s = pixmapSize $ gridPixmap s
 
     -- if rendered without scaling, the grid will be multiplied
-    sortRender sort ptr Iconified _ =
+    renderIconified sort ptr =
         renderPixmapSimple ptr (gridPixmap sort)
-    sortRender sort ptr (InScene offset) _ = do
+    renderEditorObject ptr offset eo = do
         -- render the grid
+        resetMatrix ptr
+        translate ptr offset
         windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-        renderGrid ptr sort offset windowSize
+        renderGrid ptr (editorSort eo) offset windowSize
 
     initialize sort mSpace ep Nothing = do
         let pos = editorPosition2QtPosition sort ep

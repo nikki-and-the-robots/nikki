@@ -91,7 +91,7 @@ instance Sort NSort Nikki where
 
     size sort = nikkiSize
 
-    sortRender sort ptr _ _ =
+    renderIconified sort ptr =
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
     initialize sort (Just space) editorPosition Nothing = do
