@@ -84,7 +84,7 @@ instance Sort PSort Platform where
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
     updateNoSceneChange sort mode now contacts cd =
-        updatePath >>>>
+        updateLogic >>>>
         passThrough applyPlatformForce
 
     render platform sort ptr offset now = do
@@ -109,9 +109,9 @@ shapeAttributes = robotShapeAttributes{friction = friction tileShapeAttributes}
 
 -- * physics behaviour
 
-updatePath :: Platform -> IO Platform
-updatePath platform@Platform{chipmunk, path} = do
-    path' <- updateSegment chipmunk path
+updateLogic :: Platform -> IO Platform
+updateLogic platform@Platform{chipmunk, path} = do
+    path' <- updatePath chipmunk path
     return $ platform{path = path'}
 
 -- | Applies a force to the platform.
@@ -172,8 +172,8 @@ unpickle sort (readMay -> Just (cursor, (start : path))) =
 -- | reads an OEMPath and returns the path for the game
 mkPath :: PSort -> OEMPath -> Path
 mkPath sort (OEMPath _ _ cursor path) =
-    let nodes = map (epToCenterVector sort) (getPathList path)
-    in Path nodes (last nodes)
+    let (lastNode : nodes) = map (epToCenterVector sort) (getPathList path)
+    in Path (nodes +: lastNode) lastNode 0
 
 modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
 modifyCursor f p = p{oemCursor = f (oemCursor p)}

@@ -9,16 +9,31 @@ import Sorts.Nikki as Nikki (nikkiMass)
 -- | The mass of platforms.
 -- (gravity has no effect on platforms
 platformMass :: Double = nikkiMass * 4
+
 -- | the acceleration that can will applied to a platform
 -- to let it follow its path
 platformAcceleration :: Double = 1300
--- | the maximal velocity a platform can accelerate to
-maximumPlatformVelocity :: Double = 180
--- | the minimal velocity a platform will decelerate to
--- at path nodes
-minimumPlatformVelocity :: Double = 10
+
 -- | sets the epsilon range for the velocity correction
 velocityEpsilon :: Double = 5
--- | how much the platform tries to get back on its path
--- (as opposed to going to the end point of the active segment directly)
-pathWeight :: Double = 0.66
+
+-- | general velocity of platforms
+platformStandardVelocity :: Double = 150
+
+-- * chasing mode
+
+-- | If the platform is more than positionEpsilon from its aim away,
+-- it will accelerate to platformMaximumVelocity,
+-- thus going into chasing mode.
+positionEpsilon :: Double = 5
+
+-- | The maximal velocity a platform can have when chasing the so called
+-- guide point (to get in sync again)
+platformMaximumVelocity :: Double = 200 -- 180
+
+-- | Distance the aim will be away from the closest point on the path during chasing.
+-- (Smaller = go back to the path faster,
+--  Greater = go more directly to the end of the current segment)
+-- Only relevant during chasing.
+aimDistance :: Double = 50
+

@@ -8,6 +8,10 @@ import Data.Typeable
 
 import Physics.Chipmunk
 
+import Graphics.Qt hiding (scale)
+
+import Base
+
 import Utils
 
 import Sorts.Robots.MovingPlatform.Configuration
@@ -18,7 +22,8 @@ import Sorts.Robots.MovingPlatform.Configuration
 -- (that make up a cycle of segments).
 data Path = Path {
     nodes :: [Vector],
-    lastNode :: Vector
+    lastNode :: Vector,
+    distanceToGuidePoint :: Double
   }
   deriving (Show, Typeable)
 
@@ -26,20 +31,60 @@ data Path = Path {
 nextNode :: Path -> Vector
 nextNode p@(nodes -> (a : _)) = a
 
+
+updatePath :: Chipmunk -> Path -> IO Path
+updatePath chip =
+    fromPure updateGuide >>>>
+    updateSegment chip
+
+
+-- * guide point
+
+-- The guide point is a point that moves on the path with a
+-- constant velocity. It is guiding the movement of the platform.
+-- It is described as the distance from (lastNode path) to the guide point
+-- on the path.
+
+-- | returns the guide point
+-- (for debugging)
+guidePoint :: Path -> Vector
+guidePoint path | distanceToGuidePoint path < 0 =
+    error "platform faster than guide point"
+guidePoint (Path nodes lastNode distance) =
+    inner (lastNode : cycle nodes) distance
+  where
+    inner (a : b : r) distance =
+        if distance < lenSegment then
+            a +~ scale (normalize segment) distance
+          else
+            inner (b : r) (distance - lenSegment)
+      where
+        segment = b -~ a
+        lenSegment = len segment
+
+-- | updates the guide with the configuration value for the platform speed
+updateGuide :: Path -> Path
+updateGuide (Path nodes last distance) =
+    Path nodes last (distance + stepQuantum * platformStandardVelocity)
+
+
+-- * segment switching
+
 -- | The platform has an active segment at any time,
 -- between (lastNode platform) and (nextNode platform).
 -- This operation switches to the next segment if needed.
 -- If a switch takes place, an impulse is applied to
 -- smoothen behaviour at path nodes.
 updateSegment :: Chipmunk -> Path -> IO Path
-updateSegment _ path@(Path [_] _) = return path
-updateSegment chip path@(Path (next : r) lastNode) = do
+updateSegment _ path@(Path [_] _ _) = return path
+updateSegment chip path@(Path (next : r) last dtg) = do
     p <- getPosition chip
-    let closestPathPoint = closestPointOnLineSegment (lastNode, next) p
-    if closestPathPoint == next then do
-        let newPath = Path (r +: next) next
+    let closestPathPoint = closestPointOnLineSegment (last, next) p
+        dtg' = (dtg - len (next -~ last))
+    if closestPathPoint == next && dtg' >= 0 then do
+        let newPath = Path (r +: next) next dtg'
         applyEdgeImpulse chip
-                (foldAngle $ toAngle (next -~ lastNode))
+                (foldAngle $ toAngle (next -~ last))
                 (foldAngle $ toAngle (nextNode newPath -~ next))
         return newPath
       else
@@ -58,41 +103,25 @@ applyEdgeImpulse chip last next = do
     applyImpulse b impulse zero
 
 
+-- * force
+
 -- | (pure) calculation of the path force.
 mkPathForce :: Path -> Double -> Vector -> Vector -> IO Vector
 mkPathForce path m p v = do
---     mapM_ (uncurry $ debugLine lightGreen) $ adjacentCyclic $ nodes path
---     debugLine green (lastNode path) (nextNode path)
+--     mapM_ (uncurry $ debugLine green) $ adjacentCyclic $ nodes path
+--     debugLine lightGreen (lastNode path) (nextNode path)
+--     debugPoint blue $ guidePoint path
+--     debugPoint lightBlue segmentGuidePoint
 --     debugPoint white closestPathPoint
---     debugPoint yellow aim
---     debugPoint red $ guidePoint path
+--     debugPoint red aim
+-- 
+--     debugLine pink p (p +~ scale force 50)
 
     return $
-
     -- the force will always have the same length (or 0)
         scale force forceLen
   where
     forceLen = m * platformAcceleration
-
-    -- | point on the active segment that is closest to
-    -- the platform's position
-    closestPathPoint =
-        closestPointOnLineSegment (lastNode path, nextNode path) p
-
-    -- | point where the platform is headed.
-    aim = addWeightedVectors
-        (closestPathPoint, pathWeight)
-        (nextNode path, (1 - pathWeight))
-    -- | from the platform to the aim
-    toAim = aim -~ p
-    lenToAim = len toAim
-    wantedVelocityLen :: Double
-    wantedVelocityLen = mkWantedVelocityLen $ len (nextNode path -~ p)
-    -- | this would be the ideal velocity for the platform's position
-    -- relative to the aim
-    wantedVelocity = scale (normalizeIfNotZero toAim) wantedVelocityLen
-    -- | deviation between wantedVelocity and actual velocity
-    velocityDeviation = wantedVelocity -~ v
     -- | normalized force to be applied
     force =
         if len velocityDeviation < velocityEpsilon then
@@ -100,36 +129,46 @@ mkPathForce path m p v = do
           else
             normalizeIfNotZero velocityDeviation
 
--- | if the platform is closer to the next path node
--- than the decelerationDistance the platform should decelerate
--- at full force to reach minimumPlatformVelocity when reaching the
--- next path node.
-decelerationDistance =
-    abs( - (minimumPlatformVelocity ^ 2 - maximumPlatformVelocity ^ 2) /
-         (2 * (- platformAcceleration)))
+    -- | this would be the ideal velocity for the platform's position
+    -- relative to the aim
+    wantedVelocity = scale (normalizeIfNotZero toAim) wantedVelocityLen
+    -- | deviation between wantedVelocity and actual velocity
+    velocityDeviation = wantedVelocity -~ v
 
--- | The length of the wanted velocity.
-mkWantedVelocityLen distance =
-    if distance > decelerationDistance then
-        maximumPlatformVelocity
-      else
-        -- deceleration
-        slopeH * distance + minimumPlatformVelocity
-slopeH =
-    (maximumPlatformVelocity - minimumPlatformVelocity) /
-    decelerationDistance
+    -- | The length of the wanted velocity.
+    wantedVelocityLen :: Double
+    wantedVelocityLen =
+        if len toAim < positionEpsilon then
+            platformStandardVelocity
+        else
+            platformMaximumVelocity
 
--- | adds two vectors with the given weights
-addWeightedVectors :: (Vector, Double) -> (Vector, Double) -> Vector
-addWeightedVectors (a, aw) (b, bw) =
-    scale a aw +~
-    scale b bw
+    -- | guidePoint restricted to the actual segment.
+    segmentGuidePoint =
+        if distanceToGuidePoint path > len (nextNode path -~ lastNode path) then
+            -- guidePoint is on the next segment
+            nextNode path
+          else
+            guidePoint path
+
+    -- | point on the active segment that is closest to
+    -- the platform's position
+    closestPathPoint =
+        closestPointOnLineSegment (lastNode path, nextNode path) p
+
+    -- | where the platform will go to
+    aim = if len (segmentGuidePoint -~ closestPathPoint) < aimDistance then
+            -- segmentGuidePoint is closer than aimDistance
+            segmentGuidePoint
+          else
+            -- segmentGuidePoint is further away than aimDistance
+            closestPathPoint +~ scale (normalize (segmentGuidePoint -~ closestPathPoint)) aimDistance
+    toAim = aim -~ p
 
 
+-- * geometry utils
 
--- * geometry
-
--- | calculates the closest point on a line segment to a given point.
+-- | Calculates the closest point on a line segment to a given point.
 closestPointOnLineSegment :: (Vector, Vector) -> Vector -> Vector
 closestPointOnLineSegment (a, b) p =
     if a == b then a else
@@ -140,9 +179,3 @@ closestPointOnLineSegment (a, b) p =
         (len (b -~ a) ^ 2)
     x = vectorX
     y = vectorY
-
--- | mirrors an angle at a given angle
-mirrorAngle :: Angle -> Angle -> Angle
-mirrorAngle mirror angle =
-    mirror - (angle - mirror)
-
