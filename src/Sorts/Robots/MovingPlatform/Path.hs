@@ -106,20 +106,10 @@ applyEdgeImpulse chip last next = do
 -- * force
 
 -- | (pure) calculation of the path force.
-mkPathForce :: Path -> Double -> Vector -> Vector -> IO Vector
-mkPathForce path m p v = do
---     mapM_ (uncurry $ debugLine green) $ adjacentCyclic $ nodes path
---     debugLine lightGreen (lastNode path) (nextNode path)
---     debugPoint blue $ guidePoint path
---     debugPoint lightBlue segmentGuidePoint
---     debugPoint white closestPathPoint
---     debugPoint red aim
--- 
---     debugLine pink p (p +~ scale force 50)
-
-    return $
+mkPathForce :: Path -> Double -> Vector -> Vector -> Vector
+mkPathForce path m p v =
     -- the force will always have the same length (or 0)
-        scale force forceLen
+    scale force forceLen
   where
     forceLen = m * platformAcceleration
     -- | normalized force to be applied
