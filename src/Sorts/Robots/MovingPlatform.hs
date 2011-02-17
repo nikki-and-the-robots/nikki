@@ -63,6 +63,17 @@ instance Sort PSort Platform where
     renderIconified sort ptr =
         renderPixmapSimple ptr (pix sort)
 
+    renderEditorObject ptr offset (EditorObject sort position (Just (OEMState oemState))) =
+        case cast oemState of
+            (Just oemPath :: Maybe OEMPath) -> do
+                resetMatrix ptr
+                translate ptr offset
+                translate ptr (editorPosition2QtPosition sort position)
+                renderIconified sort ptr
+                resetMatrix ptr
+                translate ptr offset
+                renderOEMPath sort ptr offset $ getPathList $ pathPositions oemPath
+
     initialize sort (Just space) ep (Just (OEMState oemState_)) = do
         let Just oemState = cast oemState_
             Size width height = size sort
@@ -152,14 +163,14 @@ data OEMPath = OEMPath {
     oemPSort :: PSort,
     oemStepSize :: Int,
     oemCursor :: EditorPosition,
-    oemPath :: OEMPathPositions
+    pathPositions :: OEMPathPositions
   }
     deriving (Show, Typeable, Data)
 
 instance IsOEMState OEMPath where
     oemEnterMode _ = id
     oemUpdate _ = updateOEMPath
-    oemRender = renderOEMPath
+    oemRender = renderOEMState
     oemPickle (OEMPath _ _ cursor path) =
         show ((cursor, getPathList path) :: PickleType)
 
@@ -190,7 +201,7 @@ initialState sort p = OEMPath sort (fromKachel 1) p (OEMPathPositions p [])
 data OEMPathPositions =
     OEMPathPositions {
         startPosition :: EditorPosition,
-        pathPositions :: [EditorPosition]
+        positions :: [EditorPosition]
       }
   deriving (Show, Typeable, Data)
 
@@ -233,11 +244,10 @@ updateOEMPath button oem@(OEMPath sort cursorStep cursor path) =
     cursorStepF :: Double = fromIntegral cursorStep
 
 
-renderOEMPath :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()
-renderOEMPath ptr scene (OEMPath sort stepSize cursor (getPathList -> paths)) = do
+renderOEMState :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()
+renderOEMState ptr scene (OEMPath sort stepSize cursor (getPathList -> paths)) = do
     offset <- transformation ptr cursor (size sort)
     renderScene offset
-    renderPath offset
     renderCursor offset
     let stepSizeF = fromIntegral stepSize
     renderCursorStepSize ptr $ EditorPosition stepSizeF stepSizeF
@@ -245,21 +255,21 @@ renderOEMPath ptr scene (OEMPath sort stepSize cursor (getPathList -> paths)) = 
     renderScene offset = do
         renderObjectScene ptr offset scene
 
-    renderPath offset = do
-        resetMatrix ptr
-        translate ptr offset
-        setPenColor ptr green 4
-        mapM_ renderLine (adjacentCyclic paths)
-        setPenColor ptr red 4
-        mapM_ drawPathNode paths
-    renderLine :: (EditorPosition, EditorPosition) -> IO ()
-    renderLine (a, b) =
-        drawLine ptr (epToCenterPosition sort a) (epToCenterPosition sort b)
-    drawPathNode n =
-        drawCircle ptr (epToCenterPosition sort n) 5
-
     renderCursor offset =
         drawColoredBox ptr (epToPosition sort cursor +~ offset) (size sort) 4 yellow
+
+renderOEMPath sort ptr offset paths = do
+    setPenColor ptr green 4
+    mapM_ (renderLine sort ptr) (adjacentCyclic paths)
+    setPenColor ptr red 4
+    mapM_ (drawPathNode sort ptr) paths
+
+-- renderLine :: (EditorPosition, EditorPosition) -> IO ()
+renderLine sort ptr (a, b) =
+    drawLine ptr (epToCenterPosition sort a) (epToCenterPosition sort b)
+
+drawPathNode sort ptr n =
+    drawCircle ptr (epToCenterPosition sort n) 5
 
 
 -- * position conversions
