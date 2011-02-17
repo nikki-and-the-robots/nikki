@@ -56,11 +56,13 @@ data Platform
 
 instance Sort PSort Platform where
     sortId _ = SortId "robots/platform/standard"
-    size = pix >>> pixmapSize
+                             -- one bigger than actual (to prevent getting stuck on edges)
+    size _ = fmap fromUber $ Size 48 22
 
     objectEditMode s = Just $ oemMethods s
 
-    renderIconified sort ptr =
+    renderIconified sort ptr = do
+        translate ptr physicsPadding
         renderPixmapSimple ptr (pix sort)
 
     renderEditorObject ptr offset (EditorObject sort position (Just (OEMState oemState))) =
@@ -68,11 +70,9 @@ instance Sort PSort Platform where
             (Just oemPath :: Maybe OEMPath) -> do
                 resetMatrix ptr
                 translate ptr offset
+                renderOEMPath sort ptr offset $ getPathList $ pathPositions oemPath
                 translate ptr (editorPosition2QtPosition sort position)
                 renderIconified sort ptr
-                resetMatrix ptr
-                translate ptr offset
-                renderOEMPath sort ptr offset $ getPathList $ pathPositions oemPath
 
     initialize sort (Just space) ep (Just (OEMState oemState_)) = do
         let Just oemState = cast oemState_
@@ -100,13 +100,19 @@ instance Sort PSort Platform where
 
     render platform sort ptr offset now = do
         (position, rad) <- getRenderPosition $ chipmunk platform
-        renderPixmap ptr offset position (Just rad) (pix sort)
+        renderPixmap ptr offset (position +~ physicsPadding) (Just rad) (pix sort)
 
+-- | To prevent platforms from getting stuck everywhere, we
+-- use a padding of 0.5 Überpixels.
+physicsPadding :: Position Double
+physicsPadding = fmap fromUber $ Position 0.5 0.5
 
 -- * attributes
 
 mkPoly :: PSort -> ShapeType
-mkPoly sort = mkRect (Position (- width / 2) (- height / 2)) size_
+mkPoly sort = mkRect
+    (Position (- width / 2) (- height / 2) +~ physicsPadding)
+    (size_ -~ fmap fromUber (Size 1 1))
   where
     size_@(Size width height) = size sort
 
