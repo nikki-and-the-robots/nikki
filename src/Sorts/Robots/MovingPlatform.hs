@@ -269,7 +269,6 @@ renderOEMPath :: PSort -> Ptr QPainter -> Offset Double -> [EditorPosition]
 renderOEMPath sort ptr offset paths = do
     setPenColor ptr green 4
     mapM_ (renderLine sort ptr) (adjacentCyclic paths)
-    setPenColor ptr (modifyAlpha (* 0.4) yellow) 4
     mapM_ (drawPathNode sort ptr) paths
 
 renderLine :: PSort -> Ptr QPainter -> (EditorPosition, EditorPosition) -> IO ()
@@ -278,7 +277,9 @@ renderLine sort ptr (a, b) =
 
 drawPathNode :: PSort -> Ptr QPainter -> EditorPosition -> IO ()
 drawPathNode sort ptr n =
-    drawRect ptr (epToPosition sort n) (size sort)
+    eraseRect ptr (fmap round $ epToPosition sort n)
+        (fmap round $ size sort)
+        (modifyAlpha (* 0.4) yellow)
 
 
 -- * position conversions
