@@ -23,7 +23,9 @@ import Base hiding (cursorStep)
 import Object
 
 import Sorts.Tiles (tileShapeAttributes)
+
 import Sorts.Robots.Configuration
+import Sorts.Robots.Eyes
 
 import Sorts.Robots.MovingPlatform.Configuration
 import Sorts.Robots.MovingPlatform.Path
@@ -36,12 +38,14 @@ import Editor.Scene.Rendering.Helpers
 
 sorts :: RM [Sort_]
 sorts = do
-    path <- getDataFileName (pngDir </> "robots" </> "platform" </> "horizontal-standard_idle_00" <.> "png")
+    path <- getDataFileName (pngDir </> "robots" </> "platform" </> "horizontal-standard_standard_00" <.> "png")
     pix <- loadPixmap (Position 1 1) path
-    return $ [Sort_ $ PSort pix]
+    robotEyes <- loadRobotEyesPixmaps
+    return $ [Sort_ $ PSort pix robotEyes]
 
 data PSort = PSort {
-    pix :: Pixmap
+    pix :: Pixmap,
+    robotEyes :: RobotEyesPixmaps
   }
     deriving (Show, Typeable, Data)
 
@@ -101,6 +105,10 @@ instance Sort PSort Platform where
     render platform sort ptr offset now = do
         (position, rad) <- getRenderPosition $ chipmunk platform
         renderPixmap ptr offset (position +~ physicsPadding) (Just rad) (pix sort)
+        let eyesPosition = position +~ physicsPadding +~ eyesOffset
+        renderRobotEyes (robotEyes sort) ptr offset eyesPosition Idle
+
+eyesOffset = fmap fromUber $ Position 18 9
 
 -- | To prevent platforms from getting stuck everywhere, we
 -- use a padding of 0.5 Überpixels.
