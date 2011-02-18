@@ -28,12 +28,7 @@ import Sorts.Robots.Configuration
 
 -- * Configuration
 
-animationFrameTimesMap :: Map RenderState [Seconds]
-animationFrameTimesMap = fromList [
-    (Idle, [robotIdleEyeTime]),
-    (Wait, [3, 0.15, 0.1, 0.15]),
-    (Boost, [0.08])
-  ]
+boostFrameTimes = [0.08]
 
 jetpackSize = fmap fromUber $ Size 27 21
 
@@ -42,20 +37,15 @@ jetpackSize = fmap fromUber $ Size 27 21
 
 sorts :: RM [Sort_]
 sorts = do
-    pixmaps <- fmapM (fmapM (
-                    fromPure mkJetpackPngPath >>>> 
-                    getDataFileName >>>>
-                    (io . loadJetpackPixmap)
-                )) pngMap
-    let r = JSort pixmaps
-    return $ map Sort_ [r]
-
-pngMap :: Map RenderState [String]
-pngMap = fromList [
-    (Wait, ["wait_00", "wait_01"]),
-    (Boost, ["boost_00", "boost_01"]),
-    (Idle, ["idle_00", "idle_01", "idle_02", "idle_03"])
-  ]
+    standardPixmap <- loadJetpackPng "standard_00"
+    boostPixmaps <- mapM loadJetpackPng ["boost_00", "boost_01"]
+    return [Sort_ $ JSort standardPixmap boostPixmaps]
+  where
+    loadJetpackPng :: String -> RM Pixmap
+    loadJetpackPng =
+        fromPure mkJetpackPngPath >>>>
+        getDataFileName >>>>
+        (io . loadJetpackPixmap)
 
 mkJetpackPngPath name = pngDir </> "robots" </> "jetpack" </> name <.> "png"
 
@@ -71,13 +61,14 @@ data RenderState
     | Idle
   deriving (Eq, Ord, Show)
 
+isBoost Boost = True
+isBoost _ = False
+
 data JSort = JSort {
-    pixmaps :: Map RenderState [Pixmap]
+    standardPixmap :: Pixmap,
+    boostPixmaps :: [Pixmap]
   }
     deriving (Show, Typeable)
-
-defaultPixmap :: Map RenderState [Pixmap] -> Pixmap
-defaultPixmap m = head (m ! Wait)
 
 data Jetpack = Jetpack {
     chipmunk :: Chipmunk,
@@ -92,7 +83,7 @@ instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
     size = const jetpackSize
     renderIconified sort ptr =
-        renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
+        renderPixmapSimple ptr (standardPixmap sort)
 
     initialize sort (Just space) ep Nothing = do
         let
@@ -196,10 +187,10 @@ renderJetpack j sort ptr offset now = do
 
 pickPixmap :: Seconds -> Jetpack -> JSort -> Pixmap
 pickPixmap now j sort =
-    pickAnimationFrame pixmapList animationFrameTimes (now - startTime j)
-  where
-    pixmapList = pixmaps sort ! renderState j
-    animationFrameTimes = animationFrameTimesMap ! renderState j
+    if isBoost (renderState j) then
+        pickAnimationFrame (boostPixmaps sort) boostFrameTimes (now - startTime j)
+      else
+        standardPixmap sort
 
 
 -- * chipmunk control
