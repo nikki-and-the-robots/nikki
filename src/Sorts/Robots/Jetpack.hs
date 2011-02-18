@@ -24,6 +24,7 @@ import Base
 import Object
 
 import Sorts.Robots.Configuration
+import qualified Sorts.Robots.Eyes as Eyes
 
 
 -- * Configuration
@@ -39,7 +40,8 @@ sorts :: RM [Sort_]
 sorts = do
     standardPixmap <- loadJetpackPng "standard_00"
     boostPixmaps <- mapM loadJetpackPng ["boost_00", "boost_01"]
-    return [Sort_ $ JSort standardPixmap boostPixmaps]
+    robotEyes <- Eyes.loadRobotEyesPixmaps
+    return [Sort_ $ JSort standardPixmap boostPixmaps robotEyes]
   where
     loadJetpackPng :: String -> RM Pixmap
     loadJetpackPng =
@@ -66,7 +68,8 @@ isBoost _ = False
 
 data JSort = JSort {
     standardPixmap :: Pixmap,
-    boostPixmaps :: [Pixmap]
+    boostPixmaps :: [Pixmap],
+    robotEyes :: Eyes.RobotEyesPixmaps
   }
     deriving (Show, Typeable)
 
@@ -167,7 +170,7 @@ updateRenderState now controlled j =
     if renderState j /= newRenderState then
         j{
             renderState = newRenderState,
-            startTime = 0
+            startTime = now
           }
       else
         j
@@ -184,6 +187,16 @@ updateRenderState now controlled j =
 renderJetpack j sort ptr offset now = do
     let pixmap = pickPixmap now j sort
     renderChipmunk ptr offset pixmap (chipmunk j)
+    (position, rad) <- getRenderPosition $ chipmunk j
+    Eyes.renderRobotEyes (robotEyes sort) ptr offset position rad eyesOffset
+        eyesState (now - startTime j)
+  where
+    eyesState = case renderState j of
+        Idle -> Eyes.Idle
+        Wait -> Eyes.Active
+        Boost -> Eyes.Open
+
+eyesOffset = fmap fromUber $ Position 8 3
 
 pickPixmap :: Seconds -> Jetpack -> JSort -> Pixmap
 pickPixmap now j sort =

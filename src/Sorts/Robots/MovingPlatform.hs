@@ -104,9 +104,10 @@ instance Sort PSort Platform where
 
     render platform sort ptr offset now = do
         (position, rad) <- getRenderPosition $ chipmunk platform
-        renderPixmap ptr offset (position +~ physicsPadding) (Just rad) (pix sort)
-        let eyesPosition = position +~ physicsPadding +~ eyesOffset
-        renderRobotEyes (robotEyes sort) ptr offset eyesPosition Idle
+        let renderPosition = position +~ physicsPadding
+        renderPixmap ptr offset renderPosition (Just rad) (pix sort)
+        renderRobotEyes (robotEyes sort) ptr offset renderPosition rad eyesOffset
+            Active now
 
 eyesOffset = fmap fromUber $ Position 18 9
 

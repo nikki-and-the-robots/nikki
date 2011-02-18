@@ -27,9 +27,3 @@ robotShapeAttributes = ShapeAttributes{
 
 -- | size of one of the robots "face tiles"
 robotBodySize :: Size Double = fmap fromUber $ Size 15 15
-
-
--- * animation speeds
-
-robotIdleEyeTime :: Double 
-robotIdleEyeTime = 0.4
