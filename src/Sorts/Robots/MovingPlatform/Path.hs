@@ -1,4 +1,4 @@
-{-# language ViewPatterns, NamedFieldPuns, DeriveDataTypeable #-}
+{-# language ViewPatterns, NamedFieldPuns, DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Sorts.Robots.MovingPlatform.Path where
 
@@ -50,6 +50,7 @@ updatePath chip =
 guidePoint :: Path -> Vector
 guidePoint path | distanceToGuidePoint path < 0 =
     error "platform faster than guide point"
+guidePoint (Path [n] lastNode distance) = n
 guidePoint (Path nodes lastNode distance) =
     inner (lastNode : cycle nodes) distance
   where
@@ -99,17 +100,24 @@ applyEdgeImpulse chip last next = do
     let delta = foldAngle (next - last)
         wantedVelocity = rotateVector delta v
         velocityDeviation = wantedVelocity -~ v
-        impulse = scale velocityDeviation m
+        impulse = scale velocityDeviation (m * edgeImpulseFactor)
     applyImpulse b impulse zero
 
 
 -- * force
 
 -- | (pure) calculation of the path force.
-mkPathForce :: Path -> Double -> Vector -> Vector -> Vector
-mkPathForce path m p v =
+mkPathForce :: Path -> Double -> Vector -> Vector -> IO Vector
+mkPathForce path m p v = do
+--     ppp (len (nextNode path -~ p), decelerationRamp, wantedVelocityLen)
+--     debugPoint white (guidePoint path)
+--     debugPoint pink aim
+--     debugLine green p (p +~ scale force 50)
+--     debugLine red p (p +~ scale v 1)
+--     forM_ (adjacentCyclic $ nodes path) $ \ (a, b) ->
+--         debugLine green a b
     -- the force will always have the same length (or 0)
-    scale force forceLen
+    return $ scale force forceLen
   where
     forceLen = m * platformAcceleration
     -- | normalized force to be applied
@@ -128,6 +136,23 @@ mkPathForce path m p v =
     -- | The length of the wanted velocity.
     wantedVelocityLen :: Double
     wantedVelocityLen =
+--         min decelerationRamp
+        wantedVelocityLenWithoutDeceleration
+
+    -- | Decelaration ramp. A value that will linearly approach platformMinimumVelocity
+    -- when the next node is reached, dependent on the distance to that next node.
+    -- Intersects with the platformStandardVelocity when the distance equals
+    -- decelerationDistance.
+    decelerationRamp :: Double
+    decelerationRamp = decelerationRampFunction $ len (nextNode path -~ p)
+    decelerationRampFunction x =
+        m * x + c
+      where
+        m = (platformStandardVelocity - platformMinimumVelocity) / decelerationDistance
+        c = platformMinimumVelocity
+
+    -- | length of the wanted velocity without decelerating the platform
+    wantedVelocityLenWithoutDeceleration =
         if len toAim < positionEpsilon then
             platformStandardVelocity
         else
@@ -154,6 +179,15 @@ mkPathForce path m p v =
             -- segmentGuidePoint is further away than aimDistance
             closestPathPoint +~ scale (normalize (segmentGuidePoint -~ closestPathPoint)) aimDistance
     toAim = aim -~ p
+
+
+-- | Distance to the next path node from which the platform will decelerate.
+-- Lost time will be made up for by chasing a bit in the next poath segment.
+decelerationDistance :: Double = fromKachel 0.5
+
+-- | Velocity the platform will decelerate to on path nodes.
+platformMinimumVelocity :: Double = 150
+
 
 
 -- * geometry utils

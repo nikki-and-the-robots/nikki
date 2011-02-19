@@ -164,7 +164,7 @@ getPathForce platform = do
     m <- getMass $ chipmunk platform
     p <- getPosition $ chipmunk platform
     v <- get $ velocity $ body $ chipmunk platform
-    return $ mkPathForce (path platform) m p v
+    mkPathForce (path platform) m p v
 
 
 -- * object edit mode

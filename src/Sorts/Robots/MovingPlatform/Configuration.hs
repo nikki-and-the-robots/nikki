@@ -3,6 +3,8 @@
 module Sorts.Robots.MovingPlatform.Configuration where
 
 
+import Base
+
 import Sorts.Nikki as Nikki (nikkiMass)
 
 
@@ -19,6 +21,11 @@ velocityEpsilon :: Double = 5
 
 -- | general velocity of platforms
 platformStandardVelocity :: Double = 150
+
+-- | Factor with which the impulse at the path nodes will be applied.
+-- 1.0 = perfect (hard) direction changes
+-- 0.0 = no edge impulse applied at all.
+edgeImpulseFactor :: Double = 0.0
 
 -- * chasing mode
 
