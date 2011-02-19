@@ -6,13 +6,13 @@ module Sorts.Robots.MovingPlatform.Path where
 import Data.Abelian
 import Data.Typeable
 
-import Physics.Chipmunk
+import Physics.Chipmunk hiding (start, end)
 
 import Graphics.Qt hiding (scale)
 
 import Base
 
-import Utils
+import Utils hiding (distance)
 
 import Sorts.Robots.MovingPlatform.Configuration
 
@@ -20,16 +20,54 @@ import Sorts.Robots.MovingPlatform.Configuration
 -- | Describes the path of a platform.
 -- A platform path can be thought of as a cycle of nodes
 -- (that make up a cycle of segments).
-data Path = Path {
-    nodes :: [Vector],
-    lastNode :: Vector,
-    distanceToGuidePoint :: Double
-  }
+data Path
+    = Path {
+        segments :: [Segment],
+        distanceToGuidePoint :: Double,
+        pathLength :: Double
+      }
+    | SingleNode {
+        node :: Vector,
+        onState :: Maybe Path -- saves the path if the platform can be switched on
+      }
   deriving (Show, Typeable)
+
+mkPath :: [Vector] -> Path
+mkPath [] = error "empty paths are not allowed"
+mkPath [n] = SingleNode n Nothing
+mkPath list =
+    (deleteConsecutiveTwins >>>
+    adjacentCyclic >>>
+    map (\ (a, b) -> segment a b) >>>
+    (\ segments -> Path segments 0 (sumLength segments))) list
+  where
+    -- deletes consecutive points in the path that are identical.
+    deleteConsecutiveTwins :: Eq a => [a] -> [a]
+    deleteConsecutiveTwins = mergeAdjacentCyclicPairs $
+        \ a b -> if a == b then Just a else Nothing
+
+    -- sums up all the segment's lengths
+    sumLength :: [Segment] -> Double
+    sumLength = sum . map segmentLength
+
+data Segment = Segment {
+    start :: Vector,
+    end :: Vector,
+    segmentLength :: Double
+  }  deriving (Show, Typeable)
+
+segment :: Vector -> Vector -> Segment
+segment start end = Segment start end (len (end -~ start))
+
+segmentToVector :: Segment -> Vector
+segmentToVector segment = end segment -~ start segment
 
 -- | returns the next path node
 nextNode :: Path -> Vector
-nextNode p@(nodes -> (a : _)) = a
+nextNode (segments -> (a : _)) = end a
+
+lastNode :: Path -> Vector
+lastNode (segments -> (a : _)) = start a
 
 
 updatePath :: Chipmunk -> Path -> IO Path
@@ -50,24 +88,30 @@ updatePath chip =
 guidePoint :: Path -> Vector
 guidePoint path | distanceToGuidePoint path < 0 =
     error "platform faster than guide point"
-guidePoint (Path [n] lastNode distance) = n
-guidePoint (Path nodes lastNode distance) =
-    inner (lastNode : cycle nodes) distance
+guidePoint path =
+    inner (cycle $ segments path) (distanceToGuidePoint path)
   where
-    inner (a : b : r) distance =
-        if distance < lenSegment then
-            a +~ scale (normalize segment) distance
+    inner (a : r) d =
+        if d < segmentLength a then
+            start a +~ scale (normalize $ segmentToVector a) d
           else
-            inner (b : r) (distance - lenSegment)
-      where
-        segment = b -~ a
-        lenSegment = len segment
+            inner r (d - segmentLength a)
 
 -- | updates the guide with the configuration value for the platform speed
 updateGuide :: Path -> Path
-updateGuide (Path nodes last distance) =
-    Path nodes last (distance + stepQuantum * platformStandardVelocity)
-
+updateGuide p@SingleNode{} = p
+updateGuide (Path segments@(segment : _) distance pathLength) =
+    Path segments newDistance pathLength
+  where
+    tmpNewDistance = distance + stepQuantum * platformStandardVelocity
+    newDistance =
+        if tmpNewDistance > segmentLength segment then
+            foldToRange
+                (segmentLength segment,
+                 segmentLength segment + pathLength)
+                tmpNewDistance
+          else
+            tmpNewDistance
 
 -- * segment switching
 
@@ -77,14 +121,16 @@ updateGuide (Path nodes last distance) =
 -- If a switch takes place, an impulse is applied to
 -- smoothen behaviour at path nodes.
 updateSegment :: Chipmunk -> Path -> IO Path
-updateSegment _ path@(Path [_] _ _) = return path
-updateSegment chip path@(Path (next : r) last dtg) = do
+updateSegment _ p@SingleNode{} = return p
+updateSegment chip path@(Path (a : r) dtg pathLength) = do
     p <- getPosition chip
-    let closestPathPoint = closestPointOnLineSegment (last, next) p
+    let last = lastNode path
+        next = nextNode path
+        closestPathPoint = closestPointOnLineSegment (last, next) p
         dtg' = (dtg - len (next -~ last))
     if closestPathPoint == next && dtg' >= 0 then do
-        let newPath = Path (r +: next) next dtg'
-        applyEdgeImpulse chip
+        let newPath = Path (r +: a) dtg' pathLength
+        applyNodeImpulse chip
                 (foldAngle $ toAngle (next -~ last))
                 (foldAngle $ toAngle (nextNode newPath -~ next))
         return newPath
@@ -92,32 +138,42 @@ updateSegment chip path@(Path (next : r) last dtg) = do
         return path
 
 -- | calculates the impulse to apply when switching path segments
-applyEdgeImpulse :: Chipmunk -> Angle -> Angle -> IO ()
-applyEdgeImpulse chip last next = do
+applyNodeImpulse :: Chipmunk -> Angle -> Angle -> IO ()
+applyNodeImpulse chip last next = do
     let b = body chip
     m <- getMass chip
     v <- get $ velocity b
     let delta = foldAngle (next - last)
         wantedVelocity = rotateVector delta v
         velocityDeviation = wantedVelocity -~ v
-        impulse = scale velocityDeviation (m * edgeImpulseFactor)
+        impulse = scale velocityDeviation (m * nodeImpulseFactor)
     applyImpulse b impulse zero
 
 
 -- * force
 
 -- | (pure) calculation of the path force.
-mkPathForce :: Path -> Double -> Vector -> Vector -> IO Vector
-mkPathForce path m p v = do
---     ppp (len (nextNode path -~ p), decelerationRamp, wantedVelocityLen)
---     debugPoint white (guidePoint path)
---     debugPoint pink aim
---     debugLine green p (p +~ scale force 50)
---     debugLine red p (p +~ scale v 1)
---     forM_ (adjacentCyclic $ nodes path) $ \ (a, b) ->
---         debugLine green a b
+mkPathForce :: Path -> Double -> Vector -> Vector -> Vector
+mkPathForce (SingleNode aim _) m p v =
+    force +~ drag
+  where
+    direction = normalizeIfNotZero (aim -~ p)
+    force = scale direction forceLen
+    forceLen = m * toAimLen * springFactor
+    toAimLen = len (aim -~ p)
+    -- the acceleration should increase with lenToAim
+    -- till the springConstantAccelerationDistance is reached
+    springFactor = platformAcceleration / springConstantAccelerationDistance
+    -- drag to let the swinging stop
+    drag = scale dragDirection dragLen
+    dragLen = constantDrag +~ dynamicDrag
+    constantDrag = frictionFactor * m * platformAcceleration
+    dynamicDrag = dragFactor * m * platformAcceleration
+        * len v / platformStandardVelocity
+    dragDirection = normalizeIfNotZero (negateAbelian v)
+mkPathForce path@Path{} m p v =
     -- the force will always have the same length (or 0)
-    return $ scale force forceLen
+    scale force forceLen
   where
     forceLen = m * platformAcceleration
     -- | normalized force to be applied

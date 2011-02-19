@@ -90,7 +90,7 @@ instance Sort PSort Platform where
                     +~ baryCenterOffset
         chip <- initChipmunk space (bodyAttributes sort pos) shapes baryCenterOffset
 
-        let path = mkPath sort oemState
+        let path = toPath sort oemState
         return $ Platform (size sort) chip path
 
     chipmunks p = [chipmunk p]
@@ -164,7 +164,7 @@ getPathForce platform = do
     m <- getMass $ chipmunk platform
     p <- getPosition $ chipmunk platform
     v <- get $ velocity $ body $ chipmunk platform
-    mkPathForce (path platform) m p v
+    return $ mkPathForce (path platform) m p v
 
 
 -- * object edit mode
@@ -197,15 +197,9 @@ unpickle sort (readMay -> Just (cursor, (start : path))) =
     OEMPath sort (fromKachel 1) cursor (OEMPathPositions start path)
 
 -- | reads an OEMPath and returns the path for the game
-mkPath :: PSort -> OEMPath -> Path
-mkPath sort (OEMPath _ _ cursor path) =
-    let (lastNode : nodes) = map (epToCenterVector sort) (getPathList path)
-    in Path (deleteConsecutiveTwins (nodes +: lastNode)) lastNode 0
-  where
-    -- deletes consecutive points in the path that are identical.
-    deleteConsecutiveTwins :: Eq a => [a] -> [a]
-    deleteConsecutiveTwins = mergeAdjacentCyclicPairs $
-        \ a b -> if a == b then Just a else Nothing
+toPath :: PSort -> OEMPath -> Path
+toPath sort (OEMPath _ _ cursor path) =
+    mkPath $ map (epToCenterVector sort) (getPathList path)
 
 modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
 modifyCursor f p = p{oemCursor = f (oemCursor p)}
