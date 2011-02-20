@@ -110,7 +110,14 @@ instance Sort PSort Platform where
         let renderPosition = position +~ physicsPadding
         renderPixmap ptr offset renderPosition (Just rad) (pix sort)
         renderRobotEyes (robotEyes sort) ptr offset renderPosition rad eyesOffset
-            Active now
+            (robotEyesState $ path platform) now
+
+-- | Returns the state of the robots eyes dependent on the current Path
+robotEyesState :: Path -> RobotEyesState
+robotEyesState p = case p of
+    Path{} -> Active
+    (SingleNode _ Nothing) -> Idle
+    (SingleNode _ (Just _)) -> Idle
 
 eyesOffset = fmap fromUber $ Position 18 9
 
