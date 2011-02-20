@@ -13,6 +13,8 @@ module Editor.Scene.RenderOrdering (
 import Data.Indexable as I
 import Data.List (isPrefixOf)
 
+import Physics.Chipmunk
+
 import Utils
 
 import Base
@@ -32,14 +34,20 @@ sortShadowedTiles = sortBy tilesReadOrdering
 
 tilesReadOrdering :: EditorObject Sort_ -> EditorObject Sort_ -> Ordering
 tilesReadOrdering a b | isTileSort (editorSort a) && isTileSort (editorSort b) =
-    withView (editorY . editorPosition) compare a b `before`
-    withView (editorX . editorPosition) compare a b
+    withView editorPosition tilesOrdering a b
 tilesReadOrdering _ _ = EQ
 
--- | combines two Orderings. The first given Ordering takes precedence over the second.
-before :: Ordering -> Ordering -> Ordering
-before EQ = id
-before x = const x
+-- | Orders left and up first. 45 degrees.
+tilesOrdering :: EditorPosition -> EditorPosition -> Ordering
+tilesOrdering a b =
+    withView (ep2v >>> rot >>> vectorY) compare a b
+  where
+    ep2v :: EditorPosition -> Vector
+    ep2v (EditorPosition x y) = Vector x y
+    -- rotate by (- 45 degrees)
+    rot :: Vector -> Vector
+    rot = rotateVector (pi / 4)
+
 
 -- | sorts the rendering order of the main layer objects be sorts:
 -- terminals
