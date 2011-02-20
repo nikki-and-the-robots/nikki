@@ -95,10 +95,13 @@ instance Sort PSort Platform where
 
     chipmunks p = [chipmunk p]
 
+    getControlledChipmunk = const chipmunk
+
     immutableCopy p@Platform{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
     updateNoSceneChange sort mode now contacts cd =
+        control cd >>>>
         updateLogic >>>>
         passThrough applyPlatformForce
 
@@ -132,6 +135,21 @@ bodyAttributes sort pos =
 -- | tile friction to allow better walking
 shapeAttributes = robotShapeAttributes{friction = friction tileShapeAttributes}
 
+
+-- * controlling
+
+control :: (Bool, ControlData) -> Platform -> IO Platform
+control (True, cd) platform | Press AButton `elem` pressed cd = do
+    newPath <- swapOnOffState (chipmunk platform) $ path platform
+    return platform{path = newPath}
+control _ platform = return platform
+
+swapOnOffState :: Chipmunk -> Path -> IO Path
+swapOnOffState c p@(SingleNode n Nothing) = return p
+swapOnOffState c (SingleNode _ (Just p)) = return p
+swapOnOffState c path@Path{} = do
+    position <- getPosition c
+    return $ SingleNode position (Just path)
 
 -- * physics behaviour
 
