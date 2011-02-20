@@ -149,7 +149,7 @@ Executable core
         , transformers
         , time
         , parsec3 >= 1.0.0.0
-        , buffer
+        , buffer >= 0.2
         , FindBin
         , clocked == 0.2
         , cmdargs >= 0.6.6
