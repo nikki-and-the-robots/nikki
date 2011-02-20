@@ -32,14 +32,15 @@ data Path
       }
   deriving (Show, Typeable)
 
-mkPath :: [Vector] -> Path
-mkPath [] = error "empty paths are not allowed"
-mkPath [n] = SingleNode n Nothing
-mkPath list =
+mkPath :: Bool -> [Vector] -> Path
+mkPath _ [] = error "empty paths are not allowed"
+mkPath _ [n] = SingleNode n Nothing
+mkPath active list =
     (deleteConsecutiveTwins >>>
     adjacentCyclic >>>
     map (\ (a, b) -> segment a b) >>>
-    (\ segments -> Path segments 0 (sumLength segments))) list
+    (\ segments -> Path segments 0 (sumLength segments)) >>>
+    wrap) list
   where
     -- deletes consecutive points in the path that are identical.
     deleteConsecutiveTwins :: Eq a => [a] -> [a]
@@ -49,6 +50,9 @@ mkPath list =
     -- sums up all the segment's lengths
     sumLength :: [Segment] -> Double
     sumLength = sum . map segmentLength
+
+    -- wraps the path in a SingleNode when platform is initially switched off
+    wrap = if active then id else SingleNode (head list) . Just
 
 data Segment = Segment {
     start :: Vector,
