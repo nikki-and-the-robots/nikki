@@ -54,7 +54,7 @@ instance Sort Sort_ Object_ where
         return (f, Object_ sort o')
     updateNoSceneChange DummySort mode now contacts cd (Object_ sort o) =
         Object_ sort <$> updateNoSceneChange sort mode now contacts cd o
-    render = error "Don't use this function, use render_ instead (that't type safe)"
+    render = error "Don't use this function, use render_ instead (that's type safe)"
 
 sort_ :: Object_ -> Sort_
 sort_ (Object_ sort _) = Sort_ sort

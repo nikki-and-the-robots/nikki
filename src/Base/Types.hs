@@ -402,7 +402,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 
     -- | only implemented in Nikki and robots
     getControlledChipmunk :: Scene Object_ -> object -> Chipmunk
-    getControlledChipmunk o = error ("please implement getControlledChipmunk in: " ++ show o)
+    getControlledChipmunk scene o = error ("please implement getControlledChipmunk in: " ++ show o)
 
     startControl :: Seconds -> object -> object
     startControl now = id
