@@ -30,7 +30,8 @@ animationFrameTimes :: Map RobotEyesState [Seconds]
 animationFrameTimes = fromList (
     (Idle, [0.4]) :
     (Active, [3, 0.15, 0.1, 0.15]) :
-    (Open, [10]) :
+    (Open, [42]) :
+    (Closed, [42]) :
     [])
 
 
@@ -43,11 +44,13 @@ loadRobotEyesPixmaps :: RM RobotEyesPixmaps
 loadRobotEyesPixmaps = do
     actives <- loadImages "active" 2
     idles <- loadImages "idle" 4
-    opens <- loadImages "active" 1
+    let open = actives !! 0
+        closed = actives !! 1
     return $ fromList (
         (Active, actives) :
         (Idle, idles) :
-        (Open, opens) :
+        (Open, [open]) :
+        (Closed, [closed]) :
         [])
   where
     -- load n images with the given name
@@ -67,6 +70,7 @@ data RobotEyesState
     = Idle
     | Active
     | Open
+    | Closed
   deriving (Eq, Ord, Show, Typeable, Data)
 
 -- | Renders the eyes of a robot.
