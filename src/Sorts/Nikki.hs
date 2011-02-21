@@ -11,7 +11,6 @@ import Data.Abelian
 import Data.Generics
 import Data.Initial
 import Data.Foldable
-import Data.Buffer
 import Data.Maybe
 
 import System.FilePath
@@ -104,14 +103,7 @@ instance Sort NSort Nikki where
 
         let surfaceVelocityShape = head $ shapes chip
 
-        return $ Nikki
-            chip
-            surfaceVelocityShape
-            initial
-            0
-            0
-            (mkFullBuffer 2000 (zero, zero))
-            (zero, zero)
+        return $ Nikki chip surfaceVelocityShape initial 0 0
 
     immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
 
@@ -124,9 +116,7 @@ instance Sort NSort Nikki where
         inner =
             updateState mode now contacts cd >>>>
             fromPure (updateStartTime now (state nikki)) >>>>
-            controlNikki now contacts cd sort >>>>
---             debugNikki now contacts >>>>
-            return
+            controlNikki now contacts cd sort
 
     render nikki sort ptr offset now = do
         let pixmap = pickPixmap now sort nikki
@@ -142,47 +132,3 @@ pickPixmap now sort nikki =
         Just pixmapList ->
             pickAnimationFrameNonLooping pixmapList frameTimes_ (now - startTime nikki)
         Nothing -> es "problem finding pixmaps in Nikki: " name
-
-
--- debugging
-
-debugNikki :: Seconds -> Contacts -> Nikki -> IO Nikki
-debugNikki now contacts nikki@Nikki{positionBuffer} = do
-    vel <- get $ velocity $ body $ chipmunk $ nikki
-    p <- getPosition (chipmunk nikki)
-    addDebugging $ \ ptr offset -> do
-        resetMatrix ptr
-        windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-        translate ptr (Position (width windowSize - 2000) 0)
-        forM_ positionBuffer $ \ (p, v) -> do
-            setPenColor ptr blue 2
-            drawPoint ptr (Position 0 (height windowSize + vectorY p / 5))
-            setPenColor ptr red 2
-            drawPoint ptr (Position 0 (height windowSize / 2 + vectorY v / 5))
-            translate ptr (Position 1 0)
-        resetMatrix ptr
-        setPenColor ptr green 1
-        forM_ (localMinima $ map (vectorY . fst) $ Data.Foldable.toList positionBuffer) $ \ minimum -> do
-            let y = (height windowSize + minimum / 5)
-            drawLine ptr (Position 0 y) (Position (width windowSize) y)
-    return (if not (vectorY (fst $ lastPosition nikki) ~= (vectorY p)) then
-        nikki{positionBuffer = fromJust $ enqueue (p, vel) $ snd $ fromJust $ dequeue positionBuffer}
-      else
-        nikki){lastPosition = (p, vel)}
-
-scaleVector v = scale v (0.25 / nikkiMass)
-
-drawVector :: Ptr QPainter -> Color -> Vector -> IO ()
-drawVector ptr color v = do
-    setPenColor ptr color 3
-    drawLine ptr zero $ vector2QtPosition $ scaleVector v
-
-drawVectorAddition :: Ptr QPainter -> (Color, Color, Color) -> Vector -> Vector -> IO ()
-drawVectorAddition ptr (aColor, bColor, cColor) a b = do
-    drawVector ptr aColor a
-    translateVector ptr $ scaleVector a
-    drawVector ptr bColor b
-    translateVector ptr $ scaleVector (negateAbelian a)
-    drawVector ptr cColor (a +~ b)
-
-drawAngle ptr color angle = drawVector ptr color $ flip scale 1000000 $ fromUpAngle angle

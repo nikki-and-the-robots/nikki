@@ -9,7 +9,6 @@ import Data.Map (Map)
 import Data.Generics
 import Data.Initial
 import Data.Abelian
-import Data.Buffer
 import Data.Directions
 
 import Graphics.Qt as Qt hiding (rotate, scale)
@@ -40,10 +39,7 @@ data Nikki
         feetShape :: Shape,
         state :: State,
         startTime :: Seconds, -- time the State was last changed
-        batteryPower :: Integer, -- makes it possible to have REALLY BIG amounts of power :)
-        -- todo: remove this debugging data
-        positionBuffer :: Buffer (Vector, Vector),
-        lastPosition :: (Vector, Vector)
+        batteryPower :: Integer -- makes it possible to have REALLY BIG amounts of power :)
       }
   deriving (Show, Typeable)
 
