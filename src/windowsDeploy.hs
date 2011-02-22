@@ -20,8 +20,6 @@ main = do
     let searchPath = args ++ ["dist/build/nikki/", "dist/build/core/", "../"]
     clean
     copy searchPath
-    strip (deploymentDir </> "nikki.exe")
-    strip (deploymentDir </> "core.exe")
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
     copyLicenses
     putStrLn ("touching " ++ deploymentIndicator)
@@ -51,12 +49,6 @@ clean = do
         void $ system ("rm -rf " ++ deploymentDir ++ "/*")
       else
         createDirectory deploymentDir
-
--- | strip an executable
-strip :: FilePath -> IO ()
-strip file = do
-    putStrLn ("stripping " ++ file)
-    trySystem ("strip " ++ file)
 
 -- | copies all files to the deployment folder
 copy :: [FilePath] -> IO ()
