@@ -57,6 +57,7 @@ Executable  nikki
             -O1
             -optl-s
 
+    ghc-options:
         -Werror
         -fwarn-missing-fields
         -fwarn-dodgy-imports
@@ -102,6 +103,7 @@ Executable core
             -O2
             -optl-s
 
+    ghc-options:
         -threaded
 --         -eventlog
 --         -prof -auto-all
