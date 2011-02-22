@@ -14,36 +14,7 @@ Extra-source-files:
 Build-Type:     Custom
 Cabal-Version:  >= 1.8
 
-data-dir:
-    ../data/
 
-data-files:
-    -- not needed at runtime, but in court ;)
-    LICENSE
-    README
-
-    -- manuals
-    manual/storyModeIntroduction
-
-    -- sounds
-    sounds/nikki/jump.wav
-
-    -- levels
-    template_levels/*.nl
-
-    -- images
-    png/*.png
-    png/nikki/*.png
-    png/tiles/*.png
-    png/objects/*.png
-    png/terminals/*.png
-    png/terminals/osd/*.png
-    png/battery/*.png
-    png/robots/jetpack/*.png
-    png/robots/platform/*.png
-    png/multilayers/*.png
-    png/backgrounds/blue/*.png
-    png/osd/*.png
 
 -- Useful for declaring setup-script dependencies
 -- (cabal will only resolve these automatically during "cabal install")
