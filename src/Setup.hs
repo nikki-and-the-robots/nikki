@@ -53,6 +53,7 @@ macPostBuild args buildFlags packageDescription localBuildInfo =
         let app = "dist/build/core.app"
             appExecutableDir = app </> "Contents/MacOS"
         copyFile "dist/build/nikki/nikki" (appExecutableDir </> "nikki")
+        mapM_ (strip . (appExecutableDir </>)) ["core", "nikki"]
         writeFile (app </> "yes_nikki_is_deployed") ""
         copyDirectory app "./nikki.app"
 
@@ -111,3 +112,8 @@ searchInPaths (a : r) file = do
         return $ Just candidate
       else
         searchInPaths r file
+
+-- | stripping an executable
+strip :: FilePath -> IO ()
+strip exe =
+    trySystem ("strip " ++ exe)
