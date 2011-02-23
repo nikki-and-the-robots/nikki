@@ -68,8 +68,29 @@ macApp resourceFiles = MacApp {
     appPlist = Nothing,
     resources = resourceFiles,
     otherBins = [],
-    appDeps = ChaseWithDefaults
+    appDeps = FilterDeps filterDeps
   }
+
+-- | Decide, which dependencies to include
+filterDeps :: FilePath -> Bool
+filterDeps dep =
+    libName dep `elem` deployedLibs
+  where
+    libName = takeBaseName >>> takeWhile (/= '.')
+
+-- | list of libs that have to be deployed
+deployedLibs :: [String]
+deployedLibs =
+    "QtOpenGL" :
+    "QtGui" :
+    "QtCore" :
+    "libsndfile" :
+    "libzip" :
+    "libFLAC" :
+    "libvorbisenc" :
+    "libvorbis" :
+    "libogg" :
+    []
 
 -- | searches the qt_menu.nib in both standard locations for
 -- qt being installed via macports or binary distribution
