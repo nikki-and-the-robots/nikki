@@ -27,6 +27,21 @@ libzip
     custom license, see "LICENSES/libzip.txt"
     http://www.nih.at/libzip/
 
+libFLAC
+    Copyright (C) 2000,2001,2002,2003,2004,2005,2006,2007,2008,2009  Josh Coalson
+    custom license, see "LICENSES/libFLAC.txt"
+    http://flac.sourceforge.net/
+
+libvorbisenc and libvorbis
+    Copyright (c) 2002-2008 Xiph.org Foundation
+    custom license, see "LICENSES/libvorbis.txt"
+    http://xiph.org/
+
+libogg
+    Copyright (c) 2002, Xiph.org Foundation
+    custom license, see "LICENSES/libvorbis.txt"
+    http://xiph.org/
+
 buffer
     LGPL-3, see "LICENSES/lgpl-3.0.txt"
     https://patch-tag.com/r/shahn/buffer/home
