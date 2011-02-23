@@ -66,37 +66,34 @@ newState now contacts controlData nikki nikkiPos velocity =
                specialJumpInformation
         -- nikki touches something
         (False, Just c) ->
-          case grips of
-            -- nikki grabs something
-            Just HLeft | rightPushed -> State GripImpulse HLeft jumpInformation'
-            Just HRight | leftPushed -> State GripImpulse HRight jumpInformation'
-            Just gripDirection -> State Grip gripDirection jumpInformation'
-            -- nikki grabs nothing
-            Nothing ->
-              if isLegsCollision c then
-              -- nikki stands on something
+          if isLegsCollision c then
+          -- nikki stands on something
                 if nothingHeld then
-                  State (Wait False) newDirection jumpInformation'
-                else
-                  State (Walk afterAirborne False) newDirection jumpInformation'
-              else if isGhostCollision c then
-              -- nikki is a ghost (boo!) (airborne, but can still jump)
-                case buttonDirection of
-                  -- no direction -> Wait
-                  Nothing -> State
-                    (Wait True)
-                    newDirection
-                    jumpInformation'
-                  Just buttonDirection -> State
-                    (Walk afterAirborne True)
-                    newDirection
-                    jumpInformation'
-              else
-              -- something touches the head that causes jumping capability
-                State
-                  (WallSlide (map nikkiCollisionAngle collisions))
-                  (wallSlideDirection $ nikkiCollisionAngle c)
-                  jumpInformation'
+                    State (Wait False) newDirection jumpInformation'
+                  else
+                    State (Walk afterAirborne False) newDirection jumpInformation'
+            else case grips of
+                -- nikki grabs something
+                Just HLeft | rightPushed -> State GripImpulse HLeft jumpInformation'
+                Just HRight | leftPushed -> State GripImpulse HRight jumpInformation'
+                Just gripDirection -> State Grip gripDirection jumpInformation'
+                -- nikki grabs nothing
+                Nothing ->
+                    if isGhostCollision c then
+                    -- nikki is a ghost (boo!) (airborne, but can still jump)
+                    case buttonDirection of
+                        -- no direction -> Wait
+                        Nothing -> State (Wait True) newDirection jumpInformation'
+                        Just buttonDirection -> State
+                            (Walk afterAirborne True)
+                            newDirection
+                            jumpInformation'
+                      else
+                        -- something touches the head that causes jumping capability
+                        State
+                            (WallSlide (map nikkiCollisionAngle collisions))
+                            (wallSlideDirection $ nikkiCollisionAngle c)
+                            jumpInformation'
         -- nikki cannot jump
         (_, Nothing) ->
           if hasLegsCollisions then
