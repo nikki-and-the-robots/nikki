@@ -107,7 +107,7 @@ instance Sort PSort Platform where
 
     updateNoSceneChange sort mode now contacts cd =
         control cd >>>>
-        updateLogic >>>>
+        fromPure updateLogic >>>>
         passThrough applyPlatformForce
 
     render platform sort ptr offset now = do
@@ -165,10 +165,9 @@ swapOnOffState c path@Path{} = do
 
 -- * physics behaviour
 
-updateLogic :: Platform -> IO Platform
-updateLogic platform@Platform{chipmunk, path} = do
-    path' <- updatePath chipmunk path
-    return $ platform{path = path'}
+updateLogic :: Platform -> Platform
+updateLogic platform@Platform{path} =
+    platform{path = updatePath path}
 
 -- | Applies a force to the platform.
 -- The force is composed of an antiGravity and a path force
