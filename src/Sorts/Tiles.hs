@@ -59,7 +59,7 @@ names =
     ("tutorial/robots-02", (Position (- 1) (- 1)), Size 920 124) :
     ("tutorial/nikki-01", (Position (- 1) (- 1)), Size 768 160) :
     ("tutorial/nikki-02", (Position (- 1) (- 1)), Size 768 160) :
-    ("tutorial/nikki-03", (Position (- 1) (- 1)), Size 316 52) :
+    ("tutorial/nikki-03", (Position (- 1) (- 1)), Size 768 160) :
     ("tutorial/nikki-04", (Position (- 1) (- 1)), Size 768 160) :
     []
 
