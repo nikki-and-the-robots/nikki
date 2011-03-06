@@ -14,7 +14,7 @@ import Control.Monad.Trans.Error
 import Control.Monad.CatchIO
 import Control.Concurrent
 
-import System.Environment.FindBin.Fixed
+import System.Environment.FindBin
 import System.FilePath
 import System.Directory
 import System.Exit

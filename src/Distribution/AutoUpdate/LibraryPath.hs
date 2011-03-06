@@ -8,7 +8,7 @@ module Distribution.AutoUpdate.LibraryPath where
 
 #ifdef linux_HOST_OS
 
-import System.Environment.FindBin.Fixed
+import System.Environment.FindBin
 
 import System.Posix.Env
 
