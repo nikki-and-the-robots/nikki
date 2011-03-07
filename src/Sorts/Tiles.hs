@@ -56,7 +56,7 @@ names =
     ("tiles/pink-small", (Position (- 1) (- 1)), Size 32 32) :
     ("tiles/red-small", (Position (- 1) (- 1)), Size 32 32) :
     ("tutorial/robots-01", (Position (- 1) (- 1)), Size 416 268) :
-    ("tutorial/robots-02", (Position (- 1) (- 1)), Size 920 124) :
+    ("tutorial/robots-02", (Position (- 1) (- 1)), Size 920 180) :
     ("tutorial/nikki-01", (Position (- 1) (- 1)), Size 768 160) :
     ("tutorial/nikki-02", (Position (- 1) (- 1)), Size 768 160) :
     ("tutorial/nikki-03", (Position (- 1) (- 1)), Size 768 160) :
