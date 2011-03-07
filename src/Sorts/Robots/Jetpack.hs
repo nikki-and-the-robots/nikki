@@ -160,9 +160,10 @@ jupdate (True, (ControlData _ held)) (Jetpack chip _ _ renderState times) =
           else
             Nothing
 
-    aButton = AButton `member` held
-    left = LeftButton `member` held
-    right = RightButton `member` held
+    aButton, left, right :: Bool
+    aButton = fany isAButton held
+    left = fany isLeft held
+    right = fany isRight held
 
 
 updateRenderState :: Seconds -> Bool -> Jetpack -> Jetpack

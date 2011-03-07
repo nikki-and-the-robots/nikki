@@ -151,7 +151,7 @@ shapeAttributes = robotShapeAttributes{friction = friction tileShapeAttributes}
 -- * controlling
 
 control :: (Bool, ControlData) -> Platform -> IO Platform
-control (True, cd) platform | Press AButton `elem` pressed cd = do
+control (True, cd) platform | fany isAButton $ pressed cd = do
     newPath <- swapOnOffState (chipmunk platform) $ path platform
     return platform{path = newPath}
 control _ platform = return platform
@@ -266,20 +266,20 @@ removePathPoint point (OEMPathPositions start path) =
 
 -- * oem logic
 
-updateOEMPath :: AppButton -> OEMPath -> OEMPath
-updateOEMPath button oem@(OEMPath sort cursorStep cursor path active) =
-    case button of
-        LeftButton -> modifyCursor (-~ EditorPosition cursorStepF 0) oem
-        RightButton -> modifyCursor (+~ EditorPosition cursorStepF 0) oem
-        UpButton -> modifyCursor (-~ EditorPosition 0 cursorStepF) oem
-        DownButton -> modifyCursor (+~ EditorPosition 0 cursorStepF) oem
+updateOEMPath :: Key -> OEMPath -> OEMPath
+updateOEMPath key oem@(OEMPath sort cursorStep cursor path active) =
+    case key of
+        LeftArrow -> modifyCursor (-~ EditorPosition cursorStepF 0) oem
+        RightArrow -> modifyCursor (+~ EditorPosition cursorStepF 0) oem
+        UpArrow -> modifyCursor (-~ EditorPosition 0 cursorStepF) oem
+        DownArrow -> modifyCursor (+~ EditorPosition 0 cursorStepF) oem
         -- append new path node
-        AButton -> OEMPath sort cursorStep cursor (addPathPoint cursor path) active
+        aKey -> OEMPath sort cursorStep cursor (addPathPoint cursor path) active
         -- delete path node
-        BButton -> OEMPath sort cursorStep cursor (removePathPoint cursor path) active
-        (KeyboardButton W _) -> oem{oemStepSize = cursorStep * 2}
-        (KeyboardButton S _) -> oem{oemStepSize = max 1 (cursorStep `div` 2)}
-        (KeyboardButton Space _) -> oem{oemActive = not active}
+        bKey -> OEMPath sort cursorStep cursor (removePathPoint cursor path) active
+        W -> oem{oemStepSize = cursorStep * 2}
+        S -> oem{oemStepSize = max 1 (cursorStep `div` 2)}
+        Space -> oem{oemActive = not active}
         _ -> oem
   where
     cursorStepF :: Double = fromIntegral cursorStep

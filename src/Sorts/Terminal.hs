@@ -322,23 +322,23 @@ mkPolys size =
 
 -- | controls the terminal in terminal mode
 updateState :: Seconds -> ControlData -> [Index] -> State -> State
-updateState now cd robots state | Press AButton `elem` pressed cd =
+updateState now cd robots state | any isAButton $ pressed cd =
   case row state of
     NikkiRow -> exitToNikki state
     RobotRow -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
-updateState now cd robots state | Press RightButton `elem` pressed cd =
+updateState now cd robots state | any isRight $ pressed cd =
     -- go right in robot list
     modifySelected now robots (+ 1) state
-updateState now cd robots state | Press LeftButton `elem` pressed cd =
+updateState now cd robots state | any isLeft $ pressed cd =
     -- go left in robot list
     modifySelected now robots (subtract 1) state
 updateState now cd robots state@State{row = NikkiRow}
-    | Press UpButton `elem` pressed cd
+    | any isUp (pressed cd)
     -- select to robot list
       && not (null robots) =
         state{row = RobotRow, changedTime = now}
 updateState now cd robots state@State{row = RobotRow}
-    | Press DownButton `elem` pressed cd =
+    | any isDown $ pressed cd =
     -- select exit (nikki) menu item (go down)
         state{row = NikkiRow, changedTime = now}
 updateState _ _ _ t = t
@@ -511,13 +511,13 @@ enterMode scene (Robots _ selected attached) =
           where
             selected' = if selected `elem` available then selected else first
 
-editorUpdate :: EditorScene sort -> AppButton -> TerminalOEMState -> TerminalOEMState
-editorUpdate scene key NoRobots = NoRobots
+editorUpdate :: EditorScene sort -> Key -> TerminalOEMState -> TerminalOEMState
+editorUpdate _ _ NoRobots = NoRobots
 editorUpdate scene key state@(Robots available selected attached) =
   case key of
-    RightButton -> state{selectedRobot = searchNext selected available}
-    LeftButton -> state{selectedRobot = searchNext selected (reverse available)}
-    AButton -> state{attachedRobots = swapIsElem selected attached}
+    RightArrow -> state{selectedRobot = searchNext selected available}
+    LeftArrow -> state{selectedRobot = searchNext selected (reverse available)}
+    x | x == Enter || x == aKey -> state{attachedRobots = swapIsElem selected attached}
     _ -> state
 
 -- | searches the next element that is not equal to the given one in the list

@@ -317,7 +317,7 @@ modifyOEMEditorPositions f o@EditorObject{editorOEMState = Just (OEMState state)
 
 class (Typeable a, Data a) => IsOEMState a where
     oemEnterMode :: Sort sort o => EditorScene sort -> a -> a
-    oemUpdate :: EditorScene sort -> AppButton -> a -> a
+    oemUpdate :: EditorScene sort -> Key -> a -> a
     oemNormalize :: Sort sort o => EditorScene sort -> a -> a
     oemRender :: Sort sort o => Ptr QPainter -> EditorScene sort -> a -> IO ()
     oemPickle :: a -> String

@@ -86,8 +86,8 @@ setNikkiPosition position =
 -- * manipulating
 
 updateEditorScene :: AppEvent -> EditorScene Sort_ -> EditorScene Sort_
-updateEditorScene (Press button) =
-    keyPress button >>>
+updateEditorScene (Press (KeyboardButton key _)) =
+    keyPress key >>>
     updateSelected >>>
     normalizeOEMStates
 updateEditorScene _ = id
@@ -96,31 +96,31 @@ updateEditorScene _ = id
 -- * gamepad buttons
 -- Start (== Escape) is handled above in Editor.MainLoop
 
-keyPress :: AppButton -> EditorScene Sort_ -> EditorScene Sort_
-keyPress button scene =
+keyPress :: Key -> EditorScene Sort_ -> EditorScene Sort_
+keyPress key scene =
     case editorMode scene of
-        NormalMode -> normalMode button scene
-        ObjectEditMode{} -> objectEditModeUpdate button scene
-        SelectionMode{} -> selectionMode button scene
+        NormalMode -> normalMode key scene
+        ObjectEditMode{} -> objectEditModeUpdate key scene
+        SelectionMode{} -> selectionMode key scene
 
 -- * Main Editor mode
 
 -- arrow keys
-normalMode LeftButton scene@EditorScene{cursor = (EditorPosition x y)} =
+normalMode LeftArrow scene@EditorScene{cursor = (EditorPosition x y)} =
     let (EditorPosition sx sy) = getCursorStep scene
     in scene{cursor = (EditorPosition (x - sx) y)}
-normalMode RightButton scene@EditorScene{cursor = (EditorPosition x y)} =
+normalMode RightArrow scene@EditorScene{cursor = (EditorPosition x y)} =
     let (EditorPosition sx sy) = getCursorStep scene
     in scene{cursor = (EditorPosition (x + sx) y)}
-normalMode UpButton scene@EditorScene{cursor = (EditorPosition x y)} =
+normalMode UpArrow scene@EditorScene{cursor = (EditorPosition x y)} =
     let (EditorPosition sx sy) = getCursorStep scene
     in scene{cursor = (EditorPosition x (y - sy))}
-normalMode DownButton scene@EditorScene{cursor = (EditorPosition x y)} =
+normalMode DownArrow scene@EditorScene{cursor = (EditorPosition x y)} =
     let (EditorPosition sx sy) = getCursorStep scene
     in scene{cursor = (EditorPosition x (y + sy))}
 
 -- add object
-normalMode AButton scene@EditorScene{cursor, selectedLayer} =
+normalMode key scene@EditorScene{cursor, selectedLayer} | aKey == key =
     scene{editorObjects = objects'}
   where
     objects' = modifySelectedLayer selectedLayer
@@ -130,56 +130,49 @@ normalMode AButton scene@EditorScene{cursor, selectedLayer} =
     selectedSort = getSelected $ availableSorts scene
 
 -- delete selected object
-normalMode BButton scene@EditorScene{} =
+normalMode key scene@EditorScene{} | bKey == key =
     case selected scene of
         Nothing -> scene
         (Just (layerIndex, i)) ->
             let newObjects = modifySelectedLayer layerIndex (modifyContent (deleteByIndex i)) (editorObjects scene)
             in scene{editorObjects = newObjects}
 
-normalMode (KeyboardButton x _) scene = normalModeKeyboard x scene
-
-normalMode _ s = s
-
--- * buttons pressed on the keyboard
-
-normalModeKeyboard :: Key -> EditorScene Sort_ -> EditorScene Sort_
-
 -- skip through available objects
-normalModeKeyboard D scene@EditorScene{} =
+normalMode D scene@EditorScene{} =
     modifySorts selectNext scene
-normalModeKeyboard A scene@EditorScene{} =
+normalMode A scene@EditorScene{} =
     modifySorts selectPrevious scene
 
 -- cycle through objects under cursor
 -- (ordering of rendering will be automated)
-normalModeKeyboard B scene@EditorScene{editorObjects, selected = Just (layerIndex, i)} =
+normalMode B scene@EditorScene{editorObjects, selected = Just (layerIndex, i)} =
     let editorObjects' = modifySelectedLayer layerIndex (modifyContent (I.toHead i)) editorObjects
     in scene{editorObjects = editorObjects'}
 
 -- change cursor step size
 
-normalModeKeyboard key scene | key `elem` [W, S] =
+normalMode key scene | key `elem` [W, S] =
     changeCursorStepSize key scene
 
 -- * Layers
 
-normalModeKeyboard Plus s@EditorScene{editorObjects, selectedLayer} =
+normalMode Plus s@EditorScene{editorObjects, selectedLayer} =
     s{selectedLayer = modifyGroundsIndex editorObjects (+ 1) selectedLayer}
-normalModeKeyboard Minus s@EditorScene{editorObjects, selectedLayer} =
+normalMode Minus s@EditorScene{editorObjects, selectedLayer} =
     s{selectedLayer = modifyGroundsIndex editorObjects (subtract 1) selectedLayer}
 
 -- * paste from clipBoard
 
-normalModeKeyboard V s = pasteClipboard s
+normalMode V s = pasteClipboard s
 
-normalModeKeyboard Space s = toSelectionMode s
+normalMode Space s = toSelectionMode s
 
-normalModeKeyboard _ scene = scene
+normalMode _ scene = scene
 
 
 -- * object edit mode
 
+objectEditModeUpdate :: Key -> EditorScene Sort_ -> EditorScene Sort_
 objectEditModeUpdate x s@EditorScene{editorMode = ObjectEditMode i} =
     s{editorObjects = objects'}
   where
@@ -190,20 +183,20 @@ objectEditModeUpdate x s@EditorScene{editorMode = ObjectEditMode i} =
 
 -- * selection mode
 
-selectionMode :: AppButton -> EditorScene Sort_ -> EditorScene Sort_
-selectionMode button scene@EditorScene{editorMode = SelectionMode pos}
-    | button `member` allArrowButtons =
-        scene{editorMode = SelectionMode (changeSelectionPosition button pos)}
+selectionMode :: Key -> EditorScene Sort_ -> EditorScene Sort_
+selectionMode key scene@EditorScene{editorMode = SelectionMode pos}
+    | key `member` allArrowKeys =
+        scene{editorMode = SelectionMode (changeSelectionPosition key pos)}
   where
-    changeSelectionPosition UpButton (EditorPosition x y) = EditorPosition x (y - sy)
-    changeSelectionPosition DownButton (EditorPosition x y) = EditorPosition x (y + sy)
-    changeSelectionPosition LeftButton (EditorPosition x y) = EditorPosition (x - sx) y
-    changeSelectionPosition RightButton (EditorPosition x y) = EditorPosition (x + sx) y
+    changeSelectionPosition UpArrow (EditorPosition x y) = EditorPosition x (y - sy)
+    changeSelectionPosition DownArrow (EditorPosition x y) = EditorPosition x (y + sy)
+    changeSelectionPosition LeftArrow (EditorPosition x y) = EditorPosition (x - sx) y
+    changeSelectionPosition RightArrow (EditorPosition x y) = EditorPosition (x + sx) y
     EditorPosition sx sy = getCursorStep scene
-selectionMode (KeyboardButton X _) scene = cutSelection scene
-selectionMode (KeyboardButton C _) scene = copySelection scene
-selectionMode BButton scene = deleteSelection scene
-selectionMode (KeyboardButton key _) scene | key `elem` [W, S] = changeCursorStepSize key scene
+selectionMode X scene = cutSelection scene
+selectionMode C scene = copySelection scene
+selectionMode key scene | bKey == key || Delete == key = deleteSelection scene
+selectionMode key scene | key `elem` [W, S] = changeCursorStepSize key scene
 
 selectionMode _ scene = scene
 

@@ -59,7 +59,7 @@ askString app parent question follower = AppState $ do
         io $ updateGLContext $ window app
         event <- waitForAppEvent app $ keyPoller app
         case event of
-            Press StartButton ->
+            Press e | isStart e ->
                 return parent
             Press (KeyboardButton k _) | k == Return || k == Enter ->
                 io $ follower <$> readMVar answerRef

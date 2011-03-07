@@ -51,9 +51,8 @@ editorLoop app play mvar scene = AppState $ do
         updateSceneMVar app mvar
         event <- lift $ waitForAppEvent app $ keyPoller app
         s <- get
-        if event == Press StartButton then
-            return $ editorMenu app play mvar s
-          else case (editorMode s, event) of
+        case (editorMode s, event) of
+            (_, Press k) | isStart k -> return $ editorMenu app play mvar s
             (NormalMode, Press (KeyboardButton T _)) ->
                 -- test the level
                 return $ play app (editorLoop app play mvar s) s

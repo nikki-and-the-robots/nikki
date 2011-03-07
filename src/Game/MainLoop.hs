@@ -73,6 +73,7 @@ gameLoop app sceneMVar = do
 
         -- input events
         controlData <- lift $ pollAppEvents app $ keyPoller app
+        let pressed_ = pressed controlData
 
         -- stepping of the scene (includes rendering)
         space <- gets cmSpace
@@ -82,7 +83,7 @@ gameLoop app sceneMVar = do
 
         swapSceneMVar =<< io getDebugging
 
-        let startPressed = Press StartButton `elem` pressed controlData
+        let startPressed = any isStart pressed_
         case mode sc' of
             LevelFinished t _ ->
                 if startPressed then

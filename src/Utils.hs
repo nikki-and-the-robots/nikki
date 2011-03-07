@@ -20,7 +20,7 @@ import Safe
 
 import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault, toList)
-import Data.Foldable (Foldable, mapM_, forM_)
+import Data.Foldable (Foldable, mapM_, forM_, any)
 import Data.Traversable (Traversable, mapM)
 import Data.IORef
 import qualified Data.Set as Set
@@ -128,6 +128,9 @@ fmapM = Data.Traversable.mapM
 
 fmapM_ :: (Monad m, Data.Foldable.Foldable t) => (a -> m b) -> t a -> m ()
 fmapM_ = Data.Foldable.mapM_
+
+fany :: Foldable t => (a -> Bool) -> t a -> Bool
+fany = Data.Foldable.any
 
 
 -- * function composition stuff

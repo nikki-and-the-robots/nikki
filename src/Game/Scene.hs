@@ -55,7 +55,7 @@ stepScene space controlData =
 -- * State automaton stuff
 
 transition :: ControlData -> Scene Object_ -> IO (Scene Object_)
-transition (ControlData pushed _) scene =
+transition (pressed -> pressed) scene =
     case mNew of
         Nothing -> return scene
         Just new -> modifyTransitioned new
@@ -63,9 +63,9 @@ transition (ControlData pushed _) scene =
     -- | Maybe the new scene
     mNew :: Maybe (Scene Object_)
     mNew = foldl1 (<|>) [
-        nikkiToTerminal scene pushed,
+        nikkiToTerminal scene pressed,
         terminalExit scene,
-        robotToTerminal scene pushed,
+        robotToTerminal scene pressed,
         nikkiMovedAwayFromTerminal scene,
         gameOver scene,
         levelPassed scene
@@ -83,14 +83,13 @@ modifyTransitioned scene = do
 
 
 -- | converts the Scene to TerminalMode, if appropriate
-nikkiToTerminal :: Scene Object_ -> [AppEvent] -> Maybe (Scene Object_)
-nikkiToTerminal scene@Scene{mode = (NikkiMode nikkiIndex)} pushed
+nikkiToTerminal :: Scene Object_ -> [Button] -> Maybe (Scene Object_)
+nikkiToTerminal scene@Scene{mode = (NikkiMode nikkiIndex)} pressed
                                                -- nikki must be in wait mode
-    | actionButtonPressed && beforeTerminal && waiting
+    | bButtonPressed && beforeTerminal && waiting
         = Just $ scene {mode = mode'}
   where
-    actionButton = BButton
-    actionButtonPressed = Press actionButton `elem` pushed
+    bButtonPressed = any isBButton pressed
     beforeTerminal = nikkiTouchesTerminal $ contacts scene
     nikki :: Nikki
     Just nikki = unwrapNikki $ getMainlayerObject scene nikkiIndex
@@ -128,12 +127,12 @@ terminalExit _ = Nothing
 
 
 -- | converts from RobotMode to TerminalMode, if appropriate
-robotToTerminal :: Scene Object_ -> [AppEvent] -> Maybe (Scene Object_)
-robotToTerminal scene@Scene{mode = RobotMode{nikki, terminal}} pushed
+robotToTerminal :: Scene Object_ -> [Button] -> Maybe (Scene Object_)
+robotToTerminal scene@Scene{mode = RobotMode{nikki, terminal}} pressed
   | bPress =
     Just $ scene{mode = TerminalMode nikki terminal}
   where
-    bPress = Press BButton `elem` pushed
+    bPress = any isBButton pressed
 robotToTerminal _ _ = Nothing
 
 -- | if nikki gets moved away from the terminal during robot mode...

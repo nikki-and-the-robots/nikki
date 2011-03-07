@@ -26,9 +26,6 @@ import Sorts.Nikki.Initialisation
 import Sorts.Nikki.Dust
 
 
-jumpButton = AButton
-
-
 updateState :: Mode -> Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
 updateState mode now _ (False, _) nikki = do
     let action = case mode of
@@ -146,12 +143,12 @@ newState now contacts controlData nikki nikkiPos velocity =
     hasLegsCollisions = not $ null $ filter isLegsCollision $ nikkiCollisions contacts
 
     -- button events
-    jumpButtonPushed = Press jumpButton `elem` pressed controlData
-    jumpButtonHeld = jumpButton `member` held controlData
-    rightPushed = Press RightButton `elem` pressed controlData
-    leftPushed = Press LeftButton `elem` pressed controlData
-    rightHeld = RightButton `member` held controlData
-    leftHeld = LeftButton `member` held controlData
+    jumpButtonPushed = any isAButton $ pressed controlData
+    jumpButtonHeld = fany isAButton $ held controlData
+    rightPushed = any isRight $ pressed controlData
+    leftPushed = any isLeft $ pressed controlData
+    rightHeld = fany isRight $ held controlData
+    leftHeld = fany isLeft $ held controlData
     nothingHeld = not (rightHeld `xor` leftHeld)
 
     -- the direction indicated by the buttons (if any)

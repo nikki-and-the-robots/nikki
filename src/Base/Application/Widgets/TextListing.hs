@@ -33,8 +33,8 @@ showText app text follower =
         io $ setDrawingCallbackGLContext (window app) $ Just $ render (drop scrolling text)
         e <- waitForAppEvent app $ keyPoller app
         case e of
-            Press DownButton -> inner (min (succ scrolling) (length text))
-            Press UpButton -> inner (max (pred scrolling) 0)
+            Press e | isDown e -> inner (min (succ scrolling) (length text))
+            Press e | isUp e -> inner (max (pred scrolling) 0)
             Press _ -> return follower
             _ -> inner scrolling
 

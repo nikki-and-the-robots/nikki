@@ -70,17 +70,17 @@ menuWithPreChoice app mTitle mParent children preChoice =
         io $ resetGuiLog
         event <- waitForAppEvent app $ keyPoller app
         case event of
-            Press UpButton -> return $ inner $ selectPrevious items
-            Press DownButton -> return $ inner $ selectNext items
-            Press AButton -> return $ snd $ selected items
-            Press x | isBackButton x -> case mParent of
+            Press e | isUp e -> return $ inner $ selectPrevious items
+            Press e | isDown e -> return $ inner $ selectNext items
+            Press e | isAButton e -> return $ snd $ selected items
+            Press e | isBackButton e -> case mParent of
                 Just parent -> return parent
                 Nothing -> return $ inner items
             x -> return $ inner items
 
-    isBackButton BButton = True
-    isBackButton StartButton = True
-    isBackButton _  = False
+    -- B button (keyboard or gamepad) or Escape
+    isBackButton (KeyboardButton Escape _) = True
+    isBackButton x = isBButton x
 
     font_ = alphaNumericFont $ applicationPixmaps app
     render items ptr = do
