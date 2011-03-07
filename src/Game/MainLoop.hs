@@ -83,18 +83,17 @@ gameLoop app sceneMVar = do
 
         swapSceneMVar =<< io getDebugging
 
-        let startPressed = any isStart pressed_
         case mode sc' of
             LevelFinished t _ ->
-                if startPressed then
+                if null pressed_ then
+                    continue
+                  else
                     return FinalState
-                else if spaceTime sc' - t > levelEndDuration then
-                    return FinalState
-                else continue
-            _ -> if startPressed then do
+            _ -> if any isStart pressed_ then do
                 io $ logInfo "NYI: game menu"
                 return FinalState -- TODO: should be a menu
-              else continue
+              else
+                continue
       where
         continue = do
             io $ waitTimer timer (stepQuantum / timeFactor)
