@@ -266,21 +266,21 @@ removePathPoint point (OEMPathPositions start path) =
 
 -- * oem logic
 
-updateOEMPath :: Key -> OEMPath -> OEMPath
+updateOEMPath :: Key -> OEMPath -> Maybe OEMPath
 updateOEMPath key oem@(OEMPath sort cursorStep cursor path active) =
     case key of
-        LeftArrow -> modifyCursor (-~ EditorPosition cursorStepF 0) oem
-        RightArrow -> modifyCursor (+~ EditorPosition cursorStepF 0) oem
-        UpArrow -> modifyCursor (-~ EditorPosition 0 cursorStepF) oem
-        DownArrow -> modifyCursor (+~ EditorPosition 0 cursorStepF) oem
+        LeftArrow -> Just $ modifyCursor (-~ EditorPosition cursorStepF 0) oem
+        RightArrow -> Just $ modifyCursor (+~ EditorPosition cursorStepF 0) oem
+        UpArrow -> Just $ modifyCursor (-~ EditorPosition 0 cursorStepF) oem
+        DownArrow -> Just $ modifyCursor (+~ EditorPosition 0 cursorStepF) oem
         -- append new path node
-        aKey -> OEMPath sort cursorStep cursor (addPathPoint cursor path) active
+        k | k == aKey -> Just $ OEMPath sort cursorStep cursor (addPathPoint cursor path) active
         -- delete path node
-        bKey -> OEMPath sort cursorStep cursor (removePathPoint cursor path) active
-        W -> oem{oemStepSize = cursorStep * 2}
-        S -> oem{oemStepSize = max 1 (cursorStep `div` 2)}
-        Space -> oem{oemActive = not active}
-        _ -> oem
+        k | k == bKey -> Just $ OEMPath sort cursorStep cursor (removePathPoint cursor path) active
+        W -> Just $ oem{oemStepSize = cursorStep * 2}
+        S -> Just $ oem{oemStepSize = max 1 (cursorStep `div` 2)}
+        Space -> Just $ oem{oemActive = not active}
+        _ -> Nothing
   where
     cursorStepF :: Double = fromIntegral cursorStep
 

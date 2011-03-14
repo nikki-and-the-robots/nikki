@@ -61,7 +61,7 @@ editorLoop app play mvar scene = AppState $ do
                 return $ play app (editorLoop app play mvar s) (setNikkiPosition (cursor s) s)
             _ -> do
                 -- other events are handled below (in Editor.Scene)
-                modifyState (updateEditorScene event)
+                eventHandled <- updateEditorScene event
                 worker
 
     render sceneMVar ptr = do

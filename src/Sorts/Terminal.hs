@@ -511,14 +511,17 @@ enterMode scene (Robots _ selected attached) =
           where
             selected' = if selected `elem` available then selected else first
 
-editorUpdate :: EditorScene sort -> Key -> TerminalOEMState -> TerminalOEMState
-editorUpdate _ _ NoRobots = NoRobots
+editorUpdate :: EditorScene sort -> Key -> TerminalOEMState -> Maybe TerminalOEMState
+editorUpdate _ key NoRobots | key `elem` keys = Just NoRobots
+  where
+    keys = (RightArrow : LeftArrow : Enter : aKey : [])
+editorUpdate _ _ NoRobots = Nothing
 editorUpdate scene key state@(Robots available selected attached) =
   case key of
-    RightArrow -> state{selectedRobot = searchNext selected available}
-    LeftArrow -> state{selectedRobot = searchNext selected (reverse available)}
-    x | x == Enter || x == aKey -> state{attachedRobots = swapIsElem selected attached}
-    _ -> state
+    RightArrow -> Just state{selectedRobot = searchNext selected available}
+    LeftArrow -> Just state{selectedRobot = searchNext selected (reverse available)}
+    x | x == Enter || x == aKey -> Just state{attachedRobots = swapIsElem selected attached}
+    _ -> Nothing
 
 -- | searches the next element that is not equal to the given one in the list
 -- wraps the list around.
