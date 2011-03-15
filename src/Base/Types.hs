@@ -321,6 +321,8 @@ class (Typeable a, Data a) => IsOEMState a where
     oemNormalize :: Sort sort o => EditorScene sort -> a -> a
     oemRender :: Sort sort o => Ptr QPainter -> EditorScene sort -> a -> IO ()
     oemPickle :: a -> String
+    -- phantom type
+    oemHelp :: a -> String
 
 data OEMState = forall a . IsOEMState a => OEMState a
   deriving Typeable
@@ -342,6 +344,7 @@ instance IsOEMState OEMState where
     oemNormalize scene (OEMState a) = OEMState $ oemNormalize scene a
     oemRender ptr scene (OEMState a) = oemRender ptr scene a
     oemPickle (OEMState a) = oemPickle a
+    oemHelp (OEMState a) = oemHelp a
 
 data OEMMethods = OEMMethods {
     oemInitialize :: EditorPosition -> OEMState,

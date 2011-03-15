@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns #-}
+{-# language NamedFieldPuns, ScopedTypeVariables #-}
 
 module Editor.Menu (PlayLevel, editorLoop) where
 
@@ -62,11 +62,18 @@ editorLoop app play mvar scene = AppState $ do
             _ -> do
                 -- other events are handled below (in Editor.Scene)
                 eventHandled <- updateEditorScene event
-                worker
+                case (eventHandled, event) of
+                    (False, Press _) -> do
+                        -- unhandled press event -> help will be displayed
+                        scene <- get
+                        return $ showEditorHelp app (this scene) scene
+                    _ -> worker
 
     render sceneMVar ptr = do
         scene <- readMVar sceneMVar
         renderEditorScene ptr scene
+
+    this scene = editorLoop app play mvar scene
 
 
 
@@ -83,7 +90,6 @@ editorMenu app play mvar scene =
                 ("edit layers", editLayers app play mvar scene),
                 ("activate selection mode (for copy, cut and paste)", edit (toSelectionMode scene)),
                 ("try playing the level", play app (edit scene) scene),
-                ("show help", showEditorHelp app this),
                 ("return to editing", edit scene),
                 ("save level", saveLevel app this editWithFilePath scene),
                 ("save level and exit editor", saveLevel app this (const $ mainMenu app) scene),
@@ -202,8 +208,18 @@ changeLayerDistance app parent scene follower =
         return $ follower
             (modifyEditorObjects (modifySelectedLayer (selectedLayer scene) (setYDistance y . setXDistance x)) scene)
 
-showEditorHelp :: Application -> AppState -> AppState
-showEditorHelp app parent = AppState $ do
-    file <- rm2m $ getDataFileName "manual/editor.txt"
-    text <- io $ pFile file
-    return $ showText app text parent
+-- | shows an editor help corresponding to the current editor mode
+showEditorHelp :: Application -> AppState -> EditorScene Sort_ -> AppState
+showEditorHelp app parent scene = case editorMode scene of
+    NormalMode{} -> showHelpFile
+    SelectionMode{} -> showHelpFile
+    (ObjectEditMode i) ->
+        let (Just oem) = objectEditMode $ editorSort $ getMainlayerEditorObject scene i
+            phantomOEM :: OEMState = oemInitialize oem undefined
+            helpText = proseLines $ p $ oemHelp phantomOEM
+        in showText app helpText parent
+  where
+    showHelpFile = AppState $ do
+        file <- rm2m $ getDataFileName "manual/editor.txt"
+        text <- io $ pFile file
+        return $ showText app text parent

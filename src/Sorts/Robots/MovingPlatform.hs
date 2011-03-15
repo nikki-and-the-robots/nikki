@@ -219,6 +219,7 @@ instance IsOEMState OEMPath where
     oemRender = renderOEMState
     oemPickle (OEMPath _ _ cursor path active) =
         show ((cursor, getPathList path, active) :: PickleType)
+    oemHelp = const oemHelpText
 
 type PickleType = (EditorPosition, [EditorPosition], Bool)
 
@@ -314,6 +315,16 @@ drawPathNode sort ptr n =
     eraseRect ptr (fmap round $ epToPosition sort n)
         (fmap round $ size sort)
         (modifyAlpha (* 0.4) yellow)
+
+
+-- * oem help text
+
+oemHelpText :: String =
+    "Arrow keys: move cursor\n" ++
+    "Ctrl: add new path node\n" ++
+    "Shift: remove existing node from path\n" ++
+    "Space: change initial state of platform (on / off)\n" ++
+    "W, S: change cursor step size"
 
 
 -- * position conversions

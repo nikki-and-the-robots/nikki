@@ -497,6 +497,7 @@ instance IsOEMState TerminalOEMState where
     oemNormalize = removeDeletedRobots
     oemRender = oemRender_
     oemPickle = show
+    oemHelp = const oemHelpText
 
 enterMode :: Sort sort o => EditorScene sort -> TerminalOEMState -> TerminalOEMState
 enterMode scene NoRobots =
@@ -577,3 +578,11 @@ renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
 hasTerminalShape :: Terminal -> Shape -> Bool
 hasTerminalShape terminal shape =
     shape `elem` shapes (chipmunk terminal)
+
+-- * help text
+
+oemHelpText :: String
+oemHelpText =
+    "Right, Left: cycle through robots\n" ++
+    "Ctrl: attach robot to terminal\n" ++
+    "Shift: remove robot from terminal"
