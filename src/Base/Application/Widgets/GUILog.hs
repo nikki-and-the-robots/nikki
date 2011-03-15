@@ -23,7 +23,7 @@ import Base.Constants
 -- Adds the given message to the log.
 guiLog :: Application_ sort -> Prose -> IO ()
 guiLog app msg = do
-    logInfo $ p' msg
+    logInfo $ unP msg
     mapM_ addMsg $ proseLines msg
     setDrawingCallbackGLContext (window app) (Just $ renderLog app)
 

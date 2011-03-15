@@ -8,7 +8,7 @@ module Base.Prose (
     getByteString,
     p,
     pVerbatim,
-    p',
+    unP,
     pFile,
     proseLines,
   ) where
@@ -41,8 +41,8 @@ pVerbatim :: String -> Prose
 pVerbatim = Prose . encode
 
 -- | inverse of p
-p' :: Prose -> String
-p' (Prose x) = decode x
+unP :: Prose -> String
+unP (Prose x) = decode x
 
 -- | Read files and return their content as Prose.
 -- Should be replaced with something that supports
