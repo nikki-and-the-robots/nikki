@@ -90,7 +90,6 @@ editorMenu app play mvar scene =
                 ("edit layers", editLayers app play mvar scene),
                 ("activate selection mode (for copy, cut and paste)", edit (toSelectionMode scene)),
                 ("try playing the level", play app (edit scene) scene),
-                ("return to editing", edit scene),
                 ("save level", saveLevel app this editWithFilePath scene),
                 ("save level and exit editor", saveLevel app this (const $ mainMenu app) scene),
                 ("exit editor without saving", reallyExitEditor app this)
