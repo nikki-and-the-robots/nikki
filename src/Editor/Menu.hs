@@ -76,7 +76,7 @@ editorLoop app play mvar scene = AppState $ do
     this scene = editorLoop app play mvar scene
 
 
-
+-- | state when pressing Escape during edit mode
 editorMenu :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
 editorMenu app play mvar scene =
@@ -95,9 +95,7 @@ editorMenu app play mvar scene =
                 ("save level and exit editor", saveLevel app this (const $ mainMenu app) scene),
                 ("exit editor without saving", reallyExitEditor app this)
               ])
-        ObjectEditMode{} ->
-            menu app (Just menuTitle) (Just (edit scene))
-            [("exit object edit mode", exitOEM app play mvar scene)]
+        ObjectEditMode{} -> exitOEM app play mvar scene
         SelectionMode{} ->
             menu app (Just menuTitle) (Just (edit scene)) [
                 ("cut selected objects", edit (cutSelection scene)),
