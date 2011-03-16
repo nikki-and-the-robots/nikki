@@ -129,16 +129,16 @@ getControlledIndex Scene{mode} =
         RobotMode{robot} -> Just robot
         LevelFinished{} -> Nothing
 
--- | returns an object from the mainLayer
+-- | returns an object from the mainlayer
 getMainlayerObject :: Scene o -> Index -> o
-getMainlayerObject s@Scene{objects} i = mainLayerIndexable objects !!! i
+getMainlayerObject s@Scene{objects} i = mainlayerIndexable objects !!! i
 
 
 -- * modifications
 
 mainlayerObjectByIndexA :: Index -> Accessor (Scene o) o
 mainlayerObjectByIndexA i =
-    objectsA .> mainLayerA .> contentA .> indexA i
+    objectsA .> mainlayerA .> contentA .> indexA i
 
 modifyObjects :: (Grounds a -> Grounds b) -> Scene a -> Scene b
 modifyObjects f s@Scene{objects} =

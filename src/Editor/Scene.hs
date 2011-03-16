@@ -70,7 +70,7 @@ initEditorScene sorts mPath pickledObjects = flip evalStateT empty $ do
         cursorStep = Just $ EditorPosition 64 64,
         availableSorts = sorts,
         editorObjects = objects,
-        selectedLayer = MainLayer,
+        selectedLayer = Mainlayer,
         selected = Nothing,
         editorMode = NormalMode,
         clipBoard = []
@@ -79,7 +79,7 @@ initEditorScene sorts mPath pickledObjects = flip evalStateT empty $ do
 -- | sets the position of Nikki (more precisely all Nikkis in the EditorScene) to the given value.
 setNikkiPosition :: EditorPosition -> EditorScene Sort_ -> EditorScene Sort_
 setNikkiPosition position =
-    editorObjectsA .> mainLayerA ^: fmap modifyNikki
+    editorObjectsA .> mainlayerA ^: fmap modifyNikki
   where
     modifyNikki :: EditorObject Sort_ -> EditorObject Sort_
     modifyNikki o = if isNikki (editorSort o) then o{editorPosition = position} else o
@@ -139,7 +139,7 @@ normalMode key scene@EditorScene{cursor, selectedLayer} | aKey == key =
     Just $ editorObjectsA .> layerA selectedLayer ^: mod $
         scene
   where
-    mod = modifyContent (RenderOrdering.sortMainLayer . (>: new))
+    mod = modifyContent (RenderOrdering.sortMainlayer . (>: new))
     new = mkEditorObject selectedSort cursor
     selectedSort = getSelected $ availableSorts scene
 
@@ -189,8 +189,8 @@ normalMode _ scene = Nothing
 
 objectEditModeUpdate :: Key -> EditorScene Sort_ -> Maybe (EditorScene Sort_)
 objectEditModeUpdate x scene@EditorScene{editorMode = ObjectEditMode i} =
-    let oldMainLayer = scene ^. editorObjectsA ^. mainLayerA
-        oldContent = oldMainLayer ^. contentA
+    let oldMainlayer = scene ^. editorObjectsA ^. mainlayerA
+        oldContent = oldMainlayer ^. contentA
         oldObject = oldContent !!! i
         Just oldOemState = editorOEMState oldObject
         newOemState = mod oldOemState
@@ -199,8 +199,8 @@ objectEditModeUpdate x scene@EditorScene{editorMode = ObjectEditMode i} =
         Just x ->
             let newObject = oldObject{editorOEMState = newOemState}
                 newContent = indexA i ^: (const newObject) $ oldContent
-                newMainLayer = contentA ^= newContent $ oldMainLayer
-                newEditorObjects = (scene ^. editorObjectsA){mainLayer = newMainLayer}
+                newMainlayer = contentA ^= newContent $ oldMainlayer
+                newEditorObjects = (scene ^. editorObjectsA){mainlayer = newMainlayer}
             in Just $ editorObjectsA ^= newEditorObjects $ scene
   where
     mod :: OEMState -> Maybe OEMState

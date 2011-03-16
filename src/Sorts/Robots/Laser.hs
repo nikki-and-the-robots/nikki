@@ -150,9 +150,9 @@ module Object.Robots.Laser where
 --     endBotPos
 --   where
 --     os = objects scene
---     mainLayerObjects = I.toList $ mainLayerIndexable os
+--     mainlayerObjects = I.toList $ mainlayerIndexable os
 --     filtered = filter innerPredicate $
---         filter isLaserEndRobot mainLayerObjects
+--         filter isLaserEndRobot mainlayerObjects
 --     endBot = case filtered of
 --         (_ : _) -> minimumBy innerCompare filtered
 --         _ -> error "no laser end bot found"
