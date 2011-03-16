@@ -71,7 +71,7 @@ initEditorScene sorts mPath pickledObjects = flip evalStateT empty $ do
         cursorStep = Just $ EditorPosition 64 64,
         availableSorts = sorts,
         editorObjects = objects,
-        selectedLayer = Mainlayer,
+        selectedLayer = MainLayer,
         selected = Nothing,
         editorMode = NormalMode,
         clipBoard = []
@@ -80,7 +80,7 @@ initEditorScene sorts mPath pickledObjects = flip evalStateT empty $ do
 -- | sets the position of Nikki (more precisely all Nikkis in the EditorScene) to the given value.
 setNikkiPosition :: EditorPosition -> EditorScene Sort_ -> EditorScene Sort_
 setNikkiPosition position =
-    editorObjectsA .> mainlayerA ^: fmap modifyNikki
+    editorObjectsA .> mainLayerA ^: fmap modifyNikki
   where
     modifyNikki :: EditorObject Sort_ -> EditorObject Sort_
     modifyNikki o = if isNikki (editorSort o) then o{editorPosition = position} else o
@@ -140,7 +140,7 @@ normalMode key scene@EditorScene{cursor, selectedLayer} | aKey == key =
     Just $ editorObjectsA .> layerA selectedLayer ^: mod $
         scene
   where
-    mod = modifyContent (RenderOrdering.sortMainlayer . (>: new))
+    mod = modifyContent (RenderOrdering.sortMainLayer . (>: new))
     new = mkEditorObject selectedSort cursor
     selectedSort = getSelected $ availableSorts scene
 
@@ -196,7 +196,7 @@ objectEditModeUpdate x scene@EditorScene{editorMode = ObjectEditMode i} =
         Just x -> Just $ acc ^= Just x $ scene
   where
     acc :: Accessor (EditorScene Sort_) (Maybe OEMState)
-    acc = editorObjectsA .> mainlayerA .> contentA .> indexA i .> editorOEMStateA
+    acc = editorObjectsA .> mainLayerA .> contentA .> indexA i .> editorOEMStateA
 
 
 -- * selection mode

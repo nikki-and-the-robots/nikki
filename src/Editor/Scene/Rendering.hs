@@ -31,7 +31,7 @@ renderEditorScene ptr scene = do
             renderObjectScene ptr offset scene
             renderGUI ptr offset scene
         ObjectEditMode index -> do
-            let Just oemState = editorOEMState $ getMainlayerEditorObject scene index
+            let Just oemState = editorOEMState $ getMainLayerEditorObject scene index
             oemRender ptr scene oemState
         SelectionMode endPosition -> renderCopySelection ptr scene endPosition
 

@@ -78,7 +78,7 @@ modifyTransitioned scene = do
     return $ case getControlledIndex scene of
       Just controlledIndex ->
         let now = spaceTime scene
-        in objectsA .> mainlayerA .> contentA .> indexA controlledIndex ^:
+        in objectsA .> mainLayerA .> contentA .> indexA controlledIndex ^:
             (startControl now) $ scene
       Nothing -> scene
 
@@ -93,7 +93,7 @@ nikkiToTerminal scene@Scene{mode = (NikkiMode nikkiIndex)} pressed
     bButtonPressed = any isBButton pressed
     beforeTerminal = nikkiTouchesTerminal $ contacts scene
     nikki :: Nikki
-    Just nikki = unwrapNikki $ scene ^. mainlayerObjectA nikkiIndex
+    Just nikki = unwrapNikki $ scene ^. mainLayerObjectA nikkiIndex
     action_ = action $ state $ nikki
     waiting = isWaitAction action_
 
@@ -107,7 +107,7 @@ whichTerminalCollides Scene{objects, contacts} =
     findIndices p allTerminals
   where
     allTerminals :: Indexable (Maybe Terminal)
-    allTerminals = fmap unwrapTerminal $ (mainlayer objects ^. contentA)
+    allTerminals = fmap unwrapTerminal $ (mainLayer objects ^. contentA)
 
     p :: Maybe Terminal -> Bool
     p Nothing = False
@@ -117,7 +117,7 @@ whichTerminalCollides Scene{objects, contacts} =
 
 terminalExit :: Scene Object_ -> Maybe (Scene Object_)
 terminalExit scene@Scene{mode = TerminalMode{nikki, terminal}} =
-    case unwrapTerminal $ scene ^. mainlayerObjectA terminal of
+    case unwrapTerminal $ scene ^. mainLayerObjectA terminal of
         Just t -> case terminalExitMode t of
             DontExit -> Nothing
             ExitToNikki ->
@@ -166,7 +166,7 @@ levelPassed scene =
         Nothing
   where
     allSwitches :: [Switch] =
-        catMaybes $ map unwrapSwitch $ toList $ (mainlayer (objects scene) ^. contentA)
+        catMaybes $ map unwrapSwitch $ toList $ (mainLayer (objects scene) ^. contentA)
     allTriggered = all triggered allSwitches
     now = spaceTime scene
 
@@ -191,24 +191,24 @@ stepSpace space s@Scene{contactRef} = do
 updateScene :: ControlData -> Scene Object_ -> IO (Scene Object_)
 updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     backgrounds' <- fmapM (modifyContentM (fmapMWithIndex updateMultiLayerObjects)) backgrounds
-    (sceneChange, mainlayer') <- updateMainlayer mainlayer
+    (sceneChange, mainLayer') <- updateMainLayer mainLayer
     foregrounds' <- fmapM (modifyContentM (fmapMWithIndex updateMultiLayerObjects)) foregrounds
-    return $ sceneChange $ scene{objects = Grounds backgrounds' mainlayer' foregrounds'}
+    return $ sceneChange $ scene{objects = Grounds backgrounds' mainLayer' foregrounds'}
   where
     controlled = getControlledIndex scene
-    (Grounds backgrounds mainlayer foregrounds) = objects
+    (Grounds backgrounds mainLayer foregrounds) = objects
 
-    -- update function for all objects in the mainlayer
-    updateMainlayer :: Layer Object_ -> IO (Scene Object_ -> Scene Object_, Layer Object_)
+    -- update function for all objects in the mainLayer
+    updateMainLayer :: Layer Object_ -> IO (Scene Object_ -> Scene Object_, Layer Object_)
     -- each object has to know, if it's controlled
-    updateMainlayer layer@Layer{content = ix} = do
+    updateMainLayer layer@Layer{content = ix} = do
         ix' <- fmapMWithIndex (\ i o ->
                 update DummySort mode now contacts (Just i == controlled, cd) i o) ix
         let changes = foldr (.) id $ fmap fst ix'
             ix'' = fmap snd ix'
         return $ (changes, layer{content = ix''})
 
-    -- update function for updates outside the mainlayer
+    -- update function for updates outside the mainLayer
     -- NOTE: SceneChanges currently only affect the main layer
     updateMultiLayerObjects :: Index -> Object_ -> IO Object_
     updateMultiLayerObjects i o = update DummySort mode now contacts (False, cd) i o >>= fromPure snd
@@ -223,7 +223,7 @@ immutableCopy scene = do
     new <- fmapM Base.immutableCopy old
     return $ acc ^= new $ scene
   where
-    acc = objectsA .> mainlayerA
+    acc = objectsA .> mainLayerA
 
 
 -- | well, renders the scene to the screen (to the max :)
@@ -241,7 +241,7 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
         when (not $ omit_pixmap_rendering configuration) $ do
             let os = objects scene
             fmapM_ (renderLayer ptr size offset now) $ backgrounds os
-            renderLayer ptr size offset now $ mainlayer os
+            renderLayer ptr size offset now $ mainLayer os
             fmapM_ (renderLayer ptr size offset now) $ foregrounds os
 
         renderTerminalOSD ptr now scene
@@ -252,7 +252,7 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
         when (render_xy_cross configuration) $
             debugDrawCoordinateSystem ptr offset
         when (render_chipmunk_objects configuration) $
-            fmapM_ (renderObjectGrid ptr offset) $ mainlayer $ objects scene
+            fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
         io $ debugging ptr offset
 
 

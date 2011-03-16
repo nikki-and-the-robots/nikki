@@ -26,7 +26,7 @@ type SaveType = Grounds PickleObject
 
 data Grounds a = Grounds {
     backgrounds :: Indexable (Layer a),
-    mainlayer :: Layer a,
+    mainLayer :: Layer a,
     foregrounds :: Indexable (Layer a)
   }
     deriving (Show, Read)

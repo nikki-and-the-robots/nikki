@@ -124,7 +124,7 @@ getControlled :: Scene o -> Maybe o
 getControlled s =
     s |>
     getControlledIndex |>
-    fmap (\ i -> s ^. mainlayerObjectA i)
+    fmap (\ i -> s ^. mainLayerObjectA i)
 
 -- | returns the controlled index in game mode
 getControlledIndex :: Scene o -> Maybe Index
@@ -135,10 +135,10 @@ getControlledIndex Scene{mode} =
         RobotMode{robot} -> Just robot
         LevelFinished{} -> Nothing
 
--- | accesses an object from the mainlayer
-mainlayerObjectA :: Index -> Accessor (Scene o) o
-mainlayerObjectA i =
-    objectsA .> mainlayerA .> contentA .> indexA i
+-- | accesses an object from the mainLayer
+mainLayerObjectA :: Index -> Accessor (Scene o) o
+mainLayerObjectA i =
+    objectsA .> mainLayerA .> contentA .> indexA i
 
 
 data CameraState

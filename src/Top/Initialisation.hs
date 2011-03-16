@@ -109,7 +109,7 @@ freeAllSorts sorts = do
 
 initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
 initScene space =
-    fromPure (mainlayerA .> contentA ^: RenderOrdering.sortMainlayer) >>>>
+    fromPure (mainLayerA .> contentA ^: RenderOrdering.sortMainLayer) >>>>
     fromPure groundsMergeTiles >>>>
     fromPure selectNikki >>>>
     secondKleisli (initializeObjects space) >>>>
@@ -117,9 +117,9 @@ initScene space =
 
 -- | select the last set nikki and delete all duplicates
 selectNikki :: Grounds (EditorObject Sort_) -> (Index, Grounds (EditorObject Sort_))
-selectNikki objects = (nikki, mainlayerA .> contentA ^: deleteDuplicateNikkis $ objects)
+selectNikki objects = (nikki, mainLayerA .> contentA ^: deleteDuplicateNikkis $ objects)
   where
-    nikkiIndices = I.findIndices (Sorts.Nikki.isNikki . editorSort) $ mainlayerIndexable objects
+    nikkiIndices = I.findIndices (Sorts.Nikki.isNikki . editorSort) $ mainLayerIndexable objects
     nikki = case nikkiIndices of
                     [a] -> a
                     (_ : _) -> trace "Warning, level containing more than one Nikki" $
@@ -130,9 +130,9 @@ selectNikki objects = (nikki, mainlayerA .> contentA ^: deleteDuplicateNikkis $ 
         foldr I.deleteByIndex layer (filter (/= nikki) nikkiIndices)
 
 initializeObjects :: Space -> Grounds (EditorObject Sort_) -> IO (Grounds Object_)
-initializeObjects space (Grounds backgrounds mainlayer foregrounds) = do
+initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
     bgs' <- fmapM (fmapM (editorObject2Object Nothing)) backgrounds
-    ml' <- fmapM (editorObject2Object (Just space)) mainlayer
+    ml' <- fmapM (editorObject2Object (Just space)) mainLayer
     fgs' <- fmapM (fmapM (editorObject2Object Nothing)) foregrounds
     return $ Grounds bgs' ml' fgs'
 
@@ -147,7 +147,7 @@ mkScene space (nikki, objects) = do
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =
-    mainlayerA .> contentA ^: mergeEditorObjects
+    mainLayerA .> contentA ^: mergeEditorObjects
 
 mergeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
 mergeEditorObjects ixs =

@@ -215,7 +215,7 @@ showEditorHelp app parent scene = case editorMode scene of
     NormalMode{} -> showHelpFile
     SelectionMode{} -> showHelpFile
     (ObjectEditMode i) ->
-        let (Just oem) = objectEditMode $ editorSort $ getMainlayerEditorObject scene i
+        let (Just oem) = objectEditMode $ editorSort $ getMainLayerEditorObject scene i
             phantomOEM :: OEMState = oemInitialize oem undefined
             helpText = proseLines $ p $ oemHelp phantomOEM
         in showText app helpText parent

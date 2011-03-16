@@ -4,7 +4,7 @@
 -- via Editor.Scene.RenderOrder.sortRenderOrder.
 
 module Editor.Scene.RenderOrdering (
-    sortMainlayer,
+    sortMainLayer,
 --     sortShadowedTiles,
 --     sortSorts,
   ) where
@@ -25,8 +25,8 @@ import Sorts.Tiles
 
 
 -- | sorts the objects in the main layer
-sortMainlayer :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
-sortMainlayer = sortShadowedTiles . sortSorts
+sortMainLayer :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
+sortMainLayer = sortShadowedTiles . sortSorts
 
 -- | sorts the tiles in reading order (top to bottom, then left to right)
 sortShadowedTiles :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)

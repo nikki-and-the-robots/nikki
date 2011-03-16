@@ -35,20 +35,20 @@ getSelectedObject scene =
     flip fmap (selected scene) $
         \ (layerIndex, i) -> (((scene ^. editorObjectsA) !|| layerIndex) ^. contentA) !!! i
 
--- | returns all Indices (to the mainlayer) for robots
+-- | returns all Indices (to the mainLayer) for robots
 getRobotIndices :: Sort sort o => EditorScene sort -> [Index]
 getRobotIndices scene =
-    I.findIndices (isRobot . editorSort) $ (mainlayer (scene ^. editorObjectsA) ^. contentA)
+    I.findIndices (isRobot . editorSort) $ (mainLayer (scene ^. editorObjectsA) ^. contentA)
 
 getCursorSize :: Sort sort o => EditorScene sort -> (Size Double)
 getCursorSize s@EditorScene{} =
     size $ getSelected $ availableSorts s
 
 -- | returns an object from the main layer
-getMainlayerEditorObject :: EditorScene sort -> Index -> EditorObject sort
-getMainlayerEditorObject scene i = os !!! i
+getMainLayerEditorObject :: EditorScene sort -> Index -> EditorObject sort
+getMainLayerEditorObject scene i = os !!! i
   where
-    os = mainlayerIndexable $ (scene ^. editorObjectsA)
+    os = mainLayerIndexable $ (scene ^. editorObjectsA)
 
 -- returns the wanted cursor step
 getCursorStep :: EditorScene Sort_ -> EditorPosition
@@ -66,17 +66,17 @@ setCursorStep scene x = scene{cursorStep = x}
 
 -- | adds a new default Layer to the EditorScene
 addDefaultBackground :: EditorScene Sort_ -> EditorScene Sort_
-addDefaultBackground s@EditorScene{editorObjects = (Grounds backgrounds mainlayer foregrounds)} =
+addDefaultBackground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
     s{editorObjects = objects'}
   where
-    objects' = Grounds (backgrounds >: initial) mainlayer foregrounds
+    objects' = Grounds (backgrounds >: initial) mainLayer foregrounds
 
 -- | adds a new default Layer to the EditorScene
 addDefaultForeground :: EditorScene Sort_ -> EditorScene Sort_
-addDefaultForeground s@EditorScene{editorObjects = (Grounds backgrounds mainlayer foregrounds)} =
+addDefaultForeground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
     s{editorObjects = objects'}
   where
-    objects' = Grounds backgrounds mainlayer (initial <: foregrounds)
+    objects' = Grounds backgrounds mainLayer (initial <: foregrounds)
 
 -- * modification
 

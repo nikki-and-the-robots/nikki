@@ -282,7 +282,7 @@ instance Sort TSort Terminal where
 
     getControlledChipmunk scene _ =
         getControlledChipmunk scene $
-        scene ^. mainlayerObjectA (Base.nikki $ mode scene)
+        scene ^. mainLayerObjectA (Base.nikki $ mode scene)
 
     chipmunks = chipmunk >>> return
 
@@ -408,7 +408,7 @@ padding = fromUber 2
 renderTerminalOSD :: Ptr QPainter -> Seconds -> Scene Object_ -> IO ()
 renderTerminalOSD ptr now scene@Scene{mode = mode@Base.TerminalMode{}} =
     let terminal = Base.terminal mode
-        object = scene ^. mainlayerObjectA terminal
+        object = scene ^. mainLayerObjectA terminal
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
         (Just sort, Just terminal) -> do
@@ -555,14 +555,14 @@ oemRender_ ptr scene state = do
 
 oemCursor :: Sort sort o => EditorScene sort -> TerminalOEMState -> EditorPosition
 oemCursor scene NoRobots = cursor scene
-oemCursor scene (Robots available selected _) = editorPosition (getMainlayerEditorObject scene selected)
+oemCursor scene (Robots available selected _) = editorPosition (getMainLayerEditorObject scene selected)
 
 renderOEMOSDs :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sort -> TerminalOEMState
     -> IO ()
 renderOEMOSDs ptr offset scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
-    renderRobotBox (modifyAlpha (const 0.5) orange) (getMainlayerEditorObject scene selected)
-    mapM_ (renderRobotBox (modifyAlpha (const 0.3) Qt.yellow)) $ map (getMainlayerEditorObject scene) $
+    renderRobotBox (modifyAlpha (const 0.5) orange) (getMainLayerEditorObject scene selected)
+    mapM_ (renderRobotBox (modifyAlpha (const 0.3) Qt.yellow)) $ map (getMainLayerEditorObject scene) $
         attached
   where
     renderRobotBox :: Sort sort o => Color -> EditorObject sort -> IO ()

@@ -24,7 +24,7 @@ import Graphics.Qt
 -- the main layer.
 data Grounds a = Grounds {
     backgrounds :: Indexable (Layer a),
-    mainlayer :: Layer a,
+    mainLayer :: Layer a,
     foregrounds :: Indexable (Layer a)
   }
     deriving (Show, Read, Data, Typeable)
@@ -33,8 +33,8 @@ backgroundsA, foregroundsA :: Accessor (Grounds a) (Indexable (Layer a))
 backgroundsA = accessor backgrounds (\ a r -> r{backgrounds = a})
 foregroundsA = accessor foregrounds (\ a r -> r{foregrounds = a})
 
-mainlayerA :: Accessor (Grounds a) (Layer a)
-mainlayerA = accessor mainlayer (\ a r -> r{mainlayer = a})
+mainLayerA :: Accessor (Grounds a) (Layer a)
+mainLayerA = accessor mainLayer (\ a r -> r{mainLayer = a})
 
 -- | one group of objects, positioned relatively to each other.
 -- to be refined
@@ -51,7 +51,7 @@ contentA = accessor content (\ a r -> r{content = a})
 -- | Index for selecting one (Layer a) from a (Grounds a)
 data GroundsIndex
     = Backgrounds Index
-    | Mainlayer
+    | MainLayer
     | Foregrounds Index
   deriving Show
 
@@ -78,19 +78,19 @@ instance Initial (Layer a) where
 
 -- * construction
 
-mkMainlayer :: Indexable a -> Layer a
-mkMainlayer c = contentA ^= c $ initial
+mkMainLayer :: Indexable a -> Layer a
+mkMainLayer c = contentA ^= c $ initial
 
 
 -- * getter
 
-mainlayerIndexable :: Grounds a -> Indexable a
-mainlayerIndexable Grounds{mainlayer} = mainlayer ^. contentA
+mainLayerIndexable :: Grounds a -> Indexable a
+mainLayerIndexable Grounds{mainLayer} = mainLayer ^. contentA
 
 -- | access the indexed Layer
 layerA :: GroundsIndex -> Accessor (Grounds a) (Layer a)
 layerA (Backgrounds i) = backgroundsA .> indexA i
-layerA Mainlayer = mainlayerA
+layerA MainLayer = mainLayerA
 layerA (Foregrounds i) = foregroundsA .> indexA i
 
 -- | extract the indexed Layer
@@ -107,11 +107,11 @@ numberOfLayers (Grounds backgrounds _ foregrounds) =
 belowSelected :: GroundsIndex -> Grounds a -> [Layer a]
 belowSelected index grounds =
     let bgs = I.toList $ backgrounds grounds
-        ml = mainlayer grounds
+        ml = mainLayer grounds
         fgs = I.toList $ foregrounds grounds
     in case index of
         Backgrounds i -> genericTake i bgs
-        Mainlayer -> bgs
+        MainLayer -> bgs
         Foregrounds i -> bgs ++ [ml] ++ genericTake i fgs
 
 
@@ -131,7 +131,7 @@ setYDistance y l = l{yDistance = y}
 toInt :: Grounds a -> GroundsIndex -> Int
 toInt Grounds{} (Backgrounds i) =
     fromIntegral i
-toInt Grounds{backgrounds} Mainlayer =
+toInt Grounds{backgrounds} MainLayer =
     fromIntegral $ I.length backgrounds
 toInt Grounds{backgrounds} (Foregrounds i) =
     fromIntegral (Index (I.length backgrounds) + 1 + i)
@@ -145,7 +145,7 @@ fromInt gs@(Grounds backgrounds _ foregrounds) i
     | i < bgsLen
         = Backgrounds $ Index i
     | i == bgsLen
-        = Mainlayer
+        = MainLayer
     | i < (I.length backgrounds + 1 + I.length foregrounds)
         = Foregrounds $ Index (i - bgsLen - 1)
     | i >= (I.length backgrounds + 1 + I.length foregrounds)
@@ -174,13 +174,13 @@ modifyContentM f layer@Layer{content} = do
 -- * maps
 
 layerMap :: (Layer a -> Layer b) -> Grounds a -> Grounds b
-layerMap f (Grounds backgrounds mainlayer foregrounds) =
-    Grounds (fmap f backgrounds) (f mainlayer) (fmap f foregrounds)
+layerMap f (Grounds backgrounds mainLayer foregrounds) =
+    Grounds (fmap f backgrounds) (f mainLayer) (fmap f foregrounds)
 
 layerMapM_ :: Monad m => (Layer a -> m b) -> Grounds a -> m ()
-layerMapM_ cmd (Grounds backgrounds mainlayer foregrounds) = do
+layerMapM_ cmd (Grounds backgrounds mainLayer foregrounds) = do
     fmapM_ cmd backgrounds
-    _ <- cmd mainlayer
+    _ <- cmd mainLayer
     fmapM_ cmd foregrounds
 
 
@@ -188,19 +188,19 @@ layerMapM_ cmd (Grounds backgrounds mainlayer foregrounds) = do
 
 -- | calculates the offset for one Layer.
 calculateLayerOffset :: Size Double -> Position Double -> Layer a -> Position Double
-calculateLayerOffset windowSize mainlayerOffset Layer{xDistance, yDistance} =
+calculateLayerOffset windowSize mainLayerOffset Layer{xDistance, yDistance} =
     Position xLayerOffset yLayerOffset
   where
     xLayerOffset = xMainOffset * xDistance + xWindowOffset * (1 - xDistance)
     yLayerOffset = yMainOffset * yDistance + yWindowOffset * (1 - yDistance)
 
-    (Position xMainOffset yMainOffset) = mainlayerOffset
+    (Position xMainOffset yMainOffset) = mainLayerOffset
     (Size width height) = windowSize
     xWindowOffset = width / 2
     yWindowOffset = height / 2
 
 
--- | modify the distances of the second given Layer as if the first was the mainlayer
+-- | modify the distances of the second given Layer as if the first was the mainLayer
 correctDistances :: Layer a -> Layer b -> Layer b
 correctDistances pretendMain l@Layer{xDistance = oldX, yDistance = oldY} =
     l{
