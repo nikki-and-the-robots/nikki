@@ -93,7 +93,7 @@ nikkiToTerminal scene@Scene{mode = (NikkiMode nikkiIndex)} pressed
     bButtonPressed = any isBButton pressed
     beforeTerminal = nikkiTouchesTerminal $ contacts scene
     nikki :: Nikki
-    Just nikki = unwrapNikki $ getMainlayerObject scene nikkiIndex
+    Just nikki = unwrapNikki $ scene ^. mainlayerObjectA nikkiIndex
     action_ = action $ state $ nikki
     waiting = isWaitAction action_
 
@@ -117,7 +117,7 @@ whichTerminalCollides Scene{objects, contacts} =
 
 terminalExit :: Scene Object_ -> Maybe (Scene Object_)
 terminalExit scene@Scene{mode = TerminalMode{nikki, terminal}} =
-    case unwrapTerminal $ getMainlayerObject scene terminal of
+    case unwrapTerminal $ scene ^. mainlayerObjectA terminal of
         Just t -> case terminalExitMode t of
             DontExit -> Nothing
             ExitToNikki ->

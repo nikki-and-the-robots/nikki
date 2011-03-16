@@ -54,7 +54,7 @@ getCameraPosition ptr scene =
         LevelFinished{} -> do
             -- level is finished, not in game mode anymore
             CS index oldPosition <- get
-            let controlledObject = getMainlayerObject scene index
+            let controlledObject = scene ^. mainlayerObjectA index
             if isNikki $ sort_ controlledObject then
                 -- camera follows Nikki
                 getPositionForIndex ptr scene oldPosition index
@@ -73,7 +73,7 @@ getCameraPositionMaybeCentered ptr scene index = do
         getPositionForIndex ptr scene oldPosition index
       else do
         -- controlled objects has changed -> center object on screen
-        let controlledObject = getMainlayerObject scene index
+        let controlledObject = scene ^. mainlayerObjectA index
         controlledPosition <- io $ getPosition $ getControlledChipmunk scene controlledObject
         put $ CS index controlledPosition
         return controlledPosition
@@ -82,7 +82,7 @@ getCameraPositionMaybeCentered ptr scene index = do
 -- Implements the bounding box.
 getPositionForIndex :: Qt.Ptr Qt.QPainter -> Scene Object_ -> Vector -> Index -> StateT CameraState IO Position
 getPositionForIndex ptr scene oldPosition index = do
-    let controlledObject = getMainlayerObject scene index
+    let controlledObject = scene ^. mainlayerObjectA index
     controlledPosition <- io $ getPosition $ getControlledChipmunk scene controlledObject
     windowSize <- fmap fromIntegral <$> io (Qt.sizeQPainter ptr)
     let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)

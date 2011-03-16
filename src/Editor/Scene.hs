@@ -23,6 +23,7 @@ import Data.SelectTree
 import qualified Data.Indexable as I
 import Data.Indexable (Index, (>:), deleteByIndex, (!!!), indexA)
 import Data.Abelian
+import Data.Accessor
 
 import Control.Monad.State
 
@@ -189,22 +190,13 @@ normalMode _ scene = Nothing
 
 objectEditModeUpdate :: Key -> EditorScene Sort_ -> Maybe (EditorScene Sort_)
 objectEditModeUpdate x scene@EditorScene{editorMode = ObjectEditMode i} =
-    let oldMainlayer = scene ^. editorObjectsA ^. mainlayerA
-        oldContent = oldMainlayer ^. contentA
-        oldObject = oldContent !!! i
-        Just oldOemState = editorOEMState oldObject
-        newOemState = mod oldOemState
-    in case newOemState of
+    let Just oldOemState = scene ^. acc
+    in case oemUpdate scene x oldOemState of
         Nothing -> Nothing
-        Just x ->
-            let newObject = oldObject{editorOEMState = newOemState}
-                newContent = indexA i ^: (const newObject) $ oldContent
-                newMainlayer = contentA ^= newContent $ oldMainlayer
-                newEditorObjects = (scene ^. editorObjectsA){mainlayer = newMainlayer}
-            in Just $ editorObjectsA ^= newEditorObjects $ scene
+        Just x -> Just $ acc ^= Just x $ scene
   where
-    mod :: OEMState -> Maybe OEMState
-    mod = oemUpdate scene x
+    acc :: Accessor (EditorScene Sort_) (Maybe OEMState)
+    acc = editorObjectsA .> mainlayerA .> contentA .> indexA i .> editorOEMStateA
 
 
 -- * selection mode

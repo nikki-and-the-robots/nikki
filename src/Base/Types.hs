@@ -118,7 +118,10 @@ objectsA = accessor objects (\ a r -> r{objects = a})
 
 -- | returns the object currently controlled by the gamepad
 getControlled :: Scene o -> Maybe o
-getControlled s = s |> getControlledIndex |> fmap (getMainlayerObject s)
+getControlled s =
+    s |>
+    getControlledIndex |>
+    fmap (\ i -> s ^. mainlayerObjectA i)
 
 -- | returns the controlled index in game mode
 getControlledIndex :: Scene o -> Maybe Index
@@ -130,8 +133,9 @@ getControlledIndex Scene{mode} =
         LevelFinished{} -> Nothing
 
 -- | returns an object from the mainlayer
-getMainlayerObject :: Scene o -> Index -> o
-getMainlayerObject s@Scene{objects} i = mainlayerIndexable objects !!! i
+mainlayerObjectA :: Index -> Accessor (Scene o) o
+mainlayerObjectA i =
+    objectsA .> mainlayerA .> contentA .> indexA i
 
 
 -- * modifications
@@ -304,6 +308,9 @@ data EditorObject sort
         editorOEMState :: Maybe OEMState
       }
   deriving Show
+
+editorOEMStateA :: Accessor (EditorObject s) (Maybe OEMState)
+editorOEMStateA = accessor editorOEMState (\ a r -> r{editorOEMState = a})
 
 instance Functor EditorObject where
     fmap f (EditorObject sort pos Nothing) = EditorObject (f sort) pos Nothing

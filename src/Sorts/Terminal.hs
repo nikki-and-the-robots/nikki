@@ -282,7 +282,7 @@ instance Sort TSort Terminal where
 
     getControlledChipmunk scene _ =
         getControlledChipmunk scene $
-        getMainlayerObject scene (Base.nikki $ mode scene)
+        scene ^. mainlayerObjectA (Base.nikki $ mode scene)
 
     chipmunks = chipmunk >>> return
 
@@ -408,7 +408,7 @@ padding = fromUber 2
 renderTerminalOSD :: Ptr QPainter -> Seconds -> Scene Object_ -> IO ()
 renderTerminalOSD ptr now scene@Scene{mode = mode@Base.TerminalMode{}} =
     let terminal = Base.terminal mode
-        object = getMainlayerObject scene terminal
+        object = scene ^. mainlayerObjectA terminal
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
         (Just sort, Just terminal) -> do

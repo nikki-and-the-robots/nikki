@@ -33,7 +33,7 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
     configuration <- getConfiguration
     io $ do
         nikkiPos <- getPosition $ getControlledChipmunk scene $
-                        getMainlayerObject scene nikkiIndex
+                        scene ^. mainlayerObjectA nikkiIndex
         cameraStateRef <- io $ newIORef initialCameraState
         setDrawingCallbackGLContext (window app)
             (Just $ render fpsRef cameraStateRef sceneMVar configuration)
