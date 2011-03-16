@@ -96,7 +96,7 @@ selectOther updateSelected reset tree =
                             Nothing
             -- child could be updated: must be inserted in list
             Just child ->
-                Just $ Node label (modifyByIndex (const child) selected children) selected
+                Just $ Node label (indexA selected ^: const child $ children) selected
     selectNextNotWrapping (Leaf a) = Nothing
 
 -- resets the tree to select the first item in it and every child.

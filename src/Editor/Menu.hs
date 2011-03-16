@@ -3,8 +3,8 @@
 module Editor.Menu (PlayLevel, editorLoop) where
 
 
-import Data.Indexable (modifyByIndex)
 import Data.SelectTree
+import Data.Indexable (indexA)
 
 import Control.Concurrent
 import Control.Monad.State
@@ -171,10 +171,13 @@ enterOEM app play mvar scene = do -- maybe monad
     (layerIndex, i) <- selected scene
     selectedObject <- getSelectedObject scene
     _ <- objectEditMode $ editorSort $ selectedObject
-    let objects' = modifySelectedLayer layerIndex (modifyContent (modifyByIndex (modifyOEMState mod) i)) $ editorObjects scene
+    let modObjects = layerA layerIndex ^:
+            modifyContent (indexA i ^: modifyOEMState mod)
         mod :: OEMState -> OEMState
         mod = oemEnterMode scene
-    Just $ edit scene{editorMode = ObjectEditMode i, editorObjects = objects'}
+    Just $ edit $
+        editorObjectsA ^: modObjects $
+        scene{editorMode = ObjectEditMode i}
   where
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app play mvar s
@@ -203,7 +206,8 @@ changeLayerDistance app parent scene follower =
     askStringRead app parent "x distance" $ \ x ->
     askStringRead app parent "y distance" $ \ y -> AppState $
         return $ follower
-            (modifyEditorObjects (modifySelectedLayer (selectedLayer scene) (setYDistance y . setXDistance x)) scene)
+            (editorObjectsA .> layerA (selectedLayer scene) ^:
+                (setYDistance y . setXDistance x) $ scene)
 
 -- | shows an editor help corresponding to the current editor mode
 showEditorHelp :: Application -> AppState -> EditorScene Sort_ -> AppState

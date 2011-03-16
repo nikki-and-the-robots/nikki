@@ -26,18 +26,19 @@ import Sorts.Robots
 -- * getters
 
 getSelectedLayerContent :: EditorScene Sort_ -> Indexable (EditorObject Sort_)
-getSelectedLayerContent scene = content (editorObjects scene !|| selectedLayer scene)
+getSelectedLayerContent scene =
+    ((scene ^. editorObjectsA) !|| selectedLayer scene) ^. contentA
 
 -- | get the object that is actually selected by the cursor
 getSelectedObject :: EditorScene Sort_ -> Maybe (EditorObject Sort_)
 getSelectedObject scene =
     flip fmap (selected scene) $
-        \ (layerIndex, i) -> content (editorObjects scene !|| layerIndex) !!! i
+        \ (layerIndex, i) -> (((scene ^. editorObjectsA) !|| layerIndex) ^. contentA) !!! i
 
 -- | returns all Indices (to the mainLayer) for robots
 getRobotIndices :: Sort sort o => EditorScene sort -> [Index]
-getRobotIndices EditorScene{editorObjects} =
-    I.findIndices (isRobot . editorSort) $ content $ mainLayer editorObjects
+getRobotIndices scene =
+    I.findIndices (isRobot . editorSort) $ (mainLayer (scene ^. editorObjectsA) ^. contentA)
 
 getCursorSize :: Sort sort o => EditorScene sort -> (Size Double)
 getCursorSize s@EditorScene{} =
@@ -47,7 +48,7 @@ getCursorSize s@EditorScene{} =
 getMainlayerEditorObject :: EditorScene sort -> Index -> EditorObject sort
 getMainlayerEditorObject scene i = os !!! i
   where
-    os = mainLayerIndexable $ editorObjects scene
+    os = mainLayerIndexable $ (scene ^. editorObjectsA)
 
 -- returns the wanted cursor step
 getCursorStep :: EditorScene Sort_ -> EditorPosition
@@ -79,9 +80,6 @@ addDefaultForeground s@EditorScene{editorObjects = (Grounds backgrounds mainLaye
 
 -- * modification
 
-modifyEditorObjects :: (Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)) -> EditorScene Sort_ -> EditorScene Sort_
-modifyEditorObjects f s@EditorScene{editorObjects} = s{editorObjects = f editorObjects}
-
 modifySorts :: (SelectTree Sort_ -> SelectTree Sort_) -> EditorScene Sort_ -> EditorScene Sort_
 modifySorts f scene@EditorScene{availableSorts} = scene{availableSorts = f availableSorts}
 
@@ -103,11 +101,10 @@ inCopySelection EditorScene{editorMode = SelectionMode endPosition, cursor} obje
 
 cutSelection :: EditorScene Sort_ -> EditorScene Sort_
 cutSelection scene =
-    scene{editorMode = NormalMode, clipBoard = clipBoard, editorObjects = newObjects}
+    editorObjectsA .> layerA (selectedLayer scene) ^:
+        (modifyContent deleteCutObjects) $
+    scene{editorMode = NormalMode, clipBoard = clipBoard}
   where
-    newObjects = modifySelectedLayer (selectedLayer scene) 
-                    (modifyContent deleteCutObjects) 
-                    (editorObjects scene)
     deleteCutObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
     deleteCutObjects = foldr (.) id (map deleteByIndex cutIndices)
     clipBoard :: [EditorObject Sort_]
@@ -144,11 +141,9 @@ moveSelectionToZero scene@EditorScene{editorMode = SelectionMode (EditorPosition
 
 pasteClipboard :: EditorScene Sort_ -> EditorScene Sort_
 pasteClipboard scene =
-    scene{editorObjects = newObjects}
+    editorObjectsA .> layerA (selectedLayer scene) ^: (modifyContent addClipboard) $
+    scene
   where
-    newObjects = modifySelectedLayer (selectedLayer scene)
-                    (modifyContent addClipboard)
-                    (editorObjects scene)
     addClipboard :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
     addClipboard = 
         foldr (>>>) id $ map (\ o ix -> ix >: o) $

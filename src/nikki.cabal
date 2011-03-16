@@ -145,6 +145,7 @@ Executable core
         , utf8-light >= 0.4
         , LibZip >= 0.2.0.1
         , uniplate >= 1.6
+        , data-accessor >= 0.2.1.7
 
     if os(linux)
         extra-libraries:

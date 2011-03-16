@@ -109,7 +109,7 @@ freeAllSorts sorts = do
 
 initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
 initScene space =
-    fromPure (modifyMainLayer RenderOrdering.sortMainLayer) >>>>
+    fromPure (mainLayerA .> contentA ^: RenderOrdering.sortMainLayer) >>>>
     fromPure groundsMergeTiles >>>>
     fromPure selectNikki >>>>
     secondKleisli (initializeObjects space) >>>>
@@ -117,7 +117,7 @@ initScene space =
 
 -- | select the last set nikki and delete all duplicates
 selectNikki :: Grounds (EditorObject Sort_) -> (Index, Grounds (EditorObject Sort_))
-selectNikki objects = (nikki, modifyMainLayer deleteDuplicateNikkis objects)
+selectNikki objects = (nikki, mainLayerA .> contentA ^: deleteDuplicateNikkis $ objects)
   where
     nikkiIndices = I.findIndices (Sorts.Nikki.isNikki . editorSort) $ mainLayerIndexable objects
     nikki = case nikkiIndices of
@@ -147,7 +147,7 @@ mkScene space (nikki, objects) = do
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =
-    modifyMainLayer mergeEditorObjects
+    mainLayerA .> contentA ^: mergeEditorObjects
 
 mergeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
 mergeEditorObjects ixs =

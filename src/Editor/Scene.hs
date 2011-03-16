@@ -21,7 +21,7 @@ import Data.Map hiding (map, filter, mapMaybe, size, member)
 import Data.Set (member)
 import Data.SelectTree
 import qualified Data.Indexable as I
-import Data.Indexable (Index, (>:), modifyByIndex, deleteByIndex, (!!!))
+import Data.Indexable (Index, (>:), deleteByIndex, (!!!), indexA)
 import Data.Abelian
 
 import Control.Monad.State
@@ -45,7 +45,7 @@ import qualified Editor.Scene.RenderOrdering as RenderOrdering
 -- in the selected layer
 searchSelectedObject :: EditorScene Sort_ -> Maybe (GroundsIndex, Index)
 searchSelectedObject s@EditorScene{selectedLayer} =
-    let indices = I.findIndices isSelected (content (editorObjects s !|| selectedLayer))
+    let indices = I.findIndices isSelected (((s ^. editorObjectsA) !|| selectedLayer) ^. contentA)
         isSelected o = lowerCorner o == cursor s
         lowerCorner o = editorPosition o
     in case indices of
@@ -79,7 +79,7 @@ initEditorScene sorts mPath pickledObjects = flip evalStateT empty $ do
 -- | sets the position of Nikki (more precisely all Nikkis in the EditorScene) to the given value.
 setNikkiPosition :: EditorPosition -> EditorScene Sort_ -> EditorScene Sort_
 setNikkiPosition position =
-    modifyEditorObjects (modifyMainLayer (fmap modifyNikki))
+    editorObjectsA .> mainLayerA ^: fmap modifyNikki
   where
     modifyNikki :: EditorObject Sort_ -> EditorObject Sort_
     modifyNikki o = if isNikki (editorSort o) then o{editorPosition = position} else o
@@ -136,11 +136,10 @@ normalMode DownArrow scene@EditorScene{cursor = (EditorPosition x y)} =
 
 -- add object
 normalMode key scene@EditorScene{cursor, selectedLayer} | aKey == key =
-    Just scene{editorObjects = objects'}
+    Just $ editorObjectsA .> layerA selectedLayer ^: mod $
+        scene
   where
-    objects' = modifySelectedLayer selectedLayer
-        (modifyContent (RenderOrdering.sortMainLayer . (>: new)))
-        (editorObjects scene)
+    mod = modifyContent (RenderOrdering.sortMainLayer . (>: new))
     new = mkEditorObject selectedSort cursor
     selectedSort = getSelected $ availableSorts scene
 
@@ -149,8 +148,9 @@ normalMode key scene@EditorScene{} | bKey == key =
     case selected scene of
         Nothing -> Just scene
         (Just (layerIndex, i)) ->
-            let newObjects = modifySelectedLayer layerIndex (modifyContent (deleteByIndex i)) (editorObjects scene)
-            in Just scene{editorObjects = newObjects}
+            let mod = modifyContent (deleteByIndex i)
+            in Just $ editorObjectsA .> layerA layerIndex ^: mod $
+                scene
 
 -- skip through available objects
 normalMode D scene@EditorScene{} =
@@ -160,9 +160,9 @@ normalMode A scene@EditorScene{} =
 
 -- cycle through objects under cursor
 -- (ordering of rendering will be automated)
-normalMode B scene@EditorScene{editorObjects, selected = Just (layerIndex, i)} =
-    let editorObjects' = modifySelectedLayer layerIndex (modifyContent (I.toHead i)) editorObjects
-    in Just scene{editorObjects = editorObjects'}
+normalMode B scene@EditorScene{selected = Just (layerIndex, i)} =
+    let mod = modifyContent (I.toHead i)
+    in Just $ editorObjectsA .> layerA layerIndex ^: mod $ scene
 
 -- change cursor step size
 
@@ -188,9 +188,9 @@ normalMode _ scene = Nothing
 -- * object edit mode
 
 objectEditModeUpdate :: Key -> EditorScene Sort_ -> Maybe (EditorScene Sort_)
-objectEditModeUpdate x s@EditorScene{editorMode = ObjectEditMode i, editorObjects} =
-    let oldMainLayer = mainLayer editorObjects
-        oldContent = content oldMainLayer
+objectEditModeUpdate x scene@EditorScene{editorMode = ObjectEditMode i} =
+    let oldMainLayer = scene ^. editorObjectsA ^. mainLayerA
+        oldContent = oldMainLayer ^. contentA
         oldObject = oldContent !!! i
         Just oldOemState = editorOEMState oldObject
         newOemState = mod oldOemState
@@ -198,13 +198,13 @@ objectEditModeUpdate x s@EditorScene{editorMode = ObjectEditMode i, editorObject
         Nothing -> Nothing
         Just x ->
             let newObject = oldObject{editorOEMState = newOemState}
-                newContent = modifyByIndex (const newObject) i oldContent
-                newMainLayer = oldMainLayer{content = newContent}
-                newEditorObjects = editorObjects{mainLayer = newMainLayer}
-            in Just s{editorObjects = newEditorObjects}
+                newContent = indexA i ^: (const newObject) $ oldContent
+                newMainLayer = contentA ^= newContent $ oldMainLayer
+                newEditorObjects = (scene ^. editorObjectsA){mainLayer = newMainLayer}
+            in Just $ editorObjectsA ^= newEditorObjects $ scene
   where
     mod :: OEMState -> Maybe OEMState
-    mod = oemUpdate s x
+    mod = oemUpdate scene x
 
 
 -- * selection mode
@@ -241,10 +241,10 @@ changeCursorStepSize S scene =
 
 -- * normalization of OEMStates
 normalizeOEMStates :: Sort sort o => EditorScene sort -> EditorScene sort
-normalizeOEMStates scene@EditorScene{editorObjects} =
-    scene{editorObjects = newEditorObjects}
+normalizeOEMStates scene =
+    editorObjectsA ^: fmap modEditorObject $
+    scene
   where
-    newEditorObjects = fmap modEditorObject editorObjects
     modEditorObject :: EditorObject sort -> EditorObject sort
     modEditorObject o@EditorObject{editorOEMState} =
         case editorOEMState of

@@ -41,8 +41,8 @@ renderObjectScene ptr offset s = do
     size <- fmap fromIntegral <$> sizeQPainter ptr
     clearScreen ptr black
     let -- the layers behind the currently selected Layer
-        currentBackgrounds = belowSelected (selectedLayer s) (editorObjects s)
-        currentLayer = editorObjects s !|| selectedLayer s
+        currentBackgrounds = belowSelected (selectedLayer s) (s ^. editorObjectsA)
+        currentLayer = (s ^. editorObjectsA) !|| selectedLayer s
     mapM_ (renderLayer ptr size offset . correctDistances currentLayer)
         (currentBackgrounds +: currentLayer)
 
@@ -61,7 +61,7 @@ renderLayer :: Sort sort o => Ptr QPainter -> Size Double -> Offset Double
     -> Layer (EditorObject sort) -> IO ()
 renderLayer ptr size offset layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
-    fmapM_ (renderEditorObject ptr modifiedOffset) (content layer)
+    fmapM_ (renderEditorObject ptr modifiedOffset) (layer ^. contentA)
 
 -- | renders the pink cursor box
 renderCursor' :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()
@@ -156,7 +156,7 @@ renderSelectionBox ptr offset scene (EditorPosition x2 y2) = do
 renderSelectedBoxes ptr offset scene =
     mapM_ (drawCopySelectedBox ptr offset) $ 
         filter (inCopySelection scene) $ I.toList $
-            content (editorObjects scene !|| selectedLayer scene)
+            (((scene ^. editorObjectsA) !|| selectedLayer scene) ^. contentA)
 
 drawCopySelectedBox ptr offset object = do
     let sort = editorSort object

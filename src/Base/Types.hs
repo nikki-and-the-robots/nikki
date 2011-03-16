@@ -19,6 +19,7 @@ import Data.Map hiding (size)
 import Data.ByteString (ByteString)
 import Data.Generics
 import Data.Generics.Uniplate.Data
+import Data.Accessor
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -108,7 +109,11 @@ data Scene object
         mode :: Mode
       }
   deriving Show
-  
+
+objectsA :: Accessor (Scene o) (Grounds o)
+objectsA = accessor objects (\ a r -> r{objects = a})
+
+
 -- * getter
 
 -- | returns the object currently controlled by the gamepad
@@ -131,9 +136,9 @@ getMainlayerObject s@Scene{objects} i = mainLayerIndexable objects !!! i
 
 -- * modifications
 
-modifyMainlayerObjectByIndex :: (o -> o) -> Index -> Scene o -> Scene o
-modifyMainlayerObjectByIndex f i =
-    modifyObjects (modifyMainLayer (modifyByIndex f i))
+mainlayerObjectByIndexA :: Index -> Accessor (Scene o) o
+mainlayerObjectByIndexA i =
+    objectsA .> mainLayerA .> contentA .> indexA i
 
 modifyObjects :: (Grounds a -> Grounds b) -> Scene a -> Scene b
 modifyObjects f s@Scene{objects} =
@@ -253,6 +258,9 @@ data EditorScene sort
         clipBoard :: [EditorObject sort]
     }
   deriving (Show, Typeable)
+
+editorObjectsA :: Accessor (EditorScene sort) (Grounds (EditorObject sort))
+editorObjectsA = accessor editorObjects (\ a r -> r{editorObjects = a})
 
 instance Show (EditorScene sort -> EditorPosition) where
     show _ = "<EditorScene -> EditorPosition>"

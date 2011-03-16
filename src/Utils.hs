@@ -8,6 +8,10 @@ module Utils (
     forM,
     forM_,
     when,
+    (^.),
+    (^=),
+    (^:),
+    (.>),
     module Utils,
   ) where
 
@@ -25,6 +29,7 @@ import Data.Traversable (Traversable, mapM)
 import Data.IORef
 import qualified Data.Set as Set
 import Data.Char
+import Data.Accessor
 
 import Text.Printf
 import Text.Logging

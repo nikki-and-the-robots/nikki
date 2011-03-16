@@ -9,7 +9,7 @@ module Game.Scene (
 
 import Prelude hiding (foldr)
 
-import Data.Indexable (Indexable, Index, findIndices, fmapMWithIndex, toList)
+import Data.Indexable (Indexable, Index, findIndices, fmapMWithIndex, toList, indexA)
 import Data.Map ((!))
 import qualified Data.Set as Set
 import Data.Foldable (foldr)
@@ -78,7 +78,8 @@ modifyTransitioned scene = do
     return $ case getControlledIndex scene of
       Just controlledIndex ->
         let now = spaceTime scene
-        in modifyMainlayerObjectByIndex (startControl now) controlledIndex scene
+        in objectsA .> mainLayerA .> contentA .> indexA controlledIndex ^:
+            (startControl now) $ scene
       Nothing -> scene
 
 
@@ -106,7 +107,7 @@ whichTerminalCollides Scene{objects, contacts} =
     findIndices p allTerminals
   where
     allTerminals :: Indexable (Maybe Terminal)
-    allTerminals = fmap unwrapTerminal $ content $ mainLayer objects
+    allTerminals = fmap unwrapTerminal $ (mainLayer objects ^. contentA)
 
     p :: Maybe Terminal -> Bool
     p Nothing = False
@@ -164,7 +165,8 @@ levelPassed scene =
       else
         Nothing
   where
-    allSwitches :: [Switch] = catMaybes $ map unwrapSwitch $ toList $ content $ mainLayer $ objects scene
+    allSwitches :: [Switch] =
+        catMaybes $ map unwrapSwitch $ toList $ (mainLayer (objects scene) ^. contentA)
     allTriggered = all triggered allSwitches
     now = spaceTime scene
 
@@ -216,7 +218,12 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
 
 -- | immutable copy (for the rendering thread)
 immutableCopy :: Scene Object_ -> IO (Scene Object_)
-immutableCopy = modifyObjectsM (modifyMainLayerM (fmapM Base.immutableCopy))
+immutableCopy scene = do
+    let old = scene ^. acc
+    new <- fmapM Base.immutableCopy old
+    return $ acc ^= new $ scene
+  where
+    acc = objectsA .> mainLayerA
 
 
 -- | well, renders the scene to the screen (to the max :)
@@ -255,7 +262,7 @@ renderLayer :: Ptr QPainter -> Size Double -> Offset Double -> Seconds
     -> Layer Object_ -> IO ()
 renderLayer ptr size offset now layer = do
     let modifiedOffset = calculateLayerOffset size offset layer
-    fmapM_ (\ o -> render_ o ptr modifiedOffset now) (content layer)
+    fmapM_ (\ o -> render_ o ptr modifiedOffset now) (layer ^. contentA)
 
 -- | renders the big osd images ("SUCCESS" or "FAILURE") at the end of levels
 renderLevelFinishedOSD :: Ptr QPainter -> Application -> Mode -> IO ()

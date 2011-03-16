@@ -11,6 +11,7 @@ import Data.List
 import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, traverse)
 import Data.Initial
+import Data.Accessor
 
 import Control.Applicative (pure)
 
@@ -28,6 +29,13 @@ data Grounds a = Grounds {
   }
     deriving (Show, Read, Data, Typeable)
 
+backgroundsA, foregroundsA :: Accessor (Grounds a) (Indexable (Layer a))
+backgroundsA = accessor backgrounds (\ a r -> r{backgrounds = a})
+foregroundsA = accessor foregrounds (\ a r -> r{foregrounds = a})
+
+mainLayerA :: Accessor (Grounds a) (Layer a)
+mainLayerA = accessor mainLayer (\ a r -> r{mainLayer = a})
+
 -- | one group of objects, positioned relatively to each other.
 -- to be refined
 data Layer a = Layer {
@@ -36,6 +44,9 @@ data Layer a = Layer {
     yDistance :: Double
   }
   deriving (Show, Read, Data, Typeable)
+
+contentA :: Accessor (Layer a) (Indexable a)
+contentA = accessor content (\ a r -> r{content = a})
 
 -- | Index for selecting one (Layer a) from a (Grounds a)
 data GroundsIndex
@@ -54,7 +65,7 @@ instance Functor Layer where
     fmap f l@Layer{content} = l{content = fmap f content}
 
 instance Foldable Layer where
-    foldMap f l = foldMap f (content l)
+    foldMap f l = foldMap f (l ^. contentA)
 
 instance Traversable Layer where
     traverse cmd (Layer content x y) = Layer <$> traverse cmd content <*> pure x <*> pure y
@@ -68,15 +79,21 @@ instance Initial (Layer a) where
 -- * construction
 
 mkMainLayer :: Indexable a -> Layer a
-mkMainLayer content = initial{content}
+mkMainLayer c = contentA ^= c $ initial
 
 
 -- * getter
 
 mainLayerIndexable :: Grounds a -> Indexable a
-mainLayerIndexable Grounds{mainLayer} = content mainLayer
+mainLayerIndexable Grounds{mainLayer} = mainLayer ^. contentA
 
--- | extracts the indexed Layer
+-- | access the indexed Layer
+layerA :: GroundsIndex -> Accessor (Grounds a) (Layer a)
+layerA (Backgrounds i) = backgroundsA .> indexA i
+layerA MainLayer = mainLayerA
+layerA (Foregrounds i) = foregroundsA .> indexA i
+
+-- | extract the indexed Layer
 (!||) :: Grounds a -> GroundsIndex -> Layer a
 Grounds{backgrounds} !|| (BackGrounds i) = backgrounds !!! i
 Grounds{mainLayer} !|| MainLayer = mainLayer
@@ -138,26 +155,8 @@ fromInt gs@(Grounds backgrounds _ foregrounds) i
     | otherwise = e "fromInt"
   where bgsLen = I.length backgrounds
 
+
 -- * modifications
-
--- | modifies the main Layer
-modifyMainLayer :: (Indexable a -> Indexable a) -> Grounds a -> Grounds a
-modifyMainLayer f = modifySelectedLayer MainLayer (modifyContent f)
-
-modifyMainLayerM :: Monad m => (Indexable a -> m (Indexable a)) -> Grounds a -> m (Grounds a)
-modifyMainLayerM f (Grounds backgrounds mainLayer foregrounds) = do
-    mainLayer' <- modifyContentM f mainLayer
-    return $ Grounds backgrounds mainLayer' foregrounds
-
-
--- | modifies the Layer given by the GroundsIndex
-modifySelectedLayer :: GroundsIndex -> (Layer a -> Layer a) -> Grounds a -> Grounds a
-modifySelectedLayer (BackGrounds i) f (Grounds backgrounds mainLayer foregrounds) =
-    Grounds (modifyByIndex f i backgrounds) mainLayer foregrounds
-modifySelectedLayer MainLayer f (Grounds backgrounds mainLayer foregrounds) =
-    Grounds backgrounds (f mainLayer) foregrounds
-modifySelectedLayer (ForeGrounds i) f (Grounds backgrounds mainLayer foregrounds) =
-    Grounds backgrounds mainLayer (modifyByIndex f i foregrounds)
 
 -- | modifies the GroundIndex according to the given function
 modifyGroundsIndex :: Grounds a -> (Int -> Int) -> GroundsIndex -> GroundsIndex
@@ -171,7 +170,7 @@ modifyContent f l@Layer{content} = l{content = f content}
 modifyContentM :: Monad m => (Indexable a -> m (Indexable b)) -> Layer a -> m (Layer b)
 modifyContentM f layer@Layer{content} = do
     content' <- f content
-    return layer{content= content'}
+    return layer{content = content'}
 
 
 -- * maps

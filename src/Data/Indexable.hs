@@ -25,9 +25,8 @@ module Data.Indexable (
 
     fmapMWithIndex,
 
-    modifyByIndex,
---     modifyByIndexM,
     deleteByIndex,
+    indexA,
     toHead,
     toLast,
     isIndexOf,
@@ -46,6 +45,7 @@ import Data.Traversable (Traversable, traverse)
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 import Data.Initial
+import Data.Accessor
 
 import Control.Applicative (Applicative, pure)
 import Control.Arrow
@@ -171,20 +171,13 @@ deleteByIndex :: Index -> Indexable a -> Indexable a
 deleteByIndex i (Indexable values keys) =
     Indexable (Map.delete (index i) values) (List.filter (/= i) keys)
 
-modifyByIndex :: (a -> a) -> Index -> Indexable a -> Indexable a
-modifyByIndex f i (Indexable values keys) | i `elem` keys =
-    Indexable (Map.adjust f (index i) values) keys
-
--- modifyByIndexM :: Monad m => (a -> m a) -> Index -> Indexable a -> m (Indexable a)
--- modifyByIndexM f (Index i) (Indexable list) =
---     inner f i list ~> Indexable
---   where
---     inner :: Monad m => (a -> m a) -> Int -> [Indexed a] -> m [Indexed a]
---     inner f 0 (Existent x : r) = do
---         x' <- f x
---         return $ Existent x' : r
---     inner f n (a : r) =
---         inner f (n - 1) r ~> (a :)
+indexA :: Index -> Accessor (Indexable a) a
+indexA i = accessor getter setter
+  where
+    getter (Indexable values keys) | i `elem` keys =
+        values ! index i
+    setter e (Indexable values keys) | i `elem` keys =
+        Indexable (Map.insert (index i) e values) keys
 
 -- | puts the indexed element first
 toHead :: Index -> Indexable a -> Indexable a

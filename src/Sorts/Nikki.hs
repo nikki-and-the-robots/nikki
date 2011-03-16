@@ -12,6 +12,7 @@ import Data.Generics
 import Data.Initial
 import Data.Foldable
 import Data.Maybe
+import Data.Indexable (indexA)
 
 import System.FilePath
 
@@ -68,10 +69,12 @@ defaultPixmap pixmaps = head (pixmaps ! "wait_right")
 -- Doesn't do anything, if the level is finished.
 modifyNikki :: (Nikki -> Nikki) -> Scene Object_ -> Scene Object_
 modifyNikki f scene | isGameMode (mode scene) =
-    modifyMainlayerObjectByIndex inner (nikki (mode scene)) scene
+    objectsA .> mainLayerA .> contentA .> indexA (nikki (mode scene)) ^:
+        mod $
+        scene
   where
-    inner :: Object_ -> Object_
-    inner (Object_ s o) =
+    mod :: Object_ -> Object_
+    mod (Object_ s o) =
         Object_ s' o'
       where
         Just s' = cast s
