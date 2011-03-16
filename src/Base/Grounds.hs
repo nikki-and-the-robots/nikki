@@ -95,9 +95,7 @@ layerA (Foregrounds i) = foregroundsA .> indexA i
 
 -- | extract the indexed Layer
 (!||) :: Grounds a -> GroundsIndex -> Layer a
-Grounds{backgrounds} !|| (Backgrounds i) = backgrounds !!! i
-Grounds{mainlayer} !|| Mainlayer = mainlayer
-Grounds{foregrounds} !|| (Foregrounds i) = foregrounds !!! i
+a !|| b = a ^. layerA b
 
 -- | returns the number of contained Layers
 -- PRE: isNormalized

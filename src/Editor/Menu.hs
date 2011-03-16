@@ -172,7 +172,7 @@ enterOEM app play mvar scene = do -- maybe monad
     selectedObject <- getSelectedObject scene
     _ <- objectEditMode $ editorSort $ selectedObject
     let modObjects = layerA layerIndex ^:
-            modifyContent (indexA i ^: modifyOEMState mod)
+            modifyContent (indexA i .> editorOEMStateA ^: fmap mod)
         mod :: OEMState -> OEMState
         mod = oemEnterMode scene
     Just $ edit $

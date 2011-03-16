@@ -85,7 +85,7 @@ instance Sort BSort Battery where
             -- the battery is consumed by nikki (TODO: delete battery)
             removeChipmunk $ chipmunk o
             let sceneChange = modifyNikki addBatteryPower . removeBattery
-                removeBattery = modifyObjects (mainlayerA .> contentA ^: (deleteByIndex i))
+                removeBattery = objectsA .> mainlayerA .> contentA ^: deleteByIndex i
             return (sceneChange, Consumed $ chipmunk o)
     update sort mode now contacts cd i o = return (id, o) -- no change
 

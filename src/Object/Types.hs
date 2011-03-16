@@ -75,11 +75,6 @@ mkEditorObject sort pos =
   where
     oemState = fmap (\ methods -> oemInitialize methods pos) $ objectEditMode sort
 
-modifyOEMState :: (OEMState -> OEMState) -> EditorObject sort -> EditorObject sort
-modifyOEMState f eo =
-    case editorOEMState eo of
-         Just x -> eo{editorOEMState = Just $ f x}
-
 
 -- * pickelable object
 

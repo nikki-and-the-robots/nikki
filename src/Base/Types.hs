@@ -113,6 +113,9 @@ data Scene object
 objectsA :: Accessor (Scene o) (Grounds o)
 objectsA = accessor objects (\ a r -> r{objects = a})
 
+modeA :: Accessor (Scene o) Mode
+modeA = accessor mode (\ a r -> r{mode = a})
+
 
 -- * getter
 
@@ -132,28 +135,10 @@ getControlledIndex Scene{mode} =
         RobotMode{robot} -> Just robot
         LevelFinished{} -> Nothing
 
--- | returns an object from the mainlayer
+-- | accesses an object from the mainlayer
 mainlayerObjectA :: Index -> Accessor (Scene o) o
 mainlayerObjectA i =
     objectsA .> mainlayerA .> contentA .> indexA i
-
-
--- * modifications
-
-mainlayerObjectByIndexA :: Index -> Accessor (Scene o) o
-mainlayerObjectByIndexA i =
-    objectsA .> mainlayerA .> contentA .> indexA i
-
-modifyObjects :: (Grounds a -> Grounds b) -> Scene a -> Scene b
-modifyObjects f s@Scene{objects} =
-    s{objects = f objects}
-
-modifyObjectsM :: Monad m => (Grounds a -> m (Grounds b)) -> Scene a -> m (Scene b)
-modifyObjectsM op s@Scene{objects} =
-    op objects >>= \ new -> return s{objects = new}
-
-modifyMode :: (Mode -> Mode) -> Scene o -> Scene o
-modifyMode f s@Scene{mode} = s{mode = f mode}
 
 
 data CameraState

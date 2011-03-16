@@ -150,7 +150,7 @@ nikkiMovedAwayFromTerminal scene@Scene{mode} =
 
 gameOver :: Scene Object_ -> Maybe (Scene Object_)
 gameOver scene | isGameOver =
-    Just $ modifyMode (const $ LevelFinished now Failed) scene
+    Just $ modeA ^: (const $ LevelFinished now Failed) $ scene
   where
     now = spaceTime scene
     isGameOver =
@@ -161,7 +161,7 @@ gameOver _ = Nothing
 levelPassed :: Scene Object_ -> Maybe (Scene Object_)
 levelPassed scene =
     if allTriggered && isGameMode (mode scene) then
-        Just $ modifyMode (const $ LevelFinished now Passed) scene
+        Just $ modeA ^: (const $ LevelFinished now Passed) $ scene
       else
         Nothing
   where
