@@ -30,8 +30,11 @@ import Graphics.Qt
 import Utils
 
 import Base.Configuration as Configuration
+import Base.Constants
 import Base.Types
 import Base.Monad
+import Base.Prose
+import Base.Font
 
 
 -- | returns the seconds since epoch start
@@ -44,7 +47,7 @@ data FpsState
         averageSpan :: !(Maybe Double),
         oldTime :: Maybe Double,
         logHandle :: Maybe Handle,
-        displayValue :: IORef String
+        displayValue :: IORef Prose
     }
     | NotActivated
 
@@ -58,28 +61,28 @@ initialFPSState = do
     if graphicsProfiling_ then do
 --         logHandle <- openFile logFile WriteMode
 --         return $ FpsState 0 Nothing Nothing logHandle
-        displayValue <- io $ newIORef ""
+        displayValue <- io $ newIORef (pVerbatim "")
         return $ FpsState 0 Nothing Nothing Nothing displayValue
       else
         return NotActivated
 
 -- does the actual work. Must be called for every frame
-tickFPS :: Ptr QPainter -> FpsState -> IO FpsState
-tickFPS ptr (FpsState counter avg Nothing logHandle displayValue) = do
+tickFPS :: Font -> Ptr QPainter -> FpsState -> IO FpsState
+tickFPS font ptr (FpsState counter avg Nothing logHandle displayValue) = do
     -- first time: QTime has to be constructed
     now <- getNow
     return $ FpsState counter avg (Just now) logHandle displayValue
-tickFPS ptr (FpsState counter avg (Just oldTime) logHandle displayValue) = do
+tickFPS font ptr (FpsState counter avg (Just oldTime) logHandle displayValue) = do
         now <- getNow
         let elapsed = now - oldTime
         log elapsed
         let avg' = calcAvg counter avg elapsed
         r <- handle (FpsState (counter + 1) (Just avg') (Just now) logHandle displayValue)
-        io (renderFPS ptr =<< readIORef displayValue)
+        io (renderFPS font ptr =<< readIORef displayValue)
         return r
   where
     handle x@(FpsState 10 (Just avg) qtime lf dv) = do
-        writeIORef dv (printf "FPS: %3.1f" (1 / avg))
+        writeIORef dv (pVerbatim $ printf "FPS: %3.1f" (1 / avg))
         return $ FpsState 0 Nothing qtime lf dv
     handle x = return x
 
@@ -92,12 +95,14 @@ tickFPS ptr (FpsState counter avg (Just oldTime) logHandle displayValue) = do
     log elapsed = whenMaybe logHandle $ \ h -> 
                     hPutStrLn h (show elapsed)
 -- no FPS activated (NotActivated)
-tickFPS _ x = return x
+tickFPS _ _ x = return x
 
-renderFPS :: Ptr QPainter -> String -> IO ()
-renderFPS ptr fps = do
+renderFPS :: Font -> Ptr QPainter -> Prose -> IO ()
+renderFPS font ptr fps = do
     resetMatrix ptr
-    drawText ptr (Position 30 30) False fps
+    size <- fmap fromIntegral <$> sizeQPainter ptr
+    translate ptr (Position (fromUber 2) (height size - fontHeight font))
+    void $ renderLineSimple font Nothing white fps ptr
 
 terminateFpsState :: FpsState -> IO ()
 terminateFpsState FpsState{logHandle = Just h} = do
@@ -130,9 +135,9 @@ initialFPSRef :: M FPSRef
 initialFPSRef =
     initialFPSState >>= io . newIORef >>= return . FPSRef
 
-tickFPSRef :: Ptr QPainter -> FPSRef -> IO ()
-tickFPSRef ptr (FPSRef ref) =
-    readIORef ref >>= tickFPS ptr >>= writeIORef ref
+tickFPSRef :: Font -> Ptr QPainter -> FPSRef -> IO ()
+tickFPSRef font ptr (FPSRef ref) =
+    readIORef ref >>= tickFPS font ptr >>= writeIORef ref
 
 terminateFPSRef :: FPSRef -> IO ()
 terminateFPSRef (FPSRef ref)  =
