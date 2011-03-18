@@ -2,6 +2,8 @@
 module Base.GlobalShortcuts (handleGlobalShortcuts) where
 
 
+import Data.Set
+
 import Control.Monad
 
 import System.Exit
@@ -14,18 +16,23 @@ import Base.Types
 import Base.Monad
 
 
-handleGlobalShortcuts :: Application_ s -> [AppEvent] -> M [AppEvent]
-handleGlobalShortcuts app =
-    filterM (handler app)
+handleGlobalShortcuts :: Application_ s -> Set Button -> [AppEvent] -> M [AppEvent]
+handleGlobalShortcuts app held =
+    filterM (handler app held)
 
-handler :: Application_ s -> AppEvent -> M Bool
-handler app x =
-    case shortcuts app x of
+handler :: Application_ s -> Set Button -> AppEvent -> M Bool
+handler app held x =
+    case shortcuts app held x of
         Nothing -> return True
         (Just h) -> h >> return False
 
-shortcuts :: Application_ s -> AppEvent -> Maybe (M ())
-shortcuts app x = case x of
+shortcuts :: Application_ s -> Set Button -> AppEvent -> Maybe (M ())
+shortcuts app held e = case e of
     Base.Types.CloseWindow -> Just $ io $ exitWith ExitSuccess
-    (Press (KeyboardButton F _)) -> Just $ swapFullScreen app
+    (Press k) | fullscreenSwitch -> Just $ swapFullScreen app
+      where
+        fullscreenSwitch =
+            (isKey Return k && fany (isKey Alt) held) ||
+            (isKey F k && fany (isKey Ctrl) held) ||
+            (isKey F11 k)
     _ -> Nothing

@@ -35,7 +35,7 @@ pollAppEvents :: Application_ s -> KeyPoller -> M ControlData
 pollAppEvents app poller = do
     (unpolledEvents, keyState) <- io $ readIORef keyStateRef
     qEvents <- io $ pollEvents poller
-    appEvents <- handleGlobalShortcuts app $
+    appEvents <- handleGlobalShortcuts app keyState $
         map (toAppEvent keyState . Left) qEvents
     let keyState' = foldr (>>>) id (map updateKeyState appEvents) keyState
     io $ writeIORef keyStateRef ([], keyState')

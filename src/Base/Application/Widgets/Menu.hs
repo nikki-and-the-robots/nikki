@@ -79,12 +79,13 @@ menuWithPreChoice app mTitle mParent children preChoice =
             x -> return $ inner items
 
     -- B button (keyboard or gamepad) or Escape
-    isBackButton x = isBButton x || keyboardKey x == Just Escape
+    isBackButton x = isBButton x || isKey Escape x
 
     -- Enter or A button
     isMenuConfirmation x =
         isAButton x ||
-        keyboardKey x `elem` (map Just [Return, Enter])
+        isKey Return x ||
+        isKey Enter x
 
     font_ = alphaNumericFont $ applicationPixmaps app
     render items ptr = do
