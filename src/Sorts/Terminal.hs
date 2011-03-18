@@ -412,7 +412,7 @@ renderTerminalOSD ptr now scene@Scene{mode = mode@Base.TerminalMode{}} =
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
         (Just sort, Just terminal) -> do
-            clearScreen ptr $ modifyAlpha (const $ 0.6) black
+            clearScreen ptr $ alphaA ^= 0.6 $ black
             windowSize <- fmap fromIntegral <$> sizeQPainter ptr
             let pixmaps = osdPixmaps sort
                 position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)
@@ -561,8 +561,8 @@ renderOEMOSDs :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sor
     -> IO ()
 renderOEMOSDs ptr offset scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
-    renderRobotBox (modifyAlpha (const 0.5) orange) (getMainLayerEditorObject scene selected)
-    mapM_ (renderRobotBox (modifyAlpha (const 0.3) Qt.yellow)) $ map (getMainLayerEditorObject scene) $
+    renderRobotBox (alphaA ^= 0.5 $ orange) (getMainLayerEditorObject scene selected)
+    mapM_ (renderRobotBox (alphaA ^= 0.3 $ Qt.yellow)) $ map (getMainLayerEditorObject scene) $
         attached
   where
     renderRobotBox :: Sort sort o => Color -> EditorObject sort -> IO ()

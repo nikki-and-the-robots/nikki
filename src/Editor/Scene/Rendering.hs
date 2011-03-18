@@ -71,7 +71,7 @@ renderCursor' ptr offset scene = do
         size_ = size sort
         pos = offset +~ editorPosition2QtPosition sort cursorPos
     resetMatrix ptr
-    drawColoredBox ptr pos size_ 5 (modifyAlpha (const 0.5) pink)
+    drawColoredBox ptr pos size_ 5 (alphaA ^= 0.5 $ pink)
 
 
 -- calculates the rendering position for all objects (does the clipping, etc.)

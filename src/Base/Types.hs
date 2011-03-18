@@ -251,6 +251,10 @@ data EditorScene sort
 editorObjectsA :: Accessor (EditorScene sort) (Grounds (EditorObject sort))
 editorObjectsA = accessor editorObjects (\ a r -> r{editorObjects = a})
 
+availableSortsA :: Accessor (EditorScene sort) (SelectTree sort)
+availableSortsA = accessor availableSorts (\ a r -> r{availableSorts = a})
+
+
 instance Show (EditorScene sort -> EditorPosition) where
     show _ = "<EditorScene -> EditorPosition>"
 
@@ -294,16 +298,14 @@ data EditorObject sort
       }
   deriving Show
 
+editorPositionA :: Accessor (EditorObject sort) EditorPosition
+editorPositionA = accessor editorPosition (\ a r -> r{editorPosition = a})
+
 editorOEMStateA :: Accessor (EditorObject s) (Maybe OEMState)
 editorOEMStateA = accessor editorOEMState (\ a r -> r{editorOEMState = a})
 
 instance Functor EditorObject where
     fmap f (EditorObject sort pos Nothing) = EditorObject (f sort) pos Nothing
-
--- | modify the EditorPosition of an EditorObject
-modifyEditorPosition :: (EditorPosition -> EditorPosition)
-    -> EditorObject s -> EditorObject s
-modifyEditorPosition f o@EditorObject{editorPosition} = o{editorPosition = f editorPosition}
 
 -- | modifies all EditorPositions of the OEMState of EditorObjects
 modifyOEMEditorPositions :: (EditorPosition -> EditorPosition)

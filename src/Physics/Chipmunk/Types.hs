@@ -247,10 +247,6 @@ vectorX (Vector x y) = x
 vectorY :: Vector -> Double
 vectorY (Vector x y) = y
 
--- | applies a given function to the length of a Vector
-modifyLen :: (Double -> Double) -> Vector -> Vector
-modifyLen f v = scale (normalize v) (f (len v))
-
 -- | folds the angle of a body to (- pi, pi)
 foldAngle :: Double -> Double
 foldAngle = foldToRange (- pi, pi)

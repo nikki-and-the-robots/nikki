@@ -5,6 +5,7 @@ module Graphics.Qt.Types where
 import Data.Generics
 import Data.Binary
 import Data.Abelian
+import Data.Accessor
 
 import Utils
 
@@ -60,12 +61,31 @@ instance PP p => PP (Size p) where
     pp (Size x y) = unwords ["Size", pp x, pp y]
 
 data Color = QtColor {
-    redComponent :: QtInt,
-    greenComponent :: QtInt,
-    blueComponent :: QtInt,
-    alphaComponent :: QtInt
+    _red :: QtInt,
+    _green :: QtInt,
+    _blue :: QtInt,
+    _alpha :: QtInt
   }
     deriving (Eq, Ord, Show)
+
+alphaA :: Accessor Color Double
+alphaA = accessor (byteIntToDouble . _alpha) (\ a r -> r{_alpha = doubleToByteInt a})
+
+opaqueColor :: Double -> Double -> Double -> Color
+opaqueColor r g b =
+    QtColor
+        (doubleToByteInt r)
+        (doubleToByteInt g)
+        (doubleToByteInt b)
+        (doubleToByteInt 1)
+
+doubleToByteInt :: Double -> QtInt
+doubleToByteInt d | d >= 0 && d <= 1 =
+    truncate (d * 255)
+
+byteIntToDouble :: QtInt -> Double
+byteIntToDouble x | x >= 0 && x <= 255 =
+    fromIntegral x / 255
 
 
 -- * utils

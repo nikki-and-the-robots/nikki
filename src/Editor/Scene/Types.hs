@@ -78,10 +78,8 @@ addDefaultForeground s@EditorScene{editorObjects = (Grounds backgrounds mainLaye
   where
     objects' = Grounds backgrounds mainLayer (initial <: foregrounds)
 
--- * modification
 
-modifySorts :: (SelectTree Sort_ -> SelectTree Sort_) -> EditorScene Sort_ -> EditorScene Sort_
-modifySorts f scene@EditorScene{availableSorts} = scene{availableSorts = f availableSorts}
+-- * modification
 
 -- | returns if an object is currently in the copy selection
 inCopySelection :: Sort s x => EditorScene s -> EditorObject s -> Bool
@@ -132,7 +130,7 @@ findCopySelectionIndices scene =
 
 moveSelectionToZero :: EditorScene Sort_ -> EditorObject Sort_ -> EditorObject Sort_
 moveSelectionToZero scene@EditorScene{editorMode = SelectionMode (EditorPosition x2 y2)} =
-    modifyEditorPosition (-~ EditorPosition x y) >>>
+    editorPositionA ^: (-~ EditorPosition x y) >>>
     modifyOEMEditorPositions (-~ EditorPosition x y)
   where
     x = min x1 x2
@@ -147,6 +145,6 @@ pasteClipboard scene =
     addClipboard :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
     addClipboard = 
         foldr (>>>) id $ map (\ o ix -> ix >: o) $
-        map (modifyEditorPosition (+~ cursor scene)) $
+        map (editorPositionA ^: (+~ cursor scene)) $
         map (modifyOEMEditorPositions (+~ cursor scene)) $
         clipBoard scene

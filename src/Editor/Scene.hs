@@ -155,9 +155,9 @@ normalMode key scene@EditorScene{} | bKey == key =
 
 -- skip through available objects
 normalMode D scene@EditorScene{} =
-    Just $ modifySorts selectNext scene
+    Just $ availableSortsA ^: selectNext $ scene
 normalMode A scene@EditorScene{} =
-    Just $ modifySorts selectPrevious scene
+    Just $ availableSortsA ^: selectPrevious $ scene
 
 -- cycle through objects under cursor
 -- (ordering of rendering will be automated)

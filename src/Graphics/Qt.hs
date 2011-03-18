@@ -101,27 +101,6 @@ turquoise :: Color = QtColor 72 214 242 255
 transparent :: Color = QtColor 0 0 0 0
 
 
-opaqueColor :: Double -> Double -> Double -> Color
-opaqueColor r g b =
-    QtColor
-        (doubleToByteInt r)
-        (doubleToByteInt g)
-        (doubleToByteInt b)
-        (doubleToByteInt 1)
-
-doubleToByteInt :: Double -> QtInt
-doubleToByteInt d | d >= 0 && d <= 1 =
-    truncate (d * 255)
-
-byteIntToDouble :: QtInt -> Double
-byteIntToDouble x | x >= 0 && x <= 255 =
-    fromIntegral x / 255
-
-modifyAlpha :: (Double -> Double) -> Color -> Color
-modifyAlpha f (QtColor r g b a) =
-    QtColor r g b (doubleToByteInt $ f $ byteIntToDouble a)
-
-
 -- * convenience drawing
 
 -- | clears the whole screen

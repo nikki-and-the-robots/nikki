@@ -9,6 +9,7 @@ import Safe
 import Data.Typeable
 import Data.Abelian
 import Data.Generics
+import Data.Accessor
 
 import System.FilePath
 
@@ -212,6 +213,9 @@ data OEMPath = OEMPath {
   }
     deriving (Show, Typeable, Data)
 
+oemCursorA :: Accessor OEMPath EditorPosition
+oemCursorA = accessor oemCursor (\ a r -> r{oemCursor = a})
+
 instance IsOEMState OEMPath where
     oemEnterMode _ = id
     oemUpdate _ = updateOEMPath
@@ -231,9 +235,6 @@ unpickle sort (readMay -> Just ((cursor, (start : path), active) :: PickleType))
 toPath :: PSort -> OEMPath -> Path
 toPath sort (OEMPath _ _ cursor path active) =
     mkPath active $ map (epToCenterVector sort) (getPathList path)
-
-modifyCursor :: (EditorPosition -> EditorPosition) -> OEMPath -> OEMPath
-modifyCursor f p = p{oemCursor = f (oemCursor p)}
 
 -- | use the position of the object as first node in Path
 initialState :: PSort -> EditorPosition -> OEMPath
@@ -270,10 +271,10 @@ removePathPoint point (OEMPathPositions start path) =
 updateOEMPath :: Key -> OEMPath -> Maybe OEMPath
 updateOEMPath key oem@(OEMPath sort cursorStep cursor path active) =
     case key of
-        LeftArrow -> Just $ modifyCursor (-~ EditorPosition cursorStepF 0) oem
-        RightArrow -> Just $ modifyCursor (+~ EditorPosition cursorStepF 0) oem
-        UpArrow -> Just $ modifyCursor (-~ EditorPosition 0 cursorStepF) oem
-        DownArrow -> Just $ modifyCursor (+~ EditorPosition 0 cursorStepF) oem
+        LeftArrow -> Just $ oemCursorA ^: (-~ EditorPosition cursorStepF 0) $ oem
+        RightArrow -> Just $ oemCursorA ^: (+~ EditorPosition cursorStepF 0) $ oem
+        UpArrow -> Just $ oemCursorA ^: (-~ EditorPosition 0 cursorStepF) $ oem
+        DownArrow -> Just $ oemCursorA ^: (+~ EditorPosition 0 cursorStepF) $ oem
         -- append new path node
         k | k == aKey -> Just $ OEMPath sort cursorStep cursor (addPathPoint cursor path) active
         -- delete path node
@@ -314,7 +315,7 @@ drawPathNode :: PSort -> Ptr QPainter -> EditorPosition -> IO ()
 drawPathNode sort ptr n =
     eraseRect ptr (fmap round $ epToPosition sort n)
         (fmap round $ size sort)
-        (modifyAlpha (* 0.4) yellow)
+        (alphaA ^: (* 0.4) $ yellow)
 
 
 -- * oem help text
