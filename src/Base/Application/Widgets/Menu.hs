@@ -72,15 +72,19 @@ menuWithPreChoice app mTitle mParent children preChoice =
         case event of
             Press e | isUp e -> return $ inner $ selectPrevious items
             Press e | isDown e -> return $ inner $ selectNext items
-            Press e | isAButton e -> return $ snd $ selected items
+            Press e | isMenuConfirmation e -> return $ snd $ selected items
             Press e | isBackButton e -> case mParent of
                 Just parent -> return parent
                 Nothing -> return $ inner items
             x -> return $ inner items
 
     -- B button (keyboard or gamepad) or Escape
-    isBackButton (KeyboardButton Escape _) = True
-    isBackButton x = isBButton x
+    isBackButton x = isBButton x || keyboardKey x == Just Escape
+
+    -- Enter or A button
+    isMenuConfirmation x =
+        isAButton x ||
+        keyboardKey x `elem` (map Just [Return, Enter])
 
     font_ = alphaNumericFont $ applicationPixmaps app
     render items ptr = do

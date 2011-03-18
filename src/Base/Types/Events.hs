@@ -26,6 +26,10 @@ data Button
 --     | GamepadButton TODO
   deriving (Eq, Ord, Show)
 
+keyboardKey :: Button -> Maybe Key
+keyboardKey (KeyboardButton k _) = Just k
+keyboardKey _ = Nothing
+
 data ControlData = ControlData {
     events :: [AppEvent],
     held :: Set Button
