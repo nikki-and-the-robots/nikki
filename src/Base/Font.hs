@@ -42,8 +42,13 @@ import Base.Font.ColorVariant
 standardFontDir :: FilePath
 standardFontDir = "png" </> "font"
 
-standardFontColor :: Color
-standardFontColor = turquoise
+fontColors :: [Color]
+fontColors =
+    turquoise :
+    white :
+    []
+
+standardFontColor = head fontColors
 
 -- * querying
 
@@ -142,7 +147,7 @@ loadAlphaNumericFont = do
 -- Does only load the standard color variant at the moment.
 toFont :: [(Either BS.ByteString ErrorSymbol, Pixmap)] -> IO Font
 toFont m =
-    toStandardColorVariant $ ColorVariant sortedLetters errorSymbol
+    toColorVariants $ ColorVariant sortedLetters errorSymbol
   where
     letters = fmap (\ k -> (k, lookupJust (Left k) m)) $ lefts $ fmap fst m
     sortedLetters = reverse $ sortBy shortestKeyFirst letters
@@ -152,25 +157,26 @@ toFont m =
     shortestKeyFirst = withView (BS.length . fst) compare
 
 -- | converts the loaded color variant (white/black) to
--- the standardColorVariant (standardFontColor/transparent)
--- and returns the initial Font.
+-- the standardColorVariants
+-- and returns the Font.
 -- Also frees the loaded colorVariant.
-toStandardColorVariant :: ColorVariant -> IO Font
-toStandardColorVariant loadedVariant = do
+toColorVariants :: ColorVariant -> IO Font
+toColorVariants loadedVariant = do
     qBlack <- colorToQRgb black
     qWhite <- colorToQRgb white
     qTransparent <- colorToQRgb transparent
-    qStandardFontColor <- colorToQRgb standardFontColor
-    let colorMapping :: QRgb -> QRgb
-        colorMapping c =
+    let colorMapping :: QRgb -> QRgb -> QRgb
+        colorMapping foreground c =
             if c == qBlack then qTransparent else
-            if c == qWhite then qStandardFontColor else
+            if c == qWhite then foreground else
             error "font pixmaps should consist of black and white only."
 
-    standardColorVariant <- newColorVariant colorMapping loadedVariant
+    colorVariants <- forM fontColors $ \ foreground -> do
+        qForeground <- colorToQRgb foreground
+        variant <- newColorVariant (colorMapping qForeground) loadedVariant
+        return (foreground, variant)
     freeColorVariant loadedVariant
-    return $ Font $ fromList [(standardFontColor, standardColorVariant)]
-  where
+    return $ Font $ fromList colorVariants
 
 data ErrorSymbol = ErrorSymbol
   deriving (Eq, Ord)
