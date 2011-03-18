@@ -60,7 +60,7 @@ Executable testsuite
         , random
         , process
         , MonadCatchIO-transformers >= 0.2.2.2
-
+        , data-accessor >= 0.2.1.7
 
     extra-libraries:
         qtwrapper, QtOpenGL
