@@ -349,10 +349,8 @@ wordsBy seps ll = inner [] ll
             inner (a : akk) r
 
 cartesian :: [a] -> [b] -> [(a, b)]
-cartesian a b = do
-    a' <- a
-    b' <- b
-    return (a', b')
+cartesian al bl =
+    concatMap (\ b -> map (\ a -> (a, b)) al) bl
 
 -- | returns every combination of given elements once.
 completeEdges :: [a] -> [(a, a)]
