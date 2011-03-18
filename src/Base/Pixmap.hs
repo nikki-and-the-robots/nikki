@@ -42,7 +42,7 @@ copyPixmap (Pixmap pix size offset) = do
 
 -- | Change the pixel colors of a given pixmap using the given function.
 -- Not very efficient, since the Pixmap is converted to a QImage in between.
-mapPixels :: (Color -> Color) -> Pixmap -> IO Pixmap
+mapPixels :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
 mapPixels f (Pixmap pix size offset) = do
     image <- toImageQPixmap pix
     destroyQPixmap pix

@@ -286,14 +286,14 @@ foreign import ccall heightQImage :: Ptr QImage -> IO QtInt
 sizeQImage :: Ptr QImage -> IO (Size QtInt)
 sizeQImage ptr = Size <$> widthQImage ptr <*> heightQImage ptr
 
-pixelQImage :: Ptr QImage -> (QtInt, QtInt) -> IO Color
-pixelQImage ptr (x, y) = qRgbToColor =<< cppPixelQImage ptr x y
+pixelQImage :: Ptr QImage -> (QtInt, QtInt) -> IO QRgb
+pixelQImage ptr (x, y) = cppPixelQImage ptr x y
 foreign import ccall "pixelQImage" cppPixelQImage ::
     Ptr QImage -> QtInt -> QtInt -> IO QRgb
 
-setPixelQImage :: Ptr QImage -> (QtInt, QtInt) -> Color -> IO ()
+setPixelQImage :: Ptr QImage -> (QtInt, QtInt) -> QRgb -> IO ()
 setPixelQImage ptr (x, y) color =
-    cppSetPixelQImage ptr x y =<< colorToQRgb color
+    cppSetPixelQImage ptr x y color
 foreign import ccall "setPixelQImage" cppSetPixelQImage ::
     Ptr QImage -> QtInt -> QtInt -> QRgb -> IO ()
 

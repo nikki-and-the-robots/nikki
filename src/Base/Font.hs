@@ -157,15 +157,20 @@ toFont m =
 -- Also frees the loaded colorVariant.
 toStandardColorVariant :: ColorVariant -> IO Font
 toStandardColorVariant loadedVariant = do
+    qBlack <- colorToQRgb black
+    qWhite <- colorToQRgb white
+    qTransparent <- colorToQRgb transparent
+    qStandardFontColor <- colorToQRgb standardFontColor
+    let colorMapping :: QRgb -> QRgb
+        colorMapping c =
+            if c == qBlack then qTransparent else
+            if c == qWhite then qStandardFontColor else
+            error "font pixmaps should consist of black and white only."
+
     standardColorVariant <- newColorVariant colorMapping loadedVariant
     freeColorVariant loadedVariant
     return $ Font $ fromList [(standardFontColor, standardColorVariant)]
   where
-    colorMapping :: Color -> Color
-    colorMapping c =
-        if c == black then transparent else
-        if c == white then standardFontColor else
-        error "font pixmaps should consist of black and white only."
 
 data ErrorSymbol = ErrorSymbol
   deriving (Eq, Ord)

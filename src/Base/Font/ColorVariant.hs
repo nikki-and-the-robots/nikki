@@ -15,13 +15,13 @@ import Base.Pixmap
 
 -- | creates a new colorvariant as a copy of the given
 -- colorvariant while mapping the colors using the given function
-newColorVariant :: (Color -> Color) -> ColorVariant -> IO ColorVariant
+newColorVariant :: (QRgb -> QRgb) -> ColorVariant -> IO ColorVariant
 newColorVariant colorMapping (ColorVariant glyphs errorSymbol) = do
     newGlyphs <- fmapM (\ (a, b) -> tuple a <$> copyAndColorPix colorMapping b) glyphs
     newErrorSymbol <- copyAndColorPix colorMapping errorSymbol
     return $ ColorVariant newGlyphs newErrorSymbol
 
-copyAndColorPix :: (Color -> Color) -> Pixmap -> IO Pixmap
+copyAndColorPix :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
 copyAndColorPix colorMapping pix = do
     new <- copyPixmap pix
     mapPixels colorMapping new
