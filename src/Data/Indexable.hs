@@ -81,12 +81,7 @@ instance Foldable Indexable where
         inner [] = mempty
 
 instance Traversable Indexable where
-    traverse cmd (Indexable values keys) = Indexable <$> inner keys <*> pure keys
-      where
-        inner (k : r) =
-            Map.insert (index k) <$> cmd (values ! index k) <*> inner r
-        inner [] = pure Map.empty
-
+    traverse cmd (Indexable values keys) = Indexable <$> traverse cmd values <*> pure keys
 
 fmapMWithIndex :: Monad m => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)
