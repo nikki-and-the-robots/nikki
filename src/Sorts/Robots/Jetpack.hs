@@ -45,8 +45,8 @@ sorts = do
   where
     loadJetpackPng :: String -> RM Pixmap
     loadJetpackPng =
-        fromPure mkJetpackPngPath >>>>
-        getDataFileName >>>>
+        return . mkJetpackPngPath >=>
+        getDataFileName >=>
         (io . loadJetpackPixmap)
 
 mkJetpackPngPath name = pngDir </> "robots" </> "jetpack" </> name <.> "png"
@@ -107,8 +107,8 @@ instance Sort JSort Jetpack where
     getControlledChipmunk _ = chipmunk
 
     updateNoSceneChange sort mode now contacts (isControlled, cd) =
-        fromPure (jupdate (isControlled, cd)) >>>>
-        fromPure (updateRenderState now isControlled) >>>>
+        return . jupdate (isControlled, cd) >=>
+        return . updateRenderState now isControlled >=>
         passThrough controlToChipmunk
 
     render = renderJetpack

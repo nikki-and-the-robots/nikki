@@ -109,10 +109,10 @@ freeAllSorts sorts = do
 
 initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
 initScene space =
-    fromPure (mainLayerA .> contentA ^: RenderOrdering.sortMainLayer) >>>>
-    fromPure groundsMergeTiles >>>>
-    fromPure selectNikki >>>>
-    secondKleisli (initializeObjects space) >>>>
+    return . (mainLayerA .> contentA ^: RenderOrdering.sortMainLayer) >=>
+    return . groundsMergeTiles >=>
+    return . selectNikki >=>
+    secondKleisli (initializeObjects space) >=>
     mkScene space
 
 -- | select the last set nikki and delete all duplicates

@@ -107,8 +107,8 @@ instance Sort PSort Platform where
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
     updateNoSceneChange sort mode now contacts cd =
-        control cd >>>>
-        fromPure updateLogic >>>>
+        control cd >=>
+        return . updateLogic >=>
         passThrough applyPlatformForce
 
     render platform sort ptr offset now = do

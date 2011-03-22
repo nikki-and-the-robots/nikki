@@ -47,8 +47,8 @@ import Sorts.Switch
 
 stepScene :: Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
 stepScene space controlData =
-    updateScene controlData >>>>
-    stepSpace space >>>>
+    updateScene controlData >=>
+    stepSpace space >=>
     transition controlData
 
 
@@ -211,7 +211,7 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     -- update function for updates outside the mainLayer
     -- NOTE: SceneChanges currently only affect the main layer
     updateMultiLayerObjects :: Index -> Object_ -> IO Object_
-    updateMultiLayerObjects i o = update DummySort mode now contacts (False, cd) i o >>= fromPure snd
+    updateMultiLayerObjects i o = update DummySort mode now contacts (False, cd) i o >>= return . snd
 
 
 -- * rendering

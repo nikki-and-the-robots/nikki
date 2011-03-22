@@ -52,7 +52,7 @@ loadPixmaps = do
   where
     load :: (String, Int) -> RM (String, [Pixmap])
     load (name, n) = do
-        pixmaps <- mapM (getDataFileName >>>> loadPixmap nikkiPngOffset) $
+        pixmaps <- mapM (getDataFileName >=> loadPixmap nikkiPngOffset) $
                         map (mkPngPath name) [0..n]
         return (name, pixmaps)
     nikkiPngOffset = Position (1 + fromUber 3) (1 + 6)
@@ -117,8 +117,8 @@ instance Sort NSort Nikki where
     updateNoSceneChange sort mode now contacts cd nikki = inner nikki
       where
         inner =
-            updateState mode now contacts cd >>>>
-            fromPure (updateStartTime now (state nikki)) >>>>
+            updateState mode now contacts cd >=>
+            return . updateStartTime now (state nikki) >=>
             controlNikki now contacts cd sort
 
     render nikki sort ptr offset now = do

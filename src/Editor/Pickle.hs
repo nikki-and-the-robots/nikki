@@ -36,7 +36,7 @@ writeFile = IO.writeFile
 
 
 parseSaved :: FilePath -> IO (Maybe SaveType)
-parseSaved file = (readFile file :: IO FileFormat) >>= fromPure parse
+parseSaved file = (readFile file :: IO FileFormat) >>= return . parse
 
 writeSaved :: FilePath -> SaveType -> IO ()
 writeSaved file level = writeFile file (saveToFile level :: FileFormat)

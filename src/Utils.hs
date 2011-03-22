@@ -4,6 +4,7 @@ module Utils (
     (<$>),
     (<*>),
     (>>>),
+    (>=>),
     trace,
     forM,
     forM_,
@@ -39,6 +40,7 @@ import Control.Monad.State hiding (forM_)
 import Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))
 import Control.Concurrent
+import Control.Monad ((>=>))
 
 import System.Directory
 import System.IO.Unsafe
@@ -145,14 +147,8 @@ a |> f = f a
 
 -- fake kleisli stuff
 
-(>>>>) :: Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)
-x >>>> y = \ a -> x a >>= y
-
 passThrough :: Monad m => (a -> m ()) -> (a -> m a)
 passThrough cmd a = cmd a >> return a
-
-fromPure :: Monad m => (a -> b) -> (a -> m b)
-fromPure = (return .)
 
 secondKleisli :: Monad m => (a -> m b) -> ((x, a) -> m (x, b))
 secondKleisli cmd (x, a) = do

@@ -57,8 +57,8 @@ blinkLength = 0.4
 sorts :: RM [Sort_]
 sorts = do
     let nameToPixmap offset =
-            fromPure toPngPath >>>>
-            getDataFileName >>>>
+            return . toPngPath >=>
+            getDataFileName >=>
             loadPixmap (Position offset offset)
     backgroundPixmap <- (nameToPixmap (1 + fromUber 1)) "terminal-standard"
     displayBlinkenLights <- fmapM (nameToPixmap (1 - fromUber 13)) (
@@ -76,7 +76,7 @@ toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
 readColorLights :: (String -> FilePath) -> RM (ColorLights Pixmap)
 readColorLights f =
-    fmapM (fromPure f >>>> getDataFileName >>>> loadPixmap (Position 13 13)) $
+    fmapM (return . f >=> getDataFileName >=> loadPixmap (Position 13 13)) $
         ColorLights "red" "blue" "green" "yellow"
 
 loadOsdPixmaps :: RM OsdPixmaps
@@ -85,7 +85,7 @@ loadOsdPixmaps = do
                     (loadPixmap zero =<< toOsdPath "background")
     let colors = ColorLights "red" "blue" "green" "yellow"
         load :: Int -> Int -> String -> RM Pixmap
-        load xOffset yOffset = toOsdPath >>>> loadPixmap (Position xOffset yOffset)
+        load xOffset yOffset = toOsdPath >=> loadPixmap (Position xOffset yOffset)
     centers <- fmapM (load 27 27) $ fmap (++ "-center") colors
     frames <- fmapM (load 27 27) $ fmap (++ "-frame") colors
     exitCenter <- (load 24 23) "exit-center"
