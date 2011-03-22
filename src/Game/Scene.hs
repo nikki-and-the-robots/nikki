@@ -29,6 +29,8 @@ import Utils
 
 import Base
 
+import Profiling.Physics
+
 import Object
 
 import Game.Scene.Camera
@@ -178,7 +180,6 @@ levelPassed scene =
 -- leaves contacts untouched, if no simulation steps are being done
 
 stepSpace :: Space -> Scene Object_ -> IO (Scene Object_)
-
 stepSpace space s@Scene{contactRef} = do
     resetContactRef contactRef
     CM.step space stepQuantum
@@ -248,6 +249,7 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
         when (render_chipmunk_objects configuration) $
             fmapM_ (renderObjectGrid ptr offset) $ physicsContent $ objects scene
         io $ debugging ptr offset
+        Profiling.Physics.render app configuration ptr now
 
 
 -- | renders the different Layers.

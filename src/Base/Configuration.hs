@@ -32,6 +32,7 @@ data Configuration = Configuration {
     update_repo :: String,
     stdout_on_windows :: Bool,
     graphics_profiling :: Bool,
+    physics_profiling :: Bool,
     omit_pixmap_rendering :: Bool,
     render_xy_cross :: Bool,
     render_chipmunk_objects :: Bool
@@ -85,6 +86,8 @@ options =
             &= help "On windows, log messages get written to the file \"nikkiLog\". Use this flag to switch to stdout.",
         graphics_profiling = False
             &= help "output FPS statistics for the rendering thread",
+        physics_profiling = False
+            &= help "output information about performance of physics engine",
         omit_pixmap_rendering = False
             &= help "omit the normal pixmaps when rendering objects",
         render_xy_cross = False

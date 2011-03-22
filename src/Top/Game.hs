@@ -15,6 +15,8 @@ import Utils
 
 import Base
 
+import Profiling.FPS
+
 import Object
 
 import Game.Scene

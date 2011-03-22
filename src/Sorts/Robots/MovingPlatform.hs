@@ -19,7 +19,7 @@ import Graphics.Qt hiding (scale)
 
 import Utils
 
-import Base hiding (cursorStep)
+import Base hiding (cursorStep, renderLine)
 
 import Object
 

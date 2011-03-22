@@ -2,7 +2,7 @@
 
 -- module to analyse the performance (FPS == Frames Per Second)
 
-module Base.FPSState (
+module Profiling.FPS (
     FpsState,
     initialFPSState,
     tickFPS,
