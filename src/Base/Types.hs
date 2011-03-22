@@ -31,6 +31,7 @@ import Graphics.Qt as Qt
 import Utils
 
 import Base.Grounds
+import Base.RenderGrounds
 
 import Base.Types.Events
 import Base.Configuration
@@ -103,14 +104,14 @@ data Pixmap = Pixmap {
 data Scene object
     = Scene {
         spaceTime :: Seconds,
-        objects :: Grounds object,
+        objects :: RenderGrounds object,
         contactRef :: !(ContactRef Contacts),
         contacts :: !Contacts,
         mode :: Mode
       }
   deriving Show
 
-objectsA :: Accessor (Scene o) (Grounds o)
+objectsA :: Accessor (Scene o) (RenderGrounds o)
 objectsA = accessor objects (\ a r -> r{objects = a})
 
 modeA :: Accessor (Scene o) Mode
@@ -138,7 +139,7 @@ getControlledIndex Scene{mode} =
 -- | accesses an object from the mainLayer
 mainLayerObjectA :: Index -> Accessor (Scene o) o
 mainLayerObjectA i =
-    objectsA .> mainLayerA .> contentA .> indexA i
+    objectsA .> physicsContentA .> indexA i
 
 
 data CameraState

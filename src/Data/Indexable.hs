@@ -75,13 +75,11 @@ instance Functor Indexable where
 
 instance Foldable Indexable where
     foldMap f (Indexable values keys) =
-        inner keys
-      where
-        inner (k : r) = f (values ! index k) `mappend` inner r
-        inner [] = mempty
+        foldMap (\ k -> f (values ! index k)) keys
 
 instance Traversable Indexable where
-    traverse cmd (Indexable values keys) = Indexable <$> traverse cmd values <*> pure keys
+    traverse cmd (Indexable values keys) =
+        Indexable <$> traverse cmd values <*> pure keys
 
 fmapMWithIndex :: Monad m => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)

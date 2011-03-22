@@ -13,6 +13,7 @@ module Base (
     module Base.Constants,
     module Base.Animation,
     module Base.Grounds,
+    module Base.RenderGrounds,
     module Base.Debugging,
     module Base.Configuration,
     module Base.FPSState,
@@ -34,6 +35,7 @@ import Base.Paths
 import Base.Constants
 import Base.Animation
 import Base.Grounds
+import Base.RenderGrounds
 import Base.Debugging
 import Base.Configuration
 import Base.FPSState

@@ -60,7 +60,7 @@ renderGUI ptr offset s = do
 renderLayer :: Sort sort o => Ptr QPainter -> Size Double -> Offset Double 
     -> Layer (EditorObject sort) -> IO ()
 renderLayer ptr size offset layer = do
-    let modifiedOffset = calculateLayerOffset size offset layer
+    let modifiedOffset = calculateLayerOffset size offset (xDistance layer, yDistance layer)
     fmapM_ (renderEditorObject ptr modifiedOffset) (layer ^. contentA)
 
 -- | renders the pink cursor box

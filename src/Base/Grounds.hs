@@ -68,7 +68,8 @@ instance Foldable Layer where
     foldMap f l = foldMap f (l ^. contentA)
 
 instance Traversable Layer where
-    traverse cmd (Layer content x y) = Layer <$> traverse cmd content <*> pure x <*> pure y
+    traverse cmd (Layer content x y) =
+        Layer <$> traverse cmd content <*> pure x <*> pure y
 
 instance Initial (Grounds a) where
     initial = Grounds initial initial initial
@@ -165,11 +166,6 @@ modifyGroundsIndex gs f i =
 modifyContent :: (Indexable a -> Indexable b) -> Layer a -> Layer b
 modifyContent f l@Layer{content} = l{content = f content}
 
-modifyContentM :: Monad m => (Indexable a -> m (Indexable b)) -> Layer a -> m (Layer b)
-modifyContentM f layer@Layer{content} = do
-    content' <- f content
-    return layer{content = content'}
-
 
 -- * maps
 
@@ -187,8 +183,8 @@ layerMapM_ cmd (Grounds backgrounds mainLayer foregrounds) = do
 -- * rendering offset
 
 -- | calculates the offset for one Layer.
-calculateLayerOffset :: Size Double -> Position Double -> Layer a -> Position Double
-calculateLayerOffset windowSize mainLayerOffset Layer{xDistance, yDistance} =
+calculateLayerOffset :: Size Double -> Position Double -> (Double, Double) -> Position Double
+calculateLayerOffset windowSize mainLayerOffset (xDistance, yDistance) =
     Position xLayerOffset yLayerOffset
   where
     xLayerOffset = xMainOffset * xDistance + xWindowOffset * (1 - xDistance)

@@ -69,7 +69,7 @@ defaultPixmap pixmaps = head (pixmaps ! "wait_right")
 -- Doesn't do anything, if the level is finished.
 modifyNikki :: (Nikki -> Nikki) -> Scene Object_ -> Scene Object_
 modifyNikki f scene | isGameMode (mode scene) =
-    objectsA .> mainLayerA .> contentA .> indexA (nikki (mode scene)) ^:
+    objectsA .> physicsContentA .> indexA (nikki (mode scene)) ^:
         mod $
         scene
   where

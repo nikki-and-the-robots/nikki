@@ -15,6 +15,7 @@ import qualified Data.Set as Set
 import Data.Foldable (foldr)
 import Data.Maybe
 import Data.Abelian
+import Data.Foldable (Foldable)
 
 import Control.Monad
 import Control.Monad.State (StateT(..))
@@ -78,7 +79,7 @@ modifyTransitioned scene = do
     return $ case getControlledIndex scene of
       Just controlledIndex ->
         let now = spaceTime scene
-        in objectsA .> mainLayerA .> contentA .> indexA controlledIndex ^:
+        in objectsA .> physicsContentA .> indexA controlledIndex ^:
             (startControl now) $ scene
       Nothing -> scene
 
@@ -107,7 +108,7 @@ whichTerminalCollides Scene{objects, contacts} =
     findIndices p allTerminals
   where
     allTerminals :: Indexable (Maybe Terminal)
-    allTerminals = fmap unwrapTerminal $ (mainLayer objects ^. contentA)
+    allTerminals = fmap unwrapTerminal $ physicsContent objects
 
     p :: Maybe Terminal -> Bool
     p Nothing = False
@@ -166,7 +167,7 @@ levelPassed scene =
         Nothing
   where
     allSwitches :: [Switch] =
-        catMaybes $ map unwrapSwitch $ toList $ (mainLayer (objects scene) ^. contentA)
+        catMaybes $ map unwrapSwitch $ toList $ physicsContent $ objects scene
     allTriggered = all triggered allSwitches
     now = spaceTime scene
 
@@ -190,28 +191,28 @@ stepSpace space s@Scene{contactRef} = do
 -- | updates every object
 updateScene :: ControlData -> Scene Object_ -> IO (Scene Object_)
 updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
-    backgrounds' <- fmapM (modifyContentM (fmapMWithIndex updateMultiLayerObjects)) backgrounds
+    backgrounds' <- fmapM (fmapM updateMultiLayerObjects) backgrounds
     (sceneChange, mainLayer') <- updateMainLayer mainLayer
-    foregrounds' <- fmapM (modifyContentM (fmapMWithIndex updateMultiLayerObjects)) foregrounds
-    return $ sceneChange $ scene{objects = Grounds backgrounds' mainLayer' foregrounds'}
+    foregrounds' <- fmapM (fmapM updateMultiLayerObjects) foregrounds
+    return $ sceneChange $ scene{objects = RenderGrounds backgrounds' mainLayer' foregrounds'}
   where
     controlled = getControlledIndex scene
-    (Grounds backgrounds mainLayer foregrounds) = objects
+    (RenderGrounds backgrounds mainLayer foregrounds) = objects
 
     -- update function for all objects in the mainLayer
-    updateMainLayer :: Layer Object_ -> IO (Scene Object_ -> Scene Object_, Layer Object_)
+    updateMainLayer :: Indexable Object_ -> IO (Scene Object_ -> Scene Object_, Indexable Object_)
     -- each object has to know, if it's controlled
-    updateMainLayer layer@Layer{content = ix} = do
+    updateMainLayer ix = do
         ix' <- fmapMWithIndex (\ i o ->
                 update DummySort mode now contacts (Just i == controlled, cd) i o) ix
         let changes = foldr (.) id $ fmap fst ix'
             ix'' = fmap snd ix'
-        return $ (changes, layer{content = ix''})
+        return $ (changes, ix'')
 
     -- update function for updates outside the mainLayer
     -- NOTE: SceneChanges currently only affect the main layer
-    updateMultiLayerObjects :: Index -> Object_ -> IO Object_
-    updateMultiLayerObjects i o = update DummySort mode now contacts (False, cd) i o >>= return . snd
+    updateMultiLayerObjects :: Object_ -> IO Object_
+    updateMultiLayerObjects o = updateNoSceneChange DummySort mode now contacts (False, cd) o
 
 
 -- * rendering
@@ -223,7 +224,7 @@ immutableCopy scene = do
     new <- fmapM Base.immutableCopy old
     return $ acc ^= new $ scene
   where
-    acc = objectsA .> mainLayerA
+    acc = objectsA .> physicsContentA
 
 
 -- | well, renders the scene to the screen (to the max :)
@@ -240,9 +241,9 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
 
         when (not $ omit_pixmap_rendering configuration) $ do
             let os = objects scene
-            fmapM_ (renderLayer ptr size offset now) $ backgrounds os
-            renderLayer ptr size offset now $ mainLayer os
-            fmapM_ (renderLayer ptr size offset now) $ foregrounds os
+            fmapM_ (renderLayer ptr size offset now) $ renderBackgrounds os
+            renderObjects ptr size offset now (1, 1) $ physicsContent os
+            fmapM_ (renderLayer ptr size offset now) $ renderForegrounds os
 
         renderTerminalOSD ptr now scene
         renderLevelFinishedOSD ptr app mode
@@ -252,17 +253,24 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
         when (render_xy_cross configuration) $
             debugDrawCoordinateSystem ptr offset
         when (render_chipmunk_objects configuration) $
-            fmapM_ (renderObjectGrid ptr offset) $ mainLayer $ objects scene
+            fmapM_ (renderObjectGrid ptr offset) $ physicsContent $ objects scene
         io $ debugging ptr offset
 
 
 -- | renders the different Layers.
 -- makes sure, everything is rendered ok.
 renderLayer :: Ptr QPainter -> Size Double -> Offset Double -> Seconds
-    -> Layer Object_ -> IO ()
-renderLayer ptr size offset now layer = do
-    let modifiedOffset = calculateLayerOffset size offset layer
-    fmapM_ (\ o -> render_ o ptr modifiedOffset now) (layer ^. contentA)
+    -> RenderLayer Object_ -> IO ()
+renderLayer ptr size offset now layer =
+    renderObjects ptr size offset now (renderXDistance layer, renderYDistance layer) (contentList layer)
+
+-- | renders the physics layer
+renderObjects :: Foldable f =>
+    Ptr QPainter -> Size Double -> Offset Double -> Seconds -> (Double, Double)
+    -> f Object_ -> IO ()
+renderObjects ptr size offset now (xDistance, yDistance) objects = do
+    let modifiedOffset = calculateLayerOffset size offset (xDistance, yDistance)
+    fmapM_ (\ o -> render_ o ptr modifiedOffset now) objects
 
 -- | renders the big osd images ("SUCCESS" or "FAILURE") at the end of levels
 renderLevelFinishedOSD :: Ptr QPainter -> Application -> Mode -> IO ()

@@ -143,7 +143,8 @@ editorObject2Object mspace (EditorObject sort pos state) =
 mkScene :: Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene space (nikki, objects) = do
     contactRef <- initContactRef space initial watchedContacts
-    return $ Scene 0 objects contactRef initial (NikkiMode nikki)
+    let optObjects = mkRenderGrounds objects
+    return $ Scene 0 optObjects contactRef initial (NikkiMode nikki)
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =
