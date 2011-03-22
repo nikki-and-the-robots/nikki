@@ -3,6 +3,7 @@
 module Utils (
     (<$>),
     (<*>),
+    pure,
     (>>>),
     (>=>),
     trace,
@@ -35,7 +36,7 @@ import Data.Accessor
 import Text.Printf
 import Text.Logging
 
-import Control.Applicative ((<$>), (<|>), (<*>))
+import Control.Applicative ((<$>), (<|>), (<*>), pure)
 import Control.Monad.State hiding (forM_)
 import Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))

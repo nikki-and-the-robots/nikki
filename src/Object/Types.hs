@@ -59,6 +59,7 @@ instance Sort Sort_ Object_ where
 sort_ :: Object_ -> Sort_
 sort_ (Object_ sort _) = Sort_ sort
 
+-- | object rendering without providing the sort
 render_ :: Object_ -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
 render_ (Object_ sort o) = render o sort
 

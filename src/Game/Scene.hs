@@ -191,13 +191,11 @@ stepSpace space s@Scene{contactRef} = do
 -- | updates every object
 updateScene :: ControlData -> Scene Object_ -> IO (Scene Object_)
 updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
-    backgrounds' <- fmapM (fmapM updateMultiLayerObjects) backgrounds
-    (sceneChange, mainLayer') <- updateMainLayer mainLayer
-    foregrounds' <- fmapM (fmapM updateMultiLayerObjects) foregrounds
-    return $ sceneChange $ scene{objects = RenderGrounds backgrounds' mainLayer' foregrounds'}
+    -- NOTE: Currently only the physics layer is updated
+    (sceneChange, physicsContent') <- updateMainLayer $ objects ^. physicsContentA
+    return $ sceneChange $ objectsA .> physicsContentA ^= physicsContent' $ scene
   where
     controlled = getControlledIndex scene
-    (RenderGrounds backgrounds mainLayer foregrounds) = objects
 
     -- update function for all objects in the mainLayer
     updateMainLayer :: Indexable Object_ -> IO (Scene Object_ -> Scene Object_, Indexable Object_)
@@ -208,11 +206,6 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
         let changes = foldr (.) id $ fmap fst ix'
             ix'' = fmap snd ix'
         return $ (changes, ix'')
-
-    -- update function for updates outside the mainLayer
-    -- NOTE: SceneChanges currently only affect the main layer
-    updateMultiLayerObjects :: Object_ -> IO Object_
-    updateMultiLayerObjects o = updateNoSceneChange DummySort mode now contacts (False, cd) o
 
 
 -- * rendering
