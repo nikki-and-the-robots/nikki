@@ -141,7 +141,6 @@ sendDebugInitials c = void $ forkOS $ do
     mapM_ worker signals
   where
     worker k = do
-        threadDelay $ round (0.1 * 10 ^ 6)
         writeChan c (KeyPress k (text k))
         writeChan c (KeyRelease k (text k))
     text K0 = "0"
@@ -149,10 +148,9 @@ sendDebugInitials c = void $ forkOS $ do
     text Dot = "."
     text x = return $ head (show x)
 
-    signals =   play 1 ++
---                 replicate 6 RightArrow ++ replicate 2 DownArrow ++
---                 Escape : Ctrl :
-                []
+    signals =
+        play 1 ++
+        []
     edit n = DownArrow : DownArrow : DownArrow : Ctrl :
              replicate n DownArrow ++ Ctrl : []
     play n =    DownArrow : Ctrl :
