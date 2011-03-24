@@ -14,8 +14,6 @@ import Data.Accessor
 import Data.Foldable (Foldable, foldMap)
 import Data.Traversable
 
-import Control.Applicative (pure)
-
 import Base.Grounds
 
 import Utils

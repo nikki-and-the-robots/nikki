@@ -41,7 +41,6 @@ import Control.Monad.State hiding (forM_)
 import Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))
 import Control.Concurrent
-import Control.Monad ((>=>))
 
 import System.Directory
 import System.IO.Unsafe

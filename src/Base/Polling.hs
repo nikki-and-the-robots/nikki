@@ -2,10 +2,7 @@
 module Base.Polling where
 
 
-import Data.Map (Map, fromList, member, (!))
-import Data.Word
-import qualified Data.Set as Set
-import Data.Set (Set, union, difference, insert, intersection, empty, delete)
+import Data.Set (Set, insert, empty, delete)
 import Data.IORef
 
 import Control.Concurrent

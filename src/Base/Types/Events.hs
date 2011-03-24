@@ -8,8 +8,6 @@ import Data.Maybe
 
 import Graphics.Qt
 
-import Utils
-
 
 data AppEvent
     = Press Button

@@ -21,15 +21,13 @@ import Data.Map hiding (map, filter, mapMaybe, size, member)
 import Data.Set (member)
 import Data.SelectTree
 import qualified Data.Indexable as I
-import Data.Indexable (Index, (>:), deleteByIndex, (!!!), indexA)
+import Data.Indexable (Index, (>:), deleteByIndex, indexA)
 import Data.Abelian
 import Data.Accessor
 
 import Control.Monad.State
 
 import Graphics.Qt
-
-import Utils
 
 import Base
 

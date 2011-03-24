@@ -43,11 +43,9 @@ import Data.Generics
 import Data.Either
 import Data.Traversable (Traversable, traverse)
 import Data.Foldable (Foldable, foldMap)
-import Data.Monoid
 import Data.Initial
 import Data.Accessor
 
-import Control.Applicative (Applicative, pure)
 import Control.Arrow
 
 import Utils

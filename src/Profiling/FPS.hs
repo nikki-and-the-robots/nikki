@@ -16,12 +16,9 @@ import Prelude hiding ((.))
 import Data.IORef
 import Data.Time.Clock.POSIX
 
-import Text.Logging
 import Text.Printf
 
 import Control.Category
-
-import System.IO
 
 import Graphics.Qt
 

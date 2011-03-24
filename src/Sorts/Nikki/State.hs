@@ -6,7 +6,6 @@ module Sorts.Nikki.State where
 import Prelude hiding (lookup)
 
 import Data.List (sortBy)
-import Data.Set (member)
 import Data.Maybe
 import Data.Directions
 

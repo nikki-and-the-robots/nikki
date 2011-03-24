@@ -7,8 +7,6 @@ module Sorts.Robots.Jetpack (sorts) where
 import Data.Abelian
 import Data.Maybe
 import Data.Generics
-import Data.Map hiding (size, map, member)
-import Data.Set (member)
 import Data.Directions
 
 import System.FilePath

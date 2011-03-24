@@ -13,8 +13,6 @@ import Data.Traversable (Traversable, traverse)
 import Data.Initial
 import Data.Accessor
 
-import Control.Applicative (pure)
-
 import Graphics.Qt
 
 

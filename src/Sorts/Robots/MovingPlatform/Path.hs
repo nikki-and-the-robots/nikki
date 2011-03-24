@@ -8,8 +8,6 @@ import Data.Typeable
 
 import Physics.Chipmunk hiding (start, end)
 
-import Graphics.Qt hiding (scale)
-
 import Base
 
 import Utils hiding (distance)
