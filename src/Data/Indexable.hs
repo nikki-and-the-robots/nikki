@@ -63,7 +63,7 @@ data Indexable a = Indexable {
     values :: Map.IntMap a,
     keys :: [Index]
   }
-    deriving (Show, Read, Data, Typeable)
+    deriving (Show, Read, Data, Typeable, Eq)
 
 
 -- * instances
@@ -194,7 +194,6 @@ optimizeMerge p =
     convertToList >>> fixpoint 0 >>> convertToIndexable
   where
     fixpoint n list =
---         trace (show n) $
         let r = mergeListSome p list
         in if List.length r == List.length list then 
             list
@@ -209,7 +208,7 @@ optimizeMerge p =
         Indexable (Map.fromList (map (first index) newValues)) (map fst newValues)
       where
         newValues = zipWith inner list newIndices
-        newIndices = [maximum allIndices + 1..]
+        newIndices = if null allIndices then [0..] else [maximum allIndices + 1..]
         allIndices = map fst $ lefts list
         inner (Left x) _ = x
         inner (Right x) i = (i, x)
