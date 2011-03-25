@@ -16,7 +16,6 @@ import Base
 
 import Object as Object
 
-import qualified Editor.Pickle.Old1 as Old1
 import Editor.Pickle.Types
 
 
@@ -46,20 +45,19 @@ writeSaved file level = writeFile file (saveToFile level :: FileFormat)
 
 parse :: FileFormat -> Maybe SaveType
 parse (readM -> Just x :: Maybe SaveType) = Just x
-parse (readM -> Just x :: Maybe Old1.SaveType) = Just $ Old1.convert x
 parse _ = Nothing
 
 
 -- * loading
 
-loadByFilePath :: FilePath -> IO (Grounds PickleObject)
-loadByFilePath path = do
+loadByFilePath :: [Sort_] -> FilePath -> IO (Grounds (EditorObject Sort_))
+loadByFilePath allSorts path = do
     exists <- doesFileExist path
     when (not exists) $
         error ("Sorry, the file \"" ++ path ++ "\" does not exist.")
     mR <- parseSaved path
     return $ case mR of
-        Just x -> x
+        Just x -> unpickle allSorts x
         Nothing -> error ("Sorry, this file is not a correct nikki level file: " ++ path)
 
 
@@ -67,4 +65,4 @@ loadByFilePath path = do
 
 writeObjectsToDisk :: FilePath -> Grounds (EditorObject Sort_) -> IO ()
 writeObjectsToDisk file objects = do
-    writeSaved file $ fmap editorObject2PickleObject objects
+    writeSaved file $ pickle objects

@@ -77,34 +77,6 @@ mkEditorObject sort pos =
     oemState = fmap (\ methods -> oemInitialize methods pos) $ objectEditMode sort
 
 
--- * pickelable object
-
-data PickleObject = PickleObject {
-    pickleSortId :: SortId,
-    picklePosition :: EditorPosition,
-    pickleOEMState :: Maybe String
-  }
-    deriving (Read, Show)
-
-editorObject2PickleObject :: EditorObject Sort_ -> PickleObject
-editorObject2PickleObject (EditorObject sort p oemState) =
-    PickleObject (sortId sort) p (fmap oemPickle oemState)
-
--- | converts pickled objects to editor objects
--- needs all available sorts
-pickleObject2EditorObject :: [Sort_] -> PickleObject -> EditorObject Sort_
-pickleObject2EditorObject allSorts (PickleObject id position oemState) =
-    EditorObject sort position (fmap (unpickleOEM sort) oemState)
-  where
-    sort = case filter ((== id) . sortId) allSorts of
-        [x] -> x
-        [] -> error ("sort not found: " ++ getSortId id)
-        _ -> error ("multiple sorts with the same id found: " ++ getSortId id)
-
-
-
-
-
 renderChipmunk :: Ptr QPainter -> Offset Double -> Pixmap -> Chipmunk -> IO ()
 renderChipmunk painter worldOffset p chipmunk = do
     (position, angle) <- getRenderPosition chipmunk

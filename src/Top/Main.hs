@@ -19,6 +19,7 @@ module Top.Main where
 
 
 import Data.List as List
+import Data.SelectTree (leafs)
 
 import Text.Logging
 
@@ -184,7 +185,7 @@ edit app parent file = loadingEditorScene app file (editLevel app playLevel)
 loadingEditorScene :: Application -> (FilePath, Bool) -> (EditorScene Sort_ -> AppState) -> AppState
 loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
     guiLog app (p "loading...")
-    grounds <- loadByFilePath file
+    grounds <- loadByFilePath (leafs $ allSorts app) file
     let mFile = if isTemplateFile then Nothing else Just file
     editorScene <- initEditorScene (allSorts app) mFile grounds
     return $ follower editorScene

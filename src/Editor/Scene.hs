@@ -59,9 +59,9 @@ updateSelected s = s{selected = searchSelectedObject s}
 -- * constructors
 
 -- | the initial editor scene
-initEditorScene :: SelectTree Sort_ -> Maybe String -> Grounds PickleObject -> IO (EditorScene Sort_)
-initEditorScene sorts mPath pickledObjects = flip evalStateT empty $ do
-    let objects :: Grounds (EditorObject Sort_) = fmap (pickleObject2EditorObject $ leafs sorts) pickledObjects
+initEditorScene :: SelectTree Sort_ -> Maybe String -> Grounds (EditorObject Sort_)
+    -> IO (EditorScene Sort_)
+initEditorScene sorts mPath objects = flip evalStateT empty $ do
     pixmap <- get
     return $ updateSelected EditorScene{
         levelPath = mPath,

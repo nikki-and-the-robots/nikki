@@ -39,8 +39,8 @@ partialLimit = 1 / 3
 maximumLimit = 200
 
 
-initialCameraState :: CameraState
-initialCameraState = CS (- 1) zero
+initialCameraState :: Index -> CameraState
+initialCameraState nikki = CS nikki zero
 
 getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_ -> StateT CameraState IO Position
 getCameraPosition ptr scene =
