@@ -9,6 +9,7 @@ import System.Directory
 import System.FilePath
 
 import Editor.Pickle
+import Editor.Pickle.Types
 
 
 main = do
@@ -17,7 +18,7 @@ main = do
         error (dir ++ " does not exist")
     let path = dir </> "empty.nl"
     putStrLn ("writing empty level to " ++ show path)
-    writeSaved path initial
+    writeSaved path $ pickle initial
 
 
 dir = "../../data/template_levels"
