@@ -167,6 +167,7 @@ indexA i = accessor getter setter
   where
     getter (Indexable values keys) | i `elem` keys =
         values ! index i
+    getter ix = error ("indexA: index not in Indexable: " ++ show i)
     setter e (Indexable values keys) | i `elem` keys =
         Indexable (Map.insert (index i) e values) keys
 
