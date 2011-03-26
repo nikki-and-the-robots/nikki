@@ -2,7 +2,7 @@
 
 -- | version of the save type from 2010-06-24
 
-module Editor.Pickle.Old1 (
+module Legacy.Old1 (
     SaveType,
     convert,
   ) where
@@ -11,6 +11,7 @@ module Editor.Pickle.Old1 (
 import Data.Convertable
 import Data.Map as Map (Map, toList)
 import Data.IntMap as IntMap (IntMap, fromList)
+import qualified Data.Indexable
 
 -- import Control.Arrow
 
@@ -18,7 +19,7 @@ import Utils
 
 import qualified Sorts.Terminal
 
-import qualified Editor.Pickle.Types as Newest
+import qualified Legacy.Old2 as Newer
 
 
 
@@ -31,8 +32,8 @@ data Grounds a = Grounds {
   }
     deriving (Show, Read)
 
-instance Convertable a b => Convertable (Grounds a) (Newest.Grounds b) where
-    convert (Grounds a b c) = Newest.Grounds (convert a) (convert b) (convert c)
+instance Convertable a b => Convertable (Grounds a) (Newer.Grounds b) where
+    convert (Grounds a b c) = Newer.Grounds (convert a) (convert b) (convert c)
 
 data Layer a = Layer {
     content :: (Indexable a),
@@ -44,9 +45,9 @@ data Layer a = Layer {
   }
   deriving (Show, Read)
 
-instance Convertable a b => Convertable (Layer a) (Newest.Layer b) where
+instance Convertable a b => Convertable (Layer a) (Newer.Layer b) where
     convert (Layer a b c _d _e _f) =
-        Newest.Layer (convert a) b c
+        Newer.Layer (convert a) b c
 
 
 data PickleObject = PickleObject {
@@ -56,21 +57,21 @@ data PickleObject = PickleObject {
   }
     deriving (Read, Show)
 
-instance Convertable PickleObject Newest.PickleObject where
+instance Convertable PickleObject Newer.PickleObject where
     convert (PickleObject a b c) =
-        Newest.PickleObject (convert a) (convert b) (fmap convertOEMStates c)
+        Newer.PickleObject (convert a) (convert b) (fmap convertOEMStates c)
 
 newtype SortId = SortId FilePath
   deriving (Show, Read, Eq)
 
-instance Convertable SortId Newest.SortId where
-    convert (SortId a) = Newest.SortId a
+instance Convertable SortId Newer.SortId where
+    convert (SortId a) = Newer.SortId a
 
 data EditorPosition = EditorPosition Double Double
   deriving (Show, Read, Eq)
 
-instance Convertable EditorPosition Newest.EditorPosition where
-    convert (EditorPosition a b) = Newest.EditorPosition a b
+instance Convertable EditorPosition Newer.EditorPosition where
+    convert (EditorPosition a b) = Newer.EditorPosition a b
 
 data Indexable a = Indexable {
     values :: Map Index a,
@@ -78,8 +79,8 @@ data Indexable a = Indexable {
   }
     deriving (Show, Read)
 
-instance Convertable a b => Convertable (Indexable a) (Newest.Indexable b) where
-    convert (Indexable a b) = Newest.Indexable (convert a) (convert b)
+instance Convertable a b => Convertable (Indexable a) (Newer.Indexable b) where
+    convert (Indexable a b) = Newer.Indexable (convert a) (convert b)
 
 instance Convertable a b => Convertable (Map Index a) (IntMap b) where
     convert =
@@ -88,9 +89,11 @@ instance Convertable a b => Convertable (Map Index a) (IntMap b) where
 newtype Index = Index Int
   deriving (Show, Read, Eq, Ord)
 
-instance Convertable Index Newest.Index where
-    convert (Index i) = Newest.Index i
+instance Convertable Index Newer.Index where
+    convert (Index i) = Newer.Index i
 
+instance Convertable Index Data.Indexable.Index where
+    convert (Index i) = Data.Indexable.Index i
 
 
 

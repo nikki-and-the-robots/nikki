@@ -4,12 +4,7 @@
 -- It employs versioned constructors to allow changes to the file
 -- format.
 
-module Editor.Pickle.Types (
-    SaveType,
-    FileFormat,
-    pickle,
-    unpickle,
-  ) where
+module Editor.Pickle.Types where
 
 
 import Data.Indexable

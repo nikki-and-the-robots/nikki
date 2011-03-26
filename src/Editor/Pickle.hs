@@ -5,6 +5,8 @@ module Editor.Pickle where
 
 import Prelude hiding (readFile, writeFile)
 
+import Data.Convertable
+
 import Control.Monad
 
 import qualified System.IO as IO
@@ -17,6 +19,9 @@ import Base
 import Object as Object
 
 import Editor.Pickle.Types
+
+import qualified Legacy.Old1 as Old1
+import qualified Legacy.Old2 as Old2
 
 
 -- * IO stuff
@@ -45,6 +50,9 @@ writeSaved file level = writeFile file (saveToFile level :: FileFormat)
 
 parse :: FileFormat -> Maybe SaveType
 parse (readM -> Just x :: Maybe SaveType) = Just x
+parse (readM -> Just x :: Maybe Old2.SaveType) = Just $ convert x
+parse (readM -> Just x :: Maybe Old1.SaveType) =
+    Just $ convert $ asTypeOf (undefined :: Old2.SaveType) $ convert x
 parse _ = Nothing
 
 
