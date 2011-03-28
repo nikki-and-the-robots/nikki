@@ -3,6 +3,10 @@
 -- for the types used to save levels to files.
 -- It employs versioned constructors to allow changes to the file
 -- format.
+-- If the data structures of the game change,
+-- the conversion functions have to be adapted. If this isn't
+-- possible with the existing SaveTypes, new versioned constructors
+-- have to be added.
 
 module Editor.Pickle.Types where
 
