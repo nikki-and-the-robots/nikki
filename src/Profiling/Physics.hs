@@ -19,7 +19,7 @@ import Base hiding (render)
 
 -- | time window which will be measured
 profilingWindow :: Seconds
-profilingWindow = 0.4
+profilingWindow = 1
 
 render :: Application_ s -> Configuration -> Ptr QPainter -> Seconds -> IO ()
 render app config ptr spaceTime | physics_profiling config = do
