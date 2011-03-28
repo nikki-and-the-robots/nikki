@@ -91,7 +91,7 @@ editorMenu app play mvar scene =
                 ("activate selection mode (for copy, cut and paste)", edit (toSelectionMode scene)),
                 ("try playing the level", play app (edit scene) scene),
                 ("save level", saveLevel app this editWithFilePath scene),
-                ("save level and exit editor", saveLevel app this (const $ mainMenu app) scene),
+                ("save level and exit editor", saveLevel app this (const $ getMainMenu app) scene),
                 ("exit editor without saving", reallyExitEditor app this)
               ])
         ObjectEditMode{} -> exitOEM app play mvar scene
@@ -143,12 +143,12 @@ fileExists app save path objects =
   where
     writeAnyway = ioAppState $ do
         writeObjectsToDisk path objects
-        return $ mainMenu app
+        return $ getMainMenu app
 
 reallyExitEditor app editor =
     menu app (Just "really exit without saving?") (Just editor) [
         ("no", editor),
-        ("yes", mainMenu app)
+        ("yes", getMainMenu app)
       ]
 
 selectSort :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)

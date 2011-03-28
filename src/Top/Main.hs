@@ -74,7 +74,7 @@ main =
 
         -- start state logick
         let app :: Application
-            app = Application qApp window keyPoller applicationStates appPixmaps sorts
+            app = Application qApp window keyPoller mainMenu appPixmaps sorts
             -- there are two main threads:
             -- this is the logick [sick!] thread
             -- dynamic changes of the configuration take place in this thread!
@@ -106,9 +106,16 @@ loadApplicationIcon qWidget = do
 
 -- * states
 
--- | top level application state (main menu)
+-- | top level application state
 applicationStates :: Application -> AppState
-applicationStates app =
+applicationStates app = AppState $ do
+    mLevel <- gets play_level
+    case mLevel of
+        Nothing -> return $ mainMenu app
+        Just file -> return $ play app (mainMenu app) file
+
+mainMenu :: Application -> AppState
+mainMenu app =
     menu app (Just title) Nothing [
         ("story mode", storyMode app),
         ("play", selectLevelPlay app this),

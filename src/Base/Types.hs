@@ -57,13 +57,13 @@ data Application_ sort
         application :: Ptr QApplication,
         window :: Ptr GLContext,
         keyPoller :: KeyPoller,
-        mainMenu_ :: Application_ sort -> AppState,
+        getMainMenu_ :: Application_ sort -> AppState,
         applicationPixmaps :: ApplicationPixmaps,
         allSorts :: SelectTree sort
       }
 
-mainMenu :: Application_ sort -> AppState
-mainMenu app = mainMenu_ app app
+getMainMenu :: Application_ sort -> AppState
+getMainMenu app = getMainMenu_ app app
 
 data AppState
     = AppState (M AppState)

@@ -24,6 +24,7 @@ import Distribution.AutoUpdate.Paths
 
 data Configuration = Configuration {
     -- user config
+    play_level :: Maybe FilePath,
     fullscreen :: Bool,
     no_update :: Bool,
 
@@ -71,6 +72,10 @@ filterUnwantedArgs = case System.Info.os of
 options :: Configuration
 options =
     Configuration {
+        play_level = Nothing
+            &= help "play the specified level file"
+            &= typ "FILE"
+            &= name "l",
         fullscreen = False
             &= help "start the game in fullscreen mode",
         no_update = False
