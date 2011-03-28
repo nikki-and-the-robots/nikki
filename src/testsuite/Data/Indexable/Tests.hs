@@ -8,9 +8,9 @@ import Prelude hiding (foldr)
 import Data.Indexable hiding (length, filter)
 import Data.List (sort, nub)
 import Data.Foldable (foldr)
-import qualified Data.IntMap
 
 import Control.Monad.State
+import Control.Arrow
 
 import Utils
 
@@ -38,7 +38,7 @@ instance Arbitrary a => Arbitrary (Indexable a) where
     arbitrary = do
         values <- arbitrary
         keys <- randomPermutation [0 .. length values - 1]
-        return $ Indexable (Data.IntMap.fromList (zip keys values)) (fmap Index keys)
+        return $ Indexable $ map (first Index) $ zip keys values
     shrink = toList >>> shrink >>> map fromList
 
 randomPermutation :: [a] -> Gen [a]
