@@ -100,7 +100,7 @@ unpicklePhysicsLayer allSorts list =
     Layer (fmap (unpickleObject allSorts) ix) 1 1
   where
     ix :: Indexable PObject
-    ix = Indexable (Data.IntMap.fromList list) (fmap (Index . fst) list)
+    ix = Indexable (map (first Index) list)
 
 unpickleObject :: [Sort_] -> PObject -> EditorObject Sort_
 unpickleObject allSorts (PObject_1 id position oemState) =

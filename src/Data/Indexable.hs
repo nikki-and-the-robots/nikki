@@ -11,6 +11,7 @@
 module Data.Indexable (
     Indexable(..),
     Index(..),
+    keys,
 
     length,
     toList,
@@ -36,8 +37,6 @@ module Data.Indexable (
 
 import Prelude hiding (length, filter)
 
-import qualified Data.IntMap as Map
-import Data.IntMap ((!))
 import qualified Data.List as List
 import Data.Generics
 import Data.Either
@@ -59,76 +58,72 @@ newtype Index = Index {index :: Int}
 -- sort (keys x) == sort (Map.keys (values x))
 -- nub (keys x) == keys x
 -- const True (keys x == sort (keys x))  (that is, the keys may be unsorted)
-data Indexable a = Indexable {
-    values :: Map.IntMap a,
-    keys :: [Index]
+newtype Indexable a = Indexable {
+    values :: [(Index, a)]
   }
     deriving (Show, Read, Data, Typeable, Eq)
+
+keys :: Indexable a -> [Index]
+keys = map fst . values
 
 
 -- * instances
 
 instance Functor Indexable where
-    fmap f (Indexable values keys) = Indexable (fmap f values) keys
+    fmap f (Indexable values) = Indexable (fmap (second f) values)
 
 instance Foldable Indexable where
-    foldMap f (Indexable values keys) =
-        foldMap (\ k -> f (values ! index k)) keys
+    foldMap f (Indexable values) =
+        foldMap (f . snd) values
 
 instance Traversable Indexable where
-    traverse cmd (Indexable values keys) =
-        Indexable <$> traverse cmd values <*> pure keys
+    traverse cmd (Indexable values) =
+        Indexable <$> traverse inner values
+      where
+        inner (k, v) = tuple k <$> cmd v
 
-fmapMWithIndex :: Monad m => (Index -> a -> m b)
+fmapMWithIndex :: (Monad m, Functor m) => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)
-fmapMWithIndex cmd (Indexable values keys) = do
-    newValues <- mapM (\ k -> cmd k (values ! (index k))) keys
-    return $ Indexable (Map.fromList $ zip (map index keys) newValues) keys
+fmapMWithIndex cmd (Indexable values) = 
+    Indexable <$> fmapM (\ (i, v) -> tuple i <$> cmd i v) values
 
 instance Initial (Indexable a) where
-    initial = Indexable initial initial
+    initial = Indexable initial
 
 -- * getter
 
 -- | returns the length of the contained list
 length :: Indexable a -> Int
-length = List.length . keys
+length = List.length . values
 
 -- -- | returns, if the Index points to something
 isIndexOf :: Index -> Indexable a -> Bool
 isIndexOf i indexable = i `elem` keys indexable
 
 toList :: Indexable a -> [a]
-toList x = map (((values x) !) . index) $ keys x
+toList = map snd . values
 
 (!!!) :: Indexable a -> Index -> a
-Indexable{values} !!! i =
-    case Map.lookup (index i) values of
+(Indexable values) !!! i =
+    case lookup i values of
         Just x -> x
         Nothing -> error ("!!!: Index not found")
 
--- | returns the list if indices for which the corresponding
+-- | returns the list of indices for which the corresponding
 -- values fullfill a given predicate.
 -- Honours the order of values.
 findIndices :: (a -> Bool) -> Indexable a -> [Index]
-findIndices p (Indexable values keys) =
-    List.filter (p . (values !) . index) keys
+findIndices p (Indexable values) =
+    map fst $ List.filter (p . snd) values
 
 filter :: (a -> Bool) -> Indexable a -> Indexable a
-filter p ixs = Indexable newValues newIndices
-  where
-    newIndices = findIndices p ixs
-    newValues = Map.fromList $ map (\ i -> (index i, ixs !!! i)) newIndices
+filter p (Indexable values) =
+    Indexable $ List.filter (p . snd) values
 
 -- | Stable sorting of Indexables while preserving indices.
 sortBy :: (a -> a -> Ordering) -> Indexable a -> Indexable a
-sortBy ordering (Indexable values keys) =
-    Indexable values (map (Index . fst) sortedPairList)
-  where
---     sortedPairList :: [(Int, a)]
-    sortedPairList = List.sortBy (withView snd ordering) pairList
---     pairList :: [(Int, a)]
-    pairList = map (\ i -> (i, values ! i)) $ map index keys
+sortBy ordering (Indexable values) =
+    Indexable $ List.sortBy (withView snd ordering) values
 
 -- | generate an unused Index
 -- (newIndex l) `elem` l == False
@@ -139,47 +134,59 @@ newIndex l = maximum l + 1
 -- * constructors
 
 (<:) :: a -> Indexable a -> Indexable a
-a <: (Indexable values keys) =
-    Indexable (Map.insert (index i) a values) (i : keys)
+a <: (Indexable values) =
+    Indexable ((i, a) : values)
   where
-    i = newIndex keys
+    i = newIndex $ map fst values
 
 (>:) :: Indexable a -> a -> Indexable a
-(Indexable values keys) >: a =
-    Indexable (Map.insert (index i) a values) (keys +: i)
+(Indexable values) >: a =
+    Indexable (values +: (i, a))
   where
-    i = newIndex keys
+    i = newIndex $ map fst values
 
 fromList :: [a] -> Indexable a
-fromList list =
-    Indexable (Map.fromList pairs) (map (Index . fst) pairs)
-  where
-    pairs = zip [0..] list
+fromList list = Indexable $ zip [0 ..] list
 
 -- * mods
 
 deleteByIndex :: Index -> Indexable a -> Indexable a
-deleteByIndex i (Indexable values keys) =
-    Indexable (Map.delete (index i) values) (List.filter (/= i) keys)
+deleteByIndex i (Indexable values) =
+    Indexable $ inner values
+  where
+    inner ((k, a) : r) | i == k = r
+    inner (a : r) = a : inner r
+    inner [] = error "deleteByIndex: index not found"
 
 indexA :: Index -> Accessor (Indexable a) a
 indexA i = accessor getter setter
   where
-    getter (Indexable values keys) | i `elem` keys =
-        values ! index i
-    getter ix = error ("indexA: index not in Indexable: " ++ show i)
-    setter e (Indexable values keys) | i `elem` keys =
-        Indexable (Map.insert (index i) e values) keys
+    getter ix = ix !!! i
+    setter e (Indexable values) = Indexable $ inner values
+      where
+        inner ((k, a) : r) | k == i =
+            (k, e) : r
+        inner (a : r) = a : inner r
 
 -- | puts the indexed element first
 toHead :: Index -> Indexable a -> Indexable a
-toHead i (Indexable values keys) | i `elem` keys =
-    Indexable values (i : List.filter (/= i) keys)
+toHead i (Indexable values) =
+    Indexable $ inner [] values
+  where
+    inner akk ((k, a) : r) | k == i =
+        (k, a) : reverse akk ++ r
+    inner akk (a : r) =
+        inner (a : akk) r
 
 -- | puts the indexed element last
 toLast :: Index -> Indexable a -> Indexable a 
-toLast i (Indexable values keys) | i `elem` keys =
-    Indexable values (List.filter (/= i) keys +: i)
+toLast i (Indexable values) =
+    Indexable $ inner [] values
+  where
+    inner akk ((k, a) : r) | k == i =
+        reverse akk ++ r +: (k, a)
+    inner akk (a : r) =
+        inner (a : akk) r
 
 
 -- | optimizes an Indexable with merging.
@@ -202,12 +209,11 @@ optimizeMerge p =
 
 
     convertToList :: Indexable a -> [Either (Index, a) a] -- left unmerged, right merged
-    convertToList ix = map (\ i -> Left (i, values ix ! index i)) (keys ix)
+    convertToList ix = map Left $ values ix
     convertToIndexable :: [Either (Index, a) a] -> Indexable a
     convertToIndexable list =
-        Indexable (Map.fromList (map (first index) newValues)) (map fst newValues)
+        Indexable $ zipWith inner list newIndices
       where
-        newValues = zipWith inner list newIndices
         newIndices = if null allIndices then [0..] else [maximum allIndices + 1..]
         allIndices = map fst $ lefts list
         inner (Left x) _ = x
