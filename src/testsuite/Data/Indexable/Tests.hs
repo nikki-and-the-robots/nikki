@@ -29,6 +29,10 @@ tests = do
     quickCheck insertion
     quickCheck mergeIdempotency
     quickCheck mergeTest
+    quickCheck indexAGetter
+    quickCheck indexASetter
+    quickCheck toHeadTest
+    quickCheck toLastTest
 
 instance Arbitrary a => Arbitrary (Indexable a) where
     arbitrary = do
@@ -120,3 +124,29 @@ mergeTest ix =
   where
     mergedList = toList $ optimizeMerge mergeFunction ix
     originalList = toList ix
+
+indexAGetter :: Indexable Double -> Property
+indexAGetter ix =
+    not (null $ toList ix) ==>
+    forAll (elements $ keys ix) $ \ i ->
+        (ix ^. indexA i == ix !!! i)
+
+indexASetter :: Indexable Double -> Double -> Property
+indexASetter ix e =
+    not (null $ toList ix) ==>
+    forAll (elements $ keys ix) $ \ i ->
+        (((indexA i ^= e) ix) !!! i == e)
+
+toHeadTest :: Indexable Double -> Property
+toHeadTest = toEndTest toHead head
+
+toLastTest :: Indexable Double -> Property
+toLastTest = toEndTest toLast last
+
+-- | generelizes toHeadTest and toLastTest
+toEndTest :: (Index -> Indexable Double -> Indexable Double) -> ([Double] -> Double)
+    -> Indexable Double -> Property
+toEndTest toEnd listSelector ix =
+    not (null $ toList ix) ==>
+    forAll (elements $ keys ix) $ \ i ->
+        ((ix !!! i) == (listSelector $ toList $ toEnd i ix))
