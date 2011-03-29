@@ -159,6 +159,9 @@ secondKleisli cmd (x, a) = do
     b <- cmd a
     return (x, b)
 
+(<>>) :: Functor m => m a -> (a -> b) -> m b
+action <>> f = f <$> action
+
 
 -- * scripting stuff
 

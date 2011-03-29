@@ -35,6 +35,7 @@ import Profiling.Physics
 import Object
 
 import Game.Scene.Camera
+import Game.Scene.OptimizeRenderPixmaps
 
 import Sorts.Nikki.Types
 import Sorts.Terminal
@@ -251,9 +252,22 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
         io $ debugging ptr offset
         Profiling.Physics.render app configuration ptr now
 
+
+renderObjects configuration windowSize ptr offset now gameGrounds =
+    when (not $ omit_pixmap_rendering configuration) $ do
+        renderPixmaps <- gameGroundsToRenderPixmaps windowSize ptr offset now gameGrounds
+        fmapM_ (doRenderPixmap ptr) =<< optimize windowSize renderPixmaps
+-- development version
 renderObjects configuration size ptr offset now gameGrounds =
     when (not $ omit_pixmap_rendering configuration) $ do
-        fmapM_ (doRenderPixmap ptr) =<< gameGroundsToRenderPixmaps size ptr offset now gameGrounds
+        renderPixmaps <- gameGroundsToRenderPixmaps size ptr offset now gameGrounds
+        let fakeSize = Size 800 600
+            fakeOffset = sizeToPosition $ fmap (/ 2) (size -~ fakeSize)
+            fakeMod = fmap (renderPositionA ^: (+~ fakeOffset))
+        fmapM_ (doRenderPixmap ptr) . fakeMod =<< optimize fakeSize renderPixmaps
+        resetMatrix ptr
+        setPenColor ptr (alphaA ^= 0.5 $ red) 1
+        drawRect ptr fakeOffset fakeSize
 
 gameGroundsToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameGrounds Object_ -> IO [RenderPixmap]
 gameGroundsToRenderPixmaps size ptr offset now (GameGrounds backgrounds mainLayer foregrounds) = do
