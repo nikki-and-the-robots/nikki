@@ -41,7 +41,7 @@ import qualified Data.List as List
 import Data.Generics
 import Data.Either
 import Data.Traversable (Traversable, traverse)
-import Data.Foldable (Foldable, foldMap)
+import Data.Foldable (Foldable, foldMap, toList)
 import Data.Initial
 import Data.Accessor
 
@@ -99,9 +99,6 @@ length = List.length . values
 -- -- | returns, if the Index points to something
 isIndexOf :: Index -> Indexable a -> Bool
 isIndexOf i indexable = i `elem` keys indexable
-
-toList :: Indexable a -> [a]
-toList = map snd . values
 
 (!!!) :: Indexable a -> Index -> a
 (Indexable values) !!! i =

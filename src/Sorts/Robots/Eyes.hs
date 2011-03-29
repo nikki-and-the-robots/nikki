@@ -12,6 +12,7 @@ module Sorts.Robots.Eyes (
 
 import Data.Generics
 import Data.Map
+import Data.Abelian
 
 import Text.Printf
 
@@ -74,16 +75,14 @@ data RobotEyesState
   deriving (Eq, Ord, Show, Typeable, Data)
 
 -- | Renders the eyes of a robot.
-renderRobotEyes :: RobotEyesPixmaps -> Ptr QPainter -> Offset Double
+renderRobotEyes :: RobotEyesPixmaps
     -> Position Double -> Double -> Position Double
-    -> RobotEyesState -> Double -> IO ()
-renderRobotEyes pixmaps ptr offset pos angle eyesOffset state stateTime = do
-    resetMatrix ptr
-    translate ptr offset
-    translate ptr pos
-    rotate ptr (rad2deg angle)
-    translate ptr eyesOffset
-    renderPixmapSimple ptr (pickPixmap pixmaps state stateTime)
+    -> RobotEyesState -> Double -> RenderPixmap
+renderRobotEyes pixmaps pos angle eyesOffset state stateTime =
+    RenderPixmap
+        (pixmapOffsetA ^: (+~ eyesOffset) $ pickPixmap pixmaps state stateTime)
+        pos
+        (Just angle)
 
 pickPixmap :: RobotEyesPixmaps -> RobotEyesState -> Double -> Pixmap
 pickPixmap pixmaps state stateTime =

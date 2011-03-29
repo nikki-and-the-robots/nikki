@@ -67,7 +67,7 @@ defaultPixmap pixmaps = head (pixmaps ! "wait_right")
 -- Doesn't do anything, if the level is finished.
 modifyNikki :: (Nikki -> Nikki) -> Scene Object_ -> Scene Object_
 modifyNikki f scene | isGameMode (mode scene) =
-    objectsA .> physicsContentA .> indexA (nikki (mode scene)) ^:
+    objectsA .> gameMainLayerA .> indexA (nikki (mode scene)) ^:
         mod $
         scene
   where
@@ -119,10 +119,10 @@ instance Sort NSort Nikki where
             return . updateStartTime now (state nikki) >=>
             controlNikki now contacts cd sort
 
-    render nikki sort ptr offset now = do
+    render nikki sort _ _ now = do
         let pixmap = pickPixmap now sort nikki
-        renderChipmunk ptr offset pixmap (chipmunk nikki)
-        renderDustClouds ptr offset now sort (dustClouds $ state nikki)
+        pos <- fst <$> getRenderPositionAndAngle (chipmunk nikki)
+        return [RenderPixmap pixmap pos Nothing]
 
 
 pickPixmap :: Seconds -> NSort -> Nikki -> Pixmap

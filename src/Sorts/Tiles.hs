@@ -162,12 +162,10 @@ instance Sort TSort Tile where
 
     immutableCopy = es "immutableCopy: use AllTiles"
     chipmunks = es "chipmunks: use AllTiles"
-    render (Tile (ImmutableChipmunk position _ _ _)) sort ptr offset now = do
-        resetMatrix ptr
-        translate ptr offset
-        let pix = pickAnimationFrame (tilePixmaps sort) [frameDuration] now
-        translate ptr (position +~ pixmapOffset pix)
-        drawPixmap ptr zero $ pixmap pix
+    render (Tile (ImmutableChipmunk position _ _ _)) sort _ offset now = return $
+        return $ RenderPixmap pix position Nothing
+      where
+        pix = pickAnimationFrame (tilePixmaps sort) [frameDuration] now
 
 -- before initializing the scene, all tiles in the physics scene are being merged 
 -- (in Top.Initialisation), resulting in an AllTiles object. 
@@ -206,17 +204,13 @@ instance Sort AllTilesSort AllTiles where
 
     chipmunks (AllTiles c _) = [c]
 
-    render (AllTiles _ renderables) _ ptr offset now = do
-        resetMatrix ptr
-        translate ptr offset
-        mapM_ draw renderables
+    render (AllTiles _ renderables) _ _ _ now = return $
+        fmap inner renderables
       where
-        draw (sort, position) = do
-            let pix = pickAnimationFrame (tilePixmaps sort) [frameDuration] now
-                pixOffset = position +~ pixmapOffset pix
-            translate ptr pixOffset
-            drawPixmap ptr zero $ pixmap pix
-            translate ptr (negateAbelian pixOffset)
+        inner (sort, pos) = RenderPixmap
+            (pickAnimationFrame (tilePixmaps sort) [frameDuration] now)
+            pos
+            Nothing
 
 mkRenderable :: EditorObject TSort -> (TSort, Qt.Position Double)
 mkRenderable (EditorObject sort ep Nothing) = (sort, editorPosition2QtPosition sort ep)

@@ -32,6 +32,7 @@ import Data.IORef
 import qualified Data.Set as Set
 import Data.Char
 import Data.Accessor
+import Data.Monoid
 
 import Text.Printf
 import Text.Logging
@@ -138,6 +139,9 @@ fmapM_ = Data.Foldable.mapM_
 
 fany :: Foldable t => (a -> Bool) -> t a -> Bool
 fany = Data.Foldable.any
+
+(+>) :: Monoid m => m -> m -> m
+(+>) = mappend
 
 
 -- * function composition stuff

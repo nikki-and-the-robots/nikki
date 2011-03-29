@@ -21,6 +21,7 @@ import Data.Generics
 import Data.Traversable
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
+import Data.Maybe
 
 import System.FilePath
 
@@ -294,8 +295,8 @@ instance Sort TSort Terminal where
         return terminal{state = updateState now cd (robots terminal) (state terminal)}
 
     render terminal sort ptr offset now = do
-        pos <- fst <$> getRenderPosition (chipmunk terminal)
-        renderTerminal sort ptr offset now terminal pos
+        pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
+        return $ renderTerminal sort now terminal pos
 
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
@@ -349,38 +350,40 @@ exitToNikki state = state{exitMode = ExitToNikki, robotIndex = 0}
 
 -- * game rendering
 
-renderTerminal :: TSort -> Ptr QPainter -> Offset Double -> Seconds
+renderTerminal :: TSort -> Seconds
     -> Terminal -> Qt.Position Double
-    -> IO ()
-renderTerminal sort ptr offset now t pos = do
-    renderTerminalBackground sort ptr offset pos
-    renderDisplayBlinkenLights sort ptr offset now t pos
-    renderLittleColorLights sort ptr offset now t pos
+    -> [RenderPixmap]
+renderTerminal sort now t pos =
+    renderTerminalBackground sort pos :
+    renderDisplayBlinkenLights sort now pos :
+    catMaybes (renderLittleColorLights sort now t pos)
 
-renderTerminalBackground sort ptr offset pos = do
-    renderPixmap ptr offset pos Nothing $ background $ pixmaps sort
+renderTerminalBackground sort pos =
+    RenderPixmap (background $ pixmaps sort) pos Nothing
 
 -- | renders the main terminal pixmap (with blinkenlights)
-renderDisplayBlinkenLights sort ptr offset now t pos = do
+renderDisplayBlinkenLights sort now pos =
     let pixmap = pickAnimationFrame (blinkenLights $ pixmaps sort)
                  [blinkenLightSpeed] now
-    renderPixmap ptr offset pos Nothing pixmap
+    in RenderPixmap pixmap pos Nothing
 
 -- | renders the little colored lights (for the associated robots) on the terminal in the scene
-renderLittleColorLights sort ptr offset now t pos = do
+renderLittleColorLights sort now t pos =
     let colorStates = fst $ blinkenLightsState now (robots t) (state t)
-    mapM_
-        (renderLight ptr (offset +~ pos) (littleColorLights $ pixmaps sort) colorStates)
+    in map
+        (renderLight (littleColorLights $ pixmaps sort) pos colorStates)
         [red_, blue_, green_, yellow_]
 
-renderLight :: Ptr QPainter -> Offset Double -> ColorLights Pixmap -> ColorLights Bool
+renderLight :: ColorLights Pixmap -> Qt.Position Double -> ColorLights Bool
     -> (forall a . (ColorLights a -> a))
-    -> IO ()
-renderLight ptr offset pixmaps colorStates color =
-    when (color colorStates) $ do
+    -> Maybe RenderPixmap
+renderLight pixmaps pos colorStates color =
+    if color colorStates then
         let lightOffset = color littleLightOffsets
             pixmap = color pixmaps
-        renderPixmap ptr offset lightOffset Nothing pixmap
+        in Just $ RenderPixmap pixmap (pos +~ lightOffset) Nothing
+      else
+        Nothing
 
 littleLightOffsets :: ColorLights (Offset Double)
 littleLightOffsets = ColorLights {

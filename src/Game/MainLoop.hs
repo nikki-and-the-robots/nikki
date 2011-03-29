@@ -60,7 +60,7 @@ setScene s x = s{scene = x}
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
-gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> GameMonad AppState
+gameLoop :: Application -> MVar (RenderScene, DebuggingCommand) -> GameMonad AppState
 gameLoop app sceneMVar = do
     initializeSceneMVar
     timer <- io $ newTimer
@@ -104,13 +104,13 @@ gameLoop app sceneMVar = do
         empty <- io $ isEmptyMVar sceneMVar
         when (not empty) $ fail "sceneMVar has to be empty"
         s <- gets scene
-        immutableCopyOfScene <- io $ Game.Scene.immutableCopy s
+        immutableCopyOfScene <- io $ mkRenderScene s
         io $ putMVar sceneMVar (immutableCopyOfScene, initial)
     swapSceneMVar :: DebuggingCommand -> GameMonad ()
-    swapSceneMVar debugging= do
+    swapSceneMVar debugging = do
         s <- gets scene
         io $ do
-            immutableCopyOfScene <- Game.Scene.immutableCopy s
+            immutableCopyOfScene <- mkRenderScene s
             modifyMVar_ sceneMVar (const $ return (immutableCopyOfScene, debugging))
             return ()
 

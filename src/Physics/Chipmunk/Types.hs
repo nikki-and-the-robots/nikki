@@ -104,7 +104,7 @@ instance Show Space where
 
 immutableCopy :: Chipmunk -> IO Chipmunk
 immutableCopy c = do
-    (pos, angle) <- getRenderPosition c
+    (pos, angle) <- getRenderPositionAndAngle c
     return $ ImmutableChipmunk pos angle (bcOffset c) (shapeTypes c)
   where
     bcOffset :: Chipmunk -> Vector
@@ -197,16 +197,18 @@ getPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
 getPosition StaticChipmunk{chipmunkPosition} = return chipmunkPosition
 
 -- returns the angle and the position of the (rotated) left upper corner of the object.
-getRenderPosition :: Chipmunk -> IO (Qt.Position Double, Angle)
-getRenderPosition Chipmunk{body, baryCenterOffset} = do
+getRenderPositionAndAngle :: Chipmunk -> IO (Qt.Position Double, Angle)
+getRenderPositionAndAngle Chipmunk{body, baryCenterOffset} = do
     pos <- get $ H.position body
     angle <- get $ H.angle body
     let rotatedOffset = rotateVector angle baryCenterOffset
         (Vector x y) = pos -~ rotatedOffset
     return (Qt.Position x y, angle)
-getRenderPosition StaticChipmunk{renderPosition} = do
+getRenderPositionAndAngle StaticChipmunk{renderPosition} = do
     return (renderPosition, 0)
-getRenderPosition (ImmutableChipmunk pos angle _ _) = return (pos, angle)
+getRenderPositionAndAngle (ImmutableChipmunk pos angle _ _) = return (pos, angle)
+
+-- OPT: getRenderPosition without Angle
 
 getChipmunkPosition :: Chipmunk -> IO (Position, Angle)
 getChipmunkPosition Chipmunk{body} = do

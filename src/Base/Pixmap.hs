@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, DeriveDataTypeable #-}
 
 -- | provides a data type for pixmaps that saves the size and the internal offset (padding)
 -- of the image.
@@ -9,17 +9,31 @@ module Base.Pixmap where
 
 
 import Data.Abelian
+import Data.Data
+import Data.Accessor
 
 import Control.Monad.IO.Class
 
 import Graphics.Qt
+import Physics.Chipmunk (Angle)
 
 import Utils
 
-import Base.Types
+
+type Offset a = Position a
+
+data Pixmap = Pixmap {
+    pixmap :: Ptr QPixmap,
+    pixmapSize :: Size Double,
+    pixmapOffset :: Position Double
+  }
+    deriving (Show, Typeable, Data)
+
+pixmapOffsetA :: Accessor Pixmap (Position Double)
+pixmapOffsetA = accessor pixmapOffset (\ a r -> r{pixmapOffset = a})
 
 
--- | Loads a pixmap. 
+-- | Loads a pixmap.
 loadPixmap :: MonadIO m => Position Int -- ^ Size of the padding.
     -> FilePath -> m Pixmap
 loadPixmap padding path = io $ do
@@ -56,6 +70,9 @@ mapPixels f (Pixmap pix size offset) = do
     destroyQImage image
     return $ Pixmap newPix size offset
 
+
+-- * rendering
+
 -- | renders the pixmap
 renderPixmap :: MonadIO m =>
     Ptr QPainter -- ^ painter to be rendered to
@@ -79,3 +96,20 @@ renderPixmap ptr offset position mAngle pix = io $ do
 renderPixmapSimple :: MonadIO m => Ptr QPainter -> Pixmap -> m ()
 renderPixmapSimple ptr pix = io $
     drawPixmap ptr (fmap round $ pixmapOffset pix) (pixmap pix)
+
+-- | pixmap with rendering information (position and angle)
+data RenderPixmap
+    = RenderPixmap {
+        getRenderPixmap :: Pixmap,
+        renderPosition :: Position Double,
+        renderAngle :: Maybe Angle
+      }
+  deriving (Show, Typeable, Data)
+
+renderPositionA :: Accessor RenderPixmap (Position Double)
+renderPositionA = accessor renderPosition (\ a r -> r{renderPosition = a})
+
+-- | renders a pixmap
+doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO ()
+doRenderPixmap ptr (RenderPixmap pix pos angle) =
+    renderPixmap ptr zero pos angle pix

@@ -8,7 +8,7 @@ module Physics.Chipmunk (
     mkShapeDescription,
     immutableCopy,
 
-    getRenderPosition,
+    getRenderPositionAndAngle,
     getChipmunkPosition,
 
     withSpace,

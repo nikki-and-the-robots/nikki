@@ -184,11 +184,12 @@ updateRenderState now controlled j =
 
 
 renderJetpack j sort ptr offset now = do
+    (pos, angle) <- getRenderPositionAndAngle $ chipmunk j
     let pixmap = pickPixmap now j sort
-    renderChipmunk ptr offset pixmap (chipmunk j)
-    (position, rad) <- getRenderPosition $ chipmunk j
-    Eyes.renderRobotEyes (robotEyes sort) ptr offset position rad eyesOffset
-        eyesState (now - startTime j)
+        background = RenderPixmap pixmap pos (Just angle)
+        eyes = Eyes.renderRobotEyes (robotEyes sort) pos angle eyesOffset
+            eyesState (now - startTime j)
+    return (background : eyes : [])
   where
     eyesState = case renderState j of
         Idle -> Eyes.Idle

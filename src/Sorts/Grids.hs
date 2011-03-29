@@ -57,7 +57,14 @@ instance Sort GSort Grid where
         resetMatrix ptr
         translate ptr offset
         windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-        renderGrid ptr (editorSort eo) offset windowSize
+        let sort = editorSort eo
+            pix = gridPixmap sort
+            positions = calculateGridRenderPositions windowSize (size sort) offset
+
+        forM_ positions $ \ p -> do
+            translate ptr p
+            renderPixmapSimple ptr pix
+            translate ptr (negateAbelian p)
 
     initialize sort mSpace ep Nothing = do
         let pos = editorPosition2QtPosition sort ep
@@ -67,23 +74,16 @@ instance Sort GSort Grid where
 
     chipmunks = const []
 
-    render o s ptr offset now = do
-        resetMatrix ptr
-        let offsetPlusPosition = offset +~ position o
-        translate ptr offsetPlusPosition
-        windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-        renderGrid ptr s offsetPlusPosition windowSize
+    render o s ptr offset _ =
+        renderGrid s offset (position o) <$> (fmap fromIntegral <$> sizeQPainter ptr)
 
 
-renderGrid :: Ptr QPainter -> GSort -> Position Double -> Size Double -> IO ()
-renderGrid ptr sort position windowSize = do
+renderGrid :: GSort -> Offset Double -> Position Double -> Size Double -> [RenderPixmap]
+renderGrid sort offset position windowSize =
     let pix = gridPixmap sort
-        positions = calculateGridRenderPositions windowSize (size sort) position
-
-    forM_ positions $ \ p -> do
-        translate ptr p
-        renderPixmapSimple ptr pix
-        translate ptr (negateAbelian p)
+        positions = calculateGridRenderPositions windowSize (size sort) (position +~ offset)
+    in (flip map) positions $ \ p ->
+            RenderPixmap pix (position +~ p) Nothing
 
 -- | calculates where to render the grid, so that every space of the screen is filled
 calculateGridRenderPositions :: Size Double -> Size Double

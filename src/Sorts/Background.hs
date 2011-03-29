@@ -70,21 +70,25 @@ instance Sort BSort () where
                                            -- (except for the cursor and iconified rendering)
     renderIconified sort ptr =
         renderPixmapSimple ptr (head $ pixmaps sort)
-    renderEditorObject ptr offset eo =
-        render () (editorSort eo) ptr offset 0
-    initialize sort mSpace ep Nothing = return ()
-    immutableCopy = return
-    chipmunks = const []
-    render _ s ptr _ _ = do
+    renderEditorObject ptr offset eo = do
         resetMatrix ptr
         windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-        let mPix = pickPixmap windowSize $ pixmaps s
-            pix = fromMaybe (last $ pixmaps s) mPix
+        let mPix = pickPixmap windowSize $ pixmaps $ editorSort eo
+            pix = fromMaybe (last $ pixmaps $ editorSort eo) mPix
             offset = sizeToPosition $ fmap (round . (/ 2)) (windowSize -~ pixmapSize pix)
         when (isNothing mPix) $
             -- background image is too small
             clearScreen ptr black
         drawPixmap ptr offset (pixmap pix)
+    initialize sort mSpace ep Nothing = return ()
+    immutableCopy = return
+    chipmunks = const []
+    render _ s ptr offset _ = do
+        windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+        let mPix = pickPixmap windowSize $ pixmaps s
+            pix = fromMaybe (last $ pixmaps s) mPix
+            pos = sizeToPosition $ fmap (fromIntegral . round . (/ 2)) (windowSize -~ pixmapSize pix)
+        return [RenderPixmap pix (pos -~ offset) Nothing]
 
 -- | returns the smallest pixmap that can cover the whole window, if it exists
 pickPixmap :: Size Double -> [Pixmap] -> Maybe Pixmap

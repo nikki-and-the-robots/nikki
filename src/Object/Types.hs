@@ -60,7 +60,7 @@ sort_ :: Object_ -> Sort_
 sort_ (Object_ sort _) = Sort_ sort
 
 -- | object rendering without providing the sort
-render_ :: Object_ -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
+render_ :: Object_ -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
 render_ (Object_ sort o) = render o sort
 
 wrapObjectModifier :: Sort s o => (o -> o) -> Object_ -> Object_
@@ -79,7 +79,7 @@ mkEditorObject sort pos =
 
 renderChipmunk :: Ptr QPainter -> Offset Double -> Pixmap -> Chipmunk -> IO ()
 renderChipmunk painter worldOffset p chipmunk = do
-    (position, angle) <- getRenderPosition chipmunk
+    (position, angle) <- getRenderPositionAndAngle chipmunk
     renderPixmap painter worldOffset position (Just angle) p
 
 

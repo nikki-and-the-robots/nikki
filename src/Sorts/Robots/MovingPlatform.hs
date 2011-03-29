@@ -81,8 +81,8 @@ instance Sort PSort Platform where
                 let renderPosition = (epToPosition sort $
                         startPosition $ pathPositions oemPath) +~ physicsPadding
                     eyesState = if oemActive oemPath then Open else Closed
-                renderRobotEyes (robotEyes sort) ptr offset
-                    renderPosition 0 eyesOffset eyesState 0
+                doRenderPixmap ptr $ renderRobotEyes (robotEyes sort)
+                    (renderPosition +~ offset) 0 eyesOffset eyesState 0
 
     initialize sort (Just space) ep (Just (OEMState oemState_)) = do
         let Just oemState = cast oemState_
@@ -112,11 +112,12 @@ instance Sort PSort Platform where
         passThrough applyPlatformForce
 
     render platform sort ptr offset now = do
-        (position, rad) <- getRenderPosition $ chipmunk platform
+        (position, rad) <- getRenderPositionAndAngle $ chipmunk platform
         let renderPosition = position +~ physicsPadding
-        renderPixmap ptr offset renderPosition (Just rad) (pix sort)
-        renderRobotEyes (robotEyes sort) ptr offset renderPosition rad eyesOffset
-            (robotEyesState $ path platform) now
+            robot = RenderPixmap (pix sort) renderPosition (Just rad)
+            eyes = renderRobotEyes (robotEyes sort) renderPosition rad eyesOffset
+                (robotEyesState $ path platform) now
+        return (robot : eyes : [])
 
 -- | Returns the state of the robots eyes dependent on the current Path
 robotEyesState :: Path -> RobotEyesState

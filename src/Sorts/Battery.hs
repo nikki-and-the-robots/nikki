@@ -85,13 +85,14 @@ instance Sort BSort Battery where
             -- the battery is consumed by nikki (TODO: delete battery)
             removeChipmunk $ chipmunk o
             let sceneChange = modifyNikki addBatteryPower . removeBattery
-                removeBattery = objectsA .> physicsContentA ^: deleteByIndex i
+                removeBattery = objectsA .> gameMainLayerA ^: deleteByIndex i
             return (sceneChange, Consumed $ chipmunk o)
     update sort mode now contacts cd i o = return (id, o) -- no change
 
-    render o@Battery{} sort ptr offset now =
-        renderChipmunk ptr offset (batteryPixmap sort) (chipmunk o)
-    render Consumed{} _ _ _ _ = return ()
+    render o@Battery{} sort ptr offset now = do
+        (pos, angle) <- getRenderPositionAndAngle (chipmunk o)
+        return $ [RenderPixmap (batteryPixmap sort) pos (Just angle)]
+    render Consumed{} _ _ _ _ = return []
 
 
 

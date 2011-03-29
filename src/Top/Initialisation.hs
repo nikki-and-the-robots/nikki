@@ -34,7 +34,7 @@ import qualified Sorts.Background
 import qualified Sorts.Robots.Jetpack
 import qualified Sorts.Robots.MovingPlatform
 
-import qualified Sorts.DebugObject
+-- import qualified Sorts.DebugObject
 
 
 sortLoaders :: [RM [Sort_]]
@@ -53,7 +53,7 @@ sortLoaders =
 
     Sorts.Grids.sorts :
     Sorts.Background.sorts :
-    Sorts.DebugObject.sorts :
+--     Sorts.DebugObject.sorts :
     []
 
 withAllSorts :: (SelectTree Sort_ -> RM a) -> RM a
@@ -143,7 +143,7 @@ editorObject2Object mspace (EditorObject sort pos state) =
 mkScene :: Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene space (nikki, objects) = do
     contactRef <- initContactRef space initial watchedContacts
-    let optObjects = mkRenderGrounds objects
+    let optObjects = mkGameGrounds objects
     return $ Scene 0 optObjects contactRef initial (NikkiMode nikki)
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)

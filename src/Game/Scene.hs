@@ -2,20 +2,21 @@
 
 module Game.Scene (
     Scene,
-    Game.Scene.immutableCopy,
+    mkRenderScene,
     stepScene,
+    RenderScene,
     renderScene,
   ) where
 
 import Prelude hiding (foldr)
 
-import Data.Indexable (Indexable, Index, findIndices, fmapMWithIndex, toList, indexA)
+import Data.Indexable (Indexable(..), Index, findIndices, fmapMWithIndex, toList, indexA)
 import Data.Map ((!))
 import qualified Data.Set as Set
 import Data.Foldable (foldr)
 import Data.Maybe
 import Data.Abelian
-import Data.Foldable (Foldable)
+import Data.Foldable (Foldable, fold)
 
 import Control.Monad
 import Control.Monad.State (StateT(..))
@@ -81,7 +82,7 @@ modifyTransitioned scene = do
     return $ case getControlledIndex scene of
       Just controlledIndex ->
         let now = spaceTime scene
-        in objectsA .> physicsContentA .> indexA controlledIndex ^:
+        in objectsA .> gameMainLayerA .> indexA controlledIndex ^:
             (startControl now) $ scene
       Nothing -> scene
 
@@ -110,7 +111,7 @@ whichTerminalCollides Scene{objects, contacts} =
     findIndices p allTerminals
   where
     allTerminals :: Indexable (Maybe Terminal)
-    allTerminals = fmap unwrapTerminal $ physicsContent objects
+    allTerminals = fmap unwrapTerminal $ gameMainLayer objects
 
     p :: Maybe Terminal -> Bool
     p Nothing = False
@@ -169,7 +170,7 @@ levelPassed scene =
         Nothing
   where
     allSwitches :: [Switch] =
-        catMaybes $ map unwrapSwitch $ toList $ physicsContent $ objects scene
+        catMaybes $ map unwrapSwitch $ toList $ gameMainLayer $ objects scene
     allTriggered = all triggered allSwitches
     now = spaceTime scene
 
@@ -193,8 +194,8 @@ stepSpace space s@Scene{contactRef} = do
 updateScene :: ControlData -> Scene Object_ -> IO (Scene Object_)
 updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
     -- NOTE: Currently only the physics layer is updated
-    (sceneChange, physicsContent') <- updateMainLayer $ objects ^. physicsContentA
-    return $ sceneChange $ objectsA .> physicsContentA ^= physicsContent' $ scene
+    (sceneChange, physicsContent') <- updateMainLayer $ objects ^. gameMainLayerA
+    return $ sceneChange $ objectsA .> gameMainLayerA ^= physicsContent' $ scene
   where
     controlled = getControlledIndex scene
 
@@ -211,19 +212,23 @@ updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
 
 -- * rendering
 
--- | immutable copy (for the rendering thread)
-immutableCopy :: Scene Object_ -> IO (Scene Object_)
-immutableCopy scene = do
+-- | type for rendering the scene
+type RenderScene = Scene Object_
+
+-- | RenderScene (for the rendering thread)
+-- Gets created in the logic thread
+mkRenderScene :: Scene Object_ -> IO RenderScene
+mkRenderScene scene = do
     let old = scene ^. acc
     new <- fmapM Base.immutableCopy old
     return $ acc ^= new $ scene
   where
-    acc = objectsA .> physicsContentA
+    acc = objectsA .> gameMainLayerA
 
-
--- | well, renders the scene to the screen (to the max :)
+-- | Well, renders the scene to the screen (to the max :)
+-- Happens in the rendering thread.
 renderScene :: Application -> Configuration -> Ptr QPainter
-    -> Scene Object_ -> DebuggingCommand -> StateT CameraState IO ()
+    -> RenderScene -> DebuggingCommand -> StateT CameraState IO ()
 renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging = do
     center <- getCameraPosition ptr scene
     io $ do
@@ -233,39 +238,49 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
 
         clearScreen ptr black
 
-        when (not $ omit_pixmap_rendering configuration) $ do
-            let os = objects scene
-            fmapM_ (renderLayer ptr size offset now) $ renderBackgrounds os
-            renderObjects ptr size offset now (1, 1) $ physicsContent os
-            fmapM_ (renderLayer ptr size offset now) $ renderForegrounds os
+        renderObjects configuration size ptr offset now (objects scene)
 
         renderTerminalOSD ptr now scene
         renderLevelFinishedOSD ptr app mode
-
 
         -- debugging
         when (render_xy_cross configuration) $
             debugDrawCoordinateSystem ptr offset
         when (render_chipmunk_objects configuration) $
-            fmapM_ (renderObjectGrid ptr offset) $ physicsContent $ objects scene
+            fmapM_ (renderObjectGrid ptr offset) $ gameMainLayer $ objects scene
         io $ debugging ptr offset
         Profiling.Physics.render app configuration ptr now
 
+renderObjects configuration size ptr offset now gameGrounds =
+    when (not $ omit_pixmap_rendering configuration) $ do
+        fmapM_ (doRenderPixmap ptr) =<< gameGroundsToRenderPixmaps size ptr offset now gameGrounds
 
--- | renders the different Layers.
--- makes sure, everything is rendered ok.
-renderLayer :: Ptr QPainter -> Size Double -> Offset Double -> Seconds
-    -> RenderLayer Object_ -> IO ()
-renderLayer ptr size offset now layer =
-    renderObjects ptr size offset now (renderXDistance layer, renderYDistance layer) (contentList layer)
+gameGroundsToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameGrounds Object_ -> IO [RenderPixmap]
+gameGroundsToRenderPixmaps size ptr offset now (GameGrounds backgrounds mainLayer foregrounds) = do
+    bgs <- layersToRenderPixmaps size ptr offset now backgrounds
+    ml <- mainLayerToRenderPixmaps ptr offset now mainLayer
+    fgs <- layersToRenderPixmaps size ptr offset now foregrounds
+    return (bgs ++ ml ++ fgs)
 
--- | renders the physics layer
-renderObjects :: Foldable f =>
-    Ptr QPainter -> Size Double -> Offset Double -> Seconds -> (Double, Double)
-    -> f Object_ -> IO ()
-renderObjects ptr size offset now (xDistance, yDistance) objects = do
-    let modifiedOffset = calculateLayerOffset size offset (xDistance, yDistance)
-    fmapM_ (\ o -> render_ o ptr modifiedOffset now) objects
+layersToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> [GameLayer Object_] -> IO [RenderPixmap]
+layersToRenderPixmaps size ptr offset now layers =
+    concat <$> fmapM (layerToRenderPixmaps size ptr offset now) layers
+
+layerToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameLayer Object_ -> IO [RenderPixmap]
+layerToRenderPixmaps size ptr offset now layer =
+    fmap (renderPositionA ^: (+~ multiOffset)) <$>
+        concat <$> fmapM (\ o -> render_ o ptr multiOffset now) (gameContent layer)
+  where
+    multiOffset = layerOffset -- -~ offset
+    layerOffset =
+        calculateLayerOffset size offset (gameXDistance layer, gameYDistance layer)
+
+-- | rendering of the different Layers.
+mainLayerToRenderPixmaps :: Ptr QPainter -> Offset Double -> Seconds
+    -> Indexable Object_ -> IO [RenderPixmap]
+mainLayerToRenderPixmaps ptr offset now objects =
+    fmap (renderPositionA ^: (+~ offset)) <$>
+        concat <$> fmapM (\ o -> render_ o ptr offset now) (toList objects)
 
 -- | renders the big osd images ("SUCCESS" or "FAILURE") at the end of levels
 renderLevelFinishedOSD :: Ptr QPainter -> Application -> Mode -> IO ()
@@ -302,11 +317,7 @@ debugDrawCoordinateSystem ptr offset = do
             map (\ p -> (- halfScaleLine, p, halfScaleLine, p)) scalePositions
     scalePositions = map (* 64) [-100 .. 100]
 
-
 renderObjectGrid :: Ptr QPainter -> Qt.Position Double -> Object_ -> IO ()
 renderObjectGrid ptr offset object = do
     let chips :: [Chipmunk] = chipmunks object
     renderGrids ptr offset chips
-
--- renderObjectGrid ptr offset o = es "renderGrid" o
-

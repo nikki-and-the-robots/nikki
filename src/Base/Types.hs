@@ -7,6 +7,7 @@
 module Base.Types (
     module Base.Types,
     module Base.Types.Events,
+    Offset,
   ) where
 
 
@@ -20,6 +21,7 @@ import Data.ByteString (ByteString)
 import Data.Generics
 import Data.Generics.Uniplate.Data
 import Data.Accessor
+import Data.Foldable
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -31,7 +33,8 @@ import Graphics.Qt as Qt
 import Utils
 
 import Base.Grounds
-import Base.RenderGrounds
+import Base.GameGrounds
+import Base.Pixmap
 
 import Base.Types.Events
 import Base.Configuration
@@ -40,8 +43,6 @@ import Base.Configuration
 -- * type aliases
 
 type Seconds = Double
-
-type Offset a = Qt.Position a
 
 type ConfigurationReader = ReaderT Configuration IO
 type RM = ConfigurationReader
@@ -87,16 +88,6 @@ data ColorVariant = ColorVariant {
       }
 
 
--- * from Base.Pixmap
-
-data Pixmap = Pixmap {
-    pixmap :: Ptr QPixmap,
-    pixmapSize :: Size Double,
-    pixmapOffset :: Qt.Position Double
-  }
-    deriving (Show, Typeable, Data)
-
-
 -- from Game.Scene
 
 -- | representing the scene (both physical and graphical objects) during the game.
@@ -104,14 +95,14 @@ data Pixmap = Pixmap {
 data Scene object
     = Scene {
         spaceTime :: Seconds,
-        objects :: RenderGrounds object,
+        objects :: GameGrounds object,
         contactRef :: !(ContactRef Contacts),
         contacts :: !Contacts,
         mode :: Mode
       }
   deriving Show
 
-objectsA :: Accessor (Scene o) (RenderGrounds o)
+objectsA :: Accessor (Scene o) (GameGrounds o)
 objectsA = accessor objects (\ a r -> r{objects = a})
 
 modeA :: Accessor (Scene o) Mode
@@ -139,7 +130,7 @@ getControlledIndex Scene{mode} =
 -- | accesses an object from the mainLayer
 mainLayerObjectA :: Index -> Accessor (Scene o) o
 mainLayerObjectA i =
-    objectsA .> physicsContentA .> indexA i
+    objectsA .> gameMainLayerA .> indexA i
 
 
 data CameraState
@@ -423,7 +414,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
         -> object -> IO object
     updateNoSceneChange _ _ _ _ _ o = return o
 
-    render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO ()
+    render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
 
 editorPosition2QtPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
 editorPosition2QtPosition sort (EditorPosition x y) =

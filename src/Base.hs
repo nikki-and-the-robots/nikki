@@ -14,7 +14,7 @@ module Base (
     module Base.Constants,
     module Base.Animation,
     module Base.Grounds,
-    module Base.RenderGrounds,
+    module Base.GameGrounds,
     module Base.Debugging,
     module Base.Configuration,
     module Base.GlobalCatcher,
@@ -24,7 +24,7 @@ module Base (
   ) where
 
 
-import Base.Types
+import Base.Types hiding (Offset)
 import Base.Prose
 import Base.Font
 import Base.Application
@@ -36,7 +36,7 @@ import Base.Paths
 import Base.Constants
 import Base.Animation
 import Base.Grounds
-import Base.RenderGrounds
+import Base.GameGrounds
 import Base.Debugging
 import Base.Configuration
 import Base.GlobalCatcher

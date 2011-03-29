@@ -18,6 +18,8 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt hiding (scale)
 
+import Utils
+
 import Base
 
 import Object
@@ -112,10 +114,13 @@ instance Sort SwitchSort Switch where
             return switch
     updateNoSceneChange s _ _ _ _ o = return o
 
-    render switch sort ptr offset now = do
-        renderChipmunk ptr offset (stampPix sort) (stampChipmunk switch)
-        let boxPix = if triggered switch then boxOnPix sort else boxOffPix sort
-        renderChipmunk ptr offset boxPix (boxChipmunk switch)
+    render switch sort _ _ now = do
+        (stampPos, stampAngle) <- getRenderPositionAndAngle (stampChipmunk switch)
+        let stamp = RenderPixmap (stampPix sort) stampPos (Just stampAngle)
+            boxPix = if triggered switch then boxOnPix sort else boxOffPix sort
+        boxPos <- fst <$> getRenderPositionAndAngle (boxChipmunk switch)
+        let box = RenderPixmap boxPix boxPos Nothing
+        return (stamp : box : [])
 
 
 boxAttributes :: Vector -> BodyAttributes
