@@ -51,11 +51,11 @@ debugPoint color p = addDebugging $ \ ptr offset -> do
     resetMatrix ptr
     translate ptr offset
     setPenColor ptr color 2
-    drawCircle ptr (vector2QtPosition p) 5
+    drawCircle ptr (vector2position p) 5
 
 debugLine :: Color -> Vector -> Vector -> IO ()
 debugLine color a b = addDebugging $ \ ptr offset -> do
     resetMatrix ptr
     translate ptr offset
     setPenColor ptr color 4
-    drawLine ptr (vector2QtPosition a) (vector2QtPosition b)
+    drawLine ptr (vector2position a) (vector2position b)

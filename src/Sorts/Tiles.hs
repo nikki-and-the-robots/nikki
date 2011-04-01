@@ -236,7 +236,7 @@ mkAbsoluteShape (EditorObject sort ep Nothing) =
     halfSizeVector = Vector (w / 2) (h / 2)
     baryCenterOffset = halfSizeVector
     Size w h = size sort
-    chipmunkPosition = qtPosition2Vector (editorPosition2QtPosition sort ep)
+    chipmunkPosition = position2vector (editorPosition2QtPosition sort ep)
         +~ baryCenterOffset
 
 -- * chipmunk stuff

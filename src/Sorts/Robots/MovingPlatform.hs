@@ -92,7 +92,7 @@ instance Sort PSort Platform where
             shape = mkPoly sort
             shapes = [mkShapeDescription shapeAttributes shape]
 
-            pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
+            pos = position2vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
         chip <- initChipmunk space (bodyAttributes sort pos) shapes baryCenterOffset
 
@@ -339,4 +339,4 @@ epToCenterPosition :: PSort -> EditorPosition -> Position Double
 epToCenterPosition sort ep = epToPosition sort ep +~ fmap (/ 2) (sizeToPosition $ size sort)
 
 epToCenterVector :: PSort -> EditorPosition -> Vector
-epToCenterVector sort = qtPosition2Vector . epToCenterPosition sort
+epToCenterVector sort = position2vector . epToCenterPosition sort

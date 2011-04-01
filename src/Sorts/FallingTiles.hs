@@ -126,7 +126,7 @@ initializeBox space sort ep = do
     let (shape, baryCenterOffset) = mkShape sort
         shapeWithAttributes = (mkShapeDescription shapeAttributes shape)
         pos :: Vector
-        pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
+        pos = position2vector (editorPosition2QtPosition sort ep)
                 +~ baryCenterOffset
         bodyAttributes = mkMaterialBodyAttributes fallingTilesMaterialMass [shape] pos
         -- this is a hack: mass and inertia set to very large values to simulate static tiles

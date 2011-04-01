@@ -96,7 +96,7 @@ instance Sort NSort Nikki where
 
     initialize sort (Just space) editorPosition Nothing = do
         let (surfaceVelocityShapeType, otherShapes, baryCenterOffset) = mkPolys
-            pos = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
+            pos = position2vector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
 
         chip <- CM.initChipmunk space (bodyAttributes pos) (surfaceVelocityShapeType : otherShapes)

@@ -88,7 +88,7 @@ instance Sort JSort Jetpack where
 
     initialize sort (Just space) ep Nothing = do
         let
-            pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
+            pos = position2vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
             bodyAttributes = jetpackBodyAttributes pos
             (polys, baryCenterOffset) = mkPolys

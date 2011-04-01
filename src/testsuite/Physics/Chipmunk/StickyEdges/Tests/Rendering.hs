@@ -80,7 +80,7 @@ generateRandoms =
 
 renderShape ptr (r, g, b) (Polygon vertices) = do
     resetMatrix ptr
-    translate ptr (vector2QtPosition $ head vertices)
+    translate ptr (vector2position $ head vertices)
     let Vector w h = vertices !! 2 -~ head vertices
     eraseRect ptr zero (fmap round $ Size w h) (QtColor r g b 55)
     resetMatrix ptr

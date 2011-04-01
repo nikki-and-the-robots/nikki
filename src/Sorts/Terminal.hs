@@ -262,7 +262,7 @@ instance Sort TSort Terminal where
             attached = case oemState of
                 NoRobots -> []
                 Robots _ _ x -> x
-            pos = qtPosition2Vector
+            pos = position2vector
                 (editorPosition2QtPosition sort editorPosition)
                 +~ baryCenterOffset
             bodyAttributes = StaticBodyAttributes{

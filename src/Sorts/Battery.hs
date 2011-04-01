@@ -69,7 +69,7 @@ instance Sort BSort Battery where
     initialize sort (Just space) ep Nothing = do
         let baryCenterOffset = Vector (width batterySize / 2) (height batterySize / 2)
             shapes = fmap (mkShapeDescription shapeAttributes) mkShapes
-            pos = qtPosition2Vector (editorPosition2QtPosition sort ep)
+            pos = position2vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
             bodyAttributes = mkMaterialBodyAttributes batteryMaterialMass mkShapes pos
         chip <- initChipmunk space bodyAttributes shapes baryCenterOffset

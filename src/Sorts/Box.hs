@@ -56,7 +56,7 @@ instance Sort BSort Box where
     initialize sort (Just space) editorPosition Nothing = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
-            position = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
+            position = position2vector (editorPosition2QtPosition sort editorPosition)
                             +~ baryCenterOffset
             bodyAttributes = mkMaterialBodyAttributes boxMaterialMass shapes position
         chip <- CM.initChipmunk space bodyAttributes

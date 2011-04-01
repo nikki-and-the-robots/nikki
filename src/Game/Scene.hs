@@ -235,7 +235,7 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
     io $ do
         size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
         let offsetVector = - (center - Vector (width / 2) (height / 2))
-            offset = fmap (fromIntegral . truncate) $ vector2QtPosition offsetVector
+            offset = fmap (fromIntegral . truncate) $ vector2position offsetVector
 
         clearScreen ptr black
 

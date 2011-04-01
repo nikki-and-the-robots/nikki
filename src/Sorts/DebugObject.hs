@@ -72,7 +72,7 @@ instance Sort DebugSort Debug where
             shapesDescriptions =
                 map (mkShapeDescription (shapeAttributes TileCT)) shapes
             pos :: Vector
-            pos = qtPosition2Vector (editorPosition2QtPosition sort editorPosition)
+            pos = position2vector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
         chip <- initChipmunk space (bodyAttributes pos)
                     shapesDescriptions baryCenterOffset
@@ -115,7 +115,7 @@ objectSize = Size width height
 mkShapes :: ([ShapeType], Vector)
 mkShapes = (map mkLine polyLines, objectBaryCenterOffset)
 
-objectBaryCenterOffset = qtPosition2Vector $ sizeToPosition $ fmap (/ 2) objectSize
+objectBaryCenterOffset = position2vector $ sizeToPosition $ fmap (/ 2) objectSize
 
 mkLine (start, end) =
     LineSegment (h start) (h end) 0

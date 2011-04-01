@@ -132,7 +132,7 @@ initChipmunk space as@StaticBodyAttributes{position} shapeTypes baryCenterOffset
     let normalAttrs = static2normalAttributes as
     body <- mkBody normalAttrs
     let chip = StaticChipmunk space body [] []
-                (vector2QtPosition (position -~ baryCenterOffset)) position
+                (vector2position (position -~ baryCenterOffset)) position
     addInitShape chip shapeTypes
 
 initChipmunk space as@BodyAttributes{} shapeTypes baryCenterOffset = do
@@ -234,11 +234,11 @@ static2normalAttributes (StaticBodyAttributes position) =
     inertia = infinity
 static2normalAttributes x = nm "static2normalAttributes" x
 
-qtPosition2Vector :: Qt.Position Double -> Vector
-qtPosition2Vector (Qt.Position x y) = Vector x y
+position2vector :: Qt.Position Double -> Vector
+position2vector (Qt.Position x y) = Vector x y
 
-vector2QtPosition :: Vector -> Qt.Position Double
-vector2QtPosition (Vector x y) = Qt.Position x y
+vector2position :: Vector -> Qt.Position Double
+vector2position (Vector x y) = Qt.Position x y
 
 
 -- * missing
