@@ -27,35 +27,37 @@ import Sorts.Robots
 
 getSelectedLayerContent :: EditorScene Sort_ -> Indexable (EditorObject Sort_)
 getSelectedLayerContent scene =
-    ((scene ^. editorObjectsA) !|| selectedLayer scene) ^. contentA
+    scene ^. editorObjects ^. layerA (selectedLayer scene) ^. content
 
 -- | get the object that is actually selected by the cursor
 getSelectedObject :: EditorScene Sort_ -> Maybe (EditorObject Sort_)
 getSelectedObject scene =
     flip fmap (selected scene) $
-        \ (layerIndex, i) -> (((scene ^. editorObjectsA) !|| layerIndex) ^. contentA) !!! i
+        \ (layerIndex, i) ->
+            scene ^. editorObjects ^. layerA layerIndex ^. content ^. indexA i
 
 -- | returns all Indices (to the mainLayer) for robots
 getRobotIndices :: Sort sort o => EditorScene sort -> [Index]
 getRobotIndices scene =
-    I.findIndices (isRobot . editorSort) $ (mainLayer (scene ^. editorObjectsA) ^. contentA)
+    I.findIndices (isRobot . editorSort) $
+        scene ^. editorObjects ^. mainLayer ^. content
 
 getCursorSize :: Sort sort o => EditorScene sort -> (Size Double)
 getCursorSize s@EditorScene{} =
-    size $ getSelected $ availableSorts s
+    size $ getSelected $ s ^. availableSorts
 
 -- | returns an object from the main layer
 getMainLayerEditorObject :: EditorScene sort -> Index -> EditorObject sort
 getMainLayerEditorObject scene i = os !!! i
   where
-    os = mainLayerIndexable $ (scene ^. editorObjectsA)
+    os = mainLayerIndexable $ (scene ^. editorObjects)
 
 -- returns the wanted cursor step
 getCursorStep :: EditorScene Sort_ -> EditorPosition
 getCursorStep s = case cursorStep s of
     Just x -> x
     Nothing ->
-        let (Size x y) = size $ getSelected $ availableSorts s
+        let (Size x y) = size $ getSelected $ s ^. availableSorts
         in EditorPosition x y
 
 
@@ -66,17 +68,13 @@ setCursorStep scene x = scene{cursorStep = x}
 
 -- | adds a new default Layer to the EditorScene
 addDefaultBackground :: EditorScene Sort_ -> EditorScene Sort_
-addDefaultBackground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
-    s{editorObjects = objects'}
-  where
-    objects' = Grounds (backgrounds >: initial) mainLayer foregrounds
+addDefaultBackground =
+    editorObjects .> backgrounds ^: (>: initial)
 
 -- | adds a new default Layer to the EditorScene
 addDefaultForeground :: EditorScene Sort_ -> EditorScene Sort_
-addDefaultForeground s@EditorScene{editorObjects = (Grounds backgrounds mainLayer foregrounds)} =
-    s{editorObjects = objects'}
-  where
-    objects' = Grounds backgrounds mainLayer (initial <: foregrounds)
+addDefaultForeground =
+    editorObjects .> foregrounds ^: (initial <:)
 
 
 -- * modification
@@ -84,11 +82,11 @@ addDefaultForeground s@EditorScene{editorObjects = (Grounds backgrounds mainLaye
 -- | returns if an object is currently in the copy selection
 inCopySelection :: Sort s x => EditorScene s -> EditorObject s -> Bool
 inCopySelection EditorScene{editorMode = SelectionMode endPosition, cursor} object =
-    (editorPosition object `pBetween` range) &&
+    ((object ^. editorPosition) `pBetween` range) &&
     objectEndPosition `pBetween` range
   where
     Size w h = size $ editorSort object
-    objectEndPosition = editorPosition object +~ EditorPosition w (- h)
+    objectEndPosition = object ^. editorPosition +~ EditorPosition w (- h)
     range = (cursor, endPosition)
 
     pBetween (EditorPosition x y) (EditorPosition x1 y1, EditorPosition x2 y2) =
@@ -99,7 +97,7 @@ inCopySelection EditorScene{editorMode = SelectionMode endPosition, cursor} obje
 
 cutSelection :: EditorScene Sort_ -> EditorScene Sort_
 cutSelection scene =
-    editorObjectsA .> layerA (selectedLayer scene) ^:
+    editorObjects .> layerA (selectedLayer scene) ^:
         (modifyContent deleteCutObjects) $
     scene{editorMode = NormalMode, clipBoard = clipBoard}
   where
@@ -130,7 +128,7 @@ findCopySelectionIndices scene =
 
 moveSelectionToZero :: EditorScene Sort_ -> EditorObject Sort_ -> EditorObject Sort_
 moveSelectionToZero scene@EditorScene{editorMode = SelectionMode (EditorPosition x2 y2)} =
-    editorPositionA ^: (-~ EditorPosition x y) >>>
+    editorPosition ^: (-~ EditorPosition x y) >>>
     modifyOEMEditorPositions (-~ EditorPosition x y)
   where
     x = min x1 x2
@@ -139,12 +137,12 @@ moveSelectionToZero scene@EditorScene{editorMode = SelectionMode (EditorPosition
 
 pasteClipboard :: EditorScene Sort_ -> EditorScene Sort_
 pasteClipboard scene =
-    editorObjectsA .> layerA (selectedLayer scene) ^: (modifyContent addClipboard) $
+    editorObjects .> layerA (selectedLayer scene) ^: (modifyContent addClipboard) $
     scene
   where
     addClipboard :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
     addClipboard = 
         foldr (>>>) id $ map (\ o ix -> ix >: o) $
-        map (editorPositionA ^: (+~ cursor scene)) $
+        map (editorPosition ^: (+~ cursor scene)) $
         map (modifyOEMEditorPositions (+~ cursor scene)) $
         clipBoard scene

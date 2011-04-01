@@ -44,7 +44,7 @@ initialCameraState nikki = CS nikki zero
 
 getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_ -> StateT CameraState IO Position
 getCameraPosition ptr scene =
-    case mode scene of
+    case scene ^. mode of
         NikkiMode{nikki} -> getCameraPositionMaybeCentered ptr scene nikki
         TerminalMode{} -> do
             -- leave the camera on the old controlled object

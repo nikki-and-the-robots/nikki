@@ -11,6 +11,8 @@ class Abelian a where
     negateAbelian :: a -> a
     negateAbelian = (zero -~)
 
+infixl 6  +~, -~
+
 instance Abelian Int where
     zero = 0
     (+~) = (+)

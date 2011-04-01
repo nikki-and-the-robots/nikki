@@ -34,7 +34,7 @@ sortShadowedTiles = sortBy tilesReadOrdering
 
 tilesReadOrdering :: EditorObject Sort_ -> EditorObject Sort_ -> Ordering
 tilesReadOrdering a b | isTileSort (editorSort a) && isTileSort (editorSort b) =
-    withView editorPosition tilesOrdering a b
+    withView (^. editorPosition) tilesOrdering a b
 tilesReadOrdering _ _ = EQ
 
 -- | Orders left and up first. 45 degrees.

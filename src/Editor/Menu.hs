@@ -119,18 +119,18 @@ editorMenu app play mvar scene =
 
 
 saveLevel :: Application -> AppState -> (FilePath -> AppState) -> EditorScene Sort_ -> AppState
-saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects} = ioAppState $ do
-    writeObjectsToDisk path editorObjects
+saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects_} = ioAppState $ do
+    writeObjectsToDisk path editorObjects_
     return $ follower path
-saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects} =
+saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects_} =
     askString app parent "level name" $ \ name -> staticConfigAppState $ do
         levelDirectory <- getFreeLevelsDirectory
         let path = levelDirectory </> name <..> "nl"
         exists <- io $ doesFileExist path
         if exists then
-            return $ fileExists app this path editorObjects
+            return $ fileExists app this path editorObjects_
           else do
-            io $ writeObjectsToDisk path editorObjects
+            io $ writeObjectsToDisk path editorObjects_
             return $ follower path
   where
     this = saveLevel app parent follower scene
@@ -154,14 +154,14 @@ reallyExitEditor app editor =
 selectSort :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
 selectSort app editorMenu play mvar scene =
-    treeToMenu app editorMenu (fmap (sortId >>> getSortId) $ availableSorts scene) select
+    treeToMenu app editorMenu (fmap (sortId >>> getSortId) $ scene ^. availableSorts) select
   where
     select :: String -> AppState
     select n =
         editorLoop app play mvar scene'
       where
-        scene' = case selectFirstElement pred (availableSorts scene) of
-            Just newTree -> scene{availableSorts = newTree}
+        scene' = case selectFirstElement pred (scene ^. availableSorts) of
+            Just newTree -> availableSorts ^= newTree $ scene
         pred sort = SortId n == sortId sort
 
 
@@ -172,11 +172,11 @@ enterOEM app play mvar scene = do -- maybe monad
     selectedObject <- getSelectedObject scene
     _ <- objectEditMode $ editorSort $ selectedObject
     let modObjects = layerA layerIndex ^:
-            modifyContent (indexA i .> editorOEMStateA ^: fmap mod)
+            modifyContent (indexA i .> editorOEMState ^: fmap mod)
         mod :: OEMState -> OEMState
         mod = oemEnterMode scene
     Just $ edit $
-        editorObjectsA ^: modObjects $
+        editorObjects ^: modObjects $
         scene{editorMode = ObjectEditMode i}
   where
     edit :: EditorScene Sort_ -> AppState
@@ -206,7 +206,7 @@ changeLayerDistance app parent scene follower =
     askStringRead app parent "x distance" $ \ x ->
     askStringRead app parent "y distance" $ \ y -> AppState $
         return $ follower
-            (editorObjectsA .> layerA (selectedLayer scene) ^:
+            (editorObjects .> layerA (selectedLayer scene) ^:
                 (setYDistance y . setXDistance x) $ scene)
 
 -- | shows an editor help corresponding to the current editor mode

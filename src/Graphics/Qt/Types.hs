@@ -68,8 +68,8 @@ data Color = QtColor {
   }
     deriving (Eq, Ord, Show)
 
-alphaA :: Accessor Color Double
-alphaA = accessor (byteIntToDouble . _alpha) (\ a r -> r{_alpha = doubleToByteInt a})
+alpha :: Accessor Color Double
+alpha = accessor (byteIntToDouble . _alpha) (\ a r -> r{_alpha = doubleToByteInt a})
 
 opaqueColor :: Double -> Double -> Double -> Color
 opaqueColor r g b =

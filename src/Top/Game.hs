@@ -28,8 +28,8 @@ import Top.Initialisation
 
 playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
 playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
-    scene :: Scene Object_ <- io $ initScene space (editorScene ^. editorObjectsA)
-    let (NikkiMode nikkiIndex) = mode scene
+    scene :: Scene Object_ <- io $ initScene space (editorScene ^. editorObjects)
+    let (NikkiMode nikkiIndex) = scene ^. mode
     sceneMVar <- io newEmptyMVar
     fpsRef <- initialFPSRef
     configuration <- getConfiguration

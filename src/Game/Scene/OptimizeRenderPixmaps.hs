@@ -20,7 +20,7 @@ optimize windowSize = filterM (inView windowSize)
 
 inView windowSize (RenderPixmap pix objectPosition Nothing) = 
     sizeQPixmap (pixmap pix) <>> \ (fmap fromIntegral -> size) ->
-        let picturePosition@(Position x y) = objectPosition -~ pixmapOffset pix
+        let picturePosition@(Position x y) = objectPosition -~ pix ^. pixmapOffset
             xGreater = x + width size >= 0
             xLesser = x <= width windowSize
             yGreater = y + height size >= 0

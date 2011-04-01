@@ -31,7 +31,7 @@ renderEditorScene ptr scene = do
             renderObjectScene ptr offset scene
             renderGUI ptr offset scene
         ObjectEditMode index -> do
-            let Just oemState = editorOEMState $ getMainLayerEditorObject scene index
+            let Just oemState = getMainLayerEditorObject scene index ^. editorOEMState
             oemRender ptr scene oemState
         SelectionMode endPosition -> renderCopySelection ptr scene endPosition
 
@@ -41,15 +41,15 @@ renderObjectScene ptr offset s = do
     size <- fmap fromIntegral <$> sizeQPainter ptr
     clearScreen ptr black
     let -- the layers behind the currently selected Layer
-        currentBackgrounds = belowSelected (selectedLayer s) (s ^. editorObjectsA)
-        currentLayer = (s ^. editorObjectsA) !|| selectedLayer s
+        currentBackgrounds = belowSelected (selectedLayer s) (s ^. editorObjects)
+        currentLayer = s ^. editorObjects ^. layerA (selectedLayer s)
     mapM_ (renderLayer ptr size offset . correctDistances currentLayer)
         (currentBackgrounds +: currentLayer)
 
 renderGUI ptr offset s = do
     renderCursor' ptr offset s
 
-    renderSelectedIcon ptr (getSelected $ availableSorts s)
+    renderSelectedIcon ptr (getSelected $ s ^. availableSorts)
     renderCursorPositionOSD ptr $ cursor s
     renderCursorStepSize ptr $ getCursorStep s
     renderLayerOSD ptr $ selectedLayer s
@@ -61,17 +61,17 @@ renderLayer :: Sort sort o => Ptr QPainter -> Size Double -> Offset Double
     -> Layer (EditorObject sort) -> IO ()
 renderLayer ptr size offset layer = do
     let modifiedOffset = calculateLayerOffset size offset (xDistance layer, yDistance layer)
-    fmapM_ (renderEditorObject ptr modifiedOffset) (layer ^. contentA)
+    fmapM_ (renderEditorObject ptr modifiedOffset) (layer ^. content)
 
 -- | renders the pink cursor box
 renderCursor' :: Ptr QPainter -> Offset Double -> EditorScene Sort_ -> IO ()
 renderCursor' ptr offset scene = do
     let cursorPos = cursor scene
-        sort = getSelected $ availableSorts scene
+        sort = getSelected $ scene ^. availableSorts
         size_ = size sort
         pos = offset +~ editorPosition2QtPosition sort cursorPos
     resetMatrix ptr
-    drawColoredBox ptr pos size_ 5 (alphaA ^= 0.5 $ pink)
+    drawColoredBox ptr pos size_ 5 (alpha ^= 0.5 $ pink)
 
 
 -- calculates the rendering position for all objects (does the clipping, etc.)
@@ -156,11 +156,11 @@ renderSelectionBox ptr offset scene (EditorPosition x2 y2) = do
 renderSelectedBoxes ptr offset scene =
     mapM_ (drawCopySelectedBox ptr offset) $ 
         filter (inCopySelection scene) $ I.toList $
-            (((scene ^. editorObjectsA) !|| selectedLayer scene) ^. contentA)
+            scene ^. editorObjects ^. layerA (selectedLayer scene) ^. content
 
 drawCopySelectedBox ptr offset object = do
     let sort = editorSort object
-        p = editorPosition2QtPosition sort (editorPosition object) +~ offset
+        p = editorPosition2QtPosition sort (object ^. editorPosition) +~ offset
     drawColoredBox ptr p (size sort) 3 green
 
 

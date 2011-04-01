@@ -25,12 +25,12 @@ type Offset a = Position a
 data Pixmap = Pixmap {
     pixmap :: Ptr QPixmap,
     pixmapSize :: Size Double,
-    pixmapOffset :: Position Double
+    pixmapOffset_ :: Position Double
   }
     deriving (Show, Typeable, Data)
 
-pixmapOffsetA :: Accessor Pixmap (Position Double)
-pixmapOffsetA = accessor pixmapOffset (\ a r -> r{pixmapOffset = a})
+pixmapOffset :: Accessor Pixmap (Position Double)
+pixmapOffset = accessor pixmapOffset_ (\ a r -> r{pixmapOffset_ = a})
 
 
 -- | Loads a pixmap.
@@ -88,26 +88,26 @@ renderPixmap ptr offset position mAngle pix = io $ do
     translate ptr position
     whenMaybe mAngle $ \ angle ->
         rotate ptr (rad2deg angle)
-    translate ptr (pixmapOffset pix)
+    translate ptr (pix ^. pixmapOffset)
 
     drawPixmap ptr zero (pixmap pix)
 
 -- | renders a Pixmap without altering the painter matrix
 renderPixmapSimple :: MonadIO m => Ptr QPainter -> Pixmap -> m ()
 renderPixmapSimple ptr pix = io $
-    drawPixmap ptr (fmap round $ pixmapOffset pix) (pixmap pix)
+    drawPixmap ptr (fmap round (pix ^. pixmapOffset)) (pixmap pix)
 
 -- | pixmap with rendering information (position and angle)
 data RenderPixmap
     = RenderPixmap {
         getRenderPixmap :: Pixmap,
-        renderPosition :: Position Double,
+        renderPosition_ :: Position Double,
         renderAngle :: Maybe Angle
       }
   deriving (Show, Typeable, Data)
 
-renderPositionA :: Accessor RenderPixmap (Position Double)
-renderPositionA = accessor renderPosition (\ a r -> r{renderPosition = a})
+renderPosition :: Accessor RenderPixmap (Position Double)
+renderPosition = accessor renderPosition_ (\ a r -> r{renderPosition_ = a})
 
 -- | renders a pixmap
 doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO ()
@@ -116,6 +116,6 @@ doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
     translate ptr position
     whenMaybe mAngle $ \ angle ->
         rotate ptr (rad2deg angle)
-    translate ptr (pixmapOffset pix)
+    translate ptr (pix ^. pixmapOffset)
 
     drawPixmap ptr zero (pixmap pix)

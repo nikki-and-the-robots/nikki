@@ -2,7 +2,7 @@
 
 module Base.GameGrounds (
     GameGrounds(..),
-    gameMainLayerA,
+    gameMainLayer,
     GameLayer(..),
     mkGameGrounds,
   ) where
@@ -21,13 +21,13 @@ import Utils
 
 data GameGrounds a = GameGrounds {
     gameBackgrounds :: [GameLayer a],
-    gameMainLayer :: Indexable a,
+    gameMainLayer_ :: Indexable a,
     gameForegrounds :: [GameLayer a]
   }
     deriving (Show, Read, Data, Typeable)
 
-gameMainLayerA :: Accessor (GameGrounds a) (Indexable a)
-gameMainLayerA = accessor gameMainLayer (\ a r -> r{gameMainLayer = a})
+gameMainLayer :: Accessor (GameGrounds a) (Indexable a)
+gameMainLayer = accessor gameMainLayer_ (\ a r -> r{gameMainLayer_ = a})
 
 data GameLayer a = GameLayer {
     gameContent :: [a],
@@ -43,7 +43,7 @@ mkGameGrounds :: Grounds a -> GameGrounds a
 mkGameGrounds (Grounds backgrounds mainLayer foregrounds) =
     GameGrounds
         (multi backgrounds)
-        (content mainLayer)
+        (mainLayer ^. content)
         (multi foregrounds)
   where
     multi :: Indexable (Layer a) -> [GameLayer a]

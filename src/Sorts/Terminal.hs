@@ -283,7 +283,7 @@ instance Sort TSort Terminal where
 
     getControlledChipmunk scene _ =
         getControlledChipmunk scene $
-        scene ^. mainLayerObjectA (Base.nikki $ mode scene)
+        scene ^. mainLayerObjectA (Base.nikki $ scene ^. mode)
 
     chipmunks = chipmunk >>> return
 
@@ -409,13 +409,13 @@ padding = fromUber 2
 -- * rendering of game OSD
 
 renderTerminalOSD :: Ptr QPainter -> Seconds -> Scene Object_ -> IO ()
-renderTerminalOSD ptr now scene@Scene{mode = mode@Base.TerminalMode{}} =
+renderTerminalOSD ptr now scene@Scene{mode_ = mode@Base.TerminalMode{}} =
     let terminal = Base.terminal mode
         object = scene ^. mainLayerObjectA terminal
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
         (Just sort, Just terminal) -> do
-            clearScreen ptr $ alphaA ^= 0.6 $ black
+            clearScreen ptr $ alpha ^= 0.6 $ black
             windowSize <- fmap fromIntegral <$> sizeQPainter ptr
             let pixmaps = osdPixmaps sort
                 position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)
@@ -558,20 +558,21 @@ oemRender_ ptr scene state = do
 
 oemCursor :: Sort sort o => EditorScene sort -> TerminalOEMState -> EditorPosition
 oemCursor scene NoRobots = cursor scene
-oemCursor scene (Robots available selected _) = editorPosition (getMainLayerEditorObject scene selected)
+oemCursor scene (Robots available selected _) =
+    getMainLayerEditorObject scene selected ^. editorPosition
 
 renderOEMOSDs :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sort -> TerminalOEMState
     -> IO ()
 renderOEMOSDs ptr offset scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
-    renderRobotBox (alphaA ^= 0.5 $ orange) (getMainLayerEditorObject scene selected)
-    mapM_ (renderRobotBox (alphaA ^= 0.3 $ Qt.yellow)) $ map (getMainLayerEditorObject scene) $
+    renderRobotBox (alpha ^= 0.5 $ orange) (getMainLayerEditorObject scene selected)
+    mapM_ (renderRobotBox (alpha ^= 0.3 $ Qt.yellow)) $ map (getMainLayerEditorObject scene) $
         attached
   where
     renderRobotBox :: Sort sort o => Color -> EditorObject sort -> IO ()
     renderRobotBox color robot = do
         let sort = editorSort robot
-            pos = editorPosition2QtPosition sort $ editorPosition robot
+            pos = editorPosition2QtPosition sort $ robot ^. editorPosition
             size_ = size sort
         drawColoredBox ptr (pos +~ offset) size_ 4 color
 

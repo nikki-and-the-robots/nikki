@@ -83,7 +83,7 @@ gameLoop app sceneMVar = do
 
         swapSceneMVar =<< io getDebugging
 
-        case mode sc' of
+        case sc' ^. mode of
             LevelFinished t _ ->
                 if null pressed_ then
                     continue

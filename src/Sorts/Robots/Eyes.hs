@@ -80,7 +80,7 @@ renderRobotEyes :: RobotEyesPixmaps
     -> RobotEyesState -> Double -> RenderPixmap
 renderRobotEyes pixmaps pos angle eyesOffset state stateTime =
     RenderPixmap
-        (pixmapOffsetA ^: (+~ eyesOffset) $ pickPixmap pixmaps state stateTime)
+        (pixmapOffset ^: (+~ eyesOffset) $ pickPixmap pixmaps state stateTime)
         pos
         (Just angle)
 

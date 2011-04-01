@@ -239,7 +239,7 @@ renderLine font wordWrapWidth color text = do
     action :: Ptr QPainter -> Offset Int -> [[Pixmap]] -> IO ()
     action ptr offset ((pix : restLine) : restText) = do
         drawPixmap ptr
-            (offset +~ fmap round (pixmapOffset pix))
+            (offset +~ fmap round (pix ^. pixmapOffset))
             (pixmap pix)
         let newOffset = offset +~ Position (round (width (pixmapSize pix)) + fromUber 1) 0
         action ptr newOffset (restLine : restText)

@@ -208,14 +208,14 @@ oemMethods sort = OEMMethods
 data OEMPath = OEMPath {
     oemPSort :: PSort,
     oemStepSize :: Int,
-    oemCursor :: EditorPosition,
+    oemCursor_ :: EditorPosition,
     pathPositions :: OEMPathPositions,
     oemActive :: Bool
   }
     deriving (Show, Typeable, Data)
 
-oemCursorA :: Accessor OEMPath EditorPosition
-oemCursorA = accessor oemCursor (\ a r -> r{oemCursor = a})
+oemCursor :: Accessor OEMPath EditorPosition
+oemCursor = accessor oemCursor_ (\ a r -> r{oemCursor_ = a})
 
 instance IsOEMState OEMPath where
     oemEnterMode _ = id
@@ -272,10 +272,10 @@ removePathPoint point (OEMPathPositions start path) =
 updateOEMPath :: Key -> OEMPath -> Maybe OEMPath
 updateOEMPath key oem@(OEMPath sort cursorStep cursor path active) =
     case key of
-        LeftArrow -> Just $ oemCursorA ^: (-~ EditorPosition cursorStepF 0) $ oem
-        RightArrow -> Just $ oemCursorA ^: (+~ EditorPosition cursorStepF 0) $ oem
-        UpArrow -> Just $ oemCursorA ^: (-~ EditorPosition 0 cursorStepF) $ oem
-        DownArrow -> Just $ oemCursorA ^: (+~ EditorPosition 0 cursorStepF) $ oem
+        LeftArrow -> Just $ oemCursor ^: (-~ EditorPosition cursorStepF 0) $ oem
+        RightArrow -> Just $ oemCursor ^: (+~ EditorPosition cursorStepF 0) $ oem
+        UpArrow -> Just $ oemCursor ^: (-~ EditorPosition 0 cursorStepF) $ oem
+        DownArrow -> Just $ oemCursor ^: (+~ EditorPosition 0 cursorStepF) $ oem
         -- append new path node
         k | k == aKey -> Just $ OEMPath sort cursorStep cursor (addPathPoint cursor path) active
         -- delete path node
@@ -316,7 +316,7 @@ drawPathNode :: PSort -> Ptr QPainter -> EditorPosition -> IO ()
 drawPathNode sort ptr n =
     eraseRect ptr (fmap round $ epToPosition sort n)
         (fmap round $ size sort)
-        (alphaA ^: (* 0.4) $ yellow)
+        (alpha ^: (* 0.4) $ yellow)
 
 
 -- * oem help text

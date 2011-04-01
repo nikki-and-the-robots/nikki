@@ -59,7 +59,8 @@ pickle :: Grounds (EditorObject Sort_) -> SaveType
 pickle (Grounds bgs pl fgs) =
     PGrounds_1 (pickleMultiLayers bgs) pickledPl (pickleMultiLayers fgs)
   where
-    pickledPl = map (\ k -> (index k, pickleObject (content pl !!! k))) $ keys (content pl)
+    pickledPl = map (\ k -> (index k, pickleObject ((pl ^. content) !!! k))) $
+        keys (pl ^. content)
 
 -- | pickle Layers (disregarding indices, both layer and object-wise)
 pickleMultiLayers :: Indexable (Layer (EditorObject Sort_)) -> [PLayer]

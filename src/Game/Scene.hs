@@ -24,7 +24,7 @@ import Control.Applicative ((<|>))
 
 import Graphics.Qt as Qt
 
-import Physics.Chipmunk as CM
+import Physics.Chipmunk as CM hiding (renderPosition)
 
 import Utils
 
@@ -82,21 +82,21 @@ modifyTransitioned scene = do
     resetHeldKeys
     return $ case getControlledIndex scene of
       Just controlledIndex ->
-        let now = spaceTime scene
-        in objectsA .> gameMainLayerA .> indexA controlledIndex ^:
+        let now = scene ^. spaceTime
+        in objects .> gameMainLayer .> indexA controlledIndex ^:
             (startControl now) $ scene
       Nothing -> scene
 
 
 -- | converts the Scene to TerminalMode, if appropriate
 nikkiToTerminal :: Scene Object_ -> [Button] -> Maybe (Scene Object_)
-nikkiToTerminal scene@Scene{mode = (NikkiMode nikkiIndex)} pressed
+nikkiToTerminal scene@Scene{mode_ = (NikkiMode nikkiIndex)} pressed
                                                -- nikki must be in wait mode
     | bButtonPressed && beforeTerminal && waiting
-        = Just $ scene {mode = mode'}
+        = Just $ mode ^= mode' $ scene
   where
     bButtonPressed = any isBButton pressed
-    beforeTerminal = nikkiTouchesTerminal $ contacts scene
+    beforeTerminal = nikkiTouchesTerminal $ scene ^. contacts
     nikki :: Nikki
     Just nikki = unwrapNikki $ scene ^. mainLayerObjectA nikkiIndex
     action_ = action $ state $ nikki
@@ -108,72 +108,72 @@ nikkiToTerminal _ _ = Nothing
 
 
 whichTerminalCollides :: Scene Object_ -> [Index]
-whichTerminalCollides Scene{objects, contacts} =
+whichTerminalCollides scene =
     findIndices p allTerminals
   where
     allTerminals :: Indexable (Maybe Terminal)
-    allTerminals = fmap unwrapTerminal $ gameMainLayer objects
+    allTerminals = fmap unwrapTerminal $ scene ^. objects ^. gameMainLayer
 
     p :: Maybe Terminal -> Bool
     p Nothing = False
     p (Just t) = any (\ shape -> hasTerminalShape t shape) collidingShapes
     collidingShapes :: [Shape]
-    collidingShapes = contacts |> terminals |> Set.toList
+    collidingShapes = (scene ^. contacts) |> terminals |> Set.toList
 
 terminalExit :: Scene Object_ -> Maybe (Scene Object_)
-terminalExit scene@Scene{mode = TerminalMode{nikki, terminal}} =
+terminalExit scene@Scene{mode_ = TerminalMode{nikki, terminal}} =
     case unwrapTerminal $ scene ^. mainLayerObjectA terminal of
         Just t -> case terminalExitMode t of
             DontExit -> Nothing
             ExitToNikki ->
-                Just scene{mode = NikkiMode nikki}
+                Just $ mode ^= NikkiMode nikki $ scene
             ExitToRobot robot ->
-                Just scene{mode = RobotMode nikki terminal robot}
+                Just $ mode ^= RobotMode nikki terminal robot $ scene
 terminalExit _ = Nothing
 
 
 -- | converts from RobotMode to TerminalMode, if appropriate
 robotToTerminal :: Scene Object_ -> [Button] -> Maybe (Scene Object_)
-robotToTerminal scene@Scene{mode = RobotMode{nikki, terminal}} pressed
+robotToTerminal scene@Scene{mode_ = RobotMode{nikki, terminal}} pressed
   | bPress =
-    Just $ scene{mode = TerminalMode nikki terminal}
+    Just $ mode ^= TerminalMode nikki terminal $ scene
   where
     bPress = any isBButton pressed
 robotToTerminal _ _ = Nothing
 
 -- | if nikki gets moved away from the terminal during robot mode...
 nikkiMovedAwayFromTerminal :: Scene Object_ -> Maybe (Scene Object_)
-nikkiMovedAwayFromTerminal scene@Scene{mode} =
-    if isRobotMode mode || isTerminalMode mode then
-        if terminal mode `elem` whichTerminalCollides scene then
+nikkiMovedAwayFromTerminal scene@Scene{mode_} =
+    if isRobotMode mode_ || isTerminalMode mode_ then
+        if terminal mode_ `elem` whichTerminalCollides scene then
             Nothing
         else
-            Just $ scene{mode = NikkiMode (nikki mode)}
+            Just $ mode ^= NikkiMode (nikki mode_) $ scene
     else
         Nothing
 
 
 gameOver :: Scene Object_ -> Maybe (Scene Object_)
 gameOver scene | isGameOver =
-    Just $ modeA ^: (const $ LevelFinished now Failed) $ scene
+    Just $ mode ^: (const $ LevelFinished now Failed) $ scene
   where
-    now = spaceTime scene
+    now = scene ^. spaceTime
     isGameOver =
-        isGameMode (mode scene)
-        && nikkiTouchesLaser (contacts scene)
+        isGameMode (scene ^. mode)
+        && nikkiTouchesLaser (scene ^. contacts)
 gameOver _ = Nothing
 
 levelPassed :: Scene Object_ -> Maybe (Scene Object_)
 levelPassed scene =
-    if allTriggered && isGameMode (mode scene) then
-        Just $ modeA ^: (const $ LevelFinished now Passed) $ scene
+    if allTriggered && isGameMode (scene ^. mode) then
+        Just $ mode ^: (const $ LevelFinished now Passed) $ scene
       else
         Nothing
   where
     allSwitches :: [Switch] =
-        catMaybes $ map unwrapSwitch $ toList $ gameMainLayer $ objects scene
+        catMaybes $ map unwrapSwitch $ toList $ scene ^. objects ^. gameMainLayer
     allTriggered = all triggered allSwitches
-    now = spaceTime scene
+    now = scene ^. spaceTime
 
 
 -- * chipmunk stepping
@@ -182,30 +182,37 @@ levelPassed scene =
 -- leaves contacts untouched, if no simulation steps are being done
 
 stepSpace :: Space -> Scene Object_ -> IO (Scene Object_)
-stepSpace space s@Scene{contactRef} = do
+stepSpace space scene@Scene{contactRef} = do
     resetContactRef contactRef
     CM.step space stepQuantum
     contacts' <- readContactRef contactRef
-    return s{contacts = contacts', spaceTime = spaceTime s + stepQuantum}
+    return $
+        contacts ^= contacts' $
+        spaceTime ^: (+ stepQuantum) $
+        scene
 
 
 -- * object updating
 
 -- | updates every object
 updateScene :: ControlData -> Scene Object_ -> IO (Scene Object_)
-updateScene cd scene@Scene{spaceTime = now, objects, contacts, mode} = do
+updateScene cd scene = do
     -- NOTE: Currently only the physics layer is updated
-    (sceneChange, physicsContent') <- updateMainLayer $ objects ^. gameMainLayerA
-    return $ sceneChange $ objectsA .> gameMainLayerA ^= physicsContent' $ scene
+    (sceneChange, physicsContent') <- updateMainLayer $ scene ^. objects ^. gameMainLayer
+    return $ sceneChange $ objects .> gameMainLayer ^= physicsContent' $ scene
   where
+    now = scene ^. spaceTime
     controlled = getControlledIndex scene
 
     -- update function for all objects in the mainLayer
-    updateMainLayer :: Indexable Object_ -> IO (Scene Object_ -> Scene Object_, Indexable Object_)
+    updateMainLayer :: Indexable Object_
+        -> IO (Scene Object_ -> Scene Object_, Indexable Object_)
     -- each object has to know, if it's controlled
     updateMainLayer ix = do
         ix' <- fmapMWithIndex (\ i o ->
-                update DummySort mode now contacts (Just i == controlled, cd) i o) ix
+                update DummySort (scene ^. mode) now (scene ^. contacts)
+                    (Just i == controlled, cd) i o)
+                ix
         let changes = foldr (.) id $ fmap fst ix'
             ix'' = fmap snd ix'
         return $ (changes, ix'')
@@ -224,13 +231,14 @@ mkRenderScene scene = do
     new <- fmapM Base.immutableCopy old
     return $ acc ^= new $ scene
   where
-    acc = objectsA .> gameMainLayerA
+    acc = objects .> gameMainLayer
 
 -- | Well, renders the scene to the screen (to the max :)
 -- Happens in the rendering thread.
 renderScene :: Application -> Configuration -> Ptr QPainter
     -> RenderScene -> DebuggingCommand -> StateT CameraState IO ()
-renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging = do
+renderScene app configuration ptr scene debugging = do
+    let now = scene ^. spaceTime
     center <- getCameraPosition ptr scene
     io $ do
         size@(Size width height) <- fmap fromIntegral <$> sizeQPainter ptr
@@ -239,16 +247,16 @@ renderScene app configuration ptr scene@Scene{spaceTime = now, mode} debugging =
 
         clearScreen ptr black
 
-        renderObjects configuration size ptr offset now (objects scene)
+        renderObjects configuration size ptr offset now (scene ^. objects)
 
         renderTerminalOSD ptr now scene
-        renderLevelFinishedOSD ptr app mode
+        renderLevelFinishedOSD ptr app (scene ^. mode)
 
         -- debugging
         when (render_xy_cross configuration) $
             debugDrawCoordinateSystem ptr offset
         when (render_chipmunk_objects configuration) $
-            fmapM_ (renderObjectGrid ptr offset) $ gameMainLayer $ objects scene
+            fmapM_ (renderObjectGrid ptr offset) $ scene ^. objects ^. gameMainLayer
         io $ debugging ptr offset
         Profiling.Physics.render app configuration ptr now
 
@@ -263,10 +271,10 @@ renderObjects configuration size ptr offset now gameGrounds =
         renderPixmaps <- gameGroundsToRenderPixmaps size ptr offset now gameGrounds
         let fakeSize = Size 800 600
             fakeOffset = sizeToPosition $ fmap (/ 2) (size -~ fakeSize)
-            fakeMod = fmap (renderPositionA ^: (+~ fakeOffset))
+            fakeMod = fmap (renderPosition ^: (+~ fakeOffset))
         fmapM_ (doRenderPixmap ptr) . fakeMod =<< optimize fakeSize renderPixmaps
         resetMatrix ptr
-        setPenColor ptr (alphaA ^= 0.5 $ red) 1
+        setPenColor ptr (alpha ^= 0.5 $ red) 1
         drawRect ptr fakeOffset fakeSize
 
 gameGroundsToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameGrounds Object_ -> IO [RenderPixmap]
@@ -282,7 +290,7 @@ layersToRenderPixmaps size ptr offset now layers =
 
 layerToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameLayer Object_ -> IO [RenderPixmap]
 layerToRenderPixmaps size ptr offset now layer =
-    fmap (renderPositionA ^: (+~ layerOffset)) <$>
+    fmap (renderPosition ^: (+~ layerOffset)) <$>
         concat <$> fmapM (\ o -> render_ o ptr layerOffset now) (gameContent layer)
   where
     layerOffset =
@@ -292,7 +300,7 @@ layerToRenderPixmaps size ptr offset now layer =
 mainLayerToRenderPixmaps :: Ptr QPainter -> Offset Double -> Seconds
     -> Indexable Object_ -> IO [RenderPixmap]
 mainLayerToRenderPixmaps ptr offset now objects =
-    fmap (renderPositionA ^: (+~ offset)) <$>
+    fmap (renderPosition ^: (+~ offset)) <$>
         concat <$> fmapM (\ o -> render_ o ptr offset now) (toList objects)
 
 -- | renders the big osd images ("SUCCESS" or "FAILURE") at the end of levels

@@ -66,8 +66,8 @@ defaultPixmap pixmaps = head (pixmaps ! "wait_right")
 -- | Modifies our beloved main character in the game scene.
 -- Doesn't do anything, if the level is finished.
 modifyNikki :: (Nikki -> Nikki) -> Scene Object_ -> Scene Object_
-modifyNikki f scene | isGameMode (mode scene) =
-    objectsA .> gameMainLayerA .> indexA (nikki (mode scene)) ^:
+modifyNikki f scene | isGameMode (scene ^. mode) =
+    objects .> gameMainLayer .> indexA (nikki (scene ^. mode)) ^:
         mod $
         scene
   where

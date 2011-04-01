@@ -21,30 +21,30 @@ import Graphics.Qt
 -- the don't move wrt the main layer, but are rendered before (after)
 -- the main layer.
 data Grounds a = Grounds {
-    backgrounds :: Indexable (Layer a),
-    mainLayer :: Layer a,
-    foregrounds :: Indexable (Layer a)
+    backgrounds_ :: Indexable (Layer a),
+    mainLayer_ :: Layer a,
+    foregrounds_ :: Indexable (Layer a)
   }
     deriving (Show, Read, Data, Typeable)
 
-backgroundsA, foregroundsA :: Accessor (Grounds a) (Indexable (Layer a))
-backgroundsA = accessor backgrounds (\ a r -> r{backgrounds = a})
-foregroundsA = accessor foregrounds (\ a r -> r{foregrounds = a})
+backgrounds, foregrounds :: Accessor (Grounds a) (Indexable (Layer a))
+backgrounds = accessor backgrounds_ (\ a r -> r{backgrounds_ = a})
+foregrounds = accessor foregrounds_ (\ a r -> r{foregrounds_ = a})
 
-mainLayerA :: Accessor (Grounds a) (Layer a)
-mainLayerA = accessor mainLayer (\ a r -> r{mainLayer = a})
+mainLayer :: Accessor (Grounds a) (Layer a)
+mainLayer = accessor mainLayer_ (\ a r -> r{mainLayer_ = a})
 
 -- | one group of objects, positioned relatively to each other.
 -- to be refined
 data Layer a = Layer {
-    content :: (Indexable a),
+    content_ :: (Indexable a),
     xDistance :: Double,
     yDistance :: Double
   }
   deriving (Show, Read, Data, Typeable)
 
-contentA :: Accessor (Layer a) (Indexable a)
-contentA = accessor content (\ a r -> r{content = a})
+content :: Accessor (Layer a) (Indexable a)
+content = accessor content_ (\ a r -> r{content_ = a})
 
 -- | Index for selecting one (Layer a) from a (Grounds a)
 data GroundsIndex
@@ -60,10 +60,10 @@ instance Functor Grounds where
     fmap f (Grounds a b c) = Grounds (fmap (fmap f) a) (fmap f b) (fmap (fmap f) c)
 
 instance Functor Layer where
-    fmap f l@Layer{content} = l{content = fmap f content}
+    fmap f l@Layer{content_} = l{content_ = fmap f content_}
 
 instance Foldable Layer where
-    foldMap f l = foldMap f (l ^. contentA)
+    foldMap f l = foldMap f (l ^. content)
 
 instance Traversable Layer where
     traverse cmd (Layer content x y) =
@@ -78,23 +78,19 @@ instance Initial (Layer a) where
 -- * construction
 
 mkMainLayer :: Indexable a -> Layer a
-mkMainLayer c = contentA ^= c $ initial
+mkMainLayer c = content ^= c $ initial
 
 
 -- * getter
 
 mainLayerIndexable :: Grounds a -> Indexable a
-mainLayerIndexable Grounds{mainLayer} = mainLayer ^. contentA
+mainLayerIndexable = (^. mainLayer .> content)
 
 -- | access the indexed Layer
 layerA :: GroundsIndex -> Accessor (Grounds a) (Layer a)
-layerA (Backgrounds i) = backgroundsA .> indexA i
-layerA MainLayer = mainLayerA
-layerA (Foregrounds i) = foregroundsA .> indexA i
-
--- | extract the indexed Layer
-(!||) :: Grounds a -> GroundsIndex -> Layer a
-a !|| b = a ^. layerA b
+layerA (Backgrounds i) = backgrounds .> indexA i
+layerA MainLayer = mainLayer
+layerA (Foregrounds i) = foregrounds .> indexA i
 
 -- | returns the number of contained Layers
 -- PRE: isNormalized
@@ -105,9 +101,9 @@ numberOfLayers (Grounds backgrounds _ foregrounds) =
 -- | returns all Layers below the selected (excluding the selected)
 belowSelected :: GroundsIndex -> Grounds a -> [Layer a]
 belowSelected index grounds =
-    let bgs = I.toList $ backgrounds grounds
-        ml = mainLayer grounds
-        fgs = I.toList $ foregrounds grounds
+    let bgs = I.toList (grounds ^. backgrounds)
+        ml = grounds ^. mainLayer
+        fgs = I.toList (grounds ^. foregrounds)
     in case index of
         Backgrounds i -> genericTake i bgs
         MainLayer -> bgs
@@ -128,12 +124,12 @@ setYDistance y l = l{yDistance = y}
 -- | converts the GroundsIndex to an Int
 -- PRE: isNormalized
 toInt :: Grounds a -> GroundsIndex -> Int
-toInt Grounds{} (Backgrounds i) =
+toInt gs (Backgrounds i) =
     fromIntegral i
-toInt Grounds{backgrounds} MainLayer =
-    fromIntegral $ I.length backgrounds
-toInt Grounds{backgrounds} (Foregrounds i) =
-    fromIntegral (Index (I.length backgrounds) + 1 + i)
+toInt gs MainLayer =
+    fromIntegral $ I.length (gs ^. backgrounds)
+toInt gs (Foregrounds i) =
+    fromIntegral (Index (I.length (gs ^. backgrounds)) + 1 + i)
 
 -- | reverse of toInt
 -- PRE: isNormalized
@@ -162,7 +158,7 @@ modifyGroundsIndex gs f i =
 
 -- | modifies the content of one Layer
 modifyContent :: (Indexable a -> Indexable b) -> Layer a -> Layer b
-modifyContent f l@Layer{content} = l{content = f content}
+modifyContent f l@Layer{content_} = l{content_ = f content_}
 
 
 -- * maps

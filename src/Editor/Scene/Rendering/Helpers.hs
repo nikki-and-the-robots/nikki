@@ -4,6 +4,8 @@ module Editor.Scene.Rendering.Helpers where
 
 import Graphics.Qt
 
+import Utils
+
 import Base
 
 
@@ -29,7 +31,7 @@ sortRenderIconified ptr offset eo boxSize = do
     resetMatrix ptr
     translate ptr offset
 
-    let ep = editorPosition eo
+    let ep = eo ^. editorPosition
         pos = Position (editorX ep) (editorY ep - height boxSize)
     translate ptr pos
 

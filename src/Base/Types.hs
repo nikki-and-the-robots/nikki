@@ -94,19 +94,26 @@ data ColorVariant = ColorVariant {
 -- A value of this type gets passed from the logic thread to the rendering thread
 data Scene object
     = Scene {
-        spaceTime :: Seconds,
-        objects :: GameGrounds object,
+        spaceTime_ :: Seconds,
+        objects_ :: GameGrounds object,
         contactRef :: !(ContactRef Contacts),
-        contacts :: !Contacts,
-        mode :: Mode
+        contacts_ :: !Contacts,
+        mode_ :: Mode
       }
   deriving Show
 
-objectsA :: Accessor (Scene o) (GameGrounds o)
-objectsA = accessor objects (\ a r -> r{objects = a})
 
-modeA :: Accessor (Scene o) Mode
-modeA = accessor mode (\ a r -> r{mode = a})
+spaceTime :: Accessor (Scene o) Seconds
+spaceTime = accessor spaceTime_ (\ a r -> r{spaceTime_ = a})
+
+objects :: Accessor (Scene o) (GameGrounds o)
+objects = accessor objects_ (\ a r -> r{objects_ = a})
+
+contacts :: Accessor (Scene o) Contacts
+contacts = accessor contacts_ (\ a r -> r{contacts_ = a})
+
+mode :: Accessor (Scene o) Mode
+mode = accessor mode_ (\ a r -> r{mode_ = a})
 
 
 -- * getter
@@ -120,8 +127,8 @@ getControlled s =
 
 -- | returns the controlled index in game mode
 getControlledIndex :: Scene o -> Maybe Index
-getControlledIndex Scene{mode} =
-    case mode of
+getControlledIndex scene =
+    case scene ^. mode of
         NikkiMode{nikki} -> Just nikki
         TerminalMode{terminal} -> Just terminal
         RobotMode{robot} -> Just robot
@@ -130,7 +137,7 @@ getControlledIndex Scene{mode} =
 -- | accesses an object from the mainLayer
 mainLayerObjectA :: Index -> Accessor (Scene o) o
 mainLayerObjectA i =
-    objectsA .> gameMainLayerA .> indexA i
+    objects .> gameMainLayer .> indexA i
 
 
 data CameraState
@@ -228,9 +235,9 @@ data EditorScene sort
         cursor :: EditorPosition,
         cursorStep :: Maybe EditorPosition, -- if Nothing -> size of selected object
 
-        availableSorts :: SelectTree sort,
+        availableSorts_ :: SelectTree sort,
 
-        editorObjects :: Grounds (EditorObject sort),
+        editorObjects_ :: Grounds (EditorObject sort),
         selectedLayer :: GroundsIndex,
         selected :: Maybe (GroundsIndex, Index),
             -- index of the object that is in the scene and currently under the cursor
@@ -240,11 +247,11 @@ data EditorScene sort
     }
   deriving (Show, Typeable)
 
-editorObjectsA :: Accessor (EditorScene sort) (Grounds (EditorObject sort))
-editorObjectsA = accessor editorObjects (\ a r -> r{editorObjects = a})
+editorObjects :: Accessor (EditorScene sort) (Grounds (EditorObject sort))
+editorObjects = accessor editorObjects_ (\ a r -> r{editorObjects_ = a})
 
-availableSortsA :: Accessor (EditorScene sort) (SelectTree sort)
-availableSortsA = accessor availableSorts (\ a r -> r{availableSorts = a})
+availableSorts :: Accessor (EditorScene sort) (SelectTree sort)
+availableSorts = accessor availableSorts_ (\ a r -> r{availableSorts_ = a})
 
 
 instance Show (EditorScene sort -> EditorPosition) where
@@ -285,16 +292,16 @@ instance Abelian EditorPosition where
 data EditorObject sort
     = EditorObject {
         editorSort :: sort,
-        editorPosition :: EditorPosition,
-        editorOEMState :: Maybe OEMState
+        editorPosition_ :: EditorPosition,
+        editorOEMState_ :: Maybe OEMState
       }
   deriving Show
 
-editorPositionA :: Accessor (EditorObject sort) EditorPosition
-editorPositionA = accessor editorPosition (\ a r -> r{editorPosition = a})
+editorPosition :: Accessor (EditorObject sort) EditorPosition
+editorPosition = accessor editorPosition_ (\ a r -> r{editorPosition_ = a})
 
-editorOEMStateA :: Accessor (EditorObject s) (Maybe OEMState)
-editorOEMStateA = accessor editorOEMState (\ a r -> r{editorOEMState = a})
+editorOEMState :: Accessor (EditorObject s) (Maybe OEMState)
+editorOEMState = accessor editorOEMState_ (\ a r -> r{editorOEMState_ = a})
 
 instance Functor EditorObject where
     fmap f (EditorObject sort pos Nothing) = EditorObject (f sort) pos Nothing
@@ -302,9 +309,9 @@ instance Functor EditorObject where
 -- | modifies all EditorPositions of the OEMState of EditorObjects
 modifyOEMEditorPositions :: (EditorPosition -> EditorPosition)
     -> EditorObject s -> EditorObject s
-modifyOEMEditorPositions f o@EditorObject{editorOEMState = Nothing} = o
-modifyOEMEditorPositions f o@EditorObject{editorOEMState = Just (OEMState state)} =
-    o{editorOEMState = Just $ OEMState $ transformBi f state}
+modifyOEMEditorPositions f o@EditorObject{editorOEMState_ = Nothing} = o
+modifyOEMEditorPositions f o@EditorObject{editorOEMState_ = Just (OEMState state)} =
+    editorOEMState ^= (Just $ OEMState $ transformBi f state) $ o
 
 
 -- * object edit mode
@@ -386,7 +393,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
         resetMatrix ptr
         translate ptr offset
         let sort = editorSort editorObject
-        translate ptr (editorPosition2QtPosition sort (editorPosition editorObject))
+        translate ptr (editorPosition2QtPosition sort (editorObject ^. editorPosition))
         renderIconified sort ptr
 
     -- if Nothing is passed as space, this should be an object 
