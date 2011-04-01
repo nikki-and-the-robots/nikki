@@ -111,5 +111,11 @@ renderPositionA = accessor renderPosition (\ a r -> r{renderPosition = a})
 
 -- | renders a pixmap
 doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO ()
-doRenderPixmap ptr (RenderPixmap pix pos angle) =
-    renderPixmap ptr zero pos angle pix
+doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
+    resetMatrix ptr
+    translate ptr position
+    whenMaybe mAngle $ \ angle ->
+        rotate ptr (rad2deg angle)
+    translate ptr (pixmapOffset pix)
+
+    drawPixmap ptr zero (pixmap pix)
