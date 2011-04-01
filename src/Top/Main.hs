@@ -20,6 +20,7 @@ module Top.Main where
 
 import Data.List as List
 import Data.SelectTree (leafs)
+import Data.Accessor.Monad.MTL.State ((%=))
 
 import Text.Logging
 
@@ -110,6 +111,7 @@ loadApplicationIcon qWidget = do
 applicationStates :: Application -> AppState
 applicationStates app = AppState $ do
     mLevel <- gets play_level
+    play_levelA %= Nothing
     case mLevel of
         Nothing -> return $ mainMenu app
         Just file -> return $ play app (mainMenu app) file

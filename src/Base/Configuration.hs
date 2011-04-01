@@ -2,10 +2,13 @@
 
 module Base.Configuration (
     Configuration(..),
+    play_levelA,
     loadConfiguration,
   ) where
 
+
 import Data.List
+import Data.Accessor
 
 import Text.Logging
 
@@ -39,6 +42,9 @@ data Configuration = Configuration {
     render_chipmunk_objects :: Bool
   }
     deriving (Show, Data, Typeable)
+
+play_levelA :: Accessor Configuration (Maybe FilePath)
+play_levelA = accessor play_level (\ a r -> r{play_level = a})
 
 -- | loads the configuration and initialises the logging command.
 -- (before calling loadConfiguration, nothing should be logged.)
