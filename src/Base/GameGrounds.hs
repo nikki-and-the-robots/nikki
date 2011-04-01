@@ -40,10 +40,10 @@ data GameLayer a = GameLayer {
 -- * creation
 
 mkGameGrounds :: Grounds a -> GameGrounds a
-mkGameGrounds (Grounds backgrounds mainlayer foregrounds) =
+mkGameGrounds (Grounds backgrounds mainLayer foregrounds) =
     GameGrounds
         (multi backgrounds)
-        (content mainlayer)
+        (content mainLayer)
         (multi foregrounds)
   where
     multi :: Indexable (Layer a) -> [GameLayer a]
