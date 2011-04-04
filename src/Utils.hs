@@ -76,6 +76,7 @@ a <<? msg = trace (msg ++ ": " ++ show a) a
 a <<| _ = a
 
 traceThis :: String -> (x -> String) -> x -> x
+traceThis "" showFun x = trace (showFun x) x
 traceThis msg showFun x = trace (msg ++ ": " ++ showFun x) x
 
 
