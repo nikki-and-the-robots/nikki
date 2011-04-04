@@ -48,7 +48,7 @@ headFriction = 0.1 -- 0.1
 
 -- | maximum walking speed (pixel per second)
 -- also affects maximal jumping distance
-walkingVelocity :: Double = 415 -- 390.0
+maximumWalkingVelocity :: Double = 415 -- 390.0
 
 -- | how strong the horizontal force is while Nikki is airborne
 -- in gravities

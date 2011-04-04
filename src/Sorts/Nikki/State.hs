@@ -59,7 +59,7 @@ newState now contacts controlData nikki nikkiPos velocity =
           in State
                (JumpImpulse impulse)
                (jumpImpulseDirection $ nikkiCollisionAngle impulse)
-               airborneSurfaceVelocity
+               airborneFeetVelocity
                specialJumpInformation
         -- nikki touches something
         (False, Just c) ->
@@ -68,7 +68,7 @@ newState now contacts controlData nikki nikkiPos velocity =
                 if nothingHeld then
                     State (Wait False) newDirection 0 jumpInformation'
                   else
-                    State (Walk afterAirborne False) newDirection walkingSurfaceVelocity jumpInformation'
+                    State (Walk afterAirborne False) newDirection walkingFeetVelocity jumpInformation'
             else case grips of
                 -- nikki grabs something
                 Just HLeft | rightPushed -> State GripImpulse HLeft 0 jumpInformation'
@@ -81,28 +81,28 @@ newState now contacts controlData nikki nikkiPos velocity =
                     case buttonDirection of
                         -- no direction -> Wait
                         Nothing -> State (Wait True) newDirection
-                                      airborneSurfaceVelocity jumpInformation'
+                                      airborneFeetVelocity jumpInformation'
                         Just buttonDirection -> State
                             (Walk afterAirborne True)
                             newDirection
-                            airborneSurfaceVelocity
+                            airborneFeetVelocity
                             jumpInformation'
                       else
                         -- something touches the head that causes jumping capability
                         State
                             (WallSlide (map nikkiCollisionAngle collisions))
                             (wallSlideDirection $ nikkiCollisionAngle c)
-                            airborneSurfaceVelocity
+                            airborneFeetVelocity
                             jumpInformation'
         -- nikki cannot jump
         (_, Nothing) ->
           if hasLegsCollisions then
           -- nikki cannot jump, but has legs collisions
           -- the angle is too steep: nikki slides into grip mode (hopefully)
-            State SlideToGrip newDirection airborneSurfaceVelocity jumpInformation'
+            State SlideToGrip newDirection airborneFeetVelocity jumpInformation'
           else
             -- nikki touches nothing relevant
-            State Airborne newDirection airborneSurfaceVelocity jumpInformation'
+            State Airborne newDirection airborneFeetVelocity jumpInformation'
 
     -- Action of nikkis last state
     oldAction = action $ state nikki
@@ -111,12 +111,18 @@ newState now contacts controlData nikki nikkiPos velocity =
     oldDirection = direction $ state nikki
 
     -- velocity of nikki's feet when airborne
-    airborneSurfaceVelocity = - vectorX velocity
+    airborneFeetVelocity =
+        if xVel > 0
+        then max (- maximumWalkingVelocity) (- xVel)
+        else min maximumWalkingVelocity (- xVel)
+      where
+        xVel = vectorX velocity
+
 
     -- velocity of nikki's feet when walking
-    walkingSurfaceVelocity = case newDirection of
-        HLeft -> walkingVelocity
-        HRight -> - walkingVelocity
+    walkingFeetVelocity = case newDirection of
+        HLeft -> maximumWalkingVelocity
+        HRight -> - maximumWalkingVelocity
 
     -- if the actual action came after being airborne
     -- (assuming the actual action is Walk)

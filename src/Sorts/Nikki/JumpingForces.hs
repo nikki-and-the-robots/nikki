@@ -25,9 +25,9 @@ getJumpingForces now ji =
 -- and the left xor right button is pressed.
 airborne :: Maybe HorizontalDirection -> Velocity -> Double
 airborne (Just HLeft) velocity =
-    if vectorX velocity > (- walkingVelocity) then (- airForce) else 0
+    if vectorX velocity > (- maximumWalkingVelocity) then (- airForce) else 0
 airborne (Just HRight) velocity =
-    if vectorX velocity < walkingVelocity then airForce else 0
+    if vectorX velocity < maximumWalkingVelocity then airForce else 0
 airborne Nothing _ = 0
 
 -- | force that will be applied horizontally, if applicable
