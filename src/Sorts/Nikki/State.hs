@@ -109,6 +109,8 @@ newState now contacts controlData nikki nikkiPos velocity =
     -- nikkis previous horizontal direction
     oldDirection :: HorizontalDirection
     oldDirection = direction $ state nikki
+    -- previous feet velocity
+    oldFeetVelocity = feetVelocity $ state nikki
 
     -- velocity of nikki's feet when airborne
     airborneFeetVelocity =
@@ -118,11 +120,15 @@ newState now contacts controlData nikki nikkiPos velocity =
       where
         xVel = vectorX velocity
 
-
     -- velocity of nikki's feet when walking
     walkingFeetVelocity = case newDirection of
-        HLeft -> maximumWalkingVelocity
-        HRight -> - maximumWalkingVelocity
+        HLeft -> min maximumWalkingVelocity (oldFeetVelocity + feetAcceleration)
+        HRight -> max (- maximumWalkingVelocity) (oldFeetVelocity - feetAcceleration)
+
+    -- The acceleration that can be applied to the feet's surface velocity
+    -- when walking. (per stepQuantum)
+    feetAcceleration = (maximumWalkingVelocity / accelerationTime) * stepQuantum
+
 
     -- if the actual action came after being airborne
     -- (assuming the actual action is Walk)

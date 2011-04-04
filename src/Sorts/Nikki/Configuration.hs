@@ -50,6 +50,9 @@ headFriction = 0.1 -- 0.1
 -- also affects maximal jumping distance
 maximumWalkingVelocity :: Double = 415 -- 390.0
 
+-- | Time it takes Nikki to accelerate to maximumWalkingVelocity.
+accelerationTime :: Double = 0.5
+
 -- | how strong the horizontal force is while Nikki is airborne
 -- in gravities
 airBorneForceFactor = 0.6 -- 0.5
