@@ -62,6 +62,7 @@ addBatteryPower n = n{batteryPower = batteryPower n + 1}
 data State = State {
     action :: Action,
     direction :: HorizontalDirection, -- the direction nikki faces
+    feetVelocity :: Double,
     jumpInformation :: JumpInformation,
     considerGhostsState :: Bool, -- if ghost shapes should be considered
     dustClouds :: [DustCloud]
@@ -69,7 +70,7 @@ data State = State {
     deriving (Show)
 
 instance Initial State where
-    initial = State (Wait False) HRight initial False []
+    initial = State (Wait False) HRight 0 initial False []
 
 data Action
     = Wait {isGhost :: Bool}

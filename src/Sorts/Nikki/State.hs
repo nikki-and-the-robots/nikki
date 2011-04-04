@@ -33,7 +33,7 @@ updateState mode now _ (False, _) nikki = do
             (LevelFinished _ result) -> NikkiLevelFinished result
         jumpInformation' = jumpInformation $ state nikki
         State{direction, dustClouds} = state nikki
-        newState = State action direction jumpInformation' False dustClouds
+        newState = State action direction 0 jumpInformation' False dustClouds
     addDustClouds now nikki{state = newState}
 updateState mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
@@ -59,52 +59,64 @@ newState now contacts controlData nikki nikkiPos velocity =
           in State
                (JumpImpulse impulse)
                (jumpImpulseDirection $ nikkiCollisionAngle impulse)
+               airborneSurfaceVelocity
                specialJumpInformation
         -- nikki touches something
         (False, Just c) ->
           if isLegsCollision c then
           -- nikki stands on something
                 if nothingHeld then
-                    State (Wait False) newDirection jumpInformation'
+                    State (Wait False) newDirection 0 jumpInformation'
                   else
-                    State (Walk afterAirborne False) newDirection jumpInformation'
+                    State (Walk afterAirborne False) newDirection walkingSurfaceVelocity jumpInformation'
             else case grips of
                 -- nikki grabs something
-                Just HLeft | rightPushed -> State GripImpulse HLeft jumpInformation'
-                Just HRight | leftPushed -> State GripImpulse HRight jumpInformation'
-                Just gripDirection -> State Grip gripDirection jumpInformation'
+                Just HLeft | rightPushed -> State GripImpulse HLeft 0 jumpInformation'
+                Just HRight | leftPushed -> State GripImpulse HRight 0 jumpInformation'
+                Just gripDirection -> State Grip gripDirection 0 jumpInformation'
                 -- nikki grabs nothing
                 Nothing ->
                     if isGhostCollision c then
                     -- nikki is a ghost (boo!) (airborne, but can still jump)
                     case buttonDirection of
                         -- no direction -> Wait
-                        Nothing -> State (Wait True) newDirection jumpInformation'
+                        Nothing -> State (Wait True) newDirection
+                                      airborneSurfaceVelocity jumpInformation'
                         Just buttonDirection -> State
                             (Walk afterAirborne True)
                             newDirection
+                            airborneSurfaceVelocity
                             jumpInformation'
                       else
                         -- something touches the head that causes jumping capability
                         State
                             (WallSlide (map nikkiCollisionAngle collisions))
                             (wallSlideDirection $ nikkiCollisionAngle c)
+                            airborneSurfaceVelocity
                             jumpInformation'
         -- nikki cannot jump
         (_, Nothing) ->
           if hasLegsCollisions then
           -- nikki cannot jump, but has legs collisions
           -- the angle is too steep: nikki slides into grip mode (hopefully)
-            State SlideToGrip newDirection jumpInformation'
+            State SlideToGrip newDirection airborneSurfaceVelocity jumpInformation'
           else
             -- nikki touches nothing relevant
-            State Airborne newDirection jumpInformation'
+            State Airborne newDirection airborneSurfaceVelocity jumpInformation'
 
     -- Action of nikkis last state
     oldAction = action $ state nikki
     -- nikkis previous horizontal direction
     oldDirection :: HorizontalDirection
     oldDirection = direction $ state nikki
+
+    -- velocity of nikki's feet when airborne
+    airborneSurfaceVelocity = - vectorX velocity
+
+    -- velocity of nikki's feet when walking
+    walkingSurfaceVelocity = case newDirection of
+        HLeft -> walkingVelocity
+        HRight -> - walkingVelocity
 
     -- if the actual action came after being airborne
     -- (assuming the actual action is Walk)

@@ -34,23 +34,21 @@ control :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO ()
 control _ _ (False, _) _ nikki = do
     setNikkiSurfaceVelocity nikki zero
     resetForces $ body $ chipmunk nikki
-control now contacts (True, cd) nsort nikki =
+control now contacts (True, cd) nsort nikki = do
+    setNikkiSurfaceVelocity nikki (feetVelocity $ state $ nikki)
     case state nikki of
 
-        State (Wait False) _ _ _ _ -> do
-            setNikkiSurfaceVelocity nikki zero
+        State (Wait False) _ _ _ _ _ ->
             resetForces $ body $ chipmunk nikki
         -- ghost state
-        State (Wait True) _ ji _ _ -> applyAirborneForces now nikki ji
+        State (Wait True) _ _ ji _ _ ->
+            applyAirborneForces now nikki ji
 
-        State (Walk afterAirborne False) direction _ _ _ -> do
-            setNikkiSurfaceVelocity nikki (walking direction)
+        State (Walk afterAirborne False) direction _ _ _ _ ->
             resetForces $ body $ chipmunk nikki
-          where
-            walking HLeft = walkingVelocity
-            walking HRight = - walkingVelocity
         -- ghost state
-        State (Walk afterAirborne True) _ ji _ _ -> applyAirborneForces now nikki ji
+        State (Walk afterAirborne True) _ _ ji _ _ ->
+            applyAirborneForces now nikki ji
 
         -- jumping
         -- =======
@@ -77,36 +75,31 @@ control now contacts (True, cd) nsort nikki =
         -- at the peak of the jump. This function will decide, how high Nikki can
         -- can jump maximally.
         -- (see Sorts.Nikki.JumpingForces)
-        State (JumpImpulse (NikkiCollision shape contactAngle _)) _ ji _ _ -> do
+        State (JumpImpulse (NikkiCollision shape contactAngle _)) _ _ ji _ _ -> do
             let velocity = jumpNikkiVelocity ji
-            setNikkiSurfaceVelocity nikki (- vectorX velocity)
             collisionObjectVelocity <- get (Hip.velocity (Hip.body shape))
             modifyApplyImpulse (chipmunk nikki) $
                 getJumpingImpulse collisionObjectVelocity contactAngle velocity
             modifyApplyOnlyForce (chipmunk nikki) $
                 getJumpingForces now ji
 
-        State Airborne _ ji _ _ ->
+        State Airborne _ _ ji _ _ ->
             applyAirborneForces now nikki ji
 
-        State (WallSlide contactAngles) _ ji _ _ -> do
-            setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
+        State (WallSlide contactAngles) _ _ ji _ _ -> do
             modifyApplyOnlyForce (chipmunk nikki) $
                 getJumpingForces now ji
             when (isPushedAwayByLShape contactAngles (jumpButtonDirection ji)) $ do
                 modifyVelocity (chipmunk nikki) (\ (Vector _ y) -> Vector 0 y)
 
-        State SlideToGrip _ ji _ _ -> do
-            setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
+        State SlideToGrip _ _ ji _ _ ->
             modifyApplyOnlyForce (chipmunk nikki) $
                 getJumpingForces now ji
 
-        State Grip _ _ _ _ -> do
-            setNikkiSurfaceVelocity nikki 0
+        State Grip _ _ _ _ _ ->
             resetForces $ body $ chipmunk nikki
 
-        State GripImpulse direction _ _ _ -> do
-            setNikkiSurfaceVelocity nikki 0
+        State GripImpulse direction _ _ _ _ -> do
             modifyApplyImpulse (chipmunk nikki) (Vector (mkGripImpulse direction) 0)
             resetForces $ body $ chipmunk nikki
           where
@@ -116,7 +109,6 @@ control now contacts (True, cd) nsort nikki =
         x -> es "controlBody" x
 
 applyAirborneForces now nikki ji = do
-    setNikkiSurfaceVelocity nikki (- vectorX (jumpNikkiVelocity ji))
     modifyApplyOnlyForce (chipmunk nikki) $
         getJumpingForces now ji
 
