@@ -80,7 +80,7 @@ data Action
     | Airborne
     | WallSlide [Angle]
     | UsingTerminal
-    | SlideToGrip
+    | SlideToGrip HorizontalDirection -- to which side is the collision
     | Grip -- when Nikki uses the paws to hold on to something
     | GripImpulse -- state for one frame (when grip state is ended)
     | NikkiLevelFinished LevelResult

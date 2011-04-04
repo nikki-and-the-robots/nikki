@@ -36,19 +36,21 @@ control _ _ (False, _) _ nikki = do
     resetForces $ body $ chipmunk nikki
 control now contacts (True, cd) nsort nikki = do
     setNikkiSurfaceVelocity nikki (feetVelocity $ state $ nikki)
+    let chipmunk_ = chipmunk nikki
+        action_ = action $ state nikki
     case state nikki of
 
         State (Wait False) _ _ _ _ _ ->
-            resetForces $ body $ chipmunk nikki
+            resetForces $ body chipmunk_
         -- ghost state
         State (Wait True) _ _ ji _ _ ->
-            applyAirborneForces now nikki ji
+            applyAirborneForces now chipmunk_ action_ ji
 
         State (Walk afterAirborne False) direction _ _ _ _ ->
-            resetForces $ body $ chipmunk nikki
+            resetForces $ body chipmunk_
         -- ghost state
         State (Walk afterAirborne True) _ _ ji _ _ ->
-            applyAirborneForces now nikki ji
+            applyAirborneForces now chipmunk_ action_ ji
 
         -- jumping
         -- =======
@@ -78,39 +80,39 @@ control now contacts (True, cd) nsort nikki = do
         State (JumpImpulse (NikkiCollision shape contactAngle _)) _ _ ji _ _ -> do
             let velocity = jumpNikkiVelocity ji
             collisionObjectVelocity <- get (Hip.velocity (Hip.body shape))
-            modifyApplyImpulse (chipmunk nikki) $
+            modifyApplyImpulse chipmunk_ $
                 getJumpingImpulse collisionObjectVelocity contactAngle velocity
-            modifyApplyOnlyForce (chipmunk nikki) $
-                getJumpingForces now ji
+            modifyApplyOnlyForce chipmunk_ $
+                getJumpingForces now action_ ji
 
         State Airborne _ _ ji _ _ ->
-            applyAirborneForces now nikki ji
+            applyAirborneForces now chipmunk_ action_ ji
 
         State (WallSlide contactAngles) _ _ ji _ _ -> do
-            modifyApplyOnlyForce (chipmunk nikki) $
-                getJumpingForces now ji
+            modifyApplyOnlyForce chipmunk_ $
+                getJumpingForces now action_ ji
             when (isPushedAwayByLShape contactAngles (jumpButtonDirection ji)) $ do
-                modifyVelocity (chipmunk nikki) (\ (Vector _ y) -> Vector 0 y)
+                modifyVelocity chipmunk_ (\ (Vector _ y) -> Vector 0 y)
 
-        State SlideToGrip _ _ ji _ _ ->
-            modifyApplyOnlyForce (chipmunk nikki) $
-                getJumpingForces now ji
+        State SlideToGrip{} _ _ ji _ _ ->
+            modifyApplyOnlyForce chipmunk_ $
+                getJumpingForces now action_ ji
 
         State Grip _ _ _ _ _ ->
-            resetForces $ body $ chipmunk nikki
+            resetForces $ body chipmunk_
 
         State GripImpulse direction _ _ _ _ -> do
-            modifyApplyImpulse (chipmunk nikki) (Vector (mkGripImpulse direction) 0)
-            resetForces $ body $ chipmunk nikki
+            modifyApplyImpulse chipmunk_ (Vector (mkGripImpulse direction) 0)
+            resetForces $ body chipmunk_
           where
             mkGripImpulse HLeft = gripImpulse * nikkiMass
             mkGripImpulse HRight = - gripImpulse * nikkiMass
 
         x -> es "controlBody" x
 
-applyAirborneForces now nikki ji = do
-    modifyApplyOnlyForce (chipmunk nikki) $
-        getJumpingForces now ji
+applyAirborneForces now chip action ji = do
+    modifyApplyOnlyForce chip $
+        getJumpingForces now action ji
 
 
 

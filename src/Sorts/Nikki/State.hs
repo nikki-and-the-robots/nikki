@@ -42,8 +42,7 @@ updateState mode now contacts (True, controlData) nikki = do
     addDustClouds now nikki{state = newState_}
 
 newState :: Seconds -> Contacts -> ControlData
-    -> Nikki -> CM.Position -> Velocity
-    -> State
+    -> Nikki -> CM.Position -> Velocity -> State
 newState now contacts controlData nikki nikkiPos velocity =
     mkNewState considerGhostsState' (dustClouds $ state nikki)
   where
@@ -95,14 +94,17 @@ newState now contacts controlData nikki nikkiPos velocity =
                             airborneFeetVelocity
                             jumpInformation'
         -- nikki cannot jump
-        (_, Nothing) ->
-          if hasLegsCollisions then
-          -- nikki cannot jump, but has legs collisions
-          -- the angle is too steep: nikki slides into grip mode (hopefully)
-            State SlideToGrip newDirection airborneFeetVelocity jumpInformation'
-          else
-            -- nikki touches nothing relevant
-            State Airborne newDirection airborneFeetVelocity jumpInformation'
+        (_, Nothing) -> case legsCollisions of
+            (coll : _) ->
+            -- nikki cannot jump, but has legs collisions
+            -- the angle is too steep: nikki slides into grip mode (hopefully)
+                let wallDirection = swapHorizontalDirection $
+                        angleDirection $ nikkiCollisionAngle coll
+                in State (SlideToGrip wallDirection)
+                    newDirection airborneFeetVelocity jumpInformation'
+            _ ->
+                -- nikki touches nothing relevant
+                State Airborne newDirection airborneFeetVelocity jumpInformation'
 
     -- Action of nikkis last state
     oldAction = action $ state nikki
@@ -174,8 +176,10 @@ newState now contacts controlData nikki nikkiPos velocity =
     isGripCollision c =
         abs (nikkiCollisionAngle c) < gripAngleLimit
 
-    -- if nikki has collisions with the legs
-    hasLegsCollisions = not $ null $ filter isLegsCollision $ nikkiCollisions contacts
+    -- collisions with the legs
+    legsCollisions = filter isLegsCollision $ nikkiCollisions contacts
+
+    hasLegsCollisions = not $ null $ legsCollisions
 
     -- button events
     jumpButtonPushed = any isAButton $ pressed controlData
@@ -217,12 +221,12 @@ newState now contacts controlData nikki nikkiPos velocity =
     -- | direction when starting a jump
     jumpImpulseDirection angle =
         fromMaybe oldDirection
-            (buttonDirection <|> angleDirection angle)
+            (buttonDirection <|> angleMDirection angle)
 
     -- | direction when wallsliding
     wallSlideDirection angle =
         fromMaybe oldDirection
-            (fmap swapHorizontalDirection $ angleDirection angle)
+            (fmap swapHorizontalDirection $ angleMDirection angle)
 
     -- | There is a state where nikki's jump impulse will be affected by collisions
     -- with the ghost shapes. These jumps are called ghost jumps.
@@ -270,11 +274,14 @@ isStandingFeetAngle angle =
                                                 -- angle epsilon
 
 -- | returns the horizontal direction of a given angle
-angleDirection :: Angle -> Maybe HorizontalDirection
-angleDirection angle =
+angleMDirection :: Angle -> Maybe HorizontalDirection
+angleMDirection angle =
     if abs angle > deg2rad 10
-    then Just $ if angle > 0 then HRight else HLeft
+    then Just $ angleDirection angle
     else Nothing
+
+angleDirection :: Angle -> HorizontalDirection
+angleDirection angle = if angle > 0 then HRight else HLeft
 
 -- | Calculates the collision causing possible jump.
 -- Considers ghost collisions depending on the arguments.

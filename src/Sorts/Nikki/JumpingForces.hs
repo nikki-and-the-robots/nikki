@@ -15,20 +15,23 @@ import Sorts.Nikki.JumpingImpulse
 
 
 -- | returns both the anti gravity force and the horizontal airborne force
-getJumpingForces :: Seconds -> JumpInformation -> Vector
-getJumpingForces now ji =
+getJumpingForces :: Seconds -> Action -> JumpInformation -> Vector
+getJumpingForces now action ji =
     Vector airborneForce (getLongJumpingForce now ji)
   where
-    airborneForce = airborne (jumpButtonDirection ji) (jumpNikkiVelocity ji)
+    airborneForce = airborne (jumpButtonDirection ji) action (jumpNikkiVelocity ji)
 
--- | returns the horizontal force while nikki touches nothing
+-- | Returns the horizontal force while nikki touches nothing
 -- and the left xor right button is pressed.
-airborne :: Maybe HorizontalDirection -> Velocity -> Double
-airborne (Just HLeft) velocity =
+-- In a SlideToGrip state, the movement towards the touched object is not possible.
+airborne :: Maybe HorizontalDirection -> Action -> Velocity -> Double
+airborne (Just buttonDirection) (SlideToGrip wallDirection) _
+    | buttonDirection == wallDirection = 0
+airborne (Just HLeft) _ velocity =
     if vectorX velocity > (- maximumWalkingVelocity) then (- airForce) else 0
-airborne (Just HRight) velocity =
+airborne (Just HRight) _ velocity =
     if vectorX velocity < maximumWalkingVelocity then airForce else 0
-airborne Nothing _ = 0
+airborne Nothing _ _ = 0
 
 -- | force that will be applied horizontally, if applicable
 airForce = gravity * nikkiMass * airBorneForceFactor
