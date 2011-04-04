@@ -120,10 +120,22 @@ newState now contacts controlData nikki nikkiPos velocity =
       where
         xVel = vectorX velocity
 
-    -- velocity of nikki's feet when walking
+    -- Velocity of nikki's feet when walking.
+    -- If no arrow key is pressed, the feet velocity stops immediately (is set to 0).
+    -- If we are for some reason in the situation (for example after a jump),
+    -- that the oldFeetVelocity and the wanted feetVelocity have different signs,
+    -- we should set the feetVelocity to zero also, to ensure a consistent feel.
     walkingFeetVelocity = case newDirection of
-        HLeft -> min maximumWalkingVelocity (oldFeetVelocity + feetAcceleration)
-        HRight -> max (- maximumWalkingVelocity) (oldFeetVelocity - feetAcceleration)
+        HLeft -> min
+            maximumWalkingVelocity
+            (oldFeetVelocityOrZero + feetAcceleration)
+          where
+            oldFeetVelocityOrZero = max 0 oldFeetVelocity
+        HRight -> max
+            (- maximumWalkingVelocity)
+            (oldFeetVelocityOrZero - feetAcceleration)
+          where
+            oldFeetVelocityOrZero = min 0 oldFeetVelocity
 
     -- The acceleration that can be applied to the feet's surface velocity
     -- when walking. (per stepQuantum)
