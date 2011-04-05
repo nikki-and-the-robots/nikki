@@ -13,6 +13,7 @@ module Physics.Chipmunk (
 
     withSpace,
     mkMaterialBodyAttributes,
+    mkBodyAttributes,
     Physics.Chipmunk.Types.initChipmunk,
     removeChipmunk,
 
@@ -51,7 +52,7 @@ module Physics.Chipmunk (
     componentUpAngle,
     component,
 
-    massForShape,
+    areaForShape,
     momentForMaterialShape,
 
     -- re-exports from Physics.Hipmunk

@@ -98,11 +98,12 @@ toActionNumber GripImpulse          = 8
 toActionNumber NikkiLevelFinished{} = 9
 
 isWaitAction, isWalkAction, isJumpImpulseAction,
-    isAirborneAction, isSlideToGripAction :: Action -> Bool
+    isAirborneAction, isWallSlideAction, isSlideToGripAction :: Action -> Bool
 isWaitAction        = (0 ==) . toActionNumber
 isWalkAction        = (1 ==) . toActionNumber
 isJumpImpulseAction = (2 ==) . toActionNumber
 isAirborneAction    = (3 ==) . toActionNumber
+isWallSlideAction   = (4 ==) . toActionNumber
 isSlideToGripAction = (6 ==) . toActionNumber
 
 

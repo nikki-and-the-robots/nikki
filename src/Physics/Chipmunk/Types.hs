@@ -116,15 +116,24 @@ immutableCopy c = do
 
 -- * creation
 
--- | creates BodyAttributes for shapes that belong to one material
--- and don't overlap. (otherwise the mass and inertia will be wrong).
+-- | Creates BodyAttributes for shapes that belong to one material
+-- and don't overlap. Mass is given as the mass per uberpixel.
 mkMaterialBodyAttributes :: Mass -> [ShapeType] -> Position -> BodyAttributes
-mkMaterialBodyAttributes mpp shapes pos = BodyAttributes {
+mkMaterialBodyAttributes mpup shapes pos =
+    mkBodyAttributes shapes pos objectMass
+  where
+    mpp = mpup / 16
+    objectMass = sum (map ((mpp *) . areaForShape) shapes)
+
+-- | Creates BodyAttributes for an object. The given mass is the absolute
+-- mass of the whole object. Inertia is inferred from that.
+mkBodyAttributes :: [ShapeType] -> Position -> Mass -> BodyAttributes
+mkBodyAttributes shapes pos objectMass = BodyAttributes {
     position = pos,
-    mass        = sum (map (massForShape mpp) shapes),
+    mass        = objectMass,
     inertia     = sum (map (momentForMaterialShape mpp Nothing) shapes)
   }
-
+    where mpp = objectMass / sum (fmap areaForShape shapes)
 
 initChipmunk :: Space -> BodyAttributes -> [ShapeDescription]
     -> Vector -> IO Chipmunk
@@ -334,25 +343,25 @@ mkRectFromPositions (Vector x1 y1) (Vector x2 y2) =
     minY = min y1 y2
     maxY = max y1 y2
 
--- | @massForShape mpp shape@ calculates the mass for a given shape.
+-- | @areaForShape mpp shape@ calculates the mass for a given shape.
 -- @mpp@ is the material mass per (square-)pixel.
-massForShape :: Mass -> ShapeType -> Mass
-massForShape mpp (Circle r) = 2 * pi * r * mpp
-massForShape _ (LineSegment _ _ _) = 0
-massForShape mpp (Polygon (p : q : r : rest)) =
-    mpp * triangleArea + massForShape mpp (Polygon (p : r : rest))
+areaForShape :: ShapeType -> Double
+areaForShape (Circle r) = 2 * pi * r
+areaForShape (LineSegment _ _ _) = 0
+areaForShape (Polygon (p : q : r : rest)) =
+    triangleArea + areaForShape (Polygon (p : r : rest))
   where
     triangleArea = abs (len a * len b * sin gamma / 2)
     a = p -~ q
     b = p -~ r
     gamma = abs (toAngle a - toAngle b)
-massForShape _ (Polygon _) = 0
+areaForShape (Polygon _) = 0
 
 -- | @momentForMaterialShape mpp offset shape@ returns the moment of inertia
 -- for @shape@ at the given @offset@. The shape has a mass per pixel of @mpp@.
 momentForMaterialShape :: Mass -> Maybe Position -> ShapeType -> Moment
 momentForMaterialShape mpp mOffset shape =
-    momentForShape (massForShape mpp shape) shape (fromMaybe zero mOffset)
+    momentForShape (mpp * areaForShape shape) shape (fromMaybe zero mOffset)
 
 
 -- * chipmunk initialisation

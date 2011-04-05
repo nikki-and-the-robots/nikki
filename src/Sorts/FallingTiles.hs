@@ -23,8 +23,6 @@ import Base
 
 import Object
 
-import Sorts.Box (boxMaterialMass)
-
 
 -- * configuration
 
@@ -37,7 +35,7 @@ names = [
 timeBeforeGettingLoose :: Seconds
 timeBeforeGettingLoose = 0.2
 
-fallingTilesMaterialMass = boxMaterialMass
+fallingTilesMaterialMass = 0.5
 
 -- * loading
 

@@ -1,6 +1,6 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable #-}
 
-module Sorts.Box (sorts, boxMaterialMass) where
+module Sorts.Box (sorts) where
 
 
 import Data.Typeable
@@ -19,21 +19,22 @@ import Object
 
 -- Configuration
 
-names = ["box-wood-small", "box-wood-large"]
-
-boxMaterialMass = 1.21875
+names =
+    ("box-wood-small", 125) :
+    ("box-wood-large", 370) :
+    []
 
 -- loading
 
 sorts :: RM [Sort_]
 sorts =
-    mapM mkSort_ names
+    mapM (uncurry mkSort_) names
   where
     mkSortId name = SortId ("objects/" ++ name)
-    mkSort_ name = do
+    mkSort_ name mass = do
         pngFile <- getDataFileName $ mkPath name
         pix <- loadPixmap (Position 1 1) pngFile
-        return $ Sort_ $ BSort (mkSortId name) pix
+        return $ Sort_ $ BSort (mkSortId name) mass pix
 
 mkPath :: String -> FilePath
 mkPath name = pngDir </> "objects" </> name <.> "png"
@@ -41,6 +42,7 @@ mkPath name = pngDir </> "objects" </> name <.> "png"
 data BSort
     = BSort {
         sortId_ :: SortId,
+        boxMass :: Mass, -- absolute mass of this BSort
         boxPixmap :: Pixmap
       }
   deriving (Show, Typeable)
@@ -58,7 +60,7 @@ instance Sort BSort Box where
             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
             position = position2vector (editorPosition2QtPosition sort editorPosition)
                             +~ baryCenterOffset
-            bodyAttributes = mkMaterialBodyAttributes boxMaterialMass shapes position
+            bodyAttributes = mkBodyAttributes shapes position (boxMass sort)
         chip <- CM.initChipmunk space bodyAttributes
                     shapesWithAttributes baryCenterOffset
         return $ Box chip
@@ -71,10 +73,9 @@ instance Sort BSort Box where
 shapeAttributes :: ShapeAttributes
 shapeAttributes = ShapeAttributes {
     elasticity    = 0.5,
-    friction      = 2,
+    friction      = 0.95,
     collisionType = TileCT
   }
-
 
 mkShapes :: Size Double -> ([ShapeType], Vector)
 mkShapes (Size w h) = ([box],  baryCenterOffset)

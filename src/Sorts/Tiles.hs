@@ -256,6 +256,6 @@ tileShapeAttributes :: ShapeAttributes
 tileShapeAttributes =
     ShapeAttributes {
         elasticity = 0.5,
-        friction = 2,
+        friction = 0.95,
         CM.collisionType = TileCT
       }

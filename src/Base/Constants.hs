@@ -25,11 +25,9 @@ toKachel = (/ 16) . toUber
 
 -- * Physics
 
-gravity :: Double
-gravity = 2000 -- 1904
+gravity :: Double = 1975
 
-stepQuantum :: Double
-stepQuantum = 0.002
+stepQuantum :: Double = 0.002
 
 timeFactor :: Double = 1
 
