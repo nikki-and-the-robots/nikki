@@ -155,11 +155,12 @@ springForce conf mass position velocity aim =
     toAimLen = len (aim -~ position)
     -- the acceleration should increase with lenToAim
     -- till the springConstantAccelerationDistance is reached
-    springFactor = platformAcceleration / springConstantAccelerationDistance conf
+    springFactor =
+        springAcceleration conf / fromKachel 1
     -- drag to let the swinging stop
     drag = scale dragDirection dragLen
     dragLen = constantDrag +~ dynamicDrag
-    constantDrag = frictionFactor conf * mass * platformAcceleration
-    dynamicDrag = dragFactor conf * mass * platformAcceleration
+    constantDrag = frictionFactor conf * mass
+    dynamicDrag = dragFactor conf * mass
         * len velocity / platformStandardVelocity
     dragDirection = normalizeIfNotZero (negateAbelian velocity)

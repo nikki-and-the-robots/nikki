@@ -147,7 +147,7 @@ bodyAttributes sort pos =
     BodyAttributes pos platformMass infinity
 
 -- | tile friction to allow better walking
-shapeAttributes = robotShapeAttributes{friction = friction tileShapeAttributes}
+shapeAttributes = robotShapeAttributes{friction = platformFriction}
 
 
 -- * controlling
