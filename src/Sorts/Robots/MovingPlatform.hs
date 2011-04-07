@@ -86,8 +86,7 @@ instance Sort PSort Platform where
 
     initialize sort (Just space) ep (Just (OEMState oemState_)) = do
         let Just oemState = cast oemState_
-            Size width height = size sort
-            baryCenterOffset = Vector (width / 2) (height / 2)
+            baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
 
             shape = mkPoly sort
             shapes = [mkShapeDescription shapeAttributes shape]
@@ -137,10 +136,11 @@ physicsPadding = fmap fromUber $ Position 0.5 0.5
 
 mkPoly :: PSort -> ShapeType
 mkPoly sort = mkRect
-    (Position (- width / 2) (- height / 2) +~ physicsPadding)
+    (Position (- width / 2) (- height / 2) +~ fmap realToFrac physicsPadding)
     (size_ -~ fmap fromUber (Size 1 1))
   where
-    size_@(Size width height) = size sort
+    size_ :: Size CpFloat
+    size_@(Size width height) = fmap realToFrac $ size sort
 
 bodyAttributes :: PSort -> Vector -> BodyAttributes
 bodyAttributes sort pos =

@@ -3,6 +3,8 @@
 module Base.Constants where
 
 
+import Physics.Hipmunk
+
 import Graphics.Qt
 
 -- * Graphics
@@ -25,11 +27,11 @@ toKachel = (/ 16) . toUber
 
 -- * Physics
 
-gravity :: Double = 1975
+gravity :: CpFloat = 1975
 
-stepQuantum :: Double = 0.002
+stepQuantum :: CpFloat = 0.002
 
-timeFactor :: Double = 1
+timeFactor :: CpFloat = 1
 
 -- * file directories
 

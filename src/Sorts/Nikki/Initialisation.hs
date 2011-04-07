@@ -74,7 +74,7 @@ otherShapes =
     map (mkShapeDescription ghostShapeAttributes) ghostShapes ++
     []
 
-Size w h = nikkiSize
+Size w h = fmap realToFrac nikkiSize
 wh = w / 2
 hh = h / 2
 baryCenterOffset = Vector wh hh

@@ -34,7 +34,7 @@ import Object
 
 -- * Tile configuration
 
-frameDuration :: Double = 1.0
+frameDuration :: Seconds = 1.0
 
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
@@ -233,9 +233,8 @@ mkAbsoluteShape (EditorObject sort ep Nothing) =
     mapVectors (+~ chipmunkPosition) $
     mkRectFromPositions (negateAbelian halfSizeVector) halfSizeVector
   where
-    halfSizeVector = Vector (w / 2) (h / 2)
+    halfSizeVector = size2vector $ fmap (/ 2) $ size sort
     baryCenterOffset = halfSizeVector
-    Size w h = size sort
     chipmunkPosition = position2vector (editorPosition2QtPosition sort ep)
         +~ baryCenterOffset
 

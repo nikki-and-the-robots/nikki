@@ -1,4 +1,4 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable, NamedFieldPuns #-}
+{-# language MultiParamTypeClasses, DeriveDataTypeable, NamedFieldPuns, ScopedTypeVariables #-}
 
 module Sorts.Switch (
     sorts, 
@@ -69,7 +69,7 @@ unwrapSwitch (Object_ sort o) = cast o
 
 instance Sort SwitchSort Switch where
     sortId _ = SortId "switch/levelExit"
-    size _ = boxSize +~ Size 0 (fromUber 7)
+    size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
 
     renderIconified sort ptr = do
         renderPixmapSimple ptr (stampPix sort)
@@ -77,18 +77,19 @@ instance Sort SwitchSort Switch where
         renderPixmapSimple ptr (boxOffPix sort)
 
     initialize sort (Just space) ep Nothing = do
-        let ((boxShapes, boxBaryCenterOffset), triggerShapes, (stampShapes, stampBaryCenterOffset)) =
+        let ex = realToFrac $ editorX ep
+            ey = realToFrac $ editorY ep
+            ((boxShapes, boxBaryCenterOffset), triggerShapes, (stampShapes, stampBaryCenterOffset)) =
                     switchShapes
 
-            boxPos = Vector (editorX ep) (editorY ep - height boxSize)
+            boxPos = Vector ex (ey - height boxSize)
                      +~ boxBaryCenterOffset
         boxChip <- initChipmunk space (boxAttributes boxPos) boxShapes boxBaryCenterOffset
         triggerChip <- initChipmunk space (boxAttributes boxPos) triggerShapes boxBaryCenterOffset
         let [triggerShape] = shapes triggerChip
 
         let stampPos =
-                Vector (editorX ep)
-                       (editorY ep - height boxSize - yPlatformDistance - height platformSize)
+                Vector ex (ey - height boxSize - yPlatformDistance - height platformSize)
                        +~ stampBaryCenterOffset
             stampAttributes = stampBodyAttributes stampPos
         stampChip <- initChipmunk space stampAttributes stampShapes stampBaryCenterOffset
@@ -155,7 +156,7 @@ triggerShapeAttributes =
         CM.collisionType = TriggerCT
       }
 
-
+boxSize :: Size CpFloat
 boxSize = Size (fromUber 30) (fromUber 15)
 
 
@@ -168,12 +169,13 @@ switchShapes =
      (stamp, stampBaryCenterOffset))
 
 -- Configuration
+platformSize :: Size CpFloat
 platformSize = Size (width boxSize) (fromUber 5)
 outerWallThickness = 32
 -- size of the shaft, that  can be seen outside the box
 shaftSize = Size (fromUber 11) yPlatformDistance
 -- y distance between platform and box
-yPlatformDistance = fromUber 2
+yPlatformDistance :: CpFloat = fromUber 2
 innerPadding = 4
 shaftPadding = 0.2
 openingWidth = width shaftSize + 2 * shaftPadding
@@ -230,7 +232,7 @@ stamp = [
     (mkShapeDescription innerStampShapeAttributes innerStampThingie)
     ]
 platform = mkRect
-    (Position (- width platformSize / 2) (- height shaftSize - height platformSize))
+    (fmap realToFrac $ Position (- width platformSize / 2) (- height shaftSize - height platformSize))
     platformSize
 shaft = mkRect
     (Position (- (width shaftSize / 2)) (- height shaftSize - shaftOverlap))

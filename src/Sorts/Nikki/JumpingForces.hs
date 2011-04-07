@@ -24,7 +24,7 @@ getJumpingForces now action ji =
 -- | Returns the horizontal force while nikki touches nothing
 -- and the left xor right button is pressed.
 -- In a SlideToGrip state, the movement towards the touched object is not possible.
-airborne :: Maybe HorizontalDirection -> Action -> Velocity -> Double
+airborne :: Maybe HorizontalDirection -> Action -> Velocity -> CpFloat
 airborne (Just buttonDirection) (SlideToGrip wallDirection) _
     | buttonDirection == wallDirection = 0
 airborne (Just HLeft) _ velocity =
@@ -38,7 +38,7 @@ airForce = gravity * nikkiMass * airBorneForceFactor
 
 -- | returns the force that causes the maximal jump (some kind of antigravity)
 -- which will be applied when the jump button is held
-getLongJumpingForce :: Seconds -> JumpInformation -> Double
+getLongJumpingForce :: Seconds -> JumpInformation -> CpFloat
 getLongJumpingForce now ji =
     case (jumpStartTime ji, jumpCollisionAngle ji) of
         (Just jumpStartTime_, Just collisionAngle) ->
@@ -48,7 +48,7 @@ getLongJumpingForce now ji =
 
 -- | calculates the force that is applied in a maximal jump
 -- depending on the time
-longJumpAntiGravity :: Seconds -> Double
+longJumpAntiGravity :: Seconds -> CpFloat
 longJumpAntiGravity t = negate $
     if t < t_s
     then q_a * t ^ 2 + s_a * t + c_a

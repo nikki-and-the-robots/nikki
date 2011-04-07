@@ -1,4 +1,4 @@
-{-# language DeriveDataTypeable, NamedFieldPuns, MultiParamTypeClasses #-}
+{-# language DeriveDataTypeable, NamedFieldPuns, MultiParamTypeClasses, ScopedTypeVariables #-}
 
 -- | objects that seem like tiles, but move when Nikki touches them
 
@@ -152,7 +152,7 @@ mkShape sort =
     xUnit = Vector 1 0
     yUnit = Vector 0 1
 
-    Size w h = size sort
+    Size w h :: Size CpFloat = fmap realToFrac $ size sort
     wh = w / 2
     hh = h / 2
     baryCenterOffset = Vector wh hh

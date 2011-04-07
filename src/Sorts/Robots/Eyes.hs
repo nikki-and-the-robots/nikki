@@ -18,6 +18,8 @@ import Text.Printf
 
 import System.FilePath
 
+import Physics.Chipmunk (Angle)
+
 import Graphics.Qt
 
 import Utils
@@ -76,14 +78,14 @@ data RobotEyesState
 
 -- | Renders the eyes of a robot.
 renderRobotEyes :: RobotEyesPixmaps
-    -> Position Double -> Double -> Position Double
-    -> RobotEyesState -> Double -> RenderPixmap
+    -> Position Double -> Angle -> Position Double
+    -> RobotEyesState -> Seconds -> RenderPixmap
 renderRobotEyes pixmaps pos angle eyesOffset state stateTime =
     RenderPixmap
         (pixmapOffset ^: (+~ eyesOffset) $ pickPixmap pixmaps state stateTime)
         pos
         (Just angle)
 
-pickPixmap :: RobotEyesPixmaps -> RobotEyesState -> Double -> Pixmap
+pickPixmap :: RobotEyesPixmaps -> RobotEyesState -> Seconds -> Pixmap
 pickPixmap pixmaps state stateTime =
     pickAnimationFrame (pixmaps ! state) (animationFrameTimes ! state) stateTime

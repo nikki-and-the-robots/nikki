@@ -1,4 +1,5 @@
-{-# language NamedFieldPuns, ExistentialQuantification, StandaloneDeriving, DeriveDataTypeable #-}
+{-# language NamedFieldPuns, ExistentialQuantification, StandaloneDeriving, DeriveDataTypeable,
+    ViewPatterns #-}
 
 module Physics.Chipmunk.Types where
 
@@ -109,8 +110,8 @@ immutableCopy c = do
   where
     bcOffset :: Chipmunk -> Vector
     bcOffset Chipmunk{baryCenterOffset} = baryCenterOffset
-    bcOffset StaticChipmunk{chipmunkPosition, renderPosition = Qt.Position x y} = 
-        chipmunkPosition -~ Vector x y
+    bcOffset StaticChipmunk{chipmunkPosition, renderPosition} = 
+        chipmunkPosition -~ position2vector renderPosition
     bcOffset ImmutableChipmunk{baryCenterOffset} = baryCenterOffset
 
 
@@ -201,8 +202,8 @@ removeChipmunk c@Chipmunk{} = do
 
 getPosition :: Chipmunk -> IO Vector
 getPosition Chipmunk{body} = get $ H.position body
-getPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
-    return (Vector x y +~ rotate baryCenterOffset (fromAngle angle))
+getPosition (ImmutableChipmunk pos angle baryCenterOffset _) =
+    return (position2vector pos +~ rotate baryCenterOffset (fromAngle angle))
 getPosition StaticChipmunk{chipmunkPosition} = return chipmunkPosition
 
 -- returns the angle and the position of the (rotated) left upper corner of the object.
@@ -211,8 +212,8 @@ getRenderPositionAndAngle Chipmunk{body, baryCenterOffset} = do
     pos <- get $ H.position body
     angle <- get $ H.angle body
     let rotatedOffset = rotateVector angle baryCenterOffset
-        (Vector x y) = pos -~ rotatedOffset
-    return (Qt.Position x y, angle)
+        renderPos = vector2position (pos -~ rotatedOffset)
+    return (renderPos, angle)
 getRenderPositionAndAngle StaticChipmunk{renderPosition} = do
     return (renderPosition, 0)
 getRenderPositionAndAngle (ImmutableChipmunk pos angle _ _) = return (pos, angle)
@@ -226,8 +227,8 @@ getChipmunkPosition Chipmunk{body} = do
     return (p, a)
 getChipmunkPosition StaticChipmunk{chipmunkPosition} =
     return (chipmunkPosition, 0)
-getChipmunkPosition (ImmutableChipmunk (Qt.Position x y) angle baryCenterOffset _) =
-    return (Vector x y +~ rotateVector angle baryCenterOffset, angle)
+getChipmunkPosition (ImmutableChipmunk pos angle baryCenterOffset _) =
+    return (position2vector pos +~ rotateVector angle baryCenterOffset, angle)
 
 getMass :: Chipmunk -> IO Mass
 getMass = get . H.mass . body
@@ -244,22 +245,31 @@ static2normalAttributes (StaticBodyAttributes position) =
 static2normalAttributes x = nm "static2normalAttributes" x
 
 position2vector :: Qt.Position Double -> Vector
-position2vector (Qt.Position x y) = Vector x y
+position2vector (Qt.Position x y) = Vector (realToFrac x) (realToFrac y)
 
 vector2position :: Vector -> Qt.Position Double
-vector2position (Vector x y) = Qt.Position x y
+vector2position (Vector x y) = Qt.Position (realToFrac x) (realToFrac y)
+
+size2vector :: Qt.Size Double -> Vector
+size2vector (fmap realToFrac -> Qt.Size x y) = Vector x y
 
 
 -- * missing
 
-vectorX :: Vector -> Double
+vectorX :: Vector -> CpFloat
 vectorX (Vector x y) = x
 
-vectorY :: Vector -> Double
+vectorY :: Vector -> CpFloat
 vectorY (Vector x y) = y
 
+rad2deg :: Angle -> Double
+rad2deg x = realToFrac ((x * 360) / (pi * 2))
+
+deg2rad :: Double -> Angle
+deg2rad x = realToFrac (x * 2 * pi / 360)
+
 -- | folds the angle of a body to (- pi, pi)
-foldAngle :: Double -> Double
+foldAngle :: CpFloat -> CpFloat
 foldAngle = foldToRange (- pi, pi)
 
 -- | a chipmunk angles of 0 points east. We need to use angles that point north.
@@ -303,20 +313,20 @@ rotateVector angle (Vector a b) =
     nullVector = nva :+ nvb
 
 translateVector :: Ptr QPainter -> Vector -> IO ()
-translateVector ptr (Vector x y) = translate ptr (Qt.Position x y)
+translateVector ptr v = translate ptr $ vector2position v
 
 mapVectors :: (Vector -> Vector) -> ShapeType -> ShapeType
 mapVectors f (LineSegment a b t) = LineSegment (f a) (f b) t
 mapVectors f (Polygon list) = Polygon (map f list)
 mapVectors f x = es " mo" x
 
-vmap :: (Double -> Double) -> Vector -> Vector
+vmap :: (CpFloat -> CpFloat) -> Vector -> Vector
 vmap f (Vector a b) = Vector (f a) (f b)
 
 -- @mkRect p s@ creates a Polygon of a rectangle
 -- with @p@ as upper left corner and @s@ as size.
-mkRect :: Qt.Position Double -> Qt.Size Double  -> ShapeType
-mkRect (Qt.Position x y) (Qt.Size width height) =
+mkRect :: Qt.Position CpFloat -> Qt.Size CpFloat  -> ShapeType
+mkRect (fmap realToFrac -> Qt.Position x y) (fmap realToFrac -> Qt.Size width height) =
     Polygon [
         Vector left top,
         Vector left bottom,
@@ -345,7 +355,7 @@ mkRectFromPositions (Vector x1 y1) (Vector x2 y2) =
 
 -- | @areaForShape mpp shape@ calculates the mass for a given shape.
 -- @mpp@ is the material mass per (square-)pixel.
-areaForShape :: ShapeType -> Double
+areaForShape :: ShapeType -> CpFloat
 areaForShape (Circle r) = 2 * pi * r
 areaForShape (LineSegment _ _ _) = 0
 areaForShape (Polygon (p : q : r : rest)) =
@@ -367,7 +377,7 @@ momentForMaterialShape mpp mOffset shape =
 -- * chipmunk initialisation
 
 mkStandardPolys :: Qt.Size Double -> ([ShapeType], Vector)
-mkStandardPolys (Qt.Size w h) =
+mkStandardPolys (fmap realToFrac -> Qt.Size w h) =
      ([rect], baryCenterOffset)
   where
     rect =

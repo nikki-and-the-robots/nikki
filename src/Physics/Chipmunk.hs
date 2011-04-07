@@ -19,6 +19,8 @@ module Physics.Chipmunk (
 
     vectorX,
     vectorY,
+    rad2deg,
+    deg2rad,
 
     modifyPosition,
     modifyVelocity,
@@ -38,6 +40,7 @@ module Physics.Chipmunk (
     rotateVector,
     position2vector,
     vector2position,
+    size2vector,
     mapVectors,
     vmap,
     mkRect,
@@ -56,6 +59,7 @@ module Physics.Chipmunk (
     momentForMaterialShape,
 
     -- re-exports from Physics.Hipmunk
+    CpFloat,
     infinity,
 
     Vector(..),

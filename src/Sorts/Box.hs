@@ -1,4 +1,4 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable #-}
+{-# language MultiParamTypeClasses, DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Sorts.Box (sorts) where
 
@@ -78,10 +78,11 @@ shapeAttributes = ShapeAttributes {
   }
 
 mkShapes :: Size Double -> ([ShapeType], Vector)
-mkShapes (Size w h) = ([box],  baryCenterOffset)
+mkShapes size = ([box],  baryCenterOffset)
   where
     box = Polygon [upperLeft, lowerLeft, lowerRight, upperRight]
 
+    Size w h :: Size CpFloat = fmap realToFrac size
     wh = w / 2
     hh = h / 2
     baryCenterOffset = Vector wh hh

@@ -15,7 +15,7 @@ import Data.Accessor
 import Control.Monad.IO.Class
 
 import Graphics.Qt
-import Physics.Chipmunk (Angle)
+import Physics.Chipmunk (Angle, rad2deg)
 
 import Utils
 
@@ -78,7 +78,7 @@ renderPixmap :: MonadIO m =>
     Ptr QPainter -- ^ painter to be rendered to
     -> Offset Double -- ^ global (camera) offset
     -> Position Double -- ^ position of pixmap
-    -> Maybe Double -- ^ rotation
+    -> Maybe Angle -- ^ rotation
     -> Pixmap -- ^ pixmap to be rendered
     -> m ()
 renderPixmap ptr offset position mAngle pix = io $ do

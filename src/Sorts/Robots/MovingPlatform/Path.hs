@@ -21,8 +21,8 @@ import Sorts.Robots.MovingPlatform.Configuration
 data Path
     = Path {
         segments :: [Segment],
-        distanceToGuidePoint :: Double,
-        pathLength :: Double
+        distanceToGuidePoint :: CpFloat,
+        pathLength :: CpFloat
       }
     | SingleNode {
         node :: Vector,
@@ -46,7 +46,7 @@ mkPath active list =
         \ a b -> if a == b then Just a else Nothing
 
     -- sums up all the segment's lengths
-    sumLength :: [Segment] -> Double
+    sumLength :: [Segment] -> CpFloat
     sumLength = sum . map segmentLength
 
     -- wraps the path in a SingleNode when platform is initially switched off
@@ -59,7 +59,7 @@ currentSegment Path{segments = (a : _)} = a
 data Segment = Segment {
     start :: Vector,
     end :: Vector,
-    segmentLength :: Double
+    segmentLength :: CpFloat
   }  deriving (Show, Typeable)
 
 segment :: Vector -> Vector -> Segment
@@ -90,7 +90,7 @@ updatePath =
 -- on the path.
 
 -- | returns the guide point
-guidePoint :: [Segment] -> Double -> Vector
+guidePoint :: [Segment] -> CpFloat -> Vector
 guidePoint segments distanceToGuidePoint =
     inner (cycle segments) distanceToGuidePoint
   where
@@ -134,7 +134,7 @@ updateSegment path@(Path (a : r) dtg pathLength) =
 -- * force
 
 -- | (pure) calculation of the path force.
-mkPathForce :: Path -> Double -> Vector -> Vector -> Vector
+mkPathForce :: Path -> Mass -> Vector -> Vector -> Vector
 mkPathForce (SingleNode aim _) m p v =
     springForce singleNodeSpringConfiguration m p v aim
 mkPathForce (Path segments distanceToGuidePoint _) m p v = do

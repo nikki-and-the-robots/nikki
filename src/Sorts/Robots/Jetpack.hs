@@ -29,6 +29,7 @@ import qualified Sorts.Robots.Eyes as Eyes
 
 boostFrameTimes = [0.08]
 
+jetpackSize :: Size Double
 jetpackSize = fmap fromUber $ Size 27 21
 
 
@@ -138,7 +139,7 @@ mkPolys =
     wh = w / 2
     hh = h / 2
     baryCenterOffset = Vector wh hh
-    Size w h = jetpackSize
+    Size w h = fmap realToFrac $ jetpackSize
 
 
 -- * logick

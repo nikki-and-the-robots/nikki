@@ -20,7 +20,7 @@ import Data.Directions
 
 import Control.Arrow
 
-import Physics.Hipmunk (ShapeType(Polygon, vertices), Vector(Vector))
+import Physics.Hipmunk (ShapeType(Polygon, vertices), Vector(Vector), CpFloat)
 
 import Physics.Chipmunk.Types (vectorX, vectorY)
 
@@ -35,8 +35,8 @@ y = vectorY
 data Rectangle
   = Rectangle {
     start :: Vector,
-    width :: Double,
-    height :: Double
+    width :: CpFloat,
+    height :: CpFloat
   }
     deriving (Eq, Show)
 
@@ -44,7 +44,7 @@ data Rectangle
 end :: Rectangle -> Vector
 end r = start r +~ Vector (width r) (height r)
 
-modifyWidth :: (Double -> Double) -> Rectangle -> Rectangle
+modifyWidth :: (CpFloat -> CpFloat) -> Rectangle -> Rectangle
 modifyWidth f (Rectangle start w h) =
     Rectangle start (f w) h
 
@@ -77,7 +77,7 @@ withRectangles f =
 
 -- * actual algorithm
 
-removeStickyEdges :: Double -> [ShapeType] -> [ShapeType]
+removeStickyEdges :: CpFloat -> [ShapeType] -> [ShapeType]
 removeStickyEdges epsilon =
     withRectangles (
         fixpoint moveSides >>>
@@ -127,7 +127,7 @@ moveRightSide a b = Nothing
 
 
 -- | moves two points (by distance of epsilon) in L-shaped combinations of two shapes to avoid sticky edges
-removeWedges :: Double -> [ShapeType] -> [ShapeType]
+removeWedges :: CpFloat -> [ShapeType] -> [ShapeType]
 removeWedges epsilon =
     withModified $
         foldr1 (>>>) $ replicate 4 (mergePairs moveUpperLeftCorner >>> map rotatePolygon90)

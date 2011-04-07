@@ -28,12 +28,11 @@ nikkiSize :: Size Double =
 
 -- * physic
 
-elasticity_ = 0.0
+elasticity_ :: CpFloat = 0.0
 
 -- | mass of nikki per pixel.
 -- Should be 1, Nikki's material mass is our mass unit.
-nikkiMaterialMass :: Double
-nikkiMaterialMass = 1
+nikkiMaterialMass :: CpFloat = 1
 
 nikkiNumberOfUberPixels = 256
 
@@ -45,37 +44,37 @@ nikkiMass =
 -- | friction for nikkis feet. The higher the friction,
 -- the faster nikki will gain maximum walking speed
 -- and the faster nikki will be able to stop or change direction
-nikkiFeetFriction :: Double = 1.5789
+nikkiFeetFriction :: CpFloat = 1.5789
 
 -- | the friction of the head
-headFriction = 0.2105
+headFriction :: CpFloat = 0.2105
 
 -- | maximum walking speed (pixels per second)
 -- also affects maximal jumping distance
-maximumWalkingVelocity :: Double = 415
+maximumWalkingVelocity :: CpFloat = 415
 
 -- | Time it takes Nikki to accelerate to maximumWalkingVelocity.
-accelerationTime :: Double = 0.3
+accelerationTime :: CpFloat = 0.3
 
 -- | how strong the horizontal force is while Nikki is airborne
 -- in gravities
-airBorneForceFactor = 0.54 -- 0.6
+airBorneForceFactor :: CpFloat = 0.54 -- 0.6
 
 -- | minimal jumping height (for calculating the impulse strength)
-minimalJumpingHeight = fromKachel 0.3 -- maybe even higher, before: 0.25 and 0.28
+minimalJumpingHeight :: CpFloat = fromKachel 0.3 -- maybe even higher, before: 0.25 and 0.28
 
 -- | maximal jumping height (created with decreased gravity (aka anti-gravity force))
-maximalJumpingHeight = fromKachel 3.4
+maximalJumpingHeight :: CpFloat = fromKachel 3.4
 
 -- | defines how strong the walljump from a vertical will be
 -- (in terms of a normal jump from a horizontal object)
-walljumpFactor :: Double = 0.82
+walljumpFactor :: CpFloat = 0.82
 
 -- | decides how strong the horizontal impulse is in case of a 90 degree wall jump
 -- 0 - no horizontal impulse
 -- 0.5 - same horizontal impulse as normal jumping impulse (pointing up)
 -- 1.0 infinite horizontal impulse
-walljumpHorizontalFactor :: Double = 0.69
+walljumpHorizontalFactor :: CpFloat = 0.69
 
 -- | Controls how Nikki's velocity gets decreased by wall jumps.
 -- Must be >= 1.
@@ -83,7 +82,7 @@ walljumpHorizontalFactor :: Double = 0.69
 -- bigger - the downwards velocity has more and more influence
 -- No matter how high the value, the downwards velocity gets always clipped, 
 -- to avoid wall jumps that point downwards.
-correctionSteepness :: Double = 1.0004 -- 1.005
+correctionSteepness :: CpFloat = 1.0004 -- 1.005
 
 -- | if the contactAngle is smaller than gripAngleLimit
 -- (and the collision is with nikki's head),
@@ -92,17 +91,17 @@ gripAngleLimit :: Angle = deg2rad 18
 
 -- | strength of the impulse applied to nikki,
 -- when dropping of a tile nikki hangs on with the paws.
-gripImpulse :: Double
+gripImpulse :: CpFloat
 gripImpulse = 160
 
 -- | There are two so called ghost shapes around Nikki's legs.
 -- They enable jumping, when there was a leg collision before.
 -- See Sorts.Nikki.State.
 -- One is wider than the legs:
-ghostWidthPadding :: Double = fromUber 8
+ghostWidthPadding :: CpFloat = fromUber 8
 
 -- and one is longer:
-ghostHeightPadding :: Double = fromUber 3
+ghostHeightPadding :: CpFloat = fromUber 3
 
 
 

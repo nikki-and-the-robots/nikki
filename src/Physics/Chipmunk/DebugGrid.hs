@@ -37,12 +37,12 @@ renderShapeType ptr ShapeDescription{shapeType, shapeOffset} =
             mapM_ (uncurry (renderVectorLine ptr)) (adjacentCyclic vertices)
         (LineSegment start end thickness, Vector 0 0) ->
             renderVectorLine ptr start end
-        (Circle radius, Vector x y) -> do
+        (Circle radius, vec) -> do
             setPenColor ptr signalRed 1
-            drawCircle ptr (Position x y) radius
+            drawCircle ptr (vector2position vec) (realToFrac radius)
         st -> nm "renderShape" st
 
 renderVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
-renderVectorLine ptr (Vector x1 y1) (Vector x2 y2) = do
+renderVectorLine ptr a b = do
     setPenColor ptr signalRed 1
-    drawLine ptr (Position x1 y1) (Position x2 y2)
+    drawLine ptr (vector2position a) (vector2position b)

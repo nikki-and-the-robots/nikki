@@ -21,7 +21,7 @@ import Sorts.Nikki.JumpingForces
 import Sorts.Nikki.JumpingImpulse
 
 
-setNikkiSurfaceVelocity :: Nikki -> Double -> IO ()
+setNikkiSurfaceVelocity :: Nikki -> CpFloat -> IO ()
 setNikkiSurfaceVelocity nikki surfaceVelocity =
     forM_ (feetShapes nikki) $ \ fs ->
         surfaceVel fs $= Vector surfaceVelocity 0

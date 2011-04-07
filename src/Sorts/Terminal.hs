@@ -310,13 +310,13 @@ mkPolys size =
             Vector (wh - padding) hh,
             Vector (wh - padding) (- hh)
           ]
-    (Size wh hh) = fmap (/ 2) size
+    (Size wh hh) :: Size CpFloat = fmap realToFrac $ fmap (/ 2) size
     baryCenterOffset = Vector wh hh
     -- the physics object is much narrower to simulate,
     -- nikki being able to use the terminal if nikki is completely
     -- inside the terminal frame. (With height, there is no such padding,
     -- as nikki can only jump when standing on the ground.)
-    padding = width nikkiSize
+    padding = realToFrac $ width nikkiSize
 
 
 -- * controlling

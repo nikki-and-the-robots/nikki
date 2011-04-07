@@ -43,7 +43,7 @@ tilesOrdering a b =
     withView (ep2v >>> rot >>> vectorY) compare a b
   where
     ep2v :: EditorPosition -> Vector
-    ep2v (EditorPosition x y) = Vector x y
+    ep2v (EditorPosition x y) = Vector (realToFrac x) (realToFrac y)
     -- rotate by (- 45 degrees)
     rot :: Vector -> Vector
     rot = rotateVector (pi / 4)

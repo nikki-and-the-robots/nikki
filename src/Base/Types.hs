@@ -42,7 +42,7 @@ import Base.Configuration
 
 -- * type aliases
 
-type Seconds = Double
+type Seconds = CpFloat
 
 type ConfigurationReader = ReaderT Configuration IO
 type RM = ConfigurationReader

@@ -29,6 +29,7 @@ import Sorts.Nikki (addBatteryPower, modifyNikki)
 
 batteryMaterialMass = 3.588785046728972
 
+batterySize :: Fractional f => Size f
 batterySize = Size 28 52
 
 batteryOffset = Position (- 17) (- 5) -- offset from upper left corner (in the graphic file)
@@ -67,7 +68,7 @@ instance Sort BSort Battery where
 
     -- sort -> Maybe  Space  -> EditorPosition  -> Maybe  String  -> IO  object
     initialize sort (Just space) ep Nothing = do
-        let baryCenterOffset = Vector (width batterySize / 2) (height batterySize / 2)
+        let baryCenterOffset = size2vector $ fmap (/2) batterySize
             shapes = fmap (mkShapeDescription shapeAttributes) mkShapes
             pos = position2vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
@@ -123,20 +124,10 @@ mkShapes =
 
 
 
-rectangle :: Double -> Double -> Double -> Double -> ShapeType
+rectangle :: CpFloat -> CpFloat -> CpFloat -> CpFloat -> ShapeType
 rectangle top bottom left right = Polygon [
     Vector left top,
     Vector left bottom,
     Vector right bottom,
     Vector right top
   ]
-
-
-
-
-
-
-
-
-
-

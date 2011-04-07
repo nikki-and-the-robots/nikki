@@ -475,19 +475,13 @@ justWhen False = const Nothing
 
 -- * math stuff
 
-rad2deg :: Floating a => a -> a
-rad2deg x = (x * 360) / (pi * 2)
-
-deg2rad :: Floating a => a -> a
-deg2rad x = x * 2 * pi / 360
-
 (~=) :: (Ord n, Fractional n) => n -> n -> Bool
 a ~= b = distance a b < epsilon
 
 epsilon :: Fractional n => n
 epsilon = 0.001
 
-divide :: Double -> Double -> (Int, Double)
+divide :: (RealFrac f, Integral i) => f -> f -> (i, f)
 divide a b = (n, f * b)
   where
     (n, f) = properFraction (a / b)
@@ -628,6 +622,9 @@ instance PP a => PP (Maybe a) where
 
 
 instance PP Double where
+    pp = printf "%8.3f"
+
+instance PP Float where
     pp = printf "%8.3f"
 
 instance PP Int where

@@ -29,8 +29,8 @@ addDustClouds now nikki = do
     dustClouds' p = newClouds p ++ removeOldClouds (dustClouds $ state nikki)
     newClouds p = [newCloud p direction_]
 
-    newCloud (Vector x y) _ =
-        DustCloud now (Position x y)
+    newCloud v _ =
+        DustCloud now $ vector2position v
 --     newCloud (Vector x y) HRight =
 --         DustCloud now (Position x y +~ Position (fromUber (13 / 2)) (fromUber (24 / 2)) +~ cloudRenderCorrection)
     cloudRenderCorrection = Position (- fromUber (5 / 2)) (- fromUber (5 / 2))

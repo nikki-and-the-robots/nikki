@@ -18,7 +18,7 @@ import Sorts.Nikki.Configuration
 
 
 -- | calculates the force of the initial jumping impulse
-jumpingImpulseLength :: Double
+jumpingImpulseLength :: CpFloat
 jumpingImpulseLength =
     c_v * nikkiMass
   where
@@ -118,6 +118,6 @@ calculate collisionObjectVelocity contactAngle nikkiVelocity =
     -- the impact of wallVelocity is controlled by correctionSteepness
     wallVelocityLenFactor = 1 - (correctionSteepness ** (- len wallVelocity))
 
-getJumpingFactor :: Angle -> Double
+getJumpingFactor :: Angle -> CpFloat
 getJumpingFactor angle =
     walljumpFactor + (1 - walljumpFactor) * cos angle

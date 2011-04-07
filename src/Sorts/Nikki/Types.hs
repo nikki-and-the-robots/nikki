@@ -62,7 +62,7 @@ addBatteryPower n = n{batteryPower = batteryPower n + 1}
 data State = State {
     action :: Action,
     direction :: HorizontalDirection, -- the direction nikki faces
-    feetVelocity :: Double,
+    feetVelocity :: CpFloat,
     jumpInformation :: JumpInformation,
     considerGhostsState :: Bool, -- if ghost shapes should be considered
     dustClouds :: [DustCloud]

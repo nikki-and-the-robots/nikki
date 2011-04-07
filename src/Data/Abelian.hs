@@ -23,3 +23,7 @@ instance Abelian Double where
     (+~) = (+)
     (-~) = (-)
 
+instance Abelian Float where
+    zero = 0
+    (+~) = (+)
+    (-~) = (-)

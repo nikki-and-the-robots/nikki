@@ -15,7 +15,7 @@ import Base
 -- * physics
 
 -- | robot mass per (square-)pixel
-robotMaterialMass :: Double = 78
+robotMaterialMass :: CpFloat = 78
 
 -- | physical attributes of the robots
 -- (Obviously, don't change the collisionType.)
@@ -26,4 +26,4 @@ robotShapeAttributes = ShapeAttributes{
   }
 
 -- | size of one of the robots "face tiles"
-robotBodySize :: Size Double = fmap fromUber $ Size 15 15
+robotBodySize :: Size CpFloat = fmap fromUber $ Size 15 15

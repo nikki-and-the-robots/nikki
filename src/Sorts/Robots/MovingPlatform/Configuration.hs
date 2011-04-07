@@ -3,6 +3,8 @@
 module Sorts.Robots.MovingPlatform.Configuration where
 
 
+import Physics.Chipmunk
+
 import Base
 
 import Sorts.Nikki as Nikki (nikkiMass)
@@ -10,12 +12,12 @@ import Sorts.Nikki as Nikki (nikkiMass)
 
 -- | The mass of platforms.
 -- (gravity has no effect on platforms
-platformMass :: Double = nikkiMass * 3.5 -- 3
+platformMass :: CpFloat = nikkiMass * 3.5 -- 3
 
-platformFriction :: Double = 0.75 -- 0.95
+platformFriction :: CpFloat = 0.75 -- 0.95
 
 -- | general velocity of platforms
-platformStandardVelocity :: Double = 170 -- 150
+platformStandardVelocity :: CpFloat = 170 -- 150
 
 
 -- * spring configuration
@@ -23,13 +25,13 @@ platformStandardVelocity :: Double = 170 -- 150
 data SpringConfiguration = SpringConfiguration {
     -- When the platform is further than this value away from its aim,
     -- the applied acceleration will have reached platformAcceleration
-    springAcceleration :: Double,
+    springAcceleration :: CpFloat,
     -- factor of friction
     -- (not dependent on the velocity, like sliding friction)
-    frictionFactor :: Double,
+    frictionFactor :: CpFloat,
     -- factor of drag
     -- (dependent on velocity, like air drag)
-    dragFactor :: Double
+    dragFactor :: CpFloat
   }
 
 -- | spring configuration for platforms that move on a path

@@ -96,7 +96,7 @@ gameLoop app sceneMVar = do
                 continue
       where
         continue = do
-            io $ waitTimer timer (stepQuantum / timeFactor)
+            io $ waitTimer timer (realToFrac (stepQuantum / timeFactor))
             loop timer
 
     initializeSceneMVar :: GameMonad ()
