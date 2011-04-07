@@ -11,6 +11,8 @@ import Data.Map
 
 import Graphics.Qt.Types
 
+import System.Info
+
 
 data QtEvent
     = KeyPress Key String
@@ -200,9 +202,9 @@ keyMapping = [
     (0x1000014, RightArrow),
 
     -- modifiers
-    (0x1000022, Meta),
+    (0x1000022, realMeta),
     (0x1000020, Shift),
-    (0x1000021, Ctrl),
+    (0x1000021, realCtrl),
     (0x1000023, Alt),
     (0x1001103, AltGr),
 
@@ -232,3 +234,18 @@ keyMapping = [
     (16777274, F11),
     (16777275, F12)
   ]
+
+-- stick with Ctrl on osx
+-- (Qt::AA_MacDontSwapCtrlAndMeta doesn't seem to work)
+
+-- | translates to Ctrl on osx, to Meta on all other platforms
+realMeta :: Key
+realMeta = case System.Info.os of
+    "darwin" -> Ctrl
+    _ -> Meta
+
+-- | translates to Meta on osx, to Ctrl on all other platforms
+realCtrl :: Key
+realCtrl = case System.Info.os of
+    "darwin" -> Meta
+    _ -> Ctrl
