@@ -113,7 +113,7 @@ instance Sort PSort Platform where
     render platform sort ptr offset now = do
         (position, rad) <- getRenderPositionAndAngle $ chipmunk platform
         let renderPosition = position +~ physicsPadding
-            robot = RenderPixmap (pix sort) renderPosition (Just rad)
+            robot = RenderPixmap (pix sort) renderPosition Nothing
             eyes = renderRobotEyes (robotEyes sort) renderPosition rad eyesOffset
                 (robotEyesState $ path platform) now
         return (robot : eyes : [])
