@@ -5,6 +5,8 @@ module Physics.Chipmunk.DebugGrid (
   ) where
 
 
+import Data.Abelian
+
 import Graphics.Qt as Qt
 
 import Physics.Hipmunk as CM
@@ -35,8 +37,8 @@ renderShapeType ptr ShapeDescription{shapeType, shapeOffset} =
     case (shapeType, shapeOffset) of
         (Polygon{vertices}, Vector 0 0) ->
             mapM_ (uncurry (renderVectorLine ptr)) (adjacentCyclic vertices)
-        (LineSegment start end thickness, Vector 0 0) ->
-            renderVectorLine ptr start end
+        (LineSegment start end thickness, offset) ->
+            renderVectorLine ptr (start +~ offset) (end +~ offset)
         (Circle radius, vec) -> do
             setPenColor ptr signalRed 1
             drawCircle ptr (vector2position vec) (realToFrac radius)
