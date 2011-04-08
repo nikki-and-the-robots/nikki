@@ -253,6 +253,9 @@ vector2position (Vector x y) = Qt.Position (realToFrac x) (realToFrac y)
 size2vector :: Qt.Size Double -> Vector
 size2vector (fmap realToFrac -> Qt.Size x y) = Vector x y
 
+vector2size :: Vector -> Qt.Size Double
+vector2size (Vector x y) = fmap realToFrac $ Qt.Size x y
+
 
 -- * missing
 

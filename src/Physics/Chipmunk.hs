@@ -41,6 +41,7 @@ module Physics.Chipmunk (
     position2vector,
     vector2position,
     size2vector,
+    vector2size,
     mapVectors,
     vmap,
     mkRect,

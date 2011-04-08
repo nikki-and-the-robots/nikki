@@ -67,18 +67,23 @@ data Switch
 unwrapSwitch :: Object_ -> Maybe Switch
 unwrapSwitch (Object_ sort o) = cast o
 
+-- | padding to make the switch bigger in the editor than it really is.
+editorPadding = Vector (fromUber 1) (- fromUber 1)
+
 instance Sort SwitchSort Switch where
     sortId _ = SortId "switch/levelExit"
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
+                +~ fmap ((* 2) . abs) (vector2size editorPadding)
 
     renderIconified sort ptr = do
+        translate ptr $ fmap abs $ vector2position editorPadding
         renderPixmapSimple ptr (stampPix sort)
         translate ptr (Position 0 (fromUber 7))
         renderPixmapSimple ptr (boxOffPix sort)
 
     initialize sort (Just space) ep Nothing = do
-        let ex = realToFrac $ editorX ep
-            ey = realToFrac $ editorY ep
+        let ex = realToFrac (editorX ep) + vectorX editorPadding
+            ey = realToFrac (editorY ep) + vectorY editorPadding
             ((boxShapes, boxBaryCenterOffset), triggerShapes, (stampShapes, stampBaryCenterOffset)) =
                     switchShapes
 
