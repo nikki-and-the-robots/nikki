@@ -71,7 +71,7 @@ surfaceVelocityShape =
 otherShapes =
     mkShapeDescription headShapeAttributes headPoly :
     mkShapeDescription leftPawShapeAttributes leftPawPoly :
-    map (mkShapeDescription ghostShapeAttributes) ghostShapes ++
+    mkShapeDescription ghostShapeAttributes ghostShape :
     []
 
 Size w h = fmap realToFrac nikkiSize
@@ -115,20 +115,11 @@ leftPawPoly = Polygon [
     Vector 0 (headLow + pawThickness - fromUber 1)
     ]
 
--- there are two ghost shapes, one with a bigger height, one with a bigger width
--- than the feet.
-ghostShapes :: [ShapeType]
-ghostShapes =
-    wider :
-    higher :
-    []
-  where
-    wider = mkRectFromPositions
-        (Vector (legLeft - ghostWidthPadding) legUp)
-        (Vector (legRight + ghostWidthPadding) low)
-    higher = mkRectFromPositions
-        (Vector legLeft legUp)
-        (Vector legRight (low + ghostHeightPadding))
+-- ghost shape to allow for jumping when nikki stopped touching the ground
+ghostShape :: ShapeType
+ghostShape = mkRectFromPositions
+    (Vector (legLeft - ghostWidthPadding) legUp)
+    (Vector (legRight + ghostWidthPadding) (low + ghostHeightPadding))
 
 
 -- | the angle of the line from the edge of the feet to the lower edge of the head
