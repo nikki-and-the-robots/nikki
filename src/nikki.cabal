@@ -123,6 +123,7 @@ Executable core
             -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
         ld-options:
             -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+            -headerpad_max_install_names
 
     build-depends:
           base >= 4 && < 5
