@@ -118,6 +118,12 @@ Executable core
         -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
 
+    if os(darwin)
+        cc-options:
+            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+        ld-options:
+            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+
     build-depends:
           base >= 4 && < 5
         , binary
@@ -128,7 +134,7 @@ Executable core
         , mtl >= 2
         , process
         , Hipmunk >= 5.2.0.2
-        , sfml-audio
+        , sfml-audio >= 0.2.1706.1
         , safe
         , random
         , StateVar
