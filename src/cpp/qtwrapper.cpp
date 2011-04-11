@@ -165,7 +165,7 @@ extern "C" int heightQPainter(QPainter* painter) {
 extern "C" QPixmap* newQPixmap(char* file) {
     QPixmap* result = new QPixmap(QString(file));
     if (result->isNull())
-        qDebug() << "null";
+        return NULL;
     return result;
 };
 

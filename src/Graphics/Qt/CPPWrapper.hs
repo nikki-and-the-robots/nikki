@@ -253,7 +253,10 @@ newQPixmap file_ = do
     exists <- doesFileExist file
     when (not exists) $
         error ("file does not exist: " ++ file)
-    withCString file cppNewQPixmap
+    ptr <- withCString file cppNewQPixmap
+    when (ptr == nullPtr) $
+        error ("could not load image file: " ++ file)
+    return ptr
 
 foreign import ccall "newQPixmap" cppNewQPixmap :: CString -> IO (Ptr QPixmap)
 
