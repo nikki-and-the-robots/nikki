@@ -62,6 +62,13 @@ waitForAppEvent app poller = do
             io $ threadDelay (round (0.01 * 10 ^ 6))
             waitForAppEvent app poller
 
+-- | Blocks until a Press AppEvent is received.
+waitForPressAppEvent :: Application_ s -> KeyPoller -> M AppEvent
+waitForPressAppEvent app poller = do
+    e <- waitForAppEvent app poller
+    case e of
+        (Press _) -> return e
+        _ -> waitForPressAppEvent app poller
 
 updateKeyState :: AppEvent -> Set Button -> Set Button
 updateKeyState (Press   k) ll = insert k ll

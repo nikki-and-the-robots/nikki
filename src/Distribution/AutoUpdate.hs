@@ -27,7 +27,9 @@ import Base.Types hiding (update)
 import Base.Prose
 import Base.Monad
 import Base.Configuration
+import Base.Application
 import Base.Application.Widgets.GUILog
+import Base.Application.Widgets.Message
 
 import Distribution.AutoUpdate.Paths
 import Distribution.AutoUpdate.Download
@@ -63,41 +65,31 @@ isDeployed = do
       else
         Nothing
 
--- | doing the auto update (wrapping the logic thread)
-autoUpdate :: Application_ sort -> M a -> M a
-autoUpdate app game = do
-    no_update_ <- gets no_update
-    if no_update_ then do
-        io $ guiLog app (p "not updating")
-        game
-      else
-        doAutoUpdate app game
-
-doAutoUpdate :: Application_ sort -> M a -> M a
-doAutoUpdate app game = do
+-- | doing the auto update
+autoUpdate :: Application_ sort -> AppState -> AppState
+autoUpdate app follower = AppState $ do
     repoString <- gets update_repo
     mDeployed <- io $ isDeployed
     case mDeployed of
         Nothing -> do
-            io $ guiLog app (p "not deployed: not updating")
-            game
+            message app [p "not deployed: not updating"]
+            return follower
         Just path@(DeployPath dp) -> do
             io $ do
                 guiLog app (p "deployed in " `mappend` pVerbatim dp)
                 guiLog app (p "looking for updates...")
             result <- io $ attemptUpdate app (Repo repoString) path
             case result of
-                (Left message) -> do
-                    io $ guiLog app (p "update failed: " `mappend` pVerbatim message)
-                    game
-                (Right True) -> io $ do
-                    guiLog app $ p "game updated..."
-                    guiLog app $ p "restarting..."
-                    threadDelay 5000000
-                    exitWith $ ExitFailure 143
+                (Left errorMessage) -> do
+                    message app [p "update failed: " +> pVerbatim errorMessage]
+                    return follower
+                (Right True) -> do
+                    message app $ [p "game updated to version " +> pVerbatim "$VERSION", p "restarting..."]
+                    io $ threadDelay 5000000
+                    io $ exitWith $ ExitFailure 143
                 (Right False) -> do
-                    io $ guiLog app (p "version up to date")
-                    game
+                    message app [p "version up to date"]
+                    return follower
 
 -- | Looks for updates on the server.
 -- If found, updates the program.

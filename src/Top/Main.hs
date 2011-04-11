@@ -82,7 +82,6 @@ main =
             logicThread = do
                 guiLog app (p "loading...")
                 withDynamicConfiguration configuration $
-                    autoUpdate app $
                     executeStates (applicationStates app)
         exitCodeMVar <- forkLogicThread $ do
             logicThread `finally` quitQApplication
@@ -123,6 +122,7 @@ mainMenu app =
         ("play", selectLevelPlay app this),
         ("help", mainMenuHelp app this),
         ("edit", selectLevelEdit app this),
+        ("update", autoUpdate app this),
         ("quit", FinalState)
       ]
   where

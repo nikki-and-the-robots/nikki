@@ -33,7 +33,7 @@ renderLog app ptr = do
     let font = alphaNumericFont $ applicationPixmaps app
     log <- readMVar logRef
     when (not $ null log) $ do
-        size  <- fmap fromIntegral <$> sizeQPainter ptr
+        size <- fmap fromIntegral <$> sizeQPainter ptr
         translate ptr (Position (fromUber 3) (height size - fromUber 1))
         forM_ log $ \ line -> do
             translate ptr (Position 0 (- fontHeight font))

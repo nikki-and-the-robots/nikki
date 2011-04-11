@@ -29,7 +29,6 @@ data Configuration = Configuration {
     -- user config
     play_level :: Maybe FilePath,
     fullscreen :: Bool,
-    no_update :: Bool,
 
     -- development
     run_in_place :: Bool,
@@ -84,8 +83,6 @@ options =
             &= name "l",
         fullscreen = False
             &= help "start the game in fullscreen mode",
-        no_update = False
-            &= help "don't attempt to update the game from the web",
 
         run_in_place = False
             &= groupname "Development flags"
