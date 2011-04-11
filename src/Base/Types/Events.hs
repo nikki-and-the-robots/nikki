@@ -58,7 +58,7 @@ isArrowButton (KeyboardButton k _) =
     k `elem` (UpArrow : DownArrow : LeftArrow : RightArrow : [])
 
 -- | buttons that could be inserted via keyboard or gamepad
-isUp, isDown, isLeft, isRight, isAButton, isBButton, isStart :: Button -> Bool
+isUp, isDown, isLeft, isRight, isAButton, isBButton, isStart, isEnterOrReturn :: Button -> Bool
 isUp = isKeyBoardButton UpArrow
 isDown = isKeyBoardButton DownArrow
 isLeft = isKeyBoardButton LeftArrow
@@ -66,6 +66,7 @@ isRight = isKeyBoardButton RightArrow
 isAButton = isKeyBoardButton aKey
 isBButton = isKeyBoardButton bKey
 isStart = isKeyBoardButton Escape
+isEnterOrReturn (KeyboardButton k _) = k == Return || k == Enter
 
 isKeyBoardButton :: Key -> (Button -> Bool)
 isKeyBoardButton a (KeyboardButton b _) = a == b

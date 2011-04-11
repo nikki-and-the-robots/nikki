@@ -84,8 +84,7 @@ menuWithPreChoice app mTitle mParent children preChoice =
     -- Enter or A button
     isMenuConfirmation x =
         isAButton x ||
-        isKey Return x ||
-        isKey Enter x
+        isEnterOrReturn x
 
     font_ = alphaNumericFont $ applicationPixmaps app
     render items ptr = do

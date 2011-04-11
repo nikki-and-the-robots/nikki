@@ -32,7 +32,6 @@ shortcuts app held e = case e of
     (Press k) | fullscreenSwitch -> Just $ swapFullScreen app
       where
         fullscreenSwitch =
-            (isKey Return k && fany (isKey Alt) held) ||
-            (isKey F k && fany (isKey Ctrl) held) ||
+            (isEnterOrReturn k && fany (isKey Alt) held) ||
             (isKey F11 k)
     _ -> Nothing

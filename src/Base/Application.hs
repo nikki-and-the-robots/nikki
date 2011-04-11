@@ -61,7 +61,7 @@ askString app parent question follower = AppState $ do
         case event of
             Press e | isStart e ->
                 return parent
-            Press (KeyboardButton k _) | k == Return || k == Enter ->
+            Press e | isEnterOrReturn e ->
                 io $ follower <$> readMVar answerRef
             Press (KeyboardButton k text) -> do
                 io $ modifyMVar_ answerRef (\ x -> return $ modifyTextField k text x)

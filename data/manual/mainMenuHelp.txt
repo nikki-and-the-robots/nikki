@@ -2,6 +2,8 @@ CONTROLS
 
 We are trying to make the controls of the game as intuitive as possible. So, we hope you will be able to figure it out by yourselves for the most part.
 
+You can switch from and to fullscreen mode with either F11 or Alt+Enter.
+
 The keys that are used for playing are the ARROW KEYS, CTRL, SHIFT and ESC.
 
 Nikki's Controls:
