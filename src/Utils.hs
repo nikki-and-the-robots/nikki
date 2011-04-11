@@ -1,4 +1,4 @@
-{-# language EmptyDataDecls, FlexibleInstances, ViewPatterns #-}
+{-# language EmptyDataDecls, FlexibleInstances, ViewPatterns, PackageImports #-}
 
 module Utils (
     (<$>),
@@ -38,8 +38,8 @@ import Text.Printf
 import Text.Logging
 
 import Control.Applicative ((<$>), (<|>), (<*>), pure)
-import Control.Monad.State hiding (forM_)
-import Control.Monad.Trans.Error () -- Monad (Either e)
+import "mtl" Control.Monad.State hiding (forM_)
+import "transformers" Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))
 import Control.Concurrent
 
