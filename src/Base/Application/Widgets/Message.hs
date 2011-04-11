@@ -19,7 +19,7 @@ import Base.Polling
 message :: Application_ sort -> [Prose] -> M ()
 message app texts = do
     io $ setDrawingCallbackGLContext (window app) (Just $ render app texts)
-    void $ waitForPressAppEvent app $ keyPoller app
+    void $ waitForPressAppEvent app
 
 render :: Application_ sort -> [Prose] -> Ptr QPainter -> IO ()
 render app texts ptr = do

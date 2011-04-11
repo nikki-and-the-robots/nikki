@@ -72,7 +72,7 @@ gameLoop app sceneMVar = do
         io $ resetDebugging
 
         -- input events
-        controlData <- lift $ pollAppEvents app $ keyPoller app
+        controlData <- lift $ pollAppEvents app
         let pressed_ = pressed controlData
 
         -- stepping of the scene (includes rendering)

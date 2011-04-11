@@ -28,10 +28,10 @@ keyStateRef = unsafePerformIO $ newIORef ([], empty)
 
 -- | non-blocking polling of AppEvents
 -- Also handles global shortcuts.
-pollAppEvents :: Application_ s -> KeyPoller -> M ControlData
-pollAppEvents app poller = do
+pollAppEvents :: Application_ s -> M ControlData
+pollAppEvents app = do
     (unpolledEvents, keyState) <- io $ readIORef keyStateRef
-    qEvents <- io $ pollEvents poller
+    qEvents <- io $ pollEvents $ keyPoller app
     appEvents <- handleGlobalShortcuts app keyState $
         map (toAppEvent keyState . Left) qEvents
     let keyState' = foldr (>>>) id (map updateKeyState appEvents) keyState
@@ -51,24 +51,24 @@ resetHeldKeys = do
 
 -- | Blocking wait for the next event.
 -- waits between polls
-waitForAppEvent :: Application_ s -> KeyPoller -> M AppEvent
-waitForAppEvent app poller = do
-    ControlData events _ <- pollAppEvents app poller
+waitForAppEvent :: Application_ s -> M AppEvent
+waitForAppEvent app = do
+    ControlData events _ <- pollAppEvents app
     case events of
         (a : r) -> io $ do
             unpollAppEvents r
             return a
         [] -> do
             io $ threadDelay (round (0.01 * 10 ^ 6))
-            waitForAppEvent app poller
+            waitForAppEvent app
 
 -- | Blocks until a Press AppEvent is received.
-waitForPressAppEvent :: Application_ s -> KeyPoller -> M AppEvent
-waitForPressAppEvent app poller = do
-    e <- waitForAppEvent app poller
+waitForPressAppEvent :: Application_ s -> M AppEvent
+waitForPressAppEvent app = do
+    e <- waitForAppEvent app
     case e of
         (Press _) -> return e
-        _ -> waitForPressAppEvent app poller
+        _ -> waitForPressAppEvent app
 
 updateKeyState :: AppEvent -> Set Button -> Set Button
 updateKeyState (Press   k) ll = insert k ll

@@ -49,7 +49,7 @@ editorLoop app play mvar scene = AppState $ do
     worker :: MM AppState
     worker = do
         updateSceneMVar app mvar
-        event <- lift $ waitForAppEvent app $ keyPoller app
+        event <- lift $ waitForAppEvent app
         s <- get
         case (editorMode s, event) of
             (_, Press k) | isStart k -> return $ editorMenu app play mvar s

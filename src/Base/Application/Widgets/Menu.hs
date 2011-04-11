@@ -68,7 +68,7 @@ menuWithPreChoice app mTitle mParent children preChoice =
     inner items = AppState $ do
         io $ setDrawingCallbackGLContext (window app) (Just $ render items)
         io $ resetGuiLog
-        event <- waitForAppEvent app $ keyPoller app
+        event <- waitForAppEvent app
         case event of
             Press e | isUp e -> return $ inner $ selectPrevious items
             Press e | isDown e -> return $ inner $ selectNext items

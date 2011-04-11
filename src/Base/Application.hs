@@ -57,7 +57,7 @@ askString app parent question follower = AppState $ do
   where
     loop answerRef = do
         io $ updateGLContext $ window app
-        event <- waitForAppEvent app $ keyPoller app
+        event <- waitForAppEvent app
         case event of
             Press e | isStart e ->
                 return parent
