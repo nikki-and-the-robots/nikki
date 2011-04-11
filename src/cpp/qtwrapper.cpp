@@ -164,7 +164,7 @@ extern "C" int heightQPainter(QPainter* painter) {
 
 // * QPixmap
 extern "C" QPixmap* newQPixmap(char* file) {
-    QPixmap* result = new QPixmap(QString(file));
+    QPixmap* result = new QPixmap(QString::fromUtf8(file));
     if (result->isNull())
         return NULL;
     return result;
@@ -233,7 +233,7 @@ extern "C" QIcon* newQIcon() {
 };
 
 extern "C" void addFileQIcon(QIcon* ptr, char* path) {
-    ptr->addFile(QString(path));
+    ptr->addFile(QString::fromUtf8(path));
 };
 
 
