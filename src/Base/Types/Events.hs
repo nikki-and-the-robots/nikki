@@ -20,9 +20,21 @@ isPress (Press _) = True
 isPress _ = False
 
 data Button
-    = KeyboardButton Key String
+    = KeyboardButton {
+        key :: Key,
+        keyString :: String
+    }
 --     | GamepadButton TODO
-  deriving (Eq, Ord, Show)
+  deriving (Show)
+
+-- Eq and Ord instances disregard the keyString
+
+instance Eq Button where
+    a == b = key a == key b
+
+instance Ord Button where
+    compare a b = compare (key a) (key b)
+
 
 isKey :: Key -> Button -> Bool
 isKey a (KeyboardButton b _) = a == b

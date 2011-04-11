@@ -18,7 +18,7 @@ data QtEvent
     = KeyPress Key String
     | KeyRelease Key String
     | CloseWindow
-  deriving (Eq, Show)
+  deriving (Show)
 
 data Key
     -- characters
