@@ -1,82 +1,11 @@
 
-This directory contains all source files for Nikki and the Robots. Building is a bit more complicated than a simple "cabal install", though. For compiling on OS X and windows, look at our wiki, which is much more up to date:
+This directory contains all source files for Nikki and the Robots. Building is a bit more complicated than a simple "cabal install", though. Information on how to compile the game is currently available in our wiki:
 
 https://patch-tag.com/r/shahn/nikki-wiki/wiki/
 
-We have some helper scripts:
+Feedback
+========
 
-1. Available scripts
-====================
-
-./linuxCompile.sh and ./windowsCompile.sh
-Compiles everything in place.
-linuxCompile.sh works on mac, too. It should create an app bundle (in dist/build/).
-
-./linuxRunInPlace.sh
-Runs the game in place. Run ./linuxCompile.sh first.
-
-./linuxDeploy.sh
-Deploys the application in one folder on linux.
-(This does not deploy the shared libraries yet!)
-
-./windowsCompile.sh
-(Compiling on windows is very complicated right now. We are using msys and mingw to do this. The main problem is, that both Qt and the GHC come with their own gcc version. We managed to get the ghc to use Qt's gcc, but it seems not very elegant. If you have experience in compiling stuff on windows and have some time to help out, you effort would be highly appreciated.)
-
-./windowsDeploy.hs
-Creates a distributable application on windows. This will be a folder containing the main binary, all needed dll's and all data. Before calling the script, execute ./windowsCompile.sh.
-
-./haddock.hs
-Builds the Haskell code documentation.
-
-./clean.sh
-Removes all compilation products.
-
-./testsuite
-Contains a testsuite (which covers only very selected parts of the code).
-
-./scripts
-Contains helper scripts.
-
-
-2. External dependencies
-========================
-
-* cmake (tested with 2.8.0)
-
-* qt (tested with 4.6.2 and 4.7.0 beta)
-
-* ghc (tested with 6.10 and 6.12)
-
-* cabal-install (tested with 0.8.2)
-    http://haskell.org/cabal/download.html
-
-* homegrown haskell bindings for sfml-audio
-    install with e.g.:
-        darcs get http://patch-tag.com/r/shahn/sfml-audio 
-        cd sfml-audio
-        cabal install
-    They ship with their own version of SFML2.
-
-* buffer, library for buffers
-    install with e.g.:
-    darcs get http://patch-tag.com/r/shahn/buffer
-    cd buffer
-    cabal install
-
-* clocked, library for timing IO actions
-    install with e.g.:
-    darcs get http://patch-tag.com/r/shahn/clocked
-    cd clocked
-    cabal install
-
-* lots of haskell stuff from hackage
-    look at nikki.cabal for full hackage dependencies
-
-
-3. Feedback
-===========
-
-If you have any questions or comments regarding compiling and installation, mail me.
+If you have any questions or comments regarding compiling and installation, mail me:
 
 Contact: shahn@joyridelabs.de
-
