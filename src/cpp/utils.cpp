@@ -2,7 +2,7 @@
 #include "QtGui"
 
 void error(QString msg) {
-    qDebug() << "ERROR:" << msg;
+    qDebug() << "ERROR (in cpp-land):" << msg;
     exit(1);
 };
 

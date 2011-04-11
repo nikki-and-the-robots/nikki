@@ -24,6 +24,7 @@ extern "C" const char* qtVersion() {
     return qVersion();
 };
 
+void error(QString msg);
 
 // * QApplication
 
