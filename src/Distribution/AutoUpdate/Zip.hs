@@ -8,15 +8,22 @@ import Data.Word
 
 import Codec.Archive.LibZip
 
+import Control.Monad.CatchIO
+
 import System.FilePath
 import System.Directory
+import System.IO
 
 import Utils
 
 
+-- | chunk size while unzipping
+chunkSize :: Int
+chunkSize = 1024
+
 -- | unzips a given archive into a given directory
 unzipArchive :: FilePath -> FilePath -> IO ()
-unzipArchive zipFile directory = do
+unzipArchive zipFile directory =
     withArchive [] zipFile $ do
         files <- fileNames []
         forM_ files $ extract directory
@@ -31,11 +38,29 @@ extract destination fileInArchive = do
     io $ createDirectoryIfMissing True parent
     if isDir fileInArchive then
         io $ createDirectory fullPath
-      else do
-        contents :: [Word8] <- fileContents [] fileInArchive
-        io $ BS.writeFile fullPath (BS.pack contents)
+      else
+        fromFile [] fileInArchive (extractFile fullPath)
   where
     isDir = (== '/') . last
+
+extractFile :: FilePath -> Entry ()
+extractFile destination = do
+    io $ assertNonExistance destination
+    withFileMIO destination WriteMode inner
+  where
+    inner :: Handle -> Entry ()
+    inner handle = do
+        chunk :: [Word8] <- readBytes chunkSize
+        if not (null chunk) then do
+            io $ BS.hPutStr handle (BS.pack chunk)
+            inner handle
+          else
+            return ()
+
+-- | like withFile, but with MonadCatchIO
+withFileMIO :: MonadCatchIO m => FilePath -> IOMode -> (Handle -> m a) -> m a
+withFileMIO name mode =
+    bracket (io $ openFile name mode) (io . hClose)
 
 -- | zips a given folder recursively into the given zipFile
 zipArchive :: FilePath -> FilePath -> IO ()
