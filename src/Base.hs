@@ -21,6 +21,7 @@ module Base (
     module Base.GlobalShortcuts,
     module Base.LevelLoading,
     module Base.Polling,
+    module Base.Options,
   ) where
 
 
@@ -43,3 +44,4 @@ import Base.GlobalCatcher
 import Base.GlobalShortcuts
 import Base.LevelLoading
 import Base.Polling
+import Base.Options

@@ -117,14 +117,14 @@ applicationStates app = AppState $ do
 
 mainMenu :: Application -> AppState
 mainMenu app =
-    menu app (Just title) Nothing [
-        ("story mode", storyMode app),
-        ("play", selectLevelPlay app this),
-        ("help", mainMenuHelp app this),
-        ("edit", selectLevelEdit app this),
-        ("update", autoUpdate app this),
-        ("quit", FinalState)
-      ]
+    menu app (Just title) Nothing
+       (("story mode", storyMode app) :
+        ("community levels", community app) :
+        ("help", mainMenuHelp app this) :
+        ("options", generalOptions app this) :
+        ("update", autoUpdate app this) :
+        ("quit", FinalState) :
+        [])
   where
     this = applicationStates app
     title = unlines (("NIKKI AND THE ROBOTS (" ++ showVersion nikkiVersion ++ ")") :
@@ -137,6 +137,24 @@ storyMode app = AppState $ do
     file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
     prose <- io $ pFile file
     return $ showText app prose (applicationStates app)
+
+community :: Application -> AppState
+community app =
+    menu app (Just "community") (Just (mainMenu app))
+       (("play levels", selectLevelPlay app this) :
+        ("edit levels", selectLevelEdit app this) :
+        ("download community levels", downloadLevels app this) :
+        [])
+  where
+    this = community app
+
+
+downloadLevels :: Application -> AppState -> AppState
+downloadLevels app parent = AppState $ do
+    file <- rm2m $ getDataFileName "manual/downloadLevels"
+    prose <- io $ pFile file
+    return $ showText app prose parent
+
 
 -- | asks, if the user really wants to quit
 quit :: Application -> AppState -> AppState
