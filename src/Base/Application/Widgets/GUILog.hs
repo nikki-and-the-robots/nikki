@@ -17,6 +17,8 @@ import Base.Font
 import Base.Prose
 import Base.Constants
 
+import Base.Application.Widgets.Common
+
 
 -- | Shows log messages in the GUI.
 -- Switches the renderer to a functions that shows a log.
@@ -29,7 +31,7 @@ guiLog app msg = do
 
 renderLog :: Application_ s -> Ptr QPainter -> IO ()
 renderLog app ptr = do
-    clearScreen ptr darkGrey
+    clearScreen ptr backgroundColor
     let font = alphaNumericFont $ applicationPixmaps app
     log <- readMVar logRef
     when (not $ null log) $ do

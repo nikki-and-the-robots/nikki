@@ -1,14 +1,20 @@
+{-# language ScopedTypeVariables #-}
 
 -- | Things used in multiple Widgets.
 
 module Base.Application.Widgets.Common where
 
 
+import Graphics.Qt
+
 import Utils
 
 import Base.Types
 import Base.Polling
 
+
+backgroundColor :: Color = blue
+standardFontColor :: Color = red
 
 -- | Blocks until a Press AppEvent is received.
 -- Flushes the event queue before that.

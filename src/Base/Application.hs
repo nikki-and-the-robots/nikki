@@ -28,6 +28,7 @@ import Base.Monad
 
 import Base.Application.Widgets.Menu
 import Base.Application.Widgets.TextListing
+import Base.Application.Widgets.Common
 
 
 -- | if you don't need the M monad, just IO
@@ -70,7 +71,7 @@ askString app parent question follower = AppState $ do
     render :: String -> MVar String -> Ptr QPainter -> IO ()
     render question answerRef ptr = do
         resetMatrix ptr
-        clearScreen ptr darkGrey
+        clearScreen ptr backgroundColor
         setPenColor ptr white 1
 
         let nextY = translate ptr (Position 0 20)

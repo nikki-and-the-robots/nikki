@@ -25,7 +25,7 @@ message app texts = do
 
 render :: Application_ sort -> [Prose] -> Ptr QPainter -> IO ()
 render app texts ptr = do
-    clearScreen ptr darkGrey
+    clearScreen ptr backgroundColor
     let font = alphaNumericFont $ applicationPixmaps app
     windowSize <- sizeQPainter ptr
     resetMatrix ptr

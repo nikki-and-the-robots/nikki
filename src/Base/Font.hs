@@ -38,17 +38,17 @@ import Base.Pixmap
 import Base.Prose
 import Base.Font.ColorVariant
 
+import Base.Application.Widgets.Common
+
 
 standardFontDir :: FilePath
 standardFontDir = "png" </> "font"
 
 fontColors :: [Color]
-fontColors =
-    turquoise :
+fontColors = nub (
+    standardFontColor :
     white :
-    []
-
-standardFontColor = head fontColors
+    [])
 
 -- * querying
 

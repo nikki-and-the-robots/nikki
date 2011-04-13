@@ -90,7 +90,7 @@ menuWithPreChoice app mTitle mParent children preChoice =
     font_ = alphaNumericFont $ applicationPixmaps app
     render items ptr = do
         resetMatrix ptr
-        clearScreen ptr darkGrey
+        clearScreen ptr backgroundColor
 
         let renderMenuTitlePixmap = do
                 let pix = menuTitlePixmap $ applicationPixmaps app

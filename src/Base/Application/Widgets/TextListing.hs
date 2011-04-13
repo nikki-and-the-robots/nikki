@@ -39,7 +39,7 @@ showText app text follower =
          else return follower
 
     render text ptr = do
-        clearScreen ptr darkGrey
+        clearScreen ptr backgroundColor
         resetMatrix ptr
         translate ptr (Position (fromUber 4) (fromUber 4))
         let font = alphaNumericFont $ applicationPixmaps app
