@@ -62,14 +62,6 @@ waitForAppEvent app = do
             io $ threadDelay (round (0.01 * 10 ^ 6))
             waitForAppEvent app
 
--- | Blocks until a Press AppEvent is received.
-waitForPressAppEvent :: Application_ s -> M AppEvent
-waitForPressAppEvent app = do
-    e <- waitForAppEvent app
-    case e of
-        (Press _) -> return e
-        _ -> waitForPressAppEvent app
-
 updateKeyState :: AppEvent -> Set Button -> Set Button
 updateKeyState (Press   k) ll = insert k ll
 updateKeyState (Release k) ll = delete k ll

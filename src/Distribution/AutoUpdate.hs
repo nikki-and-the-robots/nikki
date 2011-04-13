@@ -83,20 +83,21 @@ autoUpdate app follower = AppState $ do
                 (Left errorMessage) -> do
                     message app [p "update failed: " +> pVerbatim errorMessage]
                     return follower
-                (Right True) -> do
-                    message app $ [p "game updated to version " +> pVerbatim "$VERSION", p "restarting..."]
-                    io $ threadDelay 5000000
+                (Right (Just version)) -> do
+                    message app $ (p "game updated to version " +> pVerbatim (showVersion version) :
+                                   p "restarting..." :
+                                   [])
                     io $ exitWith $ ExitFailure 143
-                (Right False) -> do
+                (Right Nothing) -> do
                     message app [p "version up to date"]
                     return follower
 
 -- | Looks for updates on the server.
 -- If found, updates the program.
--- Returns (Right True) if an update was successfully installed,
--- (Right False) if there is no newer version and
+-- Returns (Right (Just newVersion)) if an update was successfully installed,
+-- (Right Nothing) if there is no newer version and
 -- (Left message) if an error occurs.
-attemptUpdate :: Application_ sort -> Repo -> DeployPath -> IO (Either String Bool)
+attemptUpdate :: Application_ sort -> Repo -> DeployPath -> IO (Either String (Maybe Version))
 attemptUpdate app repo deployPath = runErrorT $ do
     io $ guiLog app (p "local version: " `mappend` pVerbatim (showVersion Version.nikkiVersion))
     serverVersion :: Version <-
@@ -104,9 +105,9 @@ attemptUpdate app repo deployPath = runErrorT $ do
     io $ guiLog app (p "remote version: " `mappend` pVerbatim (showVersion serverVersion))
     if serverVersion > Version.nikkiVersion then do
         update app repo serverVersion deployPath
-        return True
+        return $ Just serverVersion
       else
-        return False
+        return Nothing
 
 -- | the actual updating procedure
 update :: Application_ sort -> Repo -> Version -> DeployPath -> ErrorT String IO ()

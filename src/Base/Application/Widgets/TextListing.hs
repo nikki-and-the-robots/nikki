@@ -15,6 +15,8 @@ import Base.Polling
 import Base.Prose
 import Base.Font
 
+import Base.Application.Widgets.Common
+
 
 drawTextBlock :: Font -> Ptr QPainter -> [Prose] -> IO ()
 drawTextBlock font ptr = mapM_ $ \ line -> do
@@ -31,12 +33,10 @@ showText app text follower =
     -- Calls itself with another scrolling, if needed.
     inner scrolling = do
         io $ setDrawingCallbackGLContext (window app) $ Just $ render (drop scrolling text)
-        e <- waitForAppEvent app
-        case e of
-            Press e | isDown e -> inner (min (succ scrolling) (length text))
-            Press e | isUp e -> inner (max (pred scrolling) 0)
-            Press _ -> return follower
-            _ -> inner scrolling
+        e <- waitForPressAppEvent app
+        if isDown e then inner (min (succ scrolling) (length text))
+         else if isUp e then inner (max (pred scrolling) 0)
+         else return follower
 
     render text ptr = do
         clearScreen ptr darkGrey

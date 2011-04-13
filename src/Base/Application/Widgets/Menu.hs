@@ -18,7 +18,9 @@ import Base.Constants
 import Base.Polling
 import Base.Font
 import Base.Prose
+
 import Base.Application.Widgets.GUILog
+import Base.Application.Widgets.Common
 
 
 data MenuItems
@@ -68,15 +70,14 @@ menuWithPreChoice app mTitle mParent children preChoice =
     inner items = AppState $ do
         io $ setDrawingCallbackGLContext (window app) (Just $ render items)
         io $ resetGuiLog
-        event <- waitForAppEvent app
-        case event of
-            Press e | isUp e -> return $ inner $ selectPrevious items
-            Press e | isDown e -> return $ inner $ selectNext items
-            Press e | isMenuConfirmation e -> return $ snd $ selected items
-            Press e | isBackButton e -> case mParent of
+        e <- waitForPressAppEvent app
+        if isUp e then return $ inner $ selectPrevious items
+         else if isDown e then return $ inner $ selectNext items
+         else if isMenuConfirmation e then return $ snd $ selected items
+         else if isBackButton e then case mParent of
                 Just parent -> return parent
                 Nothing -> return $ inner items
-            x -> return $ inner items
+         else return $ inner items
 
     -- B button (keyboard or gamepad) or Escape
     isBackButton x = isBButton x || isKey Escape x

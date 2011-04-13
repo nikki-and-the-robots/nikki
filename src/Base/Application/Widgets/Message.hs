@@ -14,6 +14,8 @@ import Base.Prose
 import Base.Font
 import Base.Polling
 
+import Base.Application.Widgets.Common
+
 
 -- | show a textual message and wait for a keypress
 message :: Application_ sort -> [Prose] -> M ()
