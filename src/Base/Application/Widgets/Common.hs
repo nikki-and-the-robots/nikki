@@ -13,8 +13,8 @@ import Base.Types
 import Base.Polling
 
 
-backgroundColor :: Color = blue
-standardFontColor :: Color = red
+backgroundColor :: Color = QtColor 16 0 156 255
+standardFontColor :: Color = QtColor 115 115 255 255
 
 -- | Blocks until a Press AppEvent is received.
 -- Flushes the event queue before that.
