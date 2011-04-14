@@ -4,7 +4,7 @@ The executables of the game "Nikki and the Robots", namely "nikki" and "core" ar
 The resources contained in the "data" directory are licensed under the "Creative Commons Attribution-Share Alike 3.0 Germany License" (see "data/LICENSE").
 
 The libraries used in this distribution are as follows:
-(Some are contained as dynamically linked libraries in binary form in this distribution. Some are only used on certain platforms)
+(Some are contained as dynamically linked libraries in binary form in this distribution. Some are only used on certain platforms.)
 
 libaudio
     Copyright 1995 Network Computing Devices, Inc.
@@ -21,6 +21,12 @@ Qt
     © 1994-2008 Trolltech ASA.
     LGPL-2.1, see "LICENSES/lgpl-2.1.txt"
     http://qt.nokia.com/downloads
+
+libgmp
+    Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2003,
+    2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+    LGPL-3, see "LICENSES/lgpl-3.0.txt"
+    http://gmplib.org/
 
 libzip
     Copyright (C) 1999-2008 Dieter Baron and Thomas Klausner
