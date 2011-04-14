@@ -34,6 +34,7 @@ main = do
     fmapM_ copy =<< getDynamicDependencies
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
     copyDeploymentLicenses
+    fiddleInStartScript
     putStrLn ("touching " ++ deploymentIndicator)
     writeFile deploymentIndicator ""
 
@@ -48,10 +49,8 @@ prepareDeploymentDir = do
 getDynamicDependencies :: IO (Set FilePath)
 getDynamicDependencies = do
     restarterDeps <- getDeps nikkiExe
-    forM_ restarterDeps $ \ l ->
-        assertLabel ("not a standard library: " ++ l) (isStandardLibrary l)
     coreDeps <- getDeps coreExe
-    let allDeps = Data.Set.filter (not . isStandardLibrary) coreDeps
+    let allDeps = Data.Set.filter (not . isStandardLibrary) (union restarterDeps coreDeps)
     return allDeps
   where
     assertLabel :: String -> Bool -> IO ()
@@ -162,3 +161,33 @@ lddParser = do
     -- parses any string till the next whitespace character
     token :: Parsec String () String
     token = many1 (satisfy (not . isSpace))
+
+
+-- * start script stuff
+-- We have to provide a bash start-script to set LD_LIBRARY_PATH
+-- (We would use a haskell program for this, but haskell's RTS depends
+-- on some libraries that might not be there (e.g. libgmp))
+
+fiddleInStartScript :: IO ()
+fiddleInStartScript = do
+    putStrLn "fiddling in the start bash script"
+    renameNikkiExe
+    copyStartScript
+
+-- We rename the restarter "nikki" to "restarter"
+renameNikkiExe :: IO ()
+renameNikkiExe =
+    renameFile src dest
+  where
+    src = deploymentDir </> "nikki"
+    dest = deploymentDir </> "restarter"
+
+-- | copies the starting script to the deployed directory
+copyStartScript :: IO ()
+copyStartScript = do
+    copyFile src dest
+    void $ system ("chmod +x " ++ dest)
+  where
+    name = "nikki.sh"
+    src = "bash" </> name
+    dest = deploymentDir </> name

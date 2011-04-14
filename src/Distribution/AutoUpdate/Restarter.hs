@@ -11,11 +11,9 @@ import System.Exit
 import System.Info
 
 import Distribution.AutoUpdate.Paths
-import Distribution.AutoUpdate.LibraryPath
 
 
 main = do
-    setLibraryPath
     executable <- findCoreExecutable
     args <- getArgs
     loop 5 $ rawSystem executable args
