@@ -79,6 +79,7 @@ nonStandardLibraries = fromList (
     "libopenal" :
     "libzip" :
     "libaudio" :
+    "libgmp" :
     [])
 
 
