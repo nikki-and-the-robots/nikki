@@ -28,6 +28,10 @@ libgmp
     LGPL-3, see "LICENSES/lgpl-3.0.txt"
     http://gmplib.org/
 
+libpng
+    For copyrights and license of libpng, see "LICENSES/libpng.txt"
+    http://libpng.org/pub/png/libpng.html
+
 libzip
     Copyright (C) 1999-2008 Dieter Baron and Thomas Klausner
     custom license, see "LICENSES/libzip.txt"

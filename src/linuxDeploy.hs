@@ -75,7 +75,7 @@ isStandardLibrary :: FilePath -> Bool
 isStandardLibrary s =
     not (libName `member` nonStandardLibraries)
   where
-    libName = takeWhile (/= '.') $ takeFileName s
+    libName = takeWhile isAlpha $ takeFileName s
 
 -- | Set of libraries expected not to be on every standard linux system.
 nonStandardLibraries :: Set String
@@ -92,6 +92,7 @@ nonStandardLibraries = fromList (
     "libzip" :
     "libaudio" :
     "libgmp" :
+    "libpng" :
     [])
 
 
