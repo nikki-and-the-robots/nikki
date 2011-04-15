@@ -39,20 +39,25 @@ import qualified Sorts.Robots.MovingPlatform
 
 sortLoaders :: [RM [Sort_]]
 sortLoaders =
-    Sorts.Nikki.sorts :
 
     Sorts.Tiles.sorts :
-    Sorts.FallingTiles.sorts :
-    Sorts.Switch.sorts :
-    Sorts.Terminal.sorts :
-    Sorts.Battery.sorts :
-    Sorts.Box.sorts :
 
     Sorts.Robots.Jetpack.sorts :
     Sorts.Robots.MovingPlatform.sorts :
 
-    Sorts.Grids.sorts :
+    Sorts.Terminal.sorts :
+
+    Sorts.Battery.sorts :
+
+    Sorts.Switch.sorts :
+
+    Sorts.Box.sorts :
+    Sorts.FallingTiles.sorts :
+
     Sorts.Background.sorts :
+    Sorts.Grids.sorts :
+
+    Sorts.Nikki.sorts :
 --     Sorts.DebugObject.sorts :
     []
 
