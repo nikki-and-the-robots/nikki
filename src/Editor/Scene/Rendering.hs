@@ -34,6 +34,7 @@ renderEditorScene ptr scene = do
             let Just oemState = getMainLayerEditorObject scene index ^. editorOEMState
             oemRender ptr scene oemState
         SelectionMode endPosition -> renderCopySelection ptr scene endPosition
+    renderHelpButtonOSD ptr
 
 
 renderObjectScene :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sort -> IO ()
@@ -164,7 +165,8 @@ drawCopySelectedBox ptr offset object = do
     drawColoredBox ptr p (size sort) 3 green
 
 
-
-
-
-
+renderHelpButtonOSD :: Ptr QPainter -> IO ()
+renderHelpButtonOSD ptr = do
+    resetMatrix ptr
+    size <- fmap fromIntegral <$> sizeQPainter ptr
+    drawText ptr (Position (width size - 200) (height size - 20)) False ("Help: F1")
