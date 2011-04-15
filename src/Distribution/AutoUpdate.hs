@@ -19,6 +19,7 @@ import System.FilePath
 import System.Directory
 import System.Exit
 import System.IO.Temp (createTempDirectory)
+import qualified System.Info
 
 import Version
 import Utils
@@ -180,10 +181,14 @@ installUpdate :: NewVersionDir -> DeployPath -> ErrorT String IO ()
 installUpdate (NewVersionDir newVersionDir) (DeployPath deployPath) = io $ do
     copyDirectory newVersionDir deployPath
     -- adding executable rights to the executables
-    forM_ [restarterExecutable, coreExecutable] $ \ exe -> do
+    forM_ executables $ \ exe -> do
         let p = deployPath </> deployRootToExecutables </> exe
         perm <- getPermissions p
         setPermissions p perm{executable = True}
+  where
+    executables = case System.Info.os of
+        "linux" -> [linuxStartScript, linuxRenamedRestarter, coreExecutable]
+        _ -> [restarterExecutable, coreExecutable]
 
 
 -- * temp functions

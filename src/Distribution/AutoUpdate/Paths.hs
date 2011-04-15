@@ -44,8 +44,10 @@ deployRootToExecutables = case System.Info.os of
     x -> osError "deployRootToExecutables"
 
 restarterExecutable = mkExecutable "nikki"
-
+linuxStartScript = "nikki.sh"
+linuxRenamedRestarter = mkExecutable "restarter"
 coreExecutable = mkExecutable "core"
+
 
 mkExecutable :: String -> String
 mkExecutable = case System.Info.os of
