@@ -25,7 +25,8 @@ type Offset a = Position a
 data Pixmap = Pixmap {
     pixmap :: Ptr QPixmap,
     pixmapSize :: Size Double,
-    pixmapOffset_ :: Position Double
+    pixmapOffset_ :: Position Double,
+    pixmapImageSize :: Size Double
   }
     deriving (Show, Typeable, Data)
 
@@ -43,6 +44,12 @@ loadPixmap padding path = io $ do
         pix
         (fmap fromIntegral (size -~ fmap (* 2) (positionToSize padding)))
         (fmap (fromIntegral . negate) padding)
+        (fmap fromIntegral size)
+
+mkPixmap :: MonadIO m => Ptr QPixmap -> Size Double -> Offset Double -> m Pixmap
+mkPixmap pixmap size offset = io $ do
+    imageSize <- fmap fromIntegral <$> sizeQPixmap pixmap
+    return $ Pixmap pixmap size offset imageSize
 
 -- | release the resource
 freePixmap :: MonadIO m => Pixmap -> m ()
@@ -50,14 +57,14 @@ freePixmap = pixmap >>> io . destroyQPixmap
 
 -- | copy a pixmap
 copyPixmap :: Pixmap -> IO Pixmap
-copyPixmap (Pixmap pix size offset) = do
+copyPixmap (Pixmap pix size offset imageSize) = do
     pixCopy <- copyQPixmap pix
-    return $ Pixmap pixCopy size offset
+    return $ Pixmap pixCopy size offset imageSize
 
 -- | Change the pixel colors of a given pixmap using the given function.
 -- Not very efficient, since the Pixmap is converted to a QImage in between.
 mapPixels :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
-mapPixels f (Pixmap pix size offset) = do
+mapPixels f (Pixmap pix size offset realSize) = do
     image <- toImageQPixmap pix
     destroyQPixmap pix
     imageSize <- sizeQImage image
@@ -68,7 +75,7 @@ mapPixels f (Pixmap pix size offset) = do
         setPixelQImage image (x, y) (f c)
     newPix <- fromImageQPixmap image
     destroyQImage image
-    return $ Pixmap newPix size offset
+    return $ Pixmap newPix size offset realSize
 
 
 -- * rendering

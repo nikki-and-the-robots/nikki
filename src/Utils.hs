@@ -488,7 +488,7 @@ divide a b = (n, f * b)
 
 -- | folds the given number to the given range
 -- range is including lower bound and excluding upper bound
--- TODO: is O(a), could be constant (using properFraction)
+-- OPT: is O(a), could be constant (using properFraction)
 foldToRange :: (Ord n, Num n) => (n, n) -> n -> n
 foldToRange (lower, upper) a | upper <= lower = e "foldToRange"
 foldToRange (lower, upper) a | a >= upper = foldToRange (lower, upper) (a - distance lower upper)

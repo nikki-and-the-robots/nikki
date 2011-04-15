@@ -44,7 +44,8 @@ sorts :: RM [Sort_]
 sorts = do
     pngFile <- getDataFileName (pngDir </> "battery/standard.png")
     ptr <- io $ newQPixmap pngFile
-    return $ return $ Sort_ $ BSort $ Pixmap ptr batterySize batteryOffset
+    pixmap <- io $ mkPixmap ptr batterySize batteryOffset
+    return $ return $ Sort_ $ BSort pixmap
 
 data BSort
     = BSort {

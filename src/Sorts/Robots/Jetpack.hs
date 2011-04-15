@@ -54,7 +54,7 @@ mkJetpackPngPath name = pngDir </> "robots" </> "jetpack" </> name <.> "png"
 loadJetpackPixmap :: FilePath -> IO Pixmap
 loadJetpackPixmap file = do
     p <- newQPixmap file
-    return (Pixmap p (Size (fromUber 27) (fromUber 21)) (Position (- 9) (- 1)))
+    mkPixmap p (Size (fromUber 27) (fromUber 21)) (Position (- 9) (- 1))
 
 data RenderState
     = Wait

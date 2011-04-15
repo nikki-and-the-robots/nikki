@@ -79,9 +79,9 @@ mkSort name offset size = do
     when (null pngFiles) $
         fail ("no png files found for tile: " ++ name)
     pixmaps <- io $ mapM newQPixmap pngFiles
-    return $ Sort_ $ TSort name $ map mkPixmap pixmaps
+    Sort_ <$> TSort name <$> mapM mkTilePixmap pixmaps
   where
-    mkPixmap pixmap = Pixmap pixmap size (fmap fromIntegral offset)
+    mkTilePixmap pixmap = mkPixmap pixmap size (fmap fromIntegral offset)
 
 -- | returns the list of filenames for all the frames with the given name
 getFrameFileNames :: String -> RM [FilePath]
