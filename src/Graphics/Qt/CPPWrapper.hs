@@ -137,10 +137,10 @@ setDrawingCallbackGLContext ptr Nothing =
 -- event callbacks
 
 foreign import ccall "setKeyCallbackGLContext" cppSetKeyCallbackGLContext ::
-    Ptr GLContext -> FunPtr (Bool -> Ptr QKeyEvent -> IO ()) -> IO ()
+    Ptr GLContext -> FunPtr (Int -> Ptr QKeyEvent -> IO ()) -> IO ()
 
 foreign import ccall "wrapper" wrapKeyCallback ::
-    (Bool -> Ptr QKeyEvent -> IO ()) -> IO (FunPtr (Bool -> Ptr QKeyEvent -> IO ()))
+    (Int -> Ptr QKeyEvent -> IO ()) -> IO (FunPtr (Int -> Ptr QKeyEvent -> IO ()))
 -- True means Press, False means Release
 
 setKeyCallbackGLContext :: Ptr GLContext -> (QtEvent -> IO ()) -> IO ()
@@ -148,16 +148,21 @@ setKeyCallbackGLContext ptr cmd =
     wrapKeyCallback preWrap >>=
         cppSetKeyCallbackGLContext ptr
   where
-    preWrap :: (Bool -> Ptr QKeyEvent -> IO ())
-    preWrap isPress ptr =
-        if (nullPtr == ptr) then
-            cmd CloseWindow
-          else do
+    preWrap :: (Int -> Ptr QKeyEvent -> IO ())
+    preWrap n ptr = case n of
+        0 -> do
+            (key, text) <- peekQKeyEvent
+            cmd $ KeyPress (translateQtKey key) text
+        1 -> do
+            (key, text) <- peekQKeyEvent
+            cmd $ KeyRelease (translateQtKey key) text
+        2 -> cmd FocusOut
+        3 -> cmd CloseWindow
+      where
+        peekQKeyEvent = do
             key <- keyQKeyEvent ptr
             text <- textQKeyEvent ptr
-            let constructor = if isPress then KeyPress else KeyRelease
-                event = constructor (translateQtKey key) text
-            cmd event
+            return (key, text)
 
 
 -- * QPainter

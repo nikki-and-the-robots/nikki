@@ -16,6 +16,7 @@ GLContext::GLContext(const QGLFormat& format) : QGLWidget(format) {
 
     this->setAutoFillBackground(false);
     this->setCursor(Qt::BlankCursor);
+    this->setFocusPolicy(Qt::StrongFocus);
 
     this->repaintTimer = new QTimer(this);
     QObject::connect(this->repaintTimer, SIGNAL(timeout()), this, SLOT(update()));
@@ -33,20 +34,26 @@ void GLContext::paintEvent(QPaintEvent* event) {
 
 void GLContext::keyPressEvent(QKeyEvent* e) {
     if (((this->arrowAutoRepeat && isArrowKey(e)) || (! e->isAutoRepeat())) && (keyCallback != NULL)) {
-        this->keyCallback(true, e);
+        this->keyCallback(0, e);
     }
 };
 
 void GLContext::keyReleaseEvent(QKeyEvent* e) {
     if ((! e->isAutoRepeat()) && (keyCallback != NULL)) {
-        this->keyCallback(false, e);
+        this->keyCallback(1, e);
+    }
+};
+
+void GLContext::focusOutEvent(QFocusEvent* e) {
+    if (keyCallback != NULL) {
+        this->keyCallback(2, NULL);
     }
 };
 
 void GLContext::closeEvent(QCloseEvent* e) {
     e->ignore();
     if (keyCallback != NULL) {
-        this->keyCallback(true, NULL);
+        this->keyCallback(3, NULL);
     }
 };
 

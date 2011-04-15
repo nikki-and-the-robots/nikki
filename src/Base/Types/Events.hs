@@ -12,6 +12,7 @@ import Graphics.Qt
 data AppEvent
     = Press Button
     | Release Button
+    | FocusOut
     | CloseWindow
   deriving (Eq, Ord, Show)
 

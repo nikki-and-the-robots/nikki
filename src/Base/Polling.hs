@@ -63,9 +63,10 @@ waitForAppEvent app = do
             waitForAppEvent app
 
 updateKeyState :: AppEvent -> Set Button -> Set Button
-updateKeyState (Press   k) ll = insert k ll
-updateKeyState (Release k) ll = delete k ll
-updateKeyState Base.Types.CloseWindow ll = ll
+updateKeyState (Press   k) = insert k
+updateKeyState (Release k) = delete k
+updateKeyState Base.Types.FocusOut = const empty
+updateKeyState Base.Types.CloseWindow = id
 
 
 toAppEvent :: Set Button -> Either QtEvent JJ_Event -> AppEvent
@@ -73,6 +74,7 @@ toAppEvent :: Set Button -> Either QtEvent JJ_Event -> AppEvent
 toAppEvent _ (Left (KeyPress key string)) = Press $ KeyboardButton key string
 toAppEvent _ (Left (KeyRelease key string)) = Release $ KeyboardButton key string
 
+toAppEvent _ (Left Graphics.Qt.FocusOut) = Base.Types.FocusOut
 toAppEvent _ (Left Graphics.Qt.CloseWindow) = Base.Types.CloseWindow
 
 -- joystick

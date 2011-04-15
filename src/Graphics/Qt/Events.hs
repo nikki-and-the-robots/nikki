@@ -17,6 +17,7 @@ import System.Info
 data QtEvent
     = KeyPress Key String
     | KeyRelease Key String
+    | FocusOut
     | CloseWindow
   deriving (Show)
 
