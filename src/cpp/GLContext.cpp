@@ -34,12 +34,14 @@ void GLContext::paintEvent(QPaintEvent* event) {
 
 void GLContext::keyPressEvent(QKeyEvent* e) {
     if (((this->arrowAutoRepeat && isArrowKey(e)) || (! e->isAutoRepeat())) && (keyCallback != NULL)) {
+        e->accept();
         this->keyCallback(0, e);
     }
 };
 
 void GLContext::keyReleaseEvent(QKeyEvent* e) {
     if ((! e->isAutoRepeat()) && (keyCallback != NULL)) {
+        e->accept();
         this->keyCallback(1, e);
     }
 };
