@@ -34,15 +34,18 @@ Executable dummy
 
     build-depends:
         base >= 4 && < 5
-        , cabal-macosx
-        , process
-        , filepath
-        , directory
-        , transformers
-        , mtl
-        , containers
-        , safe
-        , Cabal >= 1.8
+
+    if os(darwin)
+        build-depends:
+            cabal-macosx == 0.1.1
+            , process
+            , filepath
+            , directory
+            , transformers
+            , mtl
+            , containers
+            , safe
+            , Cabal >= 1.8
 
 
 Executable  nikki
@@ -109,6 +112,9 @@ Executable core
         ghc-options:
             -O2
             -optl-s
+
+    if impl(ghc >= 7)
+       cpp-options:     -DGHC7
 
     ghc-options:
         -threaded
