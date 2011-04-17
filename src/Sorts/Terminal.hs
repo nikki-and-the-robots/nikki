@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, ScopedTypeVariables,
-     ViewPatterns, DeriveDataTypeable, Rank2Types, FlexibleInstances #-}
+     ViewPatterns, DeriveDataTypeable, Rank2Types, FlexibleInstances, ImpredicativeTypes #-}
 
 module Sorts.Terminal (
     sorts,
@@ -108,6 +108,9 @@ data ColorLights a = ColorLights {
     red_, blue_, green_, yellow_ :: a
   }
     deriving Show
+
+allSelectors :: [forall a . (ColorLights a -> a)]
+allSelectors = [red_, blue_, green_, yellow_]
 
 instance Functor ColorLights where
     fmap f (ColorLights a b c d) = ColorLights (f a) (f b) (f c) (f d)
@@ -372,7 +375,7 @@ renderLittleColorLights sort now t pos =
     let colorStates = fst $ blinkenLightsState now (robots t) (state t)
     in map
         (renderLight (littleColorLights $ pixmaps sort) pos colorStates)
-        [red_, blue_, green_, yellow_]
+        allSelectors
 
 renderLight :: ColorLights Pixmap -> Qt.Position Double -> ColorLights Bool
     -> (forall a . (ColorLights a -> a))
@@ -436,7 +439,7 @@ osdPosition windowSize (pixmapSize -> pixSize) =
 
 renderOsdCenters :: Ptr QPainter -> Qt.Position Double -> OsdPixmaps -> ColorLights Bool -> IO ()
 renderOsdCenters ptr offset pixmaps states =
-    mapM_ inner [red_, blue_, green_, yellow_]
+    mapM_ inner allSelectors
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
     inner color = when (color states) $
@@ -444,7 +447,7 @@ renderOsdCenters ptr offset pixmaps states =
 
 renderOsdFrames ptr offset pixmaps state selected =
     case (row state) of
-        RobotRow -> mapM_ inner [red_, blue_, green_, yellow_]
+        RobotRow -> mapM_ inner allSelectors
         _ -> return ()
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
