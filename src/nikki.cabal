@@ -161,6 +161,7 @@ Executable core
         , uniplate >= 1.6
         , data-accessor >= 0.2.1.7
         , data-accessor-mtl >= 0.2.0.2
+        , stm >= 2.2.0.1
 
     if os(linux)
         extra-libraries:

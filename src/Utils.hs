@@ -567,17 +567,6 @@ infix 4 ~>
 True ~> x = x
 False ~> _ = True
 
--- | reads all currently available messages from the channel.
-pollChannel :: Chan a -> IO [a]
-pollChannel chan = do
-    empty <- isEmptyChan chan
-    if empty then
-        return []
-      else do
-        a <- readChan chan
-        r <- pollChannel chan
-        return (a : r)
-
 fixpoint :: Eq e => (e -> e) -> e -> e
 fixpoint f x = if fx == x then x else fixpoint f fx
   where

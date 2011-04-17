@@ -15,6 +15,8 @@ module Graphics.Qt (
 import Data.Abelian
 
 import Control.Concurrent
+import Control.Concurrent.STM
+import Control.Concurrent.STM.TChan
 import Control.Exception
 
 import Graphics.Qt.Types
@@ -113,36 +115,38 @@ clearScreen ptr color = do
 
 -- * Key Polling
 
-newtype KeyPoller = KeyPoller (Chan QtEvent)
+newtype KeyPoller = KeyPoller (TChan QtEvent)
 
 newKeyPoller :: Ptr GLContext -> IO KeyPoller
 newKeyPoller widget = do
-    chan <- newChan
-    setKeyCallbackGLContext widget (writeChan chan)
+    chan <- newTChanIO
+    setKeyCallbackGLContext widget (atomically . writeTChan chan)
 --     sendDebugInitials chan
     return $ KeyPoller chan
 
 pollEvents :: KeyPoller -> IO [QtEvent]
-pollEvents kp@(KeyPoller chan) = do
-    empty <- isEmptyChan chan
-    if empty then
-        return []
-      else do
-        a <- readChan chan
-        r <- pollEvents kp
-        return (a : r)
+pollEvents kp@(KeyPoller chan) = atomically inner
+  where
+    inner = do
+        empty <- isEmptyTChan chan
+        if empty then
+            return []
+          else do
+            a <- readTChan chan
+            r <- inner
+            return (a : r)
 
 waitForEvent :: KeyPoller -> IO QtEvent
-waitForEvent (KeyPoller c) = readChan c
+waitForEvent (KeyPoller c) = atomically $ readTChan c
 
 
-sendDebugInitials :: Chan QtEvent -> IO ()
-sendDebugInitials c = ignore $ forkOS $ do
+sendDebugInitials :: TChan QtEvent -> IO ()
+sendDebugInitials c = ignore $ forkOS $ atomically $ do
     mapM_ worker signals
   where
     worker k = do
-        writeChan c (KeyPress k (text k))
-        writeChan c (KeyRelease k (text k))
+        writeTChan c (KeyPress k (text k))
+        writeTChan c (KeyRelease k (text k))
     text K0 = "0"
     text K5 = "5"
     text Dot = "."
