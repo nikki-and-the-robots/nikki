@@ -21,7 +21,7 @@ import Base.Application.Widgets.Common
 message :: Application_ sort -> [Prose] -> M ()
 message app texts = do
     io $ setDrawingCallbackGLContext (window app) (Just $ render app texts)
-    void $ waitForPressAppEvent app
+    ignore $ waitForPressAppEvent app
 
 render :: Application_ sort -> [Prose] -> Ptr QPainter -> IO ()
 render app texts ptr = do

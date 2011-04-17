@@ -86,12 +86,12 @@ putInZip file =
         isDir <- io $ doesDirectoryExist fullPath
         isFile <- io $ doesFileExist fullPath
         if isDir then do
-            void $ addDirectory file
+            ignore $ addDirectory file
             subDirFiles <- io $ getFiles fullPath Nothing
             mapM_ (inner root) $ map (file </>) subDirFiles
           else if isFile then do
             content <- sourceFile fullPath 0 0
-            void $ addFile file content
+            ignore $ addFile file content
             return ()
           else
             error ("file not found: " ++ file)

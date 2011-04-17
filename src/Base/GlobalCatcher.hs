@@ -29,7 +29,7 @@ forkLogicThread action = do
                     (Just x) -> x
                     Nothing -> ExitFailure 1
             putMVar exitCodeMVar exitCode
-    void $ forkOS $ catch (action >> putMVar exitCodeMVar ExitSuccess) catchAll
+    ignore $ forkOS $ catch (action >> putMVar exitCodeMVar ExitSuccess) catchAll
     return exitCodeMVar
 
 -- | standard handling of exceptions

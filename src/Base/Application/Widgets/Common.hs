@@ -20,7 +20,7 @@ standardFontColor :: Color = QtColor 115 115 255 255
 -- Flushes the event queue before that.
 waitForPressAppEvent :: Application_ s -> M Button
 waitForPressAppEvent app = do
-    void $ pollAppEvents app
+    ignore $ pollAppEvents app
     inner
   where
     inner = do

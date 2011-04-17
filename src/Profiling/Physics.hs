@@ -32,7 +32,7 @@ render app config ptr spaceTime | physics_profiling config = do
     let font = alphaNumericFont $ applicationPixmaps app
     resetMatrix ptr
     translate ptr (Position (fromUber 1) 0)
-    void $ renderLineSimple font Nothing white text ptr
+    ignore $ renderLineSimple font Nothing white text ptr
 render _ _ _ _ = return ()
 
 -- | calculate the information to be shown

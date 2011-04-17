@@ -89,7 +89,7 @@ renderFPS font ptr fps = do
     resetMatrix ptr
     size <- fmap fromIntegral <$> sizeQPainter ptr
     translate ptr (Position (fromUber 2) (height size - fontHeight font))
-    void $ renderLineSimple font Nothing white fps ptr
+    ignore $ renderLineSimple font Nothing white fps ptr
 
 writeDistribution :: FilePath -> FilePath -> IO ()
 writeDistribution srcFile destFile = do
