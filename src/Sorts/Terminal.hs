@@ -1,6 +1,8 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, ScopedTypeVariables,
      ViewPatterns, DeriveDataTypeable, Rank2Types, FlexibleInstances, ImpredicativeTypes #-}
 
+{-# OPTIONS_GHC -fno-warn-deprecated-flags #-}
+
 module Sorts.Terminal (
     sorts,
     unwrapTerminal,
