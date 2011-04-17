@@ -41,7 +41,7 @@ playLevel app parent editorScene = AppState $ withSpace gravity $ \ space -> do
             (Just $ render fpsRef cameraStateRef sceneMVar configuration)
 
         postGUI (window app) $ setRenderingLooped (window app) True
-    void $ runStateT (gameLoop app sceneMVar) (GameState space scene)
+    ignore $ runStateT (gameLoop app sceneMVar) (GameState space scene)
     io $ postGUI (window app) $ setRenderingLooped (window app) False
     io $ setDrawingCallbackGLContext (window app) Nothing
 

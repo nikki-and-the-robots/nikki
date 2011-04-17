@@ -106,7 +106,7 @@ getFrameFileNames name = do
     parseTileName = do
         n <- parseName
         i <- parseFrameNumber
-        void $ string ".png"
+        ignore $ string ".png"
         eof
         return (n, i)
 
@@ -117,14 +117,14 @@ getFrameFileNames name = do
       where
         name = many1 (noneOf ['_', '.'])
         namePart = try $ do
-            void $ char '_'
+            ignore $ char '_'
             a <- letter
             r <- name
             return ('_' : a : r)
 
     parseFrameNumber :: Parsec String () (Maybe Int)
     parseFrameNumber = optionMaybe $ do
-        void $ char '_'
+        ignore $ char '_'
         s <- many1 digit
         return $ readNote "frameNumber" s
 
