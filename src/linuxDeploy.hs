@@ -200,7 +200,7 @@ renameNikkiExe =
 copyStartScript :: IO ()
 copyStartScript = do
     copyFile src dest
-    void $ system ("chmod +x " ++ dest)
+    ignore $ system ("chmod +x " ++ dest)
   where
     name = "nikki.sh"
     src = "bash" </> name
