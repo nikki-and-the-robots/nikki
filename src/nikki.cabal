@@ -87,7 +87,7 @@ Executable  nikki
         , mtl
         , containers
         , safe
-        , FindBin == 0.0.3
+        , FindBin >= 0.0.3
     if os(linux)
         build-depends:
             -- for setting LD_LIBRARY_PATH
@@ -155,7 +155,7 @@ Executable core
         , transformers
         , time
         , parsec3 >= 1.0.0.0
-        , FindBin == 0.0.3
+        , FindBin >= 0.0.3
         , clocked == 0.3
         , cmdargs >= 0.6.6
         , MonadCatchIO-transformers >= 0.2.2.2
