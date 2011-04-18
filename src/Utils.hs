@@ -59,6 +59,14 @@ todo :: Todo
 todo = error "just working on this (Utils.todo)"
 
 
+-- | can be used to try out different values for constants without recompiling
+tweakValue :: Read a => FilePath -> a
+tweakValue file = System.IO.Unsafe.unsafePerformIO $ do
+    value <- readFile file
+    putStrLn (file ++ " = " ++ value)
+    return $ read value
+{-# noinline tweakValue #-}
+
 -- | prints debug messages (as unsafe side effects)
 -- can be used at the end of expressions like this:
 -- (x * y + 3) << id
