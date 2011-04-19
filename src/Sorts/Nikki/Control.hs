@@ -7,6 +7,7 @@ import Prelude hiding (lookup)
 import Data.Abelian
 import Data.Maybe
 import Data.Directions
+import qualified Data.Strict as Strict
 
 import Physics.Chipmunk hiding (position, Position)
 import qualified Physics.Hipmunk as Hip
@@ -40,16 +41,16 @@ control now contacts (True, cd) nsort nikki = do
         action_ = action $ state nikki
     case state nikki of
 
-        State (Wait False) _ _ _ _ _ ->
+        State (Wait False) _ _ _ _ ->
             resetForces $ body chipmunk_
         -- ghost state
-        State (Wait True) _ _ ji _ _ ->
+        State (Wait True) _ _ ji _ ->
             applyAirborneForces now chipmunk_ action_ ji
 
-        State (Walk afterAirborne False) direction _ _ _ _ ->
+        State (Walk afterAirborne False) direction _ _ _ ->
             resetForces $ body chipmunk_
         -- ghost state
-        State (Walk afterAirborne True) _ _ ji _ _ ->
+        State (Walk afterAirborne True) _ _ ji _ ->
             applyAirborneForces now chipmunk_ action_ ji
 
         -- jumping
@@ -77,7 +78,7 @@ control now contacts (True, cd) nsort nikki = do
         -- at the peak of the jump. This function will decide, how high Nikki can
         -- can jump maximally.
         -- (see Sorts.Nikki.JumpingForces)
-        State (JumpImpulse (NikkiCollision shape contactAngle _)) _ _ ji _ _ -> do
+        State (JumpImpulse (NikkiCollision shape contactAngle _)) _ _ ji _ -> do
             let velocity = jumpNikkiVelocity ji
             collisionObjectVelocity <- get (Hip.velocity (Hip.body shape))
             modifyApplyImpulse chipmunk_ $
@@ -85,23 +86,23 @@ control now contacts (True, cd) nsort nikki = do
             modifyApplyOnlyForce chipmunk_ $
                 getJumpingForces now action_ ji
 
-        State Airborne _ _ ji _ _ ->
+        State Airborne _ _ ji _ ->
             applyAirborneForces now chipmunk_ action_ ji
 
-        State (WallSlide contactAngles) _ _ ji _ _ -> do
+        State (WallSlide_ contactAngles) _ _ ji _ -> do
             modifyApplyOnlyForce chipmunk_ $
                 getJumpingForces now action_ ji
             when (isPushedAwayByLShape contactAngles (jumpButtonDirection ji)) $ do
                 modifyVelocity chipmunk_ (\ (Vector _ y) -> Vector 0 y)
 
-        State SlideToGrip{} _ _ ji _ _ ->
+        State SlideToGrip{} _ _ ji _ ->
             modifyApplyOnlyForce chipmunk_ $
                 getJumpingForces now action_ ji
 
-        State Grip _ _ _ _ _ ->
+        State Grip _ _ _ _ ->
             resetForces $ body chipmunk_
 
-        State GripImpulse direction _ _ _ _ -> do
+        State GripImpulse direction _ _ _ -> do
             modifyApplyImpulse chipmunk_ (Vector (mkGripImpulse direction) 0)
             resetForces $ body chipmunk_
           where
@@ -119,9 +120,9 @@ applyAirborneForces now chip action ji = do
 -- | returns if nikki's horizontal velocity should be set to 0
 -- to prevent nikki from being pushed away from L-shaped tiles.
 -- (This is a hack, but seems to be necessary)
-isPushedAwayByLShape :: [Angle] -> Maybe HorizontalDirection -> Bool
+isPushedAwayByLShape :: [Angle] -> Strict.Maybe HorizontalDirection -> Bool
 isPushedAwayByLShape contactAngles buttonDirection =
-    isNothing buttonDirection &&
+    Strict.isNothing buttonDirection &&
     (left || right)
   where
     left = touchesWedge (pi / 2)

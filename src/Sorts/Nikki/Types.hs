@@ -10,6 +10,7 @@ import Data.Generics
 import Data.Initial
 import Data.Abelian
 import Data.Directions
+import qualified Data.Strict as Strict
 
 import Graphics.Qt as Qt hiding (rotate, scale)
 
@@ -36,10 +37,10 @@ isNikki _ = False
 data Nikki
     = Nikki {
         chipmunk :: Chipmunk,
-        feetShape :: Shape,
-        state :: State,
-        startTime :: Seconds, -- time the State was last changed
-        batteryPower :: Integer -- makes it possible to have REALLY BIG amounts of power :)
+        feetShape :: !Shape,
+        state :: !State,
+        startTime :: !Seconds, -- time the State was last changed
+        batteryPower :: !Integer -- makes it possible to have REALLY BIG amounts of power :)
       }
   deriving (Show, Typeable)
 
@@ -60,37 +61,39 @@ addBatteryPower n = n{batteryPower = batteryPower n + 1}
 
 
 data State = State {
-    action :: Action,
-    direction :: HorizontalDirection, -- the direction nikki faces
-    feetVelocity :: CpFloat,
-    jumpInformation :: JumpInformation,
-    considerGhostsState :: Bool, -- if ghost shapes should be considered
-    dustClouds :: [DustCloud]
+    action :: !Action,
+    direction :: !HorizontalDirection, -- the direction nikki faces
+    feetVelocity :: !CpFloat,
+    jumpInformation :: !JumpInformation,
+    considerGhostsState :: !Bool -- if ghost shapes should be considered
+--     dustClouds :: [DustCloud]
   }
     deriving (Show)
 
 instance Initial State where
-    initial = State (Wait False) HRight 0 initial False []
+    initial = State (Wait False) HRight 0 initial False
 
 data Action
-    = Wait {isGhost :: Bool}
-    | Walk {afterAirborne :: Bool, isGhost :: Bool}
+    = Wait {isGhost :: !Bool}
+    | Walk {afterAirborne :: !Bool, isGhost :: !Bool}
         -- state for one frame (when a jump starts)
-    | JumpImpulse NikkiCollision
+    | JumpImpulse !NikkiCollision
     | Airborne
-    | WallSlide [Angle]
+    | WallSlide_ [Angle] -- use wallSlide to be strict
     | UsingTerminal
-    | SlideToGrip HorizontalDirection -- to which side is the collision
+    | SlideToGrip !HorizontalDirection -- to which side is the collision
     | Grip -- when Nikki uses the paws to hold on to something
     | GripImpulse -- state for one frame (when grip state is ended)
     | NikkiLevelFinished LevelResult
   deriving (Show)
 
+wallSlide angles = seq (foldr seq () angles) $ WallSlide_ angles
+
 toActionNumber Wait{}               = 0
 toActionNumber Walk{}               = 1
 toActionNumber JumpImpulse{}        = 2
 toActionNumber Airborne{}           = 3
-toActionNumber WallSlide{}          = 4
+toActionNumber WallSlide_{}          = 4
 toActionNumber UsingTerminal        = 5
 toActionNumber SlideToGrip{}        = 6
 toActionNumber Grip                 = 7
@@ -109,15 +112,15 @@ isSlideToGripAction = (6 ==) . toActionNumber
 
 data JumpInformation =
     JumpInformation {
-        jumpStartTime :: Maybe Seconds,
-        jumpCollisionAngle :: Maybe Angle,
-        jumpNikkiVelocity :: Velocity,
-        jumpButtonDirection :: (Maybe HorizontalDirection)
+        jumpStartTime :: !(Strict.Maybe Seconds),
+        jumpCollisionAngle :: !(Strict.Maybe Angle),
+        jumpNikkiVelocity :: !Velocity,
+        jumpButtonDirection :: !(Strict.Maybe HorizontalDirection)
       }
   deriving (Show)
 
 instance Initial JumpInformation where
-    initial = JumpInformation Nothing Nothing zero Nothing
+    initial = JumpInformation Strict.Nothing Strict.Nothing zero Strict.Nothing
 
 data DustCloud
     = DustCloud {

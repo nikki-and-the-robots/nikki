@@ -116,7 +116,7 @@ frameTimes state = case (action state, direction state) of
     (Walk{afterAirborne}, d) -> (addDirection d "walk", walk afterAirborne)
     (JumpImpulse{}, d) -> (addDirection d "jump", airborne)
     (Airborne{}, d) -> (addDirection d "jump", airborne)
-    (WallSlide{}, d) -> (addDirection d "wallslide", airborne)
+    (WallSlide_{}, d) -> (addDirection d "wallslide", airborne)
     (SlideToGrip{}, d) -> (addDirection d "jump", singleFrame)
     (Grip, d) -> (addDirection d "grip", singleFrame)
     (GripImpulse, d) -> (addDirection d "grip", singleFrame)

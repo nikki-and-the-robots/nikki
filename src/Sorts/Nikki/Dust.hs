@@ -21,22 +21,22 @@ import Sorts.Nikki.Configuration
 -- | create nikki's dust
 addDustClouds :: Seconds -> Nikki -> IO Nikki
 addDustClouds _ n = return n
-addDustClouds now nikki = do
-    p <- getPosition $ chipmunk nikki
-    return nikki{state = newState p}
-  where
-    newState p = (state nikki){dustClouds = dustClouds' p}
-    dustClouds' p = newClouds p ++ removeOldClouds (dustClouds $ state nikki)
-    newClouds p = [newCloud p direction_]
-
-    newCloud v _ =
-        DustCloud now $ vector2position v
---     newCloud (Vector x y) HRight =
---         DustCloud now (Position x y +~ Position (fromUber (13 / 2)) (fromUber (24 / 2)) +~ cloudRenderCorrection)
-    cloudRenderCorrection = Position (- fromUber (5 / 2)) (- fromUber (5 / 2))
-    direction_ = direction $ state nikki
-
-    removeOldClouds = filter (\ c -> now - creationTime c < 4 * cloudCreationTime)
+-- addDustClouds now nikki = do
+--     p <- getPosition $ chipmunk nikki
+--     return nikki{state = newState p}
+--   where
+--     newState p = (state nikki){dustClouds = dustClouds' p}
+--     dustClouds' p = newClouds p ++ removeOldClouds (dustClouds $ state nikki)
+--     newClouds p = [newCloud p direction_]
+-- 
+--     newCloud v _ =
+--         DustCloud now $ vector2position v
+-- --     newCloud (Vector x y) HRight =
+-- --         DustCloud now (Position x y +~ Position (fromUber (13 / 2)) (fromUber (24 / 2)) +~ cloudRenderCorrection)
+--     cloudRenderCorrection = Position (- fromUber (5 / 2)) (- fromUber (5 / 2))
+--     direction_ = direction $ state nikki
+-- 
+--     removeOldClouds = filter (\ c -> now - creationTime c < 4 * cloudCreationTime)
 
 
 

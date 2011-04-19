@@ -41,7 +41,6 @@ import Control.Applicative ((<$>), (<|>), (<*>), pure)
 import "mtl" Control.Monad.State hiding (forM_)
 import "transformers" Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))
-import Control.Concurrent
 
 import System.Directory
 import System.IO.Unsafe

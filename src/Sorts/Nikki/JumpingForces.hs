@@ -4,6 +4,7 @@ module Sorts.Nikki.JumpingForces where
 
 import Data.Abelian
 import Data.Directions
+import qualified Data.Strict as Strict
 
 import Physics.Chipmunk
 
@@ -24,14 +25,14 @@ getJumpingForces now action ji =
 -- | Returns the horizontal force while nikki touches nothing
 -- and the left xor right button is pressed.
 -- In a SlideToGrip state, the movement towards the touched object is not possible.
-airborne :: Maybe HorizontalDirection -> Action -> Velocity -> CpFloat
-airborne (Just buttonDirection) (SlideToGrip wallDirection) _
+airborne :: Strict.Maybe HorizontalDirection -> Action -> Velocity -> CpFloat
+airborne (Strict.Just buttonDirection) (SlideToGrip wallDirection) _
     | buttonDirection == wallDirection = 0
-airborne (Just HLeft) _ velocity =
+airborne (Strict.Just HLeft) _ velocity =
     if vectorX velocity > (- maximumWalkingVelocity) then (- airForce) else 0
-airborne (Just HRight) _ velocity =
+airborne (Strict.Just HRight) _ velocity =
     if vectorX velocity < maximumWalkingVelocity then airForce else 0
-airborne Nothing _ _ = 0
+airborne Strict.Nothing _ _ = 0
 
 -- | force that will be applied horizontally, if applicable
 airForce = gravity * nikkiMass * airBorneForceFactor
@@ -41,7 +42,7 @@ airForce = gravity * nikkiMass * airBorneForceFactor
 getLongJumpingForce :: Seconds -> JumpInformation -> CpFloat
 getLongJumpingForce now ji =
     case (jumpStartTime ji, jumpCollisionAngle ji) of
-        (Just jumpStartTime_, Just collisionAngle) ->
+        (Strict.Just jumpStartTime_, Strict.Just collisionAngle) ->
             longJumpAntiGravity (now - jumpStartTime_) *
             getJumpingFactor collisionAngle
         _ -> zero

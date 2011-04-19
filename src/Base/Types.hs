@@ -175,9 +175,9 @@ instance PP MyCollisionType where
     pp = show
 
 data NikkiCollision = NikkiCollision {
-    nikkiCollisionShape :: Shape,
-    nikkiCollisionAngle :: Angle,
-    nikkiCollisionType :: MyCollisionType
+    nikkiCollisionShape :: !Shape,
+    nikkiCollisionAngle :: !Angle,
+    nikkiCollisionType :: !MyCollisionType
   }
     deriving (Show)
 
