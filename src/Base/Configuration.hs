@@ -38,7 +38,8 @@ data Configuration = Configuration {
     physics_profiling :: Bool,
     omit_pixmap_rendering :: Bool,
     render_xy_cross :: Bool,
-    render_chipmunk_objects :: Bool
+    render_chipmunk_objects :: Bool,
+    abort_level :: Maybe Double
   }
     deriving (Show, Data, Typeable)
 
@@ -103,7 +104,10 @@ options =
             &= help "render x and y axis",
         render_chipmunk_objects = False
             &= name "c"
-            &= help "render red lines for physical objects"
+            &= help "render red lines for physical objects",
+        abort_level = Nothing
+            &= help "abort levels after simulating N seconds"
+            &= typ "N"
       }
     &= program "nikki"
     &= summary ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")

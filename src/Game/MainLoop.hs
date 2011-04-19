@@ -16,7 +16,7 @@ import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
 import Clocked
 
-import Physics.Chipmunk as CM
+import Physics.Chipmunk (Space)
 
 import Graphics.Qt
 
@@ -50,7 +50,7 @@ debugQtVersion = do
 type GameMonad o = StateT GameState M o
 
 data GameState = GameState {
-    cmSpace :: CM.Space,
+    cmSpace :: Space,
     scene :: Scene Object_
   }
 
@@ -78,7 +78,8 @@ gameLoop app sceneMVar = do
         -- stepping of the scene (includes rendering)
         space <- gets cmSpace
         sc <- gets scene
-        sc' <- io $ stepScene space controlData sc
+        configuration <- lift get
+        sc' <- io $ stepScene configuration space controlData sc
         puts setScene sc'
 
         swapSceneMVar =<< io getDebugging

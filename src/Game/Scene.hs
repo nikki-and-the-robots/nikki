@@ -50,10 +50,11 @@ import Sorts.Switch
 -- updating the objects
 -- rendering
 
-stepScene :: Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
-stepScene space controlData =
+stepScene :: Configuration -> Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
+stepScene configuration space controlData =
     updateScene controlData >=>
     stepSpace space >=>
+    maybeAbort configuration >=>
     transition controlData
 
 
@@ -190,6 +191,13 @@ stepSpace space scene@Scene{contactRef} = do
         contacts ^= contacts' $
         spaceTime ^: (+ stepQuantum) $
         scene
+
+-- | aborts the game, when specified by clo --abort_level
+maybeAbort :: Configuration -> Scene Object_ -> IO (Scene Object_)
+maybeAbort config = case abort_level config of
+    Nothing -> return
+    Just limit -> \ scene ->
+        if scene ^. spaceTime >= limit then error "level aborted" else return scene
 
 
 -- * object updating
