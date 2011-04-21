@@ -43,8 +43,6 @@ import Data.Foldable (Foldable(..), foldMap, toList)
 import Data.Initial
 import Data.Traversable (Traversable, traverse)
 import Data.Vector as Vector
--- import qualified Data.Vector.Generic.Base
--- import qualified Data.Vector.Generic.Mutable
 import Data.Generics
 
 import Control.Arrow
@@ -54,9 +52,6 @@ import Utils
 
 newtype Index = Index {index :: Int}
   deriving (Show, Read, Enum, Num, Eq, Integral, Real, Ord, Data, Typeable)
---     Data.Vector.Generic.Base.Vector Vector,
---     Data.Vector.Generic.Mutable.MVector MVector,
---     Unbox)
 
 
 -- | invariants:
