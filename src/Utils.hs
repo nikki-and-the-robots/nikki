@@ -80,6 +80,7 @@ a <<? msg = trace (msg ++ ": " ++ show a) a
 
 
 -- | useful for temporarily deactivating $<<?$
+(<<|) :: Show a => a -> String -> a
 a <<| _ = a
 
 traceThis :: String -> (x -> String) -> x -> x
@@ -208,16 +209,17 @@ copyDirectory src dst = do
 -- | returns all (unhidden) files in a directory recursively, sorted.
 -- Omits the directories.
 getFilesRecursive :: FilePath -> IO [FilePath]
-getFilesRecursive dir =
-    map normalise <$> inner dir "."
+getFilesRecursive root =
+    map normalise <$> inner "."
   where
-    inner root dir = do
+    inner dir = do
         content <- map (dir </>) <$> sort <$> getFiles (root </> dir) Nothing
         (directories, files) <- partitionM (doesDirectoryExist . (root </>)) content
-        recursive <- fmapM (inner root) $ directories
+        recursive <- fmapM inner $ directories
         return $ sort (files ++ concat recursive)
 
 -- | removes file and directories if they exist
+removeIfExists :: MonadIO m => FilePath -> m ()
 removeIfExists f = io $ do
     isFile <- doesFileExist f
     isDirectory <- doesDirectoryExist f
@@ -370,11 +372,12 @@ completeEdges [] = []
 
 adjacentCyclic :: [a] -> [(a, a)]
 adjacentCyclic [] = []
-adjacentCyclic [a] = []
+adjacentCyclic [_] = []
 adjacentCyclic list@(head : _) = inner head list
   where
     inner first (a : b : r) = (a, b) : inner first (b : r)
     inner first [last] = [(last, first)]
+    inner _ [] = error "adjacentCyclic"
 
 -- | merges pairs of elements for which the given function returns (Just a).
 -- removes the pair and inserts (the merged) as.
@@ -395,7 +398,7 @@ mergePairs f =
                     Nothing -> Nothing
                     Just r' -> Just (b : r')
             Just newAs -> Just (newAs ++ r)
-    inner a [] = Nothing
+    inner _ [] = Nothing
 
 -- | like mergePairs, but only tries to merge adjacent elements
 -- (or the first and the last element)
@@ -445,11 +448,8 @@ fromKeys :: Ord k => (k -> a) -> [k] -> Map k a
 fromKeys f keys = fromList (map (\ key -> (key, f key)) keys)
 
 lookups :: Ord k => [k] -> Map k a -> Maybe a
-lookups [] m = Nothing
+lookups [] _ = Nothing
 lookups (k : r) m = if k `member` m then Just (m ! k) else lookups r m
-
-safeLookup :: Ord k => String -> Map k e -> k -> e
-safeLookup msg m k | k `member` m = m ! k
 
 -- | creates a mapping function with an error message
 toFunction :: (Show k, Ord k) => String -> Map k e -> k -> e
@@ -497,7 +497,7 @@ divide a b = (n, f * b)
 -- range is including lower bound and excluding upper bound
 -- OPT: is O(a), could be constant (using properFraction)
 foldToRange :: (Ord n, Num n) => (n, n) -> n -> n
-foldToRange (lower, upper) a | upper <= lower = e "foldToRange"
+foldToRange (lower, upper) _ | upper <= lower = e "foldToRange"
 foldToRange (lower, upper) a | a >= upper = foldToRange (lower, upper) (a - distance lower upper)
 foldToRange (lower, upper) a | a < lower = foldToRange (lower, upper) (a + distance lower upper)
 foldToRange _ a = a
@@ -519,7 +519,7 @@ distance a b = abs (a - b)
 clip :: (Ord n, Num n) => (n, n) -> n -> n
 clip (lower, _) x | x < lower = lower
 clip (lower, upper) x | x >= lower && x <= upper = x
-clip (_, upper) x | x > upper = upper
+clip (_, upper) _ = upper
 
 
 -- * tuple stuff
@@ -534,7 +534,7 @@ snd3 :: (a, b, c) -> b
 snd3 (_, b, _) = b
 
 third :: (a, b, c) -> c
-third (a, b, c) = c
+third (_, _, x) = x
 
 
 -- * misc
@@ -548,7 +548,7 @@ readM :: (Monad m, Read r) => String -> m r
 readM x = unsafePerformIO $
     Prelude.catch
         (return <$> readIO x)
-        (\ e -> return (fail ("readM: no parse: " ++ take 100000 x)))
+        (const $ return (fail ("readM: no parse: " ++ take 100000 x)))
 
 uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
 uncurry3 f (a, b, c) = f a b c
