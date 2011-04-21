@@ -28,7 +28,14 @@ import Object
 
 -- | Tiles that are available as falling tiles. Same format as in Sorts/Tiles.hs
 names = [
-    ("tiles/white-falling", (Position (- 1) (- 1)), Size 64 64)
+    ("tiles/black-falling", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/white-falling", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/yellow-falling", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/green-falling", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/aqua-falling", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/blue-falling", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/pink-falling", (Position (- 1) (- 1)), Size 64 64),
+    ("tiles/red-falling", (Position (- 1) (- 1)), Size 64 64)
   ]
 
 -- | time in seconds, before the tiles start to fall after touching Nikki
