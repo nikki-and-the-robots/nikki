@@ -8,6 +8,7 @@ import Prelude hiding (foldr)
 import Data.Indexable hiding (length, filter)
 import Data.List (sort, nub)
 import Data.Foldable (foldr)
+import qualified Data.Vector as Vector
 
 import Control.Monad.State
 import Control.Arrow
@@ -23,6 +24,7 @@ tests = do
     quickCheck indexing
     quickCheck indexPreservingSort
     quickCheck fmapTest
+    quickCheck fmapMTest
     quickCheck foldTest
     quickCheck deleteTest
     quickCheck traverseTest
@@ -33,12 +35,13 @@ tests = do
     quickCheck indexASetter
     quickCheck toHeadTest
     quickCheck toLastTest
+    quickCheck showTestEquality
 
-instance Arbitrary a => Arbitrary (Indexable a) where
+instance (Arbitrary a) => Arbitrary (Indexable a) where
     arbitrary = do
         values <- arbitrary
         keys <- randomPermutation [0 .. length values - 1]
-        return $ Indexable $ map (first Index) $ zip keys values
+        return $ Indexable $ Vector.fromList $ map (first Index) $ zip keys values
     shrink = toList >>> shrink >>> map fromList
 
 randomPermutation :: [a] -> Gen [a]
@@ -76,8 +79,23 @@ fmapTest m c ix =
     sort (keys ix) == sort (keys mapped) &&
     all (\ i -> (fun (ix !!! i)) == mapped !!! i) (keys ix)
   where
-    mapped = fmap fun  ix
+    mapped = fmap fun ix
     fun x = x * m + c
+
+fmapMTest :: Double -> Double -> Indexable Double -> Bool
+fmapMTest m c ix = 
+    case monad of
+        Just True -> True
+        _ -> False
+  where
+    monad = do
+        mapped <- fmapM action ix
+        let keysEqual = sort (keys ix) == sort (keys mapped)
+        equals <- forM (keys ix) $ \ i -> do
+            x <- action (ix !!! i)
+            return (x == mapped !!! i)
+        return (keysEqual && all id equals)
+    action x = return (x * m + c)
 
 foldTest :: [Double] -> Bool
 foldTest list =
@@ -85,6 +103,7 @@ foldTest list =
 
 deleteTest :: Indexable Double -> Property
 deleteTest ix =
+    printTestCase "deleteByIndex" $
     not (null (keys ix)) ==>
     forAll (elements (keys ix)) $ \ i ->
     not (i `isIndexOf` (deleteByIndex i ix))
@@ -150,3 +169,8 @@ toEndTest toEnd listSelector ix =
     not (null $ toList ix) ==>
     forAll (elements $ keys ix) $ \ i ->
         ((ix !!! i) == (listSelector $ toList $ toEnd i ix))
+
+-- | tests if (show . read) == id
+showTestEquality :: Indexable Double -> Bool
+showTestEquality ix = ix == (read $ show ix)
+

@@ -29,18 +29,13 @@ testMassForShape = do
 
 shapeTest :: Gen (ShapeType, Mass) -> Property
 shapeTest shapeGen =
-    forAll shapeGen $ \ (shape, area) ->
-    forAll mkMass $ \ mpp ->
-    let result = massForShape mpp shape
-        expected = area * mpp
-    in printTestCase (show (expected, result))
-        (result =~ expected)
+    forAll shapeGen $ \ (shape, expectedArea) ->
+    let result = areaForShape shape
+    in printTestCase (show (expectedArea, result))
+        (result =~ expectedArea)
 
 a =~ b = abs (a - b) < eps
 eps = 0.000001
-
-mkMass :: Gen Mass
-mkMass = choose (1, 100)
 
 -- | translates and rotates a given polygon by random values.
 randomizePolygon :: [Vector] -> Gen [Vector]

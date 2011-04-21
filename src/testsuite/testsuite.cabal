@@ -61,6 +61,8 @@ Executable testsuite
         , process
         , MonadCatchIO-transformers >= 0.2.2.2
         , data-accessor >= 0.2.1.7
+        , stm >= 2.2.0.1
+        , vector >= 0.7.0.1
 
     extra-libraries:
         qtwrapper, QtOpenGL

@@ -16,7 +16,6 @@ import Data.Abelian
 
 import Control.Concurrent
 import Control.Concurrent.STM
-import Control.Concurrent.STM.TChan
 import Control.Exception
 
 import Graphics.Qt.Types
