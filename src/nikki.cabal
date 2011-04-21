@@ -169,6 +169,7 @@ Executable core
         , data-accessor-mtl >= 0.2.0.2
         , stm >= 2.2.0.1
         , strict >= 0.3.2
+        , vector >= 0.7.0.1
 
     if os(linux)
         extra-libraries:

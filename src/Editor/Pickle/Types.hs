@@ -13,6 +13,7 @@ module Editor.Pickle.Types where
 
 import Data.Indexable
 import qualified Data.IntMap
+import qualified Data.Vector
 
 import Control.Arrow
 
@@ -101,7 +102,7 @@ unpicklePhysicsLayer allSorts list =
     Layer (fmap (unpickleObject allSorts) ix) 1 1
   where
     ix :: Indexable PObject
-    ix = Indexable (map (first Index) list)
+    ix = Indexable $ Data.Vector.fromList (map (first Index) list)
 
 unpickleObject :: [Sort_] -> PObject -> EditorObject Sort_
 unpickleObject allSorts (PObject_1 id position oemState) =

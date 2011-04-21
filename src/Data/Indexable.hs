@@ -13,14 +13,14 @@ module Data.Indexable (
     Index(..),
     keys,
 
-    length,
-    toList,
+    Data.Indexable.length,
+    Data.Foldable.toList,
     (!!!),
-    findIndices,
-    filter,
+    Data.Indexable.findIndices,
+    Data.Indexable.filter,
     sortBy,
 
-    fromList,
+    Data.Indexable.fromList,
     (<:),
     (>:),
 
@@ -35,15 +35,17 @@ module Data.Indexable (
     optimizeMerge,
   ) where
 
-import Prelude hiding (length, filter)
+import Prelude hiding (map, mapM, (++), filter, reverse, elem, maximum, zip, zipWith, null, length, head, tail)
 
 import qualified Data.List as List
-import Data.Generics
-import Data.Either
-import Data.Traversable (Traversable, traverse)
-import Data.Foldable (Foldable, foldMap, toList)
-import Data.Initial
 import Data.Accessor
+import Data.Foldable (Foldable(..), foldMap, toList)
+import Data.Initial
+import Data.Traversable (Traversable, traverse)
+import Data.Vector as Vector
+-- import qualified Data.Vector.Generic.Base
+-- import qualified Data.Vector.Generic.Mutable
+import Data.Generics
 
 import Control.Arrow
 
@@ -52,19 +54,40 @@ import Utils
 
 newtype Index = Index {index :: Int}
   deriving (Show, Read, Enum, Num, Eq, Integral, Real, Ord, Data, Typeable)
+--     Data.Vector.Generic.Base.Vector Vector,
+--     Data.Vector.Generic.Mutable.MVector MVector,
+--     Unbox)
 
 
 -- | invariants:
 -- sort (keys x) == sort (Map.keys (values x))
 -- nub (keys x) == keys x
 -- const True (keys x == sort (keys x))  (that is, the keys may be unsorted)
-newtype Indexable a = Indexable {
-    values :: [(Index, a)]
-  }
-    deriving (Show, Read, Data, Typeable, Eq)
+data Indexable a =
+    Indexable {
+        values :: (Vector (Index, a))
+      }
+  deriving (Eq, Typeable, Data)
+
+instance Show a => Show (Indexable a) where
+    show (Indexable v) = "Indexable " List.++ show (Vector.toList v)
+
+instance Read a => Read (Indexable a) where
+    readsPrec n s =
+        if consString `List.isPrefixOf` s then
+            List.map (first (Indexable . Vector.fromList)) $
+                readsPrec n (List.drop (List.length consString) s)
+        else
+            error "Data.Indexable.readsPrec: not parseable"
+      where
+        consString = "Indexable "
+
+keysVector :: Indexable a -> Vector Index
+keysVector = map fst . values
 
 keys :: Indexable a -> [Index]
-keys = map fst . values
+keys = Vector.toList . keysVector
+
 
 
 -- * instances
@@ -85,25 +108,25 @@ instance Traversable Indexable where
 fmapMWithIndex :: (Monad m, Functor m) => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)
 fmapMWithIndex cmd (Indexable values) = 
-    Indexable <$> fmapM (\ (i, v) -> tuple i <$> cmd i v) values
+    Indexable <$> mapM (\ (i, v) -> tuple i <$> cmd i v) values
 
 instance Initial (Indexable a) where
-    initial = Indexable initial
+    initial = Indexable empty
 
 -- * getter
 
 -- | returns the length of the contained list
 length :: Indexable a -> Int
-length = List.length . values
+length = Vector.length . values
 
 -- -- | returns, if the Index points to something
 isIndexOf :: Index -> Indexable a -> Bool
-isIndexOf i indexable = i `elem` keys indexable
+isIndexOf i indexable = i `elem` keysVector indexable
 
 (!!!) :: Indexable a -> Index -> a
 (Indexable values) !!! i =
-    case lookup i values of
-        Just x -> x
+    case find ((== i) . fst) values of
+        Just x -> snd x
         Nothing -> error ("!!!: Index not found")
 
 -- | returns the list of indices for which the corresponding
@@ -111,80 +134,84 @@ isIndexOf i indexable = i `elem` keys indexable
 -- Honours the order of values.
 findIndices :: (a -> Bool) -> Indexable a -> [Index]
 findIndices p (Indexable values) =
-    map fst $ List.filter (p . snd) values
+    Vector.toList $ map fst $ Vector.filter (p . snd) values
 
 filter :: (a -> Bool) -> Indexable a -> Indexable a
 filter p (Indexable values) =
-    Indexable $ List.filter (p . snd) values
+    Indexable $ Vector.filter (p . snd) values
 
 -- | Stable sorting of Indexables while preserving indices.
 sortBy :: (a -> a -> Ordering) -> Indexable a -> Indexable a
 sortBy ordering (Indexable values) =
-    Indexable $ List.sortBy (withView snd ordering) values
+    Indexable $ Vector.fromList $ List.sortBy (withView snd ordering) $ Vector.toList values
 
 -- | generate an unused Index
 -- (newIndex l) `elem` l == False
-newIndex :: [Index] -> Index
-newIndex [] = 0
-newIndex l = maximum l + 1
+newIndex :: Vector Index -> Index
+newIndex l = if null l then 0 else maximum l + 1
 
 -- * constructors
 
 (<:) :: a -> Indexable a -> Indexable a
 a <: (Indexable values) =
-    Indexable ((i, a) : values)
+    Indexable ((i, a) `cons` values)
   where
     i = newIndex $ map fst values
 
 (>:) :: Indexable a -> a -> Indexable a
 (Indexable values) >: a =
-    Indexable (values +: (i, a))
+    Indexable (values `snoc` (i, a))
   where
     i = newIndex $ map fst values
 
 fromList :: [a] -> Indexable a
-fromList list = Indexable $ zip [0 ..] list
+fromList list = Indexable $ Vector.fromList (List.zip [0 ..] list)
 
 -- * mods
 
 deleteByIndex :: Index -> Indexable a -> Indexable a
 deleteByIndex i (Indexable values) =
-    Indexable $ inner values
-  where
-    inner ((k, a) : r) | i == k = r
-    inner (a : r) = a : inner r
-    inner [] = error "deleteByIndex: index not found"
+    Indexable $ Vector.filter (fst >>> (/= i)) values
 
 indexA :: Index -> Accessor (Indexable a) a
 indexA i = accessor getter setter
   where
     getter ix = ix !!! i
-    setter e (Indexable values) = Indexable $ inner values
+    setter e (Indexable values) = Indexable $ update values (singleton (foundVectorIndex, (i, e)))
       where
-        inner ((k, a) : r) | k == i =
-            (k, e) : r
-        inner (a : r) = a : inner r
+        (Just foundVectorIndex) = findIndex (fst >>> (== i)) values
 
--- | puts the indexed element first
+-- | Puts the indexed element first.
+-- Unsafe when Index not contained.
+-- OPT: Vector-like?
 toHead :: Index -> Indexable a -> Indexable a
 toHead i (Indexable values) =
-    Indexable $ inner [] values
+    Indexable $ inner empty values
   where
-    inner akk ((k, a) : r) | k == i =
-        (k, a) : reverse akk ++ r
-    inner akk (a : r) =
-        inner (a : akk) r
+    inner :: Vector (Index, a) -> Vector (Index, a) -> Vector (Index, a)
+    inner akk vector = case decons vector of
+        Just (a, r) ->
+            if fst a == i then
+                a `cons` reverse akk ++ r
+            else
+                inner (a `cons` akk) r
 
--- | puts the indexed element last
+-- | Puts the indexed element last.
+-- Unsafe when Index not contained.
 toLast :: Index -> Indexable a -> Indexable a 
 toLast i (Indexable values) =
-    Indexable $ inner [] values
+    Indexable $ inner empty values
   where
-    inner akk ((k, a) : r) | k == i =
-        reverse akk ++ r +: (k, a)
-    inner akk (a : r) =
-        inner (a : akk) r
+    inner :: Vector (Index, a) -> Vector (Index, a) -> Vector (Index, a)
+    inner akk vector = case decons vector of
+        Just (a, r) ->
+            if fst a == i then
+                reverse akk ++ r `snoc` a
+            else
+                inner (a `cons` akk) r
 
+
+type MergeVector a = Vector (Either (Index, a) a) -- left unmerged, right merged
 
 -- | optimizes an Indexable with merging.
 -- calls the given function for every pair in the Indexable.
@@ -195,45 +222,81 @@ toLast i (Indexable values) =
 -- Note, that indices of optimized items are going to be invalidated.
 optimizeMerge :: Show a => (a -> a -> Maybe a) -> Indexable a -> Indexable a
 optimizeMerge p =
-    convertToList >>> fixpoint 0 >>> convertToIndexable
+    convertToVector >>> fixpoint (mergeVectorSome p) >>> convertToIndexable
   where
-    fixpoint n list =
-        let r = mergeListSome p list
-        in if List.length r == List.length list then 
-            list
+    fixpoint :: (MergeVector a -> MergeVector a) -> MergeVector a -> MergeVector a
+    fixpoint f vector =
+        let r = f vector
+        in if Vector.length r == Vector.length vector then 
+            vector
           else
-            fixpoint (n + 1) r
+            fixpoint f r
 
 
-    convertToList :: Indexable a -> [Either (Index, a) a] -- left unmerged, right merged
-    convertToList ix = map Left $ values ix
-    convertToIndexable :: [Either (Index, a) a] -> Indexable a
+    convertToVector :: Indexable a -> MergeVector a -- left unmerged, right merged
+    convertToVector ix = map Left $ values ix
+    convertToIndexable :: MergeVector a -> Indexable a
     convertToIndexable list =
         Indexable $ zipWith inner list newIndices
       where
-        newIndices = if null allIndices then [0..] else [maximum allIndices + 1..]
+        newIndices :: Vector Index
+        newIndices = Vector.fromList $
+            if null allIndices then [0 ..] else [maximum allIndices + 1 ..]
         allIndices = map fst $ lefts list
         inner (Left x) _ = x
         inner (Right x) i = (i, x)
 
-mergeListSome :: (a -> a -> Maybe a) -> [(Either (Index, a) a)] -> [(Either (Index, a) a)]
-mergeListSome p (a : r) =
-        case mergeSome p a ([], r) of
-            Just (merged, r') -> Right merged : mergeListSome p r'
-            Nothing -> a : mergeListSome p r
+-- OPT: This is probably not very Vector-like code.
+mergeVectorSome :: (a -> a -> Maybe a) -> MergeVector a -> MergeVector a
+mergeVectorSome p vector = case decons vector of
+    Just (a, r) ->
+        case mergeSome p a (empty, r) of
+            Just (merged, r') -> Right merged `cons` mergeVectorSome p r'
+            Nothing -> a `cons` mergeVectorSome p r
+    Nothing -> empty
   where
-    mergeSome :: (a -> a -> Maybe a)
-        -> Either (Index, a) a
-        -> ([(Either (Index, a) a)], [(Either (Index, a) a)])
-        -> Maybe (a, [(Either (Index, a) a)])
-    mergeSome p outerA (before, (outerB : r)) =
-        case p (getInner outerA) (getInner outerB) of
-            Just x -> Just (x, reverse before ++ r)
-            Nothing -> mergeSome p outerA (outerB : before, r)
-    mergeSome _ _ (_, []) = Nothing
+    mergeSome :: (a -> a -> Maybe a) -> Either (Index, a) a -> (MergeVector a, MergeVector a)
+        -> Maybe (a, MergeVector a)
+    mergeSome p outerA (before, after) = case decons after of
+        Just (outerB, r) ->
+            case p (getInner outerA) (getInner outerB) of
+                Just x -> Just (x, reverse before ++ r)
+                Nothing -> mergeSome p outerA (outerB `cons` before, r)
+        Nothing -> Nothing
 
     getInner (Left (_, a)) = a
     getInner (Right b) = b
 
 
-mergeListSome _ [] = []
+-- * vector utils (instances stolen from hackage: vector-instances)
+
+lefts :: Vector (Either a b) -> Vector a
+lefts = Vector.filter isLeft >>> map fromLeft
+  where
+    isLeft (Left _) = True
+    isLeft _ = False
+    fromLeft (Left a) = a
+
+-- | (head a, tail a) for mimicking (a : r) pattern matching
+decons :: Vector a -> Maybe (a, Vector a)
+decons v =
+    if null v then Nothing else Just (head v, tail v)
+
+instance Traversable Vector where
+    traverse f v
+        = Vector.fromListN (Vector.length v) <$> traverse f (Vector.toList v)
+    {-# INLINE traverse #-}
+
+instance Functor Vector where
+    fmap = Vector.map
+    {-# INLINE fmap #-}
+
+instance Foldable Vector where
+    foldl = Vector.foldl
+    {-# INLINE foldl #-}
+    foldr = Vector.foldr
+    {-# INLINE foldr #-}
+    foldl1 = Vector.foldl1
+    {-# INLINE foldl1 #-}
+    foldr1 = Vector.foldr1
+    {-# INLINE foldr1 #-}
