@@ -85,14 +85,14 @@ readColorLights f =
 loadOsdPixmaps :: RM OsdPixmaps
 loadOsdPixmaps = do
     background <- removeUberPixelShadow <$>
-                    (loadPixmap zero =<< toOsdPath "background")
+                    (loadPixmap (Position 1 1) =<< toOsdPath "background")
     let colors = ColorLights "red" "blue" "green" "yellow"
-        load :: Int -> Int -> String -> RM Pixmap
-        load xOffset yOffset = toOsdPath >=> loadPixmap (Position xOffset yOffset)
-    centers <- fmapM (load 27 27) $ fmap (++ "-center") colors
-    frames <- fmapM (load 27 27) $ fmap (++ "-frame") colors
-    exitCenter <- (load 24 23) "exit-center"
-    exitFrame <- (load 27 27) "exit-frame"
+        load :: Int ->  String -> RM Pixmap
+        load offset = toOsdPath >=> loadPixmap (Position offset offset)
+    centers <- fmapM (load 40) $ fmap (++ "-center") colors
+    frames <- fmapM (load 38) $ fmap (++ "-frame") colors
+    exitCenter <- (load 40) "exit-center"
+    exitFrame <- (load 38) "exit-frame"
     return $ OsdPixmaps background centers frames exitCenter exitFrame
   where
     osdPath = pngDir </> "terminals" </> "osd"
@@ -333,20 +333,20 @@ updateState now cd robots state | any isAButton $ pressed cd =
     NikkiRow -> exitToNikki state
     RobotRow -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
 updateState now cd robots state | any isRight $ pressed cd =
-    -- go right in robot list
-    modifySelected now robots (+ 1) state
-updateState now cd robots state | any isLeft $ pressed cd =
+    if robotIndex state < length robots - 1 then
+        -- go right in robot list
+        modifySelected now robots (+ 1) state
+      else
+        -- select exit (nikki) menu item
+        state{row = NikkiRow, changedTime = now}
+
+updateState now cd robots state@State{row = RobotRow} | any isLeft $ pressed cd =
     -- go left in robot list
     modifySelected now robots (subtract 1) state
 updateState now cd robots state@State{row = NikkiRow}
-    | any isUp (pressed cd)
-    -- select to robot list
-      && not (null robots) =
+    | (any isLeft $ pressed cd) && not (null robots) =
+        -- go to robot list
         state{row = RobotRow, changedTime = now}
-updateState now cd robots state@State{row = RobotRow}
-    | any isDown $ pressed cd =
-    -- select exit (nikki) menu item (go down)
-        state{row = NikkiRow, changedTime = now}
 updateState _ _ _ t = t
 
 exitToNikki :: State -> State
@@ -466,7 +466,7 @@ osdFrameOffsets =
     green = toLeftFrame blue
     yellow = toLeftFrame green
 
-    toLeftFrame = (+~ Position (fromUber 17) 0)
+    toLeftFrame = (+~ Position (fromUber 20) 0)
 
 osdCenterOffsets :: ColorLights (Qt.Position Double)
 osdCenterOffsets = fmap (+~ fmap fromUber (Position 2 2)) osdFrameOffsets
@@ -477,7 +477,7 @@ renderOsdExit ptr offset now pixmaps state exitState = do
     when exitState $
         renderPixmap ptr offset exitCenterOffset Nothing (osdExitCenter pixmaps)
   where
-    exitFrameOffset = fmap fromUber $ Position 33 29
+    exitFrameOffset = fmap fromUber $ Position 91 5
     exitCenterOffset = exitFrameOffset +~ fmap fromUber (Position 2 2)
 
 
