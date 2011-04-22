@@ -60,14 +60,14 @@ setScene s x = s{scene = x}
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
-gameLoop :: Application -> MVar (RenderScene, DebuggingCommand) -> GameMonad AppState
+gameLoop :: Application -> MVar (RenderScene, DebuggingCommand) -> GameMonad ()
 gameLoop app sceneMVar = do
     initializeSceneMVar
     timer <- io $ newTimer
     withArrowAutoRepeat app $
         loop timer
   where
-    loop :: Timer -> GameMonad AppState
+    loop :: Timer -> GameMonad ()
     loop timer = do
         io $ resetDebugging
 
@@ -86,13 +86,11 @@ gameLoop app sceneMVar = do
 
         case sc' ^. mode of
             LevelFinished t _ ->
-                if null pressed_ then
+                when (null pressed_)
                     continue
-                  else
-                    return FinalState
             _ -> if any isStart pressed_ then do
                 io $ logInfo "NYI: game menu"
-                return FinalState -- TODO: should be a menu
+                return () -- TODO: should be a menu
               else
                 continue
       where
