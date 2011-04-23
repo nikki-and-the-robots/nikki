@@ -29,8 +29,9 @@ import Base.Prose
 import Base.Monad
 import Base.Configuration
 import Base.Application
-import Base.Application.Widgets.GUILog
-import Base.Application.Widgets.Message
+import Base.Renderable.Common
+import Base.Renderable.GUILog
+import Base.Renderable.Message
 
 import Distribution.AutoUpdate.Paths
 import Distribution.AutoUpdate.Download
@@ -68,7 +69,7 @@ isDeployed = do
 
 -- | doing the auto update
 autoUpdate :: Application_ sort -> AppState -> AppState
-autoUpdate app follower = AppState $ do
+autoUpdate app follower = AppState (rt "autoUpdate") $ do
     repoString <- gets update_repo
     mDeployed <- io $ isDeployed
     case mDeployed of

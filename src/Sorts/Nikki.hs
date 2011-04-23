@@ -126,7 +126,7 @@ instance Sort NSort Nikki where
             return . updateStartTime now (state nikki) >=>
             controlNikki now contacts cd sort
 
-    render nikki sort _ _ now = do
+    renderObject nikki sort _ _ now = do
         let pixmap = pickPixmap now sort nikki
         pos <- fst <$> getRenderPositionAndAngle (chipmunk nikki)
         return [RenderPixmap pixmap pos Nothing]

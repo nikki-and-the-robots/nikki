@@ -527,6 +527,9 @@ clip (_, upper) _ = upper
 tuple :: a -> b -> (a, b)
 tuple a b = (a, b)
 
+swapTuple :: (a, b) -> (b, a)
+swapTuple (a, b) = (b, a)
+
 fst3 :: (a, b, c) -> a
 fst3 (a, _, _) = a
 

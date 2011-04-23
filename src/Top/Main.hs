@@ -82,7 +82,7 @@ main =
             logicThread = do
                 guiLog app (p "loading...")
                 withDynamicConfiguration configuration $
-                    executeStates (applicationStates app)
+                    executeStates app (applicationStates app)
         exitCodeMVar <- forkLogicThread $ do
             logicThread `finally` quitQApplication
 
@@ -108,7 +108,7 @@ loadApplicationIcon qWidget = do
 
 -- | top level application state
 applicationStates :: Application -> AppState
-applicationStates app = AppState $ do
+applicationStates app = AppState (rt "applicationStates") $ do
     mLevel <- gets play_level
     play_levelA %= Nothing
     case mLevel of
@@ -117,7 +117,7 @@ applicationStates app = AppState $ do
 
 mainMenu :: Application -> AppState
 mainMenu app =
-    menu app (Just title) Nothing
+    menu app title Nothing
        (("story mode", storyMode app) :
         ("community levels", community app) :
         ("help", mainMenuHelp app this) :
@@ -133,14 +133,14 @@ mainMenu app =
 
 -- | shows a text describing our plans with the story mode
 storyMode :: Application -> AppState
-storyMode app = AppState $ do
+storyMode app = AppState (rt "storyMode") $ do
     file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
     prose <- io $ pFile file
     return $ showText app prose (applicationStates app)
 
 community :: Application -> AppState
 community app =
-    menu app (Just "community") (Just (mainMenu app))
+    menu app "community" (Just (mainMenu app))
        (("play levels", selectLevelPlay app this) :
         ("edit levels", selectLevelEdit app this) :
         ("download community levels", downloadLevels app this) :
@@ -150,7 +150,7 @@ community app =
 
 
 downloadLevels :: Application -> AppState -> AppState
-downloadLevels app parent = AppState $ do
+downloadLevels app parent = AppState (rt "downloadLevels") $ do
     file <- rm2m $ getDataFileName "manual/downloadLevels"
     prose <- io $ pFile file
     return $ showText app prose parent
@@ -159,7 +159,7 @@ downloadLevels app parent = AppState $ do
 -- | asks, if the user really wants to quit
 quit :: Application -> AppState -> AppState
 quit app parent =
-    menu app (Just "quit?") (Just parent) [
+    menu app "quit?" (Just parent) [
         ("no", applicationStates app),
         ("yes", FinalState)
       ]
@@ -169,11 +169,11 @@ selectLevelPlay :: Application -> AppState -> AppState
 selectLevelPlay app parent = staticConfigAppState $ do
     levelFiles <- lookupLevels
     if null levelFiles then
-        return $ menu app (Just "no levels found.") (Just parent) [("back", parent)]
+        return $ menu app "no levels found." (Just parent) [("back", parent)]
       else do
             -- menu with the given selected item.
         let this preChoice = menuWithPreChoice
-                app (Just "pick a level to play") (Just parent)
+                app "pick a level to play" (Just parent)
                 (map (\ path -> (takeBaseName path, \ n -> play app (this n) path))
                     levelFiles)
                 preChoice
@@ -183,7 +183,7 @@ selectLevelEdit :: Application -> AppState -> AppState
 selectLevelEdit app parent = staticConfigAppState $ do
     freeLevelsPath <- getFreeLevelsDirectory
     levelFiles <- map (freeLevelsPath </>) <$> io (getFiles freeLevelsPath (Just "nl"))
-    return $ menu app (Just "pick a level to edit") (Just parent) $
+    return $ menu app "pick a level to edit" (Just parent) $
         ("new level", pickNewLevel app parent) :
         map (\ path -> (takeBaseName path, edit app parent (path, False))) levelFiles
 
@@ -192,7 +192,7 @@ pickNewLevel app parent = staticConfigAppState $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles templateLevelsDir (Just ".nl")
-    return $ menu app (Just "pick a template to start from") (Just parent) $
+    return $ menu app "pick a template to start from" (Just parent) $
         map mkMenuItem templateLevelPaths ++
         ("empty level", edit app parent (pathToEmptyLevel, True)) :
         []
@@ -218,7 +218,7 @@ loadingEditorScene app (file, isTemplateFile) follower = ioAppState $ do
     return $ follower editorScene
 
 mainMenuHelp :: Application -> AppState -> AppState
-mainMenuHelp app parent = AppState $ do
+mainMenuHelp app parent = AppState (rt "mainMenuHelp") $ do
     file <- rm2m $ getDataFileName "manual/mainMenuHelp.txt"
     text <- io $ pFile file
     return $ showText app text parent

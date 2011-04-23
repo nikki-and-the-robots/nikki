@@ -1,7 +1,6 @@
 {-# language ScopedTypeVariables, ViewPatterns #-}
 
 module Base.Font (
-    standardFontColor,
     loadAlphaNumericFont,
     freeFont,
     fontHeight,
@@ -38,7 +37,7 @@ import Base.Pixmap
 import Base.Prose
 import Base.Font.ColorVariant
 
-import Base.Application.Widgets.Common
+import Base.Renderable.Common
 
 
 standardFontDir :: FilePath
@@ -217,19 +216,19 @@ freeFont (Font variants) = forM_ variants freeColorVariant
 -- Does not alter the GL matrix.
 renderLineSimple :: Font -> Maybe Int -> Color -> Prose -> Ptr QPainter -> IO (Size Double)
 renderLineSimple font wordWrapWidth color text ptr = do
-    (action, size) <- renderLine font wordWrapWidth color text
+    let (action, size) = renderLine font wordWrapWidth color text
     action ptr
     return size
 
 -- | Returns a rendering action to render a line of text
 -- and the size of the renderings.
 -- Does not alter the painter matrix.
-renderLine :: Font -> Maybe Int -> Color -> Prose -> IO (Ptr QPainter -> IO (), Size Double)
-renderLine font wordWrapWidth color text = do
-    variant <- getColorVariant font color
-    let pixs = textPixmaps variant
-    return (\ ptr -> action ptr zero pixs, size pixs)
+renderLine :: Font -> Maybe Int -> Color -> Prose -> (Ptr QPainter -> IO (), Size Double)
+renderLine font wordWrapWidth color text =
+    (\ ptr -> action ptr zero pixs, size pixs)
   where
+    variant = getColorVariant font color
+    pixs = textPixmaps variant
     size pixs =
         Size (maximum $ fmap lineWidth pixs) (textHeight * fromIntegral (length pixs))
     lineWidth :: [Pixmap] -> Double
@@ -250,9 +249,13 @@ renderLine font wordWrapWidth color text = do
     textPixmaps :: ColorVariant -> [[Pixmap]]
     textPixmaps variant = selectLetterPixmaps variant wordWrapWidth text
 
+instance Renderable Prose where
+    render app size prose = swapTuple $
+        renderLine (alphaNumericFont $ applicationPixmaps app) Nothing standardFontColor
+            prose
 
 -- | Returns the colorvariant for the given color.
-getColorVariant :: Font -> Color -> IO ColorVariant
+getColorVariant :: Font -> Color -> ColorVariant
 getColorVariant (Font m) color = case Data.Map.lookup color m of
-    Just v -> return v
+    Just v -> v
     Nothing -> error ("font color variant missing: " ++ show color)

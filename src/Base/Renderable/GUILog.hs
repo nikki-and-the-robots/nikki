@@ -1,5 +1,5 @@
 
-module Base.Application.Widgets.GUILog (guiLog, resetGuiLog) where
+module Base.Renderable.GUILog (guiLog, resetGuiLog) where
 
 
 import Text.Logging
@@ -17,7 +17,7 @@ import Base.Font
 import Base.Prose
 import Base.Constants
 
-import Base.Application.Widgets.Common
+import Base.Renderable.Common
 
 
 -- | Shows log messages in the GUI.

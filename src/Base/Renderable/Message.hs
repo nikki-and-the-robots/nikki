@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables #-}
 
-module Base.Application.Widgets.Message (message) where
+module Base.Renderable.Message (message) where
 
 
 import Data.Abelian
@@ -14,7 +14,7 @@ import Base.Prose
 import Base.Font
 import Base.Polling
 
-import Base.Application.Widgets.Common
+import Base.Renderable.Common
 
 
 -- | show a textual message and wait for a keypress
@@ -36,8 +36,8 @@ render app texts ptr = do
     renderCentered font windowSize (p "press any key to continue")
   where
     renderCentered font windowSize text = do
-        (renderAction, textSize) <- renderLine font (Just (width windowSize)) standardFontColor text
-        let centerX :: Double = width (fmap fromIntegral windowSize -~ textSize) / 2
+        let (renderAction, textSize) = renderLine font (Just (width windowSize)) standardFontColor text
+            centerX :: Double = width (fmap fromIntegral windowSize -~ textSize) / 2
         translate ptr (Position centerX 0)
         renderAction ptr
         translate ptr (Position (- centerX) 0)

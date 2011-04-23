@@ -60,7 +60,7 @@ getPngPaths n =
 
 data BSort = BSort {
     name :: String,
-    pixmaps :: [Pixmap] -- 
+    pixmaps :: [Pixmap]
   }
     deriving (Show, Typeable)
 
@@ -73,28 +73,13 @@ instance Sort BSort () where
     renderEditorObject ptr offset eo = do
         resetMatrix ptr
         windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-        let mPix = pickPixmap windowSize $ pixmaps $ editorSort eo
-            pix = fromMaybe (last $ pixmaps $ editorSort eo) mPix
-            offset = sizeToPosition $ fmap (round . (/ 2)) (windowSize -~ pixmapSize pix)
-        when (isNothing mPix) $
-            -- background image is too small
-            clearScreen ptr black
-        drawPixmap ptr offset (pixmap pix)
+        renderWholeScreenPixmap ptr windowSize (pixmaps $ editorSort eo)
     initialize sort mSpace ep Nothing = return ()
     immutableCopy = return
     chipmunks = const []
-    render _ s ptr offset _ = do
+    renderObject _ s ptr offset _ = do
         windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-        let mPix = pickPixmap windowSize $ pixmaps s
+        let mPix = pickWholeScreenPixmap windowSize $ pixmaps s
             pix = fromMaybe (last $ pixmaps s) mPix
             pos = sizeToPosition $ fmap (fromIntegral . round . (/ 2)) (windowSize -~ pixmapSize pix)
         return [RenderPixmap pix (pos -~ offset) Nothing]
-
--- | returns the smallest pixmap that can cover the whole window, if it exists
-pickPixmap :: Size Double -> [Pixmap] -> Maybe Pixmap
-pickPixmap windowSize list =
-    headMay $ filter isBiggerThanWindow list
-  where
-    isBiggerThanWindow (pixmapSize -> pixmapSize) =
-        withView width (>) pixmapSize windowSize &&
-        withView height (>) pixmapSize windowSize

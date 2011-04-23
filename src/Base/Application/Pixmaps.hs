@@ -21,6 +21,7 @@ import Base.Types
 import Base.Constants
 import Base.Pixmap
 import Base.Font
+import Base.Renderable.Common
 
 
 withApplicationPixmaps :: (ApplicationPixmaps -> IO a) -> RM a
@@ -30,16 +31,18 @@ withApplicationPixmaps cmd = do
 
 load :: RM ApplicationPixmaps
 load = do
+    menubackgrounds <- mapM (loadPixmap zero) =<< getDataFiles (menuDir </> "background") (Just ".png")
     alphaNumericFont <- loadAlphaNumericFont
     menuTitlePixmap <- loadOsd "menuTitle"
     finished <- fmapM loadOsd finishedMap
-    return $ ApplicationPixmaps alphaNumericFont menuTitlePixmap finished
+    return $ ApplicationPixmaps menubackgrounds alphaNumericFont menuTitlePixmap finished
 
 loadOsd :: String -> RM Pixmap
 loadOsd name = io . loadPixmap zero =<< getDataFileName (pngDir </> "osd" </> name <.> "png")
 
 free :: ApplicationPixmaps -> IO ()
-free (ApplicationPixmaps font menuTitle finished) = do
+free (ApplicationPixmaps menuBackgrounds font menuTitle finished) = do
+    fmapM_ freePixmap menuBackgrounds
     freeFont font
     freePixmap menuTitle
     fmapM_ freePixmap finished

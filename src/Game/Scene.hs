@@ -300,7 +300,7 @@ layersToRenderPixmaps size ptr offset now layers =
 layerToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameLayer Object_ -> IO [RenderPixmap]
 layerToRenderPixmaps size ptr offset now layer =
     fmap (renderPosition ^: (+~ layerOffset)) <$>
-        concat <$> fmapM (\ o -> render_ o ptr layerOffset now) (gameContent layer)
+        concat <$> fmapM (\ o -> renderObject_ o ptr layerOffset now) (gameContent layer)
   where
     layerOffset =
         calculateLayerOffset size offset (gameXDistance layer, gameYDistance layer)
@@ -310,7 +310,7 @@ mainLayerToRenderPixmaps :: Ptr QPainter -> Offset Double -> Seconds
     -> Indexable Object_ -> IO [RenderPixmap]
 mainLayerToRenderPixmaps ptr offset now objects =
     fmap (renderPosition ^: (+~ offset)) <$>
-        concat <$> fmapM (\ o -> render_ o ptr offset now) (toList objects)
+        concat <$> fmapM (\ o -> renderObject_ o ptr offset now) (toList objects)
 
 -- | renders the big osd images ("SUCCESS" or "FAILURE") at the end of levels
 renderLevelFinishedOSD :: Ptr QPainter -> Application -> Mode -> IO ()

@@ -16,7 +16,7 @@ import Utils
 
 import Base.Types
 import Base.Prose
-import Base.Application.Widgets.GUILog
+import Base.Renderable.GUILog
 
 
 -- | Tries to fetch the file with the given path.

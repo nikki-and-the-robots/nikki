@@ -4,13 +4,8 @@ module Base.Application (
     staticConfigAppState,
     executeStates,
 
-    menu,
-    menuWithPreChoice,
-    treeToMenu,
     askStringRead,
     askString,
-    drawTextBlock,
-    showText,
   ) where
 
 
@@ -26,24 +21,30 @@ import Base.Types
 import Base.Polling
 import Base.Monad
 
-import Base.Application.Widgets.Menu
-import Base.Application.Widgets.TextListing
-import Base.Application.Widgets.Common
+import Base.Renderable.Common
 
 
 -- | if you don't need the M monad, just IO
 ioAppState :: IO AppState -> AppState
-ioAppState = AppState . io
+ioAppState = AppState (rt "ioAppState") . io
 
 -- | if you want to only read the configuration
 staticConfigAppState :: RM AppState -> AppState
-staticConfigAppState = AppState . rm2m
+staticConfigAppState = AppState (rt "staticConfigAppState") . rm2m
 
 
-executeStates :: AppState -> M ()
-executeStates (AppState cmd) =
-    cmd >>= executeStates
-executeStates FinalState = return ()
+executeStates :: Application_ s -> AppState -> M ()
+executeStates app (AppState renderable cmd) = do
+    io $ setDrawingCallbackGLContext (window app) (Just renderCallback)
+    cmd >>= executeStates app
+  where
+    renderCallback :: Ptr QPainter -> IO ()
+    renderCallback ptr = do
+        size <- fmap fromIntegral <$> sizeQPainter ptr
+        let (_, cmd) = render app size renderable
+        resetMatrix ptr
+        cmd ptr
+executeStates _ FinalState = return ()
 
 
 -- * widgets
@@ -51,7 +52,7 @@ executeStates FinalState = return ()
 -- | Gets a string from the user.
 -- returns the parent if Escape is pressed.
 askString :: Application_ sort -> AppState -> String -> (String -> AppState) -> AppState
-askString app parent question follower = AppState $ do
+askString app parent question follower = AppState (rt "askString") $ do
     answerRef <- io $ newMVar ""
     io $ setDrawingCallbackGLContext (window app) (Just $ render question answerRef)
     loop answerRef

@@ -79,10 +79,18 @@ extern "C" void setApplicationName(QApplication* app, char* name) {
 
 // * QPainter
 
+extern "C" const QTransform* getMatrix(QPainter* painter) {
+    return &(painter->worldTransform());
+};
+
+extern "C" void setMatrix(QPainter* painter, QTransform* matrix) {
+    painter->setWorldTransform(*matrix);
+};
+
 extern "C" void eraseRect(QPainter* painter, int x, int y, int w, int h, int r, int g, int b, int alpha) {
     painter->setBackground(QBrush(QColor(r, g, b, alpha)));
     painter->eraseRect(x, y, w, h);
-}
+};
 
 extern "C" void resetMatrix(QPainter* painter) {
     painter->resetMatrix();

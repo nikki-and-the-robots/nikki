@@ -7,7 +7,9 @@ module Base (
     module Base.Font,
     module Base.Application,
     module Base.Application.Pixmaps,
-    module Base.Application.Widgets.GUILog,
+
+    module Base.Renderable,
+
     module Base.Pixmap,
     module Base.Monad,
     module Base.Paths,
@@ -30,7 +32,9 @@ import Base.Prose
 import Base.Font
 import Base.Application
 import Base.Application.Pixmaps
-import Base.Application.Widgets.GUILog
+
+import Base.Renderable
+
 import Base.Pixmap
 import Base.Monad
 import Base.Paths

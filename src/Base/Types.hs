@@ -32,12 +32,13 @@ import Graphics.Qt as Qt
 
 import Utils
 
+import Base.Configuration
 import Base.Grounds
 import Base.GameGrounds
 import Base.Pixmap
 
 import Base.Types.Events
-import Base.Configuration
+
 
 
 -- * type aliases
@@ -67,10 +68,15 @@ getMainMenu :: Application_ sort -> AppState
 getMainMenu app = getMainMenu_ app app
 
 data AppState
-    = AppState (M AppState)
+    = AppState RenderableInstance (M AppState)
     | FinalState
 
+appState :: Renderable r => r -> M AppState -> AppState
+appState r = AppState (RenderableInstance r)
+
+
 data ApplicationPixmaps = ApplicationPixmaps {
+    menuBackgrounds :: [Pixmap],
     alphaNumericFont :: Font,
     menuTitlePixmap :: Pixmap,
     finished :: Map LevelResult Pixmap
@@ -86,6 +92,17 @@ data ColorVariant = ColorVariant {
         glyphs :: [(ByteString, Pixmap)],
         errorSymbol :: Pixmap
       }
+
+
+-- * Base.Renderable
+
+class Renderable r where
+    -- Returns the minimal size and the rendering command.
+    render :: Application_ s -> Size Double -> r -> (Size Double, Ptr QPainter -> IO ())
+    render = error "render default"
+
+data RenderableInstance =
+    forall r . Renderable r => RenderableInstance r
 
 
 -- from Game.Scene
@@ -421,7 +438,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
         -> object -> IO object
     updateNoSceneChange _ _ _ _ _ o = return o
 
-    render :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
+    renderObject :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
 
 editorPosition2QtPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
 editorPosition2QtPosition sort (EditorPosition x y) =

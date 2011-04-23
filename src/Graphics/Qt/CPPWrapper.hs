@@ -172,6 +172,10 @@ data QPainter
 foreign import ccall "eraseRect" cppEraseRect ::
     Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 
+foreign import ccall getMatrix :: Ptr QPainter -> IO (Ptr QTransform)
+
+foreign import ccall setMatrix :: Ptr QPainter -> Ptr QTransform -> IO ()
+
 eraseRect :: Ptr QPainter -> Position QtInt -> Size QtInt -> Color -> IO ()
 eraseRect ptr (Position x y) (Size w h) (QtColor r g b a) =
     cppEraseRect
@@ -244,6 +248,11 @@ sizeQPainter ptr = do
 foreign import ccall widthQPainter :: Ptr QPainter -> IO QtInt
 
 foreign import ccall heightQPainter :: Ptr QPainter -> IO QtInt
+
+
+-- * QTransform
+
+data QTransform
 
 
 -- * QPixmap

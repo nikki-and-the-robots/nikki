@@ -79,6 +79,17 @@ setWindowSize win FullScreen =
     setFullscreenGLContext win True
 
 
+-- * matrix
+
+type Matrix = Ptr QTransform
+
+recoverMatrix :: Ptr QPainter -> IO () -> IO ()
+recoverMatrix ptr action = do
+    m <- getMatrix ptr
+    action
+    setMatrix ptr m
+
+
 -- * Colors
 
 black :: Color = opaqueColor 0 0 0

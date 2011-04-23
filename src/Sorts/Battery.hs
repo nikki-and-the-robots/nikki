@@ -91,10 +91,10 @@ instance Sort BSort Battery where
             return (sceneChange, Consumed $ chipmunk o)
     update sort mode now contacts cd i o = return (id, o) -- no change
 
-    render o@Battery{} sort ptr offset now = do
+    renderObject o@Battery{} sort ptr offset now = do
         (pos, angle) <- getRenderPositionAndAngle (chipmunk o)
         return $ [RenderPixmap (batteryPixmap sort) pos (Just angle)]
-    render Consumed{} _ _ _ _ = return []
+    renderObject Consumed{} _ _ _ _ = return []
 
 
 

@@ -110,7 +110,7 @@ instance Sort JSort Jetpack where
         return . updateRenderState now isControlled >=>
         passThrough controlToChipmunk
 
-    render = renderJetpack
+    renderObject = renderJetpack
 
 jetpackBodyAttributes p =
     mkMaterialBodyAttributes robotMaterialMass (fst mkPolys) p

@@ -110,7 +110,7 @@ instance Sort PSort Platform where
         return . updateLogic >=>
         passThrough applyPlatformForce
 
-    render platform sort ptr offset now = do
+    renderObject platform sort ptr offset now = do
         (position, rad) <- getRenderPositionAndAngle $ chipmunk platform
         let renderPosition = position +~ physicsPadding
             robot = RenderPixmap (pix sort) renderPosition Nothing

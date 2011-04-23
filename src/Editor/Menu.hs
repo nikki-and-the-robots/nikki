@@ -42,7 +42,7 @@ updateSceneMVar app mvar = do
 
 editorLoop :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorLoop app play mvar scene = AppState $ do
+editorLoop app play mvar scene = AppState (rt "editorLoop") $ do
     io $ setDrawingCallbackGLContext (window app) (Just $ render mvar)
     evalStateT worker scene
   where
@@ -82,7 +82,7 @@ editorMenu :: Application -> PlayLevel -> MVar (EditorScene Sort_)
 editorMenu app play mvar scene =
     case editorMode scene of
         NormalMode ->
-            menu app (Just menuTitle) (Just (edit scene))
+            menu app menuTitle (Just (edit scene))
               (
               lEnterOEM ++
               [
@@ -96,7 +96,7 @@ editorMenu app play mvar scene =
               ])
         ObjectEditMode{} -> exitOEM app play mvar scene
         SelectionMode{} ->
-            menu app (Just menuTitle) (Just (edit scene)) [
+            menu app menuTitle (Just (edit scene)) [
                 ("cut selected objects", edit (cutSelection scene)),
                 ("copy selected objects", edit (copySelection scene)),
                 ("delete selected objects", edit (deleteSelection scene)),
@@ -136,7 +136,7 @@ saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjec
     this = saveLevel app parent follower scene
 
 fileExists app save path objects =
-    menu app (Just ("level with the name " ++ path ++ " already exists")) (Just save) [
+    menu app ("level with the name " ++ path ++ " already exists") (Just save) [
         ("no", save),
         ("yes", writeAnyway)
       ]
@@ -146,7 +146,7 @@ fileExists app save path objects =
         return $ getMainMenu app
 
 reallyExitEditor app editor =
-    menu app (Just "really exit without saving?") (Just editor) [
+    menu app "really exit without saving?" (Just editor) [
         ("no", editor),
         ("yes", getMainMenu app)
       ]
@@ -191,7 +191,7 @@ exitOEM app play mvar s =
 editLayers :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
 editLayers app play mvar scene =
-    menu app (Just "edit layers") (Just editMenu) [
+    menu app "edit layers" (Just editMenu) [
         ("change layer distance", changeLayerDistance app this scene edit),
         ("add background layer", edit (addDefaultBackground scene)),
         ("add foreground layer", edit (addDefaultForeground scene))
@@ -204,7 +204,7 @@ editLayers app play mvar scene =
 changeLayerDistance :: Application -> AppState -> EditorScene Sort_ -> (EditorScene Sort_ -> AppState) -> AppState
 changeLayerDistance app parent scene follower =
     askStringRead app parent "x distance" $ \ x ->
-    askStringRead app parent "y distance" $ \ y -> AppState $
+    askStringRead app parent "y distance" $ \ y -> AppState (rt "changeLayerDistance") $
         return $ follower
             (editorObjects .> layerA (selectedLayer scene) ^:
                 (setYDistance y . setXDistance x) $ scene)
@@ -220,7 +220,7 @@ showEditorHelp app parent scene = case editorMode scene of
             helpText = proseLines $ p $ oemHelp phantomOEM
         in showText app helpText parent
   where
-    showHelpFile = AppState $ do
+    showHelpFile = AppState (rt "showHelpFile") $ do
         file <- rm2m $ getDataFileName "manual/editor.txt"
         text <- io $ pFile file
         return $ showText app text parent

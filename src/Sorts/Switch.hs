@@ -120,7 +120,7 @@ instance Sort SwitchSort Switch where
             return switch
     updateNoSceneChange s _ _ _ _ o = return o
 
-    render switch sort _ _ now = do
+    renderObject switch sort _ _ now = do
         (stampPos, stampAngle) <- getRenderPositionAndAngle (stampChipmunk switch)
         let stamp = RenderPixmap (stampPix sort) stampPos (Just stampAngle)
             boxPix = if triggered switch then boxOnPix sort else boxOffPix sort

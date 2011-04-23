@@ -121,7 +121,7 @@ instance Sort TSort FallingTile where
             Loose ->
                 return fallingTile
 
-    render t@FallingTile{chipmunk = ImmutableChipmunk{}} sort@TSort{tilePixmap} ptr offset _now = do
+    renderObject t@FallingTile{chipmunk = ImmutableChipmunk{}} sort@TSort{tilePixmap} ptr offset _now = do
         (position, rad) <- getRenderPositionAndAngle $ chipmunk t
         return [RenderPixmap tilePixmap position (Just rad)]
 

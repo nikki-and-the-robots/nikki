@@ -299,7 +299,7 @@ instance Sort TSort Terminal where
     updateNoSceneChange sort mode now contacts (True, cd) terminal =
         return terminal{state = updateState now cd (robots terminal) (state terminal)}
 
-    render terminal sort ptr offset now = do
+    renderObject terminal sort ptr offset now = do
         pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
         return $ renderTerminal sort now terminal pos
 

@@ -2,7 +2,7 @@
 -- | Showing texts on the screen, till a key is pressed.
 -- Used for help screens.
 
-module Base.Application.Widgets.TextListing where
+module Base.Renderable.TextListing where
 
 
 import Graphics.Qt
@@ -15,7 +15,7 @@ import Base.Polling
 import Base.Prose
 import Base.Font
 
-import Base.Application.Widgets.Common
+import Base.Renderable.Common
 
 
 drawTextBlock :: Font -> Ptr QPainter -> [Prose] -> IO ()
@@ -27,7 +27,7 @@ drawTextBlock font ptr = mapM_ $ \ line -> do
 
 showText :: Application_ sort -> [Prose] -> AppState -> AppState
 showText app text follower =
-    AppState $ inner 0
+    AppState (rt "showText") $ inner 0
   where
     -- Sets a renderer, that renders the given text with the given scrolling.
     -- Calls itself with another scrolling, if needed.
