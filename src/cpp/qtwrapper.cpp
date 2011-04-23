@@ -79,17 +79,6 @@ extern "C" void setApplicationName(QApplication* app, char* name) {
 
 // * QPainter
 
-extern "C" const QTransform* getMatrix(QPainter* painter) {
-    QTransform* matrix = new QTransform(painter->worldTransform());
-    return matrix;
-};
-
-extern "C" void setMatrix(QPainter* painter, QTransform* matrix) {
-    painter->setWorldTransform(*matrix);
-    delete matrix;
-    qDebug() << "NYI: free matrix with ForeignPtr?";
-};
-
 extern "C" void eraseRect(QPainter* painter, int x, int y, int w, int h, int r, int g, int b, int alpha) {
     painter->setBackground(QBrush(QColor(r, g, b, alpha)));
     painter->eraseRect(x, y, w, h);
@@ -171,6 +160,21 @@ extern "C" int heightQPainter(QPainter* painter) {
     return painter->window().height();
 };
 
+
+// * QTransform
+
+extern "C" void destroyQTransform(QTransform* ptr) {
+    delete ptr;
+};
+
+extern "C" const QTransform* getMatrix(QPainter* painter) {
+    QTransform* matrix = new QTransform(painter->worldTransform());
+    return matrix;
+};
+
+extern "C" void setMatrix(QPainter* painter, QTransform* matrix) {
+    painter->setWorldTransform(*matrix);
+};
 
 
 // * QPixmap

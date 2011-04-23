@@ -84,10 +84,10 @@ setWindowSize win FullScreen =
 type Matrix = Ptr QTransform
 
 recoverMatrix :: Ptr QPainter -> IO () -> IO ()
-recoverMatrix ptr action = do
-    m <- getMatrix ptr
-    action
-    setMatrix ptr m
+recoverMatrix ptr action =
+    withMatrix ptr $ \ matrix -> do
+        action
+        setMatrix ptr matrix
 
 
 -- * Colors

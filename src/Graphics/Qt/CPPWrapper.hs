@@ -12,6 +12,7 @@ import Foreign (Ptr, FunPtr, nullPtr)
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.Marshal.Alloc (free)
+import Foreign.ForeignPtr
 
 import System.Directory
 import System.Environment
@@ -172,10 +173,6 @@ data QPainter
 foreign import ccall "eraseRect" cppEraseRect ::
     Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 
-foreign import ccall getMatrix :: Ptr QPainter -> IO (Ptr QTransform)
-
-foreign import ccall setMatrix :: Ptr QPainter -> Ptr QTransform -> IO ()
-
 eraseRect :: Ptr QPainter -> Position QtInt -> Size QtInt -> Color -> IO ()
 eraseRect ptr (Position x y) (Size w h) (QtColor r g b a) =
     cppEraseRect
@@ -253,6 +250,18 @@ foreign import ccall heightQPainter :: Ptr QPainter -> IO QtInt
 -- * QTransform
 
 data QTransform
+
+foreign import ccall "&destroyQTransform" destroyQTransform :: FinalizerPtr QTransform
+
+withMatrix :: Ptr QPainter -> (Ptr QTransform -> IO a) -> IO a
+withMatrix ptr action = do
+    matrix <- cppGetMatrix ptr
+    foreignPtr <- newForeignPtr destroyQTransform matrix
+    withForeignPtr foreignPtr action
+
+foreign import ccall "getMatrix" cppGetMatrix :: Ptr QPainter -> IO (Ptr QTransform)
+
+foreign import ccall "setMatrix" setMatrix :: Ptr QPainter -> Ptr QTransform -> IO ()
 
 
 -- * QPixmap
