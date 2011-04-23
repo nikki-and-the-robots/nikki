@@ -23,7 +23,7 @@ import Base.Renderable.Common
 import Base.Renderable.VBox
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
--- import Base.Renderable.Centered
+import Base.Renderable.Centered
 
 
 data Menu
@@ -111,7 +111,7 @@ treeToMenu app parent (Node label children i) f =
 
 mainMenuRenderable items =
     MenuBackground |:>
-    (vBox $ toLines items)
+    (centered $ vBox $ toLines items)
 
 toLines :: Menu -> [Prose]
 toLines (Menu title before selected after) = map p (
@@ -119,17 +119,6 @@ toLines (Menu title before selected after) = map p (
     map fst before ++
     ("-> " ++ fst selected ++ " <-") :
     map fst after)
-
--- -- | Perform a rendering action centered horizontally
--- -- (without anti-aliasing).
--- -- Restores the matrix after performing the rendering action.
--- centerHorizontally :: Ptr QPainter -> Size Double -> (Ptr QPainter -> IO ()) -> IO ()
--- centerHorizontally ptr size action = do
---     windowSize <- fmap fromIntegral <$> sizeQPainter ptr
---     let translation = Position (fromIntegral $ round ((width windowSize - width size) / 2)) 0
---     translate ptr translation
---     action ptr
---     translate ptr (negateAbelian translation)
 
 -- | modify the items before the selected to implement simple scrolling
 mkScrolling :: [(String, AppState)] -> [(String, AppState)]

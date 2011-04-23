@@ -127,9 +127,7 @@ mainMenu app =
         [])
   where
     this = applicationStates app
-    title = unlines (("NIKKI AND THE ROBOTS (" ++ showVersion nikkiVersion ++ ")") :
-                     "(Use arrow keys and Ctrl key to select menu item.)" :
-                     [])
+    title = "NIKKI AND THE ROBOTS (" ++ showVersion nikkiVersion ++ ")"
 
 -- | shows a text describing our plans with the story mode
 storyMode :: Application -> AppState
