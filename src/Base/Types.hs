@@ -21,7 +21,6 @@ import Data.ByteString (ByteString)
 import Data.Generics
 import Data.Generics.Uniplate.Data
 import Data.Accessor
-import Data.Foldable
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict

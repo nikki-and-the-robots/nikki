@@ -17,15 +17,12 @@
 module Sorts.Background (sorts) where
 
 
-import Safe
-
 import Data.Typeable
 import Data.Abelian
 import Data.List
 import Data.Maybe
 
 import Control.Applicative
-import Control.Monad
 
 import System.FilePath
 

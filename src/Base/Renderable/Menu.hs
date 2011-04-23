@@ -8,7 +8,6 @@ module Base.Renderable.Menu (
 
 import Data.SelectTree (SelectTree(..))
 import qualified Data.Indexable as I
-import Data.Abelian
 
 import Control.Arrow
 
@@ -17,14 +16,10 @@ import Graphics.Qt
 import Utils
 
 import Base.Types hiding (selected)
-import Base.Pixmap
-import Base.Constants
-import Base.Polling
-import Base.Font
 import Base.Prose
+import Base.Font ()
 
 import Base.Renderable.Common
-import Base.Renderable.GUILog
 import Base.Renderable.VBox
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered

@@ -12,7 +12,6 @@ module Editor.Pickle.Types where
 
 
 import Data.Indexable
-import qualified Data.IntMap
 import qualified Data.Vector
 
 import Control.Arrow

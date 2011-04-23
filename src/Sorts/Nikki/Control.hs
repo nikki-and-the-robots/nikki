@@ -5,7 +5,6 @@ module Sorts.Nikki.Control where
 import Prelude hiding (lookup)
 
 import Data.Abelian
-import Data.Maybe
 import Data.Directions
 import qualified Data.Strict as Strict
 

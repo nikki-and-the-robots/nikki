@@ -12,7 +12,6 @@ import Utils
 import Base.Types hiding (render)
 import Base.Prose
 import Base.Font
-import Base.Polling
 
 import Base.Renderable.Common
 

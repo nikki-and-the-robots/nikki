@@ -16,7 +16,6 @@ import qualified Data.Set as Set
 import Data.Foldable (foldr)
 import Data.Maybe
 import Data.Abelian
-import Data.Foldable (Foldable, fold)
 
 import Control.Monad
 import Control.Monad.State (StateT(..))

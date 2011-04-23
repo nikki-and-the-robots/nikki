@@ -5,8 +5,6 @@ module Game.Scene.OptimizeRenderPixmaps (optimize) where
 
 import Data.Abelian
 
-import Control.Monad
-
 import Graphics.Qt
 
 import Utils

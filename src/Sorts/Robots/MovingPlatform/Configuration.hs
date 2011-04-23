@@ -5,8 +5,6 @@ module Sorts.Robots.MovingPlatform.Configuration where
 
 import Physics.Chipmunk
 
-import Base
-
 import Sorts.Nikki as Nikki (nikkiMass)
 
 

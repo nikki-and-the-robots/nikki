@@ -9,7 +9,6 @@ import Control.Concurrent
 import Control.Arrow
 
 import System.IO.Unsafe
-import System.Info
 
 import Graphics.Qt
 

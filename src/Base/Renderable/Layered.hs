@@ -7,7 +7,7 @@ import Graphics.Qt
 import Utils
 
 import Base.Types
-import Base.Renderable.Common
+import Base.Renderable.Common ()
 
 
 data Layered =

@@ -39,7 +39,6 @@ import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation
 import Sorts.Nikki.State
 import Sorts.Nikki.Control
-import Sorts.Nikki.Dust
 
 
 sorts :: RM [Sort_]

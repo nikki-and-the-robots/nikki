@@ -23,8 +23,6 @@ import Base hiding (cursorStep, renderLine)
 
 import Object
 
-import Sorts.Tiles (tileShapeAttributes)
-
 import Sorts.Robots.Configuration
 import Sorts.Robots.Eyes
 

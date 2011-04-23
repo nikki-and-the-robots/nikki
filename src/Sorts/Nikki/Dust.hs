@@ -6,8 +6,6 @@ module Sorts.Nikki.Dust where
 
 import Data.Map (lookup)
 
-import Physics.Chipmunk
-
 import Graphics.Qt
 
 import Utils
