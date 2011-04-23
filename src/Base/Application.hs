@@ -1,5 +1,6 @@
 
 module Base.Application (
+    appState,
     ioAppState,
     staticConfigAppState,
     executeStates,
@@ -24,9 +25,12 @@ import Base.Monad
 import Base.Renderable.Common
 
 
+appState :: Renderable r => r -> M AppState -> AppState
+appState r = AppState (RenderableInstance r)
+
 -- | if you don't need the M monad, just IO
-ioAppState :: IO AppState -> AppState
-ioAppState = AppState (rt "ioAppState") . io
+ioAppState :: Renderable r => r -> IO AppState -> AppState
+ioAppState r action = AppState (RenderableInstance r) (io action)
 
 -- | if you want to only read the configuration
 staticConfigAppState :: RM AppState -> AppState

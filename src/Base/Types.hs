@@ -70,9 +70,6 @@ data AppState
     = AppState RenderableInstance (M AppState)
     | FinalState
 
-appState :: Renderable r => r -> M AppState -> AppState
-appState r = AppState (RenderableInstance r)
-
 
 data ApplicationPixmaps = ApplicationPixmaps {
     menuBackgrounds :: [Pixmap],

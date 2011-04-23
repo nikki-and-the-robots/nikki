@@ -14,7 +14,7 @@ import Editor.Menu
 
 
 editLevel :: Application -> PlayLevel -> EditorScene Sort_ -> AppState
-editLevel app play s = ioAppState $ do
+editLevel app play s = ioAppState (rt "editLevel") $ do
     sceneMVar <- newMVar s
     return $ editorLoop app play sceneMVar s
 

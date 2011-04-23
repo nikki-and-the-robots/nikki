@@ -119,9 +119,10 @@ editorMenu app play mvar scene =
 
 
 saveLevel :: Application -> AppState -> (FilePath -> AppState) -> EditorScene Sort_ -> AppState
-saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects_} = ioAppState $ do
-    writeObjectsToDisk path editorObjects_
-    return $ follower path
+saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects_} =
+    ioAppState (rt "saveLevel") $ do
+        writeObjectsToDisk path editorObjects_
+        return $ follower path
 saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects_} =
     askString app parent "level name" $ \ name -> staticConfigAppState $ do
         levelDirectory <- getFreeLevelsDirectory
@@ -141,7 +142,7 @@ fileExists app save path objects =
         ("yes", writeAnyway)
       ]
   where
-    writeAnyway = ioAppState $ do
+    writeAnyway = ioAppState (rt "writeAnyway") $ do
         writeObjectsToDisk path objects
         return $ getMainMenu app
 

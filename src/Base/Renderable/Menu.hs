@@ -16,6 +16,7 @@ import Graphics.Qt
 import Utils
 
 import Base.Types hiding (selected)
+import Base.Application
 import Base.Prose
 import Base.Font ()
 
