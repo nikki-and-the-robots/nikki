@@ -95,9 +95,11 @@ data ColorVariant = ColorVariant {
 
 -- * Base.Renderable
 
-class Renderable r where
-    -- Returns the minimal size and the rendering command.
-    render :: Application_ s -> Size Double -> r -> (Size Double, Ptr QPainter -> IO ())
+class Show r => Renderable r where
+
+    minimalSize :: Application_ s -> r -> Size Double
+
+    render :: Ptr QPainter -> Application_ s -> Size Double -> r -> IO ()
     render = error "render default"
 
 data RenderableInstance =

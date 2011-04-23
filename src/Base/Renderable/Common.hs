@@ -17,7 +17,7 @@ import Base.Polling
 
 
 backgroundColor :: Color = QtColor 16 0 156 255
-standardFontColor :: Color = QtColor 115 115 255 255
+standardFontColor :: Color = QtColor 70 210 245 255
 
 menuDir :: FilePath
 menuDir = pngDir </> "menu"
@@ -37,12 +37,18 @@ waitForPressAppEvent app = do
 
 -- * Renderable
 
+instance Show RenderableInstance where
+    show (RenderableInstance x) = "(" ++ show x ++ ")"
+
+instance Renderable RenderableInstance where
+    minimalSize app (RenderableInstance r) = minimalSize app r
+    render ptr app size (RenderableInstance r) = render ptr app size r
+
+
 rt :: String -> RenderableInstance
 rt = RenderableInstance
 
 -- NYI instance
 instance Renderable String where
-    render _ _ msg = (Size 10 10, const $ putStrLn ("NYI: renderable " ++ msg))
-
-instance Renderable RenderableInstance where
-    render app size (RenderableInstance r) = render app size r
+    minimalSize _ = const $ Size 10 10
+    render _ _ _ msg = putStrLn ("NYI: renderable " ++ msg)

@@ -41,9 +41,8 @@ executeStates app (AppState renderable cmd) = do
     renderCallback :: Ptr QPainter -> IO ()
     renderCallback ptr = do
         size <- fmap fromIntegral <$> sizeQPainter ptr
-        let (_, cmd) = render app size renderable
         resetMatrix ptr
-        cmd ptr
+        render ptr app size renderable
 executeStates _ FinalState = return ()
 
 

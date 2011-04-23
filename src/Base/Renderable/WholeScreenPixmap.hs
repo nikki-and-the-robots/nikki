@@ -40,9 +40,11 @@ renderWholeScreenPixmap ptr size pixmaps = do
 
 data WholeScreenPixmap
     = MenuBackground
+  deriving Show
 
 instance Renderable WholeScreenPixmap where
-    render app size typ = tuple zero $ \ ptr -> do
+    minimalSize _ = const zero
+    render ptr app size typ = do
         renderWholeScreenPixmap ptr size (typPixmaps app typ)
 
 typPixmaps :: Application_ s -> WholeScreenPixmap -> [Pixmap]

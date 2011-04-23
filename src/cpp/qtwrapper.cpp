@@ -80,11 +80,14 @@ extern "C" void setApplicationName(QApplication* app, char* name) {
 // * QPainter
 
 extern "C" const QTransform* getMatrix(QPainter* painter) {
-    return &(painter->worldTransform());
+    QTransform* matrix = new QTransform(painter->worldTransform());
+    return matrix;
 };
 
 extern "C" void setMatrix(QPainter* painter, QTransform* matrix) {
     painter->setWorldTransform(*matrix);
+    delete matrix;
+    qDebug() << "NYI: free matrix with ForeignPtr?";
 };
 
 extern "C" void eraseRect(QPainter* painter, int x, int y, int w, int h, int r, int g, int b, int alpha) {

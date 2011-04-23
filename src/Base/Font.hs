@@ -250,7 +250,10 @@ renderLine font wordWrapWidth color text =
     textPixmaps variant = selectLetterPixmaps variant wordWrapWidth text
 
 instance Renderable Prose where
-    render app size prose = swapTuple $
+    minimalSize app prose = snd $
+        renderLine (alphaNumericFont $ applicationPixmaps app) Nothing standardFontColor
+            prose
+    render ptr app size prose = ($ ptr) $ fst $
         renderLine (alphaNumericFont $ applicationPixmaps app) Nothing standardFontColor
             prose
 

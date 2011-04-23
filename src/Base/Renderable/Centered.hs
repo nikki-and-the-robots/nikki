@@ -14,12 +14,13 @@ centered :: Renderable r => r -> RenderableInstance
 centered = RenderableInstance . Centered . RenderableInstance
 
 data Centered = Centered RenderableInstance
+  deriving Show
 
 instance Renderable Centered where
-    render app parentSize (Centered child) = (size, action)
+    minimalSize app (Centered x) = minimalSize app x
+    render ptr app parentSize (Centered child) =
+        translate ptr offset >>
+        render ptr app childSize child
       where
-        (size, childAction) = render app parentSize child
-        offset = sizeToPosition $ fmap (fromIntegral . round . (/ 2)) (parentSize -~ size)
-        action ptr =
-            translate ptr offset >>
-            childAction ptr
+        childSize = minimalSize app child
+        offset = sizeToPosition $ fmap (fromIntegral . round . (/ 2)) (parentSize -~ childSize)

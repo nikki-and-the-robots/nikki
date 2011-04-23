@@ -111,7 +111,7 @@ treeToMenu app parent (Node label children i) f =
 
 mainMenuRenderable items =
     MenuBackground |:>
-    (centered $ vBox $ toLines items)
+    (centered $ vBox $ fmap centered $ toLines items)
 
 toLines :: Menu -> [Prose]
 toLines (Menu title before selected after) = map p (

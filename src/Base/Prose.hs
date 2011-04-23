@@ -25,7 +25,7 @@ import Utils
 -- | Type for human readable text.
 -- (utf8 encoded)
 newtype Prose = Prose BS.ByteString
-  deriving Monoid
+  deriving (Show, Monoid)
 
 -- | returns the inner bytestring
 getByteString :: Prose -> BS.ByteString
