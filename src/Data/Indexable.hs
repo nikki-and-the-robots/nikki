@@ -43,7 +43,7 @@ import Data.Foldable (Foldable(..), foldMap, toList)
 import Data.Initial
 import Data.Traversable (Traversable, traverse)
 import Data.Vector as Vector
-import Data.Generics
+import Data.Generics (Typeable, Data)
 
 import Control.Arrow
 

@@ -43,11 +43,12 @@ qtRendering :: Ptr QApplication
     -> WindowSize
     -> ([QtEvent] -> Ptr QPainter -> IO ())
     -> (IO () -> IO ())
+    -> [Key]
     -> IO ExitCode
-qtRendering app window title windowSize renderCmd catcher = do
+qtRendering app window title windowSize renderCmd catcher initialSignals = do
     setWindowTitle window title
     setWindowSize window windowSize
-    keyPoller <- newKeyPoller window
+    keyPoller <- newKeyPoller window initialSignals
 
     let loop qPainter = catcher $ do
             events <- pollEvents keyPoller
@@ -127,11 +128,11 @@ clearScreen ptr color = do
 
 newtype KeyPoller = KeyPoller (TChan QtEvent)
 
-newKeyPoller :: Ptr GLContext -> IO KeyPoller
-newKeyPoller widget = do
+newKeyPoller :: Ptr GLContext -> [Key] -> IO KeyPoller
+newKeyPoller widget signals = do
     chan <- newTChanIO
     setKeyCallbackGLContext widget (atomically . writeTChan chan)
---     sendDebugInitials chan
+    sendInitialSignals chan signals
     return $ KeyPoller chan
 
 pollEvents :: KeyPoller -> IO [QtEvent]
@@ -149,9 +150,9 @@ pollEvents kp@(KeyPoller chan) = atomically inner
 waitForEvent :: KeyPoller -> IO QtEvent
 waitForEvent (KeyPoller c) = atomically $ readTChan c
 
-
-sendDebugInitials :: TChan QtEvent -> IO ()
-sendDebugInitials c = ignore $ forkOS $ atomically $ do
+-- | This is for development
+sendInitialSignals :: TChan QtEvent -> [Key] -> IO ()
+sendInitialSignals c signals = ignore $ forkOS $ atomically $ do
     mapM_ worker signals
   where
     worker k = do
@@ -161,11 +162,3 @@ sendDebugInitials c = ignore $ forkOS $ atomically $ do
     text K5 = "5"
     text Dot = "."
     text x = return $ head (show x)
-
-    signals =
-        play 1 ++
-        []
-    edit n = DownArrow : DownArrow : DownArrow : Ctrl :
-             replicate n DownArrow ++ Ctrl : []
-    play n =    DownArrow : Ctrl :
-                replicate (n - 1) DownArrow ++ Ctrl : []

@@ -50,8 +50,8 @@ import Top.Editor (editLevel)
 import Top.Game (playLevel)
 
 
-main :: IO ()
-main =
+main :: [Key] -> IO ()
+main initialSignals =
   withStaticConfiguration $ do
     logInfo ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
 
@@ -62,7 +62,7 @@ main =
     let Windowed windowSize = programWindowSize
     window <- io $ newGLContext 0 (width windowSize) (height windowSize)
     loadApplicationIcon window
-    keyPoller <- io $ newKeyPoller window
+    keyPoller <- io $ newKeyPoller window initialSignals
 
     -- showing main window
     let windowMode = if fullscreen configuration then FullScreen else programWindowSize
