@@ -62,6 +62,8 @@ data Battery
 instance Sort BSort Battery where
     sortId _ = SortId "battery"
 
+    freeSort = freePixmap . batteryPixmap
+
     size (BSort p) = pixmapSize p
 
     renderIconified sort ptr =

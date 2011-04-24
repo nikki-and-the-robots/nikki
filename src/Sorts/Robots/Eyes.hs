@@ -5,6 +5,7 @@
 module Sorts.Robots.Eyes (
     RobotEyesPixmaps,
     loadRobotEyesPixmaps,
+    freeRobotEyesPixmaps,
     RobotEyesState(..),
     renderRobotEyes,
   ) where
@@ -66,6 +67,8 @@ loadRobotEyesPixmaps = do
             loadPixmap (Position 1 1) path
     underscore a b = a ++ "_" ++ b
 
+freeRobotEyesPixmaps :: RobotEyesPixmaps -> IO ()
+freeRobotEyesPixmaps = fmapM_ (fmapM_ freePixmap)
 
 -- * rendering
 

@@ -145,6 +145,11 @@ data Pixmaps = Pixmaps {
   }
     deriving Show
 
+freeTerminalPixmaps (Pixmaps a bs cs) =
+    freePixmap a >>
+    fmapM_ freePixmap bs >>
+    fmapM_ freePixmap cs
+
 data OsdPixmaps = OsdPixmaps {
     osdBackground :: Pixmap,
     osdCenters :: ColorLights Pixmap,
@@ -153,6 +158,13 @@ data OsdPixmaps = OsdPixmaps {
     osdExitFrame :: Pixmap
   }
     deriving (Show, Typeable)
+
+freeOsdPixmaps (OsdPixmaps a bs cs d e) = do
+    freePixmap a
+    fmapM_ freePixmap bs
+    fmapM_ freePixmap cs
+    freePixmap d
+    freePixmap e
 
 
 data TSort = TSort {
@@ -256,6 +268,9 @@ data ExitMode
 
 instance Sort TSort Terminal where
     sortId = const $ SortId "terminal"
+    freeSort (TSort terminalPixmaps osdPixmaps) =
+        freeTerminalPixmaps terminalPixmaps >>
+        freeOsdPixmaps osdPixmaps
     size = const $ Size (fromUber 48) (fromUber 48)
     renderIconified sort ptr =
         renderPixmapSimple ptr $ background $ pixmaps sort

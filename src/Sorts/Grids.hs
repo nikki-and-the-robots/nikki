@@ -47,6 +47,7 @@ data Grid = Grid {
 
 instance Sort GSort Grid where
     sortId s = SortId ("grid/" ++ name s)
+    freeSort = freePixmap . gridPixmap
     size s = pixmapSize $ gridPixmap s
 
     -- if rendered without scaling, the grid will be multiplied

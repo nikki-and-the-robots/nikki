@@ -59,6 +59,9 @@ data Platform
 
 instance Sort PSort Platform where
     sortId _ = SortId "robots/platform/standard"
+    freeSort (PSort a eyes) =
+        freePixmap a >>
+        freeRobotEyesPixmaps eyes
                              -- one bigger than actual (to prevent getting stuck on edges)
     size _ = fmap fromUber $ Size 48 22
 

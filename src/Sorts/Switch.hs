@@ -72,6 +72,8 @@ editorPadding = Vector (fromUber 1) (- fromUber 1)
 
 instance Sort SwitchSort Switch where
     sortId _ = SortId "switch/levelExit"
+    freeSort (SwitchSort a b c) =
+        fmapM_ freePixmap (a : b : c : [])
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
                 +~ fmap ((* 2) . abs) (vector2size editorPadding)
 

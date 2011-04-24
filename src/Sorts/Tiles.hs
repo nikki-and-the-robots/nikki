@@ -151,6 +151,8 @@ data Tile
 instance Sort TSort Tile where
     sortId TSort{name} = SortId name
 
+    freeSort = fmapM_ freePixmap . tilePixmaps
+
     size (TSort _ pixmaps) = pixmapSize $ head pixmaps
 
     renderIconified sort ptr =
@@ -191,6 +193,7 @@ mkAllTiles tiles = EditorObject (Sort_ (AllTilesSort (fmap (fmap unwrapTSort) ti
 
 instance Sort AllTilesSort AllTiles where
     sortId _ = SortId "allTiles"
+    freeSort = error "freeSort: not in use for AllTiles"
     size = error "size: not in use for AllTiles"
     renderIconified = error "renderIconified: not in use for AllTiles"
     initialize (AllTilesSort editorObjects) (Just space) (EditorPosition 0 0) Nothing = do
