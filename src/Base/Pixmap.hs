@@ -28,7 +28,7 @@ data Pixmap = Pixmap {
     pixmapOffset_ :: Position Double,
     pixmapImageSize :: Size Double
   }
-    deriving (Show, Typeable, Data)
+    deriving (Show, Eq, Typeable, Data)
 
 pixmapOffset :: Accessor Pixmap (Position Double)
 pixmapOffset = accessor pixmapOffset_ (\ a r -> r{pixmapOffset_ = a})

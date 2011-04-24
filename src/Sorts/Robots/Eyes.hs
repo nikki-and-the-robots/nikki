@@ -12,8 +12,10 @@ module Sorts.Robots.Eyes (
 
 
 import Data.Generics
+import Data.Generics.Uniplate.Data
 import Data.Map
 import Data.Abelian
+import Data.List
 
 import Text.Printf
 
@@ -68,7 +70,11 @@ loadRobotEyesPixmaps = do
     underscore a b = a ++ "_" ++ b
 
 freeRobotEyesPixmaps :: RobotEyesPixmaps -> IO ()
-freeRobotEyesPixmaps = fmapM_ (fmapM_ freePixmap)
+freeRobotEyesPixmaps eyes = fmapM_ freePixmap allPixmaps
+  where
+    -- some pixmaps are used more than once in the data structure!!!
+    allPixmaps :: [Pixmap]
+    allPixmaps = nub $ universeBi eyes
 
 -- * rendering
 
