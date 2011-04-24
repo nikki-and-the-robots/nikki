@@ -1,12 +1,82 @@
 {-# LANGUAGE ForeignFunctionInterface,  EmptyDataDecls, NamedFieldPuns, DeriveDataTypeable, FlexibleInstances #-}
 
-module Graphics.Qt.CPPWrapper where
+module Graphics.Qt.CPPWrapper (
+
+    -- * globale
+    qtVersion,
+
+    -- * QApplication
+    QApplication,
+    withQApplication,
+    execQApplication,
+    quitQApplication,
+
+    -- * GLContext
+    GLContext,
+    withGLContext,
+    setWindowTitle,
+    setWindowIcon,
+    setFullscreenGLContext,
+    showGLContext,
+    resizeGLContext,
+    updateGLContext,
+    setDrawingCallbackGLContext,
+    setKeyCallbackGLContext,
+    setArrowAutoRepeat,
+    setRenderingLooped,
+
+    -- * QPainter
+    QPainter,
+    sizeQPainter,
+
+    resetMatrix,
+    translate,
+    rotate,
+    scale,
+    setPenColor,
+
+    eraseRect,
+    drawCircle,
+    drawLine,
+    drawText,
+    drawPixmap,
+    drawRect,
+
+    -- * QTransform
+    QTransform,
+    withMatrix,
+    setMatrix,
+
+    withQIcon,
+    addFileQIcon,
+
+    -- * QPixmap
+    QPixmap,
+    newQPixmap,
+    destroyQPixmap,
+    sizeQPixmap,
+    toImageQPixmap,
+    copyQPixmap,
+
+    -- * QImage
+    destroyQImage,
+    sizeQImage,
+    pixelQImage,
+    setPixelQImage,
+    fromImageQPixmap,
+
+    -- * QRgb
+    QRgb,
+    colorToQRgb,
+
+  ) where
 
 
 import Data.Generics
 import Data.Abelian
 
 import Control.Monad
+import Control.Monad.CatchIO
 
 import Foreign (Ptr, FunPtr, nullPtr)
 import Foreign.C.String
@@ -47,6 +117,9 @@ newQApplication = do
 
 foreign import ccall destroyQApplication :: Ptr QApplication -> IO ()
 
+withQApplication :: MonadCatchIO m => (Ptr QApplication -> m a) -> m a
+withQApplication = bracket (io newQApplication) (io . destroyQApplication)
+
 foreign import ccall execQApplication :: Ptr QApplication -> IO QtInt
 
 foreign import ccall quitQApplication :: IO ()
@@ -70,6 +143,12 @@ foreign import ccall "setApplicationName" cppSetApplicationName :: Ptr QApplicat
 data GLContext
 
 foreign import ccall newGLContext :: Int -> Int -> Int -> IO (Ptr GLContext)
+
+foreign import ccall destroyGLContext :: Ptr GLContext -> IO ()
+
+withGLContext :: MonadCatchIO m => Int -> Int -> Int -> (Ptr GLContext -> m a) -> m a
+withGLContext swapInterval width height =
+    bracket (io $ newGLContext swapInterval width height) (io . destroyGLContext)
 
 foreign import ccall setWindowIcon :: Ptr GLContext -> Ptr QIcon -> IO ()
 
@@ -346,6 +425,11 @@ foreign import ccall c_qRgba :: QtInt -> QtInt -> QtInt -> QtInt -> IO QRgb
 data QIcon
 
 foreign import ccall newQIcon :: IO (Ptr QIcon)
+
+foreign import ccall destroyQIcon :: Ptr QIcon -> IO ()
+
+withQIcon :: MonadCatchIO m => (Ptr QIcon -> m a) -> m a
+withQIcon = bracket (io newQIcon) (io . destroyQIcon)
 
 addFileQIcon :: Ptr QIcon -> FilePath -> IO ()
 addFileQIcon ptr s = withCString s (cppAddFileQIcon ptr)

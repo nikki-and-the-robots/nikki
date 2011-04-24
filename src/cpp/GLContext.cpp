@@ -80,6 +80,10 @@ extern "C" GLContext* newGLContext(int swapInterval, int width, int height) {
     return result;
 };
 
+extern "C" void destroyGLContext(GLContext* ptr) {
+    delete ptr;
+};
+
 extern "C" void setWindowIcon(GLContext* self, QIcon* icon) {
     self->mainWindow->setWindowIcon(*icon);
 };

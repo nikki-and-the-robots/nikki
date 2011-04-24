@@ -25,7 +25,7 @@ import Data.Accessor.Monad.MTL.State ((%=))
 import Text.Logging
 
 import Control.Concurrent
-import Control.Exception
+import Control.Monad.CatchIO
 
 import System.FilePath
 import System.Exit
@@ -58,50 +58,50 @@ main initialSignals =
     configuration <- ask
 
     -- qt initialisation
-    qApp <- io newQApplication
-    let Windowed windowSize = programWindowSize
-    window <- io $ newGLContext 0 (width windowSize) (height windowSize)
-    loadApplicationIcon window
-    keyPoller <- io $ newKeyPoller window initialSignals
+    withQApplication $ \ qApp -> do
+        let Windowed windowSize = programWindowSize
+        withGLContext 0 (width windowSize) (height windowSize) $ \ window -> do
+            withNikkiIcon window $ do
+                keyPoller <- io $ newKeyPoller window initialSignals
 
-    -- showing main window
-    let windowMode = if fullscreen configuration then FullScreen else programWindowSize
-    io $ setWindowTitle window "Nikki and the Robots"
-    io $ setWindowSize window windowMode
-    io $ showGLContext window
+                -- showing main window
+                let windowMode = if fullscreen configuration then FullScreen else programWindowSize
+                io $ setWindowTitle window "Nikki and the Robots"
+                io $ setWindowSize window windowMode
+                io $ showGLContext window
 
-    -- sort loading (pixmaps and sounds)
-    withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
+                -- sort loading (pixmaps and sounds)
+                withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
 
-        -- start state logick
-        let app :: Application
-            app = Application qApp window keyPoller mainMenu appPixmaps sorts
-            -- there are two main threads:
-            -- this is the logick [sick!] thread
-            -- dynamic changes of the configuration take place in this thread!
-            logicThread = do
-                guiLog app (p "loading...")
-                withDynamicConfiguration configuration $
-                    executeStates app (applicationStates app)
-        exitCodeMVar <- forkLogicThread $ do
-            logicThread `finally` quitQApplication
+                    -- start state logick
+                    let app :: Application
+                        app = Application qApp window keyPoller mainMenu appPixmaps sorts
+                        -- there are two main threads:
+                        -- this is the logick [sick!] thread
+                        -- dynamic changes of the configuration take place in this thread!
+                        logicThread = do
+                            guiLog app (p "loading...")
+                            withDynamicConfiguration configuration $
+                                executeStates app (applicationStates app)
+                    exitCodeMVar <- forkLogicThread $ do
+                        logicThread `finally` quitQApplication
 
-        -- this is the rendering thread (will be quit by the logick thread)
-        exitCodeFromQApplication <- execQApplication qApp
+                    -- this is the rendering thread (will be quit by the logick thread)
+                    exitCodeFromQApplication <- execQApplication qApp
 
-        exitCodeFromLogicThread <- takeMVar exitCodeMVar
+                    exitCodeFromLogicThread <- takeMVar exitCodeMVar
 
-        case exitCodeFromLogicThread of
-            ExitFailure x -> exitWith $ ExitFailure x
-            ExitSuccess -> case exitCodeFromQApplication of
-                0 -> return ()
-                x -> exitWith $ ExitFailure x
+                    case exitCodeFromLogicThread of
+                        ExitFailure x -> exitWith $ ExitFailure x
+                        ExitSuccess -> case exitCodeFromQApplication of
+                            0 -> return ()
+                            x -> exitWith $ ExitFailure x
 
-loadApplicationIcon :: Ptr GLContext -> RM ()
-loadApplicationIcon qWidget = do
+withNikkiIcon :: Ptr GLContext -> RM a -> RM a
+withNikkiIcon qWidget action = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
         getDataFiles pngDir (Just ".png")
-    io $ setApplicationIcon qWidget iconPaths
+    withApplicationIcon qWidget iconPaths action
 
 
 -- * states

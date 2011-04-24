@@ -14,9 +14,9 @@ module Graphics.Qt (
 
 import Data.Abelian
 
+import Control.Monad.CatchIO
 import Control.Concurrent
 import Control.Concurrent.STM
-import Control.Exception
 
 import Graphics.Qt.Types
 import Graphics.Qt.CPPWrapper
@@ -31,11 +31,6 @@ import Utils
 
 
 -- * entry points
-
-withQApplication :: (Ptr QApplication -> IO a) -> IO a
-withQApplication cmd = do
-    app <- newQApplication
-    cmd app `finally` destroyQApplication app
 
 qtRendering :: Ptr QApplication
     -> Ptr GLContext
@@ -64,11 +59,12 @@ qtRendering app window title windowSize renderCmd catcher initialSignals = do
         c -> ExitFailure c
 
 -- | sets a list of files that can be used as application icons (for the window manager)
-setApplicationIcon :: Ptr GLContext -> [FilePath] -> IO ()
-setApplicationIcon window iconPaths = do
-    qIcon <- newQIcon
-    mapM_ (addFileQIcon qIcon) iconPaths
-    setWindowIcon window qIcon
+withApplicationIcon :: MonadCatchIO m => Ptr GLContext -> [FilePath] -> m a -> m a
+withApplicationIcon window iconPaths action =
+    withQIcon $ \ qIcon -> do
+        io $ mapM_ (addFileQIcon qIcon) iconPaths
+        io $ setWindowIcon window qIcon
+        action
 
 
 data WindowSize = Windowed (Size QtInt) | FullScreen

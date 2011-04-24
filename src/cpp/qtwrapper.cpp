@@ -247,6 +247,10 @@ extern "C" QIcon* newQIcon() {
     return new QIcon();
 };
 
+extern "C" void destroyQIcon(QIcon* ptr) {
+    delete ptr;
+};
+
 extern "C" void addFileQIcon(QIcon* ptr, char* path) {
     ptr->addFile(QString::fromUtf8(path));
 };
