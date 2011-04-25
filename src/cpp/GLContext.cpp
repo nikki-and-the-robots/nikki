@@ -7,6 +7,10 @@ void emptyDrawingCallback(QPainter* ptr) {
 };
 
 GLContext::GLContext(const QGLFormat& format) : QGLWidget(format) {
+    if (!(this->isValid())) {
+        error("GL context not valid");
+    };
+
     mainWindow = new MainWindow();
     ((MainWindow*) mainWindow)->setChild(this);
 

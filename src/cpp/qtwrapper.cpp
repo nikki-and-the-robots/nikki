@@ -186,8 +186,7 @@ extern "C" QPixmap* newQPixmap(char* file) {
 };
 
 extern "C" void destroyQPixmap(QPixmap* ptr) {
-    // why return? (cause Ptr QPixmap -> IO ()?)
-    return delete ptr;
+    delete ptr;
 };
 
 extern "C" QPixmap* copyQPixmap(QPixmap* self) {
