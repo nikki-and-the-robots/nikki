@@ -62,7 +62,7 @@ main initialSignals =
         let Windowed windowSize = programWindowSize
         withGLContext 0 (width windowSize) (height windowSize) $ \ window -> do
             withNikkiIcon window $ do
-                keyPoller <- io $ newKeyPoller window initialSignals
+                keyPoller <- io $ newKeyPoller window (initial_events configuration ++ initialSignals)
 
                 -- showing main window
                 let windowMode = if fullscreen configuration then FullScreen else programWindowSize

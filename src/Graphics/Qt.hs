@@ -148,12 +148,15 @@ waitForEvent (KeyPoller c) = atomically $ readTChan c
 
 -- | This is for development
 sendInitialSignals :: TChan QtEvent -> [Key] -> IO ()
-sendInitialSignals c signals = ignore $ forkOS $ atomically $ do
+sendInitialSignals c signals = ignore $ forkOS $ do
+    threadDelay (5 * 10 ^ 6)
     mapM_ worker signals
   where
     worker k = do
-        writeTChan c (KeyPress k (text k))
-        writeTChan c (KeyRelease k (text k))
+        threadDelay $ round (0.8 * 10 ^ 6)
+        atomically $ do
+            writeTChan c (KeyPress k (text k))
+            writeTChan c (KeyRelease k (text k))
     text K0 = "0"
     text K5 = "5"
     text Dot = "."

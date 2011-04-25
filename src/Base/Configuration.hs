@@ -16,6 +16,8 @@ import System.Environment
 import System.Console.CmdArgs
 import System.Info
 
+import Graphics.Qt
+
 import Version
 
 import Utils
@@ -39,7 +41,8 @@ data Configuration = Configuration {
     omit_pixmap_rendering :: Bool,
     render_xy_cross :: Bool,
     render_chipmunk_objects :: Bool,
-    abort_level :: Maybe Double
+    abort_level :: Maybe Double,
+    initial_events :: [Key]
   }
     deriving (Show, Data, Typeable)
 
@@ -107,7 +110,10 @@ options =
             &= help "render red lines for physical objects",
         abort_level = Nothing
             &= help "abort levels after simulating N seconds"
-            &= typ "N"
+            &= typ "N",
+        initial_events = []
+            &= help "list of initial events sent to the application"
+            &= typ "[Key]"
       }
     &= program "nikki"
     &= summary ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")

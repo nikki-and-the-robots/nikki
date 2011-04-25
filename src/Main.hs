@@ -16,7 +16,7 @@ initialSignals =
   where
     edit n = DownArrow : DownArrow : DownArrow : Ctrl :
              replicate n DownArrow ++ Ctrl : []
-    play n = DownArrow : Ctrl :
+    play n = DownArrow : Ctrl : Ctrl :
              replicate (n - 1) DownArrow ++ Ctrl : []
 
 

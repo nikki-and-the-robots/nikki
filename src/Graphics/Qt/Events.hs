@@ -1,3 +1,4 @@
+{-# language DeriveDataTypeable #-}
 
 module Graphics.Qt.Events (
     QtEvent(..),
@@ -8,10 +9,13 @@ module Graphics.Qt.Events (
 
 
 import Data.Map
+import Data.Data
 
 import Graphics.Qt.Types
 
 import System.Info
+
+import Utils
 
 
 data QtEvent
@@ -117,9 +121,10 @@ data Key
     | F11
     | F12
 
-    | UnknownKey QtInt
+    | CloseWindowKey
+    | UnknownKey
 
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Enum, Bounded, Show, Read, Typeable, Data)
 
 
 -- | modifies the contents of a text field
@@ -133,7 +138,9 @@ modifyTextField _ t l = l ++ t
 translateQtKey :: QtInt -> Key
 translateQtKey keyInt | keyInt `member` keyMap =
     keyMap ! keyInt
-translateQtKey x = UnknownKey x -- error ("translateQtKey: " ++ show x)
+translateQtKey x =
+    trace ("warning: unknown key: " ++ show x)
+    UnknownKey -- error ("translateQtKey: " ++ show x)
 
 keyMap :: Map QtInt Key
 keyMap = fromList keyMapping

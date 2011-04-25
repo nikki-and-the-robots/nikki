@@ -70,6 +70,7 @@ updateKeyState Base.Types.CloseWindow = id
 
 toAppEvent :: Set Button -> Either QtEvent JJ_Event -> AppEvent
 -- keyboard
+toAppEvent _ (Left (KeyPress CloseWindowKey _)) = Base.Types.CloseWindow
 toAppEvent _ (Left (KeyPress key string)) = Press $ KeyboardButton key string
 toAppEvent _ (Left (KeyRelease key string)) = Release $ KeyboardButton key string
 
