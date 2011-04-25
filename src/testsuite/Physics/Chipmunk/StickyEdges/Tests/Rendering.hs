@@ -39,8 +39,8 @@ scaleVector (Size width height) = (+~ Vector rectLimit rectLimit) >>> (flip scal
 drawOffender :: TestPolygons -> IO ()
 drawOffender (fromTestPolygons -> offender) = do
     print $ map vertices offender
-    withQApplication $ \ qApp -> do
-        window <- newGLContext 0 1000 500
+    withQApplication $ \ qApp ->
+      withGLContext 0 1000 500 $ \ window -> do
         keyPoller <- newKeyPoller window []
         randoms <- generateRandoms
         setDrawingCallbackGLContext window $ Just (render (cycle randoms))

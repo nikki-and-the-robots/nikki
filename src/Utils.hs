@@ -586,6 +586,10 @@ fixpoint f x = if fx == x then x else fixpoint f fx
 superApply :: Int -> (a -> a) -> a -> a
 superApply n f = foldr (.) id $ replicate n f
 
+-- | returns all possible values, sorted.
+allValues :: (Enum a, Bounded a) => [a]
+allValues = [minBound .. maxBound]
+
 
 -- * Pretty Printing
 
