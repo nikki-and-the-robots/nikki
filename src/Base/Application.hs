@@ -36,8 +36,10 @@ executeStates app (AppState renderable cmd) = do
         size <- io $ fmap fromIntegral <$> sizeQPainter ptr
         io $ resetMatrix ptr
         snd =<< render ptr app config size renderable
-executeStates app (NoGUIState cmd) =
+executeStates app (NoGUIAppState cmd) =
     cmd >>= executeStates app
-executeStates _ FinalState = return ()
+executeStates app (GameAppState cmd) =
+    cmd >>= executeStates app
+executeStates _ FinalAppState = return ()
 
 

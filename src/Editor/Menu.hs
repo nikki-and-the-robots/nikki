@@ -42,7 +42,7 @@ updateSceneMVar app mvar = do
 
 editorLoop :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
-editorLoop app play mvar scene = AppState (rt "editorLoop") $ do
+editorLoop app play mvar scene = GameAppState $ do
     io $ setDrawingCallbackGLContext (window app) (Just $ render mvar)
     evalStateT worker scene
   where
@@ -120,18 +120,18 @@ editorMenu app play mvar scene =
 
 saveLevel :: Application -> AppState -> (FilePath -> AppState) -> EditorScene Sort_ -> AppState
 saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects_} =
-    appState (rt "saveLevel") $ io $ do
+    appState (busyMessage $ p "saving level...") $ io $ do
         writeObjectsToDisk path editorObjects_
         return $ follower path
 saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects_} =
-    askString app parent "level name" $ \ name -> AppState (rt "saveLevel") $ rm2m $ do
+    askString app parent "level name" $ \ name -> NoGUIAppState $ rm2m $ do
         levelDirectory <- getFreeLevelsDirectory
         let path = levelDirectory </> name <..> "nl"
         exists <- io $ doesFileExist path
         if exists then
             return $ fileExists app this path editorObjects_
-          else do
-            io $ writeObjectsToDisk path editorObjects_
+          else return $ appState (busyMessage $ p "saving level...") $ io $ do
+            writeObjectsToDisk path editorObjects_
             return $ follower path
   where
     this = saveLevel app parent follower scene
@@ -142,7 +142,7 @@ fileExists app save path objects =
         ("yes", writeAnyway)
       ]
   where
-    writeAnyway = appState (rt "writeAnyway") $ io $ do
+    writeAnyway = appState (busyMessage $ p "saving level...") $ io $ do
         writeObjectsToDisk path objects
         return $ getMainMenu app
 
@@ -202,11 +202,12 @@ editLayers app play mvar scene =
     editMenu = editorMenu app play mvar scene
     this = editLayers app play mvar scene
 
-changeLayerDistance :: Application -> AppState -> EditorScene Sort_ -> (EditorScene Sort_ -> AppState) -> AppState
+changeLayerDistance :: Application -> AppState -> EditorScene Sort_
+    -> (EditorScene Sort_ -> AppState) -> AppState
 changeLayerDistance app parent scene follower =
     askStringRead app parent "x distance" $ \ x ->
-    askStringRead app parent "y distance" $ \ y -> AppState (rt "changeLayerDistance") $
-        return $ follower
+    askStringRead app parent "y distance" $ \ y ->
+        follower
             (editorObjects .> layerA (selectedLayer scene) ^:
                 (setYDistance y . setXDistance x) $ scene)
 
@@ -222,7 +223,7 @@ showEditorHelp app parent scene = case editorMode scene of
         in scrollingAppState app helpText parent
   where
     showHelpFile :: AppState
-    showHelpFile = appState (rt "showHelpFile (editor)") $ do
+    showHelpFile = appState (busyMessage (p "showHelpFile (editor)")) $ do
         file <- rm2m $ getDataFileName "manual/editor.txt"
         text <- io $ pFile file
         return $ scrollingAppState app text parent

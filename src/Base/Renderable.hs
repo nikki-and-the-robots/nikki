@@ -6,6 +6,7 @@ module Base.Renderable (
     module Base.Renderable.WholeScreenPixmap,
     module Base.Renderable.Scrollable,
     module Base.Renderable.AskString,
+    module Base.Renderable.BusyMessage,
   ) where
 
 
@@ -15,3 +16,4 @@ import Base.Renderable.GUILog
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Scrollable
 import Base.Renderable.AskString
+import Base.Renderable.BusyMessage

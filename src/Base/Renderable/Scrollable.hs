@@ -29,7 +29,7 @@ import Base.Renderable.CenterHorizontally
 
 
 scrollingAppState :: Application_ s -> [Prose] -> AppState -> AppState
-scrollingAppState app text follower = appState (rt "scrollingAppState") $ io $ do
+scrollingAppState app text follower = NoGUIAppState $ io $ do
     (renderable, sendCommand) <- scrollable app text
     return $ AppState renderable $ loop sendCommand
   where

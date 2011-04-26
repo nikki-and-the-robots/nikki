@@ -27,7 +27,7 @@ import Top.Initialisation
 
 
 playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
-playLevel app parent editorScene = AppState (rt "playLevel") $ withSpace gravity $ \ space -> do
+playLevel app parent editorScene = GameAppState $ withSpace gravity $ \ space -> do
     scene :: Scene Object_ <- io $ initScene space (editorScene ^. editorObjects)
     let (NikkiMode nikkiIndex) = scene ^. mode
     sceneMVar <- io newEmptyMVar

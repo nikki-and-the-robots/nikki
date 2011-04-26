@@ -107,7 +107,7 @@ withNikkiIcon qWidget action = do
 
 -- | top level application state
 applicationStates :: Application -> AppState
-applicationStates app = AppState (rt "applicationStates") $ do
+applicationStates app = NoGUIAppState $ do
     mLevel <- gets play_level
     play_levelA %= Nothing
     case mLevel of
@@ -122,7 +122,7 @@ mainMenu app =
         ("help", mainMenuHelp app this) :
         ("options", generalOptions app this) :
         ("update", autoUpdate app this) :
-        ("quit", FinalState) :
+        ("quit", FinalAppState) :
         [])
   where
     this = applicationStates app
@@ -130,7 +130,7 @@ mainMenu app =
 
 -- | shows a text describing our plans with the story mode
 storyMode :: Application -> AppState
-storyMode app = AppState (rt "storyMode") $ do
+storyMode app = NoGUIAppState $ do
     file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
     prose <- io $ pFile file
     return $ scrollingAppState app prose (mainMenu app)
@@ -147,7 +147,7 @@ community app =
 
 
 downloadLevels :: Application -> AppState -> AppState
-downloadLevels app parent = AppState (rt "downloadLevels") $ do
+downloadLevels app parent = NoGUIAppState $ do
     file <- rm2m $ getDataFileName "manual/downloadLevels"
     prose <- io $ pFile file
     return $ scrollingAppState app prose parent
@@ -158,12 +158,12 @@ quit :: Application -> AppState -> AppState
 quit app parent =
     menu app "quit?" (Just parent) [
         ("no", applicationStates app),
-        ("yes", FinalState)
+        ("yes", FinalAppState)
       ]
 
 -- | select a saved level.
 selectLevelPlay :: Application -> AppState -> AppState
-selectLevelPlay app parent = AppState (rt "selectLevelPlay") $ rm2m $ do
+selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
     levelFiles <- lookupLevels
     if null levelFiles then
         return $ menu app "no levels found." (Just parent) [("back", parent)]
@@ -177,7 +177,7 @@ selectLevelPlay app parent = AppState (rt "selectLevelPlay") $ rm2m $ do
         return $ this 0
 
 selectLevelEdit :: Application -> AppState -> AppState
-selectLevelEdit app parent = AppState (rt "selectLevelEdit") $ rm2m $ do
+selectLevelEdit app parent = NoGUIAppState $ rm2m $ do
     freeLevelsPath <- getFreeLevelsDirectory
     levelFiles <- map (freeLevelsPath </>) <$> io (getFiles freeLevelsPath (Just "nl"))
     return $ menu app "pick a level to edit" (Just parent) $
@@ -185,7 +185,7 @@ selectLevelEdit app parent = AppState (rt "selectLevelEdit") $ rm2m $ do
         map (\ path -> (takeBaseName path, edit app parent (path, False))) levelFiles
 
 pickNewLevel :: Application -> AppState -> AppState
-pickNewLevel app parent = AppState (rt "pickNewLevel") $ rm2m $ do
+pickNewLevel app parent = NoGUIAppState $ rm2m $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles templateLevelsDir (Just ".nl")
@@ -208,17 +208,14 @@ edit app parent file = loadingEditorScene app file (editLevel app playLevel)
 -- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
 loadingEditorScene :: Application -> (FilePath, Bool) -> (EditorScene Sort_ -> AppState) -> AppState
 loadingEditorScene app (file, isTemplateFile) follower =
-    appState (rt "loadingEditorScene") $ io $ do
-        (renderable, logCommand) <- mkGuiLog app
-        return $ appState renderable $ io $ do
-            logCommand (p "loading...")
-            grounds <- loadByFilePath (leafs $ allSorts app) file
-            let mFile = if isTemplateFile then Nothing else Just file
-            editorScene <- initEditorScene (allSorts app) mFile grounds
-            return $ follower editorScene
+    appState (busyMessage $ p "loading...") $ io $ do
+        grounds <- loadByFilePath (leafs $ allSorts app) file
+        let mFile = if isTemplateFile then Nothing else Just file
+        editorScene <- initEditorScene (allSorts app) mFile grounds
+        return $ follower editorScene
 
 mainMenuHelp :: Application -> AppState -> AppState
-mainMenuHelp app parent = AppState (rt "mainMenuHelp") $ do
+mainMenuHelp app parent = NoGUIAppState $ do
     file <- rm2m $ getDataFileName "manual/mainMenuHelp.txt"
     text <- io $ pFile file
     return $ scrollingAppState app text parent

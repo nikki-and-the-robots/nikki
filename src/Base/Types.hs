@@ -68,8 +68,9 @@ getMainMenu app = getMainMenu_ app app
 
 data AppState
     = AppState RenderableInstance (M AppState)
-    | NoGUIState (M AppState)
-    | FinalState
+    | NoGUIAppState (M AppState)
+    | GameAppState (M AppState) -- rendering managed by itself
+    | FinalAppState
 
 
 data ApplicationPixmaps = ApplicationPixmaps {

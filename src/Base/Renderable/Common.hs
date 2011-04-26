@@ -66,9 +66,6 @@ fiddleInDebugging ptr renderable (widgetSize, action) =
         eraseRect ptr zero (fmap round widgetSize) (alpha ^= 0.1 $ color)
         drawText ptr (Position 10 25) False (head $ words $ show renderable)
 
-rt :: String -> RenderableInstance
-rt = RenderableInstance
-
 -- NYI instance
 instance Renderable String where
     render _ _ _ _ msg = return $ tuple (Size 10 10) $ putStrLn ("NYI: renderable " ++ msg)
