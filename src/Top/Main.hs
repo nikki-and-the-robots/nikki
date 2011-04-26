@@ -163,7 +163,7 @@ quit app parent =
 
 -- | select a saved level.
 selectLevelPlay :: Application -> AppState -> AppState
-selectLevelPlay app parent = staticConfigAppState $ do
+selectLevelPlay app parent = AppState (rt "selectLevelPlay") $ rm2m $ do
     levelFiles <- lookupLevels
     if null levelFiles then
         return $ menu app "no levels found." (Just parent) [("back", parent)]
@@ -177,7 +177,7 @@ selectLevelPlay app parent = staticConfigAppState $ do
         return $ this 0
 
 selectLevelEdit :: Application -> AppState -> AppState
-selectLevelEdit app parent = staticConfigAppState $ do
+selectLevelEdit app parent = AppState (rt "selectLevelEdit") $ rm2m $ do
     freeLevelsPath <- getFreeLevelsDirectory
     levelFiles <- map (freeLevelsPath </>) <$> io (getFiles freeLevelsPath (Just "nl"))
     return $ menu app "pick a level to edit" (Just parent) $
@@ -185,7 +185,7 @@ selectLevelEdit app parent = staticConfigAppState $ do
         map (\ path -> (takeBaseName path, edit app parent (path, False))) levelFiles
 
 pickNewLevel :: Application -> AppState -> AppState
-pickNewLevel app parent = staticConfigAppState $ do
+pickNewLevel app parent = AppState (rt "pickNewLevel") $ rm2m $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles templateLevelsDir (Just ".nl")
