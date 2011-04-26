@@ -6,21 +6,21 @@ import Data.Abelian
 
 import Graphics.Qt
 
+import Utils
+
 import Base.Types
-import Base.Renderable.Common ()
+import Base.Renderable.Common
 
 
 centered :: Renderable r => r -> RenderableInstance
 centered = RenderableInstance . Centered . RenderableInstance
 
 data Centered = Centered RenderableInstance
-  deriving Show
 
 instance Renderable Centered where
-    minimalSize app (Centered x) = minimalSize app x
-    render ptr app parentSize (Centered child) =
-        translate ptr offset >>
-        render ptr app childSize child
+    render ptr app parentSize (Centered child) = tuple parentSize $ do
+        translate ptr $ uberRound offset
+        action
       where
-        childSize = minimalSize app child
+        (childSize, action) = render ptr app parentSize child
         offset = sizeToPosition $ fmap (fromIntegral . round . (/ 2)) (parentSize -~ childSize)

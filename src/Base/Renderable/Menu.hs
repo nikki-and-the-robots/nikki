@@ -25,6 +25,7 @@ import Base.Renderable.VBox
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.Centered
+import Base.Renderable.CenterHorizontally
 
 
 data Menu
@@ -74,7 +75,7 @@ menuWithPreChoice app title mParent children preChoice =
   where
     inner :: Menu -> AppState
     inner items = appState (mainMenuRenderable items) $ do
-        e <- waitForPressAppEvent app
+        e <- waitForPressButton app
         if isUp e then return $ inner $ selectPrevious items
          else if isDown e then return $ inner $ selectNext items
          else if isMenuConfirmation e then return $ snd $ selected items
@@ -112,7 +113,7 @@ treeToMenu app parent (Node label children i) f =
 
 mainMenuRenderable items =
     MenuBackground |:>
-    (centered $ vBox $ fmap centered $ toLines items)
+    (centered $ vBox $ fmap centerHorizontally $ toLines items)
 
 toLines :: Menu -> [Prose]
 toLines (Menu title before selected after) = map p (

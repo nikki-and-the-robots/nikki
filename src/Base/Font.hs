@@ -1,11 +1,11 @@
-{-# language ScopedTypeVariables, ViewPatterns #-}
+{-# language ScopedTypeVariables, ViewPatterns, FlexibleInstances #-}
 
 module Base.Font (
+    Glyph,
     loadAlphaNumericFont,
     freeFont,
     fontHeight,
-    renderLine,
-    renderLineSimple,
+    wordWrap,
   ) where
 
 
@@ -55,13 +55,16 @@ fontColors = nub (
 fontHeight :: Font -> Double
 fontHeight = height . pixmapSize . errorSymbol . (! standardFontColor) . colorVariants
 
--- | returns a list of pixmaps that represent the given Prose text.
-selectLetterPixmaps :: ColorVariant -> Maybe Int -> Prose -> [[Pixmap]]
-selectLetterPixmaps variant wordWrapWidth prose =
-    fmap (fmap glyphPixmap) $
-    wordWrap wordWrapWidth $
-    inner (glyphs variant) (getByteString prose)
+standardFont :: Application_ s -> Font
+standardFont = alphaNumericFont . applicationPixmaps
+
+proseToGlyphs :: Application_ s -> Prose -> [Glyph]
+proseToGlyphs app prose =
+    inner glyphs_ $ getByteString prose
   where
+    glyphs_ = glyphs variant
+    variant = getColorVariant (standardFont app) standardFontColor
+
     inner :: [(BS.ByteString, Pixmap)] -> BS.ByteString -> [Glyph]
     inner _ string | BS.null string = []
     inner ((key, pixmap) : r) string =
@@ -83,6 +86,7 @@ pixmapsWidth pixs =
 
 -- * word wrap
 
+-- | a single word (as in "seperated by whitespaces")
 data Word = Word {
     wordPixmaps :: [Glyph], -- word glyphs including following white space characters
     wordWidth :: Double, -- word width without counting white spaces, and counting
@@ -91,12 +95,17 @@ data Word = Word {
                                -- one kerning pixel for each character.
   }
 
+-- | a letter with its graphical representation
 data Glyph
     = Glyph {
         character :: BS.ByteString,
         glyphPixmap :: Pixmap
       }
     | ErrorGlyph {glyphPixmap :: Pixmap}
+  deriving (Show)
+
+glyphSize :: Glyph -> Size Double
+glyphSize = pixmapSize . glyphPixmap
 
 isSpaceGlyph :: Glyph -> Bool
 isSpaceGlyph (Glyph c _) = all isSpace $ decode c
@@ -117,9 +126,8 @@ fromWords :: [Word] -> [Glyph]
 fromWords = concatMap wordPixmaps
 
 -- | implements a word wrap on a list of glyph pixmaps
-wordWrap :: Maybe Int -> [Glyph] -> [[Glyph]]
-wordWrap Nothing = (: [])
-wordWrap (fmap fromIntegral -> Just wrapWidth) =
+wordWrapGlyphs :: Double -> [Glyph] -> [[Glyph]]
+wordWrapGlyphs wrapWidth =
     toWords >>>
     inner 0 [] >>>
     fmap fromWords
@@ -131,6 +139,9 @@ wordWrap (fmap fromIntegral -> Just wrapWidth) =
           else
             reverse akk : inner 0 [] (a : r)
     inner _ akk [] = reverse akk : []
+
+wordWrap :: Application_ s -> Double -> [Prose] -> [[Glyph]]
+wordWrap app w = concatMap (wordWrapGlyphs w . proseToGlyphs app)
 
 
 -- * loading
@@ -212,50 +223,26 @@ freeFont (Font variants) = forM_ variants freeColorVariant
 
 -- * rendering
 
--- | Like renderLine, but renders with the current GL matrix.
--- Does not alter the GL matrix.
-renderLineSimple :: Font -> Maybe Int -> Color -> Prose -> Ptr QPainter -> IO (Size Double)
-renderLineSimple font wordWrapWidth color text ptr = do
-    let (action, size) = renderLine font wordWrapWidth color text
-    action ptr
-    return size
+-- | used for rendering one line of text
+-- (all other text rendering is implemented in terms of this)
+instance Renderable [Glyph] where
+    render ptr app parentSize [] = (zero, return ())
+    render ptr app parentSize glyphs =
+        (size, action)
+      where
+        size = Size
+            ((sum $ fmap (width . glyphSize) glyphs) + kerning)
+            (height $ glyphSize $ head glyphs)
+        kerning = fromUber (fromIntegral (length glyphs) - 1)
+        action = forM_ glyphs $ \ glyph -> do
+            recoverMatrix ptr $
+                snd <$> render ptr app size $ glyphPixmap glyph
+            translate ptr (Position (width (glyphSize glyph) + fromUber 1) 0)
 
--- | Returns a rendering action to render a line of text
--- and the size of the renderings.
--- Does not alter the painter matrix.
-renderLine :: Font -> Maybe Int -> Color -> Prose -> (Ptr QPainter -> IO (), Size Double)
-renderLine font wordWrapWidth color text =
-    (\ ptr -> action ptr zero pixs, size pixs)
-  where
-    variant = getColorVariant font color
-    pixs = textPixmaps variant
-    size pixs =
-        Size (maximum $ fmap lineWidth pixs) (textHeight * fromIntegral (length pixs))
-    lineWidth :: [Pixmap] -> Double
-    lineWidth pixs = pixmapsWidth pixs
-    textHeight = fontHeight font
-
-    action :: Ptr QPainter -> Offset Int -> [[Pixmap]] -> IO ()
-    action ptr offset ((pix : restLine) : restText) = do
-        drawPixmap ptr
-            (offset +~ fmap round (pix ^. pixmapOffset))
-            (pixmap pix)
-        let newOffset = offset +~ Position (round (width (pixmapSize pix)) + fromUber 1) 0
-        action ptr newOffset (restLine : restText)
-    action ptr (Position _ yOffset) ([] : restText) =
-        action ptr (Position 0 (yOffset + round (fontHeight font))) restText
-    action _ _ [] = return ()
-    -- sequence of pixmaps to be rendered
-    textPixmaps :: ColorVariant -> [[Pixmap]]
-    textPixmaps variant = selectLetterPixmaps variant wordWrapWidth text
-
+-- | text rendering without word wrapping
 instance Renderable Prose where
-    minimalSize app prose = snd $
-        renderLine (alphaNumericFont $ applicationPixmaps app) Nothing standardFontColor
-            prose
-    render ptr app size prose = ($ ptr) $ fst $
-        renderLine (alphaNumericFont $ applicationPixmaps app) Nothing standardFontColor
-            prose
+    render ptr app size prose =
+        render ptr app size $ proseToGlyphs app prose
 
 -- | Returns the colorvariant for the given color.
 getColorVariant :: Font -> Color -> ColorVariant

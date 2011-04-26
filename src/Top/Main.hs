@@ -134,7 +134,7 @@ storyMode :: Application -> AppState
 storyMode app = AppState (rt "storyMode") $ do
     file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
     prose <- io $ pFile file
-    return $ showText app prose (applicationStates app)
+    return $ scrollingAppState app prose (mainMenu app)
 
 community :: Application -> AppState
 community app =
@@ -151,7 +151,7 @@ downloadLevels :: Application -> AppState -> AppState
 downloadLevels app parent = AppState (rt "downloadLevels") $ do
     file <- rm2m $ getDataFileName "manual/downloadLevels"
     prose <- io $ pFile file
-    return $ showText app prose parent
+    return $ scrollingAppState app prose parent
 
 
 -- | asks, if the user really wants to quit
@@ -219,4 +219,4 @@ mainMenuHelp :: Application -> AppState -> AppState
 mainMenuHelp app parent = AppState (rt "mainMenuHelp") $ do
     file <- rm2m $ getDataFileName "manual/mainMenuHelp.txt"
     text <- io $ pFile file
-    return $ showText app text parent
+    return $ scrollingAppState app text parent

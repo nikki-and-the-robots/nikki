@@ -46,7 +46,7 @@ executeStates app (AppState renderable cmd) = do
     renderCallback ptr = do
         size <- fmap fromIntegral <$> sizeQPainter ptr
         resetMatrix ptr
-        render ptr app size renderable
+        snd $ render ptr app size renderable
 executeStates _ FinalState = return ()
 
 

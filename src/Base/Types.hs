@@ -92,15 +92,14 @@ data ColorVariant = ColorVariant {
 
 -- * Base.Renderable
 
-class Show r => Renderable r where
-
-    minimalSize :: Application_ s -> r -> Size Double
-
-    render :: Ptr QPainter -> Application_ s -> Size Double -> r -> IO ()
-    render = error "render default"
+class Renderable r where
+    render :: Ptr QPainter -> Application_ s -> Size Double -> r -> (Size Double, IO ())
 
 data RenderableInstance =
     forall r . Renderable r => RenderableInstance r
+
+instance Renderable RenderableInstance where
+    render ptr app size (RenderableInstance r) = render ptr app size r
 
 
 -- from Game.Scene

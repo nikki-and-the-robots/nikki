@@ -39,7 +39,8 @@ renderLog app ptr = do
         translate ptr (Position (fromUber 3) (height size - fromUber 1))
         forM_ log $ \ line -> do
             translate ptr (Position 0 (- fontHeight font))
-            renderLineSimple font Nothing standardFontColor line ptr
+            todo
+--             renderLineSimple font Nothing standardFontColor line ptr
 
 -- | global MVar for the log
 {-# NOINLINE logRef #-}

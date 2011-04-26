@@ -20,7 +20,7 @@ import Base.Renderable.Common
 message :: Application_ sort -> [Prose] -> M ()
 message app texts = do
     io $ setDrawingCallbackGLContext (window app) (Just $ render app texts)
-    ignore $ waitForPressAppEvent app
+    ignore $ waitForPressButton app
 
 render :: Application_ sort -> [Prose] -> Ptr QPainter -> IO ()
 render app texts ptr = do
@@ -35,8 +35,8 @@ render app texts ptr = do
     renderCentered font windowSize (p "press any key to continue")
   where
     renderCentered font windowSize text = do
-        let (renderAction, textSize) = renderLine font (Just (width windowSize)) standardFontColor text
+        let (renderAction, textSize) = todo -- renderLine font (Just (width windowSize)) standardFontColor text
             centerX :: Double = width (fmap fromIntegral windowSize -~ textSize) / 2
         translate ptr (Position centerX 0)
-        renderAction ptr
+        ignore $ renderAction ptr
         translate ptr (Position (- centerX) 0)

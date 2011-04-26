@@ -2,8 +2,10 @@
 -- | Showing texts on the screen, till a key is pressed.
 -- Used for help screens.
 
-module Base.Renderable.TextListing where
+module Deprecated.Base.Renderable.TextListing where
 
+
+import Data.Abelian
 
 import Graphics.Qt
 

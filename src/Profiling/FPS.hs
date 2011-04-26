@@ -57,17 +57,17 @@ initialFPSState = do
         return NotActivated
 
 -- does the actual work. Must be called for every frame
-tickFPS :: Font -> Ptr QPainter -> FpsState -> IO FpsState
-tickFPS font ptr (FpsState counter avg Nothing displayValue) = do
+tickFPS :: Application_ s -> Ptr QPainter -> FpsState -> IO FpsState
+tickFPS _ ptr (FpsState counter avg Nothing displayValue) = do
     -- first time: QTime has to be constructed
     now <- getNow
     return $ FpsState counter avg (Just now) displayValue
-tickFPS font ptr (FpsState counter avg (Just oldTime) displayValue) = do
+tickFPS app ptr (FpsState counter avg (Just oldTime) displayValue) = do
         now <- getNow
         let elapsed = now - oldTime
             avg' = calcAvg counter avg elapsed
         r <- handle (FpsState (counter + 1) (Just avg') (Just now) displayValue)
-        io (renderFPS font ptr =<< readIORef displayValue)
+        io (renderFPS app ptr =<< readIORef displayValue)
         return r
   where
     handle x@(FpsState 10 (Just avg) qtime dv) = do
@@ -84,12 +84,11 @@ tickFPS font ptr (FpsState counter avg (Just oldTime) displayValue) = do
 -- no FPS activated (NotActivated)
 tickFPS _ _ x = return x
 
-renderFPS :: Font -> Ptr QPainter -> Prose -> IO ()
-renderFPS font ptr fps = do
+renderFPS :: Application_ s -> Ptr QPainter -> Prose -> IO ()
+renderFPS app ptr fps = do
     resetMatrix ptr
     size <- fmap fromIntegral <$> sizeQPainter ptr
-    translate ptr (Position (fromUber 2) (height size - fontHeight font))
-    ignore $ renderLineSimple font Nothing white fps ptr
+    snd $ render ptr app size fps
 
 writeDistribution :: FilePath -> FilePath -> IO ()
 writeDistribution srcFile destFile = do
@@ -114,6 +113,6 @@ initialFPSRef :: M FPSRef
 initialFPSRef =
     initialFPSState >>= io . newIORef >>= return . FPSRef
 
-tickFPSRef :: Font -> Ptr QPainter -> FPSRef -> IO ()
-tickFPSRef font ptr (FPSRef ref) =
-    readIORef ref >>= tickFPS font ptr >>= writeIORef ref
+tickFPSRef :: Application_ s -> Ptr QPainter -> FPSRef -> IO ()
+tickFPSRef app ptr (FPSRef ref) =
+    readIORef ref >>= tickFPS app ptr >>= writeIORef ref

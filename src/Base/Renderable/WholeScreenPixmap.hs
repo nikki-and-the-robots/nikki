@@ -43,8 +43,7 @@ data WholeScreenPixmap
   deriving Show
 
 instance Renderable WholeScreenPixmap where
-    minimalSize _ = const zero
-    render ptr app size typ = do
+    render ptr app size typ = tuple size $
         renderWholeScreenPixmap ptr size (typPixmaps app typ)
 
 typPixmaps :: Application_ s -> WholeScreenPixmap -> [Pixmap]

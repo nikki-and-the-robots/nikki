@@ -215,13 +215,17 @@ showEditorHelp :: Application -> AppState -> EditorScene Sort_ -> AppState
 showEditorHelp app parent scene = case editorMode scene of
     NormalMode{} -> showHelpFile
     SelectionMode{} -> showHelpFile
-    (ObjectEditMode i) ->
-        let (Just oem) = objectEditMode $ editorSort $ getMainLayerEditorObject scene i
-            phantomOEM :: OEMState = oemInitialize oem undefined
-            helpText = proseLines $ p $ oemHelp phantomOEM
-        in showText app helpText parent
+    (ObjectEditMode i) -> todo 
+-- ioAppState (rt "showEditorHelp") $
+--         let (Just oem) = objectEditMode $ editorSort $ getMainLayerEditorObject scene i
+--             phantomOEM :: OEMState = oemInitialize oem undefined
+--             helpText = proseLines $ p $ oemHelp phantomOEM
+--         e <- waitForPressAppEvent app
+
+--         in showText app helpText parent
   where
-    showHelpFile = AppState (rt "showHelpFile") $ do
+    showHelpFile :: AppState
+    showHelpFile = appState (rt "showHelpFile (editor)") $ do
         file <- rm2m $ getDataFileName "manual/editor.txt"
         text <- io $ pFile file
-        return $ showText app text parent
+        return $ scrollingAppState app text parent
