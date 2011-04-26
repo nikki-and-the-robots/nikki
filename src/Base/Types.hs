@@ -68,6 +68,7 @@ getMainMenu app = getMainMenu_ app app
 
 data AppState
     = AppState RenderableInstance (M AppState)
+    | NoGUIState (M AppState)
     | FinalState
 
 
