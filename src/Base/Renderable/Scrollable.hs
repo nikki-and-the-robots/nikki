@@ -66,10 +66,10 @@ instance Show Scrollable where
 textWidth :: Double = 800
 
 instance Renderable Scrollable where
-    render ptr app parentSize (Scrollable lines chan scrollDownRef) = do
+    render ptr app config parentSize (Scrollable lines chan scrollDownRef) = do
         let h = height parentSize
             widgetSize = Size textWidth h
-        lineRenders <- fmapM (render ptr app widgetSize) lines
+        lineRenders <- fmapM (render ptr app config widgetSize) lines
         scrollDown <- updateScrollDown (maximalScrollDown h lineRenders) chan scrollDownRef
         let action = forM_ (clipHeight h $ drop scrollDown lineRenders) $
                 \ (itemSize, itemAction) -> do

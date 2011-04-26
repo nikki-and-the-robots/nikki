@@ -40,6 +40,6 @@ instance Show GuiLog where
     show = const "<GuiLog>"
 
 instance Renderable GuiLog where
-    render ptr app parentSize (GuiLog logMVar) = do
+    render ptr app config parentSize (GuiLog logMVar) = do
         lines <- wordWrap app (width parentSize) <$> readMVar logMVar
-        render ptr app parentSize (MenuBackground |:> centered (vBox lines))
+        render ptr app config parentSize (MenuBackground |:> centered (vBox lines))

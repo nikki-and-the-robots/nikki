@@ -42,7 +42,8 @@ data Configuration = Configuration {
     render_xy_cross :: Bool,
     render_chipmunk_objects :: Bool,
     abort_level :: Maybe Double,
-    initial_events :: [Key]
+    initial_events :: [Key],
+    show_widget_frames :: Bool
   }
     deriving (Show, Data, Typeable)
 
@@ -113,7 +114,9 @@ options =
             &= typ "N",
         initial_events = []
             &= help "list of initial events sent to the application"
-            &= typ "[Key]"
+            &= typ "[Key]",
+        show_widget_frames = False
+            &= help "show colored frames for all displayed widgets"
       }
     &= program "nikki"
     &= summary ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")

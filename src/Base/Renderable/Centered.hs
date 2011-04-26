@@ -19,8 +19,8 @@ data Centered = Centered RenderableInstance
   deriving Show
 
 instance Renderable Centered where
-    render ptr app parentSize (Centered child) = return $ tuple parentSize $ do
-        (childSize, action) <- render ptr app parentSize child
+    render ptr app config parentSize (Centered child) = return $ tuple parentSize $ do
+        (childSize, action) <- render ptr app config parentSize child
         let offset = sizeToPosition $ fmap (fromIntegral . round . (/ 2)) (parentSize -~ childSize)
         translate ptr $ uberRound offset
         action

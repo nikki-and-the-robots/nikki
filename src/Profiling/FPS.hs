@@ -57,17 +57,17 @@ initialFPSState = do
         return NotActivated
 
 -- does the actual work. Must be called for every frame
-tickFPS :: Application_ s -> Ptr QPainter -> FpsState -> IO FpsState
-tickFPS _ ptr (FpsState counter avg Nothing displayValue) = do
+tickFPS :: Application_ s -> Configuration -> Ptr QPainter -> FpsState -> IO FpsState
+tickFPS _ config ptr (FpsState counter avg Nothing displayValue) = do
     -- first time: QTime has to be constructed
     now <- getNow
     return $ FpsState counter avg (Just now) displayValue
-tickFPS app ptr (FpsState counter avg (Just oldTime) displayValue) = do
+tickFPS app config ptr (FpsState counter avg (Just oldTime) displayValue) = do
         now <- getNow
         let elapsed = now - oldTime
             avg' = calcAvg counter avg elapsed
         r <- handle (FpsState (counter + 1) (Just avg') (Just now) displayValue)
-        io (renderFPS app ptr =<< readIORef displayValue)
+        io (renderFPS app config ptr =<< readIORef displayValue)
         return r
   where
     handle x@(FpsState 10 (Just avg) qtime dv) = do
@@ -82,13 +82,13 @@ tickFPS app ptr (FpsState counter avg (Just oldTime) displayValue) = do
       where lenF = fromIntegral len
 
 -- no FPS activated (NotActivated)
-tickFPS _ _ x = return x
+tickFPS _ _ _ x = return x
 
-renderFPS :: Application_ s -> Ptr QPainter -> Prose -> IO ()
-renderFPS app ptr fps = do
+renderFPS :: Application_ s -> Configuration -> Ptr QPainter -> Prose -> IO ()
+renderFPS app config ptr fps = do
     resetMatrix ptr
     size <- fmap fromIntegral <$> sizeQPainter ptr
-    snd =<< render ptr app size fps
+    snd =<< render ptr app config size fps
 
 writeDistribution :: FilePath -> FilePath -> IO ()
 writeDistribution srcFile destFile = do
@@ -113,6 +113,6 @@ initialFPSRef :: M FPSRef
 initialFPSRef =
     initialFPSState >>= io . newIORef >>= return . FPSRef
 
-tickFPSRef :: Application_ s -> Ptr QPainter -> FPSRef -> IO ()
-tickFPSRef app ptr (FPSRef ref) =
-    readIORef ref >>= tickFPS app ptr >>= writeIORef ref
+tickFPSRef :: Application_ s -> Configuration -> Ptr QPainter -> FPSRef -> IO ()
+tickFPSRef app config ptr (FPSRef ref) =
+    readIORef ref >>= tickFPS app config ptr >>= writeIORef ref

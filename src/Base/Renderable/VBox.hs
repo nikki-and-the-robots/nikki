@@ -20,7 +20,7 @@ vBox :: Renderable r => [r] -> VBox
 vBox = VBox . map RenderableInstance
 
 instance Renderable VBox where
-    render ptr app parentSize vBox@(VBox items) = do
+    render ptr app config parentSize vBox@(VBox items) = do
         itemRenders <- inner (height parentSize) items
         return (vBoxSize (fmap fst itemRenders), renderVBox itemRenders)
       where
@@ -30,7 +30,7 @@ instance Renderable VBox where
 
         inner :: Double -> [RenderableInstance] -> IO [(Size Double, IO ())]
         inner h (a : r) = do
-            t@(itemSize, action) <- render ptr app (Size (width parentSize) h) a
+            t@(itemSize, action) <- render ptr app config (Size (width parentSize) h) a
             if (h >= height itemSize) then do
                 rest <- inner (h - height itemSize) r
                 return (t : rest)

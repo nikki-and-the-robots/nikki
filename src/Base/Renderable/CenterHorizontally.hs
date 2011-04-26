@@ -15,8 +15,8 @@ data CenterHorizontally = CenterHorizontally RenderableInstance
   deriving Show
 
 instance Renderable CenterHorizontally where
-    render ptr app parentSize (CenterHorizontally child) = do
-        (childSize, childAction) <- render ptr app parentSize child
+    render ptr app config parentSize (CenterHorizontally child) = do
+        (childSize, childAction) <- render ptr app config parentSize child
         let size = Size (width parentSize) (height childSize)
             offset = (width parentSize - width childSize) / 2
             action = do

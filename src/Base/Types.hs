@@ -94,7 +94,8 @@ data ColorVariant = ColorVariant {
 -- * Base.Renderable
 
 class Show r => Renderable r where
-    render :: Ptr QPainter -> Application_ s -> Size Double -> r -> IO (Size Double, IO ())
+    render :: Ptr QPainter -> Application_ s -> Configuration
+        -> Size Double -> r -> IO (Size Double, IO ())
 
 data RenderableInstance =
     forall r . Renderable r => RenderableInstance r

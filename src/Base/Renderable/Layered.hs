@@ -18,9 +18,9 @@ data Layered =
 a |:> b = Layered (RenderableInstance a) (RenderableInstance b)
 
 instance Renderable Layered where
-    render ptr app parentSize (Layered a b) = do
-        aR <- render ptr app parentSize a
-        bR <- render ptr app parentSize b
+    render ptr app config parentSize (Layered a b) = do
+        aR <- render ptr app config parentSize a
+        bR <- render ptr app config parentSize b
         return (size aR bR, action aR bR)
       where
         size aR bR = Size (withView (width . fst) max aR bR) (withView (height . fst) max aR bR)

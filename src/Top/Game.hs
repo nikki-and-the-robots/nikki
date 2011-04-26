@@ -55,4 +55,4 @@ playLevel app parent editorScene = AppState (rt "playLevel") $ withSpace gravity
         runStateTFromIORef cameraStateRef $
             Game.Scene.renderScene app configuration ptr scene debugging
 
-        tickFPSRef app ptr fpsRef
+        tickFPSRef app configuration ptr fpsRef

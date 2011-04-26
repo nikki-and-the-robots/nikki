@@ -16,6 +16,7 @@ import Graphics.Qt
 import Utils
 
 import Base.Constants
+import Base.Configuration
 import Base.Types
 import Base.Polling
 import Base.Pixmap
@@ -49,9 +50,11 @@ uberRound =
 -- * Renderable
 
 instance Renderable RenderableInstance where
-    render ptr app size (RenderableInstance r) =
---         fiddleInDebugging ptr r <$>
-            render ptr app size r
+    render ptr app config size (RenderableInstance r) =
+        (if show_widget_frames config
+            then fiddleInDebugging ptr r
+            else id) <$>
+        render ptr app config size r
 
 fiddleInDebugging ptr renderable (widgetSize, action) =
     (widgetSize, recoverMatrix ptr action >> debugRender)
@@ -68,9 +71,9 @@ rt = RenderableInstance
 
 -- NYI instance
 instance Renderable String where
-    render _ _ _ msg = return $ tuple (Size 10 10) $ putStrLn ("NYI: renderable " ++ msg)
+    render _ _ _ _ msg = return $ tuple (Size 10 10) $ putStrLn ("NYI: renderable " ++ msg)
 
 instance Renderable Pixmap where
-    render ptr app size pix = return $ tuple (pixmapSize pix) $ do
+    render ptr app _ size pix = return $ tuple (pixmapSize pix) $ do
         translate ptr (pix ^. pixmapOffset)
         drawPixmap ptr zero (pixmap pix)
