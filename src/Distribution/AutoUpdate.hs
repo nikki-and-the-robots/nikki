@@ -68,7 +68,7 @@ isDeployed = do
 
 -- | doing the auto update
 autoUpdate :: Application_ sort -> AppState -> AppState
-autoUpdate app follower = ioAppState (rt "autoUpdate") $ do
+autoUpdate app follower = NoGUIState $ io $ do
     (renderable, logCommand) <- mkGuiLog app
     return $ AppState renderable $ do
         repoString <- gets update_repo
@@ -87,7 +87,7 @@ autoUpdate app follower = ioAppState (rt "autoUpdate") $ do
                         return $ message app
                             (p "game updated to version " +> pVerbatim (showVersion version) :
                              p "restarting..." :
-                             []) $ ioAppState (rt "autoUpdate") $ do
+                             []) $ NoGUIState $ io $ do
                                 exitWith $ ExitFailure 143
                     (Right Nothing) ->
                         return $ message app [p "version up to date"] follower

@@ -207,14 +207,15 @@ edit app parent file = loadingEditorScene app file (editLevel app playLevel)
 -- This AppState involves is a hack to do things from the logic thread 
 -- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
 loadingEditorScene :: Application -> (FilePath, Bool) -> (EditorScene Sort_ -> AppState) -> AppState
-loadingEditorScene app (file, isTemplateFile) follower = ioAppState (rt "loadingEditorScene") $ do
-    (renderable, logCommand) <- mkGuiLog app
-    return $ ioAppState renderable $ do
-        logCommand (p "loading...")
-        grounds <- loadByFilePath (leafs $ allSorts app) file
-        let mFile = if isTemplateFile then Nothing else Just file
-        editorScene <- initEditorScene (allSorts app) mFile grounds
-        return $ follower editorScene
+loadingEditorScene app (file, isTemplateFile) follower =
+    appState (rt "loadingEditorScene") $ io $ do
+        (renderable, logCommand) <- mkGuiLog app
+        return $ appState renderable $ io $ do
+            logCommand (p "loading...")
+            grounds <- loadByFilePath (leafs $ allSorts app) file
+            let mFile = if isTemplateFile then Nothing else Just file
+            editorScene <- initEditorScene (allSorts app) mFile grounds
+            return $ follower editorScene
 
 mainMenuHelp :: Application -> AppState -> AppState
 mainMenuHelp app parent = AppState (rt "mainMenuHelp") $ do

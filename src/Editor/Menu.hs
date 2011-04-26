@@ -120,7 +120,7 @@ editorMenu app play mvar scene =
 
 saveLevel :: Application -> AppState -> (FilePath -> AppState) -> EditorScene Sort_ -> AppState
 saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects_} =
-    ioAppState (rt "saveLevel") $ do
+    appState (rt "saveLevel") $ io $ do
         writeObjectsToDisk path editorObjects_
         return $ follower path
 saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects_} =
@@ -142,7 +142,7 @@ fileExists app save path objects =
         ("yes", writeAnyway)
       ]
   where
-    writeAnyway = ioAppState (rt "writeAnyway") $ do
+    writeAnyway = appState (rt "writeAnyway") $ io $ do
         writeObjectsToDisk path objects
         return $ getMainMenu app
 
