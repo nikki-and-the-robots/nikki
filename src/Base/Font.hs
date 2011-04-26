@@ -226,9 +226,9 @@ freeFont (Font variants) = forM_ variants freeColorVariant
 -- | used for rendering one line of text
 -- (all other text rendering is implemented in terms of this)
 instance Renderable [Glyph] where
-    render ptr app parentSize [] = (zero, return ())
+    render ptr app parentSize [] = return (zero, return ())
     render ptr app parentSize glyphs =
-        (size, action)
+        return (size, action)
       where
         size = Size
             ((sum $ fmap (width . glyphSize) glyphs) + kerning)
@@ -236,7 +236,7 @@ instance Renderable [Glyph] where
         kerning = fromUber (fromIntegral (length glyphs) - 1)
         action = forM_ glyphs $ \ glyph -> do
             recoverMatrix ptr $
-                snd <$> render ptr app size $ glyphPixmap glyph
+                (snd =<< render ptr app size (glyphPixmap glyph))
             translate ptr (Position (width (glyphSize glyph) + fromUber 1) 0)
 
 -- | text rendering without word wrapping

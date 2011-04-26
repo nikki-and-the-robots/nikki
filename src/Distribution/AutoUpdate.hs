@@ -27,6 +27,7 @@ import Base.Types hiding (update)
 import Base.Prose
 import Base.Monad
 import Base.Configuration
+import Base.Application
 import Base.Renderable.Common
 import Base.Renderable.GUILog
 import Base.Renderable.Message
@@ -67,68 +68,71 @@ isDeployed = do
 
 -- | doing the auto update
 autoUpdate :: Application_ sort -> AppState -> AppState
-autoUpdate app follower = AppState (rt "autoUpdate") $ do
-    repoString <- gets update_repo
-    mDeployed <- io $ isDeployed
-    case mDeployed of
-        Nothing -> do
-            message app [p "not deployed: not updating"]
-            return follower
-        Just path@(DeployPath dp) -> do
-            io $ do
-                guiLog app (p "deployed in " `mappend` pVerbatim dp)
-                guiLog app (p "looking for updates...")
-            result <- io $ attemptUpdate app (Repo repoString) path
-            case result of
-                (Left errorMessage) -> do
-                    message app [p "update failed: " +> pVerbatim errorMessage]
-                    return follower
-                (Right (Just version)) -> do
-                    message app $ (p "game updated to version " +> pVerbatim (showVersion version) :
-                                   p "restarting..." :
-                                   [])
-                    io $ exitWith $ ExitFailure 143
-                (Right Nothing) -> do
-                    message app [p "version up to date"]
-                    return follower
+autoUpdate app follower = ioAppState (rt "autoUpdate") $ do
+    (renderable, logCommand) <- mkGuiLog app
+    return $ AppState renderable $ do
+        repoString <- gets update_repo
+        mDeployed <- io $ isDeployed
+        case mDeployed of
+            Nothing -> return $ message app [p "not deployed: not updating"] follower
+            Just path@(DeployPath dp) -> do
+                io $ do
+                    logCommand (p "deployed in " `mappend` pVerbatim dp)
+                    logCommand (p "looking for updates...")
+                result <- io $ attemptUpdate app logCommand (Repo repoString) path
+                case result of
+                    (Left errorMessage) ->
+                        return $ message app [p "update failed: " +> pVerbatim errorMessage] follower
+                    (Right (Just version)) -> do
+                        return $ message app
+                            (p "game updated to version " +> pVerbatim (showVersion version) :
+                             p "restarting..." :
+                             []) $ ioAppState (rt "autoUpdate") $ do
+                                exitWith $ ExitFailure 143
+                    (Right Nothing) ->
+                        return $ message app [p "version up to date"] follower
 
 -- | Looks for updates on the server.
 -- If found, updates the program.
 -- Returns (Right (Just newVersion)) if an update was successfully installed,
 -- (Right Nothing) if there is no newer version and
 -- (Left message) if an error occurs.
-attemptUpdate :: Application_ sort -> Repo -> DeployPath -> IO (Either String (Maybe Version))
-attemptUpdate app repo deployPath = runErrorT $ do
-    io $ guiLog app (p "local version: " `mappend` pVerbatim (showVersion Version.nikkiVersion))
+attemptUpdate :: Application_ sort -> (Prose -> IO ()) -> Repo -> DeployPath
+    -> IO (Either String (Maybe Version))
+attemptUpdate app logCommand repo deployPath = runErrorT $ do
+    io $ logCommand (p "local version: " `mappend` pVerbatim (showVersion Version.nikkiVersion))
     serverVersion :: Version <-
         (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
-    io $ guiLog app (p "remote version: " `mappend` pVerbatim (showVersion serverVersion))
+    io $ logCommand (p "remote version: " `mappend` pVerbatim (showVersion serverVersion))
     if serverVersion > Version.nikkiVersion then do
-        update app repo serverVersion deployPath
+        update app logCommand repo serverVersion deployPath
         return $ Just serverVersion
       else
         return Nothing
 
 -- | the actual updating procedure
-update :: Application_ sort -> Repo -> Version -> DeployPath -> ErrorT String IO ()
-update app repo newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
-    zipFile <- downloadUpdate app repo newVersion downloadDir
-    newVersionDir <- unzipFile app zipFile
+update :: Application_ sort -> (Prose -> IO ()) -> Repo -> Version -> DeployPath
+    -> ErrorT String IO ()
+update app logCommand repo newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
+    zipFile <- downloadUpdate app logCommand repo newVersion downloadDir
+    newVersionDir <- unzipFile app logCommand zipFile
     -- (withBackup creates its own temporary directory.)
-    withBackup app deployPath $
+    withBackup app logCommand deployPath $
         installUpdate newVersionDir deployPath
 
 -- | downloads the update to 
-downloadUpdate :: Application_ sort -> Repo -> Version -> FilePath -> ErrorT String IO ZipFilePath
-downloadUpdate app repo newVersion tmpDir = do
+downloadUpdate :: Application_ sort -> (Prose -> IO ()) -> Repo -> Version -> FilePath
+    -> ErrorT String IO ZipFilePath
+downloadUpdate app logCommand repo newVersion tmpDir = do
     let zipFile = ("nikki-" ++ showVersion newVersion) <.> "zip"
-    downloadFile app (mkUrl repo zipFile) (tmpDir </> zipFile)
+    downloadFile app logCommand (mkUrl repo zipFile) (tmpDir </> zipFile)
     return $ ZipFilePath (tmpDir </> zipFile)
 
 -- | unzips a given zipFile (in the same directory) and returns the path to the unzipped directory
-unzipFile :: Application_ sort -> ZipFilePath -> ErrorT String IO NewVersionDir
-unzipFile app (ZipFilePath path) = do
-    io $ guiLog app (p "unzipping " `mappend` pVerbatim path)
+unzipFile :: Application_ sort -> (Prose -> IO ()) -> ZipFilePath
+    -> ErrorT String IO NewVersionDir
+unzipFile app logCommand (ZipFilePath path) = do
+    io $ logCommand (p "unzipping " `mappend` pVerbatim path)
     io $ unzipArchive path (takeDirectory path)
     let nikkiDir = takeDirectory path </> mkDeployedFolder "nikki"
     nikkiExists <- io $ doesDirectoryExist nikkiDir
@@ -140,8 +144,9 @@ unzipFile app (ZipFilePath path) = do
 -- Catches every exception and every ErrorT error.
 -- Leaves the backup where it is (in a folder called "temporaryBackupSOMETHING",
 -- which will be deleted by the restarter at a later launch.)
-withBackup :: Application_ sort -> DeployPath -> ErrorT String IO a -> ErrorT String IO a
-withBackup app (DeployPath deployPath) action = do
+withBackup :: Application_ sort -> (Prose -> IO ()) -> DeployPath
+    -> ErrorT String IO a -> ErrorT String IO a
+withBackup app logCommand (DeployPath deployPath) action = do
     deployedFiles <- io $ sort <$> getDirectoryRealContents deployPath
     tmpDir <- io $ createTempDirectory deployPath "temporaryBackup"
 
@@ -151,7 +156,7 @@ withBackup app (DeployPath deployPath) action = do
                 rename (deployPath </> f) (tmpDir </> f)
         restore :: ErrorT String IO ()
         restore = do
-            io $ guiLog app (p "restoring backup")
+            io $ logCommand (p "restoring backup")
             forM_ deployedFiles $ \ f -> do
                 let dest = deployPath </> f
                 removeIfExists dest

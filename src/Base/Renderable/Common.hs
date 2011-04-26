@@ -7,6 +7,8 @@ module Base.Renderable.Common where
 
 import Data.Abelian
 
+import Control.Arrow
+
 import System.FilePath
 
 import Graphics.Qt
@@ -17,6 +19,7 @@ import Base.Constants
 import Base.Types
 import Base.Polling
 import Base.Pixmap
+import Base.Prose
 
 
 backgroundColor :: Color = QtColor 16 0 156 255
@@ -41,18 +44,33 @@ waitForPressButton app = do
 -- | rounds to uberpixels
 uberRound :: Position Double -> Position Double
 uberRound =
-    fmap ((/ 4) >>> round >>> fromIntegral >>> (* 4))
+    fmap ((/ 4) >>> floor >>> fromIntegral >>> (* 4))
 
 -- * Renderable
+
+instance Renderable RenderableInstance where
+    render ptr app size (RenderableInstance r) =
+--         fiddleInDebugging ptr r <$>
+            render ptr app size r
+
+fiddleInDebugging ptr renderable (widgetSize, action) =
+    (widgetSize, recoverMatrix ptr action >> debugRender)
+  where
+    debugRender = do
+        color <- alpha ^= 1 <$> randomColor
+        setPenColor ptr color 1
+        drawRect ptr zero widgetSize
+        eraseRect ptr zero (fmap round widgetSize) (alpha ^= 0.1 $ color)
+        drawText ptr (Position 10 25) False (head $ words $ show renderable)
 
 rt :: String -> RenderableInstance
 rt = RenderableInstance
 
 -- NYI instance
 instance Renderable String where
-    render _ _ _ msg = tuple (Size 10 10) $ putStrLn ("NYI: renderable " ++ msg)
+    render _ _ _ msg = return $ tuple (Size 10 10) $ putStrLn ("NYI: renderable " ++ msg)
 
 instance Renderable Pixmap where
-    render ptr app size pix = tuple (pixmapSize pix) $ do
+    render ptr app size pix = return $ tuple (pixmapSize pix) $ do
         translate ptr (pix ^. pixmapOffset)
         drawPixmap ptr zero (pixmap pix)

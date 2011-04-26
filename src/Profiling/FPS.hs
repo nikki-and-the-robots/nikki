@@ -88,7 +88,7 @@ renderFPS :: Application_ s -> Ptr QPainter -> Prose -> IO ()
 renderFPS app ptr fps = do
     resetMatrix ptr
     size <- fmap fromIntegral <$> sizeQPainter ptr
-    snd $ render ptr app size fps
+    snd =<< render ptr app size fps
 
 writeDistribution :: FilePath -> FilePath -> IO ()
 writeDistribution srcFile destFile = do

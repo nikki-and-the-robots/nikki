@@ -25,6 +25,7 @@ import Graphics.Qt.PostGUI
 
 import Foreign.Ptr
 
+import System.Random
 import System.Exit
 
 import Utils
@@ -108,6 +109,13 @@ darkGrey :: Color = QtColor 64 64 64 255
 turquoise :: Color = QtColor 72 214 242 255
 
 transparent :: Color = QtColor 0 0 0 0
+
+
+randomColor :: IO Color
+randomColor =
+    QtColor <$> randByte <*> randByte <*> randByte <*> randByte
+  where
+    randByte = randomRIO (0, 255)
 
 
 -- * convenience drawing

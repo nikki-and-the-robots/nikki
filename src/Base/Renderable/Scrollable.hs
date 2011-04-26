@@ -7,6 +7,7 @@ module Base.Renderable.Scrollable (
 
 import Data.Abelian
 import Data.IORef
+import Data.List
 
 import Control.Concurrent
 
@@ -27,52 +28,77 @@ import Base.Renderable.Centered
 import Base.Renderable.CenterHorizontally
 
 
-textWidth :: Double = 800
-
 scrollingAppState :: Application_ s -> [Prose] -> AppState -> AppState
 scrollingAppState app text follower = ioAppState (rt "scrollingAppState") $ do
-    stateRef <- mkStateRef $ wordWrap app textWidth text
-    return $ appState (scrollable Nothing stateRef) $ loop stateRef
+    (renderable, sendCommand) <- scrollable app text
+    return $ AppState renderable $ loop sendCommand
   where
-    loop ref = do
+    loop :: ((Int -> Int) -> IO ()) -> M AppState
+    loop send = do
         e <- waitForPressButton app
-        if isScrollableButton e then do
-            return $ appState (scrollable (Just e) ref) $ loop ref
+        if isDown e then
+            io (send (+ 1)) >>
+            loop send
+          else if isUp e then
+            io (send (subtract 1)) >>
+            loop send
           else
             return follower
 
-mkStateRef lines = newIORef (State lines 0)
+scrollable :: Application_ s -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
+scrollable app lines = do
+    chan <- newChan
+    scrollDownRef <- newIORef 0
+    let r = RenderableInstance (
+            MenuBackground |:>
+            (centerHorizontally $ Scrollable (wordWrap app textWidth lines) chan scrollDownRef)
+          )
+        send fun = do
+            writeChan chan fun
+            updateGLContext (window app)
+    return (r, send)
 
-scrollable :: Maybe Button -> IORef State -> RenderableInstance
-scrollable mButton ref =
-    RenderableInstance (
-        MenuBackground |:>
-        (centerHorizontally $ Scrollable mButton ref)
-      )
+data Scrollable = Scrollable [[Glyph]] (Chan (Int -> Int)) (IORef Int)
 
-isScrollableButton :: Button -> Bool
-isScrollableButton x = isDown x || isUp x
+instance Show Scrollable where
+    show = const "<Scrollable>"
 
-data Scrollable = Scrollable (Maybe Button) (IORef State)
-
-data State = State [[Glyph]] Int
-                          -- scrolldown
+textWidth :: Double = 800
 
 instance Renderable Scrollable where
-    render ptr app parentSize (Scrollable mButton ref) =
-        (Size textWidth 30, action)
-      where
-        action = do
-            newState <- updateState mButton <$> readIORef ref
-            writeIORef ref newState
-            let (State lines scrollDown) = newState
-            snd $ render ptr app (Size textWidth (height parentSize)) $
-                vBox (drop scrollDown lines)
+    render ptr app parentSize (Scrollable lines chan scrollDownRef) = do
+        let h = height parentSize
+            widgetSize = Size textWidth h
+        lineRenders <- fmapM (render ptr app widgetSize) lines
+        scrollDown <- updateScrollDown (maximalScrollDown h lineRenders) chan scrollDownRef
+        let action = forM_ (clipHeight h $ drop scrollDown lineRenders) $
+                \ (itemSize, itemAction) -> do
+                    recoverMatrix ptr $ itemAction
+                    translate ptr (Position 0 (height itemSize))
+        return (widgetSize, action)
 
--- | applies the scrolling events to the scrollDown
-updateState :: (Maybe Button) -> State -> State
-updateState Nothing state = state
-updateState (Just button) s@(State lines scrollDown) =
-         if isDown button then State lines (scrollDown + 1)
-    else if isUp   button then State lines (scrollDown - 1)
-    else s
+-- | Updates the scrollDown according to the widget size and events.
+-- Returns the current scrollDown.
+updateScrollDown :: Int -> Chan (Int -> Int) -> IORef Int -> IO Int
+updateScrollDown maximalScrollDown chan ref = do
+    events <- pollChannel chan
+    modifyIORef ref (min maximalScrollDown . max 0 . foldr (.) id events)
+    readIORef ref
+
+-- | Returns the maximal scrollDown for a given height and child sizes (and actions).
+maximalScrollDown :: Double -> [(Size Double, IO ())] -> Int
+maximalScrollDown h [] = 0
+maximalScrollDown h widgets =
+    length widgets - numberOfItemsWhenScrolledDown
+  where
+    numberOfItemsWhenScrolledDown = length $ takeWhile (< h) summedHeights
+    summedHeights = fmap sum $ tail $ inits heights
+    heights = fmap (height . fst) $ reverse widgets
+
+-- | Removes the widgets at the end of the list that don't fit.
+clipHeight :: Double -> [(Size Double, IO ())] -> [(Size Double, IO ())]
+clipHeight h [] = []
+clipHeight h (a : r) =
+    if itemHeight > h then [] else a : clipHeight (h - itemHeight) r
+  where
+    itemHeight = height $ fst a

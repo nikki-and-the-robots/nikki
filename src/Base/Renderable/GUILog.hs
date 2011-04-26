@@ -1,10 +1,10 @@
 
-module Base.Renderable.GUILog (guiLog, resetGuiLog) where
+module Base.Renderable.GUILog (mkGuiLog) where
 
 
 import Text.Logging
 
-import Control.Concurrent
+import Control.Concurrent.MVar
 
 import System.IO.Unsafe
 
@@ -18,38 +18,28 @@ import Base.Prose
 import Base.Constants
 
 import Base.Renderable.Common
+import Base.Renderable.WholeScreenPixmap
+import Base.Renderable.Layered
+import Base.Renderable.VBox
+import Base.Renderable.Centered
 
 
--- | Shows log messages in the GUI.
--- Switches the renderer to a functions that shows a log.
--- Adds the given message to the log.
-guiLog :: Application_ sort -> Prose -> IO ()
-guiLog app msg = do
-    logInfo $ unP msg
-    mapM_ addMsg $ proseLines msg
-    setDrawingCallbackGLContext (window app) (Just $ renderLog app)
+-- | Initializes logging in the GUI.
+-- Returns a Renderable and a logging command
+mkGuiLog :: Application_ s -> IO (RenderableInstance, Prose -> IO ())
+mkGuiLog app = do
+    logMVar <- newMVar []
+    let logCommand t = do
+            modifyMVar_ logMVar (\ log -> return (log +: t))
+            updateGLContext $ window app
+    return (RenderableInstance $ GuiLog logMVar, logCommand)
 
-renderLog :: Application_ s -> Ptr QPainter -> IO ()
-renderLog app ptr = do
-    clearScreen ptr backgroundColor
-    let font = alphaNumericFont $ applicationPixmaps app
-    log <- readMVar logRef
-    when (not $ null log) $ do
-        size <- fmap fromIntegral <$> sizeQPainter ptr
-        translate ptr (Position (fromUber 3) (height size - fromUber 1))
-        forM_ log $ \ line -> do
-            translate ptr (Position 0 (- fontHeight font))
-            todo
---             renderLineSimple font Nothing standardFontColor line ptr
+data GuiLog = GuiLog (MVar [Prose])
 
--- | global MVar for the log
-{-# NOINLINE logRef #-}
-logRef :: MVar [Prose]
-logRef = unsafePerformIO $ newMVar []
+instance Show GuiLog where
+    show = const "<GuiLog>"
 
-addMsg :: Prose -> IO ()
-addMsg msg = modifyMVar_ logRef (return . (msg :))
-
--- | Empty the gui log queue
-resetGuiLog :: IO ()
-resetGuiLog = modifyMVar_ logRef (const $ return [])
+instance Renderable GuiLog where
+    render ptr app parentSize (GuiLog logMVar) = do
+        lines <- wordWrap app (width parentSize) <$> readMVar logMVar
+        render ptr app parentSize (MenuBackground |:> centered (vBox lines))

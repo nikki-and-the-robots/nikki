@@ -1,9 +1,10 @@
 
-module Profiling.Physics (render) where
+module Profiling.Physics (Profiling.Physics.render) where
 
 
 import Data.IORef
 import Data.Time.Clock.POSIX
+import Data.Abelian
 
 import Text.Printf
 
@@ -15,7 +16,7 @@ import Graphics.Qt
 
 import Utils
 
-import Base hiding (render)
+import Base
 
 
 -- | time window which will be measured
@@ -29,11 +30,9 @@ getTime = realToFrac <$> getPOSIXTime
 render :: Application_ s -> Configuration -> Ptr QPainter -> Seconds -> IO ()
 render app config ptr spaceTime | physics_profiling config = do
     text <- tick spaceTime
-    let font = alphaNumericFont $ applicationPixmaps app
     resetMatrix ptr
     translate ptr (Position (fromUber 1) 0)
-    todo
---     ignore $ renderLineSimple font Nothing white text ptr
+    snd =<< Base.render ptr app zero text
 render _ _ _ _ = return ()
 
 -- | calculate the information to be shown
