@@ -1,7 +1,6 @@
 
 module Base.Renderable.Menu (
-    menu,
-    menuWithPreChoice,
+    menuAppState,
     treeToMenu,
   ) where
 
@@ -57,24 +56,16 @@ selectPrevious :: Menu -> Menu
 selectPrevious m@(Menu _ [] _ _) = m
 selectPrevious (Menu t b s a) = Menu t (init b) (last b) (s : a)
 
--- | like menuWithPreChoice but without the prechoice.
-menu :: Application_ sort -> String -> Maybe AppState
-    -> [(String, AppState)] -> AppState
-menu app title parent children =
-    menuWithPreChoice app title parent children' 0
-  where
-    children' = map (second const) children
-
 -- | Creates a menu with a title, if given.
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
-menuWithPreChoice :: Application_ sort -> String -> Maybe AppState
+menuAppState :: Application_ sort -> String -> Maybe AppState
     -> [(String, Int -> AppState)] -> Int -> AppState
-menuWithPreChoice app title mParent children preChoice =
-    inner $ mkMenu title children preChoice
+menuAppState app title mParent children preSelection =
+    inner $ mkMenu title children preSelection
   where
     inner :: Menu -> AppState
-    inner items = appState (mainMenuRenderable items) $ do
+    inner items = appState (menuRenderable items) $ do
         e <- waitForPressButton app
         if isUp e then return $ inner $ selectPrevious items
          else if isDown e then return $ inner $ selectNext items
@@ -97,12 +88,13 @@ menuWithPreChoice app title mParent children preChoice =
 
 -- | convert a SelectTree to a menu
 treeToMenu :: Application_ sort -> AppState -> SelectTree String -> (String -> AppState)
-    -> AppState
-treeToMenu app parent (Leaf n) f = f n
-treeToMenu app parent (Node label children i) f =
-    menu app label (Just parent) (map mkItem (I.toList children))
+    -> Int -> AppState
+treeToMenu app parent (Leaf n) f _ = f n
+treeToMenu app parent (Node label children i) f preSelection =
+    menuAppState app label (Just parent) (map mkItem (I.toList children)) preSelection
   where
-    mkItem t = (getLabel t, treeToMenu app this t f)
+    mkItem :: SelectTree String -> (String, Int -> AppState)
+    mkItem t = (getLabel t, \ ps -> treeToMenu app (this ps) t f 0)
     getLabel (Leaf n) = n
     getLabel (Node n _ _) = n
 
@@ -111,7 +103,7 @@ treeToMenu app parent (Node label children i) f =
 
 -- * rendering
 
-mainMenuRenderable items =
+menuRenderable items =
     MenuBackground |:>
     (centered $ vBox $ fmap centerHorizontally $ toLines items)
 

@@ -72,6 +72,8 @@ data AppState
     | GameAppState (M AppState) -- rendering managed by itself
     | FinalAppState
 
+type Parent = AppState
+
 
 data ApplicationPixmaps = ApplicationPixmaps {
     menuBackgrounds :: [Pixmap],

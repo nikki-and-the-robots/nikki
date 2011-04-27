@@ -12,9 +12,9 @@ import Base.Renderable.Menu
 
 
 -- | options that are used in the main menu and in the game (and possibly the editor?)
-generalOptions :: Application_ s -> AppState -> AppState
-generalOptions app parent = menu app "options" (Just parent)
-   (("fullscreen", NoGUIAppState (swapFullScreen app >> return this)) :
-   [])
+generalOptions :: Application_ s -> Int -> Parent -> AppState
+generalOptions app ps parent = menuAppState app "options" (Just parent)
+   (("fullscreen", \ ps -> NoGUIAppState (swapFullScreen app >> return (this ps))) :
+   []) ps
   where
-    this = generalOptions app parent
+    this ps = generalOptions app ps parent

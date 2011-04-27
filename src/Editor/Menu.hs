@@ -1,6 +1,6 @@
 {-# language NamedFieldPuns, ScopedTypeVariables #-}
 
-module Editor.Menu (PlayLevel, editorLoop) where
+module Editor.Menu (PlayLevel, editLevel) where
 
 
 import Data.SelectTree
@@ -24,6 +24,8 @@ import Editor.Scene
 import Editor.Scene.Types
 import Editor.Pickle
 
+import Top.Game
+
 
 type PlayLevel = Application -> AppState -> EditorScene Sort_ -> AppState
 
@@ -40,6 +42,12 @@ updateSceneMVar app mvar = do
 
 -- * menus and states
 
+editLevel :: Application -> EditorScene Sort_ -> AppState
+editLevel app s = NoGUIAppState $ io $ do
+    sceneMVar <- newMVar s
+    return $ editorLoop app playLevel sceneMVar s
+
+-- | main editor loop
 editorLoop :: Application -> PlayLevel -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> AppState
 editorLoop app play mvar scene = GameAppState $ do
@@ -52,7 +60,7 @@ editorLoop app play mvar scene = GameAppState $ do
         event <- lift $ waitForAppEvent app
         s <- get
         case (editorMode s, event) of
-            (_, Press k) | isStart k -> return $ editorMenu app play mvar s
+            (_, Press k) | isStart k -> return $ editorMenu app play mvar s 0
             (NormalMode, Press (KeyboardButton T _)) ->
                 -- test the level
                 return $ play app (editorLoop app play mvar s) s
@@ -78,30 +86,32 @@ editorLoop app play mvar scene = GameAppState $ do
 
 -- | state when pressing Escape during edit mode
 editorMenu :: Application -> PlayLevel -> MVar (EditorScene Sort_)
-    -> EditorScene Sort_ -> AppState
-editorMenu app play mvar scene =
+    -> EditorScene Sort_ -> Int -> AppState
+editorMenu app play mvar scene ps =
     case editorMode scene of
         NormalMode ->
-            menu app menuTitle (Just (edit scene))
+            menuAppState app menuTitle (Just $ edit scene)
               (
               lEnterOEM ++
-              [
-                ("select object", selectSort app this play mvar scene),
-                ("edit layers", editLayers app play mvar scene),
-                ("activate selection mode (for copy, cut and paste)", edit (toSelectionMode scene)),
-                ("try playing the level", play app (edit scene) scene),
-                ("save level", saveLevel app this editWithFilePath scene),
-                ("save level and exit editor", saveLevel app this (const $ getMainMenu app) scene),
-                ("exit editor without saving", reallyExitEditor app this)
-              ])
+              (
+                ("select object", selectSort app play mvar scene 0 . this) :
+                ("edit layers", editLayers app play mvar scene 0 . this) :
+                ("activate selection mode (for copy, cut and paste)",
+                    const $ edit (toSelectionMode scene)) :
+                ("try playing the level", const $ play app (edit scene) scene) :
+                ("save level", saveLevel app editWithFilePath scene . this) :
+                ("save level and exit editor",
+                    saveLevel app (const $ getMainMenu app) scene . this) :
+                ("exit editor without saving", reallyExitEditor app . this) :
+              [])) ps
         ObjectEditMode{} -> exitOEM app play mvar scene
         SelectionMode{} ->
-            menu app menuTitle (Just (edit scene)) [
-                ("cut selected objects", edit (cutSelection scene)),
-                ("copy selected objects", edit (copySelection scene)),
-                ("delete selected objects", edit (deleteSelection scene)),
-                ("exit selection mode", edit scene{editorMode = NormalMode})
-              ]
+            menuAppState app menuTitle (Just (edit scene)) (
+                ("cut selected objects", const $ edit (cutSelection scene)) :
+                ("copy selected objects", const $ edit (copySelection scene)) :
+                ("delete selected objects", const $ edit (deleteSelection scene)) :
+                ("exit selection mode", const $ edit scene{editorMode = NormalMode}) :
+                []) ps
   where
     menuTitle = case levelPath scene of
         Nothing -> "editing untitled level"
@@ -115,15 +125,16 @@ editorMenu app play mvar scene =
 
     lEnterOEM = case enterOEM app play mvar scene of
         Nothing -> []
-        Just x -> [("edit object", x)]
+        Just x -> [("edit object", const x)]
 
 
-saveLevel :: Application -> AppState -> (FilePath -> AppState) -> EditorScene Sort_ -> AppState
-saveLevel app _parent follower EditorScene{levelPath = (Just path), editorObjects_} =
+saveLevel :: Application -> (FilePath -> AppState) -> EditorScene Sort_
+    -> Parent -> AppState
+saveLevel app follower EditorScene{levelPath = (Just path), editorObjects_} _parent =
     appState (busyMessage $ p "saving level...") $ io $ do
         writeObjectsToDisk path editorObjects_
         return $ follower path
-saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjects_} =
+saveLevel app follower scene@EditorScene{levelPath = Nothing, editorObjects_} parent =
     askString app parent "level name" $ \ name -> NoGUIAppState $ rm2m $ do
         levelDirectory <- getFreeLevelsDirectory
         let path = levelDirectory </> name <..> "nl"
@@ -134,28 +145,30 @@ saveLevel app parent follower scene@EditorScene{levelPath = Nothing, editorObjec
             writeObjectsToDisk path editorObjects_
             return $ follower path
   where
-    this = saveLevel app parent follower scene
+    this = saveLevel app follower scene parent
 
 fileExists app save path objects =
-    menu app ("level with the name " ++ path ++ " already exists") (Just save) [
-        ("no", save),
-        ("yes", writeAnyway)
-      ]
+    menuAppState app ("level with the name " ++ path ++ " already exists") (Just save) [
+        ("no", const save),
+        ("yes", const writeAnyway)
+      ] 0
   where
     writeAnyway = appState (busyMessage $ p "saving level...") $ io $ do
         writeObjectsToDisk path objects
         return $ getMainMenu app
 
+reallyExitEditor :: Application_ s -> Parent -> AppState
 reallyExitEditor app editor =
-    menu app "really exit without saving?" (Just editor) [
-        ("no", editor),
-        ("yes", getMainMenu app)
-      ]
+    menuAppState app "really exit without saving?" (Just editor) (
+        ("no", const editor) :
+        ("yes", const $ getMainMenu app) :
+        []) 0
 
-selectSort :: Application -> AppState -> PlayLevel -> MVar (EditorScene Sort_)
-    -> EditorScene Sort_ -> AppState
-selectSort app editorMenu play mvar scene =
-    treeToMenu app editorMenu (fmap (sortId >>> getSortId) $ scene ^. availableSorts) select
+selectSort :: Application -> PlayLevel -> MVar (EditorScene Sort_)
+    -> EditorScene Sort_ -> Int -> Parent -> AppState
+selectSort app play mvar scene ps editorMenu =
+    treeToMenu app editorMenu
+        (fmap (sortId >>> getSortId) $ scene ^. availableSorts) select ps
   where
     select :: String -> AppState
     select n =
@@ -190,24 +203,23 @@ exitOEM app play mvar s =
 
 
 editLayers :: Application -> PlayLevel -> MVar (EditorScene Sort_)
-    -> EditorScene Sort_ -> AppState
-editLayers app play mvar scene =
-    menu app "edit layers" (Just editMenu) [
-        ("change layer distance", changeLayerDistance app this scene edit),
-        ("add background layer", edit (addDefaultBackground scene)),
-        ("add foreground layer", edit (addDefaultForeground scene))
-      ]
+    -> EditorScene Sort_ -> Int -> Parent -> AppState
+editLayers app play mvar scene ps parent =
+    menuAppState app "edit layers" (Just parent) (
+        ("change layer distance", changeLayerDistance app play mvar scene . this) :
+        ("add background layer", edit (addDefaultBackground scene)) :
+        ("add foreground layer", edit (addDefaultForeground scene)) :
+        []) ps
   where
-    edit s = editorLoop app play mvar s
-    editMenu = editorMenu app play mvar scene
-    this = editLayers app play mvar scene
+    edit s = const $ editorLoop app play mvar s
+    this ps = editLayers app play mvar scene ps parent
 
-changeLayerDistance :: Application -> AppState -> EditorScene Sort_
-    -> (EditorScene Sort_ -> AppState) -> AppState
-changeLayerDistance app parent scene follower =
+changeLayerDistance :: Application -> PlayLevel -> MVar (EditorScene Sort_)
+    -> EditorScene Sort_ -> Parent -> AppState
+changeLayerDistance app play mvar scene parent =
     askStringRead app parent "x distance" $ \ x ->
     askStringRead app parent "y distance" $ \ y ->
-        follower
+        editorLoop app play mvar
             (editorObjects .> layerA (selectedLayer scene) ^:
                 (setYDistance y . setXDistance x) $ scene)
 
