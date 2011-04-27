@@ -27,8 +27,6 @@ import Base.Types hiding (update)
 import Base.Prose
 import Base.Monad
 import Base.Configuration
-import Base.Application
-import Base.Renderable.Common
 import Base.Renderable.GUILog
 import Base.Renderable.Message
 

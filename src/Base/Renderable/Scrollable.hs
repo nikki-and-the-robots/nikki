@@ -5,7 +5,6 @@ module Base.Renderable.Scrollable (
   ) where
 
 
-import Data.Abelian
 import Data.IORef
 import Data.List
 
@@ -18,13 +17,10 @@ import Utils
 import Base.Prose
 import Base.Types
 import Base.Font
-import Base.Application
 
 import Base.Renderable.Common
-import Base.Renderable.VBox
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
-import Base.Renderable.Centered
 import Base.Renderable.CenterHorizontally
 
 

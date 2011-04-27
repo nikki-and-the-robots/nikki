@@ -8,8 +8,6 @@ module Base.Renderable.Menu (
 import Data.SelectTree (SelectTree(..))
 import qualified Data.Indexable as I
 
-import Control.Arrow
-
 import Graphics.Qt
 
 import Utils

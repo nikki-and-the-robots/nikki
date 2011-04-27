@@ -8,7 +8,6 @@ import Base.Types
 import Base.Monad
 import Base.Prose
 
-import Base.Renderable.Common
 import Base.Renderable.Menu
 
 

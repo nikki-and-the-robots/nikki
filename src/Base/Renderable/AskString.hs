@@ -11,7 +11,6 @@ import Graphics.Qt
 import Base.Types
 import Base.Polling
 import Base.Prose
-import Base.Font
 
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered

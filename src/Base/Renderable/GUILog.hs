@@ -2,11 +2,7 @@
 module Base.Renderable.GUILog (mkGuiLog) where
 
 
-import Text.Logging
-
 import Control.Concurrent.MVar
-
-import System.IO.Unsafe
 
 import Graphics.Qt
 
@@ -15,9 +11,7 @@ import Utils
 import Base.Types
 import Base.Font
 import Base.Prose
-import Base.Constants
 
-import Base.Renderable.Common
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.VBox

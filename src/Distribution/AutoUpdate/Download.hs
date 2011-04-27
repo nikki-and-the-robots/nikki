@@ -5,7 +5,6 @@ module Distribution.AutoUpdate.Download where
 
 
 import qualified Data.ByteString.Lazy as BS
-import Data.Monoid
 
 import Control.Monad.Trans.Error
 
@@ -16,7 +15,6 @@ import Utils
 
 import Base.Types
 import Base.Prose
-import Base.Renderable.GUILog
 
 
 -- | Tries to fetch the file with the given path.

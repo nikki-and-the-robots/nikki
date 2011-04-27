@@ -8,7 +8,6 @@ import Utils
 import Base.Types
 import Base.Prose
 import Base.Application
-import Base.Font
 
 import Base.Renderable.Common
 import Base.Renderable.WholeScreenPixmap

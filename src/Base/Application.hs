@@ -5,9 +5,6 @@ module Base.Application (
   ) where
 
 
-import Safe
-
-import Control.Concurrent
 import Control.Monad.State (get)
 
 import Graphics.Qt
@@ -16,10 +13,8 @@ import Utils
 
 import Base.Types
 import Base.Configuration
-import Base.Polling
-import Base.Monad
 
-import Base.Renderable.Common
+import Base.Renderable.Common ()
 
 
 appState :: Renderable r => r -> M AppState -> AppState

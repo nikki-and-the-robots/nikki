@@ -25,12 +25,11 @@ import Graphics.Qt
 import Utils
 
 import Base.Configuration as Configuration
-import Base.Constants
 import Base.Types
 import Base.Monad
 import Base.Prose
-import Base.Font
-import Base.Renderable.Common
+import Base.Renderable.Common ()
+
 
 -- | returns the seconds since epoch start
 getNow = realToFrac <$> getPOSIXTime
