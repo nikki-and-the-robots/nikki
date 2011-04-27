@@ -1,10 +1,13 @@
-{-# language ScopedTypeVariables, ViewPatterns, FlexibleInstances #-}
+{-# language ScopedTypeVariables, ViewPatterns #-}
 
 module Base.Font (
-    Glyph,
     loadAlphaNumericFont,
     freeFont,
     fontHeight,
+
+    Glyph(..),
+    glyphSize,
+    proseToGlyphs,
     wordWrap,
   ) where
 
@@ -37,8 +40,8 @@ import Base.Pixmap
 import Base.Prose
 import Base.Font.ColorVariant
 
-import Base.Renderable.Common
 
+standardFontColor :: Color = QtColor 70 210 245 255
 
 standardFontDir :: FilePath
 standardFontDir = "png" </> "font"
@@ -83,6 +86,11 @@ pixmapsWidth pixs =
     -- gaps in between
     max 0 (fromIntegral (Prelude.length pixs - 1)) * fromUber 1
 
+-- | Returns the colorvariant for the given color.
+getColorVariant :: Font -> Color -> ColorVariant
+getColorVariant (Font m) color = case Data.Map.lookup color m of
+    Just v -> v
+    Nothing -> error ("font color variant missing: " ++ show color)
 
 -- * word wrap
 
@@ -219,33 +227,3 @@ parseFileName name = do
 -- | frees the memory taken by a font
 freeFont :: Font -> IO ()
 freeFont (Font variants) = forM_ variants freeColorVariant
-
-
--- * rendering
-
--- | used for rendering one line of text
--- (all other text rendering is implemented in terms of this)
-instance Renderable [Glyph] where
-    render ptr app config parentSize [] = return (zero, return ())
-    render ptr app config parentSize glyphs =
-        return (size, action)
-      where
-        size = Size
-            ((sum $ fmap (width . glyphSize) glyphs) + kerning)
-            (height $ glyphSize $ head glyphs)
-        kerning = fromUber (fromIntegral (length glyphs) - 1)
-        action = forM_ glyphs $ \ glyph -> do
-            recoverMatrix ptr $
-                (snd =<< render ptr app config size (glyphPixmap glyph))
-            translate ptr (Position (width (glyphSize glyph) + fromUber 1) 0)
-
--- | text rendering without word wrapping
-instance Renderable Prose where
-    render ptr app config size prose =
-        render ptr app config size $ proseToGlyphs app prose
-
--- | Returns the colorvariant for the given color.
-getColorVariant :: Font -> Color -> ColorVariant
-getColorVariant (Font m) color = case Data.Map.lookup color m of
-    Just v -> v
-    Nothing -> error ("font color variant missing: " ++ show color)

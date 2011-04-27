@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables, TypeSynonymInstances #-}
+{-# language ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances #-}
 
 -- | Things used in multiple Widgets.
 
@@ -21,10 +21,8 @@ import Base.Types
 import Base.Polling
 import Base.Pixmap
 import Base.Prose
+import Base.Font
 
-
-backgroundColor :: Color = QtColor 16 0 156 255
-standardFontColor :: Color = QtColor 70 210 245 255
 
 menuDir :: FilePath
 menuDir = pngDir </> "menu"
@@ -70,3 +68,24 @@ instance Renderable Pixmap where
     render ptr app _ size pix = return $ tuple (pixmapSize pix) $ do
         translate ptr (pix ^. pixmapOffset)
         drawPixmap ptr zero (pixmap pix)
+
+-- | used for rendering one line of text
+-- (all other text rendering is implemented in terms of this)
+instance Renderable [Glyph] where
+    render ptr app config parentSize [] = return (zero, return ())
+    render ptr app config parentSize glyphs =
+        return (size, action)
+      where
+        size = Size
+            ((sum $ fmap (width . glyphSize) glyphs) + kerning)
+            (height $ glyphSize $ head glyphs)
+        kerning = fromUber (fromIntegral (length glyphs) - 1)
+        action = forM_ glyphs $ \ glyph -> do
+            recoverMatrix ptr $
+                (snd =<< render ptr app config size (glyphPixmap glyph))
+            translate ptr (Position (width (glyphSize glyph) + fromUber 1) 0)
+
+-- | text rendering without word wrapping
+instance Renderable Prose where
+    render ptr app config size prose =
+        render ptr app config size $ proseToGlyphs app prose

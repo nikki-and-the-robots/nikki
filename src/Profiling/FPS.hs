@@ -30,7 +30,7 @@ import Base.Types
 import Base.Monad
 import Base.Prose
 import Base.Font
-
+import Base.Renderable.Common
 
 -- | returns the seconds since epoch start
 getNow = realToFrac <$> getPOSIXTime
