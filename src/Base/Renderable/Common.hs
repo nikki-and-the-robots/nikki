@@ -24,9 +24,6 @@ import Base.Prose
 import Base.Font
 
 
-menuDir :: FilePath
-menuDir = pngDir </> "menu"
-
 -- | Blocks until a Press AppEvent is received.
 -- Flushes the event queue before that.
 waitForPressButton :: Application_ s -> M Button

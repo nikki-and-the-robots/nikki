@@ -31,14 +31,16 @@ withApplicationPixmaps cmd = do
 
 load :: RM ApplicationPixmaps
 load = do
-    menubackgrounds <- mapM (loadPixmap zero) =<< getDataFiles (menuDir </> "background") (Just ".png")
+    menubackgrounds <- mapM (loadPixmap zero) =<< getDataFiles (osdDir </> "background") (Just ".png")
     alphaNumericFont <- loadAlphaNumericFont
     menuTitlePixmap <- loadOsd "menuTitle"
     finished <- fmapM loadOsd finishedMap
     return $ ApplicationPixmaps menubackgrounds alphaNumericFont menuTitlePixmap finished
 
 loadOsd :: String -> RM Pixmap
-loadOsd name = io . loadPixmap zero =<< getDataFileName (pngDir </> "osd" </> name <.> "png")
+loadOsd name = io . loadPixmap zero =<< getDataFileName (osdDir </> name <.> "png")
+
+osdDir = pngDir </> "osd"
 
 free :: ApplicationPixmaps -> IO ()
 free (ApplicationPixmaps menuBackgrounds font menuTitle finished) = do
