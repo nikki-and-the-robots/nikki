@@ -103,6 +103,9 @@ class Show r => Renderable r where
 data RenderableInstance =
     forall r . Renderable r => RenderableInstance r
 
+renderable :: Renderable r => r -> RenderableInstance
+renderable = RenderableInstance
+
 instance Show RenderableInstance where
     show (RenderableInstance x) = show x
 

@@ -27,13 +27,13 @@ import Base.Renderable.CenterHorizontally
 
 data Menu
     = Menu {
-        title :: Prose,
+        title :: Maybe Prose, -- if Nothing it's the main menu
         before :: [(Prose, AppState)],
         selected :: (Prose, AppState),
         after :: [(Prose, AppState)]
       }
 
-mkMenu :: Prose -> [(Prose, Int -> AppState)] -> Int -> Menu
+mkMenu :: Maybe Prose -> [(Prose, Int -> AppState)] -> Int -> Menu
 mkMenu title items =
     inner $ zipWith (\ (label, appStateFun) n -> (label, appStateFun n)) items [0..]
   where
@@ -54,16 +54,17 @@ selectPrevious :: Menu -> Menu
 selectPrevious m@(Menu _ [] _ _) = m
 selectPrevious (Menu t b s a) = Menu t (init b) (last b) (s : a)
 
--- | Creates a menu with a title, if given.
+-- | Creates a menu.
+-- If a title is given, it will be displayed. If not, the main menu will be assumed.
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
-menuAppState :: Application_ sort -> Prose -> Maybe AppState
+menuAppState :: Application_ sort -> Maybe Prose -> Maybe AppState
     -> [(Prose, Int -> AppState)] -> Int -> AppState
 menuAppState app title mParent children preSelection =
     inner $ mkMenu title children preSelection
   where
     inner :: Menu -> AppState
-    inner items = appState (menuRenderable items) $ do
+    inner items = appState (menuRenderable app items) $ do
         e <- waitForPressButton app
         if isUp e then return $ inner $ selectPrevious items
          else if isDown e then return $ inner $ selectNext items
@@ -91,7 +92,8 @@ treeToMenu :: Application_ sort -> AppState -> SelectTree String -> (String -> A
     -> Int -> AppState
 treeToMenu app parent (Leaf n) f _ = f n
 treeToMenu app parent (Node label children i) f preSelection =
-    menuAppState app (pVerbatim label) (Just parent) (map mkItem (I.toList children)) preSelection
+    menuAppState app (Just $ pVerbatim label) (Just parent)
+        (map mkItem (I.toList children)) preSelection
   where
     mkItem :: SelectTree String -> (Prose, Int -> AppState)
     mkItem t = (pVerbatim $ getLabel t, \ ps -> treeToMenu app (this ps) t f 0)
@@ -103,13 +105,26 @@ treeToMenu app parent (Node label children i) f preSelection =
 
 -- * rendering
 
-menuRenderable items =
-    MenuBackground |:>
-    (centered $ vBox $ fmap centerHorizontally $ toLines items)
+menuRenderable app items =
+    case title items of
+        Just title ->
+            -- normal menu
+            MenuBackground |:>
+            (centered $ vBox $ fmap centerHorizontally $ titleLines ++ toLines items)
+          where
+            titleLines = fmap renderable $
+                title : pVerbatim " " : []
+        Nothing ->
+            -- main menu
+            MenuBackground |:>
+            (centered $ vBox $ fmap centerHorizontally
+                (mainMenuPixmap : toLines items))
+          where
+            mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
 
-toLines :: Menu -> [Prose]
-toLines (Menu title before selected after) =
-    title : pVerbatim "" :
+-- | return the items (entries) of the menu
+toLines :: Menu -> [RenderableInstance]
+toLines (Menu _ before selected after) = fmap renderable $
     map fst before ++
     (proseSelect $ fst selected) :
     map fst after

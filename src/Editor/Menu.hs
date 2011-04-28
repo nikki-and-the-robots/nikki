@@ -87,7 +87,7 @@ editorMenu :: Application -> MVar (EditorScene Sort_)
 editorMenu app mvar scene ps =
     case editorMode scene of
         NormalMode ->
-            menuAppState app menuTitle (Just $ edit scene)
+            menuAppState app (Just menuTitle) (Just $ edit scene)
               (
               lEnterOEM ++
               (
@@ -103,7 +103,7 @@ editorMenu app mvar scene ps =
               [])) ps
         ObjectEditMode{} -> exitOEM app mvar scene
         SelectionMode{} ->
-            menuAppState app menuTitle (Just (edit scene)) (
+            menuAppState app (Just menuTitle) (Just (edit scene)) (
                 (p "cut selected objects", const $ edit (cutSelection scene)) :
                 (p "copy selected objects", const $ edit (copySelection scene)) :
                 (p "delete selected objects", const $ edit (deleteSelection scene)) :
@@ -145,7 +145,7 @@ saveLevel app follower scene@EditorScene{levelPath = Nothing, editorObjects_} pa
     this = saveLevel app follower scene parent
 
 fileExists app save path objects =
-    menuAppState app (p "level with the name " +> pVerbatim path +> p " already exists") (Just save) (
+    menuAppState app (Just $ p "level with the name " +> pVerbatim path +> p " already exists") (Just save) (
         (p "no", const save) :
         (p "yes", const writeAnyway) :
         []) 0
@@ -156,7 +156,7 @@ fileExists app save path objects =
 
 reallyExitEditor :: Application_ s -> Parent -> AppState
 reallyExitEditor app editor =
-    menuAppState app (p "really exit without saving?") (Just editor) (
+    menuAppState app (Just $ p "really exit without saving?") (Just editor) (
         (p "no", const editor) :
         (p "yes", const $ getMainMenu app) :
         []) 0
@@ -202,7 +202,7 @@ exitOEM app mvar s =
 editLayers :: Application -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Int -> Parent -> AppState
 editLayers app mvar scene ps parent =
-    menuAppState app (p "edit layers") (Just parent) (
+    menuAppState app (Just $ p "edit layers") (Just parent) (
         (p "change layer distance", changeLayerDistance app mvar scene . this) :
         (p "add background layer", edit (addDefaultBackground scene)) :
         (p "add foreground layer", edit (addDefaultForeground scene)) :
