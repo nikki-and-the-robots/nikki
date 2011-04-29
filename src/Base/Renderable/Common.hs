@@ -70,7 +70,7 @@ instance Renderable [Glyph] where
       where
         size = Size
             ((sum $ fmap (width . glyphSize) glyphs) + kerning)
-            (height $ glyphSize $ head glyphs)
+            fontHeight
         kerning = fromUber (fromIntegral (length glyphs) - 1)
         action = forM_ glyphs $ \ glyph -> do
             recoverMatrix ptr $

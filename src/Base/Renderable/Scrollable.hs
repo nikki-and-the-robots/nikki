@@ -21,9 +21,14 @@ import Base.Font
 import Base.Renderable.Common
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
-import Base.Renderable.CenterHorizontally
+import Base.Renderable.Centered
+import Base.Renderable.Spacer
 
 
+textWidth = 800
+
+-- | Shows a text till some key is pressed.
+-- Adds an empty line at the top.
 scrollingAppState :: Application_ s -> [Prose] -> AppState -> AppState
 scrollingAppState app text follower = NoGUIAppState $ io $ do
     (renderable, sendCommand) <- scrollable app text
@@ -42,36 +47,44 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
             return follower
 
 scrollable :: Application_ s -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
-scrollable app lines = do
+scrollable app children = do
     chan <- newChan
     scrollDownRef <- newIORef 0
-    let r = RenderableInstance (
-            MenuBackground |:>
-            (centerHorizontally $ Scrollable (wordWrap app textWidth lines) chan scrollDownRef)
-          )
+    let r = MenuBackground |:>
+            (centered $
+            parentSpacer (\ (Size w h) -> Size textWidth h) $
+            Scrollable children chan scrollDownRef)
         send fun = do
             writeChan chan fun
             updateGLContext (window app)
-    return (r, send)
+    return (renderable r, send)
 
-data Scrollable = Scrollable [[Glyph]] (Chan (Int -> Int)) (IORef Int)
+data Scrollable = Scrollable [Prose] (Chan (Int -> Int)) (IORef Int)
 
 instance Show Scrollable where
     show = const "<Scrollable>"
 
-textWidth :: Double = 800
-
 instance Renderable Scrollable where
-    render ptr app config parentSize (Scrollable lines chan scrollDownRef) = do
+    render ptr app config parentSize (Scrollable children chan scrollDownRef) = do
         let h = height parentSize
-            widgetSize = Size textWidth h
-        lineRenders <- fmapM (render ptr app config widgetSize) lines
+            widgetSize = parentSize
+            lines = concatMap (wordWrap app (width parentSize)) children
+        lineRenders <-
+            fmapM (render ptr app config widgetSize) $
+            addSpacer $ fmap spacerForNull $
+            lines
         scrollDown <- updateScrollDown (maximalScrollDown h lineRenders) chan scrollDownRef
         let action = forM_ (clipHeight h $ drop scrollDown lineRenders) $
                 \ (itemSize, itemAction) -> do
                     recoverMatrix ptr $ itemAction
                     translate ptr (Position 0 (height itemSize))
         return (widgetSize, action)
+      where
+        lineSpacer = renderable $ emptySpacer (const $ Size 0 fontHeight)
+        addSpacer = (lineSpacer :)
+        spacerForNull :: [Glyph] -> RenderableInstance
+        spacerForNull [] = lineSpacer
+        spacerForNull x = renderable x
 
 -- | Updates the scrollDown according to the widget size and events.
 -- Returns the current scrollDown.

@@ -50,11 +50,10 @@ fontColors = nub $
     headerFontColor :
     []
 
--- * querying
+fontHeight :: Num n => n
+fontHeight = 36
 
--- | returns the standard height of the font
-fontHeight :: Font -> Double
-fontHeight = height . pixmapSize . errorSymbol . (! standardFontColor) . colorVariants
+-- * querying
 
 standardFont :: Application_ s -> Font
 standardFont = alphaNumericFont . applicationPixmaps
@@ -150,8 +149,8 @@ wordWrapGlyphs wrapWidth =
             reverse akk : inner 0 [] (a : r)
     inner _ akk [] = reverse akk : []
 
-wordWrap :: Application_ s -> Double -> [Prose] -> [[Glyph]]
-wordWrap app w = concatMap (wordWrapGlyphs w . proseToGlyphs app)
+wordWrap :: Application_ s -> Double -> Prose -> [[Glyph]]
+wordWrap app w = wordWrapGlyphs w . proseToGlyphs app
 
 
 -- * loading

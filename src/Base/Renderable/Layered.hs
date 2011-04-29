@@ -14,6 +14,7 @@ data Layered =
     Layered RenderableInstance RenderableInstance
   deriving Show
 
+
 (|:>) :: (Renderable a, Renderable b) => a -> b -> Layered
 a |:> b = Layered (RenderableInstance a) (RenderableInstance b)
 
