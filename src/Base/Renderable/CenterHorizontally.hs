@@ -20,6 +20,6 @@ instance Renderable CenterHorizontally where
         let size = Size (width parentSize) (height childSize)
             offset = (width parentSize - width childSize) / 2
             action = do
-                translate ptr $ uberRound (Position offset 0)
+                translate ptr $ Position offset 0
                 childAction
         return (size, action)

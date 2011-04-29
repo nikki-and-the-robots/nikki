@@ -78,6 +78,7 @@ type Parent = AppState
 data ApplicationPixmaps = ApplicationPixmaps {
     menuBackgrounds :: [Pixmap],
     alphaNumericFont :: Font,
+    headerCubePixmaps :: HeaderCubePixmaps,
     menuTitlePixmap :: Pixmap,
     finished :: Map LevelResult Pixmap
   }
@@ -91,6 +92,14 @@ data ColorVariant = ColorVariant {
         -- ordered: longer keys first
         glyphs :: [(ByteString, Pixmap)],
         errorSymbol :: Pixmap
+      }
+
+data HeaderCubePixmaps
+    = HeaderCubePixmaps {
+        startCube :: Pixmap,
+        standardCube :: Pixmap,
+        spaceCube :: Pixmap,
+        endCube :: Pixmap
       }
 
 

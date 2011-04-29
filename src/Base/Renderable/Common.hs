@@ -37,11 +37,6 @@ waitForPressButton app = do
             _ -> inner
 
 
--- | rounds to uberpixels
-uberRound :: Position Double -> Position Double
-uberRound =
-    fmap ((/ 4) >>> floor >>> fromIntegral >>> (* 4))
-
 -- * Renderable
 
 instance Renderable RenderableInstance where

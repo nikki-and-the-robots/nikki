@@ -23,6 +23,7 @@ import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.Centered
 import Base.Renderable.CenterHorizontally
+import Base.Renderable.Header
 
 
 data Menu
@@ -112,8 +113,10 @@ menuRenderable app items =
             MenuBackground |:>
             (centered $ vBox $ fmap centerHorizontally $ titleLines ++ toLines items)
           where
-            titleLines = fmap renderable $
-                title : pVerbatim " " : []
+            titleLines =
+                header app title :
+                renderable (pVerbatim " ") :
+                []
         Nothing ->
             -- main menu
             MenuBackground |:>

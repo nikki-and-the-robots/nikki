@@ -14,6 +14,8 @@ import Control.Exception
 
 import System.FilePath
 
+import Graphics.Qt
+
 import Utils
 
 import Base.Paths
@@ -33,21 +35,37 @@ load :: RM ApplicationPixmaps
 load = do
     menubackgrounds <- mapM (loadPixmap zero) =<< getDataFiles (osdDir </> "background") (Just ".png")
     alphaNumericFont <- loadAlphaNumericFont
-    menuTitlePixmap <- loadOsd "menuTitle"
-    finished <- fmapM loadOsd finishedMap
-    return $ ApplicationPixmaps menubackgrounds alphaNumericFont menuTitlePixmap finished
+    headerCubePixmaps <- loadHeaderCubePixmaps
+    menuTitlePixmap <- loadOsd zero "menuTitle"
+    finished <- fmapM (loadOsd zero) finishedMap
+    return $ ApplicationPixmaps menubackgrounds alphaNumericFont headerCubePixmaps
+        menuTitlePixmap finished
 
-loadOsd :: String -> RM Pixmap
-loadOsd name = io . loadPixmap zero =<< getDataFileName (osdDir </> name <.> "png")
+loadHeaderCubePixmaps :: RM HeaderCubePixmaps
+loadHeaderCubePixmaps = do
+    start <- loadOsd off "box-left"
+    standard <- loadOsd off "box-standard"
+    space <- loadOsd off "box-space"
+    end <- loadOsd off "box-right"
+    return $ HeaderCubePixmaps start standard space end
+  where
+    off = Position 1 1
+
+loadOsd :: Position Int -> String -> RM Pixmap
+loadOsd offset name = io . loadPixmap offset =<< getDataFileName (osdDir </> name <.> "png")
 
 osdDir = pngDir </> "osd"
 
 free :: ApplicationPixmaps -> IO ()
-free (ApplicationPixmaps menuBackgrounds font menuTitle finished) = do
+free (ApplicationPixmaps menuBackgrounds font cubePixmaps menuTitle finished) = do
     fmapM_ freePixmap menuBackgrounds
     freeFont font
+    freeHeaderCubePixmaps cubePixmaps
     freePixmap menuTitle
     fmapM_ freePixmap finished
+
+freeHeaderCubePixmaps (HeaderCubePixmaps a b c d) =
+    fmapM_ freePixmap [a, b, c, d]
 
 finishedMap :: Map LevelResult String
 finishedMap = fromList (

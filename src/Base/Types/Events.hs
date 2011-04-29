@@ -41,18 +41,6 @@ isKey :: Key -> Button -> Bool
 isKey a (KeyboardButton b _) = a == b
 isKey _ _ = False
 
-data ControlData = ControlData {
-    events :: [AppEvent],
-    held :: Set Button
-  }
-    deriving Show
-
--- | return all Pressed Buttons from the ControlData.
-pressed :: ControlData -> [Button]
-pressed = catMaybes . map inner . events
-  where
-    inner (Press x) = Just x
-    inner _ = Nothing
 
 isArrowButton :: Button -> Bool
 isArrowButton (KeyboardButton k _) =
@@ -93,3 +81,18 @@ allArrowKeys = Set.fromList (
     RightArrow :
     [])
 
+
+-- * ControlData
+
+data ControlData = ControlData {
+    events :: [AppEvent],
+    held :: Set Button
+  }
+    deriving Show
+
+-- | return all Pressed Buttons from the ControlData.
+pressed :: ControlData -> [Button]
+pressed = catMaybes . map inner . events
+  where
+    inner (Press x) = Just x
+    inner _ = Nothing

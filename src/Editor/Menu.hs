@@ -228,7 +228,7 @@ showEditorHelp app parent scene = case editorMode scene of
     (ObjectEditMode i) ->
         let (Just oem) = objectEditMode $ editorSort $ getMainLayerEditorObject scene i
             phantomOEM :: OEMState = oemInitialize oem undefined
-            helpText = proseLines $ p $ oemHelp phantomOEM
+            helpText = fmap p $ lines $ oemHelp phantomOEM
         in scrollingAppState app helpText parent
   where
     showHelpFile :: AppState

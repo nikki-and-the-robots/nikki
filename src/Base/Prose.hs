@@ -1,48 +1,71 @@
-{-# language GeneralizedNewtypeDeriving #-}
+{-# language GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
 
 
 -- | Module for human readable text.
 
 module Base.Prose (
-    Prose,
+    Prose(..),
+    standardFontColor,
+    headerFontColor,
+    colorizeProse,
+    capitalizeProse,
     getByteString,
     p,
     pVerbatim,
     unP,
     pFile,
-    proseLines,
   ) where
 
 
 import Data.Monoid
 import qualified Data.ByteString as BS
+import Data.Char
 
 import Codec.Binary.UTF8.Light
+
+import Control.Arrow
+
+import Graphics.Qt
 
 import Utils
 
 
+standardFontColor :: Color = QtColor 70 210 245 255
+headerFontColor :: Color = QtColor 10 50 60 255
+
 -- | Type for human readable text.
 -- (utf8 encoded)
-newtype Prose = Prose BS.ByteString
+newtype Prose
+    = Prose [(Color, BS.ByteString)]
   deriving (Show, Monoid)
 
--- | returns the inner bytestring
+colorizeProse :: Color -> Prose -> Prose
+colorizeProse color p =
+    Prose $ return $ tuple color $ getByteString p
+
+-- | Returns the content of a Prose as a ByteString
 getByteString :: Prose -> BS.ByteString
-getByteString (Prose x) = x
+getByteString (Prose list) = foldr (+>) BS.empty $ fmap snd list
+
+capitalizeProse :: Prose -> Prose
+capitalizeProse (Prose list) =
+    Prose $ fmap (second capitalizeByteString) list
+  where
+    capitalizeByteString :: BS.ByteString -> BS.ByteString
+    capitalizeByteString = encode . map toUpper . decode
 
 -- | Converts haskell Strings to human readable text.
 -- Will be used for translations in the future.
 p :: String -> Prose
-p = Prose . encode
+p = pVerbatim
 
 -- | Convert any (ASCII-) string to Prose without doing any translation.
 pVerbatim :: String -> Prose
-pVerbatim = Prose . encode
+pVerbatim x = Prose [(standardFontColor, encode x)]
 
 -- | inverse of p
 unP :: Prose -> String
-unP (Prose x) = decode x
+unP = decode . getByteString
 
 -- | Read files and return their content as Prose.
 -- Should be replaced with something that supports
@@ -50,12 +73,11 @@ unP (Prose x) = decode x
 -- (Needs to be separated from p, because it has to return multiple lines.)
 pFile :: FilePath -> IO [Prose]
 pFile file =
-    proseLines <$> Prose <$> BS.readFile file
+    fmap (Prose . return . tuple standardFontColor) <$> byteStringLines <$> BS.readFile file
 
--- | like Data.List.lines, but with Prose.
-proseLines :: Prose -> [Prose]
-proseLines (Prose x) =
-    map Prose $ inner BS.empty x
+byteStringLines :: BS.ByteString -> [BS.ByteString]
+byteStringLines =
+    inner BS.empty
   where
     inner :: BS.ByteString -> BS.ByteString -> [BS.ByteString]
     inner akk x = case BS.uncons x of

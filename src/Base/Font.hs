@@ -41,16 +41,14 @@ import Base.Prose
 import Base.Font.ColorVariant
 
 
-standardFontColor :: Color = QtColor 70 210 245 255
-
 standardFontDir :: FilePath
 standardFontDir = "png" </> "font"
 
 fontColors :: [Color]
-fontColors = nub (
+fontColors = nub $
     standardFontColor :
-    white :
-    [])
+    headerFontColor :
+    []
 
 -- * querying
 
@@ -62,20 +60,24 @@ standardFont :: Application_ s -> Font
 standardFont = alphaNumericFont . applicationPixmaps
 
 proseToGlyphs :: Application_ s -> Prose -> [Glyph]
-proseToGlyphs app prose =
-    inner glyphs_ $ getByteString prose
+proseToGlyphs app (Prose list) =
+    concatMap inner list
   where
-    glyphs_ = glyphs variant
-    variant = getColorVariant (standardFont app) standardFontColor
+    inner :: (Color, BS.ByteString) -> [Glyph]
+    inner (color, string) =
+        searchGlyphs (getColorVariant (standardFont app) color) string
 
-    inner :: [(BS.ByteString, Pixmap)] -> BS.ByteString -> [Glyph]
+searchGlyphs :: ColorVariant -> BS.ByteString -> [Glyph]
+searchGlyphs variant =
+    inner (glyphs variant)
+  where
     inner _ string | BS.null string = []
     inner ((key, pixmap) : r) string =
         if key `BS.isPrefixOf` string then
-            Glyph key pixmap : inner (glyphs variant) (BS.drop (BS.length key) string)
+            Glyph key pixmap : searchGlyphs variant (BS.drop (BS.length key) string)
         else
             inner r string
-    inner [] string = ErrorGlyph (errorSymbol variant) : inner (glyphs variant) (BS.tail string)
+    inner [] string = ErrorGlyph (errorSymbol variant) : searchGlyphs variant (BS.tail string)
 
 -- | Returns the width of the given sequence of pixmaps,
 -- including 1 üp for kerning
