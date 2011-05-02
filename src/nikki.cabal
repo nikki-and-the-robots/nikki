@@ -33,7 +33,7 @@ Executable dummy
         -O0
 
     build-depends:
-        base >= 4 && < 5
+        base == 4.*
 
     if os(darwin)
         build-depends:
@@ -79,7 +79,7 @@ Executable  nikki
             -headerpad_max_install_names
 
     build-depends:
-        base >= 4 && < 5
+        base == 4.*
         , directory
         , process
         , filepath
@@ -87,11 +87,11 @@ Executable  nikki
         , mtl
         , containers
         , safe
-        , FindBin >= 0.0.3
+        , FindBin >= 0.0.5
     if os(linux)
         build-depends:
             -- for setting LD_LIBRARY_PATH
-            unix >= 2.4.0.2
+            unix == 2.4.*
 
     if os(mingw32)
         ld-options:
@@ -139,13 +139,13 @@ Executable core
             -headerpad_max_install_names
 
     build-depends:
-          base >= 4 && < 5
+          base == 4.*
         , binary
         , syb
         , containers
         , directory
         , filepath
-        , mtl >= 2
+        , mtl == 2.*
         , process
         , Hipmunk >= 5.2.0.2
         , sfml-audio >= 0.2.1706.1
@@ -155,7 +155,7 @@ Executable core
         , transformers
         , time
         , parsec3 >= 1.0.0.0
-        , FindBin >= 0.0.3
+        , FindBin >= 0.0.5
         , clocked == 0.3
         , cmdargs >= 0.6.6
         , MonadCatchIO-transformers >= 0.2.2.2
