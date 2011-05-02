@@ -56,7 +56,7 @@ loadPixmaps = do
   where
     load :: (String, Int) -> RM (String, [Pixmap])
     load (name, n) = do
-        pixmaps <- mapM (getDataFileName >=> loadPixmap nikkiPngOffset) $
+        pixmaps <- mapM (getDataFileName >=> loadSymmetricPixmap nikkiPngOffset) $
                         map (mkPngPath name) [0..n]
         return (name, pixmaps)
     nikkiPngOffset = Position (1 + fromUber 3) (1 + 6)

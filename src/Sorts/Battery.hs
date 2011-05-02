@@ -32,7 +32,7 @@ batteryMaterialMass = 3.588785046728972
 batterySize :: Fractional f => Size f
 batterySize = Size 28 52
 
-batteryOffset = Position (- 17) (- 5) -- offset from upper left corner (in the graphic file)
+batteryOffset = Position 17 5 -- offset from upper left corner (in the graphic file)
 
 contactHeight = fromUber 1
 contactWidth = fromUber 3
@@ -43,8 +43,7 @@ contactWidth = fromUber 3
 sorts :: RM [Sort_]
 sorts = do
     pngFile <- getDataFileName (pngDir </> "battery/standard.png")
-    ptr <- io $ newQPixmap pngFile
-    pixmap <- io $ mkPixmap ptr batterySize batteryOffset
+    pixmap <- io $ loadPixmap pngFile batteryOffset batterySize
     return $ return $ Sort_ $ BSort pixmap
 
 data BSort

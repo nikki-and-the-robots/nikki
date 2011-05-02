@@ -46,7 +46,7 @@ sorts = map Sort_ <$> mapM mkSort backgrounds
 mkSort :: String -> RM BSort
 mkSort name = do
                                 -- zeropadding :)
-    pixmaps <- mapM (loadPixmap zero) =<< getPngPaths name
+    pixmaps <- mapM (loadSymmetricPixmap zero) =<< getPngPaths name
     return $ BSort name (sort pixmaps)
   where
     sort = sortBy (withView (width . pixmapSize) compare)

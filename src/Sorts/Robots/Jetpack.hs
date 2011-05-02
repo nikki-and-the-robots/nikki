@@ -53,8 +53,7 @@ mkJetpackPngPath name = pngDir </> "robots" </> "jetpack" </> name <.> "png"
 -- | loads a pixmap with the special size and padding of jetpack pixmaps
 loadJetpackPixmap :: FilePath -> IO Pixmap
 loadJetpackPixmap file = do
-    p <- newQPixmap file
-    mkPixmap p (Size (fromUber 27) (fromUber 21)) (Position (- 9) (- 1))
+    loadPixmap file (Position 9 1) (Size (fromUber 27) (fromUber 21))
 
 data RenderState
     = Wait

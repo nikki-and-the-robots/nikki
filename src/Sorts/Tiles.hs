@@ -39,28 +39,28 @@ frameDuration :: Seconds = 1.0
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
 names =
-    ("tiles/black-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/white-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/yellow-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/green-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/aqua-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/blue-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/pink-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/red-standard", (Position (- 1) (- 1)), Size 64 64) :
-    ("tiles/black-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/white-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/yellow-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/green-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/aqua-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/blue-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/pink-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tiles/red-small", (Position (- 1) (- 1)), Size 32 32) :
-    ("tutorial/robots-01", (Position (- 1) (- 1)), Size 416 268) :
-    ("tutorial/robots-02", (Position (- 1) (- 1)), Size 920 180) :
-    ("tutorial/nikki-01", (Position (- 1) (- 1)), Size 768 160) :
-    ("tutorial/nikki-02", (Position (- 1) (- 1)), Size 768 160) :
-    ("tutorial/nikki-03", (Position (- 1) (- 1)), Size 768 160) :
-    ("tutorial/nikki-04", (Position (- 1) (- 1)), Size 768 160) :
+    ("tiles/black-standard", Position 1 1, Size 64 64) :
+    ("tiles/white-standard", Position 1 1, Size 64 64) :
+    ("tiles/yellow-standard", Position 1 1, Size 64 64) :
+    ("tiles/green-standard", Position 1 1, Size 64 64) :
+    ("tiles/aqua-standard", Position 1 1, Size 64 64) :
+    ("tiles/blue-standard", Position 1 1, Size 64 64) :
+    ("tiles/pink-standard", Position 1 1, Size 64 64) :
+    ("tiles/red-standard", Position 1 1, Size 64 64) :
+    ("tiles/black-small", Position 1 1, Size 32 32) :
+    ("tiles/white-small", Position 1 1, Size 32 32) :
+    ("tiles/yellow-small", Position 1 1, Size 32 32) :
+    ("tiles/green-small", Position 1 1, Size 32 32) :
+    ("tiles/aqua-small", Position 1 1, Size 32 32) :
+    ("tiles/blue-small", Position 1 1, Size 32 32) :
+    ("tiles/pink-small", Position 1 1, Size 32 32) :
+    ("tiles/red-small", Position 1 1, Size 32 32) :
+    ("tutorial/robots-01", Position 1 1, Size 416 268) :
+    ("tutorial/robots-02", Position 1 1, Size 920 180) :
+    ("tutorial/nikki-01", Position 1 1, Size 768 160) :
+    ("tutorial/nikki-02", Position 1 1, Size 768 160) :
+    ("tutorial/nikki-03", Position 1 1, Size 768 160) :
+    ("tutorial/nikki-04", Position 1 1, Size 768 160) :
     []
 
 -- | points are moved by this distance to avoid sticky edges
@@ -78,10 +78,9 @@ mkSort name offset size = do
     pngFiles <- getFrameFileNames name
     when (null pngFiles) $
         fail ("no png files found for tile: " ++ name)
-    pixmaps <- io $ mapM newQPixmap pngFiles
-    Sort_ <$> TSort name <$> mapM mkTilePixmap pixmaps
+    Sort_ <$> TSort name <$> mapM mkTilePixmap pngFiles
   where
-    mkTilePixmap pixmap = mkPixmap pixmap size (fmap fromIntegral offset)
+    mkTilePixmap file = loadPixmap file (fmap fromIntegral offset) size
 
 -- | returns the list of filenames for all the frames with the given name
 getFrameFileNames :: String -> RM [FilePath]

@@ -28,14 +28,14 @@ import Object
 
 -- | Tiles that are available as falling tiles. Same format as in Sorts/Tiles.hs
 names = [
-    ("tiles/black-falling", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/white-falling", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/yellow-falling", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/green-falling", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/aqua-falling", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/blue-falling", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/pink-falling", (Position (- 1) (- 1)), Size 64 64),
-    ("tiles/red-falling", (Position (- 1) (- 1)), Size 64 64)
+    ("tiles/black-falling", Position 1 1, Size 64 64),
+    ("tiles/white-falling", Position 1 1, Size 64 64),
+    ("tiles/yellow-falling", Position 1 1, Size 64 64),
+    ("tiles/green-falling", Position 1 1, Size 64 64),
+    ("tiles/aqua-falling", Position 1 1, Size 64 64),
+    ("tiles/blue-falling", Position 1 1, Size 64 64),
+    ("tiles/pink-falling", Position 1 1, Size 64 64),
+    ("tiles/red-falling", Position 1 1, Size 64 64)
   ]
 
 -- | time in seconds, before the tiles start to fall after touching Nikki
@@ -54,8 +54,7 @@ sorts = do
 mkSort :: String -> Offset Int -> Size Double -> RM Sort_
 mkSort name offset size = do
     pngFile <- getDataFileName (pngDir </> name <.> "png")
-    pixmap <- io $ newQPixmap pngFile
-    Sort_ <$> TSort name <$> mkPixmap pixmap size (fmap fromIntegral offset)
+    Sort_ <$> TSort name <$> loadPixmap pngFile (fmap fromIntegral offset) size
 
 
 data TSort

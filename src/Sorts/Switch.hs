@@ -37,9 +37,9 @@ stampMaterialMass = 1.7677053824362605
 
 sorts :: RM [Sort_]
 sorts = do
-    boxOffPix <- mkPath "switch-standard-off" >>= loadPixmap (Position 1 1)
-    boxOnPix <- mkPath "switch-standard-on" >>= loadPixmap (Position 1 1)
-    stampPix <- mkPath "switch-platform" >>= loadPixmap (Position 1 1)
+    boxOffPix <- mkPath "switch-standard-off" >>= loadSymmetricPixmap (Position 1 1)
+    boxOnPix <- mkPath "switch-standard-on" >>= loadSymmetricPixmap (Position 1 1)
+    stampPix <- mkPath "switch-platform" >>= loadSymmetricPixmap (Position 1 1)
     return $ map Sort_ [SwitchSort boxOffPix boxOnPix stampPix]
 
 mkPath :: String -> RM FilePath

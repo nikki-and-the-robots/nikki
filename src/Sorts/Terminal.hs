@@ -62,7 +62,7 @@ sorts = do
     let nameToPixmap offset =
             return . toPngPath >=>
             getDataFileName >=>
-            loadPixmap (Position offset offset)
+            loadSymmetricPixmap (Position offset offset)
     backgroundPixmap <- (nameToPixmap (1 + fromUber 1)) "terminal-standard"
     displayBlinkenLights <- fmapM (nameToPixmap (1 - fromUber 13)) (
         "display_00" :
@@ -79,16 +79,16 @@ toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
 readColorLights :: (String -> FilePath) -> RM (ColorLights Pixmap)
 readColorLights f =
-    fmapM (return . f >=> getDataFileName >=> loadPixmap (Position 13 13)) $
+    fmapM (return . f >=> getDataFileName >=> loadSymmetricPixmap (Position 13 13)) $
         ColorLights "red" "blue" "green" "yellow"
 
 loadOsdPixmaps :: RM OsdPixmaps
 loadOsdPixmaps = do
     background <- removeUberPixelShadow <$>
-                    (loadPixmap (Position 1 1) =<< toOsdPath "background")
+                    (loadSymmetricPixmap (Position 1 1) =<< toOsdPath "background")
     let colors = ColorLights "red" "blue" "green" "yellow"
         load :: Int ->  String -> RM Pixmap
-        load offset = toOsdPath >=> loadPixmap (Position offset offset)
+        load offset = toOsdPath >=> loadSymmetricPixmap (Position offset offset)
     centers <- fmapM (load 40) $ fmap (++ "-center") colors
     frames <- fmapM (load 38) $ fmap (++ "-frame") colors
     exitCenter <- (load 40) "exit-center"

@@ -38,7 +38,7 @@ import Editor.Scene.Rendering.Helpers
 sorts :: RM [Sort_]
 sorts = do
     path <- getDataFileName (pngDir </> "robots" </> "platform" </> "horizontal-standard_standard_00" <.> "png")
-    pix <- loadPixmap (Position 1 1) path
+    pix <- loadSymmetricPixmap (Position 1 1) path
     robotEyes <- loadRobotEyesPixmaps
     return $ [Sort_ $ PSort pix robotEyes]
 

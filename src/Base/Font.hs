@@ -202,7 +202,7 @@ data ErrorSymbol = ErrorSymbol
 
 loadLetter :: FilePath -> IO (Either BS.ByteString ErrorSymbol, Pixmap)
 loadLetter file = do
-    pixmap <- loadPixmap (Position 1 1) file
+    pixmap <- loadSymmetricPixmap (Position 1 1) file
     return (utf8String, pixmap)
   where
     utf8String = left encodeUTF8 $ parseFileName (takeBaseName file)

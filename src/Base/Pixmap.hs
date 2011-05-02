@@ -24,8 +24,8 @@ type Offset a = Position a
 
 data Pixmap = Pixmap {
     pixmap :: Ptr QPixmap,
-    pixmapSize :: Size Double,
     pixmapOffset_ :: Position Double,
+    pixmapSize :: Size Double,
     pixmapImageSize :: Size Double
   }
     deriving (Show, Eq, Typeable, Data)
@@ -34,22 +34,26 @@ pixmapOffset :: Accessor Pixmap (Position Double)
 pixmapOffset = accessor pixmapOffset_ (\ a r -> r{pixmapOffset_ = a})
 
 
--- | Loads a pixmap.
-loadPixmap :: MonadIO m => Position Int -- ^ Size of the padding.
+-- | Loads a pixmap with a symmetric offset (right == left && above == below).
+loadSymmetricPixmap :: MonadIO m =>
+    Position Int -- ^ Offset of the object in the image
     -> FilePath -> m Pixmap
-loadPixmap padding path = io $ do
+loadSymmetricPixmap padding path = io $ do
     pix <- newQPixmap path
     size <- sizeQPixmap pix
     return $ Pixmap
         pix
-        (fmap fromIntegral (size -~ fmap (* 2) (positionToSize padding)))
         (fmap (fromIntegral . negate) padding)
+        (fmap fromIntegral (size -~ fmap (* 2) (positionToSize padding)))
         (fmap fromIntegral size)
 
-mkPixmap :: MonadIO m => Ptr QPixmap -> Size Double -> Offset Double -> m Pixmap
-mkPixmap pixmap size offset = io $ do
+-- | Loads a pixmap.
+-- The offset and size define the offset and size of the object in the picture.
+loadPixmap :: MonadIO m => FilePath -> Offset Double -> Size Double -> m Pixmap
+loadPixmap file offset size = io $ do
+    pixmap <- newQPixmap file
     imageSize <- fmap fromIntegral <$> sizeQPixmap pixmap
-    return $ Pixmap pixmap size offset imageSize
+    return $ Pixmap pixmap (fmap negate offset) size imageSize
 
 -- | release the resource
 freePixmap :: MonadIO m => Pixmap -> m ()

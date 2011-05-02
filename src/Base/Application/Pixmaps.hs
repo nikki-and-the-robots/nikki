@@ -33,7 +33,8 @@ withApplicationPixmaps cmd = do
 
 load :: RM ApplicationPixmaps
 load = do
-    menubackgrounds <- mapM (loadPixmap zero) =<< getDataFiles (osdDir </> "background") (Just ".png")
+    menubackgrounds <- mapM (loadSymmetricPixmap zero) =<<
+            getDataFiles (osdDir </> "background") (Just ".png")
     alphaNumericFont <- loadAlphaNumericFont
     headerCubePixmaps <- loadHeaderCubePixmaps
     menuTitlePixmap <- loadOsd zero "menuTitle"
@@ -52,7 +53,7 @@ loadHeaderCubePixmaps = do
     off = Position 1 1
 
 loadOsd :: Position Int -> String -> RM Pixmap
-loadOsd offset name = io . loadPixmap offset =<< getDataFileName (osdDir </> name <.> "png")
+loadOsd offset name = io . loadSymmetricPixmap offset =<< getDataFileName (osdDir </> name <.> "png")
 
 osdDir = pngDir </> "osd"
 
