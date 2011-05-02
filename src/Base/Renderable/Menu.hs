@@ -24,6 +24,7 @@ import Base.Renderable.Layered
 import Base.Renderable.Centered
 import Base.Renderable.CenterHorizontally
 import Base.Renderable.Header
+import Base.Renderable.Spacer
 
 
 data Menu
@@ -111,18 +112,16 @@ menuRenderable app items =
         Just title ->
             -- normal menu
             MenuBackground |:>
-            (centered $ vBox $ fmap centerHorizontally $ titleLines ++ toLines items)
+            (centered $ vBox $ fmap centerHorizontally lines)
           where
-            titleLines =
-                header app title :
-                renderable (pVerbatim " ") :
-                []
+            lines = titleLine : lineSpacer : toLines items
+            titleLine = header app title
         Nothing ->
             -- main menu
             MenuBackground |:>
-            (centered $ vBox $ fmap centerHorizontally
-                (mainMenuPixmap : toLines items))
+            (centered $ vBox $ fmap centerHorizontally lines)
           where
+            lines = mainMenuPixmap : lineSpacer : toLines items
             mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
 
 -- | return the items (entries) of the menu

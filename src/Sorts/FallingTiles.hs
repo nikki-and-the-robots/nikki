@@ -54,7 +54,7 @@ sorts = do
 mkSort :: String -> Offset Int -> Size Double -> RM Sort_
 mkSort name offset size = do
     pngFile <- getDataFileName (pngDir </> name <.> "png")
-    Sort_ <$> TSort name <$> loadPixmap pngFile (fmap fromIntegral offset) size
+    Sort_ <$> TSort name <$> loadPixmap (fmap fromIntegral offset) size pngFile
 
 
 data TSort

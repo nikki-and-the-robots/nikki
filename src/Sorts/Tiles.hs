@@ -80,7 +80,7 @@ mkSort name offset size = do
         fail ("no png files found for tile: " ++ name)
     Sort_ <$> TSort name <$> mapM mkTilePixmap pngFiles
   where
-    mkTilePixmap file = loadPixmap file (fmap fromIntegral offset) size
+    mkTilePixmap file = loadPixmap (fmap fromIntegral offset) size file
 
 -- | returns the list of filenames for all the frames with the given name
 getFrameFileNames :: String -> RM [FilePath]

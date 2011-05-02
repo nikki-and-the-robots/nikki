@@ -49,8 +49,8 @@ loadSymmetricPixmap padding path = io $ do
 
 -- | Loads a pixmap.
 -- The offset and size define the offset and size of the object in the picture.
-loadPixmap :: MonadIO m => FilePath -> Offset Double -> Size Double -> m Pixmap
-loadPixmap file offset size = io $ do
+loadPixmap :: MonadIO m => Offset Double -> Size Double -> FilePath -> m Pixmap
+loadPixmap offset size file = io $ do
     pixmap <- newQPixmap file
     imageSize <- fmap fromIntegral <$> sizeQPixmap pixmap
     return $ Pixmap pixmap (fmap negate offset) size imageSize

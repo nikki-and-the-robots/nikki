@@ -1,6 +1,6 @@
 {-# language FlexibleInstances #-}
 
-module Base.Renderable.Spacer (emptySpacer, parentSpacer) where
+module Base.Renderable.Spacer (emptySpacer, parentSpacer, lineSpacer) where
 
 
 import Graphics.Qt
@@ -8,6 +8,7 @@ import Graphics.Qt
 import Utils
 
 import Base.Types
+import Base.Font
 
 import Base.Renderable.Common
 
@@ -20,6 +21,9 @@ emptySpacer fun = renderable $ Spacer fun Nothing
 parentSpacer :: Renderable r => (Size Double -> Size Double) -> r -> RenderableInstance
 parentSpacer fun = renderable . Spacer fun . Just . renderable
 
+-- | A spacer for on line of text
+lineSpacer :: RenderableInstance
+lineSpacer = renderable $ emptySpacer $ const $ Size 0 fontHeight
 
 data Spacer = Spacer (Size Double -> Size Double) (Maybe RenderableInstance)
   deriving Show

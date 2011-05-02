@@ -37,23 +37,21 @@ load = do
             getDataFiles (osdDir </> "background") (Just ".png")
     alphaNumericFont <- loadAlphaNumericFont
     headerCubePixmaps <- loadHeaderCubePixmaps
-    menuTitlePixmap <- loadOsd zero "menuTitle"
-    finished <- fmapM (loadOsd zero) finishedMap
+    menuTitlePixmap <- loadOsd (Position 32 32) (Size 772 268) "menuTitle"
+    finished <- fmapM loadFinished finishedMap
     return $ ApplicationPixmaps menubackgrounds alphaNumericFont headerCubePixmaps
         menuTitlePixmap finished
 
 loadHeaderCubePixmaps :: RM HeaderCubePixmaps
 loadHeaderCubePixmaps = do
-    start <- loadOsd off "box-left"
-    standard <- loadOsd off "box-standard"
-    space <- loadOsd off "box-space"
-    end <- loadOsd off "box-right"
+    start <- loadOsd (Position 31 31) (Size 48 44) "box-left"
+    standard <- loadOsd (Position 1 31) (Size 48 44) "box-standard"
+    space <- loadOsd (Position 1 31) (Size 48 44) "box-space"
+    end <- loadOsd (Position 1 31) (Size 44 44) "box-right"
     return $ HeaderCubePixmaps start standard space end
-  where
-    off = Position 1 1
 
-loadOsd :: Position Int -> String -> RM Pixmap
-loadOsd offset name = io . loadSymmetricPixmap offset =<< getDataFileName (osdDir </> name <.> "png")
+loadOsd :: Position Double -> Size Double -> String -> RM Pixmap
+loadOsd offset size name = io . loadPixmap offset size =<< getDataFileName (osdDir </> name <.> "png")
 
 osdDir = pngDir </> "osd"
 
@@ -68,8 +66,12 @@ free (ApplicationPixmaps menuBackgrounds font cubePixmaps menuTitle finished) = 
 freeHeaderCubePixmaps (HeaderCubePixmaps a b c d) =
     fmapM_ freePixmap [a, b, c, d]
 
-finishedMap :: Map LevelResult String
+finishedMap :: Map LevelResult (String, Position Double, Size Double)
 finishedMap = fromList (
-    (Passed, "success") :
-    (Failed, "failure") :
+    (Passed, ("success", Position 32 32, Size 664 88)) :
+    (Failed, ("failure", Position 32 32, Size 600 88)) :
     [])
+
+loadFinished :: (String, Position Double, Size Double) -> RM Pixmap
+loadFinished (name, offset, size) =
+    loadOsd offset size name
