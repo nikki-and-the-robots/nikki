@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables #-}
 
-module Base.Renderable.Header (header) where
+module Base.Renderable.Header (header, headerHeight) where
 
 
 import Data.Abelian
@@ -22,6 +22,8 @@ import Base.Renderable.HBox
 import Base.Renderable.Layered
 import Base.Renderable.Centered
 
+
+headerHeight :: Double = 44
 
 -- | implements menu headers
 header :: Application_ s -> Prose -> RenderableInstance

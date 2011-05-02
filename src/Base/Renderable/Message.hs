@@ -18,6 +18,6 @@ import Base.Renderable.VBox
 
 -- | show a textual message and wait for a keypress
 message :: Application_ a -> [Prose] -> AppState -> AppState
-message app text follower = appState (MenuBackground |:> centered (vBox text)) $ do
+message app text follower = appState (MenuBackground |:> centered (vBox 1 text)) $ do
     ignore $ waitForPressButton app
     return follower

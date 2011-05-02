@@ -40,7 +40,7 @@ mkWidget :: Prose -> String -> RenderableInstance
 mkWidget question answer =
     RenderableInstance (
         MenuBackground |:>
-        (centered $ vBox text)
+        (centered $ vBox 1 text)
       )
   where
     text =

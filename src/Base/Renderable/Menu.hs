@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Base.Renderable.Menu (
     menuAppState,
@@ -8,14 +9,17 @@ module Base.Renderable.Menu (
 import Data.SelectTree (SelectTree(..))
 import qualified Data.Indexable as I
 
+import Control.Concurrent.MVar
+
 import Graphics.Qt
 
 import Utils
 
 import Base.Types hiding (selected)
+import Base.Pixmap
 import Base.Application
 import Base.Prose
-import Base.Font ()
+import Base.Font
 
 import Base.Renderable.Common
 import Base.Renderable.VBox
@@ -32,10 +36,16 @@ data Menu
         title :: Maybe Prose, -- if Nothing it's the main menu
         before :: [(Prose, AppState)],
         selected :: (Prose, AppState),
-        after :: [(Prose, AppState)]
+        after :: [(Prose, AppState)],
+        scrolling :: MVar Int
       }
 
-mkMenu :: Maybe Prose -> [(Prose, Int -> AppState)] -> Int -> Menu
+instance Show Menu where
+    show menu = case title menu of
+        Nothing -> "<Menu>"
+        Just x -> "<Menu: " ++ unP x ++ ">"
+
+mkMenu :: Maybe Prose -> [(Prose, Int -> AppState)] -> Int -> IO Menu
 mkMenu title items =
     inner $ zipWith (\ (label, appStateFun) n -> (label, appStateFun n)) items [0..]
   where
@@ -44,17 +54,18 @@ mkMenu title items =
             inner items 0
           else if n > length items - 1 then
             inner items (length items - 1)
-          else
+          else do
             let (before, selected : after) = splitAt n items
-            in Menu title before selected after
+            scrollingRef <- newMVar 0
+            return $ Menu title before selected after scrollingRef
 
 selectNext :: Menu -> Menu
-selectNext (Menu t b s (a : r)) = Menu t (b +: s) a r
-selectNext m@(Menu _ _ _ []) = m
+selectNext (Menu t b s (a : r) sc) = Menu t (b +: s) a r sc
+selectNext m@(Menu _ _ _ [] _) = m
 
 selectPrevious :: Menu -> Menu
-selectPrevious m@(Menu _ [] _ _) = m
-selectPrevious (Menu t b s a) = Menu t (init b) (last b) (s : a)
+selectPrevious m@(Menu _ [] _ _ _) = m
+selectPrevious (Menu t b s a sc) = Menu t (init b) (last b) (s : a) sc
 
 -- | Creates a menu.
 -- If a title is given, it will be displayed. If not, the main menu will be assumed.
@@ -62,19 +73,19 @@ selectPrevious (Menu t b s a) = Menu t (init b) (last b) (s : a)
 -- The prechoice will determine the initially selected menu item.
 menuAppState :: Application_ sort -> Maybe Prose -> Maybe AppState
     -> [(Prose, Int -> AppState)] -> Int -> AppState
-menuAppState app title mParent children preSelection =
-    inner $ mkMenu title children preSelection
+menuAppState app title mParent children preSelection = NoGUIAppState $ io $
+    inner <$> mkMenu title children preSelection
   where
     inner :: Menu -> AppState
-    inner items = appState (menuRenderable app items) $ do
+    inner menu = appState menu $ do
         e <- waitForPressButton app
-        if isUp e then return $ inner $ selectPrevious items
-         else if isDown e then return $ inner $ selectNext items
-         else if isMenuConfirmation e then return $ snd $ selected items
+        if isUp e then return $ inner $ selectPrevious menu
+         else if isDown e then return $ inner $ selectNext menu
+         else if isMenuConfirmation e then return $ snd $ selected menu
          else if isBackButton e then case mParent of
                 Just parent -> return parent
-                Nothing -> return $ inner items
-         else return $ inner items
+                Nothing -> return $ inner menu
+         else return $ inner menu
 
     -- B button (keyboard or gamepad) or Escape
     isBackButton x = isBButton x || isKey Escape x
@@ -107,26 +118,29 @@ treeToMenu app parent (Node label children i) f preSelection =
 
 -- * rendering
 
-menuRenderable app items =
-    case title items of
-        Just title ->
-            -- normal menu
-            MenuBackground |:>
-            (centered $ vBox $ fmap centerHorizontally lines)
-          where
-            lines = titleLine : lineSpacer : toLines items
-            titleLine = header app title
-        Nothing ->
-            -- main menu
-            MenuBackground |:>
-            (centered $ vBox $ fmap centerHorizontally lines)
-          where
-            lines = mainMenuPixmap : lineSpacer : toLines items
-            mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
+instance Renderable Menu where
+    render ptr app config parentSize menu = do
+        scrolling <- updateScrollingIO app parentSize menu
+        let scroll = drop scrolling
+        case title menu of
+            Just title -> render ptr app config parentSize
+                -- normal menu
+                (MenuBackground |:>
+                (centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
+              where
+                lines = titleLine : lineSpacer : scroll (toLines menu)
+                titleLine = header app title
+            Nothing -> render ptr app config parentSize
+                -- main menu
+                (MenuBackground |:>
+                (centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
+              where
+                lines = mainMenuPixmap : lineSpacer : scroll (toLines menu)
+                mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
 
 -- | return the items (entries) of the menu
 toLines :: Menu -> [RenderableInstance]
-toLines (Menu _ before selected after) = fmap renderable $
+toLines (Menu _ before selected after _) = fmap renderable $
     map fst before ++
     (proseSelect $ fst selected) :
     map fst after
@@ -134,7 +148,41 @@ toLines (Menu _ before selected after) = fmap renderable $
     proseSelect :: Prose -> Prose
     proseSelect p = pVerbatim "⇨ " +> p +> pVerbatim " ⇦"
 
--- | modify the items before the selected to implement simple scrolling
-mkScrolling :: [(Prose, AppState)] -> [(Prose, AppState)]
-mkScrolling before = drop (max 0 (length before - 4)) before
+-- | adds a spacer before and after the menu
+addFrame :: [RenderableInstance] -> [RenderableInstance]
+addFrame ll = lineSpacer : ll +: lineSpacer 
 
+-- | Returns the scrolling.
+updateScrollingIO :: Application_ s -> Size Double -> Menu -> IO Int
+updateScrollingIO app parentSize menu = do
+    oldScrolling <- takeMVar $ scrolling menu
+    let newScrolling = updateScrolling app parentSize menu oldScrolling
+    putMVar (scrolling menu) newScrolling
+    return newScrolling
+
+updateScrolling :: Application_ s -> Size Double -> Menu -> Int -> Int
+updateScrolling app parentSize menu oldScrolling =
+    if itemsSpaceF >= 1 + 2 * itemPadding then
+        min (allItems - itemsSpaceF) $
+        max 0 $
+        min (selectedIndex - itemPadding) $
+        max oldScrolling $
+        (selectedIndex - (itemsSpaceF - itemPadding - 1))
+    else if itemsSpaceF > 0 then
+        (selectedIndex - floor (fromIntegral (itemsSpaceF - 1) / 2 :: Double))
+    else
+        selectedIndex
+  where
+    -- space for the menu items in fontHeights
+    itemsSpaceF :: Int = floor ((height parentSize - menuHeaderHeight) / fontHeight)
+    -- height of the headers of the menu
+    menuHeaderHeight = 2 * fontHeight + titleHeight
+    titleHeight = case title menu of
+        Nothing -> height $ pixmapSize $ menuTitlePixmap $ applicationPixmaps app
+        Just _ -> headerHeight
+    -- how many items should be visible ideally after or before the selected item
+    itemPadding :: Int = 2
+    -- index of the currently selected menu item
+    selectedIndex = length $ before menu
+    -- number of all menu items
+    allItems :: Int = length (before menu) + 1 + length (after menu)
