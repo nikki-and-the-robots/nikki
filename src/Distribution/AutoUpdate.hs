@@ -72,23 +72,22 @@ autoUpdate app follower = NoGUIAppState $ io $ do
         repoString <- gets update_repo
         mDeployed <- io $ isDeployed
         case mDeployed of
-            Nothing -> return $ message app [p "not deployed: not updating"] follower
+            Nothing -> return $ message app [p "not deployed: updating disabled"] follower
             Just path@(DeployPath dp) -> do
-                io $ do
-                    logCommand (p "deployed in " `mappend` pVerbatim dp)
-                    logCommand (p "looking for updates...")
+                io $ logCommand (p "updating...")
                 result <- io $ attemptUpdate app logCommand (Repo repoString) path
                 case result of
                     (Left errorMessage) ->
-                        return $ message app [p "update failed: " +> pVerbatim errorMessage] follower
+                        return $ message app [p "cannot connect to server:", pVerbatim errorMessage] follower
                     (Right (Just version)) -> do
                         return $ message app
-                            (p "game updated to version " +> pVerbatim (showVersion version) :
+                            (p "update complete" :
+                             p "new version: " +> pVerbatim (showVersion version) :
                              p "restarting..." :
                              []) $ NoGUIAppState $ io $ do
                                 exitWith $ ExitFailure 143
                     (Right Nothing) ->
-                        return $ message app [p "version up to date"] follower
+                        return $ message app [p "no updates available"] follower
 
 -- | Looks for updates on the server.
 -- If found, updates the program.
@@ -98,10 +97,8 @@ autoUpdate app follower = NoGUIAppState $ io $ do
 attemptUpdate :: Application_ sort -> (Prose -> IO ()) -> Repo -> DeployPath
     -> IO (Either String (Maybe Version))
 attemptUpdate app logCommand repo deployPath = runErrorT $ do
-    io $ logCommand (p "local version: " `mappend` pVerbatim (showVersion Version.nikkiVersion))
-    serverVersion :: Version <-
-        (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
-    io $ logCommand (p "remote version: " `mappend` pVerbatim (showVersion serverVersion))
+    serverVersion :: Version <- (ErrorT . return . parseVersion) =<<
+                                downloadContent (mkUrl repo "version")
     if serverVersion > Version.nikkiVersion then do
         update app logCommand repo serverVersion deployPath
         return $ Just serverVersion

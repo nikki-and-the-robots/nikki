@@ -119,9 +119,10 @@ mainMenu app ps =
     menuAppState app Nothing Nothing (
         (p "story mode", storyMode app . this) :
         (p "community levels", community app 0 . this) :
-        (p "help", mainMenuHelp app . this) :
         (p "options", generalOptions app 0 . this) :
-        (p "update", autoUpdate app . this) :
+        (p "help", mainMenuHelp app . this) :
+        (p "online update", autoUpdate app . this) :
+        (p "credits", credits app . this) :
         (p "quit", const $ FinalAppState) :
         []) ps
   where
@@ -134,12 +135,18 @@ storyMode app parent = NoGUIAppState $ do
     prose <- io $ pFile file
     return $ scrollingAppState app prose parent
 
+credits :: Application -> Parent -> AppState
+credits app parent = NoGUIAppState $ do
+    file <- rm2m $ getDataFileName "manual/credits"
+    prose <- io $ pFile file
+    return $ scrollingAppState app prose parent
+
 community :: Application -> Int -> Parent -> AppState
 community app ps parent =
-    menuAppState app (Just $ p "community") (Just parent) (
+    menuAppState app (Just $ p "community levels") (Just parent) (
         (p "play levels", selectLevelPlay app . this) :
-        (p "edit levels", selectLevelEdit app 0 . this) :
-        (p "download community levels", downloadLevels app . this) :
+        (p "download levels", downloadLevels app . this) :
+        (p "editor", selectLevelEdit app 0 . this) :
         []) ps
   where
     this ps = community app ps parent
@@ -169,7 +176,7 @@ selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
       else do
             -- menu with the given selected item.
         let this = menuAppState
-                app (Just $ p "pick a level to play") (Just parent)
+                app (Just $ p "choose a level") (Just parent)
                 (map (\ path -> (pVerbatim $ takeBaseName path, \ n -> play app (this n) path))
                     levelFiles)
         return $ this 0
@@ -178,7 +185,7 @@ selectLevelEdit :: Application -> Int -> Parent -> AppState
 selectLevelEdit app ps parent = NoGUIAppState $ rm2m $ do
     freeLevelsPath <- getFreeLevelsDirectory
     levelFiles <- map (freeLevelsPath </>) <$> io (getFiles freeLevelsPath (Just "nl"))
-    return $ menuAppState app (Just $ p "pick a level to edit") (Just parent) (
+    return $ menuAppState app (Just $ p "choose a level") (Just parent) (
         (p "new level", pickNewLevel app . this) :
         map (\ path -> (pVerbatim $ takeBaseName path, const $ edit app parent (path, False)))
             levelFiles ++

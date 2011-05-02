@@ -47,7 +47,7 @@ instance Show Menu where
 
 mkMenu :: Maybe Prose -> [(Prose, Int -> AppState)] -> Int -> IO Menu
 mkMenu title items =
-    inner $ zipWith (\ (label, appStateFun) n -> (label, appStateFun n)) items [0..]
+    inner $ zipWith (\ (label, appStateFun) n -> (capitalizeProse label, appStateFun n)) items [0..]
   where
     inner items n =
         if n < 0 then
