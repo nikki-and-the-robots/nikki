@@ -104,7 +104,7 @@ options =
         omit_pixmap_rendering = False
             &= help "omit the normal pixmaps when rendering objects",
         render_xy_cross = False
-            &= name "X"
+            &= name "x"
             &= help "render x and y axis",
         render_chipmunk_objects = False
             &= name "c"
@@ -116,6 +116,7 @@ options =
             &= help "list of initial events sent to the application"
             &= typ "[Key]",
         show_widget_frames = False
+            &= name "w"
             &= help "show colored frames for all displayed widgets"
       }
     &= program "nikki"
