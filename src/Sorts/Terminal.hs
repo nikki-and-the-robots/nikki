@@ -198,35 +198,35 @@ terminalExitMode = state >>> exitMode
 data State
     = State {
         gameMode :: GameMode,
-        row :: MenuRow,
+        row :: MenuState,
         robotIndex :: Int,
         changedTime :: Seconds,
         exitMode :: ExitMode
       }
   deriving Show
 
-data MenuRow = NikkiRow | RobotRow
+data MenuState = NikkiState | RobotState
   deriving (Eq, Show)
 
 initialMenuState :: Seconds -> State
-initialMenuState now = State NikkiMode RobotRow 0 now DontExit
+initialMenuState now = State NikkiMode RobotState 0 now DontExit
 
 isNikkiSelected :: State -> Bool
-isNikkiSelected (State _ NikkiRow _ _ _) = True
-isNikkiSelected (State _ RobotRow _ _ _) = False
+isNikkiSelected (State _ NikkiState _ _ _) = True
+isNikkiSelected (State _ RobotState _ _ _) = False
 
 -- | resets the terminal state, when it is started to be used.
 reset :: Seconds -> [Index] -> State -> State
 reset t robots (State _ _ i _ _) =
     State TerminalMode row i t DontExit
   where
-    row = if null robots then NikkiRow else RobotRow
+    row = if null robots then NikkiState else RobotState
 
 blinkenLightsState :: Seconds -> [Index] -> State -> (ColorLights Bool, Bool)
 blinkenLightsState now robots state =
     case row state of
-        NikkiRow -> (full, not blinkingOut)
-        RobotRow -> tuple
+        NikkiState -> (full, not blinkingOut)
+        RobotState -> tuple
             (if blinkingOut then fzipWith (\ f s -> f && not s) full selected else full)
             True
   where
@@ -244,8 +244,8 @@ blinkenLightsState now robots state =
 modifySelected :: Seconds -> [Index] -> (Int -> Int) -> State -> State
 modifySelected now robots f state =
     case row state of
-        NikkiRow -> state
-        RobotRow -> if newIndex /= robotIndex state
+        NikkiState -> state
+        RobotState -> if newIndex /= robotIndex state
                     then state{robotIndex = newIndex, changedTime = now}
                     else state -- don't reset changedTime when nothing changed
   where
@@ -345,23 +345,24 @@ mkPolys size =
 updateState :: Seconds -> ControlData -> [Index] -> State -> State
 updateState now cd robots state | any isAButton $ pressed cd =
   case row state of
-    NikkiRow -> exitToNikki state
-    RobotRow -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
-updateState now cd robots state | any isRight $ pressed cd =
-    if robotIndex state < length robots - 1 then
+    NikkiState -> exitToNikki state
+    RobotState -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
+updateState now cd robots state@State{row = RobotState}
+    | (any isRight $ pressed cd) && not (null robots) =
         -- go right in robot list
         modifySelected now robots (+ 1) state
+
+updateState now cd robots state@State{row = RobotState} | any isLeft $ pressed cd =
+    if robotIndex state > 0 then
+        -- go left in robot list
+        modifySelected now robots (subtract 1) state
       else
         -- select exit (nikki) menu item
-        state{row = NikkiRow, changedTime = now}
-
-updateState now cd robots state@State{row = RobotRow} | any isLeft $ pressed cd =
-    -- go left in robot list
-    modifySelected now robots (subtract 1) state
-updateState now cd robots state@State{row = NikkiRow}
-    | (any isLeft $ pressed cd) && not (null robots) =
+        state{row = NikkiState, changedTime = now}
+updateState now cd robots state@State{row = NikkiState}
+    | any isRight $ pressed cd =
         -- go to robot list
-        state{row = RobotRow, changedTime = now}
+        state{row = RobotState, changedTime = now}
 updateState _ _ _ t = t
 
 exitToNikki :: State -> State
@@ -464,7 +465,7 @@ renderOsdCenters ptr offset pixmaps states =
 
 renderOsdFrames ptr offset pixmaps state selected =
     case (row state) of
-        RobotRow -> mapM_ inner allSelectors
+        RobotState -> mapM_ inner allSelectors
         _ -> return ()
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
@@ -476,7 +477,7 @@ osdFrameOffsets :: ColorLights (Qt.Position Double)
 osdFrameOffsets =
     ColorLights red blue green yellow
   where
-    red = fmap fromUber $ Position 5 5
+    red = fmap fromUber $ Position 31 5
     blue = toLeftFrame red
     green = toLeftFrame blue
     yellow = toLeftFrame green
@@ -487,12 +488,12 @@ osdCenterOffsets :: ColorLights (Qt.Position Double)
 osdCenterOffsets = fmap (+~ fmap fromUber (Position 2 2)) osdFrameOffsets
 
 renderOsdExit ptr offset now pixmaps state exitState = do
-    when (row state == NikkiRow) $
+    when (row state == NikkiState) $
         renderPixmap ptr offset exitFrameOffset Nothing (osdExitFrame pixmaps)
     when exitState $
         renderPixmap ptr offset exitCenterOffset Nothing (osdExitCenter pixmaps)
   where
-    exitFrameOffset = fmap fromUber $ Position 91 5
+    exitFrameOffset = fmap fromUber $ Position 5 5
     exitCenterOffset = exitFrameOffset +~ fmap fromUber (Position 2 2)
 
 
