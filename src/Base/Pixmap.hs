@@ -36,16 +36,16 @@ pixmapOffset = accessor pixmapOffset_ (\ a r -> r{pixmapOffset_ = a})
 
 -- | Loads a pixmap with a symmetric offset (right == left && above == below).
 loadSymmetricPixmap :: MonadIO m =>
-    Position Int -- ^ Offset of the object in the image
+    Position Double -- ^ Offset of the object in the image
     -> FilePath -> m Pixmap
 loadSymmetricPixmap padding path = io $ do
     pix <- newQPixmap path
-    size <- sizeQPixmap pix
+    size <- fmap fromIntegral <$> sizeQPixmap pix
     return $ Pixmap
         pix
-        (fmap (fromIntegral . negate) padding)
-        (fmap fromIntegral (size -~ fmap (* 2) (positionToSize padding)))
-        (fmap fromIntegral size)
+        (fmap negate padding)
+        (size -~ fmap (* 2) (positionToSize padding))
+        size
 
 -- | Loads a pixmap.
 -- The offset and size define the offset and size of the object in the picture.

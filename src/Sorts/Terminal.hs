@@ -87,7 +87,7 @@ loadOsdPixmaps = do
     background <- removeUberPixelShadow <$>
                     (loadSymmetricPixmap (Position 1 1) =<< toOsdPath "background")
     let colors = ColorLights "red" "blue" "green" "yellow"
-        load :: Int ->  String -> RM Pixmap
+        load :: Double ->  String -> RM Pixmap
         load offset = toOsdPath >=> loadSymmetricPixmap (Position offset offset)
     centers <- fmapM (load 40) $ fmap (++ "-center") colors
     frames <- fmapM (load 38) $ fmap (++ "-frame") colors
