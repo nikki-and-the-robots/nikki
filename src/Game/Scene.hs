@@ -51,16 +51,16 @@ import Sorts.Switch
 
 stepScene :: Configuration -> Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
 stepScene configuration space controlData =
-    updateScene controlData >=>
+    updateScene (controls configuration) controlData >=>
     stepSpace space >=>
     maybeAbort configuration >=>
-    transition controlData
+    transition (controls configuration) controlData
 
 
 -- * State automaton stuff
 
-transition :: ControlData -> Scene Object_ -> IO (Scene Object_)
-transition (pressed -> pressed) scene =
+transition :: Controls -> ControlData -> Scene Object_ -> IO (Scene Object_)
+transition controls cd scene =
     case mNew of
         Nothing -> return scene
         Just new -> modifyTransitioned new
@@ -68,9 +68,9 @@ transition (pressed -> pressed) scene =
     -- | Maybe the new scene
     mNew :: Maybe (Scene Object_)
     mNew = foldl1 (<|>) [
-        nikkiToTerminal scene pressed,
+        nikkiToTerminal controls scene cd,
         terminalExit scene,
-        robotToTerminal scene pressed,
+        robotToTerminal controls scene cd,
         nikkiMovedAwayFromTerminal scene,
         gameOver scene,
         levelPassed scene
@@ -89,13 +89,13 @@ modifyTransitioned scene = do
 
 
 -- | converts the Scene to TerminalMode, if appropriate
-nikkiToTerminal :: Scene Object_ -> [Button] -> Maybe (Scene Object_)
-nikkiToTerminal scene@Scene{mode_ = (NikkiMode nikkiIndex)} pressed
+nikkiToTerminal :: Controls -> Scene Object_ -> ControlData -> Maybe (Scene Object_)
+nikkiToTerminal config scene@Scene{mode_ = (NikkiMode nikkiIndex)} cd
                                                -- nikki must be in wait mode
-    | bButtonPressed && beforeTerminal && waiting
+    | contextButtonPressed && beforeTerminal && waiting
         = Just $ mode ^= mode' $ scene
   where
-    bButtonPressed = any isBButton pressed
+    contextButtonPressed = isGameContextPressed config cd
     beforeTerminal = nikkiTouchesTerminal $ scene ^. contacts
     nikki :: Nikki
     Just nikki = unwrapNikki $ scene ^. mainLayerObjectA nikkiIndex
@@ -104,7 +104,7 @@ nikkiToTerminal scene@Scene{mode_ = (NikkiMode nikkiIndex)} pressed
 
     mode' = TerminalMode nikkiIndex terminal
     (terminal : _) = whichTerminalCollides scene
-nikkiToTerminal _ _ = Nothing
+nikkiToTerminal _ _ _ = Nothing
 
 
 whichTerminalCollides :: Scene Object_ -> [Index]
@@ -133,13 +133,13 @@ terminalExit _ = Nothing
 
 
 -- | converts from RobotMode to TerminalMode, if appropriate
-robotToTerminal :: Scene Object_ -> [Button] -> Maybe (Scene Object_)
-robotToTerminal scene@Scene{mode_ = RobotMode{nikki, terminal}} pressed
+robotToTerminal :: Controls -> Scene Object_ -> ControlData -> Maybe (Scene Object_)
+robotToTerminal config scene@Scene{mode_ = RobotMode{nikki, terminal}} cd
   | bPress =
     Just $ mode ^= TerminalMode nikki terminal $ scene
   where
-    bPress = any isBButton pressed
-robotToTerminal _ _ = Nothing
+    bPress = isRobotBackPressed config cd
+robotToTerminal _ _ _ = Nothing
 
 -- | if nikki gets moved away from the terminal during robot mode...
 nikkiMovedAwayFromTerminal :: Scene Object_ -> Maybe (Scene Object_)
@@ -202,8 +202,8 @@ maybeAbort config = case abort_level config of
 -- * object updating
 
 -- | updates every object
-updateScene :: ControlData -> Scene Object_ -> IO (Scene Object_)
-updateScene cd scene = do
+updateScene :: Controls -> ControlData -> Scene Object_ -> IO (Scene Object_)
+updateScene controlsConfig cd scene = do
     -- NOTE: Currently only the physics layer is updated
     (sceneChange, physicsContent') <- updateMainLayer $ scene ^. objects ^. gameMainLayer
     return $ sceneChange $ objects .> gameMainLayer ^= physicsContent' $ scene
@@ -217,7 +217,7 @@ updateScene cd scene = do
     -- each object has to know, if it's controlled
     updateMainLayer ix = do
         ix' <- fmapMWithIndex (\ i o ->
-                update DummySort (scene ^. mode) now (scene ^. contacts)
+                update DummySort controlsConfig (scene ^. mode) now (scene ^. contacts)
                     (Just i == controlled, cd) i o)
                 ix
         let changes = foldr (.) id $ fmap fst ix'

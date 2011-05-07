@@ -12,6 +12,8 @@ import Base.Types
 import Base.Polling
 import Base.Prose
 
+import Base.Configuration.Controls
+
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.Centered
@@ -28,9 +30,9 @@ askString app parent question follower =
     loop answer = AppState (mkWidget question answer) $ do
         event <- waitForAppEvent app
         case event of
-            Press e | isStart e ->
+            Press e | isTextFieldBack e ->
                 return parent
-            Press e | isEnterOrReturn e ->
+            Press e | isTextFieldConfirmation e ->
                 return $ follower answer
             Press (KeyboardButton k text) ->
                 return $ loop $ modifyTextField k text answer

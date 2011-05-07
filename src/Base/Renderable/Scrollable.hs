@@ -17,6 +17,10 @@ import Utils
 import Base.Prose
 import Base.Types
 import Base.Font
+import Base.Monad
+
+import Base.Configuration
+import Base.Configuration.Controls
 
 import Base.Renderable.Common
 import Base.Renderable.WholeScreenPixmap
@@ -37,10 +41,11 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
     loop :: ((Int -> Int) -> IO ()) -> M AppState
     loop send = do
         e <- waitForPressButton app
-        if isDown e then
+        controls_ <- gets controls
+        if isMenuDown controls_ e then
             io (send (+ 1)) >>
             loop send
-          else if isUp e then
+          else if isMenuUp controls_ e then
             io (send (subtract 1)) >>
             loop send
           else

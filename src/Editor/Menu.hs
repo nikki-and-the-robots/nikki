@@ -57,7 +57,7 @@ editorLoop app mvar scene = GameAppState $ do
         event <- lift $ waitForAppEvent app
         s <- get
         case (editorMode s, event) of
-            (_, Press k) | isStart k -> return $ editorMenu app mvar s 0
+            (_, Press (KeyboardButton Escape _)) -> return $ editorMenu app mvar s 0
             (NormalMode, Press (KeyboardButton T _)) ->
                 -- test the level
                 return $ playLevel app (editorLoop app mvar s) s

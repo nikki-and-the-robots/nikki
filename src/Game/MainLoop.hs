@@ -73,7 +73,6 @@ gameLoop app sceneMVar = do
 
         -- input events
         controlData <- lift $ pollAppEvents app
-        let pressed_ = pressed controlData
 
         -- stepping of the scene (includes rendering)
         space <- gets cmSpace
@@ -86,9 +85,9 @@ gameLoop app sceneMVar = do
 
         case sc' ^. mode of
             LevelFinished t _ ->
-                when (null pressed_)
+                when (null $ pressed controlData)
                     continue
-            _ -> if any isStart pressed_ then do
+            _ -> if isGameBackPressed (controls configuration) controlData then do
                 io $ logInfo "NYI: game menu"
                 return () -- TODO: should be a menu
               else

@@ -14,6 +14,7 @@ import Utils
 
 import Base.Types
 import Base.Monad
+import Base.Configuration.Controls
 
 
 handleGlobalShortcuts :: Application_ s -> Set Button -> [AppEvent] -> M [AppEvent]
@@ -31,7 +32,5 @@ shortcuts app held e = case e of
     Base.Types.CloseWindow -> Just $ io $ exitWith ExitSuccess
     (Press k) | fullscreenSwitch -> Just $ swapFullScreen app
       where
-        fullscreenSwitch =
-            (isEnterOrReturn k && fany (isKey Alt) held) ||
-            (isKey F11 k)
+        fullscreenSwitch = isFullscreenSwapShortcut held k
     _ -> Nothing

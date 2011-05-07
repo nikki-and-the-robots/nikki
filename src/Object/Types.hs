@@ -49,11 +49,11 @@ instance Sort Sort_ Object_ where
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o
     startControl now (Object_ sort o) = Object_ sort $ startControl now o
-    update DummySort mode now contacts cd i (Object_ sort o) = do
-        (f, o') <- update sort mode now contacts cd i o
+    update DummySort controls mode now contacts cd i (Object_ sort o) = do
+        (f, o') <- update sort controls mode now contacts cd i o
         return (f, Object_ sort o')
-    updateNoSceneChange DummySort mode now contacts cd (Object_ sort o) =
-        Object_ sort <$> updateNoSceneChange sort mode now contacts cd o
+    updateNoSceneChange DummySort controls mode now contacts cd (Object_ sort o) =
+        Object_ sort <$> updateNoSceneChange sort controls mode now contacts cd o
     renderObject = error "Don't use this function, use render_ instead (that's type safe)"
 
 sort_ :: Object_ -> Sort_

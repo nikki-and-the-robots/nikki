@@ -309,10 +309,10 @@ instance Sort TSort Terminal where
 
     startControl now t = t{state = reset (now - blinkLength) (robots t) (state t)}
 
-    updateNoSceneChange sort mode now contacts (False, cd) terminal =
+    updateNoSceneChange sort config mode now contacts (False, cd) terminal =
         return terminal
-    updateNoSceneChange sort mode now contacts (True, cd) terminal =
-        return terminal{state = updateState now cd (robots terminal) (state terminal)}
+    updateNoSceneChange sort config mode now contacts (True, cd) terminal =
+        return terminal{state = updateState config now cd (robots terminal) (state terminal)}
 
     renderObject terminal sort ptr offset now = do
         pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
@@ -342,28 +342,28 @@ mkPolys size =
 -- * controlling
 
 -- | controls the terminal in terminal mode
-updateState :: Seconds -> ControlData -> [Index] -> State -> State
-updateState now cd robots state | any isAButton $ pressed cd =
+updateState :: Controls -> Seconds -> ControlData -> [Index] -> State -> State
+updateState config now cd robots state | isTerminalConfirmationPressed config cd =
   case row state of
     NikkiState -> exitToNikki state
     RobotState -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
-updateState now cd robots state@State{row = RobotState}
-    | (any isRight $ pressed cd) && not (null robots) =
+updateState config now cd robots state@State{row = RobotState}
+    | (isGameRightPressed config cd) && not (null robots) =
         -- go right in robot list
         modifySelected now robots (+ 1) state
 
-updateState now cd robots state@State{row = RobotState} | any isLeft $ pressed cd =
+updateState config now cd robots state@State{row = RobotState} | isGameLeftPressed config cd =
     if robotIndex state > 0 then
         -- go left in robot list
         modifySelected now robots (subtract 1) state
       else
         -- select exit (nikki) menu item
         state{row = NikkiState, changedTime = now}
-updateState now cd robots state@State{row = NikkiState}
-    | any isRight $ pressed cd =
+updateState config now cd robots state@State{row = NikkiState}
+    | isGameRightPressed config cd =
         -- go to robot list
         state{row = RobotState, changedTime = now}
-updateState _ _ _ t = t
+updateState _ _ _ _ t = t
 
 exitToNikki :: State -> State
 exitToNikki state = state{exitMode = ExitToNikki, robotIndex = 0}
@@ -539,13 +539,13 @@ enterMode scene (Robots _ selected attached) =
 editorUpdate :: EditorScene sort -> Key -> TerminalOEMState -> Maybe TerminalOEMState
 editorUpdate _ key NoRobots | key `elem` keys = Just NoRobots
   where
-    keys = (RightArrow : LeftArrow : Enter : aKey : [])
+    keys = (RightArrow : LeftArrow : Enter : [])
 editorUpdate _ _ NoRobots = Nothing
 editorUpdate scene key state@(Robots available selected attached) =
   case key of
     RightArrow -> Just state{selectedRobot = searchNext selected available}
     LeftArrow -> Just state{selectedRobot = searchNext selected (reverse available)}
-    x | x == Enter || x == aKey -> Just state{attachedRobots = swapIsElem selected attached}
+    x | x == Enter -> Just state{attachedRobots = swapIsElem selected attached}
     _ -> Nothing
 
 -- | searches the next element that is not equal to the given one in the list

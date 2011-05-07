@@ -20,6 +20,10 @@ import Base.Pixmap
 import Base.Application
 import Base.Prose
 import Base.Font
+import Base.Monad
+
+import Base.Configuration
+import Base.Configuration.Controls
 
 import Base.Renderable.Common
 import Base.Renderable.VBox
@@ -79,22 +83,14 @@ menuAppState app title mParent children preSelection = NoGUIAppState $ io $
     inner :: Menu -> AppState
     inner menu = appState menu $ do
         e <- waitForPressButton app
-        if isUp e then return $ inner $ selectPrevious menu
-         else if isDown e then return $ inner $ selectNext menu
-         else if isMenuConfirmation e then return $ snd $ selected menu
-         else if isBackButton e then case mParent of
+        controls_ <- gets controls
+        if isMenuUp controls_ e then return $ inner $ selectPrevious menu
+         else if isMenuDown controls_ e then return $ inner $ selectNext menu
+         else if isMenuConfirmation controls_ e then return $ snd $ selected menu
+         else if isMenuBack controls_ e then case mParent of
                 Just parent -> return parent
                 Nothing -> return $ inner menu
          else return $ inner menu
-
-    -- B button (keyboard or gamepad) or Escape
-    isBackButton x = isBButton x || isKey Escape x
-
-    -- Enter or A button
-    isMenuConfirmation x =
-        isAButton x ||
-        isEnterOrReturn x
-
 
 -- * automatic creation
 

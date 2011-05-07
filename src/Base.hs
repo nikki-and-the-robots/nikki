@@ -19,6 +19,7 @@ module Base (
     module Base.GameGrounds,
     module Base.Debugging,
     module Base.Configuration,
+    module Base.Configuration.Controls,
     module Base.GlobalCatcher,
     module Base.GlobalShortcuts,
     module Base.LevelLoading,
@@ -44,6 +45,7 @@ import Base.Grounds
 import Base.GameGrounds
 import Base.Debugging
 import Base.Configuration
+import Base.Configuration.Controls
 import Base.GlobalCatcher
 import Base.GlobalShortcuts
 import Base.LevelLoading

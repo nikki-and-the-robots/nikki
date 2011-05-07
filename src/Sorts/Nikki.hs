@@ -118,10 +118,10 @@ instance Sort NSort Nikki where
 
     getControlledChipmunk _ = chipmunk
 
-    updateNoSceneChange sort mode now contacts cd nikki = inner nikki
+    updateNoSceneChange sort config mode now contacts cd nikki = inner nikki
       where
         inner =
-            updateState mode now contacts cd >=>
+            updateState config mode now contacts cd >=>
             return . updateStartTime now (state nikki) >=>
             controlNikki now contacts cd sort
 

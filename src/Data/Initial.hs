@@ -9,6 +9,9 @@ import Data.IntMap
 class Initial d where
     initial :: d
 
+instance Initial () where
+    initial = ()
+
 instance Initial [a] where
     initial = []
 

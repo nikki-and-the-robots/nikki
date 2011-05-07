@@ -9,11 +9,12 @@ module Base.Configuration (
 
 import Data.List
 import Data.Accessor
+import Data.Initial
 
 import Text.Logging
 
 import System.Environment
-import System.Console.CmdArgs
+import System.Console.CmdArgs as CmdArgs
 import System.Info
 
 import Graphics.Qt
@@ -23,6 +24,8 @@ import Version
 import Utils
 
 import Distribution.AutoUpdate.Paths
+
+import Base.Configuration.Controls
 
 
 -- * dynamic configuration
@@ -43,9 +46,12 @@ data Configuration = Configuration {
     render_chipmunk_objects :: Bool,
     abort_level :: Maybe Double,
     initial_events :: [Key],
-    show_widget_frames :: Bool
+    show_widget_frames :: Bool,
+
+    -- not accessible from command line
+    controls :: Controls
   }
-    deriving (Show, Data, Typeable)
+    deriving (Show, Read, Data, Typeable)
 
 play_levelA :: Accessor Configuration (Maybe FilePath)
 play_levelA = accessor play_level (\ a r -> r{play_level = a})
@@ -89,6 +95,7 @@ options =
         fullscreen = False
             &= help "start the game in fullscreen mode",
 
+        -- debugging
         run_in_place = False
             &= groupname "Development flags"
             &= help "causes the game to look for the data files in ../data and use ../data/standard_levels to load and save levels",
@@ -117,7 +124,11 @@ options =
             &= typ "[Key]",
         show_widget_frames = False
             &= name "w"
-            &= help "show colored frames for all displayed widgets"
+            &= help "show colored frames for all displayed widgets",
+
+        -- not accessible from the command line
+        controls = initial
+            &= CmdArgs.ignore
       }
     &= program "nikki"
     &= summary ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")

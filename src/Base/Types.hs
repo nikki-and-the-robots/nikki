@@ -32,6 +32,7 @@ import Graphics.Qt as Qt
 import Utils
 
 import Base.Configuration
+import Base.Configuration.Controls
 import Base.Grounds
 import Base.GameGrounds
 import Base.Pixmap
@@ -441,15 +442,15 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     startControl :: Seconds -> object -> object
     startControl now = id
 
-    update :: sort -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
+    update :: sort -> Controls -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
         -> Index -> object -> IO (Scene Object_ -> Scene Object_, object)
-    update sort mode now contacts cd i o = do
-        o' <- updateNoSceneChange sort mode now contacts cd o
+    update sort controls mode now contacts cd i o = do
+        o' <- updateNoSceneChange sort controls mode now contacts cd o
         return (id, o')
 
-    updateNoSceneChange :: sort -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
+    updateNoSceneChange :: sort -> Controls -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
         -> object -> IO object
-    updateNoSceneChange _ _ _ _ _ o = return o
+    updateNoSceneChange _ _ _ _ _ _ o = return o
 
     renderObject :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
 

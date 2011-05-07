@@ -107,8 +107,8 @@ instance Sort JSort Jetpack where
 
     getControlledChipmunk _ = chipmunk
 
-    updateNoSceneChange sort mode now contacts (isControlled, cd) =
-        return . jupdate (isControlled, cd) >=>
+    updateNoSceneChange sort config mode now contacts (isControlled, cd) =
+        return . jupdate config (isControlled, cd) >=>
         return . updateRenderState now isControlled >=>
         passThrough controlToChipmunk
 
@@ -146,13 +146,13 @@ mkPolys =
 
 -- * logick
 
-jupdate :: (Bool, ControlData) -> Jetpack -> Jetpack
-jupdate (False, _) (Jetpack chip _ _ renderState times)  =
+jupdate :: Controls -> (Bool, ControlData) -> Jetpack -> Jetpack
+jupdate config (False, _) (Jetpack chip _ _ renderState times)  =
     Jetpack chip False Nothing renderState times
-jupdate (True, (ControlData _ held)) (Jetpack chip _ _ renderState times) =
+jupdate config (True, cd) (Jetpack chip _ _ renderState times) =
     Jetpack chip boost direction renderState times
   where
-    boost = aButton
+    boost = action
     direction =
         if left then
             if right then Nothing else Just HLeft
@@ -161,10 +161,10 @@ jupdate (True, (ControlData _ held)) (Jetpack chip _ _ renderState times) =
           else
             Nothing
 
-    aButton, left, right :: Bool
-    aButton = fany isAButton held
-    left = fany isLeft held
-    right = fany isRight held
+    action, left, right :: Bool
+    action = isRobotActionHeld config cd
+    left = isGameLeftHeld config cd
+    right = isGameRightHeld config cd
 
 
 updateRenderState :: Seconds -> Bool -> Jetpack -> Jetpack

@@ -106,8 +106,8 @@ instance Sort PSort Platform where
     immutableCopy p@Platform{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
-    updateNoSceneChange sort mode now contacts cd =
-        control cd >=>
+    updateNoSceneChange sort config mode now contacts cd =
+        control config cd >=>
         return . updateLogic >=>
         passThrough applyPlatformForce
 
@@ -153,11 +153,11 @@ shapeAttributes = robotShapeAttributes{friction = platformFriction}
 
 -- * controlling
 
-control :: (Bool, ControlData) -> Platform -> IO Platform
-control (True, cd) platform | fany isAButton $ pressed cd = do
+control :: Controls -> (Bool, ControlData) -> Platform -> IO Platform
+control config (True, cd) platform | isRobotActionPressed config cd = do
     newPath <- swapOnOffState (chipmunk platform) $ path platform
     return platform{path = newPath}
-control _ platform = return platform
+control _ _ platform = return platform
 
 swapOnOffState :: Chipmunk -> Path -> IO Path
 swapOnOffState c p@(SingleNode n Nothing) = return p
@@ -278,9 +278,9 @@ updateOEMPath key oem@(OEMPath sort cursorStep cursor path active) =
         UpArrow -> Just $ oemCursor ^: (-~ EditorPosition 0 cursorStepF) $ oem
         DownArrow -> Just $ oemCursor ^: (+~ EditorPosition 0 cursorStepF) $ oem
         -- append new path node
-        k | k == aKey -> Just $ OEMPath sort cursorStep cursor (addPathPoint cursor path) active
+        k | isEditorA k -> Just $ OEMPath sort cursorStep cursor (addPathPoint cursor path) active
         -- delete path node
-        k | k == bKey -> Just $ OEMPath sort cursorStep cursor (removePathPoint cursor path) active
+        k | isEditorB k -> Just $ OEMPath sort cursorStep cursor (removePathPoint cursor path) active
         W -> Just $ oem{oemStepSize = cursorStep * 2}
         S -> Just $ oem{oemStepSize = max 1 (cursorStep `div` 2)}
         Space -> Just $ oem{oemActive = not active}

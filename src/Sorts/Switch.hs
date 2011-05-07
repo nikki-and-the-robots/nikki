@@ -113,14 +113,14 @@ instance Sort SwitchSort Switch where
 
     chipmunks (Switch a b c _ _) = [a, b, c]
 
-    updateNoSceneChange sort mode now contacts cd switch@Switch{triggered = False} =
+    updateNoSceneChange sort config mode now contacts cd switch@Switch{triggered = False} =
         if triggerShape switch `member` triggers contacts then do
             let new = switch{triggered = True}
             updateAntiGravity new
             return new
           else
             return switch
-    updateNoSceneChange s _ _ _ _ o = return o
+    updateNoSceneChange s _ _ _ _ _ o = return o
 
     renderObject switch sort _ _ now = do
         (stampPos, stampAngle) <- getRenderPositionAndAngle (stampChipmunk switch)

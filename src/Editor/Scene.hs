@@ -135,7 +135,7 @@ normalMode DownArrow scene@EditorScene{cursor = (EditorPosition x y)} =
     in Just scene{cursor = (EditorPosition x (y + sy))}
 
 -- add object
-normalMode key scene@EditorScene{cursor, selectedLayer} | aKey == key =
+normalMode key scene@EditorScene{cursor, selectedLayer} | isEditorA key =
     Just $ editorObjects .> layerA selectedLayer ^: mod $
         scene
   where
@@ -144,7 +144,7 @@ normalMode key scene@EditorScene{cursor, selectedLayer} | aKey == key =
     selectedSort = getSelected $ scene ^. availableSorts
 
 -- delete selected object
-normalMode key scene@EditorScene{} | bKey == key =
+normalMode key scene@EditorScene{} | isEditorB key =
     case selected scene of
         Nothing -> Just scene
         (Just (layerIndex, i)) ->
@@ -212,7 +212,7 @@ selectionMode key scene@EditorScene{editorMode = SelectionMode pos}
     EditorPosition sx sy = getCursorStep scene
 selectionMode X scene = Just $ cutSelection scene
 selectionMode C scene = Just $ copySelection scene
-selectionMode key scene | bKey == key || Delete == key = Just $ deleteSelection scene
+selectionMode key scene | isEditorB key || Delete == key = Just $ deleteSelection scene
 selectionMode key scene | key `elem` [W, S] = Just $ changeCursorStepSize key scene
 
 selectionMode _ scene = Nothing

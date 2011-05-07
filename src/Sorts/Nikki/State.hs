@@ -27,8 +27,8 @@ import Sorts.Nikki.Initialisation
 import Sorts.Nikki.Dust
 
 
-updateState :: Mode -> Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
-updateState mode now _ (False, _) nikki = do
+updateState :: Controls -> Mode -> Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
+updateState config mode now _ (False, _) nikki = do
     let action = case mode of
             TerminalMode{} -> UsingTerminal
             RobotMode{} -> UsingTerminal
@@ -37,15 +37,15 @@ updateState mode now _ (False, _) nikki = do
         State{direction} = state nikki
         newState = State action direction 0 jumpInformation' False
     addDustClouds now nikki{state = newState}
-updateState mode now contacts (True, controlData) nikki = do
+updateState config mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
     nikkiPos <- getPosition $ chipmunk nikki
-    let newState_ = newState now contacts controlData nikki nikkiPos velocity_
+    let newState_ = newState config now contacts controlData nikki nikkiPos velocity_
     addDustClouds now nikki{state = newState_}
 
-newState :: Seconds -> Contacts -> ControlData
+newState :: Controls -> Seconds -> Contacts -> ControlData
     -> Nikki -> CM.Position -> Velocity -> State
-newState now contacts controlData nikki nikkiPos velocity =
+newState config now contacts controlData nikki nikkiPos velocity =
     mkNewState considerGhostsState' -- (dustClouds $ state nikki)
   where
     -- function that creates the next state when given the next considerGhosts value.
@@ -73,8 +73,8 @@ newState now contacts controlData nikki nikkiPos velocity =
                     State (Walk afterAirborne False) newDirection walkingFeetVelocity jumpInformation'
             else case grips of
                 -- nikki grabs something
-                Just HLeft | rightPushed -> State GripImpulse HLeft 0 jumpInformation'
-                Just HRight | leftPushed -> State GripImpulse HRight 0 jumpInformation'
+                Just HLeft | rightPressed -> State GripImpulse HLeft 0 jumpInformation'
+                Just HRight | leftPressed -> State GripImpulse HRight 0 jumpInformation'
                 Just gripDirection -> State Grip gripDirection 0 jumpInformation'
                 -- nikki grabs nothing
                 Nothing ->
@@ -187,12 +187,12 @@ newState now contacts controlData nikki nikkiPos velocity =
     hasLegsCollisions = not $ null $ legsCollisions
 
     -- button events
-    jumpButtonPushed = any isAButton $ pressed controlData
-    jumpButtonHeld = fany isAButton $ held controlData
-    rightPushed = any isRight $ pressed controlData
-    leftPushed = any isLeft $ pressed controlData
-    rightHeld = fany isRight $ held controlData
-    leftHeld = fany isLeft $ held controlData
+    jumpButtonPushed = isGameJumpPressed config controlData
+    jumpButtonHeld = isGameJumpHeld config controlData
+    rightPressed = isGameRightPressed config controlData
+    leftPressed = isGameLeftPressed config controlData
+    rightHeld = isGameRightHeld config controlData
+    leftHeld = isGameLeftHeld config controlData
     nothingHeld = not (rightHeld `xor` leftHeld)
 
     -- the direction indicated by the buttons (if any)

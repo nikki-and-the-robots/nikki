@@ -37,40 +37,9 @@ instance Ord Button where
     compare a b = compare (key a) (key b)
 
 
-isKey :: Key -> Button -> Bool
-isKey a (KeyboardButton b _) = a == b
-isKey _ _ = False
-
-
 isArrowButton :: Button -> Bool
 isArrowButton (KeyboardButton k _) =
     k `elem` (UpArrow : DownArrow : LeftArrow : RightArrow : [])
-
--- | buttons that could be inserted via keyboard or gamepad
-isUp, isDown, isLeft, isRight, isAButton, isBButton, isStart, isEnterOrReturn :: Button -> Bool
-isUp = isKeyBoardButton UpArrow
-isDown = isKeyBoardButton DownArrow
-isLeft = isKeyBoardButton LeftArrow
-isRight = isKeyBoardButton RightArrow
-isAButton = isKeyBoardButton aKey
-isBButton = isKeyBoardButton bKey
-isStart = isKeyBoardButton Escape
-isEnterOrReturn (KeyboardButton k _) = k == Return || k == Enter
-
-isKeyBoardButton :: Key -> (Button -> Bool)
-isKeyBoardButton a (KeyboardButton b _) = a == b
-isKeyBoardButton _ _ = False
-
--- | buttons that are inserted only by keyboard
--- Enter or AButton (Ctrl)
-isKeyboardConfirmation :: Button -> Bool
-isKeyboardConfirmation (KeyboardButton k _) =
-    k `elem` [Enter, aKey]
-
--- | configuration of A and B button on the keyboard
-aKey, bKey :: Key
-aKey = Ctrl
-bKey = Shift
 
 -- | all arrow keys
 allArrowKeys :: Set Key
