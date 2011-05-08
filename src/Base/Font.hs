@@ -48,6 +48,7 @@ fontColors :: [Color]
 fontColors = nub $
     standardFontColor :
     headerFontColor :
+    white :
     []
 
 fontHeight :: Num n => n

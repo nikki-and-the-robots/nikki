@@ -138,7 +138,7 @@ instance Renderable Menu where
 toLines :: Menu -> [RenderableInstance]
 toLines (Menu _ before selected after _) = fmap renderable $
     map fst before ++
-    (proseSelect $ fst selected) :
+    (colorizeProse white $ proseSelect $ fst selected) :
     map fst after
   where
     proseSelect :: Prose -> Prose
