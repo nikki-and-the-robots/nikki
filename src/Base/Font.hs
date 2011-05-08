@@ -23,8 +23,6 @@ import Data.Char
 
 import Text.Parsec
 
-import Codec.Binary.UTF8.Light (Word32, encodeUTF8, decode)
-
 import Control.Arrow (left)
 
 import System.FilePath
@@ -118,7 +116,7 @@ glyphSize :: Glyph -> Size Double
 glyphSize = pixmapSize . glyphPixmap
 
 isSpaceGlyph :: Glyph -> Bool
-isSpaceGlyph (Glyph c _) = Text.all isSpace $ decode c
+isSpaceGlyph (Glyph c _) = Text.all isSpace c
 
 toWords :: [Glyph] -> [Word]
 toWords [] = []
@@ -204,17 +202,17 @@ data ErrorSymbol = ErrorSymbol
 loadLetter :: FilePath -> IO (Either Text ErrorSymbol, Pixmap)
 loadLetter file = do
     pixmap <- loadSymmetricPixmap (Position 1 1) file
-    return (utf8String, pixmap)
+    return (textString, pixmap)
   where
-    utf8String = left encodeUTF8 $ parseFileName (takeBaseName file)
+    textString = left (pack . fmap chr) $ parseFileName (takeBaseName file)
 
-parseFileName :: String -> Either [Word32] ErrorSymbol
+parseFileName :: String -> Either [Int] ErrorSymbol
 parseFileName name = do
     case parse parser ("letterName: " ++ name) name of
         Left err -> error $ show err
         Right x -> x
   where
-    parser :: Parsec String () (Either [Word32] ErrorSymbol)
+    parser :: Parsec String () (Either [Int] ErrorSymbol)
     parser = none <|> numbers
 
     none = string "NONE" >> return (Right ErrorSymbol)

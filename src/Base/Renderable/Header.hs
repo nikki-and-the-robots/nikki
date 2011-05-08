@@ -5,8 +5,7 @@ module Base.Renderable.Header (header, headerHeight) where
 
 import Data.Abelian
 import Data.Char
-
-import Codec.Binary.UTF8.Light
+import Data.Text
 
 import Graphics.Qt
 
@@ -49,7 +48,7 @@ glyphToHeaderCube app glyph =
     if isSpaceGlyph glyph then SpaceCube else StandardCube glyph
 
 isSpaceGlyph :: Glyph -> Bool
-isSpaceGlyph g = " " == decode (character g)
+isSpaceGlyph g = " " == unpack (character g)
 
 -- | Adds one cube before and one cube after the header.
 addStartAndEndCube :: Application_ s -> [HeaderCube] -> [HeaderCube]
