@@ -14,11 +14,11 @@ module Base.Font (
 
 import Safe
 
-import qualified Data.ByteString as BS
 import Data.Either
-import Data.List
+import Data.List as List
 import Data.Abelian
 import Data.Map ((!), lookup, fromList)
+import Data.Text as Text hiding (concatMap)
 import Data.Char
 
 import Text.Parsec
@@ -63,21 +63,21 @@ proseToGlyphs :: Application_ s -> Prose -> [Glyph]
 proseToGlyphs app (Prose list) =
     concatMap inner list
   where
-    inner :: (Color, BS.ByteString) -> [Glyph]
+    inner :: (Color, Text) -> [Glyph]
     inner (color, string) =
         searchGlyphs (getColorVariant (standardFont app) color) string
 
-searchGlyphs :: ColorVariant -> BS.ByteString -> [Glyph]
+searchGlyphs :: ColorVariant -> Text -> [Glyph]
 searchGlyphs variant =
     inner (glyphs variant)
   where
-    inner _ string | BS.null string = []
+    inner _ string | Text.null string = []
     inner ((key, pixmap) : r) string =
-        if key `BS.isPrefixOf` string then
-            Glyph key pixmap : searchGlyphs variant (BS.drop (BS.length key) string)
+        if key `Text.isPrefixOf` string then
+            Glyph key pixmap : searchGlyphs variant (Text.drop (Text.length key) string)
         else
             inner r string
-    inner [] string = ErrorGlyph (errorSymbol variant) : searchGlyphs variant (BS.tail string)
+    inner [] string = ErrorGlyph (errorSymbol variant) : searchGlyphs variant (Text.tail string)
 
 -- | Returns the width of the given sequence of pixmaps,
 -- including 1 üp for kerning
@@ -108,7 +108,7 @@ data Word = Word {
 -- | a letter with its graphical representation
 data Glyph
     = Glyph {
-        character :: BS.ByteString,
+        character :: Text,
         glyphPixmap :: Pixmap
       }
     | ErrorGlyph {glyphPixmap :: Pixmap}
@@ -118,7 +118,7 @@ glyphSize :: Glyph -> Size Double
 glyphSize = pixmapSize . glyphPixmap
 
 isSpaceGlyph :: Glyph -> Bool
-isSpaceGlyph (Glyph c _) = all isSpace $ decode c
+isSpaceGlyph (Glyph c _) = Text.all isSpace $ decode c
 
 toWords :: [Glyph] -> [Word]
 toWords [] = []
@@ -126,8 +126,8 @@ toWords glyphs =
     word : toWords rest
   where
     word = Word (nonSpaces ++ followingSpaces) wordWidth wordYOffsetDelta
-    (nonSpaces, afterWord) = span (not . isSpaceGlyph) glyphs
-    (followingSpaces, rest) = span isSpaceGlyph afterWord
+    (nonSpaces, afterWord) = List.span (not . isSpaceGlyph) glyphs
+    (followingSpaces, rest) = List.span isSpaceGlyph afterWord
     wordWidth = pixmapsWidth $ fmap glyphPixmap nonSpaces
     wordYOffsetDelta = pixmapsWidth (fmap glyphPixmap (nonSpaces ++ followingSpaces))
                        +~ fromUber 1
@@ -144,11 +144,11 @@ wordWrapGlyphs wrapWidth =
   where
     inner :: Double -> [Word] -> [Word] -> [[Word]]
     inner w akk (a : r) =
-        if null akk || (w + wordWidth a <= wrapWidth) then
+        if List.null akk || (w + wordWidth a <= wrapWidth) then
             inner (w + wordYOffsetDelta a + fromUber 1) (a : akk) r
           else
-            reverse akk : inner 0 [] (a : r)
-    inner _ akk [] = reverse akk : []
+            List.reverse akk : inner 0 [] (a : r)
+    inner _ akk [] = List.reverse akk : []
 
 wordWrap :: Application_ s -> Double -> Prose -> [[Glyph]]
 wordWrap app w = wordWrapGlyphs w . proseToGlyphs app
@@ -165,16 +165,16 @@ loadAlphaNumericFont = do
 -- | Converts loaded pixmaps to a font.
 -- Also sorts the letter pixmaps (longest keys first).
 -- Does only load the standard color variant at the moment.
-toFont :: [(Either BS.ByteString ErrorSymbol, Pixmap)] -> IO Font
+toFont :: [(Either Text ErrorSymbol, Pixmap)] -> IO Font
 toFont m =
     toColorVariants $ ColorVariant sortedLetters errorSymbol
   where
     letters = fmap (\ k -> (k, lookupJust (Left k) m)) $ lefts $ fmap fst m
-    sortedLetters = reverse $ sortBy shortestKeyFirst letters
+    sortedLetters = List.reverse $ sortBy shortestKeyFirst letters
     errorSymbol = lookupJustNote "error symbol not found" (Right ErrorSymbol) m
 
-    shortestKeyFirst :: (BS.ByteString, b) -> (BS.ByteString, b) -> Ordering
-    shortestKeyFirst = withView (BS.length . fst) compare
+    shortestKeyFirst :: (Text, b) -> (Text, b) -> Ordering
+    shortestKeyFirst = withView (Text.length . fst) compare
 
 -- | converts the loaded color variant (white/black) to
 -- the standardColorVariants
@@ -201,7 +201,7 @@ toColorVariants loadedVariant = do
 data ErrorSymbol = ErrorSymbol
   deriving (Eq, Ord)
 
-loadLetter :: FilePath -> IO (Either BS.ByteString ErrorSymbol, Pixmap)
+loadLetter :: FilePath -> IO (Either Text ErrorSymbol, Pixmap)
 loadLetter file = do
     pixmap <- loadSymmetricPixmap (Position 1 1) file
     return (utf8String, pixmap)

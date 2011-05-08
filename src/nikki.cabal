@@ -170,6 +170,7 @@ Executable core
         , stm >= 2.2.0.1
         , strict >= 0.3.2
         , vector >= 0.7.0.1
+        , text == 0.11.*
 
     if os(linux)
         extra-libraries:
