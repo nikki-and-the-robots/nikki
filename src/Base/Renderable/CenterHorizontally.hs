@@ -12,9 +12,9 @@ centerHorizontally :: Renderable r => r -> RenderableInstance
 centerHorizontally = RenderableInstance . CenterHorizontally . RenderableInstance
 
 data CenterHorizontally = CenterHorizontally RenderableInstance
-  deriving Show
 
 instance Renderable CenterHorizontally where
+    label = const "CenterHorizontally"
     render ptr app config parentSize (CenterHorizontally child) = do
         (childSize, childAction) <- render ptr app config parentSize child
         let size = Size (width parentSize) (height childSize)

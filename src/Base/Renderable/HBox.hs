@@ -14,12 +14,12 @@ import Base.Renderable.Common
 
 
 data HBox = HBox [RenderableInstance]
-  deriving Show
 
 hBox :: Renderable r => [r] -> HBox
 hBox = HBox . map RenderableInstance
 
 instance Renderable HBox where
+    label = const "HBox"
     render ptr app config size (HBox children_) = do
         children <- fmapM (render ptr app config size) children_
         let size = foldr addSizes zero $ fmap fst children

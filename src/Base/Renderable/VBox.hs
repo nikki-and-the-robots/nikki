@@ -14,7 +14,6 @@ import Base.Renderable.Common ()
 
 
 data VBox = VBox Int [RenderableInstance]
-  deriving Show
 
 -- | Creates a VBox, that will at least display n items.
 -- Displays as much as possible.
@@ -22,6 +21,7 @@ vBox :: Renderable r => Int -> [r] -> VBox
 vBox n = VBox n . map RenderableInstance
 
 instance Renderable VBox where
+    label = const "VBox"
     render ptr app config parentSize vBox@(VBox minimalItems items) = do
         itemRenders <- inner minimalItems (height parentSize) items
         return (vBoxSize (fmap fst itemRenders), renderVBox itemRenders)

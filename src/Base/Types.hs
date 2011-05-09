@@ -106,18 +106,16 @@ data HeaderCubePixmaps
 
 -- * Base.Renderable
 
-class Show r => Renderable r where
+class Renderable r where
     render :: Ptr QPainter -> Application_ s -> Configuration
         -> Size Double -> r -> IO (Size Double, IO ())
+    label :: r -> String
 
 data RenderableInstance =
     forall r . Renderable r => RenderableInstance r
 
 renderable :: Renderable r => r -> RenderableInstance
 renderable = RenderableInstance
-
-instance Show RenderableInstance where
-    show (RenderableInstance x) = show x
 
 
 -- from Game.Scene

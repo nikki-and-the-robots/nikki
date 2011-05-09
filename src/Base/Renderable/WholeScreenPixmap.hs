@@ -45,6 +45,7 @@ data WholeScreenPixmap
 instance Renderable WholeScreenPixmap where
     render ptr app config size typ = return $ tuple size $
         renderWholeScreenPixmap ptr size (typPixmaps app typ)
+    label = show
 
 typPixmaps :: Application_ s -> WholeScreenPixmap -> [Pixmap]
 typPixmaps app MenuBackground = menuBackgrounds $ applicationPixmaps app

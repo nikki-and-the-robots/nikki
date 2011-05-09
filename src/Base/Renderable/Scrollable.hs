@@ -74,6 +74,7 @@ instance Show Scrollable where
     show = const "<Scrollable>"
 
 instance Renderable Scrollable where
+    label = const "Scrollable"
     render ptr app config parentSize (Scrollable children chan scrollDownRef) = do
         let h = height parentSize
             widgetSize = parentSize

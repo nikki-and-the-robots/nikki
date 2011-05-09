@@ -12,13 +12,13 @@ import Base.Renderable.Common ()
 
 data Layered =
     Layered RenderableInstance RenderableInstance
-  deriving Show
 
 
 (|:>) :: (Renderable a, Renderable b) => a -> b -> Layered
 a |:> b = Layered (RenderableInstance a) (RenderableInstance b)
 
 instance Renderable Layered where
+    label = const "Layered"
     render ptr app config parentSize (Layered a b) = do
         aR <- render ptr app config parentSize a
         bR <- render ptr app config parentSize b

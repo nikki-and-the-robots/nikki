@@ -26,12 +26,9 @@ lineSpacer :: RenderableInstance
 lineSpacer = renderable $ emptySpacer $ const $ Size 0 fontHeight
 
 data Spacer = Spacer (Size Double -> Size Double) (Maybe RenderableInstance)
-  deriving Show
-
-instance Show (Size Double -> Size Double) where
-    show = const "<sizeFunction>"
 
 instance Renderable Spacer where
+    label = const "Spacer"
     render ptr app config size (Spacer sizeFun mChild) = do
         let spacerSize = sizeFun size
         return $ tuple spacerSize $

@@ -61,6 +61,7 @@ addStartAndEndCube app inner =
     pixmaps = headerCubePixmaps $ applicationPixmaps app
 
 instance Renderable HeaderCube where
+    label = const "HeaderCube"
     render ptr app config size cube = case pixmapCube cube of
         Left getter -> render ptr app config size $ getter pixmaps
         Right glyph -> do

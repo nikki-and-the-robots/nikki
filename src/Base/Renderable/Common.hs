@@ -45,6 +45,7 @@ instance Renderable RenderableInstance where
             then fiddleInDebugging ptr r
             else id) <$>
         render ptr app config size r
+    label (RenderableInstance r) = label r
 
 fiddleInDebugging ptr renderable (widgetSize, action) =
     (widgetSize, recoverMatrix ptr action >> debugRender)
@@ -54,12 +55,13 @@ fiddleInDebugging ptr renderable (widgetSize, action) =
         setPenColor ptr color 1
         drawRect ptr zero widgetSize
         eraseRect ptr zero (fmap round widgetSize) (alpha ^= 0.1 $ color)
-        drawText ptr (Position 10 25) False (head $ words $ show renderable)
+        drawText ptr (Position 10 25) False (head $ words $ label renderable)
 
 instance Renderable Pixmap where
     render ptr app _ size pix = return $ tuple (pixmapSize pix) $ do
         translate ptr (pix ^. pixmapOffset)
         drawPixmap ptr zero (pixmap pix)
+    label = const "Pixmap"
 
 -- | used for rendering one line of text
 -- (all other text rendering is implemented in terms of this)
@@ -76,8 +78,10 @@ instance Renderable [Glyph] where
             recoverMatrix ptr $
                 (snd =<< render ptr app config size (glyphPixmap glyph))
             translate ptr (Position (width (glyphSize glyph) + fromUber 1) 0)
+    label = const "[Glyph]"
 
 -- | text rendering without word wrapping
 instance Renderable Prose where
     render ptr app config size prose =
         render ptr app config size $ proseToGlyphs app prose
+    label = const "Prose"

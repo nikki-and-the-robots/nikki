@@ -116,6 +116,7 @@ treeToMenu app parent (Node label children i) f preSelection =
 -- * rendering
 
 instance Renderable Menu where
+    label = const "Menu"
     render ptr app config parentSize menu = do
         scrolling <- updateScrollingIO app parentSize menu
         let scroll = drop scrolling

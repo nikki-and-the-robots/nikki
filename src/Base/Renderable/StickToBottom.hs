@@ -63,9 +63,9 @@ brackets x =
 -- * renderable implementation
 
 data StickToBottom = StickToBottom RenderableInstance RenderableInstance
-  deriving Show
 
 instance Renderable StickToBottom where
+    label = const "StickToBottom"
     render ptr app config size (StickToBottom head bottom) = do
         (bottomSize, bottomR) <- render ptr app config size bottom
         let headSize = Size (width size) (height size - height bottomSize)
