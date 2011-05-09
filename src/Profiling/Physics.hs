@@ -27,7 +27,7 @@ profilingWindow = 1
 getTime :: IO CpFloat
 getTime = realToFrac <$> getPOSIXTime
 
-render :: Application_ s -> Configuration -> Ptr QPainter -> Seconds -> IO ()
+render :: Application -> Configuration -> Ptr QPainter -> Seconds -> IO ()
 render app config ptr spaceTime | physics_profiling config = do
     text <- tick spaceTime
     resetMatrix ptr

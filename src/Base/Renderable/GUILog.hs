@@ -20,7 +20,7 @@ import Base.Renderable.Centered
 
 -- | Initializes logging in the GUI.
 -- Returns a Renderable and a logging command
-mkGuiLog :: Application_ s -> IO (RenderableInstance, Prose -> IO ())
+mkGuiLog :: Application -> IO (RenderableInstance, Prose -> IO ())
 mkGuiLog app = do
     logMVar <- newMVar []
     let logCommand t = do

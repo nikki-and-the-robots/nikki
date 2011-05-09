@@ -34,7 +34,7 @@ textWidth = 800
 
 -- | Shows a text till some key is pressed.
 -- Adds an empty line at the top.
-scrollingAppState :: Application_ s -> [Prose] -> AppState -> AppState
+scrollingAppState :: Application -> [Prose] -> AppState -> AppState
 scrollingAppState app text follower = NoGUIAppState $ io $ do
     (renderable, sendCommand) <- scrollable app text
     return $ AppState renderable $ loop sendCommand
@@ -54,7 +54,7 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
           else
             loop send
 
-scrollable :: Application_ s -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
+scrollable :: Application -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
 scrollable app children = do
     chan <- newChan
     scrollDownRef <- newIORef 0

@@ -65,7 +65,7 @@ isDeployed = do
         Nothing
 
 -- | doing the auto update
-autoUpdate :: Application_ sort -> AppState -> AppState
+autoUpdate :: Application -> AppState -> AppState
 autoUpdate app follower = NoGUIAppState $ io $ do
     (renderable, logCommand) <- mkGuiLog app
     return $ AppState renderable $ do
@@ -94,7 +94,7 @@ autoUpdate app follower = NoGUIAppState $ io $ do
 -- Returns (Right (Just newVersion)) if an update was successfully installed,
 -- (Right Nothing) if there is no newer version and
 -- (Left message) if an error occurs.
-attemptUpdate :: Application_ sort -> (Prose -> IO ()) -> Repo -> DeployPath
+attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
     -> IO (Either String (Maybe Version))
 attemptUpdate app logCommand repo deployPath = runErrorT $ do
     serverVersion :: Version <- (ErrorT . return . parseVersion) =<<
@@ -106,7 +106,7 @@ attemptUpdate app logCommand repo deployPath = runErrorT $ do
         return Nothing
 
 -- | the actual updating procedure
-update :: Application_ sort -> (Prose -> IO ()) -> Repo -> Version -> DeployPath
+update :: Application -> (Prose -> IO ()) -> Repo -> Version -> DeployPath
     -> ErrorT String IO ()
 update app logCommand repo newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
     zipFile <- downloadUpdate app logCommand repo newVersion downloadDir
@@ -116,7 +116,7 @@ update app logCommand repo newVersion deployPath = withSystemTempDirectory "nikk
         installUpdate newVersionDir deployPath
 
 -- | downloads the update to 
-downloadUpdate :: Application_ sort -> (Prose -> IO ()) -> Repo -> Version -> FilePath
+downloadUpdate :: Application -> (Prose -> IO ()) -> Repo -> Version -> FilePath
     -> ErrorT String IO ZipFilePath
 downloadUpdate app logCommand repo newVersion tmpDir = do
     let zipFile = ("nikki-" ++ showVersion newVersion) <.> "zip"
@@ -124,7 +124,7 @@ downloadUpdate app logCommand repo newVersion tmpDir = do
     return $ ZipFilePath (tmpDir </> zipFile)
 
 -- | unzips a given zipFile (in the same directory) and returns the path to the unzipped directory
-unzipFile :: Application_ sort -> (Prose -> IO ()) -> ZipFilePath
+unzipFile :: Application -> (Prose -> IO ()) -> ZipFilePath
     -> ErrorT String IO NewVersionDir
 unzipFile app logCommand (ZipFilePath path) = do
     io $ logCommand (p "unzipping " `mappend` pVerbatim path)
@@ -139,7 +139,7 @@ unzipFile app logCommand (ZipFilePath path) = do
 -- Catches every exception and every ErrorT error.
 -- Leaves the backup where it is (in a folder called "temporaryBackupSOMETHING",
 -- which will be deleted by the restarter at a later launch.)
-withBackup :: Application_ sort -> (Prose -> IO ()) -> DeployPath
+withBackup :: Application -> (Prose -> IO ()) -> DeployPath
     -> ErrorT String IO a -> ErrorT String IO a
 withBackup app logCommand (DeployPath deployPath) action = do
     deployedFiles <- io $ sort <$> getDirectoryRealContents deployPath

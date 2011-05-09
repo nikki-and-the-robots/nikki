@@ -25,7 +25,7 @@ import Base.Renderable.Centered
 headerHeight :: Double = 44
 
 -- | implements menu headers
-header :: Application_ s -> Prose -> RenderableInstance
+header :: Application -> Prose -> RenderableInstance
 header app =
     colorizeProse headerFontColor >>>
     capitalizeProse >>>
@@ -43,7 +43,7 @@ data HeaderCube
   deriving Show
 
 -- | converts a glyph into a renderable cube for headers
-glyphToHeaderCube :: Application_ s -> Glyph -> HeaderCube
+glyphToHeaderCube :: Application -> Glyph -> HeaderCube
 glyphToHeaderCube app glyph =
     if isSpaceGlyph glyph then SpaceCube else StandardCube glyph
 
@@ -51,7 +51,7 @@ isSpaceGlyph :: Glyph -> Bool
 isSpaceGlyph g = " " == unpack (character g)
 
 -- | Adds one cube before and one cube after the header.
-addStartAndEndCube :: Application_ s -> [HeaderCube] -> [HeaderCube]
+addStartAndEndCube :: Application -> [HeaderCube] -> [HeaderCube]
 addStartAndEndCube app inner =
     StartCube :
     inner ++

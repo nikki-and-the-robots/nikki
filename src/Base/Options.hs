@@ -16,7 +16,7 @@ import Base.Renderable.Menu
 
 
 -- | options that are used in the main menu and in the game (and possibly the editor?)
-generalOptions :: Application_ s -> Int -> Parent -> AppState
+generalOptions :: Application -> Int -> Parent -> AppState
 generalOptions app ps parent = NoGUIAppState $ do
     fullScreenMenuItem <- mkFullScreen app this
     let menuItems =
@@ -26,7 +26,7 @@ generalOptions app ps parent = NoGUIAppState $ do
   where
     this ps = generalOptions app ps parent
 
-mkFullScreen :: Application_ s -> (Int -> AppState) -> M (Prose, Int -> AppState)
+mkFullScreen :: Application -> (Int -> AppState) -> M (Prose, Int -> AppState)
 mkFullScreen app parent = do
     on <- gets fullscreen
     let switchText = if on then p "on" else p "off"

@@ -22,7 +22,7 @@ import Base.Renderable.VBox
 
 -- | Gets a string from the user.
 -- returns the parent if Escape is pressed.
-askString :: Application_ sort -> AppState -> Prose -> (String -> AppState) -> AppState
+askString :: Application -> AppState -> Prose -> (String -> AppState) -> AppState
 askString app parent question follower =
     loop ""
   where
@@ -51,7 +51,7 @@ mkWidget question answer =
         []
 
 -- | Like askString, but reads (parses with Read) the given String. Asks again, if not parsable.
-askStringRead :: Read a => Application_ sort -> AppState -> Prose -> (a -> AppState) -> AppState
+askStringRead :: Read a => Application -> AppState -> Prose -> (a -> AppState) -> AppState
 askStringRead app parent question follower =
     askString app parent question wrapper
   where

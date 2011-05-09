@@ -17,17 +17,17 @@ import Base.Monad
 import Base.Configuration.Controls
 
 
-handleGlobalShortcuts :: Application_ s -> Set Button -> [AppEvent] -> M [AppEvent]
+handleGlobalShortcuts :: Application -> Set Button -> [AppEvent] -> M [AppEvent]
 handleGlobalShortcuts app held =
     filterM (handler app held)
 
-handler :: Application_ s -> Set Button -> AppEvent -> M Bool
+handler :: Application -> Set Button -> AppEvent -> M Bool
 handler app held x =
     case shortcuts app held x of
         Nothing -> return True
         (Just h) -> h >> return False
 
-shortcuts :: Application_ s -> Set Button -> AppEvent -> Maybe (M ())
+shortcuts :: Application -> Set Button -> AppEvent -> Maybe (M ())
 shortcuts app held e = case e of
     Base.Types.CloseWindow -> Just $ io $ exitWith ExitSuccess
     (Press k) | fullscreenSwitch -> Just $ swapFullScreen app

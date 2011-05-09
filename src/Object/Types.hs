@@ -14,51 +14,6 @@ import Physics.Chipmunk hiding (Position, collisionType)
 import Base
 
 
--- * misc
-
-type Application = Application_ Sort_
-
--- * Sort class wrappers
-
-data Sort_
-    = forall sort object .
-        (Sort sort object, Show sort, Typeable sort) =>
-            Sort_ sort
-    | DummySort -- used if the wrapper object (Object_) will find the sort.
-  deriving Typeable
-
-instance Show Sort_ where
-    show (Sort_ s) = "Sort_ (" ++ show s ++ ")"
-
-instance Eq Sort_ where
-    a == b = sortId a == sortId b
-
-instance Sort Sort_ Object_ where
-    sortId (Sort_ s) = sortId s
-    freeSort (Sort_ s) = freeSort s
-    size (Sort_ s) = size s
-    objectEditMode (Sort_ s) = objectEditMode s
-    renderIconified (Sort_ s) = renderIconified s
-    renderEditorObject ptr offset editorObject =
-        case editorSort editorObject of
-            (Sort_ innerSort) ->
-                renderEditorObject ptr offset editorObject{editorSort = innerSort}
-    initialize (Sort_ sort) space editorPosition state =
-        Object_ sort <$> initialize sort space editorPosition state
-    immutableCopy (Object_ s o) = Object_ s <$> Base.immutableCopy o
-    chipmunks (Object_ _ o) = chipmunks o
-    getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o
-    startControl now (Object_ sort o) = Object_ sort $ startControl now o
-    update DummySort controls mode now contacts cd i (Object_ sort o) = do
-        (f, o') <- update sort controls mode now contacts cd i o
-        return (f, Object_ sort o')
-    updateNoSceneChange DummySort controls mode now contacts cd (Object_ sort o) =
-        Object_ sort <$> updateNoSceneChange sort controls mode now contacts cd o
-    renderObject = error "Don't use this function, use render_ instead (that's type safe)"
-
-sort_ :: Object_ -> Sort_
-sort_ (Object_ sort _) = Sort_ sort
-
 -- | object rendering without providing the sort
 renderObject_ :: Object_ -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
 renderObject_ (Object_ sort o) = renderObject o sort

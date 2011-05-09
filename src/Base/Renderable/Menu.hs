@@ -76,7 +76,7 @@ selectPrevious (Menu t b s a sc) = Menu t (init b) (last b) (s : a) sc
 -- If a title is given, it will be displayed. If not, the main menu will be assumed.
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
-menuAppState :: Application_ sort -> Maybe Prose -> Maybe AppState
+menuAppState :: Application -> Maybe Prose -> Maybe AppState
     -> [(Prose, Int -> AppState)] -> Int -> AppState
 menuAppState app title mParent children preSelection = NoGUIAppState $ io $
     inner <$> mkMenu title children preSelection
@@ -98,7 +98,7 @@ menuAppState app title mParent children preSelection = NoGUIAppState $ io $
 -- | Converts a SelectTree to a menu.
 -- Uses pVerbatim (and unP) to convert to (and from) Prose.
 -- (Doesn't get translated therefore.)
-treeToMenu :: Application_ sort -> AppState -> SelectTree String -> (String -> AppState)
+treeToMenu :: Application -> AppState -> SelectTree String -> (String -> AppState)
     -> Int -> AppState
 treeToMenu app parent (Leaf n) f _ = f n
 treeToMenu app parent (Node label children i) f preSelection =
@@ -153,14 +153,14 @@ addFrame :: [RenderableInstance] -> [RenderableInstance]
 addFrame ll = lineSpacer : ll +: lineSpacer 
 
 -- | Returns the scrolling.
-updateScrollingIO :: Application_ s -> Size Double -> Menu -> IO Int
+updateScrollingIO :: Application -> Size Double -> Menu -> IO Int
 updateScrollingIO app parentSize menu = do
     oldScrolling <- takeMVar $ scrolling menu
     let newScrolling = updateScrolling app parentSize menu oldScrolling
     putMVar (scrolling menu) newScrolling
     return newScrolling
 
-updateScrolling :: Application_ s -> Size Double -> Menu -> Int -> Int
+updateScrolling :: Application -> Size Double -> Menu -> Int -> Int
 updateScrolling app parentSize menu oldScrolling =
     if itemsSpaceF >= 1 + 2 * itemPadding then
         min (allItems - itemsSpaceF) $

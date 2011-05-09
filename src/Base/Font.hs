@@ -54,10 +54,10 @@ fontHeight = 36
 
 -- * querying
 
-standardFont :: Application_ s -> Font
+standardFont :: Application -> Font
 standardFont = alphaNumericFont . applicationPixmaps
 
-proseToGlyphs :: Application_ s -> Prose -> [Glyph]
+proseToGlyphs :: Application -> Prose -> [Glyph]
 proseToGlyphs app (Prose list) =
     concatMap inner list
   where
@@ -148,7 +148,7 @@ wordWrapGlyphs wrapWidth =
             List.reverse akk : inner 0 [] (a : r)
     inner _ akk [] = List.reverse akk : []
 
-wordWrap :: Application_ s -> Double -> Prose -> [[Glyph]]
+wordWrap :: Application -> Double -> Prose -> [[Glyph]]
 wordWrap app w = wordWrapGlyphs w . proseToGlyphs app
 
 

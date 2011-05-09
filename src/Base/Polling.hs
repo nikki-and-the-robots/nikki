@@ -27,7 +27,7 @@ keyStateRef = unsafePerformIO $ newIORef ([], empty)
 
 -- | non-blocking polling of AppEvents
 -- Also handles global shortcuts.
-pollAppEvents :: Application_ s -> M ControlData
+pollAppEvents :: Application -> M ControlData
 pollAppEvents app = do
     (unpolledEvents, keyState) <- io $ readIORef keyStateRef
     qEvents <- io $ pollEvents $ keyPoller app
@@ -50,7 +50,7 @@ resetHeldKeys = do
 
 -- | Blocking wait for the next event.
 -- waits between polls
-waitForAppEvent :: Application_ s -> M AppEvent
+waitForAppEvent :: Application -> M AppEvent
 waitForAppEvent app = do
     ControlData events _ <- pollAppEvents app
     case events of

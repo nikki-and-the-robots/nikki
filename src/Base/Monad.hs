@@ -45,7 +45,7 @@ withDynamicConfiguration configuration action = do
 
 -- * changing the dynamic configuration
 
-swapFullScreen :: Application_ s -> M ()
+swapFullScreen :: Application -> M ()
 swapFullScreen app = do
     fullscreen' <- not <$> gets fullscreen
     modify (\ c -> c{fullscreen = fullscreen'})

@@ -47,5 +47,5 @@ instance Renderable WholeScreenPixmap where
         renderWholeScreenPixmap ptr size (typPixmaps app typ)
     label = show
 
-typPixmaps :: Application_ s -> WholeScreenPixmap -> [Pixmap]
+typPixmaps :: Application -> WholeScreenPixmap -> [Pixmap]
 typPixmaps app MenuBackground = menuBackgrounds $ applicationPixmaps app

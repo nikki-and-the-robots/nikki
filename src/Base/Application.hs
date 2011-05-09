@@ -20,7 +20,7 @@ import Base.Renderable.Common ()
 appState :: Renderable r => r -> M AppState -> AppState
 appState r = AppState (RenderableInstance r)
 
-executeStates :: Application_ s -> AppState -> M ()
+executeStates :: Application -> AppState -> M ()
 executeStates app (AppState renderable cmd) = do
     config <- get
     io $ setDrawingCallbackGLContext (window app) (Just $ renderCallback config)

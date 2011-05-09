@@ -26,7 +26,7 @@ import Base.Font
 
 -- | Blocks until a Press AppEvent is received.
 -- Flushes the event queue before that.
-waitForPressButton :: Application_ s -> M Button
+waitForPressButton :: Application -> M Button
 waitForPressButton app = do
     inner
   where

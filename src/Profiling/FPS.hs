@@ -56,7 +56,7 @@ initialFPSState = do
         return NotActivated
 
 -- does the actual work. Must be called for every frame
-tickFPS :: Application_ s -> Configuration -> Ptr QPainter -> FpsState -> IO FpsState
+tickFPS :: Application -> Configuration -> Ptr QPainter -> FpsState -> IO FpsState
 tickFPS _ config ptr (FpsState counter avg Nothing displayValue) = do
     -- first time: QTime has to be constructed
     now <- getNow
@@ -83,7 +83,7 @@ tickFPS app config ptr (FpsState counter avg (Just oldTime) displayValue) = do
 -- no FPS activated (NotActivated)
 tickFPS _ _ _ x = return x
 
-renderFPS :: Application_ s -> Configuration -> Ptr QPainter -> Prose -> IO ()
+renderFPS :: Application -> Configuration -> Ptr QPainter -> Prose -> IO ()
 renderFPS app config ptr fps = do
     resetMatrix ptr
     size <- fmap fromIntegral <$> sizeQPainter ptr
@@ -112,6 +112,6 @@ initialFPSRef :: M FPSRef
 initialFPSRef =
     initialFPSState >>= io . newIORef >>= return . FPSRef
 
-tickFPSRef :: Application_ s -> Configuration -> Ptr QPainter -> FPSRef -> IO ()
+tickFPSRef :: Application -> Configuration -> Ptr QPainter -> FPSRef -> IO ()
 tickFPSRef app config ptr (FPSRef ref) =
     readIORef ref >>= tickFPS app config ptr >>= writeIORef ref

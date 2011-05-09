@@ -154,7 +154,7 @@ fileExists app save path objects =
         writeObjectsToDisk path objects
         return $ getMainMenu app
 
-reallyExitEditor :: Application_ s -> Parent -> AppState
+reallyExitEditor :: Application -> Parent -> AppState
 reallyExitEditor app editor =
     menuAppState app (Just $ p "really exit without saving?") (Just editor) (
         (p "no", const editor) :

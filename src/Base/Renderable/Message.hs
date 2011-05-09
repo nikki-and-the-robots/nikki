@@ -18,7 +18,7 @@ import Base.Renderable.StickToBottom
 
 
 -- | show a textual message and wait for a keypress
-message :: Application_ a -> [Prose] -> AppState -> AppState
+message :: Application -> [Prose] -> AppState -> AppState
 message app text follower = appState renderable $ do
     ignore $ waitForPressButton app
     return follower

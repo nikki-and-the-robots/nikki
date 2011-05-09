@@ -54,17 +54,17 @@ type M = ConfigurationState
 
 -- * from Base.Application
 
-data Application_ sort
+data Application
     = Application {
         application :: Ptr QApplication,
         window :: Ptr GLContext,
         keyPoller :: KeyPoller,
-        getMainMenu_ :: Application_ sort -> AppState,
+        getMainMenu_ :: Application -> AppState,
         applicationPixmaps :: ApplicationPixmaps,
-        allSorts :: SelectTree sort
+        allSorts :: SelectTree Sort_
       }
 
-getMainMenu :: Application_ sort -> AppState
+getMainMenu :: Application -> AppState
 getMainMenu app = getMainMenu_ app app
 
 data AppState
@@ -107,7 +107,7 @@ data HeaderCubePixmaps
 -- * Base.Renderable
 
 class Renderable r where
-    render :: Ptr QPainter -> Application_ s -> Configuration
+    render :: Ptr QPainter -> Application -> Configuration
         -> Size Double -> r -> IO (Size Double, IO ())
     label :: r -> String
 
@@ -458,6 +458,17 @@ editorPosition2QtPosition sort (EditorPosition x y) =
   where
     Size _ height = size sort
 
+
+-- * Sort class wrappers
+
+data Sort_
+    = forall sort object .
+        (Sort sort object, Show sort, Typeable sort) =>
+            Sort_ sort
+    | DummySort -- used if the wrapper object (Object_) will find the sort.
+  deriving Typeable
+
+
 data Object_
     = forall sort object .
         (Sort sort object,
@@ -468,3 +479,35 @@ data Object_
 
 instance Show Object_ where
     show (Object_ s o) = "Object_ (" ++ show o ++ ")"
+
+instance Show Sort_ where
+    show (Sort_ s) = "Sort_ (" ++ show s ++ ")"
+
+instance Eq Sort_ where
+    a == b = sortId a == sortId b
+
+instance Sort Sort_ Object_ where
+    sortId (Sort_ s) = sortId s
+    freeSort (Sort_ s) = freeSort s
+    size (Sort_ s) = size s
+    objectEditMode (Sort_ s) = objectEditMode s
+    renderIconified (Sort_ s) = renderIconified s
+    renderEditorObject ptr offset editorObject =
+        case editorSort editorObject of
+            (Sort_ innerSort) ->
+                renderEditorObject ptr offset editorObject{editorSort = innerSort}
+    initialize (Sort_ sort) space editorPosition state =
+        Object_ sort <$> initialize sort space editorPosition state
+    immutableCopy (Object_ s o) = Object_ s <$> Base.Types.immutableCopy o
+    chipmunks (Object_ _ o) = chipmunks o
+    getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o
+    startControl now (Object_ sort o) = Object_ sort $ startControl now o
+    update DummySort controls mode now contacts cd i (Object_ sort o) = do
+        (f, o') <- Base.Types.update sort controls mode now contacts cd i o
+        return (f, Object_ sort o')
+    updateNoSceneChange DummySort controls mode now contacts cd (Object_ sort o) =
+        Object_ sort <$> updateNoSceneChange sort controls mode now contacts cd o
+    renderObject = error "Don't use this function, use render_ instead (that's type safe)"
+
+sort_ :: Object_ -> Sort_
+sort_ (Object_ sort _) = Sort_ sort
