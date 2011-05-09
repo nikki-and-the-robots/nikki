@@ -173,7 +173,7 @@ Executable core
 
     if os(linux)
         extra-libraries:
-            qtwrapper, QtOpenGL
+            qtwrapper, QtOpenGL, QtGui
         extra-lib-dirs:
             cpp/dist
 
