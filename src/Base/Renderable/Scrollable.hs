@@ -27,6 +27,7 @@ import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.Centered
 import Base.Renderable.Spacer
+import Base.Renderable.StickToBottom
 
 
 textWidth = 800
@@ -48,15 +49,18 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
           else if isMenuUp controls_ e then
             io (send (subtract 1)) >>
             loop send
-          else
+          else if isMenuBack controls_ e then
             return follower
+          else
+            loop send
 
 scrollable :: Application_ s -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
 scrollable app children = do
     chan <- newChan
     scrollDownRef <- newIORef 0
     let r = MenuBackground |:>
-            (centered $
+            (addKeysHint scrollableKeysHint $
+            centered $
             parentSpacer (\ (Size w h) -> Size textWidth h) $
             Scrollable children chan scrollDownRef)
         send fun = do

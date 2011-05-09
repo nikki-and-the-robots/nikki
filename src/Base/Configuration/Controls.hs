@@ -2,6 +2,7 @@
 module Base.Configuration.Controls (
 
     Controls,
+    KeysHint(..),
     isFullscreenSwapShortcut,
 
     -- * menu
@@ -9,6 +10,8 @@ module Base.Configuration.Controls (
     isMenuDown,
     isMenuConfirmation,
     isMenuBack,
+    menuKeysHint,
+    scrollableKeysHint,
 
     -- * text fields
     isTextFieldConfirmation,
@@ -46,11 +49,18 @@ import Graphics.Qt
 import Utils
 
 import Base.Types.Events
+import Base.Prose
 
 
 -- | Configuration of controls (could include either static and dynamic parts)
 -- Could be more sophisticated.
 type Controls = ()
+
+-- | represents hints for keys for user readable output
+data KeysHint
+    = KeysHint [(Prose, Prose)]
+    | PressAnyKey
+
 
 -- * internals
 
@@ -74,6 +84,21 @@ isMenuUp _ = isKey UpArrow
 isMenuDown _ = isKey DownArrow
 isMenuConfirmation _ k = isKey Return k || isKey jumpKey k
 isMenuBack _ k = isKey Escape k || isKey contextKey k
+
+-- | user readable hints which keys to use
+menuKeysHint :: Bool -> KeysHint
+menuKeysHint acceptsBackKey = KeysHint (
+    (p "select", p "arrow keys") :
+    (p "confirm", p "return") :
+    (if acceptsBackKey then [(p "back", p "escape")] else []) ++
+    [])
+
+-- | keys hint for Base.Renderable.Scrollable
+scrollableKeysHint :: KeysHint
+scrollableKeysHint = KeysHint (
+    (p "scroll", p "arrow keys") :
+    (p "back", p "escape") :
+    [])
 
 
 -- * text fields

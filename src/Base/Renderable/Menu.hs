@@ -33,6 +33,7 @@ import Base.Renderable.Centered
 import Base.Renderable.CenterHorizontally
 import Base.Renderable.Header
 import Base.Renderable.Spacer
+import Base.Renderable.StickToBottom
 
 
 data Menu
@@ -122,14 +123,16 @@ instance Renderable Menu where
             Just title -> render ptr app config parentSize
                 -- normal menu
                 (MenuBackground |:>
-                (centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
+                (addKeysHint (menuKeysHint True) $
+                 centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
               where
                 lines = titleLine : lineSpacer : scroll (toLines menu)
                 titleLine = header app title
             Nothing -> render ptr app config parentSize
                 -- main menu
                 (MenuBackground |:>
-                (centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
+                (addKeysHint (menuKeysHint False) $
+                 centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
               where
                 lines = mainMenuPixmap : lineSpacer : scroll (toLines menu)
                 mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
