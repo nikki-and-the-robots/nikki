@@ -121,13 +121,14 @@ Executable core
 --         -eventlog
 --         -prof -auto-all
 
-        -Werror
+        -Wwarn
+        -fwarn-missing-methods
         -fwarn-missing-fields
         -fwarn-dodgy-imports
-        -fwarn-missing-methods
         -fwarn-tabs
         -fwarn-unused-do-bind
-        -fno-warn-unused-imports
+        -fwarn-unused-imports
+
         -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
 
@@ -166,7 +167,6 @@ Executable core
         , uniplate >= 1.6
         , data-accessor >= 0.2.1.7
         , data-accessor-mtl >= 0.2.0.2
-        , stm >= 2.2.0.1
         , strict >= 0.3.2
         , vector >= 0.7.0.1
         , text == 0.11.*
