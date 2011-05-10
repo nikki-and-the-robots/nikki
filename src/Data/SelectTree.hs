@@ -5,6 +5,7 @@ module Data.SelectTree (
     mkNode,
     addChild,
     getLabel,
+    setLabel,
     getChildren,
     getSelected,
     selectNext,
@@ -13,49 +14,60 @@ module Data.SelectTree (
     leafs,
     modifyLabelled,
     (-<),
+    readDirectoryToSelectTree,
   ) where
 
 import Utils
 
+import Data.Maybe
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList)
 import qualified Data.Tree as T
 import Data.Foldable (Foldable, foldMap)
 
+import System.Directory
+import System.FilePath
+
 
 data SelectTree a
     -- Invariant: length [SelectTree a] > Index
     = Node String (Indexable (SelectTree a)) Index
-    | Leaf {fromLeaf :: a}
+    | Leaf String a
     | EmptyNode String
   deriving Show
 
 
 instance Functor SelectTree where
     fmap f (Node label children index) = Node label (fmap (fmap f) children) index
-    fmap f (Leaf a) = Leaf $ f a
+    fmap f (Leaf l a) = Leaf l $ f a
 
 instance Show a => PP (SelectTree a) where
-    pp = T.drawTree . fmap show . toTree
+    pp = T.drawTree . toTree
 
 instance Foldable SelectTree where
-    foldMap f (Leaf a) = f a
+    foldMap f (Leaf _ a) = f a
     foldMap f (Node _ cs _) = foldMap (foldMap f) cs
 
 
-mkNode :: String -> (Indexable (SelectTree a)) -> SelectTree a
+mkNode :: String -> Indexable (SelectTree a) -> SelectTree a
 mkNode label ix = Node label ix (head (keys ix))
 
 -- | adds a child (at the end)
 -- PRE: the second given tree is not a Leaf
 addChild :: SelectTree a -> SelectTree a -> SelectTree a
-addChild _ (Leaf _) = error "addChild"
+addChild _ (Leaf _ _) = error "addChild"
 addChild x (EmptyNode label) = mkNode label (I.fromList [x])
 addChild x (Node label children selected) = Node label (children >: x) selected
 
-getLabel :: SelectTree a -> Maybe String
-getLabel (Node l _ _) = Just l
-getLabel _ = Nothing
+getLabel :: SelectTree a -> String
+getLabel (Node l _ _) = l
+getLabel (Leaf l _) = l
+getLabel (EmptyNode l) = l
+
+setLabel :: String -> SelectTree a -> SelectTree a
+setLabel l (Node _ a b) = Node l a b
+setLabel l (EmptyNode _) = EmptyNode l
+setLabel l (Leaf _ e) = Leaf l e
 
 getChildren :: SelectTree a -> [SelectTree a]
 getChildren (Node _ x _) = I.toList x
@@ -63,7 +75,7 @@ getChildren _ = []
 
 getSelected :: SelectTree a -> a
 getSelected (Node sn cs i) = getSelected (cs !!! i)
-getSelected (Leaf a) = a
+getSelected (Leaf _ a) = a
 
 -- | selects the previous item in the tree.
 -- steps through all the items in a tree.
@@ -97,22 +109,22 @@ selectOther updateSelected reset tree =
             -- child could be updated: must be inserted in list
             Just child ->
                 Just $ Node label (indexA selected ^: const child $ children) selected
-    selectNextNotWrapping (Leaf a) = Nothing
+    selectNextNotWrapping (Leaf _ a) = Nothing
 
 -- resets the tree to select the first item in it and every child.
 resetSelectedsFirst :: SelectTree a -> SelectTree a
-resetSelectedsFirst (Leaf a) = Leaf a
+resetSelectedsFirst (Leaf l a) = Leaf l a
 resetSelectedsFirst (Node label children _) = Node label (fmap resetSelectedsFirst children) 0
 
 resetSelectedLast :: SelectTree a -> SelectTree a
-resetSelectedLast (Leaf a) = Leaf a
+resetSelectedLast (Leaf l a) = Leaf l a
 resetSelectedLast (Node label children _) =
     Node label (fmap resetSelectedLast children) (Index (I.length children - 1))
 
 
 leafs :: SelectTree a -> [a]
 leafs (Node _ ll _) = concatMap leafs (I.toList ll)
-leafs (Leaf a) = return a
+leafs (Leaf _ a) = return a
 
 
 selectFirstElement :: (e -> Bool) -> SelectTree e -> Maybe (SelectTree e)
@@ -132,15 +144,39 @@ modifyLabelled :: String -> (SelectTree a -> SelectTree a) -> SelectTree a -> Se
 modifyLabelled testLabel f (Node label children selected) =
     Node label (fmap inner children) selected
   where
-    inner n = if getLabel n == Just testLabel then f n else n
+    inner n = if getLabel n == testLabel then f n else n
 modifyLabelled _ _ x = x
 
 
-toTree :: Show a => SelectTree a -> T.Tree (Either String a)
-toTree (Node snippet children _) = T.Node (Left snippet) (I.toList (fmap toTree children))
-toTree (Leaf a) = T.Node (Right a) []
+toTree :: Show a => SelectTree a -> T.Tree String
+toTree (Node snippet children _) = T.Node snippet (I.toList (fmap toTree children))
+toTree (Leaf l a) = T.Node (l ++ ": " ++ show a) []
 -- toTree x = es "toTree" x
 
 (-<) :: SelectTree a -> Index -> SelectTree a
 (Node _ children _) -< index = children !!! index
 
+-- | Returns the files of a directory recursively as a SelectTree.
+-- Returns just the files, omits directories
+-- Returns just the files for which the given predicate is True.
+readDirectoryToSelectTree :: String -> (FilePath -> Bool) -> FilePath -> IO (SelectTree FilePath)
+readDirectoryToSelectTree title pred file = do
+    result <- inner file
+    return $ case result of
+        Just x -> setLabel title x
+        Nothing -> error ("not a directory: " ++ file)
+  where
+    inner :: FilePath -> IO (Maybe (SelectTree FilePath))
+    inner file = do
+        isDir <- doesDirectoryExist file
+        isFile <- doesFileExist file
+        if isDir then do
+            subFiles <- fmap (file </>) <$> getFiles file Nothing
+            children <- catMaybes <$> fmapM inner subFiles
+            return $ Just $ mkNode (takeBaseName file) $ I.fromList children
+          else if isFile then
+            return $ if pred file
+                then Just $ Leaf (takeBaseName file) file
+                else Nothing
+          else
+            error ("readDirectoryToSelectTree: file not found: " ++ file)
