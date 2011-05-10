@@ -24,7 +24,7 @@ import Distribution.AutoUpdate.Zip
 
 import Version
 
-import Utils
+import Utils hiding (ignore)
 
 
 data Configuration = Configuration {
