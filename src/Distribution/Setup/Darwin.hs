@@ -1,5 +1,5 @@
 
-module Setup.Darwin where
+module Distribution.Setup.Darwin where
 
 
 import Data.List
@@ -23,9 +23,8 @@ import Distribution.MacOSX
 import Utils
 
 
-macMain :: IO ()
-macMain = do
-    defaultMainWithHooks simpleUserHooks{postBuild = macPostBuild, instHook = installHook}
+macUserHooks = 
+    simpleUserHooks{postBuild = macPostBuild}
 
 macResourcesDir = "resources"
 

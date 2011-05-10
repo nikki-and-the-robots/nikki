@@ -6,7 +6,7 @@ module Main where
 import Distribution.Simple
 
 #ifdef darwin_HOST_OS
-import Setup.Darwin
+import Distribution.Setup.Darwin
 #endif
 
 
