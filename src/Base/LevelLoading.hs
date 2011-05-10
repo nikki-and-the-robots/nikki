@@ -1,9 +1,12 @@
 
 module Base.LevelLoading (
-    lookupLevels,
-    getFreeLevelsDirectory,
+    lookupPlayableLevels,
+    lookupEditableLevels,
+    getSaveLevelDirectory,
   ) where
 
+
+import Data.SelectTree
 
 import System.FilePath
 import System.Directory
@@ -16,21 +19,35 @@ import Base.Paths
 
 -- | Returns all files that can be played.
 -- Looks in the freeLevelsDirectory and in data/standard_levels
-lookupLevels :: RM [FilePath]
-lookupLevels = do
-    standardLevels <- getDataFiles "standard_levels" (Just ".nl")
-    levelDirectory <- getFreeLevelsDirectory
-    userLevels <- map (levelDirectory </>) <$> io (getFiles levelDirectory (Just "nl"))
-    return (standardLevels ++ userLevels)
+lookupPlayableLevels :: String -> RM (SelectTree FilePath)
+lookupPlayableLevels title = do
+    standardLevelsDir <- getDataFileName "standard_levels"
+    standardLevels <- io $ dirToLevels "standard levels" standardLevelsDir
+--     downloadedLevels <- lookupDownloadedLevels
+    ownedLevels <- io $ lookupEditableLevels "your levels"
+    return $
+        addChild ownedLevels $
+        addChild standardLevels $
+        EmptyNode title
+
+-- | returns all levels created by the user (that can be edited)
+lookupEditableLevels :: String -> IO (SelectTree FilePath)
+lookupEditableLevels title =
+    dirToLevels title =<< getEditableLevelsDirectory
 
 -- | Return the directory where levels are (and should be) saved.
 -- A standard directory is returned (using getAppUserDataDirectory "nikki-free-levels").
 -- If the standard directory does not exist, it will be created.
-getFreeLevelsDirectory :: RM FilePath
-getFreeLevelsDirectory = do
-    freeLevelsDirectory <- io $ getAppUserDataDirectory "nikki-free-levels"
-    exists <- io $ doesDirectoryExist freeLevelsDirectory
-    when (not exists) $ do
-        -- create directory
-        io $ createDirectory freeLevelsDirectory
+getEditableLevelsDirectory :: IO FilePath
+getEditableLevelsDirectory = do
+    freeLevelsDirectory <- (</> "userLevels") <$> getAppUserDataDirectory "nikki-free-levels"
+    createDirectoryIfMissing True freeLevelsDirectory
     return freeLevelsDirectory
+
+-- | returns the directory where to save files
+getSaveLevelDirectory :: IO FilePath
+getSaveLevelDirectory = getEditableLevelsDirectory
+
+-- | looks up all the levels in a given directory
+dirToLevels :: String -> FilePath -> IO (SelectTree FilePath)
+dirToLevels title = readDirectoryToSelectTree title ((".nl" ==) . takeExtension)

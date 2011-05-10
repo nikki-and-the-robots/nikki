@@ -168,35 +168,26 @@ quit app parent =
 -- | select a saved level.
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
-    levelFiles <- lookupLevels
-    if null levelFiles then
-        return $ message app [p "no levels found :("] parent
-      else do
-            -- menu with the given selected item.
-        let this = menuAppState
-                app (NormalMenu $ p "choose a level") (Just parent)
-                (map (\ path -> (pVerbatim $ takeBaseName path, \ n -> play app (this n) path))
-                    levelFiles)
-        return $ this 0
+    levelFiles <- lookupPlayableLevels "choose a level"
+    return $ if null $ leafs levelFiles then
+        message app [p "no levels found :("] parent
+      else
+        treeToMenu app parent levelFiles (play app) 0
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState
-selectLevelEdit app ps parent = NoGUIAppState $ rm2m $ do
-    freeLevelsPath <- getFreeLevelsDirectory
-    levelFiles <- map (freeLevelsPath </>) <$> io (getFiles freeLevelsPath (Just "nl"))
-    return $ menuAppState app (NormalMenu $ p "choose a level") (Just parent) (
-        (p "new level", pickNewLevel app . this) :
-        map (\ path -> (pVerbatim $ takeBaseName path, const $ edit app parent (path, False)))
-            levelFiles ++
-        []) ps
+selectLevelEdit app ps parent = menuAppState app (NormalMenu $ p "edit or create?") (Just parent) (
+    (p "new level", pickNewLevelEdit app . this) :
+    (p "edit existing level", selectExistingLevelEdit app . this) :
+    []) ps
   where
     this ps = selectLevelEdit app ps parent
 
-pickNewLevel :: Application -> AppState -> AppState
-pickNewLevel app parent = NoGUIAppState $ rm2m $ do
+pickNewLevelEdit :: Application -> AppState -> AppState
+pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles templateLevelsDir (Just ".nl")
-    return $ menuAppState app (NormalMenu $ p "pick a template to start from") (Just parent) (
+    return $ menuAppState app (NormalMenu $ p "choose a template") (Just parent) (
         map mkMenuItem templateLevelPaths ++
         (p "empty level", const $ edit app parent (pathToEmptyLevel, True)) :
         []) 0
@@ -204,11 +195,18 @@ pickNewLevel app parent = NoGUIAppState $ rm2m $ do
     mkMenuItem templatePath =
         (pVerbatim $ takeBaseName templatePath, const $ edit app parent (templatePath, True))
 
+selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
+    editableLevels <- lookupEditableLevels "choose a level"
+    return $ if null $ leafs editableLevels then
+        message app [p "no levels found :("] parent
+      else
+        treeToMenu app parent editableLevels (\ parent chosen -> edit app parent (chosen, False)) 0
 
-play :: Application -> AppState -> FilePath -> AppState
+
+play :: Application -> Parent -> FilePath -> AppState
 play app parent file = loadingEditorScene app (file, False) (playLevel app parent)
 
-edit :: Application -> AppState -> (FilePath, Bool) -> AppState
+edit :: Application -> Parent -> (FilePath, Bool) -> AppState
 edit app parent file = loadingEditorScene app file (editLevel app)
 
 -- | load a level, got to playing state afterwards

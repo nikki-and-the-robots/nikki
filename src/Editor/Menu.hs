@@ -130,10 +130,10 @@ saveLevel app follower EditorScene{levelPath = (Just path), editorObjects_} _par
         writeObjectsToDisk path editorObjects_
         return $ follower path
 saveLevel app follower scene@EditorScene{levelPath = Nothing, editorObjects_} parent =
-    askString app parent (p "level name") $ \ name -> NoGUIAppState $ rm2m $ do
-        levelDirectory <- getFreeLevelsDirectory
+    askString app parent (p "level name") $ \ name -> NoGUIAppState $ io $ do
+        levelDirectory <- getSaveLevelDirectory
         let path = levelDirectory </> name <..> "nl"
-        exists <- io $ doesFileExist path
+        exists <- doesFileExist path
         if exists then
             return $ fileExists app this path editorObjects_
           else return $ appState (busyMessage $ p "saving level...") $ io $ do
@@ -154,7 +154,7 @@ fileExists app save path objects =
 
 reallyExitEditor :: Application -> Parent -> AppState
 reallyExitEditor app editor =
-    menuAppState app (NormalMenu $ p "really exit without saving?") (Just editor) (
+    menuAppState app (NormalMenu $ p "exit without saving?") (Just editor) (
         (p "no", const editor) :
         (p "yes", const $ getMainMenu app) :
         []) 0
@@ -163,7 +163,7 @@ selectSort :: Application -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Int -> Parent -> AppState
 selectSort app mvar scene ps editorMenu =
     treeToMenu app editorMenu
-        (fmap (sortId >>> getSortId) $ scene ^. availableSorts) select ps
+        (fmap (sortId >>> getSortId) $ scene ^. availableSorts) (const select) ps
   where
     select :: String -> AppState
     select n =

@@ -78,26 +78,28 @@ getAllSorts = do
         foldl (flip addSort) (EmptyNode "objects") sorts
       where
         addSort :: Sort_ -> SelectTree Sort_ -> SelectTree Sort_
-        addSort sort t = addByPrefix (init $ wordsBy ['/'] (getSortId $ sortId sort)) sort t
+        addSort sort t = addByPrefix prefix label sort t
+          where
+            sortIdParts = wordsBy ['/'] $ getSortId $ sortId sort
+            prefix = init sortIdParts
+            label = last sortIdParts
 
         -- | adds an element by a given prefix to a SelectTree. If branches with needed labels
         -- are missing, they are created.
         -- PRE: The tree is not a Leaf.
-        addByPrefix :: [String] -> a -> SelectTree a -> SelectTree a
-        addByPrefix _ _ (Leaf _) = error "addByPrefix"
-        addByPrefix (a : r) x node =
+        addByPrefix :: [String] -> String -> a -> SelectTree a -> SelectTree a
+        addByPrefix _ _ _ (Leaf _ _) = error "addByPrefix"
+        addByPrefix (a : r) label x node =
             -- prefixes left: the tree needs to be descended further
-            if any (\ subTree -> getLabel subTree == Just a) (getChildren node) then
+            if any (\ subTree -> getLabel subTree == a) (getChildren node) then
                 -- if the child already exists
-                modifyLabelled a (addByPrefix r x) node
+                modifyLabelled a (addByPrefix r label x) node
               else
                 -- the branch doesn't exist, it's created
-                addChild (addByPrefix r x (EmptyNode a)) node
-          where
-            Just parentLabel = getLabel node
-        addByPrefix [] x node =
+                addChild (addByPrefix r label x (EmptyNode a)) node
+        addByPrefix [] label x node =
             -- no prefixes left: here the element is added
-            addChild (Leaf x) node
+            addChild (Leaf label x) node
 
 checkUniqueSortIds :: [Sort_] -> IO ()
 checkUniqueSortIds sorts =

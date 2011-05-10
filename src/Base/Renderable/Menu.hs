@@ -7,7 +7,7 @@ module Base.Renderable.Menu (
   ) where
 
 
-import Data.SelectTree (SelectTree(..))
+import Data.SelectTree (SelectTree(..), getLabel)
 import qualified Data.Indexable as I
 
 import Control.Concurrent.MVar
@@ -100,17 +100,15 @@ menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
 -- | Converts a SelectTree to a menu.
 -- Uses pVerbatim (and unP) to convert to (and from) Prose.
 -- (Doesn't get translated therefore.)
-treeToMenu :: Application -> AppState -> SelectTree String -> (String -> AppState)
+treeToMenu :: Application -> AppState -> SelectTree String -> (Parent -> String -> AppState)
     -> Int -> AppState
-treeToMenu app parent (Leaf n) f _ = f n
+treeToMenu app parent (Leaf _ n) f _ = f parent n
 treeToMenu app parent (Node label children i) f preSelection =
     menuAppState app (NormalMenu $ pVerbatim label) (Just parent)
         (map mkItem (I.toList children)) preSelection
   where
     mkItem :: SelectTree String -> (Prose, Int -> AppState)
     mkItem t = (pVerbatim $ getLabel t, \ ps -> treeToMenu app (this ps) t f 0)
-    getLabel (Leaf n) = n
-    getLabel (Node n _ _) = n
 
     this = treeToMenu app parent (Node label children i) f
 
