@@ -17,6 +17,8 @@ import System.Environment
 import System.Console.CmdArgs as CmdArgs
 import System.Info
 
+import Physics.Chipmunk
+
 import Graphics.Qt
 
 import Version
@@ -44,7 +46,7 @@ data Configuration = Configuration {
     omit_pixmap_rendering :: Bool,
     render_xy_cross :: Bool,
     render_chipmunk_objects :: Bool,
-    abort_level :: Maybe Double,
+    abort_level :: Maybe CpFloat, -- Seconds
     initial_events :: [Key],
     show_widget_frames :: Bool,
 
