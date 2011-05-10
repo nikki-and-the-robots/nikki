@@ -46,7 +46,7 @@ clean = do
     putStrLn "cleaning..."
     exists <- doesDirectoryExist deploymentDir
     if exists then
-        void $ system ("rm -rf " ++ deploymentDir ++ "/*")
+        ignore $ system ("rm -rf " ++ deploymentDir ++ "/*")
       else
         createDirectory deploymentDir
 
