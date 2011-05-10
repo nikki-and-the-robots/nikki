@@ -264,18 +264,18 @@ getFiles dir mExtension =
 
 -- * State monad stuff
 
-puts :: MonadState s m => (s -> a -> s) -> a -> m ()
+puts :: MonadState s m => (a -> s -> s) -> a -> m ()
 puts setter a = do
     s <- get
-    put (setter s a)
+    put (setter a s)
 
-modifies :: MonadState s m => (s -> a) -> (s -> a -> s) -> (a -> a) -> m ()
+modifies :: MonadState s m => (s -> a) -> (a -> s -> s) -> (a -> a) -> m ()
 modifies getter setter fun = do
     a <- gets getter
     puts setter (fun a)
 
 modifiesT :: (Monad m, MonadTrans t, MonadState s (t m)) =>
-    (s -> a) -> (s -> a1 -> s) -> (a -> m a1) -> t m ()
+    (s -> a) -> (a1 -> s -> s) -> (a -> m a1) -> t m ()
 modifiesT getter setter cmd = do
     x <- gets getter
     x' <- lift $ cmd x

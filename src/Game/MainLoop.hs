@@ -58,7 +58,7 @@ gameLoop app sceneMVar =
         sc <- gets scene
         configuration <- lift get
         sc' <- io $ stepScene configuration space controlData sc
-        puts (flip setScene) sc'
+        puts setScene sc'
 
         swapSceneMVar =<< io getDebugging
 
