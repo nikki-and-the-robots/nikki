@@ -35,6 +35,8 @@ runAppState app (GameAppState renderable cmd initialGameState) = do
     io $ setRenderable app config renderable
     follower <- evalStateT cmd initialGameState
     runAppState app follower
+runAppState app (UnManagedAppState cmd) = do
+    cmd >>= runAppState app
 runAppState _ FinalAppState = return ()
 
 setRenderable app config renderable = do
