@@ -17,7 +17,7 @@ import Safe
 import Data.Either
 import Data.List as List
 import Data.Abelian
-import Data.Map ((!), lookup, fromList)
+import Data.Map (lookup, fromList)
 import Data.Text as Text hiding (concatMap)
 import Data.Char
 

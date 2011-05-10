@@ -21,6 +21,7 @@ import Data.Text (Text)
 import Data.Generics
 import Data.Generics.Uniplate.Data
 import Data.Accessor
+import Data.IORef
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -51,6 +52,17 @@ type RM = ConfigurationReader
 type ConfigurationState = StateT Configuration IO
 type M = ConfigurationState
 
+type GameMonad o = StateT GameState M o
+
+data GameState = GameState {
+    cmSpace :: Space,
+    cameraStateRef :: IORef CameraState,
+    scene :: Scene Object_
+  }
+
+setScene :: Scene Object_ -> GameState -> GameState
+setScene scene (GameState space camRef _) = GameState space camRef scene
+
 
 -- * from Base.Application
 
@@ -70,7 +82,8 @@ getMainMenu app = getMainMenu_ app app
 data AppState
     = AppState RenderableInstance (M AppState)
     | NoGUIAppState (M AppState)
-    | GameAppState (M AppState) -- rendering managed by itself
+    | GameAppState RenderableInstance (GameMonad AppState) GameState
+    | UnManagedAppState (M AppState) -- manages rendering by itself
     | FinalAppState
 
 type Parent = AppState
@@ -81,7 +94,9 @@ data ApplicationPixmaps = ApplicationPixmaps {
     alphaNumericFont :: Font,
     headerCubePixmaps :: HeaderCubePixmaps,
     menuTitlePixmap :: Pixmap,
-    finished :: Map LevelResult Pixmap
+    pausePixmap :: Pixmap,
+    successPixmap :: Pixmap,
+    failurePixmap :: Pixmap
   }
 
 data Font = Font {

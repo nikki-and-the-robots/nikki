@@ -20,8 +20,6 @@ import Physics.Chipmunk hiding (position, Position)
 
 import Base
 
-import Object
-
 
 data NSort = NSort {
     pixmaps :: Map String [Pixmap],

@@ -16,8 +16,6 @@ import Utils
 
 import Base
 
-import Object as Object
-
 import Editor.Pickle.Types
 
 import qualified Legacy.Old1 as Old1

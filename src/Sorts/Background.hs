@@ -32,8 +32,6 @@ import Utils
 
 import Base hiding (backgrounds)
 
-import Object
-
 
 backgrounds =
     "blue" :

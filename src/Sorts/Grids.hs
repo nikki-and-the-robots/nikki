@@ -14,8 +14,6 @@ import Utils
 
 import Base
 
-import Object
-
 
 grids :: [FilePath]
 grids = [

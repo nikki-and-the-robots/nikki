@@ -10,7 +10,7 @@ import Utils
 
 import Base.Types
 
-import Base.Renderable.Common
+import Base.Renderable.Common ()
 
 
 data HBox = HBox [RenderableInstance]

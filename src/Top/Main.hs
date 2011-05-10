@@ -40,8 +40,6 @@ import Distribution.AutoUpdate
 
 import Base
 
-import Object
-
 import Editor.Scene (initEditorScene)
 import Editor.Pickle
 import Editor.Menu (editLevel)
@@ -81,7 +79,7 @@ main initialSignals =
                         -- dynamic changes of the configuration take place in this thread!
                         logicThread = do
                             withDynamicConfiguration configuration $
-                                executeStates app (applicationStates app)
+                                runAppState app (applicationStates app)
                     exitCodeMVar <- forkLogicThread $ do
                         logicThread `finally` quitQApplication
 
@@ -116,7 +114,7 @@ applicationStates app = NoGUIAppState $ do
 
 mainMenu :: Application -> Int -> AppState
 mainMenu app ps =
-    menuAppState app Nothing Nothing (
+    menuAppState app MainMenu Nothing (
         (p "story mode", storyMode app . this) :
         (p "community levels", community app 0 . this) :
         (p "options", generalOptions app 0 . this) :
@@ -143,7 +141,7 @@ credits app parent = NoGUIAppState $ do
 
 community :: Application -> Int -> Parent -> AppState
 community app ps parent =
-    menuAppState app (Just $ p "community levels") (Just parent) (
+    menuAppState app (NormalMenu $ p "community levels") (Just parent) (
         (p "play levels", selectLevelPlay app . this) :
         (p "download levels", downloadLevels app . this) :
         (p "editor", selectLevelEdit app 0 . this) :
@@ -162,7 +160,7 @@ downloadLevels app parent = NoGUIAppState $ do
 -- | asks, if the user really wants to quit
 quit :: Application -> AppState -> Int -> AppState
 quit app parent =
-    menuAppState app (Just $ p "quit?") (Just parent) (
+    menuAppState app (NormalMenu $ p "quit?") (Just parent) (
         (p "no", const $ parent) :
         (p "yes", const $ FinalAppState) :
         [])
@@ -176,7 +174,7 @@ selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
       else do
             -- menu with the given selected item.
         let this = menuAppState
-                app (Just $ p "choose a level") (Just parent)
+                app (NormalMenu $ p "choose a level") (Just parent)
                 (map (\ path -> (pVerbatim $ takeBaseName path, \ n -> play app (this n) path))
                     levelFiles)
         return $ this 0
@@ -185,7 +183,7 @@ selectLevelEdit :: Application -> Int -> Parent -> AppState
 selectLevelEdit app ps parent = NoGUIAppState $ rm2m $ do
     freeLevelsPath <- getFreeLevelsDirectory
     levelFiles <- map (freeLevelsPath </>) <$> io (getFiles freeLevelsPath (Just "nl"))
-    return $ menuAppState app (Just $ p "choose a level") (Just parent) (
+    return $ menuAppState app (NormalMenu $ p "choose a level") (Just parent) (
         (p "new level", pickNewLevel app . this) :
         map (\ path -> (pVerbatim $ takeBaseName path, const $ edit app parent (path, False)))
             levelFiles ++
@@ -198,7 +196,7 @@ pickNewLevel app parent = NoGUIAppState $ rm2m $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles templateLevelsDir (Just ".nl")
-    return $ menuAppState app (Just $ p "pick a template to start from") (Just parent) (
+    return $ menuAppState app (NormalMenu $ p "pick a template to start from") (Just parent) (
         map mkMenuItem templateLevelPaths ++
         (p "empty level", const $ edit app parent (pathToEmptyLevel, True)) :
         []) 0

@@ -2,6 +2,7 @@
 
 module Base.Renderable.Menu (
     menuAppState,
+    MenuType(..),
     treeToMenu,
   ) where
 
@@ -38,19 +39,20 @@ import Base.Renderable.StickToBottom
 
 data Menu
     = Menu {
-        title :: Maybe Prose, -- if Nothing it's the main menu
+        menuType :: MenuType,
         before :: [(Prose, AppState)],
         selected :: (Prose, AppState),
         after :: [(Prose, AppState)],
         scrolling :: MVar Int
       }
 
-instance Show Menu where
-    show menu = case title menu of
-        Nothing -> "<Menu>"
-        Just x -> "<Menu: " ++ unP x ++ ">"
+data MenuType
+    = MainMenu
+    | NormalMenu Prose
+    | PauseMenu
+    | FailureMenu
 
-mkMenu :: Maybe Prose -> [(Prose, Int -> AppState)] -> Int -> IO Menu
+mkMenu :: MenuType -> [(Prose, Int -> AppState)] -> Int -> IO Menu
 mkMenu title items =
     inner $ zipWith (\ (label, appStateFun) n -> (capitalizeProse label, appStateFun n)) items [0..]
   where
@@ -76,10 +78,10 @@ selectPrevious (Menu t b s a sc) = Menu t (init b) (last b) (s : a) sc
 -- If a title is given, it will be displayed. If not, the main menu will be assumed.
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
-menuAppState :: Application -> Maybe Prose -> Maybe AppState
+menuAppState :: Application -> MenuType -> Maybe AppState
     -> [(Prose, Int -> AppState)] -> Int -> AppState
-menuAppState app title mParent children preSelection = NoGUIAppState $ io $
-    inner <$> mkMenu title children preSelection
+menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
+    inner <$> mkMenu menuType children preSelection
   where
     inner :: Menu -> AppState
     inner menu = appState menu $ do
@@ -102,7 +104,7 @@ treeToMenu :: Application -> AppState -> SelectTree String -> (String -> AppStat
     -> Int -> AppState
 treeToMenu app parent (Leaf n) f _ = f n
 treeToMenu app parent (Node label children i) f preSelection =
-    menuAppState app (Just $ pVerbatim label) (Just parent)
+    menuAppState app (NormalMenu $ pVerbatim label) (Just parent)
         (map mkItem (I.toList children)) preSelection
   where
     mkItem :: SelectTree String -> (Prose, Int -> AppState)
@@ -120,16 +122,8 @@ instance Renderable Menu where
     render ptr app config parentSize menu = do
         scrolling <- updateScrollingIO app parentSize menu
         let scroll = drop scrolling
-        case title menu of
-            Just title -> render ptr app config parentSize
-                -- normal menu
-                (MenuBackground |:>
-                (addKeysHint (menuKeysHint True) $
-                 centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
-              where
-                lines = titleLine : lineSpacer : scroll (toLines menu)
-                titleLine = header app title
-            Nothing -> render ptr app config parentSize
+        case menuType menu of
+            MainMenu -> render ptr app config parentSize
                 -- main menu
                 (MenuBackground |:>
                 (addKeysHint (menuKeysHint False) $
@@ -137,6 +131,24 @@ instance Renderable Menu where
               where
                 lines = mainMenuPixmap : lineSpacer : scroll (toLines menu)
                 mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
+            NormalMenu title -> render ptr app config parentSize
+                -- normal menu
+                (MenuBackground |:>
+                (addKeysHint (menuKeysHint True) $
+                 centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
+              where
+                lines = titleLine : lineSpacer : scroll (toLines menu)
+                titleLine = header app title
+            PauseMenu -> pixmapGameMenu scroll pausePixmap
+            FailureMenu -> pixmapGameMenu scroll failurePixmap
+      where
+        pixmapGameMenu scroll selector = render ptr app config parentSize
+                (MenuBackground |:>
+                 (addKeysHint (menuKeysHint True) $
+                 centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
+              where
+                lines = pixmap : lineSpacer : scroll (toLines menu)
+                pixmap = renderable $ selector $ applicationPixmaps app
 
 -- | return the items (entries) of the menu
 toLines :: Menu -> [RenderableInstance]
@@ -177,9 +189,12 @@ updateScrolling app parentSize menu oldScrolling =
     itemsSpaceF :: Int = floor ((height parentSize - menuHeaderHeight) / fontHeight)
     -- height of the headers of the menu
     menuHeaderHeight = 2 * fontHeight + titleHeight
-    titleHeight = case title menu of
-        Nothing -> height $ pixmapSize $ menuTitlePixmap $ applicationPixmaps app
-        Just _ -> headerHeight
+    titleHeight = case menuType menu of
+        MainMenu -> pixmapHeight menuTitlePixmap
+        NormalMenu _ -> headerHeight
+        PauseMenu -> pixmapHeight pausePixmap
+        FailureMenu -> pixmapHeight failurePixmap
+    pixmapHeight selector = height $ pixmapSize $ selector $ applicationPixmaps app
     -- how many items should be visible ideally after or before the selected item
     itemPadding :: Int = 2
     -- index of the currently selected menu item

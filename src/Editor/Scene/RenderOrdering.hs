@@ -19,8 +19,6 @@ import Utils
 
 import Base
 
-import Object
-
 import Sorts.Tiles
 
 

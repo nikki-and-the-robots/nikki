@@ -37,8 +37,6 @@ import Utils
 import Base hiding (Mode(..))
 import qualified Base
 
-import Object
-
 import Sorts.Nikki.Configuration (nikkiSize)
 
 import Editor.Scene.Types

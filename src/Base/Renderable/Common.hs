@@ -7,10 +7,6 @@ module Base.Renderable.Common where
 
 import Data.Abelian
 
-import Control.Arrow
-
-import System.FilePath
-
 import Graphics.Qt
 
 import Utils

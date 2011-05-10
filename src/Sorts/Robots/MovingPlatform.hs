@@ -21,8 +21,6 @@ import Utils
 
 import Base hiding (cursorStep)
 
-import Object
-
 import Sorts.Robots.Configuration
 import Sorts.Robots.Eyes
 

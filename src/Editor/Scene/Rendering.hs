@@ -17,8 +17,6 @@ import Graphics.Qt
 
 import Base
 
-import Object
-
 import Editor.Scene.Types
 import Editor.Scene.Rendering.Helpers
 

@@ -32,8 +32,6 @@ import Utils
 
 import Base
 
-import Object
-
 import Sorts.Nikki.Types
 import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation

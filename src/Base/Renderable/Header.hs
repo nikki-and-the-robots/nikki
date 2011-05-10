@@ -4,7 +4,6 @@ module Base.Renderable.Header (header, headerHeight) where
 
 
 import Data.Abelian
-import Data.Char
 import Data.Text
 
 import Graphics.Qt
@@ -18,7 +17,6 @@ import Base.Font
 import Base.Pixmap
 
 import Base.Renderable.HBox
-import Base.Renderable.Layered
 import Base.Renderable.Centered
 
 

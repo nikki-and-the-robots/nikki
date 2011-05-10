@@ -7,7 +7,6 @@ module Base.Application.Pixmaps (
   ) where
 
 
-import Data.Map
 import Data.Abelian
 
 import Control.Exception
@@ -23,7 +22,6 @@ import Base.Types
 import Base.Constants
 import Base.Pixmap
 import Base.Font
-import Base.Renderable.Common
 
 
 withApplicationPixmaps :: (ApplicationPixmaps -> IO a) -> RM a
@@ -38,9 +36,11 @@ load = do
     alphaNumericFont <- loadAlphaNumericFont
     headerCubePixmaps <- loadHeaderCubePixmaps
     menuTitlePixmap <- loadOsd (Position 32 32) (Size 772 268) "menuTitle"
-    finished <- fmapM loadFinished finishedMap
+    pausePixmap <- loadOsd (Position 32 32) (Size 472 88) "pause"
+    successPixmap <- loadOsd (Position 32 32) (Size 664 88) "success"
+    failurePixmap <- loadOsd (Position 32 32) (Size 600 88) "failure"
     return $ ApplicationPixmaps menubackgrounds alphaNumericFont headerCubePixmaps
-        menuTitlePixmap finished
+        menuTitlePixmap pausePixmap successPixmap failurePixmap
 
 loadHeaderCubePixmaps :: RM HeaderCubePixmaps
 loadHeaderCubePixmaps = do
@@ -56,22 +56,14 @@ loadOsd offset size name = io . loadPixmap offset size =<< getDataFileName (osdD
 osdDir = pngDir </> "osd"
 
 free :: ApplicationPixmaps -> IO ()
-free (ApplicationPixmaps menuBackgrounds font cubePixmaps menuTitle finished) = do
+free (ApplicationPixmaps menuBackgrounds font cubePixmaps menuTitle pause success failure) = do
     fmapM_ freePixmap menuBackgrounds
     freeFont font
     freeHeaderCubePixmaps cubePixmaps
     freePixmap menuTitle
-    fmapM_ freePixmap finished
+    freePixmap pause
+    freePixmap success
+    freePixmap failure
 
 freeHeaderCubePixmaps (HeaderCubePixmaps a b c d) =
     fmapM_ freePixmap [a, b, c, d]
-
-finishedMap :: Map LevelResult (String, Position Double, Size Double)
-finishedMap = fromList (
-    (Passed, ("success", Position 32 32, Size 664 88)) :
-    (Failed, ("failure", Position 32 32, Size 600 88)) :
-    [])
-
-loadFinished :: (String, Position Double, Size Double) -> RM Pixmap
-loadFinished (name, offset, size) =
-    loadOsd offset size name

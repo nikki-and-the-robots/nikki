@@ -2,24 +2,27 @@
 
 module Game.Scene (
     Scene,
-    mkRenderScene,
     stepScene,
-    RenderScene,
+    RenderState(..),
+    mkRenderState,
+    sceneImmutableCopy,
     renderScene,
   ) where
 
 import Prelude hiding (foldr)
 
 import Data.Indexable (Indexable(..), Index, findIndices, fmapMWithIndex, toList, indexA)
-import Data.Map ((!))
 import qualified Data.Set as Set
 import Data.Foldable (foldr)
 import Data.Maybe
 import Data.Abelian
+import Data.IORef
 
 import Control.Monad
 import Control.Monad.State (StateT(..))
 import Control.Applicative ((<|>))
+
+import Control.Concurrent.MVar
 
 import Graphics.Qt as Qt
 
@@ -30,6 +33,7 @@ import Utils
 import Base
 
 import Profiling.Physics
+import Profiling.FPS (FPSRef, tickFPSRef, initialFPSRef)
 
 import Object
 
@@ -228,22 +232,47 @@ updateScene controlsConfig cd scene = do
 -- * rendering
 
 -- | type for rendering the scene
-type RenderScene = Scene Object_
+data RenderState
+    = RenderState {
+        sceneMVar :: MVar (Scene Object_, DebuggingCommand),
+        cameraStateRef :: IORef CameraState,
+        fpsRef :: FPSRef
+    }
 
 -- | RenderScene (for the rendering thread)
 -- Gets created in the logic thread
-mkRenderScene :: Scene Object_ -> IO RenderScene
-mkRenderScene scene = do
+mkRenderState :: IORef CameraState -> Scene Object_ -> M RenderState
+mkRenderState cameraStateRef scene = do
+    let noop :: DebuggingCommand = const $ const $ return ()
+    newScene <- io $ sceneImmutableCopy scene
+    sceneMVar <- io $ newMVar (newScene, noop)
+    fpsRef <- initialFPSRef
+
+    return $ RenderState sceneMVar cameraStateRef fpsRef
+
+sceneImmutableCopy :: Scene Object_ -> IO (Scene Object_)
+sceneImmutableCopy scene = do
     let old = scene ^. acc
-    new <- fmapM Base.immutableCopy old
+    new <- io $ fmapM Base.immutableCopy old
     return $ acc ^= new $ scene
   where
     acc = objects .> gameMainLayer
 
+-- let renderable_ = renderable (fpsRef, cameraStateRef :: IORef CameraState, sceneMVar :: MVar (RenderScene, DebuggingCommand))
+instance Renderable RenderState where
+    label = const "RenderScene"
+    render ptr app config size (RenderState sceneMVar cameraStateRef fpsRef) = do
+        return $ tuple size $ do
+            (scene, debugging) <- readMVar sceneMVar
+            runStateTFromIORef cameraStateRef $
+                Game.Scene.renderScene app config ptr scene debugging
+
+            tickFPSRef app config ptr fpsRef
+
 -- | Well, renders the scene to the screen (to the max :)
 -- Happens in the rendering thread.
 renderScene :: Application -> Configuration -> Ptr QPainter
-    -> RenderScene -> DebuggingCommand -> StateT CameraState IO ()
+    -> Scene Object_ -> DebuggingCommand -> StateT CameraState IO ()
 renderScene app configuration ptr scene debugging = do
     let now = scene ^. spaceTime
     center <- getCameraPosition ptr scene
@@ -258,7 +287,6 @@ renderScene app configuration ptr scene debugging = do
         renderObjects configuration size ptr offset now (scene ^. objects)
 
         renderTerminalOSD ptr now scene
-        renderLevelFinishedOSD ptr app (scene ^. mode)
 
         -- debugging
         when (render_xy_cross configuration) $
@@ -310,19 +338,6 @@ mainLayerToRenderPixmaps :: Ptr QPainter -> Offset Double -> Seconds
 mainLayerToRenderPixmaps ptr offset now objects =
     fmap (renderPosition ^: (+~ offset)) <$>
         concat <$> fmapM (\ o -> renderObject_ o ptr offset now) (toList objects)
-
--- | renders the big osd images ("SUCCESS" or "FAILURE") at the end of levels
-renderLevelFinishedOSD :: Ptr QPainter -> Application -> Mode -> IO ()
-renderLevelFinishedOSD ptr app (LevelFinished _ result) = do
-    resetMatrix ptr
-    windowSize <- fmap fromIntegral <$> sizeQPainter ptr
-    let pixmap = finished (applicationPixmaps app) ! result
-        osdSize = pixmapSize pixmap -~ Size (fromUber 1) (fromUber 1)
-                                    -- because they have a shadow of one uberpixel
-        position = fmap (fromIntegral . round . (/ 2)) $ sizeToPosition (windowSize -~ osdSize)
-    translate ptr position
-    renderPixmapSimple ptr pixmap
-renderLevelFinishedOSD ptr _ _ = return ()
 
 
 -- * debugging

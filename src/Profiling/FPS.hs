@@ -4,6 +4,7 @@
 
 module Profiling.FPS (
     FpsState,
+    FPSRef,
     initialFPSState,
     tickFPS,
     initialFPSRef,

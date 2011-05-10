@@ -3,12 +3,11 @@
 -- | The (real) main (that is, entry-) module for the game
 
 module Game.MainLoop (
+    gameAppState,
     gameLoop,
     GameState(..)
   ) where
 
-
-import Data.Initial
 
 import Text.Logging
 
@@ -16,17 +15,14 @@ import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
 import Clocked
 
-import Physics.Chipmunk (Space)
-
 import Graphics.Qt
 
 import Utils
 
 import Base
 
-import Object
-
 import Game.Scene
+import Game.Menus
 
 
 -- prints the version number of qt and exits
@@ -35,39 +31,22 @@ debugQtVersion = do
     v <- qtVersion
     logInfo ("Qt-Version: " ++ v)
 
-
--- * running the state monad inside the render IO command
--- renderCallback :: Application -> IORef GameAppState -> [QtEvent] -> Ptr QPainter -> IO ()
--- renderCallback app stateRef qtEvents painter = do
---     let allEvents = toEitherList qtEvents []
--- 
---     state <- readIORef stateRef
---     ((), state') <- runStateT (renderWithState app painter) state
---     writeIORef stateRef state'
-
--- Application Monad and State
-
-type GameMonad o = StateT GameState M o
-
-data GameState = GameState {
-    cmSpace :: Space,
-    scene :: Scene Object_
-  }
-
-setScene :: GameState -> Scene Object_ -> GameState
-setScene s x = s{scene = x}
-
+-- | create AppState for game mode
+gameAppState :: Application -> GameState -> AppState
+gameAppState app initialState = NoGUIAppState $ do
+    renderState <- mkRenderState (Base.cameraStateRef initialState) (scene initialState)
+    let sceneMVar_ = sceneMVar renderState
+    return $ GameAppState (renderable renderState) (gameLoop app sceneMVar_) initialState
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
-gameLoop :: Application -> MVar (RenderScene, DebuggingCommand) -> GameMonad ()
-gameLoop app sceneMVar = do
-    initializeSceneMVar
-    timer <- io $ newTimer
-    withArrowAutoRepeat app $
-        loop timer
+-- The returned AppState is somehow independent from the other AppState.
+-- Returns FinalState to return to the level selection.
+gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> GameMonad AppState
+gameLoop app sceneMVar =
+    loop =<< io newTimer
   where
-    loop :: Timer -> GameMonad ()
+    loop :: Timer -> GameMonad AppState
     loop timer = do
         io $ resetDebugging
 
@@ -79,17 +58,18 @@ gameLoop app sceneMVar = do
         sc <- gets scene
         configuration <- lift get
         sc' <- io $ stepScene configuration space controlData sc
-        puts setScene sc'
+        puts (flip setScene) sc'
 
         swapSceneMVar =<< io getDebugging
 
         case sc' ^. mode of
-            LevelFinished t _ ->
-                when (null $ pressed controlData)
-                    continue
+            LevelFinished _ Failed ->
+                return $ failureMenu app
+            LevelFinished _ Passed ->
+                return $ successMessage app
             _ -> if isGameBackPressed (controls configuration) controlData then do
-                io $ logInfo "NYI: game menu"
-                return () -- TODO: should be a menu
+                follower <- gameAppState app <$> get
+                return $ pauseMenu app follower 0
               else
                 continue
       where
@@ -97,24 +77,9 @@ gameLoop app sceneMVar = do
             io $ waitTimer timer (realToFrac (stepQuantum / timeFactor))
             loop timer
 
-    initializeSceneMVar :: GameMonad ()
-    initializeSceneMVar = do
-        empty <- io $ isEmptyMVar sceneMVar
-        when (not empty) $ fail "sceneMVar has to be empty"
-        s <- gets scene
-        immutableCopyOfScene <- io $ mkRenderScene s
-        io $ putMVar sceneMVar (immutableCopyOfScene, initial)
     swapSceneMVar :: DebuggingCommand -> GameMonad ()
     swapSceneMVar debugging = do
         s <- gets scene
-        io $ do
-            immutableCopyOfScene <- mkRenderScene s
-            modifyMVar_ sceneMVar (const $ return (immutableCopyOfScene, debugging))
-            return ()
-
-withArrowAutoRepeat :: MonadIO m => Application -> m a -> m a
-withArrowAutoRepeat app cmd = do
-    io $ setArrowAutoRepeat (window app) False
-    a <- cmd
-    io $ setArrowAutoRepeat (window app) True
-    return a
+        immutableCopyOfScene <- io $ sceneImmutableCopy s
+        io $ modifyMVar_ sceneMVar (const $ return (immutableCopyOfScene, debugging))
+        return ()

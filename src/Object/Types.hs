@@ -3,7 +3,6 @@
 
 module Object.Types where
 
-import Utils
 
 import Data.Dynamic
 

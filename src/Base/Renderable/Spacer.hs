@@ -10,7 +10,7 @@ import Utils
 import Base.Types
 import Base.Font
 
-import Base.Renderable.Common
+import Base.Renderable.Common ()
 
 
 -- | Widget with a size given by a function

@@ -20,8 +20,6 @@ import Utils
 
 import Base
 
-import Object
-
 import Sorts.Nikki (addBatteryPower, modifyNikki)
 
 

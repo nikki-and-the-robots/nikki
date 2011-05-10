@@ -29,8 +29,6 @@ import Utils
 
 import Base
 
-import Object
-
 
 -- * Tile configuration
 

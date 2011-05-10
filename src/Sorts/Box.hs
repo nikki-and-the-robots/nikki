@@ -14,8 +14,6 @@ import Graphics.Qt
 
 import Base
 
-import Object
-
 
 -- Configuration
 

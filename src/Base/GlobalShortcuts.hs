@@ -8,8 +8,6 @@ import Control.Monad
 
 import System.Exit
 
-import Graphics.Qt
-
 import Utils
 
 import Base.Types

@@ -5,7 +5,7 @@ module Base.Renderable.CenterHorizontally where
 import Graphics.Qt
 
 import Base.Types
-import Base.Renderable.Common
+import Base.Renderable.Common ()
 
 
 centerHorizontally :: Renderable r => r -> RenderableInstance

@@ -19,8 +19,6 @@ import Utils
 
 import Base
 
-import Object
-
 import Sorts.Robots.Configuration
 import qualified Sorts.Robots.Eyes as Eyes
 

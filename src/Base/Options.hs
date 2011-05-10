@@ -10,7 +10,6 @@ import Base.Types
 import Base.Configuration
 import Base.Monad
 import Base.Prose
-import Base.Application
 
 import Base.Renderable.Menu
 
@@ -22,7 +21,7 @@ generalOptions app ps parent = NoGUIAppState $ do
     let menuItems =
             fullScreenMenuItem :
             []
-    return $ menuAppState app (Just $ p "options") (Just parent) menuItems ps
+    return $ menuAppState app (NormalMenu $ p "options") (Just parent) menuItems ps
   where
     this ps = generalOptions app ps parent
 

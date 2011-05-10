@@ -22,8 +22,6 @@ import Utils
 
 import Base
 
-import Object
-
 import Sorts.Tiles (tileShapeAttributes)
 import Sorts.Nikki (nikkiMass)
 
