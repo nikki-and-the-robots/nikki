@@ -22,9 +22,9 @@ import Base.Paths
 lookupPlayableLevels :: String -> RM (SelectTree FilePath)
 lookupPlayableLevels title = do
     standardLevelsDir <- getDataFileName "standard_levels"
-    standardLevels <- io $ dirToLevels "standard levels" standardLevelsDir
+    standardLevels <- io $ dirToLevels "standard levels/" standardLevelsDir
 --     downloadedLevels <- lookupDownloadedLevels
-    ownedLevels <- io $ lookupEditableLevels "your levels"
+    ownedLevels <- io $ lookupEditableLevels "your levels/"
     return $
         addChild ownedLevels $
         addChild standardLevels $

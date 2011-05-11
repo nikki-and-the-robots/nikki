@@ -173,7 +173,7 @@ readDirectoryToSelectTree title pred file = do
         if isDir then do
             subFiles <- fmap (file </>) <$> getFiles file Nothing
             children <- catMaybes <$> fmapM inner subFiles
-            return $ Just $ mkNode (takeBaseName file) $ I.fromList children
+            return $ Just $ mkNode (takeBaseName file ++ "/") $ I.fromList children
           else if isFile then
             return $ if pred file
                 then Just $ Leaf (takeBaseName file) file
