@@ -66,7 +66,7 @@ loadRobotEyesPixmaps = do
         forM [0 .. n - 1] $ \ i -> do
             path <- getDataFileName
                 (pngDir </> "robots" </> "eyes" </> name `underscore` printf "%02i" i <.> "png")
-            loadSymmetricPixmap (Position 1 1) path
+            loadSymmetricPixmap (Position 9 9) path
     underscore a b = a ++ "_" ++ b
 
 freeRobotEyesPixmaps :: RobotEyesPixmaps -> IO ()
