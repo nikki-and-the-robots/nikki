@@ -68,10 +68,16 @@ mkMenu title items =
 
 selectNext :: Menu -> Menu
 selectNext (Menu t b s (a : r) sc) = Menu t (b +: s) a r sc
-selectNext m@(Menu _ _ _ [] _) = m
+selectNext m@(Menu typ before selected [] scrolling) =
+    Menu typ [] a r scrolling
+  where
+    (a : r) = before +: selected
 
 selectPrevious :: Menu -> Menu
-selectPrevious m@(Menu _ [] _ _ _) = m
+selectPrevious m@(Menu typ [] selected after scrolling) =
+    Menu typ (init items) (last items) [] scrolling
+  where
+    items = selected : after
 selectPrevious (Menu t b s a sc) = Menu t (init b) (last b) (s : a) sc
 
 -- | Creates a menu.
