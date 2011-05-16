@@ -30,6 +30,7 @@ import qualified Sorts.Battery
 import qualified Sorts.Grids
 import qualified Sorts.Switch
 import qualified Sorts.Background
+import qualified Sorts.LowerLimit
 
 import qualified Sorts.Robots.Jetpack
 import qualified Sorts.Robots.MovingPlatform
@@ -53,6 +54,7 @@ sortLoaders =
 
     Sorts.Box.sorts :
     Sorts.FallingTiles.sorts :
+    Sorts.LowerLimit.sorts :
 
     Sorts.Background.sorts :
     Sorts.Grids.sorts :
@@ -120,7 +122,8 @@ initScene space =
     return . groundsMergeTiles >=>
     return . selectNikki >=>
     secondKleisli (initializeObjects space) >=>
-    mkScene space
+    mkScene space >=>
+    return . Sorts.LowerLimit.promoteLowerLimit
 
 -- | select the last set nikki and delete all duplicates
 selectNikki :: Grounds (EditorObject Sort_) -> (Index, Grounds (EditorObject Sort_))
@@ -151,7 +154,7 @@ mkScene :: Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene space (nikki, objects) = do
     contactRef <- initContactRef space initial watchedContacts
     let optObjects = mkGameGrounds objects
-    return $ Scene 0 optObjects contactRef initial (NikkiMode nikki)
+    return $ Scene 0 optObjects Nothing contactRef initial (NikkiMode nikki)
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =

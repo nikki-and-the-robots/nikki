@@ -18,6 +18,7 @@ module Data.Indexable (
     (!!!),
     Data.Indexable.findIndices,
     Data.Indexable.filter,
+    Data.Indexable.catMaybes,
     sortBy,
 
     Data.Indexable.fromList,
@@ -44,6 +45,7 @@ import Data.Initial
 import Data.Traversable (Traversable, traverse)
 import Data.Vector as Vector
 import Data.Generics (Typeable, Data)
+import Data.Maybe
 
 import Control.Arrow
 
@@ -134,6 +136,9 @@ findIndices p (Indexable values) =
 filter :: (a -> Bool) -> Indexable a -> Indexable a
 filter p (Indexable values) =
     Indexable $ Vector.filter (p . snd) values
+
+catMaybes :: Indexable (Maybe a) -> Indexable a
+catMaybes = Data.Indexable.filter isJust >>> fmap fromJust
 
 -- | Stable sorting of Indexables while preserving indices.
 sortBy :: (a -> a -> Ordering) -> Indexable a -> Indexable a

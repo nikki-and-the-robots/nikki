@@ -141,6 +141,7 @@ data Scene object
     = Scene {
         spaceTime_ :: Seconds,
         objects_ :: GameGrounds object,
+        lowerLimit_ :: Maybe Double,
         contactRef :: !(ContactRef Contacts),
         contacts_ :: !Contacts,
         mode_ :: Mode
@@ -153,6 +154,9 @@ spaceTime = accessor spaceTime_ (\ a r -> r{spaceTime_ = a})
 
 objects :: Accessor (Scene o) (GameGrounds o)
 objects = accessor objects_ (\ a r -> r{objects_ = a})
+
+lowerLimit :: Accessor (Scene o) (Maybe Double)
+lowerLimit = accessor lowerLimit_ (\ a r -> r{lowerLimit_ = a})
 
 contacts :: Accessor (Scene o) Contacts
 contacts = accessor contacts_ (\ a r -> r{contacts_ = a})

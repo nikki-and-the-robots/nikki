@@ -43,6 +43,7 @@ import Game.Scene.OptimizeRenderPixmaps
 import Sorts.Nikki.Types
 import Sorts.Terminal
 import Sorts.Switch
+import Sorts.LowerLimit
 
 
 -- * entry
@@ -64,18 +65,21 @@ stepScene configuration space controlData =
 -- * State automaton stuff
 
 transition :: Controls -> ControlData -> Scene Object_ -> IO (Scene Object_)
-transition controls cd scene =
-    case mNew of
+transition controls cd scene = do
+    controlledPosition :: Maybe CM.Position <-
+        fmapM (getPosition . getControlledChipmunk scene) $ getControlled scene
+    case mNew controlledPosition of
         Nothing -> return scene
         Just new -> modifyTransitioned new
   where
     -- | Maybe the new scene
-    mNew :: Maybe (Scene Object_)
-    mNew = foldl1 (<|>) [
+    mNew :: Maybe CM.Position -> Maybe (Scene Object_)
+    mNew controlledPosition = foldl1 (<|>) [
         nikkiToTerminal controls scene cd,
         terminalExit scene,
         robotToTerminal controls scene cd,
         nikkiMovedAwayFromTerminal scene,
+        lowerLimitHandler scene controlledPosition,
         gameOver scene,
         levelPassed scene
       ]
@@ -159,7 +163,7 @@ nikkiMovedAwayFromTerminal scene@Scene{mode_} =
 
 gameOver :: Scene Object_ -> Maybe (Scene Object_)
 gameOver scene | isGameOver =
-    Just $ mode ^: (const $ LevelFinished now Failed) $ scene
+    Just $ mode ^= (LevelFinished now Failed) $ scene
   where
     now = scene ^. spaceTime
     isGameOver =

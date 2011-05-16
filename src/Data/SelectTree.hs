@@ -21,7 +21,7 @@ import Utils
 
 import Data.Maybe
 import qualified Data.Indexable as I
-import Data.Indexable hiding (length, toList, findIndices, fromList)
+import Data.Indexable hiding (length, toList, findIndices, fromList, catMaybes)
 import qualified Data.Tree as T
 import Data.Foldable (Foldable, foldMap)
 

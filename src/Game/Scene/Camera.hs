@@ -42,6 +42,7 @@ initialCameraState nikki = CS nikki zero
 
 getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_ -> StateT CameraState IO Position
 getCameraPosition ptr scene =
+    aboveLowerLimit ptr (scene ^. lowerLimit) =<<
     case scene ^. mode of
         NikkiMode{nikki} -> getCameraPositionMaybeCentered ptr scene nikki
         TerminalMode{} -> do
@@ -59,6 +60,14 @@ getCameraPosition ptr scene =
               else
                 -- camera followed robot
                 return oldPosition
+
+-- | Ensures, the camera stays above the (possible) lower limit of the scene.
+aboveLowerLimit :: MonadIO m => Qt.Ptr Qt.QPainter -> Maybe Double -> Position -> m Position
+aboveLowerLimit ptr Nothing p = return p
+aboveLowerLimit ptr (Just lowerLimit) (Vector x y) = io $ do
+    size <- fmap fromIntegral <$> Qt.sizeQPainter ptr
+    let newY = min (lowerLimit - Qt.height size / 2) y
+    return $ Vector x newY
 
 -- | Returns the camera position following the given object.
 -- Centers the camera on the object, if the object changed since last time.
