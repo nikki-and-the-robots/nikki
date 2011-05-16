@@ -17,7 +17,9 @@ import Base
 
 grids :: [FilePath]
 grids = [
-    "multilayers/grid-white"
+    "multilayers/grid-white",
+    "multilayers/steps-white",
+    "multilayers/bricks-white"
   ]
 
 
