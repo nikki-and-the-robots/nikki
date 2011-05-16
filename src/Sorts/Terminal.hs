@@ -537,13 +537,13 @@ enterMode scene (Robots _ selected attached) =
 editorUpdate :: EditorScene sort -> Key -> TerminalOEMState -> Maybe TerminalOEMState
 editorUpdate _ key NoRobots | key `elem` keys = Just NoRobots
   where
-    keys = (RightArrow : LeftArrow : Enter : [])
+    keys = (RightArrow : LeftArrow : Return : Enter : [])
 editorUpdate _ _ NoRobots = Nothing
 editorUpdate scene key state@(Robots available selected attached) =
   case key of
     RightArrow -> Just state{selectedRobot = searchNext selected available}
     LeftArrow -> Just state{selectedRobot = searchNext selected (reverse available)}
-    x | x == Enter -> Just state{attachedRobots = swapIsElem selected attached}
+    x | (x == Return || x == Enter || x == Ctrl) -> Just state{attachedRobots = swapIsElem selected attached}
     _ -> Nothing
 
 -- | searches the next element that is not equal to the given one in the list
