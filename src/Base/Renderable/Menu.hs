@@ -179,11 +179,15 @@ updateScrollingIO app parentSize menu = do
 updateScrolling :: Application -> Size Double -> Menu -> Int -> Int
 updateScrolling app parentSize menu oldScrolling =
     if itemsSpaceF >= 1 + 2 * itemPadding then
-        min (allItems - itemsSpaceF) $
+        let paddingMin = selectedIndex - itemPadding
+            paddingMax = selectedIndex - (itemsSpaceF - 1) + itemPadding
+            maxScrolling = allItems - itemsSpaceF
+        in
+        min maxScrolling $
         max 0 $
-        min (selectedIndex - itemPadding) $
-        max oldScrolling $
-        (selectedIndex - (itemsSpaceF - itemPadding - 1))
+        min paddingMin $
+        max paddingMax $
+        oldScrolling
     else if itemsSpaceF > 0 then
         (selectedIndex - floor (fromIntegral (itemsSpaceF - 1) / 2 :: Double))
     else
@@ -192,7 +196,7 @@ updateScrolling app parentSize menu oldScrolling =
     -- space for the menu items in fontHeights
     itemsSpaceF :: Int = floor ((height parentSize - menuHeaderHeight) / fontHeight)
     -- height of the headers of the menu
-    menuHeaderHeight = 2 * fontHeight + titleHeight
+    menuHeaderHeight = 3 * fontHeight + titleHeight
     titleHeight = case menuType menu of
         MainMenu -> pixmapHeight menuTitlePixmap
         NormalMenu _ -> headerHeight
