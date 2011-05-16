@@ -459,13 +459,13 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     startControl :: Seconds -> object -> object
     startControl now = id
 
-    update :: sort -> Controls -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
+    update :: sort -> Controls -> Scene Object_ -> Seconds -> Contacts -> (Bool, ControlData)
         -> Index -> object -> IO (Scene Object_ -> Scene Object_, object)
-    update sort controls mode now contacts cd i o = do
-        o' <- updateNoSceneChange sort controls mode now contacts cd o
+    update sort controls scene now contacts cd i o = do
+        o' <- updateNoSceneChange sort controls scene now contacts cd o
         return (id, o')
 
-    updateNoSceneChange :: sort -> Controls -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
+    updateNoSceneChange :: sort -> Controls -> Scene Object_ -> Seconds -> Contacts -> (Bool, ControlData)
         -> object -> IO object
     updateNoSceneChange _ _ _ _ _ _ o = return o
 

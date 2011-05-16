@@ -1,11 +1,25 @@
-{-# language ViewPatterns, DeriveDataTypeable #-}
+{-# language ViewPatterns, DeriveDataTypeable, FlexibleInstances #-}
 
 -- | provides a data type for pixmaps that saves the size and the internal offset (padding)
 -- of the image.
 -- Padding is the outer part of the image that should not be considered as part of 
 -- the physical object depictured by the image, e.g. an outer glow.
 
-module Base.Pixmap where
+module Base.Pixmap (
+    Offset,
+    Pixmap(..),
+    pixmapOffset,
+    loadPixmap,
+    loadSymmetricPixmap,
+    freePixmap,
+    copyPixmap,
+    mapPixels,
+    renderPixmapSimple,
+    renderPixmap,
+    RenderPixmap(RenderPixmap, RenderCommand),
+    renderPosition,
+    doRenderPixmap,
+  ) where
 
 
 import Data.Abelian
@@ -115,7 +129,14 @@ data RenderPixmap
         renderPosition_ :: Position Double,
         renderAngle :: Maybe Angle
       }
+    | RenderCommand {
+        renderPosition_ :: Position Double,
+        renderCommand :: (Ptr QPainter -> IO ())
+      }
   deriving (Show, Typeable, Data)
+
+instance Show (Ptr QPainter -> IO ()) where
+    show = const "<Ptr QPainter -> IO ()>"
 
 renderPosition :: Accessor RenderPixmap (Position Double)
 renderPosition = accessor renderPosition_ (\ a r -> r{renderPosition_ = a})
@@ -130,3 +151,7 @@ doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
     translate ptr (pix ^. pixmapOffset)
 
     drawPixmap ptr zero (pixmap pix)
+doRenderPixmap ptr (RenderCommand position command) = do
+    resetMatrix ptr
+    translate ptr position
+    command ptr

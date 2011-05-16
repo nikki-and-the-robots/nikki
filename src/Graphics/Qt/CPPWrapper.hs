@@ -248,6 +248,7 @@ setKeyCallbackGLContext ptr cmd =
 -- * QPainter
 
 data QPainter
+  deriving Typeable
 
 foreign import ccall "eraseRect" cppEraseRect ::
     Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()

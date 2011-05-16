@@ -9,6 +9,7 @@ module Sorts.LowerLimit (
     sorts,
     promoteLowerLimit,
     lowerLimitHandler,
+    isBelowLowerLimit,
   ) where
 
 
@@ -108,15 +109,15 @@ lookupLowerLimit =
 lowerLimitHandler :: Scene Object_ -> Maybe CM.Position -> Maybe (Scene Object_)
 lowerLimitHandler scene Nothing = Nothing
 lowerLimitHandler scene (Just p) =
-    if isLower then
+    if isBelowLowerLimit scene p then
         case scene ^. mode of
             NikkiMode{} -> Just $ mode ^= LevelFinished (scene ^. spaceTime) Failed $ scene
             RobotMode{nikki, terminal} -> Just $ mode ^= TerminalMode nikki terminal $ scene
             _ -> Nothing
       else
         Nothing
-  where
-    isLower :: Bool
-    isLower = case scene ^. lowerLimit of
-        Just l -> CM.vectorY p > l + lowerLimitTolerance
-        Nothing -> False
+
+isBelowLowerLimit :: Scene Object_ -> CM.Position -> Bool
+isBelowLowerLimit scene p = case scene ^. lowerLimit of
+    Just l -> CM.vectorY p > l + lowerLimitTolerance
+    Nothing -> False

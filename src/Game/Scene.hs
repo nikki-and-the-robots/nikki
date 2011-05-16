@@ -225,7 +225,7 @@ updateScene controlsConfig cd scene = do
     -- each object has to know, if it's controlled
     updateMainLayer ix = do
         ix' <- fmapMWithIndex (\ i o ->
-                update DummySort controlsConfig (scene ^. mode) now (scene ^. contacts)
+                update DummySort controlsConfig scene now (scene ^. contacts)
                     (Just i == controlled, cd) i o)
                 ix
         let changes = foldr (.) id $ fmap fst ix'

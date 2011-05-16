@@ -38,6 +38,7 @@ import Base hiding (Mode(..))
 import qualified Base
 
 import Sorts.Nikki.Configuration (nikkiSize)
+import Sorts.LowerLimit (isBelowLowerLimit)
 
 import Editor.Scene.Types
 import Editor.Scene.Rendering
@@ -178,7 +179,7 @@ isTerminal _ = False
 
 data Terminal = Terminal {
     chipmunk :: Chipmunk,
-    robots :: [Index],
+    robots :: [RobotIndex],
     state :: State
   }
     deriving (Show, Typeable)
@@ -191,6 +192,12 @@ unwrapTerminalSort (Sort_ sort) = cast sort
 
 terminalExitMode :: Terminal -> ExitMode
 terminalExitMode = state >>> exitMode
+
+
+data RobotIndex
+    = Controllable {unwrapRobotIndex :: Index}
+    | Uncontrollable {unwrapRobotIndex :: Index}
+  deriving (Show, Typeable)
 
 
 data State
@@ -214,32 +221,53 @@ isNikkiSelected (State _ NikkiState _ _ _) = True
 isNikkiSelected (State _ RobotState _ _ _) = False
 
 -- | resets the terminal state, when it is started to be used.
-reset :: Seconds -> [Index] -> State -> State
+reset :: Seconds -> [RobotIndex] -> State -> State
 reset t robots (State _ _ i _ _) =
     State TerminalMode row i t DontExit
   where
     row = if null robots then NikkiState else RobotState
 
-blinkenLightsState :: Seconds -> [Index] -> State -> (ColorLights Bool, Bool)
+data LightState
+    = On
+    | Off
+    | Disabled -- when robots are uncontrollable
+
+-- | returns robot states and exit (aka nikki or eject) state
+blinkenLightsState :: Seconds -> [RobotIndex] -> State -> (ColorLights LightState, Bool)
 blinkenLightsState now robots state =
     case row state of
-        NikkiState -> (full, not blinkingOut)
+        NikkiState -> (fmap mapRobots robotIndices, not blinkingOut)
         RobotState -> tuple
-            (if blinkingOut then fzipWith (\ f s -> f && not s) full selected else full)
+            (fzipWith zipRobotsSelected robotIndices selected)
             True
   where
-    full = ColorLights (l > 0) (l > 1) (l > 2) (l > 3)
     selected = selectedColorLights i
     i = robotIndex state
-    l = length robots
+
+    robotIndices :: ColorLights (Maybe RobotIndex)
+    robotIndices = fmap (\ i -> if i < length robots then Just (robots !! i) else Nothing) $ ColorLights 0 1 2 3
+
+    zipRobotsSelected :: Maybe RobotIndex -> Bool -> LightState
+    zipRobotsSelected (Just (Controllable _)) selected =
+        if not selected || not blinkingOut then On else Off
+    zipRobotsSelected (Just (Uncontrollable _)) selected =
+        Disabled
+    zipRobotsSelected Nothing _ =
+        Off
+
+    mapRobots :: Maybe RobotIndex -> LightState
+    mapRobots (Just (Controllable _)) = On
+    mapRobots (Just (Uncontrollable _)) = Disabled
+    mapRobots Nothing = Off
+
     blinkingOut = blinkingMode && even (floor ((now - changedTime state) / blinkLength))
     blinkingMode = case gameMode state of
         NikkiMode -> False
         _ -> True
 
--- | changes the selected robot (if applicable)
+-- | changes the selection of a robot (if applicable)
 -- and updates the selectedChangedTime (also if applicable)
-modifySelected :: Seconds -> [Index] -> (Int -> Int) -> State -> State
+modifySelected :: Seconds -> [RobotIndex] -> (Int -> Int) -> State -> State
 modifySelected now robots f state =
     case row state of
         NikkiState -> state
@@ -277,7 +305,7 @@ instance Sort TSort Terminal where
 
     initialize sort (Just space) editorPosition (Just (OEMState oemState_)) = do
         let Just oemState :: Maybe TerminalOEMState = cast oemState_
-            attached = case oemState of
+            attached = fmap Controllable $ case oemState of
                 NoRobots -> []
                 Robots _ _ x -> x
             pos = position2vector
@@ -307,10 +335,11 @@ instance Sort TSort Terminal where
 
     startControl now t = t{state = reset (now - blinkLength) (robots t) (state t)}
 
-    updateNoSceneChange sort config mode now contacts (False, cd) terminal =
-        return terminal
-    updateNoSceneChange sort config mode now contacts (True, cd) terminal =
-        return terminal{state = updateState config now cd (robots terminal) (state terminal)}
+    updateNoSceneChange sort config scene now contacts (False, cd) terminal =
+        updateControllableStates scene terminal
+    updateNoSceneChange sort config scene now contacts (True, cd) terminal =
+        updateControllableStates scene
+            terminal{state = updateState config now cd (robots terminal) (state terminal)}
 
     renderObject terminal sort ptr offset now = do
         pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
@@ -339,12 +368,26 @@ mkPolys size =
 
 -- * controlling
 
+-- | updates the controllable states of the attached robots
+updateControllableStates :: Scene Object_ -> Terminal -> IO Terminal
+updateControllableStates scene terminal = do
+    robots' <- fmapM (updateControllableState scene) $ robots terminal
+    return terminal{robots = robots'}
+
+updateControllableState :: Scene Object_ -> RobotIndex -> IO RobotIndex
+updateControllableState scene (unwrapRobotIndex -> i) = do
+    robotPosition <- getPosition $ getControlledChipmunk scene (scene ^. mainLayerObjectA i)
+    let cons = if isBelowLowerLimit scene robotPosition then Uncontrollable else Controllable
+    return $ cons i
+
 -- | controls the terminal in terminal mode
-updateState :: Controls -> Seconds -> ControlData -> [Index] -> State -> State
+updateState :: Controls -> Seconds -> ControlData -> [RobotIndex] -> State -> State
 updateState config now cd robots state | isTerminalConfirmationPressed config cd =
   case row state of
     NikkiState -> exitToNikki state
-    RobotState -> state{exitMode = ExitToRobot (robots !! robotIndex state)}
+    RobotState -> case (robots !! robotIndex state) of
+        Controllable i -> state{exitMode = ExitToRobot i}
+        Uncontrollable i -> state -- TODO: sound
 updateState config now cd robots state@State{row = RobotState}
     | (isGameRightPressed config cd) && not (null robots) =
         -- go right in robot list
@@ -393,16 +436,18 @@ renderLittleColorLights sort now t pos =
         (renderLight (littleColorLights $ pixmaps sort) pos colorStates)
         allSelectors
 
-renderLight :: ColorLights Pixmap -> Qt.Position Double -> ColorLights Bool
+renderLight :: ColorLights Pixmap -> Qt.Position Double -> ColorLights LightState
     -> (forall a . (ColorLights a -> a))
     -> Maybe RenderPixmap
 renderLight pixmaps pos colorStates color =
-    if color colorStates then
-        let lightOffset = color littleLightOffsets
-            pixmap = color pixmaps
-        in Just $ RenderPixmap pixmap (pos +~ lightOffset) Nothing
-      else
-        Nothing
+    let lightOffset = color littleLightOffsets
+        pixmap = color pixmaps
+    in case color colorStates of
+        On -> Just $ RenderPixmap pixmap (pos +~ lightOffset) Nothing
+        Off -> Nothing
+        Disabled -> Just $ RenderCommand (pos +~ lightOffset) $ \ ptr -> do
+            setPenColor ptr (alpha ^= 0.5 $ pink) 4
+            drawLine ptr zero (sizeToPosition $ pixmapSize pixmap)
 
 littleLightOffsets :: ColorLights (Offset Double)
 littleLightOffsets = ColorLights {
@@ -453,13 +498,20 @@ osdPosition windowSize (pixmapSize -> pixSize) =
   where
     position = Position (width windowSize * 0.5) (height windowSize * (1 - recip goldenRatio))
 
-renderOsdCenters :: Ptr QPainter -> Qt.Position Double -> OsdPixmaps -> ColorLights Bool -> IO ()
+renderOsdCenters :: Ptr QPainter -> Qt.Position Double -> OsdPixmaps -> ColorLights LightState -> IO ()
 renderOsdCenters ptr offset pixmaps states =
     mapM_ inner allSelectors
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
-    inner color = when (color states) $
-        renderPixmap ptr offset (color osdCenterOffsets) Nothing (color (osdCenters pixmaps))
+    inner color = case (color states) of
+        On -> renderPixmap ptr offset (color osdCenterOffsets) Nothing (color (osdCenters pixmaps))
+        Off -> return ()
+        Disabled -> do
+            resetMatrix ptr
+            translate ptr (offset +~ (color osdCenterOffsets))
+            setPenColor ptr (alpha ^= 0.5 $ pink) 4
+            let pixmap = color (osdCenters pixmaps)
+            drawLine ptr zero (sizeToPosition $ pixmapSize pixmap)
 
 renderOsdFrames ptr offset pixmaps state selected =
     case (row state) of
