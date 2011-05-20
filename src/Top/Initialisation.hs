@@ -77,7 +77,7 @@ getAllSorts = do
   where
     mkSelectTree :: [Sort_] -> SelectTree Sort_
     mkSelectTree sorts =
-        foldl (flip addSort) (EmptyNode "objects") sorts
+        foldl (flip addSort) (EmptyNode "") sorts
       where
         addSort :: Sort_ -> SelectTree Sort_ -> SelectTree Sort_
         addSort sort t = addByPrefix prefix label sort t

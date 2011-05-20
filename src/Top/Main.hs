@@ -141,7 +141,7 @@ credits app parent = NoGUIAppState $ do
 
 community :: Application -> Int -> Parent -> AppState
 community app ps parent =
-    menuAppState app (NormalMenu $ p "community levels") (Just parent) (
+    menuAppState app (NormalMenu (p "community levels") Nothing) (Just parent) (
         (p "play levels", selectLevelPlay app . this) :
         (p "download levels", downloadLevels app . this) :
         (p "editor", selectLevelEdit app 0 . this) :
@@ -160,7 +160,7 @@ downloadLevels app parent = NoGUIAppState $ do
 -- | asks, if the user really wants to quit
 quit :: Application -> AppState -> Int -> AppState
 quit app parent =
-    menuAppState app (NormalMenu $ p "quit?") (Just parent) (
+    menuAppState app (NormalMenu (p "quitting") (Just $ p "are you sure?")) (Just parent) (
         (p "no", const $ parent) :
         (p "yes", const $ FinalAppState) :
         [])
@@ -168,18 +168,19 @@ quit app parent =
 -- | select a saved level.
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
-    levelFiles <- lookupPlayableLevels "choose a level"
+    levelFiles <- lookupPlayableLevels
     return $ if null $ leafs levelFiles then
         message app [p "no levels found :("] parent
       else
-        treeToMenu app parent levelFiles (play app) 0
+        treeToMenu app parent (p "choose a level") levelFiles (play app) 0
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState
-selectLevelEdit app ps parent = menuAppState app (NormalMenu $ p "edit or create?") (Just parent) (
+selectLevelEdit app ps parent = menuAppState app menuType (Just parent) (
     (p "new level", pickNewLevelEdit app . this) :
     (p "edit existing level", selectExistingLevelEdit app . this) :
     []) ps
   where
+    menuType = NormalMenu (p "editor") (Just $ p "create a new level or edit an existing one?")
     this ps = selectLevelEdit app ps parent
 
 pickNewLevelEdit :: Application -> AppState -> AppState
@@ -187,20 +188,22 @@ pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles templateLevelsDir (Just ".nl")
-    return $ menuAppState app (NormalMenu $ p "choose a template") (Just parent) (
+    return $ menuAppState app menuType (Just parent) (
         map mkMenuItem templateLevelPaths ++
         (p "empty level", const $ edit app parent (pathToEmptyLevel, True)) :
         []) 0
   where
+    menuType = NormalMenu (p "new level") (Just $ p "choose a template to start from")
     mkMenuItem templatePath =
         (pVerbatim $ takeBaseName templatePath, const $ edit app parent (templatePath, True))
 
 selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
-    editableLevels <- lookupEditableLevels "choose a level"
+    editableLevels <- lookupEditableLevels "NYI"
     return $ if null $ leafs editableLevels then
         message app [p "no levels found :("] parent
       else
-        treeToMenu app parent editableLevels (\ parent chosen -> edit app parent (chosen, False)) 0
+        treeToMenu app parent (p "choose a level to edit") editableLevels
+            (\ parent chosen -> edit app parent (chosen, False)) 0
 
 
 play :: Application -> Parent -> FilePath -> AppState

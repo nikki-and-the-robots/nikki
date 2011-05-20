@@ -21,7 +21,7 @@ generalOptions app ps parent = NoGUIAppState $ do
     let menuItems =
             fullScreenMenuItem :
             []
-    return $ menuAppState app (NormalMenu $ p "options") (Just parent) menuItems ps
+    return $ menuAppState app (NormalMenu (p "options") Nothing) (Just parent) menuItems ps
   where
     this ps = generalOptions app ps parent
 

@@ -6,6 +6,7 @@ module Data.SelectTree (
     addChild,
     getLabel,
     setLabel,
+    mapLabels,
     getChildren,
     getSelected,
     selectNext,
@@ -68,6 +69,11 @@ setLabel :: String -> SelectTree a -> SelectTree a
 setLabel l (Node _ a b) = Node l a b
 setLabel l (EmptyNode _) = EmptyNode l
 setLabel l (Leaf _ e) = Leaf l e
+
+mapLabels :: (String -> String) -> SelectTree a -> SelectTree a
+mapLabels f (Node label a b) = Node (f label) (fmap (mapLabels f) a) b
+mapLabels f (Leaf label x) = Leaf (f label) x
+mapLabels f (EmptyNode label) = EmptyNode (f label)
 
 getChildren :: SelectTree a -> [SelectTree a]
 getChildren (Node _ x _) = I.toList x
@@ -159,12 +165,10 @@ toTree (Leaf l a) = T.Node (l ++ ": " ++ show a) []
 -- | Returns the files of a directory recursively as a SelectTree.
 -- Returns just the files, omits directories
 -- Returns just the files for which the given predicate is True.
-readDirectoryToSelectTree :: String -> (FilePath -> Bool) -> FilePath -> IO (SelectTree FilePath)
-readDirectoryToSelectTree title pred file = do
+readDirectoryToSelectTree :: (FilePath -> Bool) -> FilePath -> IO (SelectTree FilePath)
+readDirectoryToSelectTree pred file = do
     result <- inner file
-    return $ case result of
-        Just x -> setLabel title x
-        Nothing -> error ("not a directory: " ++ file)
+    return $ fromMaybe (error ("not a directory: " ++ file)) result
   where
     inner :: FilePath -> IO (Maybe (SelectTree FilePath))
     inner file = do
@@ -173,10 +177,10 @@ readDirectoryToSelectTree title pred file = do
         if isDir then do
             subFiles <- fmap (file </>) <$> getFiles file Nothing
             children <- catMaybes <$> fmapM inner subFiles
-            return $ Just $ mkNode (takeBaseName file ++ "/") $ I.fromList children
+            return $ Just $ mkNode (file ++ "/") $ I.fromList children
           else if isFile then
             return $ if pred file
-                then Just $ Leaf (takeBaseName file) file
+                then Just $ Leaf file file
                 else Nothing
           else
             error ("readDirectoryToSelectTree: file not found: " ++ file)

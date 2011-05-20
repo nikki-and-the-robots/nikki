@@ -85,7 +85,7 @@ editorMenu :: Application -> MVar (EditorScene Sort_)
 editorMenu app mvar scene ps =
     case editorMode scene of
         NormalMode ->
-            menuAppState app (NormalMenu menuTitle) (Just $ edit scene)
+            menuAppState app (NormalMenu menuTitle $ Just menuSubTitle) (Just $ edit scene)
               (
               lEnterOEM ++
               (
@@ -101,16 +101,17 @@ editorMenu app mvar scene ps =
               [])) ps
         ObjectEditMode{} -> exitOEM app mvar scene
         SelectionMode{} ->
-            menuAppState app (NormalMenu menuTitle) (Just (edit scene)) (
+            menuAppState app (NormalMenu menuTitle $ Just menuSubTitle) (Just (edit scene)) (
                 (p "cut selected objects", const $ edit (cutSelection scene)) :
                 (p "copy selected objects", const $ edit (copySelection scene)) :
                 (p "delete selected objects", const $ edit (deleteSelection scene)) :
                 (p "exit selection mode", const $ edit scene{editorMode = NormalMode}) :
                 []) ps
   where
-    menuTitle = case levelPath scene of
-        Nothing -> p "editing untitled level"
-        Just f -> p "editing " +> pVerbatim f
+    menuTitle = p "editor"
+    menuSubTitle = case levelPath scene of
+        Nothing -> p "untitled level"
+        Just f -> pVerbatim f
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app mvar (updateSelected s)
     this = editorMenu app mvar scene
@@ -143,26 +144,29 @@ saveLevel app follower scene@EditorScene{levelPath = Nothing, editorObjects_} pa
     this = saveLevel app follower scene parent
 
 fileExists app save path objects =
-    menuAppState app (NormalMenu $ p "level with the name " +> pVerbatim path +> p " already exists") (Just save) (
+    menuAppState app menuType (Just save) (
         (p "no", const save) :
         (p "yes", const writeAnyway) :
         []) 0
   where
+    menuType = NormalMenu (p "saving level") (Just (pVerbatim path +> p " already exists"))
     writeAnyway = appState (busyMessage $ p "saving level...") $ io $ do
         writeObjectsToDisk path objects
         return $ getMainMenu app
 
 reallyExitEditor :: Application -> Parent -> AppState
 reallyExitEditor app editor =
-    menuAppState app (NormalMenu $ p "exit without saving?") (Just editor) (
+    menuAppState app menuType (Just editor) (
         (p "no", const editor) :
         (p "yes", const $ getMainMenu app) :
         []) 0
+  where
+    menuType = NormalMenu (p "saving level") (Just $ p "exit without saving?")
 
 selectSort :: Application -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Int -> Parent -> AppState
 selectSort app mvar scene ps editorMenu =
-    treeToMenu app editorMenu
+    treeToMenu app editorMenu (p "select object")
         (fmap (sortId >>> getSortId) $ scene ^. availableSorts) (const select) ps
   where
     select :: String -> AppState
@@ -200,7 +204,7 @@ exitOEM app mvar s =
 editLayers :: Application -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Int -> Parent -> AppState
 editLayers app mvar scene ps parent =
-    menuAppState app (NormalMenu $ p "edit layers") (Just parent) (
+    menuAppState app (NormalMenu (p "edit layers") Nothing) (Just parent) (
         (p "change layer distance", changeLayerDistance app mvar scene . this) :
         (p "add background layer", edit (addDefaultBackground scene)) :
         (p "add foreground layer", edit (addDefaultForeground scene)) :

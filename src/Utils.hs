@@ -326,6 +326,12 @@ infixl 4 +:
 (+:) :: [a] -> a -> [a]
 a +: b = a ++ [b]
 
+-- | dropPrefix a b drops the longest prefix from b that is equal to a prefix of a.
+dropPrefix :: Eq a => [a] -> [a] -> [a]
+dropPrefix (a : aR) (b : bR) =
+    if a == b then dropPrefix aR bR else b : bR
+dropPrefix _ b = b
+
 -- returns the list of items that are in the given list more than once
 duplicates :: (Eq a, Ord a) => [a] -> [a]
 duplicates =

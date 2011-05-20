@@ -12,6 +12,8 @@ import qualified Data.Indexable as I
 
 import Control.Concurrent.MVar
 
+import System.FilePath
+
 import Graphics.Qt
 
 import Utils
@@ -48,12 +50,22 @@ data Menu
 
 data MenuType
     = MainMenu
-    | NormalMenu Prose
+    | NormalMenu {title :: Prose, subtitle :: Maybe Prose}
     | PauseMenu
     | FailureMenu
 
+-- | capitalizes the strings contained in the MenuType
+normalizeMenuType :: MenuType -> MenuType
+normalizeMenuType (NormalMenu t st) =
+    NormalMenu (capitalizeProse t) (nullToNothing $ fmap capitalizeProse st)
+  where
+    nullToNothing (Just p) =
+        if nullProse p then Nothing else Just p
+    nullToNothing Nothing = Nothing
+normalizeMenuType x = x
+
 mkMenu :: MenuType -> [(Prose, Int -> AppState)] -> Int -> IO Menu
-mkMenu title items =
+mkMenu menuType items =
     inner $ zipWith (\ (label, appStateFun) n -> (capitalizeProse label, appStateFun n)) items [0..]
   where
     inner items n =
@@ -64,7 +76,7 @@ mkMenu title items =
           else do
             let (before, selected : after) = splitAt n items
             scrollingRef <- newMVar 0
-            return $ Menu title before selected after scrollingRef
+            return $ Menu (normalizeMenuType menuType) before selected after scrollingRef
 
 selectNext :: Menu -> Menu
 selectNext (Menu t b s (a : r) sc) = Menu t (b +: s) a r sc
@@ -106,17 +118,21 @@ menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
 -- | Converts a SelectTree to a menu.
 -- Uses pVerbatim (and unP) to convert to (and from) Prose.
 -- (Doesn't get translated therefore.)
-treeToMenu :: Application -> AppState -> SelectTree String -> (Parent -> String -> AppState)
-    -> Int -> AppState
-treeToMenu app parent (Leaf _ n) f _ = f parent n
-treeToMenu app parent (Node label children i) f preSelection =
-    menuAppState app (NormalMenu $ pVerbatim label) (Just parent)
+treeToMenu :: Application -> AppState -> Prose -> SelectTree String
+    -> (Parent -> String -> AppState) -> Int -> AppState
+treeToMenu app parent title (Leaf _ n) f _ = f parent n
+treeToMenu app parent title (Node label children i) f preSelection =
+    menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)
         (map mkItem (I.toList children)) preSelection
   where
     mkItem :: SelectTree String -> (Prose, Int -> AppState)
-    mkItem t = (pVerbatim $ getLabel t, \ ps -> treeToMenu app (this ps) t f 0)
+    mkItem t = (pVerbatim $ toItem $ getLabel t, \ ps -> treeToMenu app (this ps) title t f 0)
 
-    this = treeToMenu app parent (Node label children i) f
+    toItem p = case splitPath p of
+        paths@(_ : _) -> last paths
+        [] -> "???"
+
+    this = treeToMenu app parent title (Node label children i) f
 
 
 -- * rendering
@@ -135,14 +151,19 @@ instance Renderable Menu where
               where
                 lines = mainMenuPixmap : lineSpacer : scroll (toLines menu)
                 mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
-            NormalMenu title -> render ptr app config parentSize
+            NormalMenu title subtitle -> render ptr app config parentSize
                 -- normal menu
                 (MenuBackground |:>
                 (addKeysHint (menuKeysHint True) $
-                 centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
+                 centered $ vBox (length menuHeader - 2) $
+                    addFrame $ fmap centerHorizontally lines))
               where
-                lines = titleLine : lineSpacer : scroll (toLines menu)
+                menuHeader = titleLine : lineSpacer : subtitleLines ++ []
+                lines = menuHeader ++ scroll (toLines menu)
                 titleLine = header app title
+                subtitleLines = case subtitle of
+                    Nothing -> []
+                    Just p -> renderable p : lineSpacer : []
             PauseMenu -> pixmapGameMenu scroll pausePixmap
             FailureMenu -> pixmapGameMenu scroll failurePixmap
       where
@@ -199,7 +220,7 @@ updateScrolling app parentSize menu oldScrolling =
     menuHeaderHeight = 3 * fontHeight + titleHeight
     titleHeight = case menuType menu of
         MainMenu -> pixmapHeight menuTitlePixmap
-        NormalMenu _ -> headerHeight
+        NormalMenu _ _ -> headerHeight + 2 * fontHeight
         PauseMenu -> pixmapHeight pausePixmap
         FailureMenu -> pixmapHeight failurePixmap
     pixmapHeight selector = height $ pixmapSize $ selector $ applicationPixmaps app

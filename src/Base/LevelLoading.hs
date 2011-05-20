@@ -19,16 +19,16 @@ import Base.Paths
 
 -- | Returns all files that can be played.
 -- Looks in the freeLevelsDirectory and in data/standard_levels
-lookupPlayableLevels :: String -> RM (SelectTree FilePath)
-lookupPlayableLevels title = do
+lookupPlayableLevels :: RM (SelectTree FilePath)
+lookupPlayableLevels = do
     standardLevelsDir <- getDataFileName "standard_levels"
-    standardLevels <- io $ dirToLevels "standard levels/" standardLevelsDir
+    standardLevels <- io $ dirToLevels "standard levels" standardLevelsDir
 --     downloadedLevels <- lookupDownloadedLevels
-    ownedLevels <- io $ lookupEditableLevels "your levels/"
+    ownedLevels <- io $ lookupEditableLevels "your levels"
     return $
         addChild ownedLevels $
         addChild standardLevels $
-        EmptyNode title
+        EmptyNode ""
 
 -- | returns all levels created by the user (that can be edited)
 lookupEditableLevels :: String -> IO (SelectTree FilePath)
@@ -50,4 +50,6 @@ getSaveLevelDirectory = getEditableLevelsDirectory
 
 -- | looks up all the levels in a given directory
 dirToLevels :: String -> FilePath -> IO (SelectTree FilePath)
-dirToLevels title = readDirectoryToSelectTree title ((".nl" ==) . takeExtension)
+dirToLevels title dir =
+    mapLabels (dropPrefix dir >>> (title ++) >>> dropExtension) <$>
+        readDirectoryToSelectTree ((".nl" ==) . takeExtension) dir

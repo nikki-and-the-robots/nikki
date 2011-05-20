@@ -10,6 +10,7 @@ module Base.Prose (
     colorizeProse,
     capitalizeProse,
     getText,
+    nullProse,
     p,
     pVerbatim,
     unP,
@@ -18,6 +19,7 @@ module Base.Prose (
 
 
 import Data.Monoid
+import Data.List as List
 import Data.Text as Text
 
 import Control.Arrow
@@ -47,6 +49,10 @@ getText (Prose list) = Prelude.foldr (+>) empty $ fmap snd list
 capitalizeProse :: Prose -> Prose
 capitalizeProse (Prose list) =
     Prose $ fmap (second toUpper) list
+
+nullProse :: Prose -> Bool
+nullProse (Prose snippets) =
+    List.all Text.null $ fmap snd snippets
 
 -- | Converts haskell Strings to human readable text.
 -- Will be used for translations in the future.
