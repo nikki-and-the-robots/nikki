@@ -4,7 +4,6 @@
 module Sorts.Nikki (
     sorts,
     isNikki,
-    addBatteryPower,
     modifyNikki,
     nikkiMass,
     maximumWalkingVelocity,
@@ -108,7 +107,7 @@ instance Sort NSort Nikki where
 
         let surfaceVelocityShape = head $ shapes chip
 
-        return $ Nikki chip surfaceVelocityShape initial 0 0
+        return $ Nikki chip surfaceVelocityShape initial 0
 
     immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
 

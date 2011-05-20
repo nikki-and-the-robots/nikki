@@ -37,8 +37,7 @@ data Nikki
         chipmunk :: Chipmunk,
         feetShape :: !Shape,
         state :: !State,
-        startTime :: !Seconds, -- time the State was last changed
-        batteryPower :: !Integer -- makes it possible to have REALLY BIG amounts of power :)
+        startTime :: !Seconds -- time the State was last changed
       }
   deriving (Show, Typeable)
 
@@ -51,11 +50,6 @@ feetShapes = return . feetShape
 
 instance Show (Ptr QPainter -> Offset Double -> IO ()) where
     show _ = "<Ptr QPainter -> Offset Double -> IO ()>"
-
-addBatteryPower :: Nikki -> Nikki
-addBatteryPower n = n{batteryPower = batteryPower n + 1}
-
-
 
 
 data State = State {

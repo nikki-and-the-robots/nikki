@@ -348,6 +348,26 @@ mainLayerToRenderPixmaps ptr offset now objects =
         concat <$> fmapM (\ o -> renderObject_ o ptr offset now) (toList objects)
 
 
+-- * battery OSD
+
+renderBatteryOffset :: Ptr QPainter -> Application -> Configuration -> Scene o -> IO ()
+renderBatteryOffset ptr app config scene = do
+    let text = pVerbatim $ printf "%03i" $ scene ^. batteryPower
+    size <- sizeQPainter ptr
+    (textSize, textRender) <- Base.render ptr app config size (proseToGlyphs (digitFont app) text)
+    (pixSize, pixRender) <- Base.render ptr app config size $
+        batteryBackground $ applicationPixmaps app
+    let offset = Position (width size - batteryOsdPadding - width pixSize) batteryOsdPadding
+        batteryOsdPadding = 48
+
+    resetMatrix ptr
+    translate ptr offset
+    recoverMatrix ptr
+        pixRender
+    translate ptr $ fmap fromUber $ Position 2 (- 2.5)
+    textRender
+
+
 -- * debugging
 
 debugDrawCoordinateSystem :: Ptr QPainter -> Offset Double -> IO ()

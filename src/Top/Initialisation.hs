@@ -154,7 +154,7 @@ mkScene :: Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene space (nikki, objects) = do
     contactRef <- initContactRef space initial watchedContacts
     let optObjects = mkGameGrounds objects
-    return $ Scene 0 optObjects Nothing contactRef initial (NikkiMode nikki)
+    return $ Scene 0 optObjects Nothing 0 contactRef initial (NikkiMode nikki)
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =

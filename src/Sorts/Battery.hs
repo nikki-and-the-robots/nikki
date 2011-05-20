@@ -20,8 +20,6 @@ import Utils
 
 import Base
 
-import Sorts.Nikki (addBatteryPower, modifyNikki)
-
 
 -- * battery config
 
@@ -85,7 +83,8 @@ instance Sort BSort Battery where
         | any (`member` batteries contacts) (shapes $ chipmunk o) = do
             -- the battery is consumed by nikki (TODO: delete battery)
             removeChipmunk $ chipmunk o
-            let sceneChange = modifyNikki addBatteryPower . removeBattery
+            let sceneChange :: Scene o -> Scene o
+                sceneChange = (batteryPower ^: succ) . removeBattery
                 removeBattery = objects .> gameMainLayer ^: deleteByIndex i
             return (sceneChange, Consumed $ chipmunk o)
     update sort config mode now contacts cd i o = return (id, o) -- no change
