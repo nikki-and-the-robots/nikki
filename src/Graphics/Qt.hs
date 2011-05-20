@@ -124,7 +124,7 @@ clearScreen :: Ptr QPainter -> Color -> IO ()
 clearScreen ptr color = do
     resetMatrix ptr
     windowSize <- sizeQPainter ptr
-    eraseRect ptr zero windowSize color
+    fillRect ptr zero windowSize color
 
 
 -- * Key Polling

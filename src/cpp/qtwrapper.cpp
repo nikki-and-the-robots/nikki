@@ -79,7 +79,7 @@ extern "C" void setApplicationName(QApplication* app, char* name) {
 
 // * QPainter
 
-extern "C" void eraseRect(QPainter* painter, qreal x, qreal y, qreal w, qreal h, int r, int g, int b, int alpha) {
+extern "C" void fillRect(QPainter* painter, qreal x, qreal y, qreal w, qreal h, int r, int g, int b, int alpha) {
     painter->setBackground(QBrush(QColor(r, g, b, alpha)));
     painter->eraseRect(x, y, w, h);
 };

@@ -35,7 +35,7 @@ module Graphics.Qt.CPPWrapper (
     scale,
     setPenColor,
 
-    eraseRect,
+    fillRect,
     drawCircle,
     drawLine,
     drawText,
@@ -250,11 +250,11 @@ setKeyCallbackGLContext ptr cmd =
 data QPainter
   deriving Typeable
 
-foreign import ccall "eraseRect" cppEraseRect ::
+foreign import ccall "fillRect" cppEraseRect ::
     Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 
-eraseRect :: Ptr QPainter -> Position QtReal -> Size QtReal -> Color -> IO ()
-eraseRect ptr (Position x y) (Size w h) (QtColor r g b a) =
+fillRect :: Ptr QPainter -> Position QtReal -> Size QtReal -> Color -> IO ()
+fillRect ptr (Position x y) (Size w h) (QtColor r g b a) =
     cppEraseRect
         ptr x y w h r g b a
 

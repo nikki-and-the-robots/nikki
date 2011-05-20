@@ -67,13 +67,13 @@ instance Sort LSort LowerLimit where
     size = const $ fmap fromKachel $ Size 1 1
 
     renderIconified sort ptr = do
-        eraseRect ptr (fmap fromKachel $ Position 0 0.5)
+        fillRect ptr (fmap fromKachel $ Position 0 0.5)
                 (fmap fromKachel $ Size 1 0.5) limitEditorColor
     renderEditorObject ptr offset eo = do
         window <- sizeQPainter ptr
         let startHeight = editorY (eo ^. editorPosition) + positionY offset
         resetMatrix ptr
-        eraseRect ptr (Position 0 startHeight) (Size (width window) (height window - startHeight)) limitEditorColor
+        fillRect ptr (Position 0 startHeight) (Size (width window) (height window - startHeight)) limitEditorColor
 
     initialize sort mSpace ep Nothing =
         return $ LowerLimit $ editorY ep

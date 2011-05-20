@@ -54,7 +54,7 @@ drawOffender (fromTestPolygons -> offender) = do
         resetMatrix ptr
         windowSize <- sizeQPainter ptr
         let ws = fmap fromIntegral windowSize
-        eraseRect ptr zero windowSize (QtColor 55 55 55 255)
+        fillRect ptr zero windowSize (QtColor 55 55 55 255)
         setPenColor ptr lightYellow 1
         drawText ptr (Position 30 30) False (show (length offender))
         mapM_ id $ zipWith (renderShape ptr) randoms $ map (mapVectors (scaleVector ws)) offender
@@ -82,7 +82,7 @@ renderShape ptr (r, g, b) (Polygon vertices) = do
     resetMatrix ptr
     translate ptr (vector2position $ head vertices)
     let Vector w h = vertices !! 2 -~ head vertices
-    eraseRect ptr zero (fmap round $ Size w h) (QtColor r g b 55)
+    fillRect ptr zero (fmap round $ Size w h) (QtColor r g b 55)
     resetMatrix ptr
     mapM_ (uncurry (renderPolygonLine ptr)) (adjacentCyclic vertices)
 
