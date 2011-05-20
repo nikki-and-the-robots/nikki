@@ -81,5 +81,5 @@ instance Renderable [Glyph] where
 -- | text rendering without word wrapping
 instance Renderable Prose where
     render ptr app config size prose =
-        render ptr app config size $ proseToGlyphs app prose
+        render ptr app config size $ proseToGlyphs (standardFont app) prose
     label = const "Prose"

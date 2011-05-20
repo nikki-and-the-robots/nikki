@@ -27,7 +27,7 @@ header :: Application -> Prose -> RenderableInstance
 header app =
     colorizeProse headerFontColor >>>
     capitalizeProse >>>
-    proseToGlyphs app >>>
+    proseToGlyphs (standardFont app) >>>
     fmap (glyphToHeaderCube app) >>>
     addStartAndEndCube app >>>
     hBox >>>

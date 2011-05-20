@@ -36,5 +36,5 @@ instance Show GuiLog where
 instance Renderable GuiLog where
     label = const "GuiLog"
     render ptr app config parentSize (GuiLog logMVar) = do
-        lines <- concatMap (wordWrap app (width parentSize)) <$> readMVar logMVar
+        lines <- concatMap (wordWrap (standardFont app) (width parentSize)) <$> readMVar logMVar
         render ptr app config parentSize (MenuBackground |:> centered (vBox 1 lines))

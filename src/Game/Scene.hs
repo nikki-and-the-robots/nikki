@@ -18,6 +18,8 @@ import Data.Maybe
 import Data.Abelian
 import Data.IORef
 
+import Text.Printf
+
 import Control.Monad
 import Control.Monad.State (StateT(..))
 import Control.Applicative ((<|>))
@@ -289,6 +291,8 @@ renderScene app configuration ptr scene debugging = do
         clearScreen ptr black
 
         renderObjects configuration size ptr offset now (scene ^. objects)
+
+        renderBatteryOffset ptr app configuration scene
 
         renderTerminalOSD ptr now scene
 

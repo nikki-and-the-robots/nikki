@@ -34,13 +34,15 @@ load = do
     menubackgrounds <- mapM (loadSymmetricPixmap zero) =<<
             getDataFiles (osdDir </> "background") (Just ".png")
     alphaNumericFont <- loadAlphaNumericFont
+    digitFont <- loadDigitFont
     headerCubePixmaps <- loadHeaderCubePixmaps
     menuTitlePixmap <- loadOsd (Position 32 32) (Size 772 268) "menuTitle"
     pausePixmap <- loadOsd (Position 32 32) (Size 472 88) "pause"
     successPixmap <- loadOsd (Position 32 32) (Size 664 88) "success"
     failurePixmap <- loadOsd (Position 32 32) (Size 600 88) "failure"
-    return $ ApplicationPixmaps menubackgrounds alphaNumericFont headerCubePixmaps
-        menuTitlePixmap pausePixmap successPixmap failurePixmap
+    batteryBackground <- loadOsd (Position 33 33) (Size 56 28) "battery-background"
+    return $ ApplicationPixmaps menubackgrounds alphaNumericFont digitFont headerCubePixmaps
+        menuTitlePixmap pausePixmap successPixmap failurePixmap batteryBackground
 
 loadHeaderCubePixmaps :: RM HeaderCubePixmaps
 loadHeaderCubePixmaps = do
@@ -56,14 +58,17 @@ loadOsd offset size name = io . loadPixmap offset size =<< getDataFileName (osdD
 osdDir = pngDir </> "osd"
 
 free :: ApplicationPixmaps -> IO ()
-free (ApplicationPixmaps menuBackgrounds font cubePixmaps menuTitle pause success failure) = do
+free (ApplicationPixmaps menuBackgrounds alphaFont digitFont cubePixmaps
+  menuTitle pause success failure batteryBackground) = do
     fmapM_ freePixmap menuBackgrounds
-    freeFont font
+    freeFont alphaFont
+    freeFont digitFont
     freeHeaderCubePixmaps cubePixmaps
     freePixmap menuTitle
     freePixmap pause
     freePixmap success
     freePixmap failure
+    freePixmap batteryBackground
 
 freeHeaderCubePixmaps (HeaderCubePixmaps a b c d) =
     fmapM_ freePixmap [a, b, c, d]

@@ -92,11 +92,13 @@ type Parent = AppState
 data ApplicationPixmaps = ApplicationPixmaps {
     menuBackgrounds :: [Pixmap],
     alphaNumericFont :: Font,
+    pixmapsDigitFont :: Font,
     headerCubePixmaps :: HeaderCubePixmaps,
     menuTitlePixmap :: Pixmap,
     pausePixmap :: Pixmap,
     successPixmap :: Pixmap,
-    failurePixmap :: Pixmap
+    failurePixmap :: Pixmap,
+    batteryBackground :: Pixmap
   }
 
 data Font = Font {
@@ -142,6 +144,7 @@ data Scene object
         spaceTime_ :: Seconds,
         objects_ :: GameGrounds object,
         lowerLimit_ :: Maybe Double,
+        batteryPower_ :: !Integer, -- makes it possible to have REALLY BIG amounts of power :)
         contactRef :: !(ContactRef Contacts),
         contacts_ :: !Contacts,
         mode_ :: Mode
@@ -157,6 +160,9 @@ objects = accessor objects_ (\ a r -> r{objects_ = a})
 
 lowerLimit :: Accessor (Scene o) (Maybe Double)
 lowerLimit = accessor lowerLimit_ (\ a r -> r{lowerLimit_ = a})
+
+batteryPower :: Accessor (Scene o) Integer
+batteryPower = accessor batteryPower_ (\ a r -> r{batteryPower_ = a})
 
 contacts :: Accessor (Scene o) Contacts
 contacts = accessor contacts_ (\ a r -> r{contacts_ = a})

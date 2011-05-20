@@ -2,6 +2,9 @@
 
 module Base.Font (
     loadAlphaNumericFont,
+    loadDigitFont,
+    standardFont,
+    digitFont,
     freeFont,
     fontHeight,
 
@@ -39,14 +42,18 @@ import Base.Prose
 import Base.Font.ColorVariant
 
 
-standardFontDir :: FilePath
-standardFontDir = "png" </> "font"
+standardFontDir, digitFontDir :: FilePath
+standardFontDir = pngDir </> "font"
+digitFontDir = standardFontDir </> "digits"
 
-fontColors :: [Color]
-fontColors = nub $
+alphaNumericFontColors, digitFontColors :: [Color]
+alphaNumericFontColors = nub $
     standardFontColor :
     headerFontColor :
     white :
+    []
+digitFontColors = nub $
+    standardFontColor :
     []
 
 fontHeight :: Num n => n
@@ -54,16 +61,17 @@ fontHeight = 48
 
 -- * querying
 
-standardFont :: Application -> Font
+standardFont, digitFont :: Application -> Font
 standardFont = alphaNumericFont . applicationPixmaps
+digitFont = pixmapsDigitFont . applicationPixmaps
 
-proseToGlyphs :: Application -> Prose -> [Glyph]
-proseToGlyphs app (Prose list) =
+proseToGlyphs :: Font -> Prose -> [Glyph]
+proseToGlyphs font (Prose list) =
     concatMap inner list
   where
     inner :: (Color, Text) -> [Glyph]
     inner (color, string) =
-        searchGlyphs (getColorVariant (standardFont app) color) string
+        searchGlyphs (getColorVariant font color) string
 
 searchGlyphs :: ColorVariant -> Text -> [Glyph]
 searchGlyphs variant =
@@ -148,24 +156,29 @@ wordWrapGlyphs wrapWidth =
             List.reverse akk : inner 0 [] (a : r)
     inner _ akk [] = List.reverse akk : []
 
-wordWrap :: Application -> Double -> Prose -> [[Glyph]]
-wordWrap app w = wordWrapGlyphs w . proseToGlyphs app
+wordWrap :: Font -> Double -> Prose -> [[Glyph]]
+wordWrap font w = wordWrapGlyphs w . proseToGlyphs font
 
 
 -- * loading
 
+loadFont fontColors dir = do
+    letterFiles <- getDataFiles dir (Just "png")
+    io $ toFont fontColors =<< mapM loadLetter letterFiles
+
 -- | loads the standard variable-width font
 loadAlphaNumericFont :: RM Font
-loadAlphaNumericFont = do
-    letterFiles <- getDataFiles standardFontDir (Just "png")
-    io $ toFont =<< mapM loadLetter letterFiles
+loadAlphaNumericFont = loadFont alphaNumericFontColors standardFontDir
+
+-- | loads the digits-only font
+loadDigitFont :: RM Font = loadFont digitFontColors digitFontDir
 
 -- | Converts loaded pixmaps to a font.
 -- Also sorts the letter pixmaps (longest keys first).
 -- Does only load the standard color variant at the moment.
-toFont :: [(Either Text ErrorSymbol, Pixmap)] -> IO Font
-toFont m =
-    toColorVariants $ ColorVariant sortedLetters errorSymbol
+toFont :: [Color] -> [(Either Text ErrorSymbol, Pixmap)] -> IO Font
+toFont fontColors m =
+    toColorVariants fontColors $ ColorVariant sortedLetters errorSymbol
   where
     letters = fmap (\ k -> (k, lookupJust (Left k) m)) $ lefts $ fmap fst m
     sortedLetters = List.reverse $ sortBy shortestKeyFirst letters
@@ -178,8 +191,8 @@ toFont m =
 -- the standardColorVariants
 -- and returns the Font.
 -- Also frees the loaded colorVariant.
-toColorVariants :: ColorVariant -> IO Font
-toColorVariants loadedVariant = do
+toColorVariants :: [Color] -> ColorVariant -> IO Font
+toColorVariants fontColors loadedVariant = do
     qBlack <- colorToQRgb black
     qWhite <- colorToQRgb white
     qTransparent <- colorToQRgb transparent
