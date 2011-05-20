@@ -28,7 +28,7 @@ import Utils
 
 
 standardFontColor :: Color = QtColor 70 210 245 255
-headerFontColor :: Color = QtColor 10 50 60 255
+headerFontColor :: Color = QtColor 36 110 128 255
 
 -- | Type for human readable text.
 -- (utf8 encoded)
