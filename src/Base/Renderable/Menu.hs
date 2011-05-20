@@ -38,6 +38,7 @@ import Base.Renderable.CenterHorizontally
 import Base.Renderable.Header
 import Base.Renderable.Spacer
 import Base.Renderable.StickToBottom
+import Base.Renderable.Message
 
 
 data Menu
@@ -121,6 +122,8 @@ menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
 -- (Doesn't get translated therefore.)
 treeToMenu :: Application -> AppState -> Prose -> SelectTree String
     -> (Parent -> String -> AppState) -> Int -> AppState
+treeToMenu app parent title (EmptyNode label) f _ =
+    message app [p "there is nothing here :(", p "MAKE SOME LEVELS!!!"] parent
 treeToMenu app parent title (Leaf _ n) f _ = f parent n
 treeToMenu app parent title (Node label children i) f preSelection =
     menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)

@@ -1,3 +1,6 @@
+{-# language ViewPatterns #-}
+
+
 -- Module for trees with one selected item, that can be stepped through
 
 module Data.SelectTree (
@@ -50,14 +53,15 @@ instance Foldable SelectTree where
     foldMap f (Node _ cs _) = foldMap (foldMap f) cs
 
 
-mkNode :: String -> Indexable (SelectTree a) -> SelectTree a
-mkNode label ix = Node label ix (head (keys ix))
+mkNode :: String -> [SelectTree a] -> SelectTree a
+mkNode label [] = EmptyNode label
+mkNode label (I.fromList -> ix) = Node label ix (head (keys ix))
 
 -- | adds a child (at the end)
 -- PRE: the second given tree is not a Leaf
 addChild :: SelectTree a -> SelectTree a -> SelectTree a
 addChild _ (Leaf _ _) = error "addChild"
-addChild x (EmptyNode label) = mkNode label (I.fromList [x])
+addChild x (EmptyNode label) = mkNode label [x]
 addChild x (Node label children selected) = Node label (children >: x) selected
 
 getLabel :: SelectTree a -> String
@@ -177,7 +181,7 @@ readDirectoryToSelectTree pred file = do
         if isDir then do
             subFiles <- fmap (file </>) <$> getFiles file Nothing
             children <- catMaybes <$> fmapM inner subFiles
-            return $ Just $ mkNode (file ++ "/") $ I.fromList children
+            return $ Just $ mkNode (file ++ "/") children
           else if isFile then
             return $ if pred file
                 then Just $ Leaf file file
