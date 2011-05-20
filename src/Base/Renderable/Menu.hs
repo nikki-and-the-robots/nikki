@@ -17,6 +17,7 @@ import System.FilePath
 import Graphics.Qt
 
 import Utils
+import Version
 
 import Base.Types hiding (selected)
 import Base.Pixmap
@@ -147,15 +148,19 @@ instance Renderable Menu where
                 -- main menu
                 (MenuBackground |:>
                 (addKeysHint (menuKeysHint False) $
-                 centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
+                 centered $ vBox (length menuHeader + 2) $ addFrame $ fmap centerHorizontally lines))
               where
-                lines = mainMenuPixmap : lineSpacer : scroll (toLines menu)
+                proseVersion = renderable $ capitalizeProse $
+                    pVerbatim "(" +> p "version" +>
+                    pVerbatim (" " ++ showVersion nikkiVersion ++ ")")
+                menuHeader = mainMenuPixmap : proseVersion : lineSpacer : []
+                lines = menuHeader ++ scroll (toLines menu)
                 mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
             NormalMenu title subtitle -> render ptr app config parentSize
                 -- normal menu
                 (MenuBackground |:>
                 (addKeysHint (menuKeysHint True) $
-                 centered $ vBox (length menuHeader - 2) $
+                 centered $ vBox (length menuHeader + 2) $
                     addFrame $ fmap centerHorizontally lines))
               where
                 menuHeader = titleLine : lineSpacer : subtitleLines ++ []
