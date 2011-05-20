@@ -251,9 +251,9 @@ data QPainter
   deriving Typeable
 
 foreign import ccall "eraseRect" cppEraseRect ::
-    Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
+    Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 
-eraseRect :: Ptr QPainter -> Position QtInt -> Size QtInt -> Color -> IO ()
+eraseRect :: Ptr QPainter -> Position QtReal -> Size QtReal -> Color -> IO ()
 eraseRect ptr (Position x y) (Size w h) (QtColor r g b a) =
     cppEraseRect
         ptr x y w h r g b a
@@ -269,10 +269,10 @@ foreign import ccall "translate" cppTranslate :: Ptr QPainter -> QtReal -> QtRea
 
 foreign import ccall scale :: Ptr QPainter -> QtReal -> QtReal -> IO ()
 
-drawPixmap :: Ptr QPainter -> Position QtInt -> Ptr QPixmap -> IO ()
+drawPixmap :: Ptr QPainter -> Position QtReal -> Ptr QPixmap -> IO ()
 drawPixmap ptr (Position x y) pix = do
     cppDrawPixmap ptr x y pix
-foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtInt -> QtInt -> Ptr QPixmap -> IO ()
+foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtReal -> QtReal -> Ptr QPixmap -> IO ()
 
 drawPoint :: Ptr QPainter -> Position QtReal -> IO ()
 drawPoint ptr (Position x y) =
@@ -316,11 +316,11 @@ drawText ptr (Position x y) highlighted s =
         cppDrawText ptr x y highlighted
 foreign import ccall "drawText" cppDrawText :: Ptr QPainter -> QtReal -> QtReal -> Bool -> CString -> IO ()
 
-sizeQPainter :: Ptr QPainter -> IO (Size QtInt)
+sizeQPainter :: Ptr QPainter -> IO (Size QtReal)
 sizeQPainter ptr = do
     width <- widthQPainter ptr
     height <- heightQPainter ptr
-    return Size{width, height}
+    return $ fmap fromIntegral (Size width height)
 
 foreign import ccall widthQPainter :: Ptr QPainter -> IO QtInt
 

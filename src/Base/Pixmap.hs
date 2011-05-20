@@ -120,7 +120,7 @@ renderPixmap ptr offset position mAngle pix = io $ do
 -- | renders a Pixmap without altering the painter matrix
 renderPixmapSimple :: MonadIO m => Ptr QPainter -> Pixmap -> m ()
 renderPixmapSimple ptr pix = io $
-    drawPixmap ptr (fmap round (pix ^. pixmapOffset)) (pixmap pix)
+    drawPixmap ptr (pix ^. pixmapOffset) (pixmap pix)
 
 -- | pixmap with rendering information (position and angle)
 data RenderPixmap

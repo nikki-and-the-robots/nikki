@@ -68,13 +68,13 @@ instance Sort BSort () where
         renderPixmapSimple ptr (head $ pixmaps sort)
     renderEditorObject ptr offset eo = do
         resetMatrix ptr
-        windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+        windowSize <- sizeQPainter ptr
         renderWholeScreenPixmap ptr windowSize (pixmaps $ editorSort eo)
     initialize sort mSpace ep Nothing = return ()
     immutableCopy = return
     chipmunks = const []
     renderObject _ s ptr offset _ = do
-        windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+        windowSize <- sizeQPainter ptr
         let mPix = pickWholeScreenPixmap windowSize $ pixmaps s
             pix = fromMaybe (last $ pixmaps s) mPix
             pos = sizeToPosition $ fmap (fromIntegral . round . (/ 2)) (windowSize -~ pixmapSize pix)

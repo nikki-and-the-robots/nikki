@@ -87,7 +87,7 @@ tickFPS _ _ _ x = return x
 renderFPS :: Application -> Configuration -> Ptr QPainter -> Prose -> IO ()
 renderFPS app config ptr fps = do
     resetMatrix ptr
-    size <- fmap fromIntegral <$> sizeQPainter ptr
+    size <- sizeQPainter ptr
     snd =<< render ptr app config size fps
 
 writeDistribution :: FilePath -> FilePath -> IO ()

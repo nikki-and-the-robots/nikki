@@ -37,7 +37,7 @@ renderEditorScene ptr scene = do
 
 renderObjectScene :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sort -> IO ()
 renderObjectScene ptr offset s = do
-    size <- fmap fromIntegral <$> sizeQPainter ptr
+    size <- sizeQPainter ptr
     clearScreen ptr black
     let -- the layers behind the currently selected Layer
         currentBackgrounds = belowSelected (selectedLayer s) (s ^. editorObjects)
@@ -85,7 +85,7 @@ calculateRenderTransformation ptr s@EditorScene{} = do
 
 transformation :: Ptr QPainter -> EditorPosition -> Size Double -> IO (Position Double)
 transformation ptr (EditorPosition x y) (Size cw ch) = do
-    (Size vw vh) <- fmap fromIntegral <$> sizeQPainter ptr
+    (Size vw vh) <- sizeQPainter ptr
     let viewMiddle = Position (vw / 2) (vh / 2)
         halfCursor = Position (- (cw / 2)) (ch / 2)
         pos = Position x y
@@ -96,14 +96,14 @@ transformation ptr (EditorPosition x y) (Size cw ch) = do
 -- draws the icon of the selected sort (lower left corner of the screen)
 renderSelectedIcon :: Ptr QPainter -> Sort_ -> IO ()
 renderSelectedIcon ptr sort = do
-    screenSize <- fmap fromIntegral <$> sizeQPainter ptr
+    screenSize <- sizeQPainter ptr
     let fakeObject = EditorObject sort (EditorPosition 0 (height screenSize)) Nothing
     sortRenderIconified ptr zero fakeObject (Size 64 64)
 
 -- | renders the selected object (if any) in the right lower corner
 renderSelectedObject :: Ptr QPainter ->  Sort_ -> IO ()
 renderSelectedObject ptr sort = do
-    screenSize <- fmap fromIntegral <$> sizeQPainter ptr
+    screenSize <- sizeQPainter ptr
     let position =
             EditorPosition screenWidth screenHeight -~ EditorPosition boxWidth 0
         Size screenWidth screenHeight = screenSize
@@ -116,27 +116,27 @@ renderSelectedObject ptr sort = do
 renderLayerOSD :: Ptr QPainter -> GroundsIndex -> IO ()
 renderLayerOSD ptr i = do
     resetMatrix ptr
-    (Size w h) <- fmap fromIntegral <$> sizeQPainter ptr
+    (Size w h) <- sizeQPainter ptr
     drawText ptr (Position 80 (h - 20)) False ("Layer: " ++ show i)
 
 -- | renders the cursor Position
 renderCursorPositionOSD :: Ptr QPainter -> EditorPosition -> IO ()
 renderCursorPositionOSD ptr (EditorPosition x y) = do
     resetMatrix ptr
-    (Size w h) <- fmap fromIntegral <$> sizeQPainter ptr
+    (Size w h) <- sizeQPainter ptr
     drawText ptr (Position 300 (h - 20)) False ("Cursor: " ++ show (fmap truncate (x, y)))
 
 renderCursorStepSize :: Ptr QPainter -> EditorPosition -> IO ()
 renderCursorStepSize ptr (EditorPosition x y) = do
     resetMatrix ptr
-    (Size w h) <- fmap fromIntegral <$> sizeQPainter ptr
+    (Size w h) <- sizeQPainter ptr
     drawText ptr (Position 500 (h - 20)) False ("Step: " ++ show (x, y))
 
 
 -- * copy selection
 
 renderCopySelection ptr scene endPosition@(EditorPosition x2 y2) = do
-    Size w h <- fmap fromIntegral <$> sizeQPainter ptr
+    Size w h <- sizeQPainter ptr
     let EditorPosition x1 y1 = cursor scene
         x = max x1 x2
         y = min y1 y2
@@ -166,5 +166,5 @@ drawCopySelectedBox ptr offset object = do
 renderHelpButtonOSD :: Ptr QPainter -> IO ()
 renderHelpButtonOSD ptr = do
     resetMatrix ptr
-    size <- fmap fromIntegral <$> sizeQPainter ptr
+    size <- sizeQPainter ptr
     drawText ptr (Position (width size - 200) (height size - 20)) False ("Help: F1")

@@ -50,7 +50,7 @@ fiddleInDebugging ptr renderable (widgetSize, action) =
         color <- alpha ^= 1 <$> randomColor
         setPenColor ptr color 1
         drawRect ptr zero widgetSize
-        eraseRect ptr zero (fmap round widgetSize) (alpha ^= 0.1 $ color)
+        eraseRect ptr zero widgetSize (alpha ^= 0.1 $ color)
         drawText ptr (Position 10 25) False (head $ words $ label renderable)
 
 instance Renderable Pixmap where

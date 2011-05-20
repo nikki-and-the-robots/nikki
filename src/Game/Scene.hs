@@ -281,7 +281,7 @@ renderScene app configuration ptr scene debugging = do
     let now = scene ^. spaceTime
     center <- getCameraPosition ptr scene
     io $ do
-        size :: Size Double <- fmap fromIntegral <$> sizeQPainter ptr
+        size <- sizeQPainter ptr
         let Size width height :: Size CpFloat = fmap realToFrac size
             offsetVector = - (center - Vector (width / 2) (height / 2))
             offset = fmap (fromIntegral . truncate) $ vector2position offsetVector

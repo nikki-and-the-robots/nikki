@@ -44,6 +44,6 @@ setRenderable app config renderable = do
   where
     renderCallback :: Ptr QPainter -> IO ()
     renderCallback ptr = do
-        size <- io $ fmap fromIntegral <$> sizeQPainter ptr
+        size <- io $ sizeQPainter ptr
         io $ resetMatrix ptr
         snd =<< render ptr app config size renderable

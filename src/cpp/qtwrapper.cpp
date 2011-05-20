@@ -79,7 +79,7 @@ extern "C" void setApplicationName(QApplication* app, char* name) {
 
 // * QPainter
 
-extern "C" void eraseRect(QPainter* painter, int x, int y, int w, int h, int r, int g, int b, int alpha) {
+extern "C" void eraseRect(QPainter* painter, qreal x, qreal y, qreal w, qreal h, int r, int g, int b, int alpha) {
     painter->setBackground(QBrush(QColor(r, g, b, alpha)));
     painter->eraseRect(x, y, w, h);
 };
@@ -100,7 +100,7 @@ extern "C" void scale(QPainter* painter, qreal x, qreal y) {
     painter->scale(x, y);
 };
 
-extern "C" void drawPixmap(QPainter* painter, int x, int y, QPixmap* pixmap) {
+extern "C" void drawPixmap(QPainter* painter, qreal x, qreal y, QPixmap* pixmap) {
     painter->drawPixmap(x, y, *pixmap);
 };
 

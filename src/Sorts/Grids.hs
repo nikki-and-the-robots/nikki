@@ -57,7 +57,7 @@ instance Sort GSort Grid where
         -- render the grid
         resetMatrix ptr
         translate ptr offset
-        windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+        windowSize <- sizeQPainter ptr
         let sort = editorSort eo
             pix = gridPixmap sort
             positions = calculateGridRenderPositions windowSize (size sort) offset
@@ -76,7 +76,7 @@ instance Sort GSort Grid where
     chipmunks = const []
 
     renderObject o s ptr offset _ =
-        renderGrid s offset (position o) <$> (fmap fromIntegral <$> sizeQPainter ptr)
+        renderGrid s offset (position o) <$> sizeQPainter ptr
 
 
 renderGrid :: GSort -> Offset Double -> Position Double -> Size Double -> [RenderPixmap]

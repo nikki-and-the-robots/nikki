@@ -480,7 +480,7 @@ renderTerminalOSD ptr now scene@Scene{mode_ = mode@Base.TerminalMode{}} =
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
         (Just sort, Just terminal) -> do
             clearScreen ptr $ alpha ^= 0.6 $ black
-            windowSize <- fmap fromIntegral <$> sizeQPainter ptr
+            windowSize <- sizeQPainter ptr
             let pixmaps = osdPixmaps sort
                 position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)
                 -- states of lights

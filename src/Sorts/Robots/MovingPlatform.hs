@@ -313,8 +313,8 @@ renderLine sort ptr (a, b) =
 
 drawPathNode :: PSort -> Ptr QPainter -> EditorPosition -> IO ()
 drawPathNode sort ptr n =
-    eraseRect ptr (fmap round $ epToPosition sort n)
-        (fmap round $ size sort)
+    eraseRect ptr (epToPosition sort n)
+        (size sort)
         (alpha ^: (* 0.4) $ yellow)
 
 
