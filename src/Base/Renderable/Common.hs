@@ -71,7 +71,9 @@ instance Renderable [Glyph] where
             fontHeight
         kerning = fromUber (fromIntegral (length glyphs) - 1)
         action = forM_ glyphs $ \ glyph -> do
-            recoverMatrix ptr $
+            recoverMatrix ptr $ do
+                -- center glyphs in fontheight horizontally
+                translate ptr (Position 0 ((fontHeight - height (glyphSize glyph)) / 2))
                 (snd =<< render ptr app config size (glyphPixmap glyph))
             translate ptr (Position (width (glyphSize glyph) + fromUber 1) 0)
     label = const "[Glyph]"

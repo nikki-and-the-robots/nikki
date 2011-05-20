@@ -50,7 +50,7 @@ fontColors = nub $
     []
 
 fontHeight :: Num n => n
-fontHeight = 36
+fontHeight = 48
 
 -- * querying
 
