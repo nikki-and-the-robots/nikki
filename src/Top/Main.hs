@@ -208,7 +208,7 @@ selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
 
 
 play :: Application -> Parent -> LevelFile -> AppState
-play app parent levelUID = loadingEditorScene app levelUID (playLevel app parent)
+play app parent levelUID = loadingEditorScene app levelUID (playLevel app parent False)
 
 edit :: Application -> Parent -> LevelFile -> AppState
 edit app parent levelUID = loadingEditorScene app levelUID (editLevel app)

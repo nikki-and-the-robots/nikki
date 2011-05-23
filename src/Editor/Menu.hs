@@ -59,10 +59,10 @@ editorLoop app mvar scene = UnManagedAppState $ do
             (_, Press (KeyboardButton Escape _)) -> return $ editorMenu app mvar s 0
             (NormalMode, Press (KeyboardButton T _)) ->
                 -- test the level
-                return $ playLevel app (editorLoop app mvar s) s
+                return $ playLevel app (editorLoop app mvar s) True s
             (NormalMode, Press (KeyboardButton H _)) ->
                 -- test the level with Nikki at cursor position
-                return $ playLevel app (editorLoop app mvar s) (setNikkiPosition (cursor s) s)
+                return $ playLevel app (editorLoop app mvar s) True (setNikkiPosition (cursor s) s)
             _ -> do
                 -- other events are handled below (in Editor.Scene)
                 eventHandled <- updateEditorScene event
@@ -94,7 +94,7 @@ editorMenu app mvar scene ps =
                 (p "edit layers", editLayers app mvar scene 0 . this) :
                 (p "activate selection mode (for copy, cut and paste)",
                     const $ edit (toSelectionMode scene)) :
-                (p "try playing the level", const $ playLevel app (edit scene) scene) :
+                (p "try playing the level", const $ playLevel app (edit scene) True scene) :
                 (p "save level", saveLevel app editWithFilePath scene . this) :
                 (p "save level and exit editor",
                     saveLevel app (const $ getMainMenu app) scene . this) :

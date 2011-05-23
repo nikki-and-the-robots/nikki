@@ -32,18 +32,18 @@ debugQtVersion = do
     logInfo ("Qt-Version: " ++ v)
 
 -- | create AppState for game mode
-gameAppState :: Application -> GameState -> AppState
-gameAppState app initialState = NoGUIAppState $ do
+gameAppState :: Application -> Bool -> GameState -> AppState
+gameAppState app editorTestMode initialState = NoGUIAppState $ do
     renderState <- mkRenderState (Base.cameraStateRef initialState) (scene initialState)
     let sceneMVar_ = sceneMVar renderState
-    return $ GameAppState (renderable renderState) (gameLoop app sceneMVar_) initialState
+    return $ GameAppState (renderable renderState) (gameLoop app editorTestMode sceneMVar_) initialState
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
 -- The returned AppState is somehow independent from the other AppState.
 -- Returns FinalState to return to the level selection.
-gameLoop :: Application -> MVar (Scene Object_, DebuggingCommand) -> GameMonad AppState
-gameLoop app sceneMVar =
+gameLoop :: Application -> Bool -> MVar (Scene Object_, DebuggingCommand) -> GameMonad AppState
+gameLoop app editorTestMode sceneMVar =
     loop =<< io newTimer
   where
     loop :: Timer -> GameMonad AppState
@@ -65,11 +65,14 @@ gameLoop app sceneMVar =
         case sc' ^. mode of
             LevelFinished _ Failed ->
                 return $ failureMenu app
-            LevelFinished score Passed -> do
-                records <- io $ saveScore (levelFile sc') score
-                return $ successMessage app score records
+            LevelFinished score Passed ->
+                if editorTestMode then
+                    return $ successMessage app score (NoNewRecord, NoNewRecord)
+                  else do
+                    records <- io $ saveScore (levelFile sc') score
+                    return $ successMessage app score records
             _ -> if isGameBackPressed (controls configuration) controlData then do
-                follower <- gameAppState app <$> get
+                follower <- gameAppState app editorTestMode <$> get
                 return $ pauseMenu app follower 0
               else
                 continue
