@@ -401,7 +401,7 @@ updateState config now cd robots state@State{row = RobotState} | isGameLeftPress
         -- select exit (nikki) menu item
         state{row = NikkiState, changedTime = now}
 updateState config now cd robots state@State{row = NikkiState}
-    | isGameRightPressed config cd =
+    | isGameRightPressed config cd && not (null robots) =
         -- go to robot list
         state{row = RobotState, changedTime = now}
 updateState _ _ _ _ t = t
