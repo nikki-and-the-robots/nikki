@@ -7,7 +7,7 @@ module Base.Renderable.Menu (
   ) where
 
 
-import Data.SelectTree (SelectTree(..), getLabel, setLabel)
+import Data.SelectTree (SelectTree(..), labelA)
 import qualified Data.Indexable as I
 
 import Control.Concurrent.MVar
@@ -132,7 +132,7 @@ treeToMenu app parent title showAction (Node label children i) f preSelection = 
   where
 --     mkItem :: SelectTree a -> IO (Prose, Int -> AppState)
     mkItem t = do
-        label <- showAction $ setLabel (toItem (getLabel t)) t
+        label <- showAction $ labelA ^: toItem $ t
         let follower ps = treeToMenu app (this ps) title showAction t f 0
         return (label, follower)
 

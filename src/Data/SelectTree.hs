@@ -7,8 +7,7 @@ module Data.SelectTree (
     SelectTree(..),
     mkNode,
     addChild,
-    getLabel,
-    setLabel,
+    labelA,
     mapLabels,
     getChildren,
     getSelected,
@@ -28,6 +27,7 @@ import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, catMaybes)
 import qualified Data.Tree as T
 import Data.Foldable (Foldable, foldMap)
+import Data.Accessor
 
 import System.Directory
 import System.FilePath
@@ -68,11 +68,13 @@ getLabel :: SelectTree a -> String
 getLabel (Node l _ _) = l
 getLabel (Leaf l _) = l
 getLabel (EmptyNode l) = l
-
 setLabel :: String -> SelectTree a -> SelectTree a
 setLabel l (Node _ a b) = Node l a b
 setLabel l (EmptyNode _) = EmptyNode l
 setLabel l (Leaf _ e) = Leaf l e
+
+labelA :: Accessor (SelectTree a) String
+labelA = accessor getLabel setLabel
 
 mapLabels :: (String -> String) -> SelectTree a -> SelectTree a
 mapLabels f (Node label a b) = Node (f label) (fmap (mapLabels f) a) b

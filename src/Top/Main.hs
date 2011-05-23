@@ -19,7 +19,7 @@ module Top.Main where
 
 
 import Data.List as List
-import Data.SelectTree (SelectTree(..), leafs, getLabel)
+import Data.SelectTree (SelectTree(..), leafs, labelA)
 import Data.Accessor.Monad.MTL.State ((%=))
 import qualified Data.Map as Map
 
@@ -182,7 +182,7 @@ selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
             Nothing -> pVerbatim label
             Just highScore -> pVerbatim (
                 label ++ " " ++ mkScoreString highScore)
-    showLevel x = return $ pVerbatim $ getLabel x
+    showLevel x = return $ pVerbatim (x ^. labelA)
 
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState
@@ -214,7 +214,7 @@ selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
     return $ if null $ leafs editableLevels then
         message app [p "no levels found :("] parent
       else
-        treeToMenu app parent (p "choose a level to edit") (return . pVerbatim . getLabel)
+        treeToMenu app parent (p "choose a level to edit") (return . pVerbatim . (^. labelA))
             editableLevels
             (\ parent chosen -> edit app parent chosen) 0
 

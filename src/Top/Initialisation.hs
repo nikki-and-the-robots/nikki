@@ -95,7 +95,7 @@ getAllSorts = do
         addByPrefix _ _ _ (Leaf _ _) = error "addByPrefix"
         addByPrefix (a : r) label x node =
             -- prefixes left: the tree needs to be descended further
-            if any (\ subTree -> getLabel subTree == a) (getChildren node) then
+            if any (\ subTree -> subTree ^. labelA == a) (getChildren node) then
                 -- if the child already exists
                 modifyLabelled a (addByPrefix r label x) node
               else
