@@ -8,6 +8,8 @@ module Base.Types.LevelFile (
     isUserLevel,
     isTemplateLevel,
     levelName,
+    LevelUID,
+    levelUID,
   ) where
 
 
@@ -42,3 +44,13 @@ isTemplateLevel _ = False
 levelName :: LevelFile -> String
 levelName = takeBaseName . levelFilePath
 
+type LevelUID = String
+
+-- | unique  ID of a level
+levelUID :: LevelFile -> LevelUID
+levelUID (StandardLevel_0 levelDir levelPath) =
+    "standardLevels" </> dropPrefix levelDir levelPath
+levelUID (UserLevel_0 levelDir levelPath) =
+    "userLevels" </> dropPrefix levelDir levelPath
+levelUID (TemplateLevel_0 path) = path
+levelUID (UnknownLevelType_0 path) = path

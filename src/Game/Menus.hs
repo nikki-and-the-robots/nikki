@@ -4,12 +4,7 @@ module Game.Menus where
 
 import Utils
 
-import Base.Types
-import Base.Prose
-import Base.Options
-import Base.Monad
-import Base.Paths
-import Base.Application
+import Base
 
 import Base.Renderable.Common
 import Base.Renderable.Menu
@@ -18,6 +13,8 @@ import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.StickToBottom
 import Base.Renderable.Centered
+import Base.Renderable.VBox
+import Base.Renderable.Spacer
 
 
 pauseMenu :: Application -> AppState -> Int -> AppState
@@ -47,11 +44,26 @@ failureMenu app = menuAppState app FailureMenu Nothing (
     []) 0
 
 -- | show a textual message and wait for a keypress
-successMessage :: Application -> AppState
-successMessage app = appState renderable $ do
+successMessage :: Application -> Score -> (Record, Record) -> AppState
+successMessage app score (timeRecord, batteryRecord) = appState renderableInstance $ do
     ignore $ waitForPressButton app
     return FinalAppState
   where
-    renderable = MenuBackground |:>
-        addKeysHint PressAnyKey (centered (successPixmap pixmaps))
-    pixmaps = applicationPixmaps app
+    renderableInstance = MenuBackground |:>
+        addKeysHint PressAnyKey (centered (vBox (length lines) lines))
+    lines :: [RenderableInstance]
+    lines =
+        renderable (successPixmap (applicationPixmaps app)) :
+        lineSpacer :
+        renderable (mkScoreProse score) :
+        fmap renderable (mkTimeRecord timeRecord) ++
+        fmap renderable (mkBatteryRecord batteryRecord) ++
+        []
+
+mkTimeRecord, mkBatteryRecord :: Record -> [Prose]
+mkTimeRecord NoNewRecord = []
+mkTimeRecord NewRecord = p "new best time!" : []
+mkTimeRecord RecordTied = p "time record tied!" : []
+mkBatteryRecord NoNewRecord = []
+mkBatteryRecord NewRecord = p "new battery record!" : []
+mkBatteryRecord RecordTied = p "battery record tied!" : []

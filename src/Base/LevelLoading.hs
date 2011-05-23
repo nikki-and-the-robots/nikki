@@ -18,10 +18,10 @@ import Base.Paths
 
 
 -- | Returns all files that can be played.
--- Looks in the freeLevelsDirectory and in data/standard_levels
+-- Looks in the freeLevelsDirectory and in data/standardLevels
 lookupPlayableLevels :: RM (SelectTree LevelFile)
 lookupPlayableLevels = do
-    standardLevelsDir <- getDataFileName "standard_levels"
+    standardLevelsDir <- getDataFileName "standardLevels"
     standardLevels <- io $ fmap (standardLevel standardLevelsDir) <$>
         dirToLevels "standard levels" standardLevelsDir
 --     downloadedLevels <- lookupDownloadedLevels

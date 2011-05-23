@@ -118,13 +118,13 @@ freeAllSorts sorts = do
     fmapM_ freeSort sorts
 
 
-initScene :: Application -> Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
-initScene app space =
+initScene :: Application -> LevelFile -> Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
+initScene app levelFile space =
     return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
     return . groundsMergeTiles >=>
     return . selectNikki >=>
     secondKleisli (initializeObjects app space) >=>
-    mkScene space >=>
+    mkScene levelFile space >=>
     return . Sorts.LowerLimit.promoteLowerLimit
 
 -- | select the last set nikki and delete all duplicates
@@ -152,11 +152,11 @@ editorObject2Object :: Application -> Maybe Space -> EditorObject Sort_ -> IO Ob
 editorObject2Object app mspace (EditorObject sort pos state) =
     initialize sort app mspace pos state
 
-mkScene :: Space -> (Index, Grounds Object_) -> IO (Scene Object_)
-mkScene space (nikki, objects) = do
+mkScene :: LevelFile -> Space -> (Index, Grounds Object_) -> IO (Scene Object_)
+mkScene levelFile space (nikki, objects) = do
     contactRef <- initContactRef space initial watchedContacts
     let optObjects = mkGameGrounds objects
-    return $ Scene 0 optObjects Nothing 0 contactRef initial (NikkiMode nikki)
+    return $ Scene levelFile 0 optObjects Nothing 0 contactRef initial (NikkiMode nikki)
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =

@@ -25,6 +25,7 @@ module Base (
     module Base.LevelLoading,
     module Base.Polling,
     module Base.Options,
+    module Base.Score,
   ) where
 
 
@@ -51,3 +52,4 @@ import Base.GlobalShortcuts
 import Base.LevelLoading
 import Base.Polling
 import Base.Options
+import Base.Score

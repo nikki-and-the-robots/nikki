@@ -110,15 +110,15 @@ editorMenu app mvar scene ps =
                 []) ps
   where
     menuTitle = p "editor"
-    menuSubTitle = if isTemplateLevel $ levelFile scene
+    menuSubTitle = if isTemplateLevel $ editorLevelFile scene
         then p "untitled level"
-        else pVerbatim $ levelName $ levelFile scene
+        else pVerbatim $ levelName $ editorLevelFile scene
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app mvar (updateSelected s)
     this = editorMenu app mvar scene
     -- | edit the scene, but set a given filepath for the level file
     editWithFilePath :: LevelFile -> AppState
-    editWithFilePath levelFile = edit scene{levelFile}
+    editWithFilePath editorLevelFile = edit scene{editorLevelFile}
 
     lEnterOEM = case enterOEM app mvar scene of
         Nothing -> []
@@ -127,14 +127,14 @@ editorMenu app mvar scene ps =
 
 saveLevel :: Application -> (LevelFile -> AppState) -> EditorScene Sort_
     -> Parent -> AppState
-saveLevel app follower EditorScene{levelFile, editorObjects_} _parent 
-  | isUserLevel levelFile =
-    let path = levelFilePath levelFile
+saveLevel app follower EditorScene{editorLevelFile, editorObjects_} _parent 
+  | isUserLevel editorLevelFile =
+    let path = levelFilePath editorLevelFile
     in appState (busyMessage $ p "saving level...") $ io $ do
         writeObjectsToDisk path editorObjects_
-        return $ follower levelFile
-saveLevel app follower scene@EditorScene{levelFile, editorObjects_} parent
-  | isTemplateLevel levelFile =
+        return $ follower editorLevelFile
+saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
+  | isTemplateLevel editorLevelFile =
     askString app parent (p "level name") $ \ name -> NoGUIAppState $ io $ do
         levelDirectory <- getSaveLevelDirectory
         let path = levelDirectory </> name <..> "nl"

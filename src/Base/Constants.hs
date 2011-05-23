@@ -42,10 +42,7 @@ pngDir :: FilePath
 pngDir = "png"
 
 templateLevelsDir :: FilePath
-templateLevelsDir = "template_levels"
-
-levelDir :: FilePath
-levelDir = "levels"
+templateLevelsDir = "templateLevels"
 
 
 -- * misc

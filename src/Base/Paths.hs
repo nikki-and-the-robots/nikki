@@ -3,11 +3,16 @@
 -- Use this instead to find data files.
 -- Needed for deployment in one folder
 
-module Base.Paths (getDataFileName, getDataFiles) where
+module Base.Paths (
+    getDataFileName,
+    getDataFiles,
+    getConfigurationDirectory,
+  ) where
 
 
 import System.Info
 import System.FilePath
+import System.Directory
 import System.Environment.FindBin
 
 import Utils
@@ -40,3 +45,10 @@ getDataFiles :: FilePath -> (Maybe String) -> RM [FilePath]
 getDataFiles path_ extension = do
     path <- getDataFileName path_
     map (path </>) <$> io (getFiles path extension)
+
+-- | returns the user's configuration directory
+getConfigurationDirectory :: IO FilePath
+getConfigurationDirectory = do
+    d <- getAppUserDataDirectory "nikki"
+    createDirectoryIfMissing True d
+    return d

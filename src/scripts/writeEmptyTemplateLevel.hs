@@ -21,5 +21,5 @@ main = do
     writeSaved path $ pickle initial
 
 
-dir = "../../data/template_levels"
+dir = "../../data/templateLevels"
 

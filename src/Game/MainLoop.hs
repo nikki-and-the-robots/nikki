@@ -65,8 +65,9 @@ gameLoop app sceneMVar =
         case sc' ^. mode of
             LevelFinished _ Failed ->
                 return $ failureMenu app
-            LevelFinished _ Passed ->
-                return $ successMessage app
+            LevelFinished score Passed -> do
+                records <- io $ saveScore (levelFile sc') score
+                return $ successMessage app score records
             _ -> if isGameBackPressed (controls configuration) controlData then do
                 follower <- gameAppState app <$> get
                 return $ pauseMenu app follower 0

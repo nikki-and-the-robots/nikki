@@ -165,9 +165,10 @@ nikkiMovedAwayFromTerminal scene@Scene{mode_} =
 
 gameOver :: Scene Object_ -> Maybe (Scene Object_)
 gameOver scene | isGameOver =
-    Just $ mode ^= (LevelFinished now Failed) $ scene
+    Just $ mode ^= (mkLevelFinished scene Failed) $ scene
   where
     now = scene ^. spaceTime
+    batteries = scene ^. batteryPower
     isGameOver =
         isGameMode (scene ^. mode)
         && nikkiTouchesLaser (scene ^. contacts)
@@ -176,7 +177,7 @@ gameOver _ = Nothing
 levelPassed :: Scene Object_ -> Maybe (Scene Object_)
 levelPassed scene =
     if allTriggered && isGameMode (scene ^. mode) then
-        Just $ mode ^: (const $ LevelFinished now Passed) $ scene
+        Just $ mode ^: (const $ mkLevelFinished scene Passed) $ scene
       else
         Nothing
   where
@@ -184,6 +185,7 @@ levelPassed scene =
         catMaybes $ map unwrapSwitch $ toList $ scene ^. objects ^. gameMainLayer
     allTriggered = all triggered allSwitches
     now = scene ^. spaceTime
+    batteries = scene ^. batteryPower
 
 
 -- * chipmunk stepping

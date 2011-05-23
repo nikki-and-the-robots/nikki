@@ -62,10 +62,10 @@ updateSelected s = s{selected = searchSelectedObject s}
 -- | the initial editor scene
 initEditorScene :: SelectTree Sort_ -> LevelFile -> Grounds (EditorObject Sort_)
     -> IO (EditorScene Sort_)
-initEditorScene sorts levelFile objects = flip evalStateT empty $ do
+initEditorScene sorts editorLevelFile objects = flip evalStateT empty $ do
     pixmap <- get
     return $ updateSelected EditorScene{
-        levelFile,
+        editorLevelFile,
         cursor = zero,
         cursorStep = Just $ EditorPosition 64 64,
         availableSorts_ = sorts,

@@ -23,6 +23,7 @@ import Data.Generics
 import Data.Generics.Uniplate.Data
 import Data.Accessor
 import Data.IORef
+import qualified Data.Binary as Binary
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -143,6 +144,7 @@ renderable = RenderableInstance
 -- A value of this type gets passed from the logic thread to the rendering thread
 data Scene object
     = Scene {
+        levelFile :: LevelFile,
         spaceTime_ :: Seconds,
         objects_ :: GameGrounds object,
         lowerLimit_ :: Maybe Double,
@@ -255,10 +257,13 @@ data Mode
         robot :: Index
       }
     | LevelFinished {
-        levelEndTime :: Seconds,
+        levelScore :: Score,
         levelResult :: LevelResult
       }
   deriving Show
+
+mkLevelFinished :: Scene o -> LevelResult -> Mode
+mkLevelFinished scene = LevelFinished (mkScore (scene ^. spaceTime) (scene ^. batteryPower))
 
 -- | returns, if Nikki is controlled currently
 isNikkiMode :: Mode -> Bool
@@ -284,12 +289,39 @@ isGameMode = not . isLevelFinishedMode
 data LevelResult = Passed | Failed
   deriving (Eq, Ord, Show)
 
+-- | versioned type for scores
+data Score =
+    Score_0 {
+        scoreTime_ :: Seconds,
+        scoreBatteryPower_ :: Integer
+      }
+  deriving (Eq, Show)
+
+scoreTime :: Accessor Score Seconds
+scoreTime = accessor scoreTime_ (\ a r -> r{scoreTime_ = a})
+
+scoreBatteryPower :: Accessor Score Integer
+scoreBatteryPower = accessor scoreBatteryPower_ (\ a r -> r{scoreBatteryPower_ = a})
+
+instance Binary.Binary Score where
+    put (Score_0 a b) = do
+        Binary.putWord8 0
+        Binary.put a
+        Binary.put b
+    get = do
+        i <- Binary.getWord8
+        case i of
+            0 -> Score_0 <$> Binary.get <*> Binary.get
+
+mkScore :: Double -> Integer -> Score
+mkScore = Score_0
+
 
 -- * EditorScene types
 
 data EditorScene sort
     = EditorScene {
-        levelFile :: LevelFile,
+        editorLevelFile :: LevelFile,
 
         cursor :: EditorPosition,
         cursorStep :: Maybe EditorPosition, -- if Nothing -> size of selected object

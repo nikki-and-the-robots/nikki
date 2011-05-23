@@ -111,7 +111,9 @@ lowerLimitHandler scene Nothing = Nothing
 lowerLimitHandler scene (Just p) =
     if isBelowLowerLimit scene p then
         case scene ^. mode of
-            NikkiMode{} -> Just $ mode ^= LevelFinished (scene ^. spaceTime) Failed $ scene
+            NikkiMode{} -> Just $
+                mode ^= mkLevelFinished scene Failed $
+                scene
             RobotMode{nikki, terminal} -> Just $ mode ^= TerminalMode nikki terminal $ scene
             _ -> Nothing
       else
