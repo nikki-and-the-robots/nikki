@@ -58,12 +58,14 @@ blinkLength = 0.4
 
 sorts :: RM [Sort_]
 sorts = do
-    let nameToPixmap offset =
+    let nameToPixmap =
             return . toPngPath >=>
-            getDataFileName >=>
-            loadSymmetricPixmap (Position offset offset)
-    backgroundPixmap <- (nameToPixmap (1 + fromUber 1)) "terminal-standard"
-    displayBlinkenLights <- fmapM (nameToPixmap (1 - fromUber 13)) (
+            getDataFileName
+        backgroundOffset = Position (1 + fromUber 1) (1 + fromUber 1)
+        backgroundSize = fmap fromUber $ Size 48 48
+    backgroundPixmap <- loadPixmap backgroundOffset backgroundSize =<<
+        nameToPixmap "terminal-standard"
+    displayBlinkenLights <- fmapM (nameToPixmap >=> loadSymmetricPixmap (Position 1 1)) (
         "display_00" :
         "display_01" :
         "display_02" :
@@ -427,7 +429,9 @@ renderTerminalBackground sort pos =
 renderDisplayBlinkenLights sort now pos =
     let pixmap = pickAnimationFrame (blinkenLights $ pixmaps sort)
                  [blinkenLightSpeed] now
-    in RenderPixmap pixmap pos Nothing
+    in RenderPixmap pixmap (pos +~ blinkenLightOffset) Nothing
+
+blinkenLightOffset = fmap fromUber $ Position 13 13
 
 -- | renders the little colored lights (for the associated robots) on the terminal in the scene
 renderLittleColorLights sort now t pos =
