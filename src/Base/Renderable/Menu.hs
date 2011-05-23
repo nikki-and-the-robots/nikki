@@ -7,7 +7,7 @@ module Base.Renderable.Menu (
   ) where
 
 
-import Data.SelectTree (SelectTree(..), getLabel)
+import Data.SelectTree (SelectTree(..), getLabel, setLabel)
 import qualified Data.Indexable as I
 
 import Control.Concurrent.MVar
@@ -120,23 +120,27 @@ menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
 -- | Converts a SelectTree to a menu.
 -- Uses pVerbatim (and unP) to convert to (and from) Prose.
 -- (Doesn't get translated therefore.)
-treeToMenu :: Application -> AppState -> Prose -> SelectTree a
-    -> (Parent -> a -> AppState) -> Int -> AppState
-treeToMenu app parent title (EmptyNode label) f _ =
+treeToMenu :: Application -> AppState -> Prose -> (SelectTree a -> IO Prose)
+    -> SelectTree a -> (Parent -> a -> AppState) -> Int -> AppState
+treeToMenu app parent title showAction (EmptyNode label) f _ =
     message app [p "there is nothing here :(", p "MAKE SOME LEVELS!!!"] parent
-treeToMenu app parent title (Leaf _ n) f _ = f parent n
-treeToMenu app parent title (Node label children i) f preSelection =
-    menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)
-        (map mkItem (I.toList children)) preSelection
+treeToMenu app parent title showAction (Leaf _ n) f _ = f parent n
+treeToMenu app parent title showAction (Node label children i) f preSelection = NoGUIAppState $ do
+    items <- io $ fmapM mkItem (I.toList children)
+    return $ menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)
+        items preSelection
   where
---     mkItem :: SelectTree a -> (Prose, Int -> AppState)
-    mkItem t = (pVerbatim $ toItem $ getLabel t, \ ps -> treeToMenu app (this ps) title t f 0)
+--     mkItem :: SelectTree a -> IO (Prose, Int -> AppState)
+    mkItem t = do
+        label <- showAction $ setLabel (toItem (getLabel t)) t
+        let follower ps = treeToMenu app (this ps) title showAction t f 0
+        return (label, follower)
 
     toItem p = case splitPath p of
         paths@(_ : _) -> last paths
         [] -> "???"
 
-    this = treeToMenu app parent title (Node label children i) f
+    this = treeToMenu app parent title showAction (Node label children i) f
 
 
 -- * rendering

@@ -19,7 +19,7 @@ module Top.Main where
 
 
 import Data.List as List
-import Data.SelectTree (SelectTree(..), leafs)
+import Data.SelectTree (SelectTree(..), leafs, getLabel)
 import Data.Accessor.Monad.MTL.State ((%=))
 import qualified Data.Map as Map
 
@@ -169,23 +169,21 @@ quit app parent =
 -- | select a saved level.
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
-    levelFiles <- io . addHighScores =<< lookupPlayableLevels
+    levelFiles <- lookupPlayableLevels
     return $ if null $ leafs levelFiles then
         message app [p "no levels found :("] parent
       else
-        treeToMenu app parent (p "choose a level") levelFiles (play app) 0
+        treeToMenu app parent (p "choose a level") showLevel levelFiles (play app) 0
   where
-    addHighScores :: SelectTree LevelFile -> IO (SelectTree LevelFile)
-    addHighScores t = do
-        scores <- getHighScores
-        return $ inner scores t
-    inner scores (EmptyNode l) = EmptyNode l
-    inner scores (Node l children index) = Node l (fmap (inner scores) children) index
-    inner scores leaf@(Leaf l level) =
-        case Map.lookup (levelUID level) scores of
-            Nothing -> leaf
-            Just highScore ->
-                Leaf (l ++ " " ++ mkScoreString highScore) level
+    showLevel :: SelectTree LevelFile -> IO Prose
+    showLevel (Leaf label level) = do
+        highScores <- getHighScores
+        return $ case Map.lookup (levelUID level) highScores of
+            Nothing -> pVerbatim label
+            Just highScore -> pVerbatim (
+                label ++ " " ++ mkScoreString highScore)
+    showLevel x = return $ pVerbatim $ getLabel x
+
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState
 selectLevelEdit app ps parent = menuAppState app menuType (Just parent) (
@@ -216,7 +214,8 @@ selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
     return $ if null $ leafs editableLevels then
         message app [p "no levels found :("] parent
       else
-        treeToMenu app parent (p "choose a level to edit") editableLevels
+        treeToMenu app parent (p "choose a level to edit") (return . pVerbatim . getLabel)
+            editableLevels
             (\ parent chosen -> edit app parent chosen) 0
 
 
