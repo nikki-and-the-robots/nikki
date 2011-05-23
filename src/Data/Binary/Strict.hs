@@ -10,8 +10,6 @@ import Data.ByteString as Strict
 
 import Control.Exception
 
-import System.IO
-
 import Utils
 
 

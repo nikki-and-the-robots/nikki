@@ -23,11 +23,9 @@ import System.Directory
 import Utils
 
 import Base.Constants
-import Base.Prose
 import Base.Paths
 
 import Base.Types
-import Base.Types.LevelFile
 
 
 -- | type representing the Map of HighScores,

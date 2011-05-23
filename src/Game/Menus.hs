@@ -6,10 +6,6 @@ import Utils
 
 import Base
 
-import Base.Renderable.Common
-import Base.Renderable.Menu
-import Base.Renderable.Scrollable
-import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.StickToBottom
 import Base.Renderable.Centered
