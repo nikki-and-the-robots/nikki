@@ -7,6 +7,7 @@
 module Base.Types (
     module Base.Types,
     module Base.Types.Events,
+    module Base.Types.LevelFile,
     Offset,
   ) where
 
@@ -39,6 +40,7 @@ import Base.GameGrounds
 import Base.Pixmap
 
 import Base.Types.Events
+import Base.Types.LevelFile
 
 
 
@@ -135,7 +137,7 @@ renderable :: Renderable r => r -> RenderableInstance
 renderable = RenderableInstance
 
 
--- from Game.Scene
+-- * from Game.Scene
 
 -- | representing the scene (both physical and graphical objects) during the game.
 -- A value of this type gets passed from the logic thread to the rendering thread
@@ -287,7 +289,7 @@ data LevelResult = Passed | Failed
 
 data EditorScene sort
     = EditorScene {
-        levelPath :: Maybe FilePath,
+        levelFile :: LevelFile,
 
         cursor :: EditorPosition,
         cursorStep :: Maybe EditorPosition, -- if Nothing -> size of selected object

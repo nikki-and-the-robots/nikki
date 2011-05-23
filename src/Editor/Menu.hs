@@ -110,37 +110,41 @@ editorMenu app mvar scene ps =
                 []) ps
   where
     menuTitle = p "editor"
-    menuSubTitle = case levelPath scene of
-        Nothing -> p "untitled level"
-        Just f -> pVerbatim f
+    menuSubTitle = if isTemplateLevel $ levelFile scene
+        then p "untitled level"
+        else pVerbatim $ levelName $ levelFile scene
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app mvar (updateSelected s)
     this = editorMenu app mvar scene
     -- | edit the scene, but set a given filepath for the level file
-    editWithFilePath :: FilePath -> AppState
-    editWithFilePath path = edit scene{levelPath = Just path}
+    editWithFilePath :: LevelFile -> AppState
+    editWithFilePath levelFile = edit scene{levelFile}
 
     lEnterOEM = case enterOEM app mvar scene of
         Nothing -> []
         Just x -> [(p "edit object", const x)]
 
 
-saveLevel :: Application -> (FilePath -> AppState) -> EditorScene Sort_
+saveLevel :: Application -> (LevelFile -> AppState) -> EditorScene Sort_
     -> Parent -> AppState
-saveLevel app follower EditorScene{levelPath = (Just path), editorObjects_} _parent =
-    appState (busyMessage $ p "saving level...") $ io $ do
+saveLevel app follower EditorScene{levelFile, editorObjects_} _parent 
+  | isUserLevel levelFile =
+    let path = levelFilePath levelFile
+    in appState (busyMessage $ p "saving level...") $ io $ do
         writeObjectsToDisk path editorObjects_
-        return $ follower path
-saveLevel app follower scene@EditorScene{levelPath = Nothing, editorObjects_} parent =
+        return $ follower levelFile
+saveLevel app follower scene@EditorScene{levelFile, editorObjects_} parent
+  | isTemplateLevel levelFile =
     askString app parent (p "level name") $ \ name -> NoGUIAppState $ io $ do
         levelDirectory <- getSaveLevelDirectory
         let path = levelDirectory </> name <..> "nl"
+            levelFile = userLevel levelDirectory path
         exists <- doesFileExist path
         if exists then
             return $ fileExists app this path editorObjects_
           else return $ appState (busyMessage $ p "saving level...") $ io $ do
             writeObjectsToDisk path editorObjects_
-            return $ follower path
+            return $ follower levelFile
   where
     this = saveLevel app follower scene parent
 

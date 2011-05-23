@@ -110,7 +110,7 @@ applicationStates app = NoGUIAppState $ do
     play_levelA %= Nothing
     case mLevel of
         Nothing -> return $ mainMenu app 0
-        Just file -> return $ play app (mainMenu app 0) file
+        Just file -> return $ play app (mainMenu app 0) (unknownLevel file)
 
 mainMenu :: Application -> Int -> AppState
 mainMenu app ps =
@@ -190,37 +190,37 @@ pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
                           getDataFiles templateLevelsDir (Just ".nl")
     return $ menuAppState app menuType (Just parent) (
         map mkMenuItem templateLevelPaths ++
-        (p "empty level", const $ edit app parent (pathToEmptyLevel, True)) :
+        (p "empty level", const $ edit app parent (templateLevel pathToEmptyLevel)) :
         []) 0
   where
     menuType = NormalMenu (p "new level") (Just $ p "choose a template to start from")
     mkMenuItem templatePath =
-        (pVerbatim $ takeBaseName templatePath, const $ edit app parent (templatePath, True))
+        (pVerbatim $ takeBaseName templatePath,
+            const $ edit app parent (templateLevel templatePath))
 
 selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
-    editableLevels <- lookupEditableLevels "NYI"
+    editableLevels <- lookupUserLevels "your levels"
     return $ if null $ leafs editableLevels then
         message app [p "no levels found :("] parent
       else
         treeToMenu app parent (p "choose a level to edit") editableLevels
-            (\ parent chosen -> edit app parent (chosen, False)) 0
+            (\ parent chosen -> edit app parent chosen) 0
 
 
-play :: Application -> Parent -> FilePath -> AppState
-play app parent file = loadingEditorScene app (file, False) (playLevel app parent)
+play :: Application -> Parent -> LevelFile -> AppState
+play app parent levelUID = loadingEditorScene app levelUID (playLevel app parent)
 
-edit :: Application -> Parent -> (FilePath, Bool) -> AppState
-edit app parent file = loadingEditorScene app file (editLevel app)
+edit :: Application -> Parent -> LevelFile -> AppState
+edit app parent levelUID = loadingEditorScene app levelUID (editLevel app)
 
 -- | load a level, got to playing state afterwards
--- This AppState involves is a hack to do things from the logic thread 
+-- This AppState is a hack to do things from the logic thread 
 -- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
-loadingEditorScene :: Application -> (FilePath, Bool) -> (EditorScene Sort_ -> AppState) -> AppState
-loadingEditorScene app (file, isTemplateFile) follower =
+loadingEditorScene :: Application -> LevelFile -> (EditorScene Sort_ -> AppState) -> AppState
+loadingEditorScene app file follower =
     appState (busyMessage $ p "loading...") $ io $ do
-        grounds <- loadByFilePath (leafs $ allSorts app) file
-        let mFile = if isTemplateFile then Nothing else Just file
-        editorScene <- initEditorScene (allSorts app) mFile grounds
+        grounds <- loadByFilePath (leafs $ allSorts app) (levelFilePath file)
+        editorScene <- initEditorScene (allSorts app) file grounds
         return $ follower editorScene
 
 mainMenuHelp :: Application -> Parent -> AppState

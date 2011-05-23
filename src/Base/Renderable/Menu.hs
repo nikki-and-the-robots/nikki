@@ -120,8 +120,8 @@ menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
 -- | Converts a SelectTree to a menu.
 -- Uses pVerbatim (and unP) to convert to (and from) Prose.
 -- (Doesn't get translated therefore.)
-treeToMenu :: Application -> AppState -> Prose -> SelectTree String
-    -> (Parent -> String -> AppState) -> Int -> AppState
+treeToMenu :: Application -> AppState -> Prose -> SelectTree a
+    -> (Parent -> a -> AppState) -> Int -> AppState
 treeToMenu app parent title (EmptyNode label) f _ =
     message app [p "there is nothing here :(", p "MAKE SOME LEVELS!!!"] parent
 treeToMenu app parent title (Leaf _ n) f _ = f parent n
@@ -129,7 +129,7 @@ treeToMenu app parent title (Node label children i) f preSelection =
     menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)
         (map mkItem (I.toList children)) preSelection
   where
-    mkItem :: SelectTree String -> (Prose, Int -> AppState)
+--     mkItem :: SelectTree a -> (Prose, Int -> AppState)
     mkItem t = (pVerbatim $ toItem $ getLabel t, \ ps -> treeToMenu app (this ps) title t f 0)
 
     toItem p = case splitPath p of
