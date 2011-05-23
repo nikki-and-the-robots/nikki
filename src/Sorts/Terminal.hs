@@ -303,7 +303,7 @@ instance Sort TSort Terminal where
 
     objectEditMode _ = Just oemMethods
 
-    initialize sort (Just space) editorPosition (Just (OEMState oemState_)) = do
+    initialize sort app (Just space) editorPosition (Just (OEMState oemState_)) = do
         let Just oemState :: Maybe TerminalOEMState = cast oemState_
             attached = fmap Controllable $ case oemState of
                 NoRobots -> []
@@ -569,7 +569,7 @@ instance IsOEMState TerminalOEMState where
     oemEnterMode = enterMode
     oemUpdate = editorUpdate
     oemNormalize = removeDeletedRobots
-    oemRender = oemRender_
+    oemRender ptr _ _ = oemRender_ ptr
     oemPickle = show
     oemHelp = const oemHelpText
 
@@ -586,17 +586,18 @@ enterMode scene (Robots _ selected attached) =
           where
             selected' = if selected `elem` available then selected else first
 
-editorUpdate :: EditorScene sort -> Key -> TerminalOEMState -> Maybe TerminalOEMState
-editorUpdate _ key NoRobots | key `elem` keys = Just NoRobots
+editorUpdate :: EditorScene sort -> Button -> TerminalOEMState -> Maybe TerminalOEMState
+editorUpdate _ (KeyboardButton key _) NoRobots | key `elem` keys = Just NoRobots
   where
     keys = (RightArrow : LeftArrow : Return : Enter : [])
 editorUpdate _ _ NoRobots = Nothing
-editorUpdate scene key state@(Robots available selected attached) =
+editorUpdate scene (KeyboardButton key _) state@(Robots available selected attached) =
   case key of
     RightArrow -> Just state{selectedRobot = searchNext selected available}
     LeftArrow -> Just state{selectedRobot = searchNext selected (reverse available)}
     x | (x == Return || x == Enter || x == Ctrl) -> Just state{attachedRobots = swapIsElem selected attached}
     _ -> Nothing
+editorUpdate _ _ _ = Nothing
 
 -- | searches the next element that is not equal to the given one in the list
 -- wraps the list around.

@@ -24,6 +24,7 @@ import Sorts.Tiles (isTileSort)
 import qualified Sorts.Nikki
 import qualified Sorts.Terminal
 import qualified Sorts.Tiles
+import qualified Sorts.Sign
 import qualified Sorts.FallingTiles
 import qualified Sorts.Box
 import qualified Sorts.Battery
@@ -52,6 +53,7 @@ sortLoaders =
 
     Sorts.Switch.sorts :
 
+    Sorts.Sign.sorts :
     Sorts.Box.sorts :
     Sorts.FallingTiles.sorts :
     Sorts.LowerLimit.sorts :
@@ -116,12 +118,12 @@ freeAllSorts sorts = do
     fmapM_ freeSort sorts
 
 
-initScene :: Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
-initScene space =
+initScene :: Application -> Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
+initScene app space =
     return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
     return . groundsMergeTiles >=>
     return . selectNikki >=>
-    secondKleisli (initializeObjects space) >=>
+    secondKleisli (initializeObjects app space) >=>
     mkScene space >=>
     return . Sorts.LowerLimit.promoteLowerLimit
 
@@ -139,16 +141,16 @@ selectNikki objects = (nikki, mainLayer .> content ^: deleteDuplicateNikkis $ ob
     deleteDuplicateNikkis layer =
         foldr I.deleteByIndex layer (filter (/= nikki) nikkiIndices)
 
-initializeObjects :: Space -> Grounds (EditorObject Sort_) -> IO (Grounds Object_)
-initializeObjects space (Grounds backgrounds mainLayer foregrounds) = do
-    bgs' <- fmapM (fmapM (editorObject2Object Nothing)) backgrounds
-    ml' <- fmapM (editorObject2Object (Just space)) mainLayer
-    fgs' <- fmapM (fmapM (editorObject2Object Nothing)) foregrounds
+initializeObjects :: Application -> Space -> Grounds (EditorObject Sort_) -> IO (Grounds Object_)
+initializeObjects app space (Grounds backgrounds mainLayer foregrounds) = do
+    bgs' <- fmapM (fmapM (editorObject2Object app Nothing)) backgrounds
+    ml' <- fmapM (editorObject2Object app (Just space)) mainLayer
+    fgs' <- fmapM (fmapM (editorObject2Object app Nothing)) foregrounds
     return $ Grounds bgs' ml' fgs'
 
-editorObject2Object :: Maybe Space -> EditorObject Sort_ -> IO Object_
-editorObject2Object mspace (EditorObject sort pos state) =
-    initialize sort mspace pos state
+editorObject2Object :: Application -> Maybe Space -> EditorObject Sort_ -> IO Object_
+editorObject2Object app mspace (EditorObject sort pos state) =
+    initialize sort app mspace pos state
 
 mkScene :: Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene space (nikki, objects) = do

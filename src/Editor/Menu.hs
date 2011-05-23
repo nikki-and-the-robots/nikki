@@ -46,7 +46,8 @@ editLevel app s = NoGUIAppState $ io $ do
 -- | main editor loop
 editorLoop :: Application -> MVar (EditorScene Sort_) -> EditorScene Sort_ -> AppState
 editorLoop app mvar scene = UnManagedAppState $ do
-    io $ setDrawingCallbackGLContext (window app) (Just $ render mvar)
+    config <- getConfiguration
+    io $ setDrawingCallbackGLContext (window app) (Just $ render config mvar)
     evalStateT worker scene
   where
     worker :: MM AppState
@@ -72,9 +73,9 @@ editorLoop app mvar scene = UnManagedAppState $ do
                         return $ showEditorHelp app (this scene) scene
                     _ -> worker
 
-    render sceneMVar ptr = do
+    render config sceneMVar ptr = do
         scene <- readMVar sceneMVar
-        renderEditorScene ptr scene
+        renderEditorScene ptr app config scene
 
     this scene = editorLoop app mvar scene
 

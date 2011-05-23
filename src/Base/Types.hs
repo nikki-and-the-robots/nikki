@@ -207,7 +207,8 @@ data Contacts
         triggers :: Set Shape,
         terminals :: Set Shape,
         batteries :: Set Shape,
-        fallingTiles :: Set Shape
+        fallingTiles :: Set Shape,
+        signs :: Set Shape
       }
   deriving Show
 
@@ -223,6 +224,7 @@ data MyCollisionType
     | RobotCT
     | TriggerCT
     | BatteryCT
+    | SignCT
     | FallingTileCT
   deriving (Eq, Ord, Enum, Show)
 
@@ -373,9 +375,9 @@ modifyOEMEditorPositions f o@EditorObject{editorOEMState_ = Just (OEMState state
 
 class (Typeable a, Data a) => IsOEMState a where
     oemEnterMode :: Sort sort o => EditorScene sort -> a -> a
-    oemUpdate :: EditorScene sort -> Key -> a -> Maybe a
+    oemUpdate :: EditorScene sort -> Button -> a -> Maybe a
     oemNormalize :: Sort sort o => EditorScene sort -> a -> a
-    oemRender :: Sort sort o => Ptr QPainter -> EditorScene sort -> a -> IO ()
+    oemRender :: Sort sort o => Ptr QPainter -> Application -> Configuration -> EditorScene sort -> a -> IO ()
     oemPickle :: a -> String
     -- phantom type
     oemHelp :: a -> String
@@ -398,7 +400,7 @@ instance IsOEMState OEMState where
     oemEnterMode scene (OEMState a) = OEMState $ oemEnterMode scene a
     oemUpdate scene button (OEMState a) = fmap OEMState $ oemUpdate scene button a
     oemNormalize scene (OEMState a) = OEMState $ oemNormalize scene a
-    oemRender ptr scene (OEMState a) = oemRender ptr scene a
+    oemRender ptr app config scene (OEMState a) = oemRender ptr app config scene a
     oemPickle (OEMState a) = oemPickle a
     oemHelp (OEMState a) = oemHelp a
 
@@ -452,7 +454,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 
     -- if Nothing is passed as space, this should be an object 
     -- that is not added to the chipmunk space (i.e. background tiles)
-    initialize :: sort -> Maybe Space -> EditorPosition -> Maybe OEMState -> IO object
+    initialize :: sort -> Application -> Maybe Space -> EditorPosition -> Maybe OEMState -> IO object
 
     immutableCopy :: object -> IO object
 
@@ -521,8 +523,8 @@ instance Sort Sort_ Object_ where
         case editorSort editorObject of
             (Sort_ innerSort) ->
                 renderEditorObject ptr offset editorObject{editorSort = innerSort}
-    initialize (Sort_ sort) space editorPosition state =
-        Object_ sort <$> initialize sort space editorPosition state
+    initialize (Sort_ sort) app space editorPosition state =
+        Object_ sort <$> initialize sort app space editorPosition state
     immutableCopy (Object_ s o) = Object_ s <$> Base.Types.immutableCopy o
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o

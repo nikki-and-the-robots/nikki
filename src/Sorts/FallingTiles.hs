@@ -89,7 +89,7 @@ instance Sort TSort FallingTile where
         drawLine ptr zero (Position w h)
         drawLine ptr (Position w 0) (Position 0 h)
 
-    initialize sort@TSort{} (Just space) editorPosition Nothing = do
+    initialize sort@TSort{} app (Just space) editorPosition Nothing = do
         (chip, attributes) <- initializeBox space sort editorPosition
         modifyApplyForce chip (CM.scale (Vector 0 (- gravity)) staticMass)
         return $ FallingTile attributes chip Static

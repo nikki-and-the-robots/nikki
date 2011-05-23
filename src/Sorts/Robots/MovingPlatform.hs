@@ -83,7 +83,7 @@ instance Sort PSort Platform where
                 doRenderPixmap ptr $ renderRobotEyes (robotEyes sort)
                     (renderPosition +~ offset) 0 eyesOffset eyesState 0
 
-    initialize sort (Just space) ep (Just (OEMState oemState_)) = do
+    initialize sort app (Just space) ep (Just (OEMState oemState_)) = do
         let Just oemState = cast oemState_
             baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
 
@@ -220,7 +220,7 @@ instance IsOEMState OEMPath where
     oemEnterMode _ = id
     oemUpdate _ = updateOEMPath
     oemNormalize _ = id
-    oemRender = renderOEMState
+    oemRender ptr _ _ = renderOEMState ptr
     oemPickle (OEMPath _ _ cursor path active) =
         show ((cursor, getPathList path, active) :: PickleType)
     oemHelp = const oemHelpText
@@ -268,8 +268,8 @@ removePathPoint point (OEMPathPositions start path) =
 
 -- * oem logic
 
-updateOEMPath :: Key -> OEMPath -> Maybe OEMPath
-updateOEMPath key oem@(OEMPath sort cursorStep cursor path active) =
+updateOEMPath :: Button -> OEMPath -> Maybe OEMPath
+updateOEMPath (KeyboardButton key _) oem@(OEMPath sort cursorStep cursor path active) =
     case key of
         LeftArrow -> Just $ oemCursor ^: (-~ EditorPosition cursorStepF 0) $ oem
         RightArrow -> Just $ oemCursor ^: (+~ EditorPosition cursorStepF 0) $ oem
@@ -285,6 +285,7 @@ updateOEMPath key oem@(OEMPath sort cursorStep cursor path active) =
         _ -> Nothing
   where
     cursorStepF :: Double = fromIntegral cursorStep
+updateOEMPath _ _ = Nothing
 
 
 renderOEMState :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()

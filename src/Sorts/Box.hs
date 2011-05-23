@@ -54,7 +54,7 @@ instance Sort BSort Box where
     size = pixmapSize . boxPixmap
     renderIconified sort ptr =
         renderPixmapSimple ptr (boxPixmap sort)
-    initialize sort (Just space) editorPosition Nothing = do
+    initialize sort app (Just space) editorPosition Nothing = do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
             position = position2vector (editorPosition2QtPosition sort editorPosition)

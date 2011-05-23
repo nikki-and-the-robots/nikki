@@ -65,7 +65,7 @@ instance Sort BSort Battery where
         renderPixmapSimple ptr (batteryPixmap sort)
 
     -- sort -> Maybe  Space  -> EditorPosition  -> Maybe  String  -> IO  object
-    initialize sort (Just space) ep Nothing = do
+    initialize sort app (Just space) ep Nothing = do
         let baryCenterOffset = size2vector $ fmap (/2) batterySize
             shapes = fmap (mkShapeDescription shapeAttributes) mkShapes
             pos = position2vector (editorPosition2QtPosition sort ep)

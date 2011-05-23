@@ -70,7 +70,7 @@ instance Sort BSort () where
         resetMatrix ptr
         windowSize <- sizeQPainter ptr
         renderWholeScreenPixmap ptr windowSize (pixmaps $ editorSort eo)
-    initialize sort mSpace ep Nothing = return ()
+    initialize sort app mSpace ep Nothing = return ()
     immutableCopy = return
     chipmunks = const []
     renderObject _ s ptr offset _ = do

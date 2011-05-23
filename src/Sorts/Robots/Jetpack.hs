@@ -87,7 +87,7 @@ instance Sort JSort Jetpack where
     renderIconified sort ptr =
         renderPixmapSimple ptr (standardPixmap sort)
 
-    initialize sort (Just space) ep Nothing = do
+    initialize sort app (Just space) ep Nothing = do
         let
             pos = position2vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset

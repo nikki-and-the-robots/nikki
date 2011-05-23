@@ -42,7 +42,7 @@ solidCollisionTypes =
 
 -- initial in the sense that nothing collides
 instance Initial Contacts where
-    initial = Contacts [] False empty empty empty empty
+    initial = Contacts [] False empty empty empty empty empty
 
 
 -- * setter (boolean to True)
@@ -72,7 +72,12 @@ addFallingTileContact :: Shape -> Contacts -> Contacts
 addFallingTileContact fallingTileShape contacts =
     contacts{fallingTiles = insert fallingTileShape (fallingTiles contacts)}
 
+addSign :: Shape -> Contacts -> Contacts
+addSign s contacts =
+    contacts{signs = insert s (signs contacts)}
 
+
+-- | callbacks
 
 watchedContacts :: [Callback MyCollisionType Contacts]
 watchedContacts =
@@ -84,7 +89,9 @@ watchedContacts =
     batteryCallbacks ++
     Callback (DontWatch BatteryCT TerminalCT) Permeable :
     map nikkiFallingTilesCallbacks
-        (filter isSolidNikkiCollisionType nikkiCollisionTypes)
+        (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
+    map signNikkiCallbacks (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
+    map signPermeableCallbacks (solidCollisionTypes ++ filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes)
 
 
 nikkiCallbacks solidCT nikkiCollisionType =
@@ -119,3 +126,14 @@ terminalSolidCallback solidCT =
 nikkiFallingTilesCallbacks nct =
     Callback (FullWatch FallingTileCT nct
         (\ a b v -> addFallingTileContact a . addNikkiContacts a nct v)) (nikkiPermeability nct)
+
+
+-- * signs
+signNikkiCallbacks :: MyCollisionType -> Callback MyCollisionType Contacts
+signNikkiCallbacks nikkiCT =
+    Callback (Watch nikkiCT SignCT (\ _ signShape -> addSign signShape)) Permeable
+
+signPermeableCallbacks :: MyCollisionType -> Callback MyCollisionType Contacts
+signPermeableCallbacks solidCT =
+    Callback (DontWatch SignCT solidCT) Permeable
+

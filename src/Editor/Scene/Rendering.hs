@@ -21,8 +21,8 @@ import Editor.Scene.Types
 import Editor.Scene.Rendering.Helpers
 
 -- | renders the whole editor scene (with gui)
-renderEditorScene :: Ptr QPainter -> EditorScene Sort_ -> IO ()
-renderEditorScene ptr scene = do
+renderEditorScene :: Ptr QPainter -> Application -> Configuration -> EditorScene Sort_ -> IO ()
+renderEditorScene ptr app config scene = do
     case editorMode scene of
         NormalMode -> do
             offset <- calculateRenderTransformation ptr scene
@@ -30,7 +30,7 @@ renderEditorScene ptr scene = do
             renderGUI ptr offset scene
         ObjectEditMode index -> do
             let Just oemState = getMainLayerEditorObject scene index ^. editorOEMState
-            oemRender ptr scene oemState
+            oemRender ptr app config scene oemState
         SelectionMode endPosition -> renderCopySelection ptr scene endPosition
     renderHelpButtonOSD ptr
 

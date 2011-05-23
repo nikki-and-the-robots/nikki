@@ -1,5 +1,9 @@
 
-module Base.Renderable.AskString (askString, askStringRead) where
+module Base.Renderable.AskString (
+    askString,
+    askStringRead,
+    mkAskStringWidget,
+  ) where
 
 
 import Safe
@@ -27,7 +31,7 @@ askString app parent question follower =
     loop ""
   where
     loop :: String -> AppState
-    loop answer = AppState (mkWidget question answer) $ do
+    loop answer = AppState (mkAskStringWidget question answer) $ do
         event <- waitForAppEvent app
         case event of
             Press e | isTextFieldBack e ->
@@ -38,8 +42,8 @@ askString app parent question follower =
                 return $ loop $ modifyTextField k text answer
             _ -> return $ loop answer
 
-mkWidget :: Prose -> String -> RenderableInstance
-mkWidget question answer =
+mkAskStringWidget :: Prose -> String -> RenderableInstance
+mkAskStringWidget question answer =
     RenderableInstance (
         MenuBackground |:>
         (centered $ vBox 1 text)

@@ -72,7 +72,7 @@ sortPreds = map isPrefixOf (
     "grid/" :
     "terminal" :
     "door" :
-    "npc" :
+    "sign" :
     "nikki" :
     "robots/" :
     "objects/" :

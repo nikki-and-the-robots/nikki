@@ -19,7 +19,7 @@ import Top.Initialisation
 
 playLevel :: Application -> AppState -> EditorScene Sort_ -> AppState
 playLevel app parent editorScene = NoGUIAppState $ withSpace gravity $ \ space -> do
-    scene :: Scene Object_ <- io $ initScene space (editorScene ^. editorObjects)
+    scene :: Scene Object_ <- io $ initScene app space (editorScene ^. editorObjects)
     let (NikkiMode nikkiIndex) = scene ^. mode
     cameraStateRef <- io $ newIORef $ initialCameraState nikkiIndex
     runAppState app $ gameAppState app (GameState space cameraStateRef scene)

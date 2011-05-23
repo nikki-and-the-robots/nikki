@@ -97,7 +97,7 @@ instance Sort NSort Nikki where
     renderIconified sort ptr =
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
-    initialize sort (Just space) editorPosition Nothing = do
+    initialize sort app (Just space) editorPosition Nothing = do
         let (surfaceVelocityShapeType, otherShapes, baryCenterOffset) = mkPolys
             pos = position2vector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset

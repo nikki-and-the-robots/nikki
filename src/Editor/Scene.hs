@@ -90,8 +90,8 @@ setNikkiPosition position =
 -- Returns True in case the key was recognized and acted upon.
 updateEditorScene :: MonadState (EditorScene Sort_) m =>
     AppEvent -> m Bool
-updateEditorScene (Press (KeyboardButton key _)) = do
-    acted <- keyPress key
+updateEditorScene (Press b@KeyboardButton{}) = do
+    acted <- keyPress b
     when acted $ do
         modify updateSelected
         modify normalizeOEMStates
@@ -103,13 +103,13 @@ updateEditorScene _ = return False
 -- Start (== Escape) is handled above in Editor.MainLoop
 
 keyPress :: MonadState (EditorScene Sort_) m =>
-    Key -> m Bool
-keyPress key = do
+    Button -> m Bool
+keyPress b = do
     scene <- get
     let newScene = case editorMode scene of
-            NormalMode -> normalMode key scene
-            ObjectEditMode{} -> objectEditModeUpdate key scene
-            SelectionMode{} -> selectionMode key scene
+            NormalMode -> normalMode (key b) scene
+            ObjectEditMode{} -> objectEditModeUpdate b scene
+            SelectionMode{} -> selectionMode (key b) scene
     case newScene of
         Nothing -> return False
         Just newScene -> do
@@ -187,7 +187,7 @@ normalMode _ scene = Nothing
 
 -- * object edit mode
 
-objectEditModeUpdate :: Key -> EditorScene Sort_ -> Maybe (EditorScene Sort_)
+objectEditModeUpdate :: Button -> EditorScene Sort_ -> Maybe (EditorScene Sort_)
 objectEditModeUpdate x scene@EditorScene{editorMode = ObjectEditMode i} =
     let Just oldOemState = scene ^. acc
     in case oemUpdate scene x oldOemState of

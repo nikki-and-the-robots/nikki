@@ -332,6 +332,12 @@ dropPrefix (a : aR) (b : bR) =
     if a == b then dropPrefix aR bR else b : bR
 dropPrefix _ b = b
 
+chunks :: Int -> [a] -> [[a]]
+chunks n [] = []
+chunks n l =
+    let (a, b) = splitAt n l
+    in a : chunks n b
+
 -- returns the list of items that are in the given list more than once
 duplicates :: (Eq a, Ord a) => [a] -> [a]
 duplicates =
