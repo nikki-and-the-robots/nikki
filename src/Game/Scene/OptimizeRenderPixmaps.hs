@@ -17,7 +17,7 @@ optimize :: Size Double -> [RenderPixmap] -> [RenderPixmap]
 optimize windowSize = filter (inView windowSize)
 
 inView windowSize (RenderPixmap pix objectPosition Nothing) =
-    let picturePosition@(Position x y) = objectPosition -~ pix ^. pixmapOffset
+    let imagePosition@(Position x y) = objectPosition +~ pix ^. pixmapOffset
         size = pixmapImageSize pix
         xGreater = x + width size >= 0
         xLesser = x <= width windowSize
