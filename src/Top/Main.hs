@@ -19,8 +19,9 @@ module Top.Main where
 
 
 import Data.List as List
-import Data.SelectTree (leafs)
+import Data.SelectTree (SelectTree(..), leafs)
 import Data.Accessor.Monad.MTL.State ((%=))
+import qualified Data.Map as Map
 
 import Text.Logging
 
@@ -168,11 +169,23 @@ quit app parent =
 -- | select a saved level.
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
-    levelFiles <- lookupPlayableLevels
+    levelFiles <- io . addHighScores =<< lookupPlayableLevels
     return $ if null $ leafs levelFiles then
         message app [p "no levels found :("] parent
       else
         treeToMenu app parent (p "choose a level") levelFiles (play app) 0
+  where
+    addHighScores :: SelectTree LevelFile -> IO (SelectTree LevelFile)
+    addHighScores t = do
+        scores <- getHighScores
+        return $ inner scores t
+    inner scores (EmptyNode l) = EmptyNode l
+    inner scores (Node l children index) = Node l (fmap (inner scores) children) index
+    inner scores leaf@(Leaf l level) =
+        case Map.lookup (levelUID level) scores of
+            Nothing -> leaf
+            Just highScore ->
+                Leaf (l ++ " " ++ mkScoreString highScore) level
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState
 selectLevelEdit app ps parent = menuAppState app menuType (Just parent) (

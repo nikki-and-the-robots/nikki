@@ -4,7 +4,7 @@ module Base.Score (
     Record(..),
     saveScore,
     getHighScores,
-    mkScoreProse,
+    mkScoreString,
   ) where
 
 
@@ -116,9 +116,9 @@ setHighScore :: LevelUID -> Score -> IO ()
 setHighScore uid score = do
     setHighScores . insert uid score =<< getHighScores
 
-mkScoreProse :: Score -> Prose
-mkScoreProse (Score_0 t b) = pVerbatim (
-    "[" ++ printf "%03.1f" t ++ "|" ++ printf "%03i" b ++ "]")
+mkScoreString :: Score -> String
+mkScoreString (Score_0 t b) =
+    "[" ++ printf "%03.1f" t ++ "|" ++ printf "%03i" b ++ "]"
 
 -- | Returns the filepath to the highscore file
 -- Initializes the file, if it doesn't exist.

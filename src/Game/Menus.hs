@@ -55,7 +55,7 @@ successMessage app score (timeRecord, batteryRecord) = appState renderableInstan
     lines =
         renderable (successPixmap (applicationPixmaps app)) :
         lineSpacer :
-        renderable (mkScoreProse score) :
+        renderable (pVerbatim $ mkScoreString score) :
         fmap renderable (mkTimeRecord timeRecord) ++
         fmap renderable (mkBatteryRecord batteryRecord) ++
         []
