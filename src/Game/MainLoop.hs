@@ -71,9 +71,12 @@ gameLoop app editorTestMode sceneMVar =
                   else do
                     records <- io $ saveScore (levelFile sc') score
                     return $ successMessage app score records
-            _ -> if isGameBackPressed (controls configuration) controlData then do
-                follower <- gameAppState app editorTestMode <$> get
-                return $ pauseMenu app follower 0
+            _ -> if isGameBackPressed (controls configuration) controlData then 
+                if editorTestMode then
+                    return FinalAppState
+                  else do
+                    follower <- gameAppState app editorTestMode <$> get
+                    return $ pauseMenu app follower 0
               else
                 continue
       where
