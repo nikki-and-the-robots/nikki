@@ -34,6 +34,7 @@ import Graphics.Qt as Qt
 
 import Utils
 
+import Base.Constants
 import Base.Configuration
 import Base.Configuration.Controls
 import Base.Grounds
@@ -313,8 +314,15 @@ instance Binary.Binary Score where
         case i of
             0 -> Score_0 <$> Binary.get <*> Binary.get
 
-mkScore :: Double -> Integer -> Score
-mkScore = Score_0
+mkScore :: Seconds -> Integer -> Score
+mkScore t = Score_0 (roundTime t)
+  where
+    roundTime :: Seconds -> Seconds
+    roundTime =
+        (* (10 ^ timeDigits)) >>>
+        ceiling >>>
+        fromIntegral >>>
+        (/ (10 ^ timeDigits))
 
 
 -- * EditorScene types

@@ -22,6 +22,7 @@ import System.Directory
 
 import Utils
 
+import Base.Constants
 import Base.Prose
 import Base.Paths
 
@@ -62,13 +63,13 @@ data Record
 -- | Checks, if the given score is a new record (time- or battery-wise)
 -- If yes, saves the new record.
 -- Returns (newTimeRecord, newBatteryRecord
-saveScore :: LevelFile -> Score -> IO (Record, Record)
+saveScore :: LevelFile -> Score -> IO (Maybe Score, Record, Record)
 saveScore (levelUID -> uid) currentScore = do
     highScores <- getHighScores
     case Map.lookup uid highScores of
         Nothing -> do
             setHighScore uid currentScore
-            return (NewRecord, NewRecord)
+            return (Nothing, NewRecord, NewRecord)
         Just highScore -> do
             let newHighScore =
                     updateRecord timeCompare scoreTime currentScore $
@@ -76,7 +77,8 @@ saveScore (levelUID -> uid) currentScore = do
                     highScore
             when (newHighScore /= highScore) $
                 setHighScore uid newHighScore
-            return (record timeCompare scoreTime currentScore highScore,
+            return (Just highScore,
+                record timeCompare scoreTime currentScore highScore,
                 record compare scoreBatteryPower currentScore highScore)
   where
     timeCompare a b = swapOrdering $ compare a b
@@ -118,7 +120,7 @@ setHighScore uid score = do
 
 mkScoreString :: Score -> String
 mkScoreString (Score_0 t b) =
-    "[" ++ printf "%03.1f" t ++ "|" ++ printf "%03i" b ++ "]"
+    printf ("[ %03." ++ show timeDigits ++ "f | %03i ]") t b
 
 -- | Returns the filepath to the highscore file
 -- Initializes the file, if it doesn't exist.

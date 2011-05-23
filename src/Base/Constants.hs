@@ -33,6 +33,11 @@ stepQuantum :: CpFloat = 0.002
 
 timeFactor :: CpFloat = 1
 
+-- | how many digits to use for times
+timeDigits :: Int
+timeDigits = 2
+
+
 -- * file directories
 
 soundDir :: FilePath

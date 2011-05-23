@@ -67,7 +67,7 @@ gameLoop app editorTestMode sceneMVar =
                 return $ failureMenu app
             LevelFinished score Passed ->
                 if editorTestMode then
-                    return $ successMessage app score (NoNewRecord, NoNewRecord)
+                    return $ successMessage app score (Nothing, NoNewRecord, NoNewRecord)
                   else do
                     records <- io $ saveScore (levelFile sc') score
                     return $ successMessage app score records

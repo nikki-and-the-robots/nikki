@@ -44,8 +44,8 @@ failureMenu app = menuAppState app FailureMenu Nothing (
     []) 0
 
 -- | show a textual message and wait for a keypress
-successMessage :: Application -> Score -> (Record, Record) -> AppState
-successMessage app score (timeRecord, batteryRecord) = appState renderableInstance $ do
+successMessage :: Application -> Score -> (Maybe Score, Record, Record) -> AppState
+successMessage app score (mHighScore, timeRecord, batteryRecord) = appState renderableInstance $ do
     ignore $ waitForPressButton app
     return FinalAppState
   where
@@ -56,9 +56,15 @@ successMessage app score (timeRecord, batteryRecord) = appState renderableInstan
         renderable (successPixmap (applicationPixmaps app)) :
         lineSpacer :
         renderable (pVerbatim $ mkScoreString score) :
+        highScoreLine ++
         fmap renderable (mkTimeRecord timeRecord) ++
         fmap renderable (mkBatteryRecord batteryRecord) ++
         []
+    highScoreLine =
+        maybe [] (\ highScore ->
+            renderable (p "highscore: " +> pVerbatim (mkScoreString highScore)) : [])
+            mHighScore
+
 
 mkTimeRecord, mkBatteryRecord :: Record -> [Prose]
 mkTimeRecord NoNewRecord = []
