@@ -77,9 +77,11 @@ saveScore (levelUID -> uid) currentScore = do
                 setHighScore uid newHighScore
             return (Just highScore,
                 record timeCompare scoreTime currentScore highScore,
-                record compare scoreBatteryPower currentScore highScore)
+                record batteryCompare scoreBatteryPower currentScore highScore)
   where
     timeCompare a b = swapOrdering $ compare a b
+    batteryCompare 0 x = LT
+    batteryCompare a b = compare a b
 
     updateRecord :: Compare a -> Accessor Score a -> Score -> Score -> Score
     updateRecord compare acc current high =
