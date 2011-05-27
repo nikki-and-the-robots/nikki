@@ -5,6 +5,7 @@ module Base.Score (
     saveScore,
     getHighScores,
     mkScoreString,
+    timeFormat,
   ) where
 
 
@@ -24,6 +25,7 @@ import Utils
 
 import Base.Constants
 import Base.Paths
+import Base.Prose
 
 import Base.Types
 
@@ -134,3 +136,14 @@ getHighScoreFilePath = do
         let content :: HighScoreFile = initial
         encodeFileStrict highScoreFilePath content
     return highScoreFilePath
+
+-- | formats the time (MM:SS:MM)
+timeFormat :: Seconds -> Prose
+timeFormat time =
+    pVerbatim $ printf "%02i:%02i:%02i" minutes seconds centiSeconds
+  where
+    (intSeconds, fractionSeconds) = properFraction time
+    intMinutes = floor (time / 60)
+    minutes :: Int = min 99 intMinutes
+    seconds :: Int = min 59 (intSeconds - (intMinutes * 60))
+    centiSeconds :: Int = min 99 $ ceiling (fractionSeconds * 100)

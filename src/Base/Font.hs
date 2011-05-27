@@ -54,6 +54,7 @@ alphaNumericFontColors = nub $
     []
 digitFontColors = nub $
     standardFontColor :
+    white :
     []
 
 fontHeight :: Num n => n

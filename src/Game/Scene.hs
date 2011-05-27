@@ -355,6 +355,8 @@ renderOSDs app configuration ptr now scene = do
     when (configuration ^. show_battery_OSD) $
         renderBatteryOSD ptr app configuration scene
 
+    renderGameTime ptr app configuration now
+
     renderTerminalOSD ptr now scene
 
 
@@ -374,6 +376,20 @@ renderBatteryOSD ptr app config scene = do
         pixRender
     translate ptr $ fmap fromUber $ Position 2 (- 2.5)
     textRender
+
+
+renderGameTime ptr app config now = do
+    let timeSize = fmap fromUber $ Size 31 9
+        padding = Size 48 48
+    windowSize <- sizeQPainter ptr
+    resetMatrix ptr
+    translate ptr $ sizeToPosition (windowSize -~ padding -~ timeSize)
+    fillRect ptr zero timeSize (alpha ^= 0.8 $ black)
+    translate ptr $ fmap fromUber $ Position 2 (- 1.5)
+    let glyphs = proseToGlyphs (digitFont app) $
+                    colorizeProse white $
+                    timeFormat now
+    snd =<< Base.render ptr app config (timeSize -~ fmap fromUber (Size 4 4)) glyphs
 
 
 -- * debugging

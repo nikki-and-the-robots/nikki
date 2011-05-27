@@ -11,6 +11,7 @@ module Base.Prose (
     capitalizeProse,
     getText,
     nullProse,
+    lengthProse,
     p,
     pVerbatim,
     unP,
@@ -53,6 +54,10 @@ capitalizeProse (Prose list) =
 nullProse :: Prose -> Bool
 nullProse (Prose snippets) =
     List.all Text.null $ fmap snd snippets
+
+lengthProse :: Prose -> Int
+lengthProse (Prose snippets) =
+    sum $ fmap (Text.length . snd) snippets
 
 -- | Converts haskell Strings to human readable text.
 -- Will be used for translations in the future.
