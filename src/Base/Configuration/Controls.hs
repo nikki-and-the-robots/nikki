@@ -11,6 +11,7 @@ module Base.Configuration.Controls (
     isMenuConfirmation,
     isMenuBack,
     menuKeysHint,
+    menuConfirmationKeysHint,
     scrollableKeysHint,
 
     -- * text fields
@@ -58,7 +59,7 @@ type Controls = ()
 
 -- | represents hints for keys for user readable output
 data KeysHint
-    = KeysHint [(Prose, Prose)]
+    = KeysHint {keysHint :: [(Prose, Prose)]}
     | PressAnyKey
 
 
@@ -89,8 +90,13 @@ isMenuBack _ k = isKey Escape k || isKey contextKey k
 menuKeysHint :: Bool -> KeysHint
 menuKeysHint acceptsBackKey = KeysHint (
     (p "select", p "arrow keys") :
-    (p "confirm", p "return") :
+    keysHint (menuConfirmationKeysHint (p "confirm")) ++
     (if acceptsBackKey then [(p "back", p "escape")] else []) ++
+    [])
+
+menuConfirmationKeysHint :: Prose -> KeysHint
+menuConfirmationKeysHint text = KeysHint (
+    (text, p "return") :
     [])
 
 -- | keys hint for Base.Renderable.Scrollable

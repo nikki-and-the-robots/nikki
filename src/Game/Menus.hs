@@ -42,11 +42,13 @@ failureMenu app = menuAppState app FailureMenu Nothing (
 -- | show a textual message and wait for a keypress
 successMessage :: Application -> Score -> (Maybe Score, Record, Record) -> AppState
 successMessage app score (mHighScore, timeRecord, batteryRecord) = appState renderableInstance $ do
-    ignore $ waitForPressButton app
+    controls_ <- controls <$> getConfiguration
+    ignore $ waitForSpecialPressButton app (isMenuConfirmation controls_)
     return FinalAppState
   where
     renderableInstance = MenuBackground |:>
-        addKeysHint PressAnyKey (centered (vBox (length lines) lines))
+        addKeysHint (menuConfirmationKeysHint (p "ok"))
+            (centered (vBox (length lines) lines))
     lines :: [RenderableInstance]
     lines =
         renderable (successPixmap (applicationPixmaps app)) :

@@ -23,13 +23,20 @@ import Base.Font
 -- | Blocks until a Press AppEvent is received.
 -- Flushes the event queue before that.
 waitForPressButton :: Application -> M Button
-waitForPressButton app = do
+waitForPressButton app =
+    waitForSpecialPressButton app (const True)
+
+-- | Blocks until a Press AppEvent that satisfies the given property
+-- is received.
+-- Flushes the event queue before that.
+waitForSpecialPressButton :: Application -> (Button -> Bool) -> M Button
+waitForSpecialPressButton app property = do
     inner
   where
     inner = do
         e <- waitForAppEvent app
         case e of
-            (Press b) -> return b
+            (Press b) | property b -> return b
             _ -> inner
 
 
