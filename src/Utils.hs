@@ -15,6 +15,11 @@ module Utils (
     (^:),
     (.>),
     module Utils,
+
+    -- * accessor re-exports
+    Accessor,
+    (%=),
+    (%:),
   ) where
 
 -- imports
@@ -31,7 +36,8 @@ import Data.Traversable (Traversable, mapM)
 import Data.IORef
 import qualified Data.Set as Set
 import Data.Char
-import Data.Accessor
+import Data.Accessor (Accessor, (^.), (^=), (^:), (.>))
+import Data.Accessor.Monad.MTL.State ((%=), (%:))
 import Data.Monoid
 
 import Text.Printf
@@ -280,11 +286,6 @@ modifiesT getter setter cmd = do
     x <- gets getter
     x' <- lift $ cmd x
     puts setter x'
-
-(%:) :: (MonadState s m) =>
-    Accessor s a -> (a -> a) -> m ()
-acc %: f =
-    modifies (^. acc) (\ a r -> (acc ^= a $ r)) f
 
 modifyState :: MonadState s m => (s -> s) -> m ()
 modifyState f =

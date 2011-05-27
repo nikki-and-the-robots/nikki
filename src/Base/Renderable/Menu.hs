@@ -106,11 +106,11 @@ menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
     inner :: Menu -> AppState
     inner menu = appState menu $ do
         e <- waitForPressButton app
-        controls_ <- gets controls
-        if isMenuUp controls_ e then return $ inner $ selectPrevious menu
-         else if isMenuDown controls_ e then return $ inner $ selectNext menu
-         else if isMenuConfirmation controls_ e then return $ snd $ selected menu
-         else if isMenuBack controls_ e then case mParent of
+        controls__ <- gets controls_
+        if isMenuUp controls__ e then return $ inner $ selectPrevious menu
+         else if isMenuDown controls__ e then return $ inner $ selectNext menu
+         else if isMenuConfirmation controls__ e then return $ snd $ selected menu
+         else if isMenuBack controls__ e then case mParent of
                 Just parent -> return parent
                 Nothing -> return $ inner menu
          else return $ inner menu

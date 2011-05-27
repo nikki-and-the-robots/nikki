@@ -42,14 +42,14 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
     loop :: ((Int -> Int) -> IO ()) -> M AppState
     loop send = do
         e <- waitForPressButton app
-        controls_ <- gets controls
-        if isMenuDown controls_ e then
+        controls__ <- gets controls_
+        if isMenuDown controls__ e then
             io (send (+ 1)) >>
             loop send
-          else if isMenuUp controls_ e then
+          else if isMenuUp controls__ e then
             io (send (subtract 1)) >>
             loop send
-          else if isMenuConfirmation controls_ e then
+          else if isMenuConfirmation controls__ e then
             return follower
           else
             loop send

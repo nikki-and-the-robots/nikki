@@ -13,6 +13,8 @@ import Base.Prose
 
 import Base.Renderable.Menu
 
+import Base.Options.Controls
+
 
 -- | options that are used in the main menu and in the game (and possibly the editor?)
 generalOptions :: Application -> Int -> Parent -> AppState
@@ -20,6 +22,7 @@ generalOptions app ps parent = NoGUIAppState $ do
     config <- getConfiguration
     fullScreenMenuItem <- mkFullScreen app this
     let menuItems =
+            (p "controls", controlConfigurationMenu app 0 . this) :
             fullScreenMenuItem :
             showBatteryMenuItem config this :
             []

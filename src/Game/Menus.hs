@@ -45,8 +45,8 @@ failureMenu app = menuAppState app FailureMenu Nothing (
 -- | show a textual message and wait for a keypress
 successMessage :: Application -> Score -> (Maybe Score, Record, Record) -> AppState
 successMessage app score (mHighScore, timeRecord, batteryRecord) = appState renderableInstance $ do
-    controls_ <- controls <$> getConfiguration
-    ignore $ waitForSpecialPressButton app (isMenuConfirmation controls_)
+    controls__ <- controls_ <$> getConfiguration
+    ignore $ waitForSpecialPressButton app (isMenuConfirmation controls__)
     return FinalAppState
   where
     renderableInstance = MenuBackground |:>

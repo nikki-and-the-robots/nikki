@@ -23,8 +23,8 @@ import Base.Renderable.StickToBottom
 -- | show a textual message and wait for a keypress
 message :: Application -> [Prose] -> AppState -> AppState
 message app text follower = appState renderable $ do
-    controls_ <- controls <$> getConfiguration
-    ignore $ waitForSpecialPressButton app (isMenuConfirmation controls_)
+    controls__ <- controls_ <$> getConfiguration
+    ignore $ waitForSpecialPressButton app (isMenuConfirmation controls__)
     return follower
   where
     renderable = MenuBackground |:>

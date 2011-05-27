@@ -3,6 +3,7 @@
 module Base.Configuration (
     Configuration(..),
     play_levelA,
+    controls,
     show_battery_OSD,
     loadConfiguration,
   ) where
@@ -52,13 +53,16 @@ data Configuration = Configuration {
     show_widget_frames :: Bool,
 
     -- not accessible from command line
-    controls :: Controls,
+    controls_ :: Controls,
     show_battery_OSD_ :: Bool
   }
     deriving (Show, Read, Data, Typeable)
 
 play_levelA :: Accessor Configuration (Maybe FilePath)
 play_levelA = accessor play_level (\ a r -> r{play_level = a})
+
+controls :: Accessor Configuration Controls
+controls = accessor controls_ (\ a r -> r{controls_ = a})
 
 show_battery_OSD :: Accessor Configuration Bool
 show_battery_OSD = accessor show_battery_OSD_ (\ a r -> r{show_battery_OSD_ = a})
@@ -133,7 +137,7 @@ options =
             &= help "show colored frames for all displayed widgets",
 
         -- not accessible from the command line
-        controls = initial
+        controls_ = initial
             &= CmdArgs.ignore,
         show_battery_OSD_ = True
             &= CmdArgs.ignore

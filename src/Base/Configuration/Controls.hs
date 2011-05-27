@@ -1,7 +1,15 @@
+{-# language DeriveDataTypeable #-}
+
 
 module Base.Configuration.Controls (
 
     Controls,
+    leftKey,
+    rightKey,
+    upKey,
+    downKey,
+    jumpKey,
+    contextKey,
     KeysHint(..),
     isFullscreenSwapShortcut,
 
@@ -44,6 +52,9 @@ module Base.Configuration.Controls (
 
 
 import Data.Set
+import Data.Data
+import Data.Initial
+import Data.Accessor
 
 import Graphics.Qt
 
@@ -55,7 +66,34 @@ import Base.Prose
 
 -- | Configuration of controls (could include either static and dynamic parts)
 -- Could be more sophisticated.
-type Controls = ()
+data Controls = Controls {
+    leftKey_ :: Key,
+    rightKey_ :: Key,
+    upKey_ :: Key,
+    downKey_ :: Key,
+    jumpKey_ :: Key,
+    contextKey_ :: Key
+  }
+    deriving (Show, Read, Typeable, Data)
+
+leftKey, rightKey, upKey, downKey, jumpKey, contextKey :: Accessor Controls Key
+leftKey = accessor leftKey_ (\ a r -> r{leftKey_ = a})
+rightKey = accessor rightKey_ (\ a r -> r{rightKey_ = a})
+upKey = accessor upKey_ (\ a r -> r{upKey_ = a})
+downKey = accessor downKey_ (\ a r -> r{downKey_ = a})
+jumpKey = accessor jumpKey_ (\ a r -> r{jumpKey_ = a})
+contextKey = accessor contextKey_ (\ a r -> r{contextKey_ = a})
+
+instance Initial Controls where
+    initial = Controls {
+        leftKey_ = LeftArrow,
+        rightKey_ = RightArrow,
+        upKey_ = UpArrow,
+        downKey_ = DownArrow,
+        jumpKey_ = Ctrl,
+        contextKey_ = Shift
+      }
+
 
 -- | represents hints for keys for user readable output
 data KeysHint
@@ -83,8 +121,8 @@ isFullscreenSwapShortcut held k =
 isMenuUp, isMenuDown, isMenuConfirmation, isMenuBack :: Controls -> Button -> Bool
 isMenuUp _ = isKey UpArrow
 isMenuDown _ = isKey DownArrow
-isMenuConfirmation _ k = isKey Return k || isKey jumpKey k
-isMenuBack _ k = isKey Escape k || isKey contextKey k
+isMenuConfirmation _ k = isKey Return k
+isMenuBack _ k = isKey Escape k
 
 -- | user readable hints which keys to use
 menuKeysHint :: Bool -> KeysHint
@@ -116,38 +154,35 @@ isTextFieldConfirmation k = isKey Return k || isKey Enter k
 
 -- * game
 
-jumpKey = Ctrl
-contextKey = Shift
-
 isGameLeftHeld, isGameRightHeld, isGameJumpHeld :: Controls -> ControlData -> Bool
-isGameLeftHeld _ = fany (isKey LeftArrow) . held
-isGameRightHeld _ = fany (isKey RightArrow) . held
-isGameJumpHeld _ = fany (isKey jumpKey) . held
+isGameLeftHeld controls = fany (isKey (controls ^. leftKey)) . held
+isGameRightHeld controls = fany (isKey (controls ^. rightKey)) . held
+isGameJumpHeld controls = fany (isKey (controls ^. jumpKey)) . held
 
 isGameLeftPressed, isGameRightPressed, isGameJumpPressed, isGameContextPressed,
     isGameBackPressed
     :: Controls -> ControlData -> Bool
-isGameLeftPressed _ = fany (isKey LeftArrow) . pressed
-isGameRightPressed _ = fany (isKey RightArrow) . pressed
-isGameJumpPressed _ = fany (isKey jumpKey) . pressed
-isGameContextPressed _ = fany (isKey contextKey) . pressed
+isGameLeftPressed controls = fany (isKey (controls ^. leftKey)) . pressed
+isGameRightPressed controls = fany (isKey (controls ^. rightKey)) . pressed
+isGameJumpPressed controls = fany (isKey (controls ^. jumpKey)) . pressed
+isGameContextPressed controls = fany (isKey (controls ^. contextKey)) . pressed
 isGameBackPressed _ = fany (isKey Escape) . pressed
 
 
 -- * terminals
 
 isTerminalConfirmationPressed :: Controls -> ControlData -> Bool
-isTerminalConfirmationPressed _ = fany (isKey jumpKey) . pressed
+isTerminalConfirmationPressed controls = fany (isKey (controls ^. jumpKey)) . pressed
 
 
 -- * robots (in game)
 
 isRobotActionHeld :: Controls -> ControlData -> Bool
-isRobotActionHeld _ = fany (isKey jumpKey) . held
+isRobotActionHeld controls = fany (isKey (controls ^. jumpKey)) . held
 
 isRobotActionPressed, isRobotBackPressed :: Controls -> ControlData -> Bool
-isRobotActionPressed _ = fany (isKey jumpKey) . pressed
-isRobotBackPressed _ = fany (isKey contextKey) . pressed
+isRobotActionPressed controls = fany (isKey (controls ^. jumpKey)) . pressed
+isRobotBackPressed controls = fany (isKey (controls ^. contextKey)) . pressed
 
 
 -- * editor
@@ -155,5 +190,5 @@ isRobotBackPressed _ = fany (isKey contextKey) . pressed
 -- Most of the editor keys are hardcoded.
 
 isEditorA, isEditorB :: Key -> Bool
-isEditorA = (== jumpKey)
-isEditorB = (== contextKey)
+isEditorA = (== Ctrl)
+isEditorB = (== Shift)
