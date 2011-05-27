@@ -103,7 +103,7 @@ menuConfirmationKeysHint text = KeysHint (
 scrollableKeysHint :: KeysHint
 scrollableKeysHint = KeysHint (
     (p "scroll", p "arrow keys") :
-    (p "back", p "escape") :
+    keysHint (menuConfirmationKeysHint (p "back")) ++
     [])
 
 

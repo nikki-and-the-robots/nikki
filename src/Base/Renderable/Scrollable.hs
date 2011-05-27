@@ -49,7 +49,7 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
           else if isMenuUp controls_ e then
             io (send (subtract 1)) >>
             loop send
-          else if isMenuBack controls_ e then
+          else if isMenuConfirmation controls_ e then
             return follower
           else
             loop send
