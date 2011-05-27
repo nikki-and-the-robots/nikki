@@ -71,7 +71,7 @@ successMessage app score (mHighScore, timeRecord, batteryRecord) = appState rend
         bracket $
         case batteryRecord of
             NoNewRecord ->
-                maybe (pv "") (\ hs ->
+                maybe (pv "no record") (\ hs ->
                     p "record" ++ pv ": " ++ pvd (batteryFormat hs))
                     (batteryHighScore mHighScore)
             NewRecord ->
@@ -79,7 +79,7 @@ successMessage app score (mHighScore, timeRecord, batteryRecord) = appState rend
                 maybe (pv "") (\ hs ->
                     pv " " ++ p "before" ++ pv ": " ++ pvd (batteryFormat hs))
                     (batteryHighScore mHighScore)
-            RecordTied -> p "tie record!"
+            RecordTied -> p "tie record"
     batteryHighScore :: Maybe Score -> Maybe Integer
     batteryHighScore Nothing = Nothing
     batteryHighScore (Just hs) =
@@ -105,7 +105,7 @@ successMessage app score (mHighScore, timeRecord, batteryRecord) = appState rend
                 maybe (pv "") (\ hs ->
                     pv " " ++ p "before" ++ pv ": " ++ pvd (timeFormat (hs ^. scoreTime)))
                     mHighScore
-            RecordTied -> p "tie record!"
+            RecordTied -> p "tie record"
 
 
     -- String to [Glyph]
@@ -127,12 +127,3 @@ successMessage app score (mHighScore, timeRecord, batteryRecord) = appState rend
     bracket :: [Glyph] -> [Glyph]
     bracket [] = []
     bracket x = pv "  [" ++ x ++ pv "]"
-
-
-mkTimeRecord, mkBatteryRecord :: Record -> [Prose]
-mkTimeRecord NoNewRecord = []
-mkTimeRecord NewRecord = p "new best time!" : []
-mkTimeRecord RecordTied = p "time record tied!" : []
-mkBatteryRecord NoNewRecord = []
-mkBatteryRecord NewRecord = p "new battery record!" : []
-mkBatteryRecord RecordTied = p "battery record tied!" : []
