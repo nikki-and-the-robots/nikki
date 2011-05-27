@@ -281,6 +281,11 @@ modifiesT getter setter cmd = do
     x' <- lift $ cmd x
     puts setter x'
 
+(%:) :: (MonadState s m) =>
+    Accessor s a -> (a -> a) -> m ()
+acc %: f =
+    modifies (^. acc) (\ a r -> (acc ^= a $ r)) f
+
 modifyState :: MonadState s m => (s -> s) -> m ()
 modifyState f =
     get >>= (return . f) >>= put

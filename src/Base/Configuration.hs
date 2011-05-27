@@ -3,6 +3,7 @@
 module Base.Configuration (
     Configuration(..),
     play_levelA,
+    show_battery_OSD,
     loadConfiguration,
   ) where
 
@@ -51,12 +52,16 @@ data Configuration = Configuration {
     show_widget_frames :: Bool,
 
     -- not accessible from command line
-    controls :: Controls
+    controls :: Controls,
+    show_battery_OSD_ :: Bool
   }
     deriving (Show, Read, Data, Typeable)
 
 play_levelA :: Accessor Configuration (Maybe FilePath)
 play_levelA = accessor play_level (\ a r -> r{play_level = a})
+
+show_battery_OSD :: Accessor Configuration Bool
+show_battery_OSD = accessor show_battery_OSD_ (\ a r -> r{show_battery_OSD_ = a})
 
 -- | loads the configuration and initialises the logging command.
 -- (before calling loadConfiguration, nothing should be logged.)
@@ -129,6 +134,8 @@ options =
 
         -- not accessible from the command line
         controls = initial
+            &= CmdArgs.ignore,
+        show_battery_OSD_ = True
             &= CmdArgs.ignore
       }
     &= program "nikki"

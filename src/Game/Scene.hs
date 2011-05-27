@@ -294,9 +294,7 @@ renderScene app configuration ptr scene debugging = do
 
         renderObjects configuration size ptr offset now (scene ^. objects)
 
-        renderBatteryOffset ptr app configuration scene
-
-        renderTerminalOSD ptr now scene
+        renderOSDs app configuration ptr now scene
 
         -- debugging
         when (render_xy_cross configuration) $
@@ -350,10 +348,18 @@ mainLayerToRenderPixmaps ptr offset now objects =
         concat <$> fmapM (\ o -> renderObject_ o ptr offset now) (toList objects)
 
 
--- * battery OSD
+-- * OSDs
 
-renderBatteryOffset :: Ptr QPainter -> Application -> Configuration -> Scene o -> IO ()
-renderBatteryOffset ptr app config scene = do
+renderOSDs app configuration ptr now scene = do
+
+    when (configuration ^. show_battery_OSD) $
+        renderBatteryOSD ptr app configuration scene
+
+    renderTerminalOSD ptr now scene
+
+
+renderBatteryOSD :: Ptr QPainter -> Application -> Configuration -> Scene o -> IO ()
+renderBatteryOSD ptr app config scene = do
     let text = pVerbatim $ printf "%03i" $ scene ^. batteryPower
     size <- sizeQPainter ptr
     (textSize, textRender) <- Base.render ptr app config size (proseToGlyphs (digitFont app) text)
