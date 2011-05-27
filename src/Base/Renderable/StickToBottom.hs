@@ -54,11 +54,6 @@ formatKeys PressAnyKey =
     brackets $
     p "press any key"
 
--- | put brackets around a string
-brackets :: Prose -> Prose
-brackets x =
-    pVerbatim "[" +> x +> pVerbatim "]"
-
 
 -- * renderable implementation
 

@@ -6,6 +6,7 @@ module Base.Score (
     getHighScores,
     mkScoreString,
     timeFormat,
+    batteryFormat,
   ) where
 
 
@@ -69,7 +70,8 @@ saveScore (levelUID -> uid) currentScore = do
     case Map.lookup uid highScores of
         Nothing -> do
             setHighScore uid currentScore
-            return (Nothing, NewRecord, NewRecord)
+            let batteryRecord = if currentScore ^. scoreBatteryPower == 0 then NoNewRecord else NewRecord
+            return (Nothing, NewRecord, batteryRecord)
         Just highScore -> do
             let newHighScore =
                     updateRecord timeCompare scoreTime currentScore $
@@ -122,7 +124,21 @@ setHighScore uid score = do
 
 mkScoreString :: Score -> String
 mkScoreString (Score_0 t b) =
-    printf ("[ %03." ++ show timeDigits ++ "f | %03i ]") t b
+    printf ("[ %s | %s ]") (timeFormat t) (batteryFormat b)
+
+-- | formats the time (MM:SS:MM)
+timeFormat :: Seconds -> String
+timeFormat time =
+    printf "%02i:%02i:%02i" minutes seconds centiSeconds
+  where
+    (intSeconds, fractionSeconds) = properFraction time
+    intMinutes = floor (time / 60)
+    minutes :: Int = min 99 intMinutes
+    seconds :: Int = min 59 (intSeconds - (intMinutes * 60))
+    centiSeconds :: Int = min 99 $ ceiling (fractionSeconds * 100)
+
+batteryFormat :: Integer -> String
+batteryFormat = printf "%03i"
 
 -- | Returns the filepath to the highscore file
 -- Initializes the file, if it doesn't exist.
@@ -136,14 +152,3 @@ getHighScoreFilePath = do
         let content :: HighScoreFile = initial
         encodeFileStrict highScoreFilePath content
     return highScoreFilePath
-
--- | formats the time (MM:SS:MM)
-timeFormat :: Seconds -> Prose
-timeFormat time =
-    pVerbatim $ printf "%02i:%02i:%02i" minutes seconds centiSeconds
-  where
-    (intSeconds, fractionSeconds) = properFraction time
-    intMinutes = floor (time / 60)
-    minutes :: Int = min 99 intMinutes
-    seconds :: Int = min 59 (intSeconds - (intMinutes * 60))
-    centiSeconds :: Int = min 99 $ ceiling (fractionSeconds * 100)

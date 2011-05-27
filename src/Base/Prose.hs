@@ -14,8 +14,12 @@ module Base.Prose (
     lengthProse,
     p,
     pVerbatim,
+    pv,
     unP,
     pFile,
+    batteryChar,
+    watchChar,
+    brackets,
   ) where
 
 
@@ -68,6 +72,9 @@ p = pVerbatim
 pVerbatim :: String -> Prose
 pVerbatim x = Prose [(standardFontColor, pack x)]
 
+-- | shortcut for pVerbatim
+pv = pVerbatim
+
 -- | inverse of p
 unP :: Prose -> String
 unP = unpack . getText
@@ -79,3 +86,16 @@ unP = unpack . getText
 pFile :: FilePath -> IO [Prose]
 pFile file =
     fmap (Prose . return . tuple standardFontColor) <$> Text.lines <$> pack <$> readFile file
+
+-- | special characters
+
+batteryChar :: Char
+batteryChar = '\128267'
+
+watchChar :: Char
+watchChar = '\8986'
+
+-- | put brackets around a string
+brackets :: Prose -> Prose
+brackets x =
+    pVerbatim "[" +> x +> pVerbatim "]"

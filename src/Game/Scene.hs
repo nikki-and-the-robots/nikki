@@ -388,6 +388,7 @@ renderGameTime ptr app config now = do
     translate ptr $ fmap fromUber $ Position 2 (- 1.5)
     let glyphs = proseToGlyphs (digitFont app) $
                     colorizeProse white $
+                    pVerbatim $
                     timeFormat now
     snd =<< Base.render ptr app config (timeSize -~ fmap fromUber (Size 4 4)) glyphs
 
