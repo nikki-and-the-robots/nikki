@@ -5,13 +5,16 @@ module Base.Configuration (
     play_levelA,
     controls,
     show_battery_OSD,
-    loadConfiguration,
+    annotateConfiguration,
+    defaultConfiguration,
+    initialiseLogging,
   ) where
 
 
 import Data.List
 import Data.Accessor
 import Data.Initial
+import Data.Maybe
 
 import Text.Logging
 
@@ -32,9 +35,9 @@ import Distribution.AutoUpdate.Paths
 import Base.Configuration.Controls
 
 
--- * dynamic configuration
+-- * dynamic configuration (with versioned constructors)
 
-data Configuration = Configuration {
+data Configuration = Configuration_0 {
     -- user config
     play_level :: Maybe FilePath,
     fullscreen :: Bool,
@@ -54,7 +57,9 @@ data Configuration = Configuration {
 
     -- not accessible from command line
     controls_ :: Controls,
-    show_battery_OSD_ :: Bool
+    show_battery_OSD_ :: Bool,
+    show_time_OSD_ :: Bool,
+    show_switch_OSD_ :: Bool
   }
     deriving (Show, Read, Data, Typeable)
 
@@ -67,15 +72,6 @@ controls = accessor controls_ (\ a r -> r{controls_ = a})
 show_battery_OSD :: Accessor Configuration Bool
 show_battery_OSD = accessor show_battery_OSD_ (\ a r -> r{show_battery_OSD_ = a})
 
--- | loads the configuration and initialises the logging command.
--- (before calling loadConfiguration, nothing should be logged.)
-loadConfiguration :: IO Configuration
-loadConfiguration = do
-    filteredArgs <- filterUnwantedArgs <$> getArgs
-    config <- withArgs filteredArgs $ cmdArgs options
-    initialiseLogging config
-    return config
-
 -- | initialises the logging module
 initialiseLogging :: Configuration -> IO ()
 initialiseLogging config = do
@@ -87,59 +83,56 @@ initialiseLogging config = do
           else
             putStrLn
 
--- | on OS X there is a default command line argument
--- (-psn_SOMETHING_WITH_THE_PID) passed to the application
--- when launched in application bundle mode.
--- We remove this from the arguments before processing via CmdArgs.
-filterUnwantedArgs :: [String] -> [String]
-filterUnwantedArgs = case System.Info.os of
-    "darwin" -> filter (\ arg -> not ("-psn_" `isPrefixOf` arg))
-    _ -> id
-
-options :: Configuration
-options =
-    Configuration {
-        play_level = Nothing
+-- | Adds the impure annotations needed for CmdArgs to a configuration.
+-- Also, ignores all loaded debugging flags. (uses the defaults instead.)
+annotateConfiguration :: Configuration -> Configuration
+annotateConfiguration config =
+    Configuration_0 {
+        play_level = play_level config
             &= help "play the specified level file"
             &= typ "FILE"
             &= name "l",
-        fullscreen = False
-            &= help "start the game in fullscreen mode",
+        fullscreen = fullscreen config
+            &= help "start the game in fullscreen mode (sticky option)",
 
         -- debugging
-        run_in_place = False
+        run_in_place = run_in_place defaultConfiguration
             &= groupname "Development flags",
-        update_repo = defaultRepo
+        update_repo = update_repo defaultConfiguration
             &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
             &= typ "REPOSITORY",
-        stdout_on_windows = False
+        stdout_on_windows = stdout_on_windows defaultConfiguration
             &= help "On windows, log messages get written to the file \"nikkiLog\". Use this flag to switch to stdout.",
-        graphics_profiling = False
+        graphics_profiling = graphics_profiling defaultConfiguration
             &= help "output FPS statistics for the rendering thread",
-        physics_profiling = False
+        physics_profiling = physics_profiling defaultConfiguration
             &= help "output information about performance of physics engine",
-        omit_pixmap_rendering = False
+        omit_pixmap_rendering = omit_pixmap_rendering defaultConfiguration
             &= help "omit the normal pixmaps when rendering objects",
-        render_xy_cross = False
+        render_xy_cross = render_xy_cross defaultConfiguration
             &= name "x"
             &= help "render x and y axis",
-        render_chipmunk_objects = False
+        render_chipmunk_objects = render_chipmunk_objects defaultConfiguration
             &= name "c"
             &= help "render red lines for physical objects",
-        abort_level = Nothing
+        abort_level = abort_level defaultConfiguration
             &= help "abort levels after simulating N seconds"
             &= typ "N",
-        initial_events = []
+        initial_events = initial_events defaultConfiguration
             &= help "list of initial events sent to the application"
             &= typ "[Key]",
-        show_widget_frames = False
+        show_widget_frames = show_widget_frames defaultConfiguration
             &= name "w"
             &= help "show colored frames for all displayed widgets",
 
         -- not accessible from the command line
-        controls_ = initial
+        controls_ = controls_ config
             &= CmdArgs.ignore,
-        show_battery_OSD_ = True
+        show_battery_OSD_ = show_battery_OSD_ config
+            &= CmdArgs.ignore,
+        show_time_OSD_ = show_time_OSD_ config
+            &= CmdArgs.ignore,
+        show_switch_OSD_ = show_switch_OSD_ config
             &= CmdArgs.ignore
       }
     &= program "nikki"
@@ -151,3 +144,28 @@ options =
         "Nikki and the Robots is a 2D platformer from Joyride Laboratories." :
         "http://www.joyridelabs.de/" :
         [])
+
+-- | default configuration (without annotations)
+defaultConfiguration :: Configuration
+defaultConfiguration =
+    Configuration_0 {
+        play_level = Nothing,
+        fullscreen = False,
+        -- debugging
+        run_in_place = False,
+        update_repo = defaultRepo,
+        stdout_on_windows = False,
+        graphics_profiling = False,
+        physics_profiling = False,
+        omit_pixmap_rendering = False,
+        render_xy_cross = False,
+        render_chipmunk_objects = False,
+        abort_level = Nothing,
+        initial_events = [],
+        show_widget_frames = False,
+        -- not accessible from the command line
+        controls_ = initial,
+        show_battery_OSD_ = True,
+        show_time_OSD_ = True,
+        show_switch_OSD_ = True
+      }

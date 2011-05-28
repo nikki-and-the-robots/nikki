@@ -7,13 +7,27 @@ module Base.Paths (
     getDataFileName,
     getDataFiles,
     getConfigurationDirectory,
+    getConfigurationFile,
+    withStaticConfiguration,
+    withDynamicConfiguration,
   ) where
 
+
+import Safe
+
+import Data.List
+
+import Text.Logging
+
+import Control.Monad.Reader
+import Control.Monad.State.Strict
 
 import System.Info
 import System.FilePath
 import System.Directory
+import System.Environment
 import System.Environment.FindBin
+import System.Console.CmdArgs as CmdArgs
 
 import Utils
 
@@ -46,9 +60,79 @@ getDataFiles path_ extension = do
     path <- getDataFileName path_
     map (path </>) <$> io (getFiles path extension)
 
+
+-- * configuration
+
 -- | returns the user's configuration directory
 getConfigurationDirectory :: IO FilePath
 getConfigurationDirectory = do
     d <- getAppUserDataDirectory "nikki"
     createDirectoryIfMissing True d
     return d
+
+-- | Returns the path to the configuration file.
+-- The file might be non-existent.
+getConfigurationFile :: IO FilePath
+getConfigurationFile = do
+    d <- getConfigurationDirectory
+    return (d </> "configuration")
+
+-- | loads the configuration and initialises the logging command.
+-- (before calling loadConfiguration, nothing should be logged.)
+loadConfiguration :: IO Configuration
+loadConfiguration = do
+    filteredArgs <- filterUnwantedArgs <$> getArgs
+    (loadedConfig, mMessage) <- loadConfigurationFromFile
+    config <- withArgs filteredArgs $ cmdArgs $ annotateConfiguration loadedConfig
+    initialiseLogging config
+    whenMaybe mMessage logInfo
+    return config
+
+-- | on OS X there is a default command line argument
+-- (-psn_SOMETHING_WITH_THE_PID) passed to the application
+-- when launched in application bundle mode.
+-- We remove this from the arguments before processing via CmdArgs.
+filterUnwantedArgs :: [String] -> [String]
+filterUnwantedArgs = case System.Info.os of
+    "darwin" -> filter (\ arg -> not ("-psn_" `isPrefixOf` arg))
+    _ -> id
+
+-- | loads the configuration from file.
+-- If the file does not exists, it is initialized with the default configuration.
+-- Also returns a message, if necessary.
+loadConfigurationFromFile :: IO (Configuration, Maybe String)
+loadConfigurationFromFile = do
+    file <- getConfigurationFile
+    exists <- doesFileExist file
+    if (not exists) then do
+        -- no config file found
+        return (defaultConfiguration,
+                Just "no configuration file found, using default configuration.")
+      else do
+        -- attempting to load configuration
+        mLoaded <- readMay <$> readFile file
+        return $ case mLoaded of
+            Nothing ->
+                (defaultConfiguration,
+                 Just "unable to read configuration file, using default configuration")
+            Just config -> (config, Nothing)
+
+saveConfiguration :: Configuration -> IO ()
+saveConfiguration config = do
+    file <- getConfigurationFile
+    writeFile file (show config)
+
+-- | reads the configuration
+-- configuration should not be changed
+withStaticConfiguration :: ConfigurationReader a -> IO a
+withStaticConfiguration action =
+    runReaderT action =<< loadConfiguration
+
+-- | Executes an M Monad.
+-- Will save changes to the configuration afterwards
+-- (Once this is possible, for now M is just ReaderT Configuration IO)
+withDynamicConfiguration :: Configuration -> M a -> IO a
+withDynamicConfiguration configuration action = do
+    (o, newConfig) <- runStateT action configuration
+    saveConfiguration newConfig
+    return o
