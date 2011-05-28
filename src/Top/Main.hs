@@ -20,7 +20,6 @@ module Top.Main where
 
 import Data.List as List
 import Data.SelectTree (SelectTree(..), leafs, labelA)
-import Data.Accessor.Monad.MTL.State ((%=))
 import qualified Data.Map as Map
 
 import Text.Logging

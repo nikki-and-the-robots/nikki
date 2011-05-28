@@ -11,14 +11,11 @@ module Base.Configuration (
   ) where
 
 
-import Data.List
 import Data.Accessor
 import Data.Initial
-import Data.Maybe
 
 import Text.Logging
 
-import System.Environment
 import System.Console.CmdArgs as CmdArgs
 import System.Info
 
@@ -27,8 +24,6 @@ import Physics.Chipmunk
 import Graphics.Qt
 
 import Version
-
-import Utils
 
 import Distribution.AutoUpdate.Paths
 

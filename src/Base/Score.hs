@@ -24,9 +24,7 @@ import System.Directory
 
 import Utils
 
-import Base.Constants
 import Base.Paths
-import Base.Prose
 
 import Base.Types
 
