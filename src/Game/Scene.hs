@@ -355,7 +355,8 @@ renderOSDs app configuration ptr now scene = do
     when (configuration ^. show_battery_OSD) $
         renderBatteryOSD ptr app configuration scene
 
-    renderGameTime ptr app configuration now
+    when (configuration ^. show_time_OSD) $
+        renderGameTime ptr app configuration now
 
     renderTerminalOSD ptr now scene
 

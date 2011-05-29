@@ -6,6 +6,7 @@ module Base.Configuration (
     play_levelA,
     controls,
     show_battery_OSD,
+    show_time_OSD,
     savedConfigurationToConfiguration,
     configurationToSavedConfiguration,
     initialiseLogging,

@@ -24,7 +24,7 @@ generalOptions app ps parent = NoGUIAppState $ do
     let menuItems =
             (p "controls", controlConfigurationMenu app 0 . this) :
             fullScreenMenuItem :
-            showBatteryMenuItem config this :
+            showOSDMenuItems config this ++
             []
     return $ menuAppState app (NormalMenu (p "options") Nothing) (Just parent) menuItems ps
   where
@@ -40,10 +40,11 @@ mkFullScreen app parent = do
         text = p "fullscreen" +> pVerbatim ": " +> switchText
     return (text, \ ps -> NoGUIAppState (swapFullScreen app >> return (parent ps)))
 
--- showBatteryMenuItem :: (Prose, Int -> AppState)
-showBatteryMenuItem configuration parent =
-    (p "show battery OSD" +> pVerbatim ": " +> toOnOff (configuration ^. show_battery_OSD),
-     \ ps -> NoGUIAppState (swapBatteryOSD >> return (parent ps)))
-
-swapBatteryOSD :: M ()
-swapBatteryOSD = show_battery_OSD %: not
+showOSDMenuItems configuration parent =
+    mkItem (p "show current battery power") show_battery_OSD :
+    mkItem (p "show current time") show_time_OSD :
+    []
+  where
+    mkItem text acc =
+        (text +> pVerbatim ": " +> toOnOff (configuration ^. acc),
+         \ ps -> NoGUIAppState ((acc %: not) >> return (parent ps)))
