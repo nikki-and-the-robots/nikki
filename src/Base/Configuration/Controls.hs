@@ -64,9 +64,10 @@ import Base.Types.Events
 import Base.Prose
 
 
--- | Configuration of controls (could include either static and dynamic parts)
--- Could be more sophisticated.
-data Controls = Controls {
+-- | Configuration of controls
+-- Uses versioned constructors (is saved as part of the configuration).
+
+data Controls = Controls_0 {
     leftKey_ :: Key,
     rightKey_ :: Key,
     upKey_ :: Key,
@@ -85,7 +86,7 @@ jumpKey = accessor jumpKey_ (\ a r -> r{jumpKey_ = a})
 contextKey = accessor contextKey_ (\ a r -> r{contextKey_ = a})
 
 instance Initial Controls where
-    initial = Controls {
+    initial = Controls_0 {
         leftKey_ = LeftArrow,
         rightKey_ = RightArrow,
         upKey_ = UpArrow,

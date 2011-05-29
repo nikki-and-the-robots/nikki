@@ -1,12 +1,13 @@
 {-# language DeriveDataTypeable #-}
 
 module Base.Configuration (
+    SavedConfiguration,
     Configuration(..),
     play_levelA,
     controls,
     show_battery_OSD,
-    annotateConfiguration,
-    defaultConfiguration,
+    savedConfigurationToConfiguration,
+    configurationToSavedConfiguration,
     initialiseLogging,
   ) where
 
@@ -23,6 +24,7 @@ import Physics.Chipmunk
 
 import Graphics.Qt
 
+import Utils
 import Version
 
 import Distribution.AutoUpdate.Paths
@@ -30,9 +32,30 @@ import Distribution.AutoUpdate.Paths
 import Base.Configuration.Controls
 
 
--- * dynamic configuration (with versioned constructors)
+-- | Configuration to be written (and read) to (and from) disk.
+-- Uses versioned constructors.
+data SavedConfiguration = SavedConfiguration_0 {
+    saved_fullscreen :: Bool,
+    saved_controls :: Controls,
+    saved_show_battery_OSD :: Bool,
+    saved_show_time_OSD :: Bool,
+    saved_show_switch_OSD :: Bool
+  }
+    deriving (Show, Read)
 
-data Configuration = Configuration_0 {
+instance Initial SavedConfiguration where
+    initial = SavedConfiguration_0 {
+        saved_fullscreen = False,
+        saved_controls = initial,
+        saved_show_battery_OSD = True,
+        saved_show_time_OSD = True,
+        saved_show_switch_OSD = True
+      }
+
+
+-- * dynamic configuration
+
+data Configuration = Configuration {
     -- user config
     play_level :: Maybe FilePath,
     fullscreen :: Bool,
@@ -56,7 +79,7 @@ data Configuration = Configuration_0 {
     show_time_OSD_ :: Bool,
     show_switch_OSD_ :: Bool
   }
-    deriving (Show, Read, Data, Typeable)
+    deriving (Data, Typeable)
 
 play_levelA :: Accessor Configuration (Maybe FilePath)
 play_levelA = accessor play_level (\ a r -> r{play_level = a})
@@ -66,6 +89,10 @@ controls = accessor controls_ (\ a r -> r{controls_ = a})
 
 show_battery_OSD :: Accessor Configuration Bool
 show_battery_OSD = accessor show_battery_OSD_ (\ a r -> r{show_battery_OSD_ = a})
+show_time_OSD :: Accessor Configuration Bool
+show_time_OSD = accessor show_time_OSD_ (\ a r -> r{show_time_OSD_ = a})
+show_switch_OSD :: Accessor Configuration Bool
+show_switch_OSD = accessor show_switch_OSD_ (\ a r -> r{show_switch_OSD_ = a})
 
 -- | initialises the logging module
 initialiseLogging :: Configuration -> IO ()
@@ -78,56 +105,56 @@ initialiseLogging config = do
           else
             putStrLn
 
--- | Adds the impure annotations needed for CmdArgs to a configuration.
--- Also, ignores all loaded debugging flags. (uses the defaults instead.)
-annotateConfiguration :: Configuration -> Configuration
-annotateConfiguration config =
-    Configuration_0 {
-        play_level = play_level config
+-- | Converts the configuration loaded from disk to a Configuration.
+-- Adds impure annotations needed for CmdArgs.
+savedConfigurationToConfiguration :: SavedConfiguration -> Configuration
+savedConfigurationToConfiguration config =
+    Configuration {
+        play_level = Nothing
             &= help "play the specified level file"
             &= typ "FILE"
             &= name "l",
-        fullscreen = fullscreen config
+        fullscreen = saved_fullscreen config
             &= help "start the game in fullscreen mode (sticky option)",
 
         -- debugging
-        run_in_place = run_in_place defaultConfiguration
+        run_in_place = False
             &= groupname "Development flags",
-        update_repo = update_repo defaultConfiguration
+        update_repo = defaultRepo
             &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
             &= typ "REPOSITORY",
-        stdout_on_windows = stdout_on_windows defaultConfiguration
+        stdout_on_windows = False
             &= help "On windows, log messages get written to the file \"nikkiLog\". Use this flag to switch to stdout.",
-        graphics_profiling = graphics_profiling defaultConfiguration
+        graphics_profiling = False
             &= help "output FPS statistics for the rendering thread",
-        physics_profiling = physics_profiling defaultConfiguration
+        physics_profiling = False
             &= help "output information about performance of physics engine",
-        omit_pixmap_rendering = omit_pixmap_rendering defaultConfiguration
+        omit_pixmap_rendering = False
             &= help "omit the normal pixmaps when rendering objects",
-        render_xy_cross = render_xy_cross defaultConfiguration
+        render_xy_cross = False
             &= name "x"
             &= help "render x and y axis",
-        render_chipmunk_objects = render_chipmunk_objects defaultConfiguration
+        render_chipmunk_objects = False
             &= name "c"
             &= help "render red lines for physical objects",
-        abort_level = abort_level defaultConfiguration
+        abort_level = Nothing
             &= help "abort levels after simulating N seconds"
             &= typ "N",
-        initial_events = initial_events defaultConfiguration
+        initial_events = []
             &= help "list of initial events sent to the application"
             &= typ "[Key]",
-        show_widget_frames = show_widget_frames defaultConfiguration
+        show_widget_frames = False
             &= name "w"
             &= help "show colored frames for all displayed widgets",
 
         -- not accessible from the command line
-        controls_ = controls_ config
+        controls_ = saved_controls config
             &= CmdArgs.ignore,
-        show_battery_OSD_ = show_battery_OSD_ config
+        show_battery_OSD_ = saved_show_battery_OSD config
             &= CmdArgs.ignore,
-        show_time_OSD_ = show_time_OSD_ config
+        show_time_OSD_ = saved_show_time_OSD config
             &= CmdArgs.ignore,
-        show_switch_OSD_ = show_switch_OSD_ config
+        show_switch_OSD_ = saved_show_switch_OSD config
             &= CmdArgs.ignore
       }
     &= program "nikki"
@@ -140,27 +167,11 @@ annotateConfiguration config =
         "http://www.joyridelabs.de/" :
         [])
 
--- | default configuration (without annotations)
-defaultConfiguration :: Configuration
-defaultConfiguration =
-    Configuration_0 {
-        play_level = Nothing,
-        fullscreen = False,
-        -- debugging
-        run_in_place = False,
-        update_repo = defaultRepo,
-        stdout_on_windows = False,
-        graphics_profiling = False,
-        physics_profiling = False,
-        omit_pixmap_rendering = False,
-        render_xy_cross = False,
-        render_chipmunk_objects = False,
-        abort_level = Nothing,
-        initial_events = [],
-        show_widget_frames = False,
-        -- not accessible from the command line
-        controls_ = initial,
-        show_battery_OSD_ = True,
-        show_time_OSD_ = True,
-        show_switch_OSD_ = True
+configurationToSavedConfiguration c =
+    SavedConfiguration_0 {
+        saved_fullscreen = fullscreen c,
+        saved_controls = c ^. controls,
+        saved_show_battery_OSD = c ^. show_battery_OSD,
+        saved_show_time_OSD = c ^. show_time_OSD,
+        saved_show_switch_OSD = c ^. show_switch_OSD
       }
