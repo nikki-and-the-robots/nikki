@@ -4,17 +4,15 @@
 
 module Version (
     nikkiVersion,
-    Version.parseVersion,
 
-    -- re-exports from Data.Version
+    -- re-exports from Data.Version and Utils
     showVersion,
     Version(..),
+    Utils.parseVersion,
   ) where
 
 
 import Data.Version
-
-import Text.ParserCombinators.ReadP
 
 import Utils
 
@@ -24,9 +22,3 @@ nikkiVersion = Version version tags
   where
     version = 0 : 2 : 26 : 1 : []
     tags = []
-
-parseVersion :: String -> Either String Version
-parseVersion (stripWhiteSpaces -> s) =
-    case readP_to_S Data.Version.parseVersion s of
-        (last -> (v, "")) -> Right v
-        x -> Left ("version parse error: " ++ show (s, x))

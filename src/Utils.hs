@@ -39,9 +39,11 @@ import Data.Char
 import Data.Accessor (Accessor, (^.), (^=), (^:), (.>))
 import Data.Accessor.Monad.MTL.State ((%=), (%:))
 import Data.Monoid
+import Data.Version
 
 import Text.Printf
 import Text.Logging
+import Text.ParserCombinators.ReadP (readP_to_S)
 
 import Control.Applicative ((<$>), (<|>), (<*>), pure)
 import "mtl" Control.Monad.State hiding (forM_)
@@ -618,6 +620,15 @@ pollChannel chan = do
             a <- readChan chan
             r <- pollChannel chan
             return (a : r)
+
+
+-- * version stuff
+
+parseVersion :: String -> Either String Version
+parseVersion (stripWhiteSpaces -> s) =
+    case readP_to_S Data.Version.parseVersion s of
+        (last -> (v, "")) -> Right v
+        x -> Left ("version parse error: " ++ show (s, x))
 
 
 -- * Pretty Printing

@@ -7,6 +7,4 @@ exit 1
 }
 trap error ERR
 
-echo running in place \(without auto-updating\)
-
 dist/build/core/core --run-in-place $@

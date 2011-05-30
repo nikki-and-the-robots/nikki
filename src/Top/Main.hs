@@ -51,7 +51,6 @@ import Top.Game (playLevel)
 main :: [Key] -> IO ()
 main initialSignals =
   withStaticConfiguration $ do
-    logInfo ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
 
     configuration <- ask
 
