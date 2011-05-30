@@ -27,6 +27,7 @@ import qualified Data.Binary as Binary
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
+import Control.Monad.CatchState
 
 import Physics.Chipmunk as CM
 
@@ -53,7 +54,7 @@ type Seconds = CpFloat
 type ConfigurationReader = ReaderT Configuration IO
 type RM = ConfigurationReader
 
-type ConfigurationState = StateT Configuration IO
+type ConfigurationState = CatchState Configuration IO
 type M = ConfigurationState
 
 type GameMonad o = StateT GameState M o

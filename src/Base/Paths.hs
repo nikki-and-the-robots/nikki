@@ -24,6 +24,8 @@ import Text.Logging
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
+import Control.Monad.CatchState
+import Control.Monad.CatchIO
 
 import System.Info
 import System.FilePath
@@ -136,7 +138,8 @@ withStaticConfiguration action =
 -- Will save changes to the configuration afterwards
 -- (Once this is possible, for now M is just ReaderT Configuration IO)
 withDynamicConfiguration :: Configuration -> M a -> IO a
-withDynamicConfiguration configuration action = do
-    (o, newConfig) <- runStateT action configuration
-    saveConfigurationToFile $ configurationToSavedConfiguration newConfig
-    return o
+withDynamicConfiguration configuration action =
+    fst <$> runCatchState (action `finally` save) configuration
+  where
+    save =
+        (io . saveConfigurationToFile . configurationToSavedConfiguration) =<< get
