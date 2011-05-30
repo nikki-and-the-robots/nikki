@@ -137,7 +137,8 @@ resetSelectedLast (Node label children _) =
 
 leafs :: SelectTree a -> [a]
 leafs (Node _ ll _) = concatMap leafs (I.toList ll)
-leafs (Leaf _ a) = return a
+leafs (Leaf _ a) = [a]
+leafs (EmptyNode l) = []
 
 
 selectFirstElement :: (e -> Bool) -> SelectTree e -> Maybe (SelectTree e)
