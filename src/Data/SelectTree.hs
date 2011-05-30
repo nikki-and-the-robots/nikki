@@ -44,6 +44,7 @@ data SelectTree a
 instance Functor SelectTree where
     fmap f (Node label children index) = Node label (fmap (fmap f) children) index
     fmap f (Leaf l a) = Leaf l $ f a
+    fmap f (EmptyNode l) = EmptyNode l
 
 instance Show a => PP (SelectTree a) where
     pp = T.drawTree . toTree
