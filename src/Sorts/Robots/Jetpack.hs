@@ -97,6 +97,11 @@ instance Sort JSort Jetpack where
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
         return $ Jetpack chip False Nothing Idle 0
+    initialize sort app Nothing ep Nothing = do
+        let (_, baryCenterOffset) = mkPolys
+            position = editorPosition2QtPosition sort ep
+            chip = ImmutableChipmunk position 0 baryCenterOffset []
+        return $ Jetpack chip False Nothing Idle 0
 
     chipmunks = chipmunk >>> return
 

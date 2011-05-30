@@ -96,6 +96,13 @@ instance Sort PSort Platform where
 
         let path = toPath sort oemState
         return $ Platform (size sort) chip path
+    initialize sort app Nothing ep _ = do
+        let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
+            position = editorPosition2QtPosition sort ep
+            vector = position2vector position +~ baryCenterOffset
+            path = mkPath False [vector]
+            chip = ImmutableChipmunk position 0 baryCenterOffset []
+        return $ Platform (size sort) chip path
 
     chipmunks p = [chipmunk p]
 

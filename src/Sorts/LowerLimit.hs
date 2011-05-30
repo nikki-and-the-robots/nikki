@@ -91,7 +91,7 @@ removeError = error "Sort.LowerLimit: LowerLimits have to be removed"
 promoteLowerLimit :: Scene Object_ -> Scene Object_
 promoteLowerLimit scene =
     lowerLimit ^= lookupLowerLimit (scene ^. (objects .> gameMainLayer)) $
-    (objects .> gameMainLayer) ^: (I.filter (not . isLowerLimit . sort_)) $
+    removeLowerLimits $
     scene
 
 lookupLowerLimit :: Indexable Object_ -> Maybe Double
@@ -105,6 +105,16 @@ lookupLowerLimit =
     maybeMax (Just a) Nothing = Just $ a
     maybeMax Nothing (Just a) = Just $ a
     maybeMax Nothing Nothing = Nothing
+
+removeLowerLimits :: Scene Object_ -> Scene Object_
+removeLowerLimits =
+    filterLayers gameBackgrounds .
+    ((objects .> gameMainLayer) ^: (I.filter (not . isLowerLimit . sort_))) .
+    filterLayers gameForegrounds
+  where
+    filterLayers acc =
+        (objects .> acc) ^: (fmap (gameContent ^: Prelude.filter (not . isLowerLimit . sort_)))
+
 
 lowerLimitHandler :: Scene Object_ -> Maybe CM.Position -> Maybe (Scene Object_)
 lowerLimitHandler scene Nothing = Nothing

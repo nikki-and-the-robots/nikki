@@ -23,8 +23,10 @@ import Sorts.Nikki.JumpingImpulse
 
 setNikkiSurfaceVelocity :: Nikki -> CpFloat -> IO ()
 setNikkiSurfaceVelocity nikki surfaceVelocity =
-    forM_ (feetShapes nikki) $ \ fs ->
-        surfaceVel fs $= Vector surfaceVelocity 0
+    case (feetShape nikki) of
+        Strict.Nothing -> return ()
+        Strict.Just fs ->
+            surfaceVel fs $= Vector surfaceVelocity 0
 
 controlNikki :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO Nikki
 controlNikki now contacts cd sort =

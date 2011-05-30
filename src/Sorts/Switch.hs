@@ -58,9 +58,17 @@ data Switch
         stampChipmunk :: Chipmunk,
         triggerChipmunk :: Chipmunk,
         triggerShape :: Shape,
-        triggered :: Bool
+        triggered_ :: Bool
+      }
+    | StaticSwitch {
+        boxChipmunk :: Chipmunk,
+        stampChipmunk :: Chipmunk
       }
   deriving (Typeable, Show)
+
+triggered :: Switch -> Bool
+triggered StaticSwitch{} = False
+triggered switch = triggered_ switch
 
 unwrapSwitch :: Object_ -> Maybe Switch
 unwrapSwitch (Object_ sort o) = cast o
@@ -102,7 +110,18 @@ instance Sort SwitchSort Switch where
         let switch = Switch boxChip stampChip triggerChip triggerShape False
         updateAntiGravity switch
 
-        return switch 
+        return switch
+    initialize sort app Nothing ep Nothing = do
+        let ex = realToFrac (editorX ep) + vectorX editorPadding
+            ey = realToFrac (editorY ep) + vectorY editorPadding
+            ((_, boxBaryCenterOffset), _, (_, stampBaryCenterOffset)) = switchShapes
+
+            boxPos = Position ex (ey - height boxSize)
+            stampPos = Position ex (ey - height boxSize - yPlatformDistance - height platformSize)
+
+            boxChip = ImmutableChipmunk boxPos 0 boxBaryCenterOffset []
+            stampChip = ImmutableChipmunk stampPos 0 stampBaryCenterOffset []
+        return $ StaticSwitch boxChip stampChip
 
     immutableCopy s@Switch{boxChipmunk, stampChipmunk} = do
         newBoxChipmunk <- CM.immutableCopy boxChipmunk
@@ -111,9 +130,10 @@ instance Sort SwitchSort Switch where
 
     chipmunks (Switch a b c _ _) = [a, b, c]
 
-    updateNoSceneChange sort config mode now contacts cd switch@Switch{triggered = False} =
+    updateNoSceneChange _ _ _ _ _ _ switch@StaticSwitch{} = return switch
+    updateNoSceneChange sort config mode now contacts cd switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
-            let new = switch{triggered = True}
+            let new = switch{triggered_ = True}
             updateAntiGravity new
             return new
           else

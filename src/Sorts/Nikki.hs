@@ -17,6 +17,7 @@ import Data.Abelian
 import Data.Generics
 import Data.Initial
 import Data.Indexable (indexA)
+import qualified Data.Strict as Strict
 
 import System.FilePath
 
@@ -107,7 +108,12 @@ instance Sort NSort Nikki where
 
         let surfaceVelocityShape = head $ shapes chip
 
-        return $ Nikki chip surfaceVelocityShape initial 0
+        return $ Nikki chip (Strict.Just surfaceVelocityShape) initial 0
+    initialize sort app Nothing editorPosition Nothing = do
+        let (_, _, baryCenterOffset) = mkPolys
+            position = editorPosition2QtPosition sort editorPosition
+            chip = ImmutableChipmunk position 0 baryCenterOffset []
+        return $ Nikki chip Strict.Nothing initial 0
 
     immutableCopy n@Nikki{chipmunk} = CM.immutableCopy chipmunk >>= \ new -> return n{chipmunk = new}
 

@@ -335,7 +335,7 @@ layersToRenderPixmaps size ptr offset now layers =
 layerToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameLayer Object_ -> IO [RenderPixmap]
 layerToRenderPixmaps size ptr offset now layer =
     fmap (renderPosition ^: (+~ layerOffset)) <$>
-        concat <$> fmapM (\ o -> renderObject_ o ptr layerOffset now) (gameContent layer)
+        concat <$> fmapM (\ o -> renderObject_ o ptr layerOffset now) (layer ^. gameContent)
   where
     layerOffset =
         calculateLayerOffset size offset (gameXDistance layer, gameYDistance layer)

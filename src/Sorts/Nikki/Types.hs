@@ -35,7 +35,7 @@ isNikki _ = False
 data Nikki
     = Nikki {
         chipmunk :: Chipmunk,
-        feetShape :: !Shape,
+        feetShape :: !(Strict.Maybe Shape), -- Nothing if Nikki isn't in the main layer
         state :: !State,
         startTime :: !Seconds -- time the State was last changed
       }
@@ -43,10 +43,6 @@ data Nikki
 
 unwrapNikki :: Object_ -> Maybe Nikki
 unwrapNikki (Object_ sort o) = cast o
-
--- | just for compatibility (TODO: remove)
-feetShapes :: Nikki -> [Shape]
-feetShapes = return . feetShape
 
 instance Show (Ptr QPainter -> Offset Double -> IO ()) where
     show _ = "<Ptr QPainter -> Offset Double -> IO ()>"

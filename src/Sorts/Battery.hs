@@ -73,6 +73,11 @@ instance Sort BSort Battery where
             bodyAttributes = mkMaterialBodyAttributes batteryMaterialMass mkShapes pos
         chip <- initChipmunk space bodyAttributes shapes baryCenterOffset
         return $ Battery chip
+    initialize sort app Nothing ep Nothing = return $
+        let baryCenterOffset = size2vector $ fmap (/2) batterySize
+            position = editorPosition2QtPosition sort ep
+            chip = ImmutableChipmunk position 0 baryCenterOffset []
+        in Battery chip
 
     immutableCopy b =
         CM.immutableCopy (chipmunk b) >>= \ x -> return b{chipmunk = x}

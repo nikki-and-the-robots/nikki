@@ -93,6 +93,12 @@ instance Sort TSort FallingTile where
         (chip, attributes) <- initializeBox space sort editorPosition
         modifyApplyForce chip (CM.scale (Vector 0 (- gravity)) staticMass)
         return $ FallingTile attributes chip Static
+    initialize sort app Nothing editorPosition Nothing = do
+        let (_, baryCenterOffset) = mkShape sort
+            position = editorPosition2QtPosition sort editorPosition
+            vector = position2vector position +~ baryCenterOffset
+            chip = ImmutableChipmunk position 0 baryCenterOffset []
+        return $ FallingTile (StaticBodyAttributes vector) chip Static
 
     immutableCopy t@FallingTile{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return t{chipmunk = x}

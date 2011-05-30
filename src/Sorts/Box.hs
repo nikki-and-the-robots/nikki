@@ -63,6 +63,10 @@ instance Sort BSort Box where
         chip <- CM.initChipmunk space bodyAttributes
                     shapesWithAttributes baryCenterOffset
         return $ Box chip
+    initialize sort app Nothing editorPosition Nothing = do
+        let (shapes, baryCenterOffset) = mkShapes $ size sort
+            position = editorPosition2QtPosition sort editorPosition
+        return $ Box $ ImmutableChipmunk position 0 baryCenterOffset []
     immutableCopy (Box x) = CM.immutableCopy x >>= return . Box
     chipmunks b = [chipmunk b]
     renderObject o sort ptr offset now = do

@@ -325,6 +325,11 @@ instance Sort TSort Terminal where
             polysAndAttributes = map (mkShapeDescription shapeAttributes) polys
         chip <- initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
         return $ Terminal chip attached (initialMenuState 0)
+    initialize sort app Nothing editorPosition _ = do
+        let position = editorPosition2QtPosition sort editorPosition
+            (_, baryCenterOffset) = mkPolys $ size sort
+            chip = ImmutableChipmunk position 0 baryCenterOffset []
+        return $ Terminal chip [] (initialMenuState 0)
 
     immutableCopy t =
         CM.immutableCopy (chipmunk t) >>= \ x -> return t{chipmunk = x}

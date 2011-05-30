@@ -1,9 +1,12 @@
 {-# language DeriveDataTypeable #-}
 
 module Base.GameGrounds (
-    GameGrounds(..),
+    GameGrounds(GameGrounds),
+    gameBackgrounds,
     gameMainLayer,
-    GameLayer(..),
+    gameForegrounds,
+    GameLayer(GameLayer, gameXDistance, gameYDistance),
+    gameContent,
     mkGameGrounds,
   ) where
 
@@ -20,21 +23,31 @@ import Utils
 
 
 data GameGrounds a = GameGrounds {
-    gameBackgrounds :: [GameLayer a],
+    gameBackgrounds_ :: [GameLayer a],
     gameMainLayer_ :: Indexable a,
-    gameForegrounds :: [GameLayer a]
+    gameForegrounds_ :: [GameLayer a]
   }
     deriving (Show, Read, Data, Typeable)
+
+gameBackgrounds :: Accessor (GameGrounds a) [GameLayer a]
+gameBackgrounds = accessor gameBackgrounds_ (\ a r -> r{gameBackgrounds_ = a})
 
 gameMainLayer :: Accessor (GameGrounds a) (Indexable a)
 gameMainLayer = accessor gameMainLayer_ (\ a r -> r{gameMainLayer_ = a})
 
+gameForegrounds :: Accessor (GameGrounds a) [GameLayer a]
+gameForegrounds = accessor gameForegrounds_ (\ a r -> r{gameForegrounds_ = a})
+
+
 data GameLayer a = GameLayer {
-    gameContent :: [a],
+    gameContent_ :: [a],
     gameXDistance :: Double,
     gameYDistance :: Double
   }
     deriving (Show, Read, Data, Typeable)
+
+gameContent :: Accessor (GameLayer a) [a]
+gameContent = accessor gameContent_ (\ a r -> r{gameContent_ = a})
 
 
 -- * creation
