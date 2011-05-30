@@ -75,35 +75,8 @@ getAllSorts :: RM (SelectTree Sort_)
 getAllSorts = do
     sorts <- concat <$> mapM id sortLoaders
     io $ checkUniqueSortIds sorts
-    return $ mkSelectTree sorts
+    return $ mkSortsSelectTree sorts
   where
-    mkSelectTree :: [Sort_] -> SelectTree Sort_
-    mkSelectTree sorts =
-        foldl (flip addSort) (EmptyNode "") sorts
-      where
-        addSort :: Sort_ -> SelectTree Sort_ -> SelectTree Sort_
-        addSort sort t = addByPrefix prefix label sort t
-          where
-            sortIdParts = wordsBy ['/'] $ getSortId $ sortId sort
-            prefix = init sortIdParts
-            label = last sortIdParts
-
-        -- | adds an element by a given prefix to a SelectTree. If branches with needed labels
-        -- are missing, they are created.
-        -- PRE: The tree is not a Leaf.
-        addByPrefix :: [String] -> String -> a -> SelectTree a -> SelectTree a
-        addByPrefix _ _ _ (Leaf _ _) = error "addByPrefix"
-        addByPrefix (a : r) label x node =
-            -- prefixes left: the tree needs to be descended further
-            if any (\ subTree -> subTree ^. labelA == a) (getChildren node) then
-                -- if the child already exists
-                modifyLabelled a (addByPrefix r label x) node
-              else
-                -- the branch doesn't exist, it's created
-                addChild (addByPrefix r label x (EmptyNode a)) node
-        addByPrefix [] label x node =
-            -- no prefixes left: here the element is added
-            addChild (Leaf label x) node
 
 checkUniqueSortIds :: [Sort_] -> IO ()
 checkUniqueSortIds sorts =

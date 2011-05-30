@@ -24,6 +24,7 @@ import qualified Data.Indexable as I
 import Data.Indexable (Index, (>:), deleteByIndex, indexA)
 import Data.Abelian
 import Data.Accessor
+import Data.List (isPrefixOf)
 
 import Control.Monad.State
 
@@ -68,13 +69,21 @@ initEditorScene sorts editorLevelFile objects = flip evalStateT empty $ do
         editorLevelFile,
         cursor = zero,
         cursorStep = Just $ EditorPosition 64 64,
-        availableSorts_ = sorts,
+        availableSorts_ = removeTutorialSorts sorts,
         editorObjects_ = objects,
         selectedLayer = MainLayer,
         selected = Nothing,
         editorMode = NormalMode,
         clipBoard = []
       }
+
+removeTutorialSorts :: SelectTree Sort_ -> SelectTree Sort_
+removeTutorialSorts = mkSortsSelectTree . filter (not . isTutorialSort) . leafs
+
+-- | used to provisionally remove all tutorial objects from the editor
+-- (without rendering the tutorial levels unplayable)
+isTutorialSort :: Sort_ -> Bool
+isTutorialSort = ("tutorial/" `isPrefixOf`) . getSortId . sortId
 
 -- | sets the position of Nikki (more precisely all Nikkis in the EditorScene) to the given value.
 setNikkiPosition :: EditorPosition -> EditorScene Sort_ -> EditorScene Sort_
