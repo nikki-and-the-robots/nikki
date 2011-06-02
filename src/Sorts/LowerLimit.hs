@@ -36,7 +36,8 @@ import Sorts.Nikki.Configuration
 limitEditorColor = alpha ^= 0.5 $ red
 
 -- | height that controlled objects can be below the lower limit while still being controllable
-lowerLimitTolerance = (height nikkiSize / 2)
+lowerLimitTolerance :: CM.CpFloat
+lowerLimitTolerance = realToFrac (height nikkiSize) / 2
 
 
 -- * Implementation
@@ -56,7 +57,7 @@ unwrapLowerLimit :: Object_ -> Maybe LowerLimit
 unwrapLowerLimit (Object_ sort o) = cast o
 
 data LowerLimit =
-    LowerLimit {limit :: Double}
+    LowerLimit {limit :: CM.CpFloat}
   deriving (Show, Typeable)
 
 instance Sort LSort LowerLimit where
@@ -76,7 +77,7 @@ instance Sort LSort LowerLimit where
         fillRect ptr (Position 0 startHeight) (Size (width window) (height window - startHeight)) limitEditorColor
 
     initialize sort app mSpace ep Nothing =
-        return $ LowerLimit $ editorY ep
+        return $ LowerLimit $ realToFrac $ editorY ep
 
     immutableCopy = removeError
 
@@ -94,7 +95,7 @@ promoteLowerLimit scene =
     removeLowerLimits $
     scene
 
-lookupLowerLimit :: Indexable Object_ -> Maybe Double
+lookupLowerLimit :: Indexable Object_ -> Maybe CM.CpFloat
 lookupLowerLimit =
     fmap unwrapLowerLimit >>>
     fmap (fmap limit) >>>

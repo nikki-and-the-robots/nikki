@@ -149,7 +149,7 @@ data Scene object
         levelFile :: LevelFile,
         spaceTime_ :: Seconds,
         objects_ :: GameGrounds object,
-        lowerLimit_ :: Maybe Double,
+        lowerLimit_ :: Maybe CpFloat,
         batteryPower_ :: !Integer, -- makes it possible to have REALLY BIG amounts of power :)
         contactRef :: !(ContactRef Contacts),
         contacts_ :: !Contacts,
@@ -164,7 +164,7 @@ spaceTime = accessor spaceTime_ (\ a r -> r{spaceTime_ = a})
 objects :: Accessor (Scene o) (GameGrounds o)
 objects = accessor objects_ (\ a r -> r{objects_ = a})
 
-lowerLimit :: Accessor (Scene o) (Maybe Double)
+lowerLimit :: Accessor (Scene o) (Maybe CpFloat)
 lowerLimit = accessor lowerLimit_ (\ a r -> r{lowerLimit_ = a})
 
 batteryPower :: Accessor (Scene o) Integer

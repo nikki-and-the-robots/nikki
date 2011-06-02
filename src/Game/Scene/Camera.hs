@@ -62,10 +62,10 @@ getCameraPosition ptr scene =
                 return oldPosition
 
 -- | Ensures, the camera stays above the (possible) lower limit of the scene.
-aboveLowerLimit :: MonadIO m => Qt.Ptr Qt.QPainter -> Maybe Double -> Position -> m Position
+aboveLowerLimit :: MonadIO m => Qt.Ptr Qt.QPainter -> Maybe CpFloat -> Position -> m Position
 aboveLowerLimit ptr Nothing p = return p
 aboveLowerLimit ptr (Just lowerLimit) (Vector x y) = io $ do
-    size <- Qt.sizeQPainter ptr
+    size <- fmap realToFrac <$> Qt.sizeQPainter ptr
     let newY = min (lowerLimit - Qt.height size / 2) y
     return $ Vector x newY
 
@@ -91,7 +91,7 @@ getPositionForIndex :: Qt.Ptr Qt.QPainter -> Scene Object_ -> Vector -> Index ->
 getPositionForIndex ptr scene oldPosition index = do
     let controlledObject = scene ^. mainLayerObjectA index
     controlledPosition <- io $ getPosition $ getControlledChipmunk scene controlledObject
-    windowSize <- io $ Qt.sizeQPainter ptr
+    windowSize <- io $ fmap realToFrac <$> Qt.sizeQPainter ptr
     let limit = min maximumLimit (Qt.height windowSize * partialLimit / 2)
         -- vertical distance from the controlled object to the camera's old position
         controlledToCamera = vectorY oldPosition - vectorY controlledPosition

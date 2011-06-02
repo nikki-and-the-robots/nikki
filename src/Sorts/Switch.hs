@@ -16,7 +16,7 @@ import System.FilePath
 
 import Physics.Chipmunk as CM
 
-import Graphics.Qt hiding (scale)
+import Graphics.Qt as Qt hiding (scale)
 
 import Utils
 
@@ -116,8 +116,9 @@ instance Sort SwitchSort Switch where
             ey = realToFrac (editorY ep) + vectorY editorPadding
             ((_, boxBaryCenterOffset), _, (_, stampBaryCenterOffset)) = switchShapes
 
-            boxPos = Position ex (ey - height boxSize)
-            stampPos = Position ex (ey - height boxSize - yPlatformDistance - height platformSize)
+            boxPos, stampPos :: Qt.Position Double
+            boxPos = fmap realToFrac $ Position ex (ey - height boxSize)
+            stampPos = fmap realToFrac $ Position ex (ey - height boxSize - yPlatformDistance - height platformSize)
 
             boxChip = ImmutableChipmunk boxPos 0 boxBaryCenterOffset []
             stampChip = ImmutableChipmunk stampPos 0 stampBaryCenterOffset []
