@@ -20,5 +20,5 @@ import Utils
 nikkiVersion :: Version
 nikkiVersion = Version version tags
   where
-    version = 0 : 2 : 26 : 1 : []
-    tags = []
+    version = 0 : 3 : []
+    tags = ["edward"]
