@@ -154,7 +154,7 @@ withBackup app logCommand (DeployPath deployPath) action = do
             io $ logCommand (p "restoring backup")
             forM_ deployedFiles $ \ f -> do
                 let dest = deployPath </> f
-                removeIfExists dest
+                io $ removeIfExists dest
                 rename (tmpDir </> f) dest
 
     backup
