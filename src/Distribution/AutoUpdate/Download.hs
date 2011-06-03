@@ -8,6 +8,8 @@ import qualified Data.ByteString.Lazy as BS
 
 import Control.Monad.Trans.Error
 
+import System.FilePath
+
 import Network.Curl.Download
 import Network.Curl.Download.Lazy
 
@@ -27,6 +29,6 @@ downloadContent url = do
 -- Uses mkUrl.
 downloadFile :: Application -> (Prose -> IO ()) -> String -> FilePath -> ErrorT String IO ()
 downloadFile app logCommand url destFile = do
-    io $ logCommand (p "downloading " +> pVerbatim url)
+    io $ logCommand (p "downloading " +> pVerbatim (takeBaseName url))
     content <- ErrorT $ io (openLazyURI url)
     io $ BS.writeFile destFile content

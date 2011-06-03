@@ -127,7 +127,7 @@ downloadUpdate app logCommand repo newVersion tmpDir = do
 unzipFile :: Application -> (Prose -> IO ()) -> ZipFilePath
     -> ErrorT String IO NewVersionDir
 unzipFile app logCommand (ZipFilePath path) = do
-    io $ logCommand (p "unzipping " `mappend` pVerbatim path)
+    io $ logCommand (p "uncompressing " `mappend` pVerbatim (takeBaseName path))
     io $ unzipArchive path (takeDirectory path)
     let nikkiDir = takeDirectory path </> mkDeployedFolder "nikki"
     nikkiExists <- io $ doesDirectoryExist nikkiDir
