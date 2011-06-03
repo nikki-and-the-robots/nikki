@@ -173,7 +173,11 @@ isGameBackPressed _ = fany (isKey Escape) . pressed
 -- * terminals
 
 isTerminalConfirmationPressed :: Controls -> ControlData -> Bool
-isTerminalConfirmationPressed controls = fany (isKey (controls ^. jumpKey)) . pressed
+isTerminalConfirmationPressed controls =
+    fany is . pressed
+  where
+    is k = isKey (controls ^. jumpKey) k ||
+           isMenuConfirmation controls k
 
 
 -- * robots (in game)
