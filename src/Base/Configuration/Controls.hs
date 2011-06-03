@@ -122,7 +122,7 @@ isFullscreenSwapShortcut held k =
 isMenuUp, isMenuDown, isMenuConfirmation, isMenuBack :: Controls -> Button -> Bool
 isMenuUp _ = isKey UpArrow
 isMenuDown _ = isKey DownArrow
-isMenuConfirmation _ k = isKey Return k
+isMenuConfirmation _ k = isKey Return k || isKey Enter k
 isMenuBack _ k = isKey Escape k
 
 -- | user readable hints which keys to use
