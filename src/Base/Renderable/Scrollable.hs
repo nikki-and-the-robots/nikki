@@ -49,10 +49,8 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
           else if isMenuUp controls__ e then
             io (send (subtract 1)) >>
             loop send
-          else if isMenuConfirmation controls__ e then
-            return follower
           else
-            loop send
+            return follower
 
 scrollable :: Application -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
 scrollable app children = do

@@ -128,21 +128,21 @@ isMenuBack _ k = isKey Escape k
 -- | user readable hints which keys to use
 menuKeysHint :: Bool -> KeysHint
 menuKeysHint acceptsBackKey = KeysHint (
-    (p "select", p "arrow keys") :
+    (p "select", p "↑↓") :
     keysHint (menuConfirmationKeysHint (p "confirm")) ++
-    (if acceptsBackKey then [(p "back", p "escape")] else []) ++
+    (if acceptsBackKey then [(p "back", p "esc")] else []) ++
     [])
 
 menuConfirmationKeysHint :: Prose -> KeysHint
 menuConfirmationKeysHint text = KeysHint (
-    (text, p "return") :
+    (text, p "return, enter") :
     [])
 
 -- | keys hint for Base.Renderable.Scrollable
 scrollableKeysHint :: KeysHint
 scrollableKeysHint = KeysHint (
-    (p "scroll", p "arrow keys") :
-    keysHint (menuConfirmationKeysHint (p "back")) ++
+    (p "scroll", p "↑↓") :
+    (p "back", p "any key") :
     [])
 
 

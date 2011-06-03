@@ -24,8 +24,8 @@ import Base.Renderable.StickToBottom
 message :: Application -> [Prose] -> AppState -> AppState
 message app text follower = appState renderable $ do
     controls__ <- controls_ <$> getConfiguration
-    ignore $ waitForSpecialPressButton app (isMenuConfirmation controls__)
+    ignore $ waitForPressButton app
     return follower
   where
     renderable = MenuBackground |:>
-        addKeysHint (menuConfirmationKeysHint (p "ok")) (centered (vBox 1 text))
+        addKeysHint PressAnyKey (centered (vBox 1 text))
