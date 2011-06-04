@@ -11,6 +11,9 @@ module Base.Paths (
     getConfigurationFile,
     withStaticConfiguration,
     withDynamicConfiguration,
+
+    -- * story mode data
+    getStoryModeDataFileName,
   ) where
 
 
@@ -143,3 +146,15 @@ withDynamicConfiguration configuration action =
   where
     save =
         (io . saveConfigurationToFile . configurationToSavedConfiguration) =<< get
+
+
+-- * Story mode data
+
+getStoryModeDataFileName :: FilePath -> IO (Maybe FilePath)
+getStoryModeDataFileName path = do
+    dir <- getAppUserDataDirectory "nikki-story-mode"
+    let file = dir </> "data" </> path
+    exists <- doesFileExist file
+    return $ if exists
+        then Just file
+        else Nothing

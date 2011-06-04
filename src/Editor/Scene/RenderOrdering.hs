@@ -50,7 +50,7 @@ tilesOrdering a b =
 -- | sorts the rendering order of the main layer objects be sorts:
 -- terminals
 -- Doors (don't exist yet)
--- NPCs (don't exist yet)
+-- NPCs
 -- (our beloved) Nikki
 -- Robots
 -- Objects (e.g. Boxes)
@@ -72,7 +72,7 @@ sortPreds = map isPrefixOf (
     "grid/" :
     "terminal" :
     "door" :
-    "sign" :
+    "story-mode/sign" :
     "nikki" :
     "robots/" :
     "objects/" :

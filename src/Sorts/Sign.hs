@@ -10,6 +10,9 @@ import Data.Abelian
 import Data.Data
 import Data.Set (member)
 import Data.Accessor
+import Data.Maybe
+
+import Control.Monad.Trans.Maybe
 
 import System.FilePath
 
@@ -30,16 +33,21 @@ bubbleWidth = 600
 
 signNames :: [String]
 signNames =
+    "npcs/cptbeaugard" :
     []
 
 
 -- * loading
 
 sorts :: RM [Sort_]
-sorts = forM signNames $ \ name -> do
-    pix <- loadSymmetricPixmap (Position 1 1) =<< getDataFileName (pngDir </> name ++ "_wait_01" <.> "png")
-    return $ Sort_ $ SSort name pix
-
+sorts =
+    fromMaybe [] <$> io (runMaybeT signs)
+  where
+    signs :: MaybeT IO [Sort_]
+    signs = forM signNames $ \ name -> do
+        file <- MaybeT $ getStoryModeDataFileName (pngDir </> name ++ "_wait_01" <.> "png")
+        pix <- loadSymmetricPixmap (Position 1 1) file
+        return $ Sort_ $ SSort name pix
 
 data SSort =
     SSort {
@@ -71,7 +79,7 @@ data State
 
 
 instance Sort SSort Sign where
-    sortId sort = SortId ("sign/" ++ name sort)
+    sortId sort = SortId ("story-mode/sign/" ++ name sort)
     freeSort = freePixmap . pixmap
     size = pixmapSize . pixmap
     renderIconified sort ptr =
