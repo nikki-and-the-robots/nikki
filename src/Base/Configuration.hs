@@ -44,12 +44,13 @@ data SavedConfiguration = SavedConfiguration_0 {
   }
     deriving (Show, Read)
 
+-- | default configuration
 instance Initial SavedConfiguration where
     initial = SavedConfiguration_0 {
         saved_fullscreen = False,
         saved_controls = initial,
         saved_show_battery_OSD = True,
-        saved_show_time_OSD = True,
+        saved_show_time_OSD = False,
         saved_show_switch_OSD = True
       }
 
