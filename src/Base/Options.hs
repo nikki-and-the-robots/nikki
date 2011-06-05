@@ -41,8 +41,9 @@ mkFullScreen app parent = do
     return (text, \ ps -> NoGUIAppState (swapFullScreen app >> return (parent ps)))
 
 showOSDMenuItems configuration parent =
-    mkItem (p "show current battery power") show_battery_OSD :
+    mkItem (p "show switch states") show_switch_OSD :
     mkItem (p "show current time") show_time_OSD :
+    mkItem (p "show current battery power") show_battery_OSD :
     []
   where
     mkItem text acc =
