@@ -135,7 +135,7 @@ menuKeysHint acceptsBackKey = KeysHint (
 
 menuConfirmationKeysHint :: Prose -> KeysHint
 menuConfirmationKeysHint text = KeysHint (
-    (text, p "return, enter") :
+    (text, p "⏎") :
     [])
 
 -- | keys hint for Base.Renderable.Scrollable
