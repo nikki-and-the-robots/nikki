@@ -181,9 +181,8 @@ levelPassed scene =
       else
         Nothing
   where
-    allSwitches :: [Switch] =
-        catMaybes $ map unwrapSwitch $ toList $ scene ^. objects ^. gameMainLayer
-    allTriggered = all triggered allSwitches
+    allTriggered = pressed >= total
+    (pressed, total) = scene ^. switches
     now = scene ^. spaceTime
     batteries = scene ^. batteryPower
 
