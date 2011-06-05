@@ -359,6 +359,9 @@ renderOSDs app configuration ptr now scene = do
     when (configuration ^. show_battery_OSD) $
         renderBatteryOSD ptr app configuration windowSize scene
 
+    when (configuration ^. show_switch_OSD) $
+        renderSwitchesOSD ptr app configuration windowSize scene
+
     renderTerminalOSD ptr now scene
 
 osdPadding = 48
@@ -373,6 +376,12 @@ renderGameTime ptr app configuration windowSize now = do
     renderOSD ptr app configuration windowSize text $ \ osdSize ->
         fmap (fromIntegral . floor) $
         Position ((width windowSize - width osdSize) / 2) osdPadding
+
+renderSwitchesOSD ptr app configuration windowSize scene = do
+    let (pressed, total) = scene ^. switches
+        text = pv $ printf (switchChar : zeroSpaceChar : "%02i/%02i") pressed total
+    renderOSD ptr app configuration windowSize text $
+        const $ Position osdPadding osdPadding
 
 renderOSD ptr app configuration windowSize text offsetFun = do
     (osdSize, action) <- Base.render ptr app configuration windowSize (gameOsd text)

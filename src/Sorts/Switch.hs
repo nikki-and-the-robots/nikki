@@ -1,16 +1,21 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable, NamedFieldPuns, ScopedTypeVariables #-}
+{-# language MultiParamTypeClasses, DeriveDataTypeable, NamedFieldPuns, ScopedTypeVariables,
+    ViewPatterns #-}
 
 module Sorts.Switch (
     sorts, 
     Switch,
     triggered,
     unwrapSwitch,
+    countSwitches,
   ) where
 
 
 import Data.Generics
 import Data.Abelian
 import Data.Set (member)
+import qualified Data.Indexable as I
+
+import Control.Arrow
 
 import System.FilePath
 
@@ -73,6 +78,14 @@ triggered switch = triggered_ switch
 unwrapSwitch :: Object_ -> Maybe Switch
 unwrapSwitch (Object_ sort o) = cast o
 
+isSwitch :: Sort sort o => sort -> Bool
+isSwitch (cast -> Just _ :: Maybe SwitchSort) = True
+isSwitch (cast -> Just (Sort_ inner) :: Maybe Sort_) = isSwitch inner
+isSwitch _ = False
+
+countSwitches :: I.Indexable Object_ -> Int
+countSwitches = I.length . I.filter (isSwitch . sort_)
+
 -- | padding to make the switch bigger in the editor than it really is.
 editorPadding = Vector (fromUber 1) (- fromUber 1)
 
@@ -131,15 +144,15 @@ instance Sort SwitchSort Switch where
 
     chipmunks (Switch a b c _ _) = [a, b, c]
 
-    updateNoSceneChange _ _ _ _ _ _ switch@StaticSwitch{} = return switch
-    updateNoSceneChange sort config mode now contacts cd switch@Switch{triggered_ = False} =
+    update _ _ _ _ _ _ _ switch@StaticSwitch{} = return (id, switch)
+    update sort controls scene now contacts cd index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
             let new = switch{triggered_ = True}
             updateAntiGravity new
-            return new
+            return (switches ^: (first succ), new)
           else
-            return switch
-    updateNoSceneChange s _ _ _ _ _ o = return o
+            return (id, switch)
+    update s _ _ _ _ _ _ o = return (id, o)
 
     renderObject switch sort _ _ now = do
         (stampPos, stampAngle) <- getRenderPositionAndAngle (stampChipmunk switch)

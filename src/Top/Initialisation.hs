@@ -129,7 +129,9 @@ mkScene :: LevelFile -> Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene levelFile space (nikki, objects) = do
     contactRef <- initContactRef space initial watchedContacts
     let optObjects = mkGameGrounds objects
-    return $ Scene levelFile 0 optObjects Nothing 0 contactRef initial (NikkiMode nikki)
+        totalSwitches = Sorts.Switch.countSwitches (objects ^. mainLayer ^. content)
+    return $ Scene levelFile 0 optObjects Nothing 0 (0, totalSwitches) contactRef
+        initial (NikkiMode nikki)
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =
