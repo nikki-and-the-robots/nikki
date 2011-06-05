@@ -352,46 +352,32 @@ mainLayerToRenderPixmaps ptr offset now objects =
 
 renderOSDs app configuration ptr now scene = do
 
-    when (configuration ^. show_battery_OSD) $
-        renderBatteryOSD ptr app configuration scene
-
     when (configuration ^. show_time_OSD) $
         renderGameTime ptr app configuration now
 
+    when (configuration ^. show_battery_OSD) $
+        renderBatteryOSD ptr app configuration scene
+
     renderTerminalOSD ptr now scene
 
+osdPadding = 48
 
-renderBatteryOSD :: Ptr QPainter -> Application -> Configuration -> Scene o -> IO ()
-renderBatteryOSD ptr app config scene = do
-    let text = pVerbatim $ printf "%03i" $ scene ^. batteryPower
-    size <- sizeQPainter ptr
-    (textSize, textRender) <- Base.render ptr app config size (proseToGlyphs (digitFont app) text)
-    (pixSize, pixRender) <- Base.render ptr app config size $
-        batteryBackground $ applicationPixmaps app
-    let offset = Position (width size - batteryOsdPadding - width pixSize) batteryOsdPadding
-        batteryOsdPadding = 48
-
+renderBatteryOSD ptr app configuration scene = do
+    let text = pv $ printf "%03i" $ scene ^. batteryPower
+    windowSize <- sizeQPainter ptr
+    (osdSize, action) <- Base.render ptr app configuration windowSize (gameOsd text)
     resetMatrix ptr
-    translate ptr offset
-    recoverMatrix ptr
-        pixRender
-    translate ptr $ fmap fromUber $ Position 2 (- 2.5)
-    textRender
-
+    translate ptr $ Position (width windowSize - osdPadding - width osdSize) osdPadding
+    action
 
 renderGameTime ptr app config now = do
-    let timeSize = fmap fromUber $ Size 31 9
-        padding = Size 48 48
+    let text = pv $ timeFormat now
     windowSize <- sizeQPainter ptr
+    (osdSize, action) <- Base.render ptr app config windowSize (gameOsd text)
     resetMatrix ptr
-    translate ptr $ sizeToPosition (windowSize -~ padding -~ timeSize)
-    fillRect ptr zero timeSize (alpha ^= 0.8 $ black)
-    translate ptr $ fmap fromUber $ Position 2 (- 1.5)
-    let glyphs = proseToGlyphs (digitFont app) $
-                    colorizeProse white $
-                    pVerbatim $
-                    timeFormat now
-    snd =<< Base.render ptr app config (timeSize -~ fmap fromUber (Size 4 4)) glyphs
+    translate ptr $ fmap (fromIntegral . floor) $
+        Position ((width windowSize - width osdSize) / 2) osdPadding
+    action
 
 
 -- * debugging

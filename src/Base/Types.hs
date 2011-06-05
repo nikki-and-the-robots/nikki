@@ -102,8 +102,7 @@ data ApplicationPixmaps = ApplicationPixmaps {
     menuTitlePixmap :: Pixmap,
     pausePixmap :: Pixmap,
     successPixmap :: Pixmap,
-    failurePixmap :: Pixmap,
-    batteryBackground :: Pixmap
+    failurePixmap :: Pixmap
   }
 
 data Font = Font {

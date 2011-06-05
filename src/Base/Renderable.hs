@@ -8,6 +8,7 @@ module Base.Renderable (
     module Base.Renderable.AskString,
     module Base.Renderable.Message,
     module Base.Renderable.BusyMessage,
+    module Base.Renderable.GameOSD,
   ) where
 
 
@@ -19,3 +20,4 @@ import Base.Renderable.Scrollable
 import Base.Renderable.AskString
 import Base.Renderable.Message
 import Base.Renderable.BusyMessage
+import Base.Renderable.GameOSD
