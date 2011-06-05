@@ -1,33 +1,35 @@
 
--- | Module for logging:
--- Decides how to log.
--- Saves a global logging operation.
+-- | Module for logging.
 
-module Text.Logging (logInfo, setLogCommand, printInfo) where
+module Text.Logging (LogLevel(..), logg) where
 
 
-import Control.Monad.IO.Class
-import Control.Concurrent.MVar
+import System.Info
+import System.FilePath
+import System.Environment
+import System.Environment.FindBin
 
-import System.IO.Unsafe
 
--- | log something (info level)
-logInfo :: MonadIO m => String -> m ()
-logInfo msg = liftIO $ do
-    logCommand <- readMVar logCommandRef
-    logCommand msg
+data LogLevel
+    = Debug | Info | Warning | Error
+  deriving Show
 
--- | like print, but uses the logging mechanisms of this module
--- (instead of stdout)
-printInfo :: (MonadIO m, Show s) => s -> m ()
-printInfo x = logInfo (show x)
+-- | Logs a message with the given log level.
+-- Prints to stdout on unix, uses a logFile on windows.
+logg :: LogLevel -> String -> IO ()
+logg ll msg =
+    inner $ mkMsg ll msg
+  where
+    inner = case System.Info.os of
+        "mingw32" -> windowsLogging
+        _ -> putStrLn
 
-{-# NOINLINE logCommandRef #-}
-logCommandRef :: MVar (String -> IO ())
-logCommandRef = unsafePerformIO $ newMVar putStrLn
+mkMsg :: LogLevel -> String -> String
+mkMsg ll msg =
+    show ll ++ ": " ++ msg
 
--- | sets a new log command.
-setLogCommand :: MonadIO m => (String -> IO ()) -> m ()
-setLogCommand logCommand = liftIO $ do
-    modifyMVar_ logCommandRef (const $ return logCommand)
-    return ()
+windowsLogging :: String -> IO ()
+windowsLogging msg = do
+    progPath <- getProgPath
+    progName <- getProgName
+    appendFile (progPath </> progName <.> "log") msg

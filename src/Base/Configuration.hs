@@ -9,7 +9,6 @@ module Base.Configuration (
     show_time_OSD,
     savedConfigurationToConfiguration,
     configurationToSavedConfiguration,
-    initialiseLogging,
   ) where
 
 
@@ -94,17 +93,6 @@ show_time_OSD :: Accessor Configuration Bool
 show_time_OSD = accessor show_time_OSD_ (\ a r -> r{show_time_OSD_ = a})
 show_switch_OSD :: Accessor Configuration Bool
 show_switch_OSD = accessor show_switch_OSD_ (\ a r -> r{show_switch_OSD_ = a})
-
--- | initialises the logging module
-initialiseLogging :: Configuration -> IO ()
-initialiseLogging config = do
-    setLogCommand logCommand
-  where
-    logCommand =
-        if System.Info.os == "mingw32" && not (stdout_on_windows config) then
-            appendFile "nikkiLog" . (++ "\n")
-          else
-            putStrLn
 
 -- | Converts the configuration loaded from disk to a Configuration.
 -- Adds impure annotations needed for CmdArgs.

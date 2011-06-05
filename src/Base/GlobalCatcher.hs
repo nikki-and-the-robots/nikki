@@ -39,4 +39,4 @@ handleException e =
         (Just ExitSuccess) -> return ()
         _ -> do
             let msg = "error message:\n\n" ++ show e ++ "\n"
-            logInfo msg
+            logg Info msg

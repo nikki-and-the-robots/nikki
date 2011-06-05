@@ -106,7 +106,7 @@ getHighScores = do
     content :: Maybe HighScoreFile <- decodeFileStrict filePath
     case content of
         Nothing -> do
-            logInfo ("WARNING: highscore file not readable.")
+            logg Warning "highscore file not readable."
             return empty
         Just c -> return $ highScores c
 

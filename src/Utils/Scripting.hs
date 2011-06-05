@@ -8,6 +8,8 @@ import Safe
 
 import Data.List
 
+import Text.Logging
+
 import Control.Arrow
 import Control.Applicative
 import Control.Monad
@@ -21,19 +23,10 @@ import System.Process
 import System.Info
 
 
-logInfo :: String -> IO ()
-logInfo msg =
-    if System.Info.os == "mingw32" then
-        return ()
-      else do
-        putStrLn "WARNING: logInfo not implemented on windows"
-        putStrLn ("INFO: " ++ msg)
-
-
 -- | executes a unix command on the shell and exits if it does not succeed.
 trySystem :: String -> IO ()
 trySystem cmd = do
-    logInfo ("Executing \"" ++ cmd ++ "\" ...")
+    logg Info ("Executing \"" ++ cmd ++ "\" ...")
     exitcode <- system cmd
     case exitcode of
         ExitSuccess -> return ()
@@ -90,7 +83,7 @@ removeIfExists f = liftIO $ do
     isFile <- doesFileExist f
     isDirectory <- doesDirectoryExist f
     when (isFile || isDirectory) $
-        logInfo ("removing: " ++ f)
+        logg Info ("removing: " ++ f)
     if isFile then
         removeFile f
       else if isDirectory then

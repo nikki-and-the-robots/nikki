@@ -89,12 +89,10 @@ getConfigurationFile = do
 loadConfiguration :: IO Configuration
 loadConfiguration = do
     filteredArgs <- filterUnwantedArgs <$> getArgs
-    (mLoadedConfig, mMessage) <- loadConfigurationFromFile
+    mLoadedConfig <- loadConfigurationFromFile
     let loadedConfig = savedConfigurationToConfiguration $
                             fromMaybe initial mLoadedConfig
     config <- withArgs filteredArgs $ cmdArgs loadedConfig
-    initialiseLogging config
-    whenMaybe mMessage logInfo
     return config
 
 -- | on OS X there is a default command line argument
@@ -109,22 +107,22 @@ filterUnwantedArgs = case System.Info.os of
 -- | loads the configuration from file.
 -- If the file does not exists, it is initialized with the default configuration.
 -- Also returns a message, if necessary.
-loadConfigurationFromFile :: IO (Maybe SavedConfiguration, Maybe String)
+loadConfigurationFromFile :: IO (Maybe SavedConfiguration)
 loadConfigurationFromFile = do
     file <- getConfigurationFile
     exists <- doesFileExist file
     if (not exists) then do
         -- no config file found
-        return (Nothing,
-                Just "no configuration file found, using default configuration.")
+        logg Info "no configuration file found, using default configuration."
+        return Nothing
       else do
         -- attempting to load configuration
         mLoaded :: Maybe SavedConfiguration <- readMay <$> readFile file
-        return $ case mLoaded of
-            Nothing ->
-                (Nothing,
-                 Just "unable to read configuration file, using default configuration")
-            Just config -> (Just config, Nothing)
+        case mLoaded of
+            Nothing -> do
+                logg Error "unable to read configuration file, using default configuration"
+                return Nothing
+            Just config -> return $ Just config
 
 saveConfigurationToFile :: SavedConfiguration -> IO ()
 saveConfigurationToFile config = do

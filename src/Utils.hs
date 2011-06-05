@@ -60,7 +60,7 @@ import System.Exit
 
 import Debug.Trace
 
-import Utils.Scripting hiding (logInfo)
+import Utils.Scripting
 
 
 -- * debugging stuff
@@ -111,27 +111,9 @@ nm :: Show s => String -> s -> a
 nm msg = es ("Non-exhaustive patterns: " ++ msg)
 
 
-{-# NOINLINE debug #-}
-debug :: String -> a -> a
-debug msg x = unsafePerformIO $ do
-    logInfo ("DEBUG: " ++ msg)
-    return x
-
-debugs :: Show s => String -> s -> a -> a
-debugs msg s = debug (msg ++ ": " ++ show s)
-
-printDebug :: String -> IO ()
-printDebug msg = logInfo ("\tDEBUG: " ++ msg)
-
 assertIO :: Bool -> String -> IO ()
 assertIO True _ = return ()
 assertIO False msg = error ("ASSERTION ERROR: " ++ msg)
-
-warn :: MonadIO m => String -> m ()
-warn m = io $ logInfo ("WARNING: " ++ m)
-
-toDebug :: Show s => String -> s -> String
-toDebug msg s = msg ++ ": " ++ show s
 
 -- | returns True every n-th time 'every' is called.
 -- (of course this involves unsafeIO-magick.
@@ -578,5 +560,5 @@ instance PP Int where
     pp = show
 
 ppp :: PP p => p -> IO ()
-ppp = pp >>> logInfo
+ppp = pp >>> logg Info
 

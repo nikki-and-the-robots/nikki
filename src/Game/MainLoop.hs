@@ -29,7 +29,7 @@ import Game.Menus
 debugQtVersion :: IO ()
 debugQtVersion = do
     v <- qtVersion
-    logInfo ("Qt-Version: " ++ v)
+    logg Info ("Qt-Version: " ++ v)
 
 -- | create AppState for game mode
 gameAppState :: Application -> Bool -> GameState -> AppState
