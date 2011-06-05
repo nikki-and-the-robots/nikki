@@ -351,32 +351,33 @@ mainLayerToRenderPixmaps ptr offset now objects =
 -- * OSDs
 
 renderOSDs app configuration ptr now scene = do
+    windowSize <- sizeQPainter ptr
 
     when (configuration ^. show_time_OSD) $
-        renderGameTime ptr app configuration now
+        renderGameTime ptr app configuration windowSize now
 
     when (configuration ^. show_battery_OSD) $
-        renderBatteryOSD ptr app configuration scene
+        renderBatteryOSD ptr app configuration windowSize scene
 
     renderTerminalOSD ptr now scene
 
 osdPadding = 48
 
-renderBatteryOSD ptr app configuration scene = do
-    let text = pv $ printf "%03i" $ scene ^. batteryPower
-    windowSize <- sizeQPainter ptr
+renderBatteryOSD ptr app configuration windowSize scene = do
+    let text = pv $ printf (batteryChar : zeroSpaceChar : "%03i") $ scene ^. batteryPower
+    renderOSD ptr app configuration windowSize text $ \ osdSize ->
+        Position (width windowSize - osdPadding - width osdSize) osdPadding
+
+renderGameTime ptr app configuration windowSize now = do
+    let text = pv $ (watchChar : zeroSpaceChar : timeFormat now)
+    renderOSD ptr app configuration windowSize text $ \ osdSize ->
+        fmap (fromIntegral . floor) $
+        Position ((width windowSize - width osdSize) / 2) osdPadding
+
+renderOSD ptr app configuration windowSize text offsetFun = do
     (osdSize, action) <- Base.render ptr app configuration windowSize (gameOsd text)
     resetMatrix ptr
-    translate ptr $ Position (width windowSize - osdPadding - width osdSize) osdPadding
-    action
-
-renderGameTime ptr app config now = do
-    let text = pv $ timeFormat now
-    windowSize <- sizeQPainter ptr
-    (osdSize, action) <- Base.render ptr app config windowSize (gameOsd text)
-    resetMatrix ptr
-    translate ptr $ fmap (fromIntegral . floor) $
-        Position ((width windowSize - width osdSize) / 2) osdPadding
+    translate ptr $ offsetFun osdSize
     action
 
 
