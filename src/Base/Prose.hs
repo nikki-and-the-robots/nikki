@@ -17,8 +17,11 @@ module Base.Prose (
     pv,
     unP,
     pFile,
-    batteryChar,
+    zeroSpaceChar,
     watchChar,
+    batteryChar,
+    switchChar,
+    sumSignChar,
     brackets,
   ) where
 
@@ -26,6 +29,7 @@ module Base.Prose (
 import Data.Monoid
 import Data.List as List
 import Data.Text as Text
+import Data.Char (chr)
 
 import Control.Arrow
 
@@ -89,11 +93,20 @@ pFile file =
 
 -- | special characters
 
-batteryChar :: Char
-batteryChar = '\128267'
+zeroSpaceChar :: Char
+zeroSpaceChar = chr 8203
 
 watchChar :: Char
-watchChar = '\8986'
+watchChar = chr 8986
+
+batteryChar :: Char
+batteryChar = chr 128267
+
+switchChar :: Char
+switchChar = chr 128306
+
+sumSignChar :: Char
+sumSignChar = chr 8721
 
 -- | put brackets around a string
 brackets :: Prose -> Prose
