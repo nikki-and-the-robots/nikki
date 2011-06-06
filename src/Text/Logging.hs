@@ -32,4 +32,4 @@ windowsLogging :: String -> IO ()
 windowsLogging msg = do
     progPath <- getProgPath
     progName <- getProgName
-    appendFile (progPath </> progName <.> "log") msg
+    appendFile (progPath </> progName <.> "log") (msg ++ "\n")
