@@ -58,6 +58,9 @@ main initialSignals =
     withQApplication $ \ qApp -> do
         let Windowed windowSize = programWindowSize
         withGLContext 0 (width windowSize) (height windowSize) $ \ window -> do
+            paintEngine <- io $ paintEngineTypeGLContext window
+            io $ logg Debug ("paint engine: " ++ show paintEngine)
+
             withNikkiIcon window $ do
                 keyPoller <- io $ newKeyPoller window (initial_events configuration ++ initialSignals)
 

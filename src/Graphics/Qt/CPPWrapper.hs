@@ -13,6 +13,7 @@ module Graphics.Qt.CPPWrapper (
 
     -- * GLContext
     GLContext,
+    paintEngineTypeGLContext,
     withGLContext,
     setWindowTitle,
     setWindowIcon,
@@ -188,6 +189,8 @@ data PaintEngineType
     = X11
     | OpenGL
     | OpenGL2
+
+    | UnknownPaintEngine QtInt
   deriving Show
 
 int2PaintEngineType :: QtInt -> PaintEngineType
@@ -195,7 +198,7 @@ int2PaintEngineType 0 = X11
 -- int2PaintEngineType 1 = Windows
 int2PaintEngineType 7 = OpenGL
 int2PaintEngineType 14 = OpenGL2
-int2PaintEngineType x = error ("NYI: int2PaintEngineType: " ++ show x)
+int2PaintEngineType x = UnknownPaintEngine x
 
 -- drawing callbacks (GLContext)
 
