@@ -58,13 +58,10 @@ import Sorts.LowerLimit
 
 stepScene :: Configuration -> Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
 stepScene configuration space controlData =
-    applyTimesM subStepsPerSuperStep inner
-  where
-    inner =
-        updateScene (configuration ^. controls) controlData >=>
-        stepSpace space >=>
-        maybeAbort configuration >=>
-        transition (configuration ^. controls) controlData
+    updateScene (configuration ^. controls) controlData >=>
+    stepSpace space >=>
+    maybeAbort configuration >=>
+    transition (configuration ^. controls) controlData
 
 
 -- * State automaton stuff

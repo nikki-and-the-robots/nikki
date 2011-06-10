@@ -44,10 +44,23 @@ gameAppState app editorTestMode initialState = NoGUIAppState $ do
 -- Returns FinalState to return to the level selection.
 gameLoop :: Application -> Bool -> MVar (Scene Object_, DebuggingCommand) -> GameMonad AppState
 gameLoop app editorTestMode sceneMVar =
-    withTimer loop
+    withTimer loopSuperStep
   where
-    loop :: Timer -> GameMonad AppState
-    loop timer = do
+    -- | loops to perform supersteps
+    loopSuperStep :: Timer -> GameMonad AppState
+    loopSuperStep timer = do
+        m <- performSubSteps timer subStepsPerSuperStep
+        case m of
+            Nothing -> do
+                io $ waitTimer timer (realToFrac (superStepQuantum / timeFactor))
+                loopSuperStep timer
+            Just r -> return r
+
+    -- | performs n substeps. Aborts in case of level end. Returns (Just AppState) in
+    -- that case. Nothing means, the game should continue.
+    performSubSteps :: Timer -> Int -> GameMonad (Maybe AppState)
+    performSubSteps timer 0 = return Nothing
+    performSubSteps timer n = do
         io $ resetDebugging
 
         -- input events
@@ -64,25 +77,22 @@ gameLoop app editorTestMode sceneMVar =
 
         case sc' ^. mode of
             LevelFinished _ Failed ->
-                return $ failureMenu app
+                return $ Just $ failureMenu app
             LevelFinished score Passed ->
                 if editorTestMode then
-                    return $ successMessage app score (Nothing, NoNewRecord, NoNewRecord)
+                    return $ Just $ successMessage app score (Nothing, NoNewRecord, NoNewRecord)
                   else do
                     records <- io $ saveScore (levelFile sc') score
-                    return $ successMessage app score records
+                    return $ Just $ successMessage app score records
             _ -> if isGameBackPressed (configuration ^. controls) controlData then 
                 if editorTestMode then
-                    return FinalAppState
+                    return $ Just FinalAppState
                   else do
                     follower <- gameAppState app editorTestMode <$> get
-                    return $ pauseMenu app follower 0
+                    return $ Just $ pauseMenu app follower 0
               else
-                continue
-      where
-        continue = do
-            io $ waitTimer timer (realToFrac (superStepQuantum / timeFactor))
-            loop timer
+                -- continuing performing substeps
+                performSubSteps timer (pred n)
 
     swapSceneMVar :: DebuggingCommand -> GameMonad ()
     swapSceneMVar debugging = do
