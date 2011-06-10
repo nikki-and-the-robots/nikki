@@ -44,7 +44,7 @@ gameAppState app editorTestMode initialState = NoGUIAppState $ do
 -- Returns FinalState to return to the level selection.
 gameLoop :: Application -> Bool -> MVar (Scene Object_, DebuggingCommand) -> GameMonad AppState
 gameLoop app editorTestMode sceneMVar =
-    loop =<< io newTimer
+    withTimer loop
   where
     loop :: Timer -> GameMonad AppState
     loop timer = do
