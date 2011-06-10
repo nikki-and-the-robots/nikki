@@ -29,7 +29,13 @@ toKachel = (/ 16) . toUber
 
 gravity :: CpFloat = 1975
 
-stepQuantum :: CpFloat = 0.002
+-- there are multiple substeps (steps in chipmunk) per superstep.
+subStepQuantum :: CpFloat = 0.002
+superStepQuantum :: CpFloat = subStepQuantum * fromIntegral subStepsPerSuperStep
+subStepsPerSuperStep :: Int = 8
+
+-- | updates take place once per superStep
+updateStepQuantum :: CpFloat = superStepQuantum
 
 timeFactor :: CpFloat = 1
 

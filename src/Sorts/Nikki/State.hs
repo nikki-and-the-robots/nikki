@@ -145,7 +145,7 @@ newState config now contacts controlData nikki nikkiPos velocity =
     -- The acceleration that can be applied to the feet's surface velocity
     -- when walking. (per stepQuantum)
     feetAcceleration :: CpFloat
-    feetAcceleration = (maximumWalkingVelocity / accelerationTime) * stepQuantum
+    feetAcceleration = (maximumWalkingVelocity / accelerationTime) * updateStepQuantum
 
 
     -- if the actual action came after being airborne

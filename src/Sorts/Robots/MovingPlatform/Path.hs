@@ -106,7 +106,7 @@ updateGuide p@SingleNode{} = p
 updateGuide (Path segments@(segment : _) distance pathLength) =
     Path segments newDistance pathLength
   where
-    tmpNewDistance = distance + stepQuantum * platformStandardVelocity
+    tmpNewDistance = distance + updateStepQuantum * platformStandardVelocity
     newDistance =
         if tmpNewDistance > segmentLength segment then
             foldToRange

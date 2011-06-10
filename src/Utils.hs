@@ -213,6 +213,12 @@ ignore = (>> return ())
 io :: MonadIO m => IO a -> m a
 io = liftIO
 
+-- applies a given monadic operation n times
+applyTimesM :: Monad m => Int -> (a -> m a) -> a -> m a
+applyTimesM 0 m = return
+applyTimesM n m =
+    m >=> applyTimesM (pred n) m
+
 
 -- * list stuff
 

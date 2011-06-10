@@ -81,7 +81,7 @@ gameLoop app editorTestMode sceneMVar =
                 continue
       where
         continue = do
-            io $ waitTimer timer (realToFrac (stepQuantum / timeFactor))
+            io $ waitTimer timer (realToFrac (superStepQuantum / timeFactor))
             loop timer
 
     swapSceneMVar :: DebuggingCommand -> GameMonad ()
