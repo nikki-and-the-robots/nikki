@@ -34,8 +34,8 @@ subStepQuantum :: CpFloat = 0.002
 superStepQuantum :: CpFloat = subStepQuantum * fromIntegral subStepsPerSuperStep
 subStepsPerSuperStep :: Int = 8
 
--- | updates take place once per superStep
-updateStepQuantum :: CpFloat = superStepQuantum
+-- | updates take place once per subStep
+updateStepQuantum :: CpFloat = subStepQuantum
 
 timeFactor :: CpFloat = 1
 
