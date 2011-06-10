@@ -25,6 +25,7 @@ import Graphics.Qt
 
 import Utils
 
+import Base.Constants
 import Base.Configuration as Configuration
 import Base.Types
 import Base.Monad
@@ -88,7 +89,9 @@ renderFPS :: Application -> Configuration -> Ptr QPainter -> Prose -> IO ()
 renderFPS app config ptr fps = do
     resetMatrix ptr
     size <- sizeQPainter ptr
-    snd =<< render ptr app config size fps
+    (renderSize, action) <- render ptr app config size fps
+    translate ptr $ Position (fromUber 1) (height size - height renderSize)
+    action
 
 writeDistribution :: FilePath -> FilePath -> IO ()
 writeDistribution srcFile destFile = do
