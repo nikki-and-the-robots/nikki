@@ -22,20 +22,24 @@ appState r = AppState (RenderableInstance r)
 
 runAppState :: Application -> AppState -> M ()
 runAppState app (AppState renderable cmd) = do
-    config <- get
     io $ postGUI (window app) $ setRenderingLooped (window app) False
+    io $ postGUI (window app) $ setArrowAutoRepeat (window app) True
+    config <- get
     io $ setRenderable app config renderable
     cmd >>= runAppState app
 runAppState app (NoGUIAppState cmd) = do
     io $ postGUI (window app) $ setRenderingLooped (window app) False
     cmd >>= runAppState app
 runAppState app (GameAppState renderable cmd initialGameState) = do
-    config <- get
     io $ postGUI (window app) $ setRenderingLooped (window app) True
+    io $ postGUI (window app) $ setArrowAutoRepeat (window app) False
+    config <- get
     io $ setRenderable app config renderable
     follower <- evalStateT cmd initialGameState
     runAppState app follower
 runAppState app (UnManagedAppState cmd) = do
+    io $ postGUI (window app) $ setRenderingLooped (window app) False
+    io $ postGUI (window app) $ setArrowAutoRepeat (window app) True
     cmd >>= runAppState app
 runAppState _ FinalAppState = return ()
 
