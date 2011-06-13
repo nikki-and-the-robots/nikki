@@ -181,7 +181,7 @@ levelPassed scene =
       else
         Nothing
   where
-    allTriggered = pressed >= total
+    allTriggered = pressed >= total && total > 0
     (pressed, total) = scene ^. switches
     now = scene ^. spaceTime
     batteries = scene ^. batteryPower
