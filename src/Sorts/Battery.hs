@@ -16,6 +16,8 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
+import Sound.SFML
+
 import Utils
 
 import Base
@@ -40,11 +42,14 @@ sorts :: RM [Sort_]
 sorts = do
     pngFile <- getDataFileName (pngDir </> "battery/standard.png")
     pixmap <- io $ loadPixmap batteryOffset batterySize pngFile
-    return $ return $ Sort_ $ BSort pixmap
+    soundFile <- getDataFileName (soundDir </> "bfxr/batteryCollect.wav")
+    collectSound <- io $ newPolySound soundFile 8
+    return $ return $ Sort_ $ BSort pixmap collectSound
 
 data BSort
     = BSort {
-        batteryPixmap :: Pixmap
+        batteryPixmap :: Pixmap,
+        collectSound :: PolySound
     }
   deriving (Show, Typeable)
 
@@ -57,9 +62,11 @@ data Battery
 instance Sort BSort Battery where
     sortId _ = SortId "battery"
 
-    freeSort = freePixmap . batteryPixmap
+    freeSort (BSort pix sound) = do
+        freePixmap pix
+        freePolySound sound
 
-    size (BSort p) = pixmapSize p
+    size (BSort p _) = pixmapSize p
 
     renderIconified sort ptr =
         renderPixmapSimple ptr (batteryPixmap sort)
@@ -86,7 +93,8 @@ instance Sort BSort Battery where
 
     update sort config mode now contacts cd i o
         | any (`member` batteries contacts) (shapes $ chipmunk o) = do
-            -- the battery is consumed by nikki (TODO: delete battery)
+            -- the battery is consumed by nikki
+            triggerPolySound $ collectSound sort
             removeChipmunk $ chipmunk o
             let sceneChange :: Scene o -> Scene o
                 sceneChange = (batteryPower ^: succ) . removeBattery
