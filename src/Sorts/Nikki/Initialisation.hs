@@ -4,21 +4,27 @@ module Sorts.Nikki.Initialisation (
     nikkiMass,
     bodyAttributes,
     footToHeadAngle,
+    uniqueNikki,
   ) where
 
 
 import Prelude hiding (lookup)
 
 import Data.Abelian
+import qualified Data.Indexable as I
+import Data.SelectTree
 
 import Graphics.Qt as Qt hiding (rotate, scale)
 
 import qualified Physics.Chipmunk as CM
 import Physics.Chipmunk hiding (position, Position, baryCenterOffset)
 
+import Utils
+
 import Base
 
 import Sorts.Nikki.Configuration
+import Sorts.Nikki.Types
 
 
 bodyAttributes :: CM.Position -> BodyAttributes
@@ -127,3 +133,39 @@ ghostShape = mkRectFromPositions
 footToHeadAngle :: Angle
 footToHeadAngle = abs $ foldAngle $ toUpAngle $
     (Vector headRight (headLow + pawThickness) -~ Vector legRight low)
+
+
+-- * editor scene initialisation
+
+-- | Makes sure there is exactly one Nikki in a scene.
+-- Returns the new scene and Nikki's index.
+uniqueNikki :: Application -> Grounds (EditorObject Sort_) -> (I.Index, Grounds (EditorObject Sort_))
+uniqueNikki app objects =
+    let nikkiIndices = I.findIndices (isNikki . editorSort) $ mainLayerIndexable objects
+    in case nikkiIndices of
+        [a] -> (a, objects)
+        [] -> addNikki objects
+        (a : r) -> (a, ((mainLayer .> content) ^: deleteDuplicateNikkis r) objects)
+  where
+
+    -- adds Nikki at (0, 0)
+    addNikki :: Grounds (EditorObject Sort_) -> (I.Index, Grounds (EditorObject Sort_))
+    addNikki objects =
+        (newIndex, newObjects)
+      where
+        (newIndex, newScene) = I.insert nikki (objects ^. mainLayer .> content)
+        newObjects = mainLayer .> content ^= newScene $ objects
+        nikki :: EditorObject Sort_
+        nikki = EditorObject nikkiSort (EditorPosition 0 0) Nothing
+        nikkiSort :: Sort_
+        nikkiSort = getNikkiSort app
+
+    -- delete duplicate nikkis
+    deleteDuplicateNikkis :: [I.Index]
+        -> I.Indexable (EditorObject Sort_) -> I.Indexable (EditorObject Sort_)
+    deleteDuplicateNikkis indices layer =
+        foldr I.deleteByIndex layer indices
+
+getNikkiSort :: Application -> Sort_
+getNikkiSort app = case filter isNikki $ leafs $ allSorts app of
+    (a : _) -> a

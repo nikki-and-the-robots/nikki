@@ -24,6 +24,7 @@ module Data.Indexable (
     Data.Indexable.fromList,
     (<:),
     (>:),
+    insert,
 
     fmapMWithIndex,
 
@@ -161,6 +162,13 @@ a <: (Indexable values) =
 (>:) :: Indexable a -> a -> Indexable a
 (Indexable values) >: a =
     Indexable (values `snoc` (i, a))
+  where
+    i = newIndex $ map fst values
+
+-- | inserts an element (at the end) and returns the new Index
+insert :: a -> Indexable a -> (Index, Indexable a)
+insert a (Indexable values) =
+    (i, Indexable ((i, a) `cons` values))
   where
     i = newIndex $ map fst values
 

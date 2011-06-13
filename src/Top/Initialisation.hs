@@ -93,26 +93,13 @@ freeAllSorts sorts = do
 
 initScene :: Application -> LevelFile -> Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
 initScene app levelFile space =
-    return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
-    return . groundsMergeTiles >=>
-    return . selectNikki >=>
-    secondKleisli (initializeObjects app space) >=>
+    return . Sorts.Nikki.uniqueNikki app >=>
+    secondKleisli (
+        return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
+        return . groundsMergeTiles >=>
+        initializeObjects app space) >=>
     mkScene levelFile space >=>
     return . Sorts.LowerLimit.promoteLowerLimit
-
--- | select the last set nikki and delete all duplicates
-selectNikki :: Grounds (EditorObject Sort_) -> (Index, Grounds (EditorObject Sort_))
-selectNikki objects = (nikki, mainLayer .> content ^: deleteDuplicateNikkis $ objects)
-  where
-    nikkiIndices = I.findIndices (Sorts.Nikki.isNikki . editorSort) $ mainLayerIndexable objects
-    nikki = case nikkiIndices of
-                    [a] -> a
-                    (_ : _) -> trace "Warning, level containing more than one Nikki" $
-                               last nikkiIndices
-                    [] -> error "no Nikki found"
-    -- delete duplicate nikkis
-    deleteDuplicateNikkis layer =
-        foldr I.deleteByIndex layer (filter (/= nikki) nikkiIndices)
 
 initializeObjects :: Application -> Space -> Grounds (EditorObject Sort_) -> IO (Grounds Object_)
 initializeObjects app space (Grounds backgrounds mainLayer foregrounds) = do
