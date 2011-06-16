@@ -278,7 +278,7 @@ instance Renderable RenderState where
 -- Happens in the rendering thread.
 renderScene :: Application -> Configuration -> Ptr QPainter
     -> Scene Object_ -> DebuggingCommand -> StateT CameraState IO ()
-renderScene app configuration ptr scene debugging = do
+renderScene app config ptr scene debugging = do
     let now = scene ^. spaceTime
     center <- getCameraPosition ptr scene
     io $ do
@@ -289,27 +289,27 @@ renderScene app configuration ptr scene debugging = do
 
         clearScreen ptr black
 
-        renderObjects configuration size ptr offset now (scene ^. objects)
+        renderObjects app config size ptr offset now (scene ^. objects)
 
-        renderOSDs app configuration ptr now scene
+        renderOSDs app config ptr now scene
 
         -- debugging
-        when (render_xy_cross configuration) $
+        when (render_xy_cross config) $
             debugDrawCoordinateSystem ptr offset
-        when (render_chipmunk_objects configuration) $
+        when (render_chipmunk_objects config) $
             fmapM_ (renderObjectGrid ptr offset) $ scene ^. objects ^. gameMainLayer
         io $ debugging ptr offset
-        Profiling.Physics.render app configuration ptr now
+        Profiling.Physics.render app config ptr now
 
 
-renderObjects configuration windowSize ptr offset now gameGrounds =
-    when (not $ omit_pixmap_rendering configuration) $ do
-        renderPixmaps <- gameGroundsToRenderPixmaps windowSize ptr offset now gameGrounds
+renderObjects app config windowSize ptr offset now gameGrounds =
+    when (not $ omit_pixmap_rendering config) $ do
+        renderPixmaps <- gameGroundsToRenderPixmaps app config windowSize ptr offset now gameGrounds
         fmapM_ (doRenderPixmap ptr) $ optimize windowSize renderPixmaps
 -- development version
-renderObjects configuration size ptr offset now gameGrounds =
-    when (not $ omit_pixmap_rendering configuration) $ do
-        renderPixmaps <- gameGroundsToRenderPixmaps size ptr offset now gameGrounds
+renderObjects app config size ptr offset now gameGrounds =
+    when (not $ omit_pixmap_rendering config) $ do
+        renderPixmaps <- gameGroundsToRenderPixmaps app config size ptr offset now gameGrounds
         let fakeSize = Size 800 600
             fakeOffset = sizeToPosition $ fmap (/ 2) (size -~ fakeSize)
             fakeMod = fmap (renderPosition ^: (+~ fakeOffset))
@@ -318,31 +318,38 @@ renderObjects configuration size ptr offset now gameGrounds =
         setPenColor ptr (alpha ^= 0.5 $ red) 1
         drawRect ptr fakeOffset fakeSize
 
-gameGroundsToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameGrounds Object_ -> IO [RenderPixmap]
-gameGroundsToRenderPixmaps size ptr offset now (GameGrounds backgrounds mainLayer foregrounds) = do
-    bgs <- layersToRenderPixmaps size ptr offset now backgrounds
-    ml <- mainLayerToRenderPixmaps ptr offset now mainLayer
-    fgs <- layersToRenderPixmaps size ptr offset now foregrounds
+gameGroundsToRenderPixmaps :: Application -> Configuration
+    -> Size Double -> Ptr QPainter -> Offset Double -> Seconds
+    -> GameGrounds Object_ -> IO [RenderPixmap]
+gameGroundsToRenderPixmaps app config size ptr offset now (GameGrounds backgrounds mainLayer foregrounds) = do
+    bgs <- layersToRenderPixmaps app config size ptr offset now backgrounds
+    ml <- mainLayerToRenderPixmaps app config ptr offset now mainLayer
+    fgs <- layersToRenderPixmaps app config size ptr offset now foregrounds
     return (bgs ++ ml ++ fgs)
 
-layersToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> [GameLayer Object_] -> IO [RenderPixmap]
-layersToRenderPixmaps size ptr offset now layers =
-    concat <$> fmapM (layerToRenderPixmaps size ptr offset now) layers
+layersToRenderPixmaps :: Application -> Configuration
+    -> Size Double -> Ptr QPainter -> Offset Double -> Seconds
+    -> [GameLayer Object_] -> IO [RenderPixmap]
+layersToRenderPixmaps app config size ptr offset now layers =
+    concat <$> fmapM (layerToRenderPixmaps app config size ptr offset now) layers
 
-layerToRenderPixmaps :: Size Double -> Ptr QPainter -> Offset Double -> Seconds -> GameLayer Object_ -> IO [RenderPixmap]
-layerToRenderPixmaps size ptr offset now layer =
+layerToRenderPixmaps :: Application -> Configuration
+    -> Size Double -> Ptr QPainter -> Offset Double -> Seconds
+    -> GameLayer Object_ -> IO [RenderPixmap]
+layerToRenderPixmaps app config size ptr offset now layer =
     fmap (renderPosition ^: (+~ layerOffset)) <$>
-        concat <$> fmapM (\ o -> renderObject_ o ptr layerOffset now) (layer ^. gameContent)
+        concat <$> fmapM (\ o -> renderObject_ app config o ptr layerOffset now) (layer ^. gameContent)
   where
     layerOffset =
         calculateLayerOffset size offset (gameXDistance layer, gameYDistance layer)
 
 -- | rendering of the different Layers.
-mainLayerToRenderPixmaps :: Ptr QPainter -> Offset Double -> Seconds
+mainLayerToRenderPixmaps :: Application -> Configuration
+    -> Ptr QPainter -> Offset Double -> Seconds
     -> Indexable Object_ -> IO [RenderPixmap]
-mainLayerToRenderPixmaps ptr offset now objects =
+mainLayerToRenderPixmaps app config ptr offset now objects =
     fmap (renderPosition ^: (+~ offset)) <$>
-        concat <$> fmapM (\ o -> renderObject_ o ptr offset now) (toList objects)
+        concat <$> fmapM (\ o -> renderObject_ app config o ptr offset now) (toList objects)
 
 
 -- * OSDs
@@ -360,8 +367,6 @@ renderOSDs app configuration ptr now scene = do
         renderSwitchesOSD ptr app configuration windowSize scene
 
     renderTerminalOSD ptr now scene
-
-osdPadding = 48
 
 renderBatteryOSD ptr app configuration windowSize scene = do
     let text = pv $ printf (batteryChar : zeroSpaceChar : "%03i") $ scene ^. batteryPower

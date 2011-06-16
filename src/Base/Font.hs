@@ -7,6 +7,7 @@ module Base.Font (
     digitFont,
     freeFont,
     fontHeight,
+    fontHeightOffset,
 
     Glyph(..),
     glyphSize,
@@ -59,6 +60,11 @@ digitFontColors = nub $
 
 fontHeight :: Num n => n
 fontHeight = 48
+
+-- | vertical offset that has to be applied to have capital letters aligned.
+fontHeightOffset :: Double
+fontHeightOffset = fromUber (- 3.5)
+
 
 -- * querying
 

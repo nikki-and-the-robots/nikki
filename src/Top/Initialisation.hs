@@ -91,24 +91,24 @@ freeAllSorts sorts = do
     fmapM_ freeSort sorts
 
 
-initScene :: Application -> LevelFile -> Space -> Grounds (EditorObject Sort_) -> IO (Scene Object_)
+initScene :: Application -> LevelFile -> Space -> Grounds (EditorObject Sort_) -> RM (Scene Object_)
 initScene app levelFile space =
     return . Sorts.Nikki.uniqueNikki app >=>
     secondKleisli (
         return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
         return . groundsMergeTiles >=>
         initializeObjects app space) >=>
-    mkScene levelFile space >=>
+    io . mkScene levelFile space >=>
     return . Sorts.LowerLimit.promoteLowerLimit
 
-initializeObjects :: Application -> Space -> Grounds (EditorObject Sort_) -> IO (Grounds Object_)
+initializeObjects :: Application -> Space -> Grounds (EditorObject Sort_) -> RM (Grounds Object_)
 initializeObjects app space (Grounds backgrounds mainLayer foregrounds) = do
     bgs' <- fmapM (fmapM (editorObject2Object app Nothing)) backgrounds
     ml' <- fmapM (editorObject2Object app (Just space)) mainLayer
     fgs' <- fmapM (fmapM (editorObject2Object app Nothing)) foregrounds
     return $ Grounds bgs' ml' fgs'
 
-editorObject2Object :: Application -> Maybe Space -> EditorObject Sort_ -> IO Object_
+editorObject2Object :: Application -> Maybe Space -> EditorObject Sort_ -> RM Object_
 editorObject2Object app mspace (EditorObject sort pos state) =
     initialize app mspace sort pos state
 

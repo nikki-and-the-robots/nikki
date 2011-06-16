@@ -348,7 +348,7 @@ instance Sort TSort Terminal where
         updateControllableStates scene
             terminal{state = updateState config now cd (robots terminal) (state terminal)}
 
-    renderObject terminal sort ptr offset now = do
+    renderObject _ _ terminal sort ptr offset now = do
         pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
         return $ renderTerminal sort now terminal pos
 

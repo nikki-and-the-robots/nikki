@@ -524,7 +524,8 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
         -> object -> IO object
     updateNoSceneChange _ _ _ _ _ _ o = return o
 
-    renderObject :: object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
+    renderObject :: Application -> Configuration
+        -> object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
 
 editorPosition2QtPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
 editorPosition2QtPosition sort (EditorPosition x y) =

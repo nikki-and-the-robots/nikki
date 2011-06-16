@@ -223,6 +223,9 @@ infixl 4 +:
 (+:) :: [a] -> a -> [a]
 a +: b = a ++ [b]
 
+singleton :: a -> [a]
+singleton = (: [])
+
 -- | dropPrefix a b drops the longest prefix from b that is equal to a prefix of a.
 dropPrefix :: Eq a => [a] -> [a] -> [a]
 dropPrefix (a : aR) (b : bR) =

@@ -46,8 +46,9 @@ mkSortsSelectTree sorts =
 
 
 -- | object rendering without providing the sort
-renderObject_ :: Object_ -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
-renderObject_ (Object_ sort o) = renderObject o sort
+renderObject_ :: Application -> Configuration
+    -> Object_ -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
+renderObject_ app config (Object_ sort o) = renderObject app config o sort
 
 wrapObjectModifier :: Sort s o => (o -> o) -> Object_ -> Object_
 wrapObjectModifier f (Object_ s o) =

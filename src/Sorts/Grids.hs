@@ -75,7 +75,7 @@ instance Sort GSort Grid where
 
     chipmunks = const []
 
-    renderObject o s ptr offset _ =
+    renderObject _ _ o s ptr offset _ =
         renderGrid s offset (position o) <$> sizeQPainter ptr
 
 

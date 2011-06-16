@@ -26,6 +26,7 @@ module Base (
     module Base.Polling,
     module Base.Options,
     module Base.Score,
+    module Base.Monologue,
     module Base.Language,
   ) where
 
@@ -54,4 +55,5 @@ import Base.LevelLoading
 import Base.Polling
 import Base.Options
 import Base.Score
+import Base.Monologue
 import Base.Language

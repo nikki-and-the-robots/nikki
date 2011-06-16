@@ -73,7 +73,7 @@ instance Sort BSort () where
     initialize app mSpace sort ep Nothing = return ()
     immutableCopy = return
     chipmunks = const []
-    renderObject _ s ptr offset _ = do
+    renderObject _ _ _ s ptr offset _ = do
         windowSize <- sizeQPainter ptr
         let mPix = pickWholeScreenPixmap windowSize $ pixmaps s
             pix = fromMaybe (last $ pixmaps s) mPix

@@ -161,7 +161,7 @@ instance Sort TSort Tile where
 
     immutableCopy = es "immutableCopy: use AllTiles"
     chipmunks = es "chipmunks: use AllTiles"
-    renderObject (Tile (ImmutableChipmunk position _ _ _)) sort _ offset now = return $
+    renderObject _ _ (Tile (ImmutableChipmunk position _ _ _)) sort _ offset now = return $
         return $ RenderPixmap pix position Nothing
       where
         pix = pickAnimationFrame (tilePixmaps sort) [frameDuration] now
@@ -204,7 +204,7 @@ instance Sort AllTilesSort AllTiles where
 
     chipmunks (AllTiles c _) = [c]
 
-    renderObject (AllTiles _ renderables) _ _ _ now = return $
+    renderObject _ _ (AllTiles _ renderables) _ _ _ now = return $
         fmap inner renderables
       where
         inner (sort, pos) = RenderPixmap

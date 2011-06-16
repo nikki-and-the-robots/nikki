@@ -185,7 +185,7 @@ indexA :: Index -> Accessor (Indexable a) a
 indexA i = accessor getter setter
   where
     getter ix = ix !!! i
-    setter e (Indexable values) = Indexable $ update values (singleton (foundVectorIndex, (i, e)))
+    setter e (Indexable values) = Indexable $ update values (Vector.singleton (foundVectorIndex, (i, e)))
       where
         (Just foundVectorIndex) = findIndex (fst >>> (== i)) values
 

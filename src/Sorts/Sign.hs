@@ -6,30 +6,36 @@
 module Sorts.Sign where
 
 
+import Safe
+
 import Data.Abelian
 import Data.Data
 import Data.Set (member)
 import Data.Accessor
 import Data.Maybe
 
-import Control.Monad.Trans.Maybe
-
 import System.FilePath
 
 import Physics.Chipmunk as CM
 
-import Graphics.Qt
+import Graphics.Qt as Qt
 
 import Utils
 
-import Base hiding (pixmap)
+import Base hiding (pixmap, glyphs)
 
 
 -- * configuration
 
-numberOfBubbleLines = 4
+numberOfBubbleLines = 3
 
-bubbleWidth = 600
+-- | distance between the sign pixmap and the speech icon
+speechIconPadding = fromUber 4
+
+textPadding = 28
+
+bubbleSize = Size 600 172
+textSize = bubbleSize -~ Size textPadding textPadding
 
 signNames :: [String]
 signNames =
@@ -41,42 +47,60 @@ signNames =
 
 sorts :: RM [Sort_]
 sorts =
-    fromMaybe [] <$> io (runMaybeT signs)
-  where
-    signs :: MaybeT IO [Sort_]
-    signs = forM signNames $ \ name -> do
-        file <- MaybeT $ getStoryModeDataFileName (pngDir </> name ++ "_wait_01" <.> "png")
-        pix <- loadSymmetricPixmap (Position 1 1) file
-        return $ Sort_ $ SSort name pix
+    catMaybes <$> (forM signNames $ \ name -> do
+        mFile <- io $ getStoryModeDataFileName (pngDir </> name ++ "_wait_01" <.> "png")
+        case mFile of
+            Just file -> do
+                pix <- loadSymmetricPixmap (Position 1 1) file
+                speechIcon <- loadSymmetricPixmap (Position 1 1) =<<
+                      getDataFileName (pngDir </> "sign" </> "speech-icon" <.> "png")
+                return $ Just $ Sort_ $ SSort name pix speechIcon
+            Nothing -> return Nothing)
 
 data SSort =
     SSort {
         name :: String,
-        pixmap :: Pixmap
+        pixmap :: Pixmap,
+        speechIcon :: Pixmap
       }
   deriving (Show, Typeable)
 
-type Line = [Glyph]
-type Bubble = [Line]
-type Bubbles = [Bubble]
-
 data Sign
     = Sign {
-        text :: Bubbles,
         chipmunk :: Chipmunk,
-        state_ :: !State
+        lastLanguage :: Language,
+        monologue_ :: WrappedMonologue
     }
   deriving (Show, Typeable)
 
-state :: Accessor Sign State
-state = accessor state_ (\ a r -> r{state_ = a})
+monologue :: Accessor Sign WrappedMonologue
+monologue = accessor monologue_ (\ a r -> r{monologue_ = a})
 
-data State
-    = NoContact
-    | ShowText Int
-    | EndState
-  deriving (Show, Typeable)
+-- | word and bubble-wrapped contents of a monologue
+data WrappedMonologue
+    = NoContact {
+        glyphs :: [[[Glyph]]]
+      }
+    | Contact {
+        glyphs :: [[[Glyph]]]
+      }
+    | ShowingText {
+        index :: Int,
+        glyphs :: [[[Glyph]]]
+      }
+  deriving (Show)
 
+mkWrappedMonologue :: Application -> [Prose] -> WrappedMonologue
+mkWrappedMonologue app text =
+    NoContact $ concat $ map bubbleWrap $ map (wordWrap (standardFont app) (width textSize)) text
+  where
+    bubbleWrap :: [[Glyph]] -> [[[Glyph]]]
+    bubbleWrap chunk =
+        if length chunk <= numberOfBubbleLines then
+            [chunk]
+          else
+            let (a, r) = splitAt numberOfBubbleLines chunk
+            in a : bubbleWrap r
 
 instance Sort SSort Sign where
     sortId sort = SortId ("story-mode/sign/" ++ name sort)
@@ -87,10 +111,10 @@ instance Sort SSort Sign where
 
     objectEditMode _ = Just oemMethods
 
-    initialize sort app (Just space) editorPosition (Just (OEMState oemState_)) = do
+    initialize app (Just space) sort editorPosition (Just (OEMState oemState_)) = do
         let Just oemState :: Maybe SignOEMState = cast oemState_
-            prose = mkText app $ p $ oemText oemState
-            pos = position2vector
+        monologue <- io $ readStoryModeMonologue $ oemFile oemState
+        let pos = position2vector
                 (editorPosition2QtPosition sort editorPosition)
                 +~ baryCenterOffset
             bodyAttributes = StaticBodyAttributes{
@@ -103,8 +127,10 @@ instance Sort SSort Sign where
               }
             (polys, baryCenterOffset) = mkPolys $ size sort
             polysAndAttributes = map (mkShapeDescription shapeAttributes) polys
-        chip <- initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
-        return $ Sign prose chip NoContact
+        chip <- io $ initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
+        config <- ask
+        let content = mkWrappedMonologue app monologue
+        return $ Sign chip (config ^. language) content
 
     immutableCopy s =
         CM.immutableCopy (chipmunk s) >>= \ c -> return s{chipmunk = c}
@@ -112,14 +138,10 @@ instance Sort SSort Sign where
     chipmunks = return . chipmunk
 
     updateNoSceneChange sort controls scene now contacts (_, cd) sign =
-        return $ (state ^: (traceThis "state" show . updateState controls cd contacts sign)) sign
+        return $ (monologue ^: (updateState controls cd contacts sign)) sign
 
-    renderObject (Sign _ (ImmutableChipmunk position _ _ _) _) sort ptr offset now = return $
-        let sign = RenderPixmap (pixmap sort) position Nothing
-        in [sign] -- , text]
-
-mkText :: Application -> Prose -> Bubbles
-mkText app p = chunks numberOfBubbleLines $ wordWrap (standardFont app) bubbleWidth p
+    renderObject app config sign sort ptr offset now = return $
+        renderSign app config sort sign
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
 mkPolys size =
@@ -136,39 +158,97 @@ mkPolys size =
     baryCenterOffset = Vector wh hh
 
 
+
+
 -- * updating
 
-updateState :: Controls -> ControlData -> Contacts -> Sign -> State -> State
+updateState :: Controls -> ControlData -> Contacts -> Sign -> WrappedMonologue -> WrappedMonologue
 updateState controls cd contacts sign state =
     if not (any (`member` signs contacts) (shapes $ chipmunk sign)) then
-        NoContact
+        NoContact $ glyphs state
       else
         -- nikki stands in front of the sign
-        if isGameContextPressed controls cd then
-            -- the player pressed the context button
-            case state of
-                NoContact -> ShowText 1
-                ShowText n ->
-                    if succ n < length (text sign) then
-                        ShowText $ succ n
-                      else
-                        EndState
-                EndState -> ShowText 0
-          else
+        if not $ isGameContextPressed controls cd then
             -- just standing there
             case state of
-                NoContact -> ShowText 0
+                NoContact x -> Contact x
                 x -> x
+          else
+            -- the player pressed the context button
+            case state of
+                ShowingText i glyphs ->
+                    if succ i < length glyphs then
+                        ShowingText (succ i) glyphs
+                      else
+                        Contact glyphs
+                x -> ShowingText 0 $ glyphs x
+
+
+-- * rendering
+
+renderSign :: Application -> Configuration -> SSort -> Sign -> [RenderPixmap]
+renderSign app config sort (Sign (ImmutableChipmunk position _ _ _) _ state) =
+    let sign = RenderPixmap (pixmap sort) position Nothing
+        mState = renderState app config sort position state
+    in 
+        sign :
+        maybe [] singleton mState ++
+        []
+
+renderState :: Application -> Configuration
+    -> SSort -> Qt.Position Double -> WrappedMonologue -> Maybe RenderPixmap
+renderState app config sort signPos state = case state of
+    NoContact _ -> Nothing
+    Contact _ ->
+        -- render the speech icon
+        Just $ RenderPixmap (speechIcon sort) iconPos Nothing
+          where
+            iconPos = signPos +~ Position (width signSize / 2 - width iconSize / 2)
+                                          (- (height iconSize + speechIconPadding))
+            signSize = size sort
+            iconSize = pixmapSize $ speechIcon sort
+    ShowingText i glyphs -> Just $ RenderCommand zero $ \ ptr -> do
+        -- render a big beautiful bubble
+        windowSize <- sizeQPainter ptr
+        let position =
+                fmap (fromIntegral . round) $
+                (Position ((width windowSize - width bubbleSize) / 2)
+                          (height windowSize - osdPadding - height bubbleSize))
+        resetMatrix ptr
+        translate ptr position
+        renderBubbleBackground ptr
+        translate ptr (Position textPadding (textPadding + fontHeightOffset))
+        forM_ (glyphs !! i) $ \ line -> do
+            recoverMatrix ptr $ do
+                snd =<< render ptr app config bubbleSize line
+            translate ptr (Position 0 fontHeight)
+
+-- | render the background of a bubble
+renderBubbleBackground :: Ptr QPainter -> IO ()
+renderBubbleBackground ptr = do
+    let sideStripeSize = Size (fromUber 1) (height bubbleSize - 2 * fromUber 1)
+    -- left stripe
+    fillRect ptr (fmap fromUber $ Position 0 1)
+        sideStripeSize
+        osdBackgroundColor
+    -- middle box
+    fillRect ptr (fmap fromUber $ Position 1 0)
+        (bubbleSize -~ Size (fromUber 2) 0)
+        osdBackgroundColor
+    -- right stripe
+    fillRect ptr (Position (width bubbleSize - fromUber 1) (fromUber 1))
+        sideStripeSize
+        osdBackgroundColor
 
 
 -- * OEM
 
 oemMethods :: OEMMethods
 oemMethods = OEMMethods
-    (const $ OEMState $ SignOEMState "")
-    (OEMState . (read :: (String -> SignOEMState)))
+    (const $ OEMState $ SignOEMState "specify a monologue")
+    (OEMState . (readNote "oem unpickle in Sorts.Sign" :: (String -> SignOEMState)))
 
-newtype SignOEMState = SignOEMState {oemText :: String}
+newtype SignOEMState = SignOEMState {oemFile :: String}
   deriving (Show, Read, Typeable, Data)
 
 instance IsOEMState SignOEMState where
