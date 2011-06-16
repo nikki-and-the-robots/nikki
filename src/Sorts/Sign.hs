@@ -45,15 +45,17 @@ signNames =
 
 -- * loading
 
+signDir = pngDir </> "sign"
+
 sorts :: RM [Sort_]
 sorts =
     catMaybes <$> (forM signNames $ \ name -> do
-        mFile <- io $ getStoryModeDataFileName (pngDir </> name ++ "_wait_01" <.> "png")
+        mFile <- io $ getStoryModeDataFileName (signDir </> name ++ "_wait_01" <.> "png")
         case mFile of
             Just file -> do
                 pix <- loadSymmetricPixmap (Position 1 1) file
                 speechIcon <- loadSymmetricPixmap (Position 1 1) =<<
-                      getDataFileName (pngDir </> "sign" </> "speech-icon" <.> "png")
+                      getDataFileName (signDir </> "speech-icon" <.> "png")
                 return $ Just $ Sort_ $ SSort name pix speechIcon
             Nothing -> return Nothing)
 
