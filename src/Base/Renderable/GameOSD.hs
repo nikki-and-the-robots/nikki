@@ -26,7 +26,7 @@ gameOsd = renderable . GameOSD
 
 
 osdFontPadding = fromUber 2
-osdBackgroundColor = alpha ^= 0.5 $ black
+osdBackgroundColor = alpha ^= 0.6 $ black
 fontYOffset = fromUber (- 3.5)
 
 instance Renderable GameOSD where
