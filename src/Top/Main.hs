@@ -32,8 +32,6 @@ import System.Exit
 
 import Graphics.Qt
 
-import Version
-
 import Utils
 
 import Distribution.AutoUpdate

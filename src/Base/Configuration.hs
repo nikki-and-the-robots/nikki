@@ -16,16 +16,12 @@ module Base.Configuration (
 import Data.Accessor
 import Data.Initial
 
-import Text.Logging
-
 import System.Console.CmdArgs as CmdArgs
-import System.Info
 
 import Physics.Chipmunk
 
 import Graphics.Qt
 
-import Utils
 import Version
 
 import Distribution.AutoUpdate.Paths

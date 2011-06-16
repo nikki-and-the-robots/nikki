@@ -52,11 +52,8 @@ import "transformers" Control.Monad.Trans.Error () -- Monad (Either e)
 import Control.Arrow ((>>>))
 import Control.Concurrent
 
-import System.Directory
 import System.IO.Unsafe
 import System.FilePath
-import System.Cmd
-import System.Exit
 
 import Debug.Trace
 

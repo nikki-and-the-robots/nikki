@@ -14,7 +14,6 @@ import Prelude hiding (foldr)
 import Data.Indexable (Indexable(..), Index, findIndices, fmapMWithIndex, toList, indexA)
 import qualified Data.Set as Set
 import Data.Foldable (foldr)
-import Data.Maybe
 import Data.Abelian
 import Data.IORef
 
@@ -44,7 +43,6 @@ import Game.Scene.OptimizeRenderPixmaps
 
 import Sorts.Nikki.Types
 import Sorts.Terminal
-import Sorts.Switch
 import Sorts.LowerLimit
 
 

@@ -20,7 +20,6 @@ import System.FilePath
 import System.Directory
 import System.Exit
 import System.Process
-import System.Info
 
 
 -- | executes a unix command on the shell and exits if it does not succeed.
