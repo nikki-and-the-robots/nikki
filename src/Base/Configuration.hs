@@ -4,6 +4,7 @@ module Base.Configuration (
     SavedConfiguration,
     Configuration(..),
     play_levelA,
+    language,
     controls,
     show_battery_OSD,
     show_time_OSD,
@@ -27,11 +28,21 @@ import Version
 import Distribution.AutoUpdate.Paths
 
 import Base.Configuration.Controls
+import Base.Language
 
 
 -- | Configuration to be written (and read) to (and from) disk.
 -- Uses versioned constructors.
-data SavedConfiguration = SavedConfiguration_0 {
+data SavedConfiguration
+  = SavedConfiguration_0 {
+    saved_fullscreen :: Bool,
+    saved_controls :: Controls,
+    saved_show_battery_OSD :: Bool,
+    saved_show_time_OSD :: Bool,
+    saved_show_switch_OSD :: Bool
+  }
+  | SavedConfiguration_1 {
+    saved_language :: Language,
     saved_fullscreen :: Bool,
     saved_controls :: Controls,
     saved_show_battery_OSD :: Bool,
@@ -42,7 +53,8 @@ data SavedConfiguration = SavedConfiguration_0 {
 
 -- | default configuration
 instance Initial SavedConfiguration where
-    initial = SavedConfiguration_0 {
+    initial = SavedConfiguration_1 {
+        saved_language = English,
         saved_fullscreen = False,
         saved_controls = initial,
         saved_show_battery_OSD = True,
@@ -72,6 +84,7 @@ data Configuration = Configuration {
     show_widget_frames :: Bool,
 
     -- not accessible from command line
+    language_ :: Language,
     controls_ :: Controls,
     show_battery_OSD_ :: Bool,
     show_time_OSD_ :: Bool,
@@ -81,6 +94,9 @@ data Configuration = Configuration {
 
 play_levelA :: Accessor Configuration (Maybe FilePath)
 play_levelA = accessor play_level (\ a r -> r{play_level = a})
+
+language :: Accessor Configuration Language
+language = accessor language_ (\ a r -> r{language_ = a})
 
 controls :: Accessor Configuration Controls
 controls = accessor controls_ (\ a r -> r{controls_ = a})
@@ -95,13 +111,27 @@ show_switch_OSD = accessor show_switch_OSD_ (\ a r -> r{show_switch_OSD_ = a})
 -- | Converts the configuration loaded from disk to a Configuration.
 -- Adds impure annotations needed for CmdArgs.
 savedConfigurationToConfiguration :: SavedConfiguration -> Configuration
-savedConfigurationToConfiguration config =
+savedConfigurationToConfiguration
+    (SavedConfiguration_0
+        saved_fullscreen
+        saved_controls
+        saved_show_battery_OSD
+        saved_show_time_OSD
+        saved_show_switch_OSD)
+  = defaultConfiguration {
+        fullscreen = saved_fullscreen,
+        controls_ = saved_controls,
+        show_battery_OSD_ = saved_show_battery_OSD,
+        show_time_OSD_ = saved_show_time_OSD,
+        show_switch_OSD_ = saved_show_switch_OSD}
+
+defaultConfiguration =
     Configuration {
         play_level = Nothing
             &= help "play the specified level file"
             &= typ "FILE"
             &= name "l",
-        fullscreen = saved_fullscreen config
+        fullscreen = saved_fullscreen initial
             &= help "start the game in fullscreen mode (sticky option)",
 
         -- debugging
@@ -135,13 +165,15 @@ savedConfigurationToConfiguration config =
             &= help "show colored frames for all displayed widgets",
 
         -- not accessible from the command line
-        controls_ = saved_controls config
+        language_ = saved_language initial
             &= CmdArgs.ignore,
-        show_battery_OSD_ = saved_show_battery_OSD config
+        controls_ = saved_controls initial
             &= CmdArgs.ignore,
-        show_time_OSD_ = saved_show_time_OSD config
+        show_battery_OSD_ = saved_show_battery_OSD initial
             &= CmdArgs.ignore,
-        show_switch_OSD_ = saved_show_switch_OSD config
+        show_time_OSD_ = saved_show_time_OSD initial
+            &= CmdArgs.ignore,
+        show_switch_OSD_ = saved_show_switch_OSD initial
             &= CmdArgs.ignore
       }
     &= program "nikki"
@@ -155,7 +187,8 @@ savedConfigurationToConfiguration config =
         [])
 
 configurationToSavedConfiguration c =
-    SavedConfiguration_0 {
+    SavedConfiguration_1 {
+        saved_language = c ^. language,
         saved_fullscreen = fullscreen c,
         saved_controls = c ^. controls,
         saved_show_battery_OSD = c ^. show_battery_OSD,
