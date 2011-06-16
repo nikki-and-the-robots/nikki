@@ -56,7 +56,7 @@ instance Sort BSort Box where
     size = pixmapSize . boxPixmap
     renderIconified sort ptr =
         renderPixmapSimple ptr (boxPixmap sort)
-    initialize sort app (Just space) editorPosition Nothing = do
+    initialize app (Just space) sort editorPosition Nothing = io $ do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
             position = position2vector (editorPosition2QtPosition sort editorPosition)
@@ -65,7 +65,7 @@ instance Sort BSort Box where
         chip <- CM.initChipmunk space bodyAttributes
                     shapesWithAttributes baryCenterOffset
         return $ Box chip
-    initialize sort app Nothing editorPosition Nothing = do
+    initialize app Nothing sort editorPosition Nothing = io $ do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             position = editorPosition2QtPosition sort editorPosition
         return $ Box $ ImmutableChipmunk position 0 baryCenterOffset []

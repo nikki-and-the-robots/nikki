@@ -110,7 +110,7 @@ initializeObjects app space (Grounds backgrounds mainLayer foregrounds) = do
 
 editorObject2Object :: Application -> Maybe Space -> EditorObject Sort_ -> IO Object_
 editorObject2Object app mspace (EditorObject sort pos state) =
-    initialize sort app mspace pos state
+    initialize app mspace sort pos state
 
 mkScene :: LevelFile -> Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene levelFile space (nikki, objects) = do

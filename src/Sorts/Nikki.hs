@@ -99,7 +99,7 @@ instance Sort NSort Nikki where
     renderIconified sort ptr =
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
-    initialize sort app (Just space) editorPosition Nothing = do
+    initialize app (Just space) sort editorPosition Nothing = io $ do
         let (surfaceVelocityShapeType, otherShapes, baryCenterOffset) = mkPolys
             pos = position2vector (editorPosition2QtPosition sort editorPosition)
                     +~ baryCenterOffset
@@ -110,7 +110,7 @@ instance Sort NSort Nikki where
         let surfaceVelocityShape = head $ shapes chip
 
         return $ Nikki chip (Strict.Just surfaceVelocityShape) initial 0
-    initialize sort app Nothing editorPosition Nothing = do
+    initialize app Nothing sort editorPosition Nothing = do
         let (_, _, baryCenterOffset) = mkPolys
             position = editorPosition2QtPosition sort editorPosition
             chip = ImmutableChipmunk position 0 baryCenterOffset []

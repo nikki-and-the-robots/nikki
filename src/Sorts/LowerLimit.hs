@@ -76,7 +76,7 @@ instance Sort LSort LowerLimit where
         resetMatrix ptr
         fillRect ptr (Position 0 startHeight) (Size (width window) (height window - startHeight)) limitEditorColor
 
-    initialize sort app mSpace ep Nothing =
+    initialize app mSpace sort ep Nothing =
         return $ LowerLimit $ realToFrac $ editorY ep
 
     immutableCopy = removeError

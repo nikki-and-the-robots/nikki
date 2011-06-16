@@ -87,7 +87,7 @@ instance Sort JSort Jetpack where
     renderIconified sort ptr =
         renderPixmapSimple ptr (standardPixmap sort)
 
-    initialize sort app (Just space) ep Nothing = do
+    initialize app (Just space) sort ep Nothing = io $ do
         let
             pos = position2vector (editorPosition2QtPosition sort ep)
                     +~ baryCenterOffset
@@ -97,7 +97,7 @@ instance Sort JSort Jetpack where
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
         return $ Jetpack chip False Nothing Idle 0
-    initialize sort app Nothing ep Nothing = do
+    initialize app Nothing sort ep Nothing = do
         let (_, baryCenterOffset) = mkPolys
             position = editorPosition2QtPosition sort ep
             chip = ImmutableChipmunk position 0 baryCenterOffset []
