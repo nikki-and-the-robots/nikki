@@ -51,6 +51,37 @@ data SavedConfiguration
   }
     deriving (Show, Read)
 
+toLatestSavedConfiguration :: SavedConfiguration -> SavedConfiguration
+toLatestSavedConfiguration
+    (SavedConfiguration_0
+        saved_fullscreen
+        saved_controls
+        saved_show_battery_OSD
+        saved_show_time_OSD
+        saved_show_switch_OSD) =
+    SavedConfiguration_1
+        (saved_language initial)
+        saved_fullscreen
+        saved_controls
+        saved_show_battery_OSD
+        saved_show_time_OSD
+        saved_show_switch_OSD
+toLatestSavedConfiguration
+    (SavedConfiguration_1
+        saved_language
+        saved_fullscreen
+        saved_controls
+        saved_show_battery_OSD
+        saved_show_time_OSD
+        saved_show_switch_OSD) =
+    SavedConfiguration_1
+        saved_language
+        saved_fullscreen
+        saved_controls
+        saved_show_battery_OSD
+        saved_show_time_OSD
+        saved_show_switch_OSD
+
 -- | default configuration
 instance Initial SavedConfiguration where
     initial = SavedConfiguration_1 {
@@ -112,26 +143,22 @@ show_switch_OSD = accessor show_switch_OSD_ (\ a r -> r{show_switch_OSD_ = a})
 -- Adds impure annotations needed for CmdArgs.
 savedConfigurationToConfiguration :: SavedConfiguration -> Configuration
 savedConfigurationToConfiguration
-    (SavedConfiguration_0
-        saved_fullscreen
-        saved_controls
-        saved_show_battery_OSD
-        saved_show_time_OSD
-        saved_show_switch_OSD)
-  = defaultConfiguration {
-        fullscreen = saved_fullscreen,
-        controls_ = saved_controls,
-        show_battery_OSD_ = saved_show_battery_OSD,
-        show_time_OSD_ = saved_show_time_OSD,
-        show_switch_OSD_ = saved_show_switch_OSD}
+  = defaultConfiguration . toLatestSavedConfiguration
+--  {
+--         fullscreen = saved_fullscreen,
+--         controls_ = saved_controls,
+--         show_battery_OSD_ = saved_show_battery_OSD,
+--         show_time_OSD_ = saved_show_time_OSD,
+--         show_switch_OSD_ = saved_show_switch_OSD}
 
-defaultConfiguration =
+defaultConfiguration :: SavedConfiguration -> Configuration
+defaultConfiguration (SavedConfiguration_1 saved_language saved_fullscreen saved_controls saved_show_battery_OSD saved_show_time_OSD saved_show_switch_OSD) =
     Configuration {
         play_level = Nothing
             &= help "play the specified level file"
             &= typ "FILE"
             &= name "l",
-        fullscreen = saved_fullscreen initial
+        fullscreen = saved_fullscreen
             &= help "start the game in fullscreen mode (sticky option)",
 
         -- debugging
@@ -165,15 +192,15 @@ defaultConfiguration =
             &= help "show colored frames for all displayed widgets",
 
         -- not accessible from the command line
-        language_ = saved_language initial
+        language_ = saved_language
             &= CmdArgs.ignore,
-        controls_ = saved_controls initial
+        controls_ = saved_controls
             &= CmdArgs.ignore,
-        show_battery_OSD_ = saved_show_battery_OSD initial
+        show_battery_OSD_ = saved_show_battery_OSD
             &= CmdArgs.ignore,
-        show_time_OSD_ = saved_show_time_OSD initial
+        show_time_OSD_ = saved_show_time_OSD
             &= CmdArgs.ignore,
-        show_switch_OSD_ = saved_show_switch_OSD initial
+        show_switch_OSD_ = saved_show_switch_OSD
             &= CmdArgs.ignore
       }
     &= program "nikki"
