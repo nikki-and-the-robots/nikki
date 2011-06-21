@@ -214,7 +214,7 @@ renderState app config sort signPos state = case state of
                                           (- (height iconSize + speechIconPadding))
             signSize = size sort
             iconSize = pixmapSize $ speechIcon sort
-    ShowingText i glyphs -> Just $ RenderCommand zero $ \ ptr -> do
+    ShowingText i glyphs -> Just $ RenderOnTop $ RenderCommand zero $ \ ptr -> do
         -- render a big beautiful bubble
         windowSize <- sizeQPainter ptr
         let position =
