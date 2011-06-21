@@ -38,7 +38,7 @@ speechIconPadding = fromUber 4
 
 textPadding = 28
 
-bubbleSize = Size 600 172
+bubbleSize = Size 800 172
 textSize = bubbleSize -~ Size textPadding textPadding
 
 
