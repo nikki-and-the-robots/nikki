@@ -305,7 +305,7 @@ renderScene app config ptr scene debugging = do
 renderObjects app config windowSize ptr offset now gameGrounds =
     when (not $ omit_pixmap_rendering config) $ do
         renderPixmaps <- gameGroundsToRenderPixmaps app config windowSize ptr offset now gameGrounds
-        fmapM_ (doRenderPixmap ptr) $ optimize windowSize renderPixmaps
+        doRenderPixmaps ptr $ optimize windowSize renderPixmaps
 -- development version
 renderObjects app config size ptr offset now gameGrounds =
     when (not $ omit_pixmap_rendering config) $ do
@@ -313,7 +313,7 @@ renderObjects app config size ptr offset now gameGrounds =
         let fakeSize = Size 800 600
             fakeOffset = sizeToPosition $ fmap (/ 2) (size -~ fakeSize)
             fakeMod = fmap (renderPosition ^: (+~ fakeOffset))
-        fmapM_ (doRenderPixmap ptr) $ fakeMod $ optimize fakeSize renderPixmaps
+        doRenderPixmaps ptr $ fakeMod $ optimize fakeSize renderPixmaps
         resetMatrix ptr
         setPenColor ptr (alpha ^= 0.5 $ red) 1
         drawRect ptr fakeOffset fakeSize

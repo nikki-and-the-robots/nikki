@@ -24,4 +24,5 @@ inView windowSize (RenderPixmap pix objectPosition Nothing) =
         yGreater = y + height size >= 0
         yLesser = y <= height windowSize
     in (xGreater && xLesser && yGreater && yLesser)
+inView windowSize (RenderOnTop inner) = inView windowSize inner
 inView _ _ = True

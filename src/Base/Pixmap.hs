@@ -16,15 +16,16 @@ module Base.Pixmap (
     mapPixels,
     renderPixmapSimple,
     renderPixmap,
-    RenderPixmap(RenderPixmap, RenderCommand),
+    RenderPixmap(RenderPixmap, RenderCommand, RenderOnTop),
     renderPosition,
-    doRenderPixmap,
+    doRenderPixmaps,
   ) where
 
 
 import Data.Abelian
 import Data.Data
 import Data.Accessor
+import Data.Maybe
 
 import Control.Monad.IO.Class
 
@@ -133,16 +134,33 @@ data RenderPixmap
         renderPosition_ :: Position Double,
         renderCommand :: (Ptr QPainter -> IO ())
       }
+    | RenderOnTop { -- to be rendered on top. (After all other RenderPixmaps)
+        renderInnerPixmap :: RenderPixmap
+      }
   deriving (Show, Typeable, Data)
 
 instance Show (Ptr QPainter -> IO ()) where
     show = const "<Ptr QPainter -> IO ()>"
 
 renderPosition :: Accessor RenderPixmap (Position Double)
-renderPosition = accessor renderPosition_ (\ a r -> r{renderPosition_ = a})
+renderPosition = accessor getter setter
+  where
+    getter (RenderPixmap _ p _) = p
+    getter (RenderCommand p _) = p
+    getter (RenderOnTop inner) = getter inner
+    setter p (RenderPixmap a _ c) = RenderPixmap a p c
+    setter p (RenderCommand _ a) = RenderCommand p a
+    setter p (RenderOnTop inner) = RenderOnTop (setter p inner)
 
--- | renders a pixmap
-doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO ()
+-- | renders a list of RenderPixmaps. Renders the top layers after that.
+doRenderPixmaps :: Ptr QPainter -> [RenderPixmap] -> IO ()
+doRenderPixmaps ptr pixmaps = do
+    onTop <- catMaybes <$> fmapM (doRenderPixmap ptr) pixmaps
+    when (not $ null onTop) $
+        doRenderPixmaps ptr onTop
+
+-- | renders a pixmap and returns the layer to be rendered on top of that
+doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO (Maybe RenderPixmap)
 doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
     resetMatrix ptr
     translate ptr position
@@ -151,7 +169,11 @@ doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
     translate ptr (pix ^. pixmapOffset)
 
     drawPixmap ptr zero (pixmap pix)
+    return Nothing
 doRenderPixmap ptr (RenderCommand position command) = do
     resetMatrix ptr
     translate ptr position
     command ptr
+    return Nothing
+doRenderPixmap ptr r@(RenderOnTop x) = do
+    return $ Just x

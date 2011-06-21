@@ -80,7 +80,7 @@ instance Sort PSort Platform where
                 let renderPosition = (epToPosition sort $
                         startPosition $ pathPositions oemPath) +~ physicsPadding
                     eyesState = if oemActive oemPath then Open else Closed
-                doRenderPixmap ptr $ renderRobotEyes (robotEyes sort)
+                doRenderPixmaps ptr $ singleton $ renderRobotEyes (robotEyes sort)
                     (renderPosition +~ offset) 0 eyesOffset eyesState 0
 
     initialize app (Just space) sort ep (Just (OEMState oemState_)) = io $ do
