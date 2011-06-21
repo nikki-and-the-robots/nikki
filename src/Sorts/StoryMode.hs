@@ -44,5 +44,5 @@ tiles =
     ("tiles/dummy/high-school-girl-3", Position 1 1, Size 56 88) :
     ("tiles/dummy/high-school-girl-4", Position 1 1, Size 76 104) :
     ("tiles/dummy/cpt-beaugard", Position 1 1, Size 64 96) :
-    ("tiles/dummy/data-terminal", Position 5 5, Size 128 193) :
+    ("tiles/dummy/data-terminal", Position 5 5, Size 128 192) :
     []
