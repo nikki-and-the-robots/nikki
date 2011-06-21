@@ -79,35 +79,35 @@ pickleObject (EditorObject sort pos oemState) =
 
 -- * unpickling
 
-unpickle :: [Sort_] -> SaveType -> Grounds (EditorObject Sort_)
+unpickle :: [Sort_] -> SaveType -> Either [Prose] (Grounds (EditorObject Sort_))
 unpickle allSorts (PGrounds_1 bgs pl fgs) =
-    Grounds
-        (unpickleMultiLayers allSorts bgs)
-        (unpicklePhysicsLayer allSorts pl)
+    Grounds <$>
+        (unpickleMultiLayers allSorts bgs) <*>
+        (unpicklePhysicsLayer allSorts pl) <*>
         (unpickleMultiLayers allSorts fgs)
 
 -- | unpickle layers (without preserving indices)
-unpickleMultiLayers :: [Sort_] -> [PLayer] -> Indexable (Layer (EditorObject Sort_))
+unpickleMultiLayers :: [Sort_] -> [PLayer] -> Either [Prose] (Indexable (Layer (EditorObject Sort_)))
 unpickleMultiLayers allSorts =
-    fmap (unpickleMultiLayer allSorts) . fromList
+    fmapM (unpickleMultiLayer allSorts) . fromList
 
-unpickleMultiLayer :: [Sort_] -> PLayer -> Layer (EditorObject Sort_)
-unpickleMultiLayer allSorts (PLayer_1 content xd yd) =
-    Layer (fromList $ fmap (unpickleObject allSorts) content) xd yd
+unpickleMultiLayer :: [Sort_] -> PLayer -> Either [Prose] (Layer (EditorObject Sort_))
+unpickleMultiLayer allSorts (PLayer_1 content xd yd) = do
+    newContent <- fromList <$> fmapM (unpickleObject allSorts) content
+    return $ Layer newContent xd yd
 
 -- | unpickle physics layer (with indices)
-unpicklePhysicsLayer :: [Sort_] -> [(Int, PObject)] -> Layer (EditorObject Sort_)
-unpicklePhysicsLayer allSorts list =
-    Layer (fmap (unpickleObject allSorts) ix) 1 1
+unpicklePhysicsLayer :: [Sort_] -> [(Int, PObject)] -> Either [Prose] (Layer (EditorObject Sort_))
+unpicklePhysicsLayer allSorts list = do
+    content <- fmapM (unpickleObject allSorts) ix
+    return $ Layer content 1 1
   where
     ix :: Indexable PObject
     ix = Indexable $ Data.Vector.fromList (map (first Index) list)
 
-unpickleObject :: [Sort_] -> PObject -> EditorObject Sort_
+unpickleObject :: [Sort_] -> PObject -> Either [Prose] (EditorObject Sort_)
 unpickleObject allSorts (PObject_1 id position oemState) =
-    EditorObject sort position (fmap (unpickleOEM sort) oemState)
-  where
-    sort = case Prelude.filter ((== id) . sortId) allSorts of
-        [x] -> x
-        [] -> error ("sort not found: " ++ getSortId id)
-        _ -> error ("multiple sorts with the same id found: " ++ getSortId id)
+    case Prelude.filter ((== id) . sortId) allSorts of
+        [sort] -> return $ EditorObject sort position (fmap (unpickleOEM sort) oemState)
+        [] -> Left (p "sort not found: " : pv (getSortId id) : [])
+        _ -> Left (p "multiple sorts with the same id found: " : pv (getSortId id) : [])

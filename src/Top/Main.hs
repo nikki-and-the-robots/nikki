@@ -219,20 +219,26 @@ selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
 
 
 play :: Application -> Parent -> LevelFile -> AppState
-play app parent levelUID = loadingEditorScene app levelUID (playLevel app parent False)
+play app parent levelUID = loadingEditorScene app levelUID parent (playLevel app parent False)
 
 edit :: Application -> Parent -> LevelFile -> AppState
-edit app parent levelUID = loadingEditorScene app levelUID (editLevel app)
+edit app parent levelUID = loadingEditorScene app levelUID parent (editLevel app)
 
 -- | load a level, got to playing state afterwards
 -- This AppState is a hack to do things from the logic thread 
 -- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
-loadingEditorScene :: Application -> LevelFile -> (EditorScene Sort_ -> AppState) -> AppState
-loadingEditorScene app file follower =
+loadingEditorScene :: Application -> LevelFile -> AppState
+    -> (EditorScene Sort_ -> AppState) -> AppState
+loadingEditorScene app file abortion follower =
     appState (busyMessage $ p "loading...") $ io $ do
         grounds <- loadByFilePath (leafs $ allSorts app) (levelFilePath file)
-        editorScene <- initEditorScene (allSorts app) file grounds
-        return $ follower editorScene
+        case grounds of
+            Right x -> do
+                -- level successfully loaded
+                editorScene <- initEditorScene (allSorts app) file x
+                return $ follower editorScene
+            Left errMsg -> do
+                return $ message app errMsg abortion
 
 mainMenuHelp :: Application -> Parent -> AppState
 mainMenuHelp app parent = NoGUIAppState $ do

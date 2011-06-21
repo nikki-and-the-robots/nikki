@@ -56,7 +56,7 @@ parse _ = Nothing
 
 -- * loading
 
-loadByFilePath :: [Sort_] -> FilePath -> IO (Grounds (EditorObject Sort_))
+loadByFilePath :: [Sort_] -> FilePath -> IO (Either [Prose] (Grounds (EditorObject Sort_)))
 loadByFilePath allSorts path = do
     exists <- doesFileExist path
     when (not exists) $
@@ -64,7 +64,7 @@ loadByFilePath allSorts path = do
     mR <- parseSaved path
     return $ case mR of
         Just x -> unpickle allSorts x
-        Nothing -> error ("Sorry, this file is not a correct nikki level file: " ++ path)
+        Nothing -> Left (p "Sorry, this file is not a correct nikki level file: " : pv path : [])
 
 
 -- * saving
