@@ -232,6 +232,15 @@ dropPrefix (a : aR) (b : bR) =
     if a == b then dropPrefix aR bR else b : bR
 dropPrefix _ b = b
 
+-- | drops the given prefix of a list, if prefix `isPrefixOf` list.
+dropPrefixMay :: Eq a => [a] -> [a] -> Maybe [a]
+dropPrefixMay prefix list =
+    if prefix `isPrefixOf` list then
+        Just $ drop (length prefix) list
+      else
+        Nothing
+
+
 chunks :: Int -> [a] -> [[a]]
 chunks n [] = []
 chunks n l =
