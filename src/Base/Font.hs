@@ -132,6 +132,7 @@ glyphSize = pixmapSize . glyphPixmap
 
 isSpaceGlyph :: Glyph -> Bool
 isSpaceGlyph (Glyph c _) = Text.all isSpace c
+isSpaceGlyph ErrorGlyph{} = False
 
 toWords :: [Glyph] -> [Word]
 toWords [] = []
