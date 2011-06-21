@@ -14,6 +14,7 @@ module Base.Paths (
 
     -- * story mode data
     getStoryModeDataFileName,
+    getStoryModeDataFiles,
   ) where
 
 
@@ -152,7 +153,17 @@ getStoryModeDataFileName :: FilePath -> IO (Maybe FilePath)
 getStoryModeDataFileName path = do
     dir <- getAppUserDataDirectory "nikki-story-mode"
     let file = dir </> "data" </> path
-    exists <- doesFileExist file
-    return $ if exists
-        then Just file
-        else Nothing
+    fileExists <- doesFileExist file
+    dirExists <- doesDirectoryExist file
+    if (fileExists || dirExists)
+        then return $ Just file
+        else do
+            logg Debug ("sm-file not found: " ++ path)
+            return Nothing
+
+getStoryModeDataFiles :: FilePath -> (Maybe String) -> IO (Maybe [FilePath])
+getStoryModeDataFiles path_ extension = do
+    mPath <- getStoryModeDataFileName path_
+    case mPath of
+        Nothing -> return Nothing
+        Just path -> Just <$> map (path </>) <$> io (getFiles path extension)

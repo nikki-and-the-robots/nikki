@@ -14,8 +14,10 @@ import Safe
 import Data.Abelian
 import Data.Generics
 import Data.List
+import Data.Maybe
 
 import Text.Parsec
+import Text.Logging
 
 import Control.Monad
 
@@ -28,6 +30,8 @@ import Physics.Chipmunk as CM
 import Utils
 
 import Base
+
+import qualified Sorts.StoryMode
 
 
 -- * Tile configuration
@@ -69,31 +73,43 @@ tileMergingEpsilon = 1
 
 sorts :: RM [Sort_]
 sorts = do
-    mapM (\ (a, b, c) -> mkSort a b c) names
+    freeSorts <- mapM (\ (a, b, c) -> mkSort False a b c) names
+    storyModeSorts <- mapM (\ (a, b, c) -> mkSort True a b c) Sorts.StoryMode.tiles
+    return $ catMaybes (freeSorts ++ storyModeSorts)
 
-mkSort :: String -> Offset Int -> Size Double -> RM Sort_
-mkSort name offset size = do
-    pngFiles <- getFrameFileNames name
-    when (null pngFiles) $
-        fail ("no png files found for tile: " ++ name)
-    Sort_ <$> TSort name <$> mapM mkTilePixmap pngFiles
+-- | returns Nothing if a story mode tile is not available
+mkSort :: Bool -> String -> Offset Int -> Size Double -> RM (Maybe Sort_)
+mkSort storyMode name offset size = do
+    mPngFiles <- getFrameFileNames storyMode name
+    case mPngFiles of
+        Nothing -> return Nothing
+        Just pngFiles -> do
+            when (null pngFiles) $
+                fail ("no png files found for tile: " ++ name)
+            let sortID = if storyMode then ("story-mode/" ++ name) else name
+            io $ logg Debug ("tile sort: " ++ sortID)
+            Just <$> Sort_ <$> TSort sortID <$> mapM mkTilePixmap pngFiles
   where
     mkTilePixmap file = loadPixmap (fmap fromIntegral offset) size file
 
--- | returns the list of filenames for all the frames with the given name
-getFrameFileNames :: String -> RM [FilePath]
-getFrameFileNames name = do
+-- | Returns the list of filenames for all the frames with the given name
+-- Returns Nothing in case a story mode tile is not available.
+getFrameFileNames :: Bool -> String -> RM (Maybe [FilePath])
+getFrameFileNames storyMode name = do
     -- paths of all pngs in the corresponding directory
-    absolutePaths <- getDataFiles (pngDir </> takeDirectory name) (Just ".png")
-    -- making them relative again
-    let relativePaths = map ((takeDirectory name </>) . takeFileName) absolutePaths
-    files <- mapM getDataFileName $
-            map (pngDir </>) $
-            map third $
-            sortBy (withView snd3 compare) $
-            filter (\ (candidateName, _, _) -> withView splitDirectories (==) name candidateName) $
-            map parsePath relativePaths
-    return files
+    mAbsolutePaths <- getPngFiles storyMode name
+    case mAbsolutePaths of
+        Nothing -> return Nothing
+        Just absolutePaths -> do
+            -- making them relative again
+            let relativePaths = map ((takeDirectory name </>) . takeFileName) absolutePaths
+            files <- mapM (getPngFileName storyMode) $
+                    map (pngDir </>) $
+                    map third $
+                    sortBy (withView snd3 compare) $
+                    filter (\ (candidateName, _, _) -> withView splitDirectories (==) name candidateName) $
+                    map parsePath relativePaths
+            return $ Just $ catMaybes files
   where
     parsePath :: String -> (String, Maybe Int, FilePath)
     parsePath path = case parse parseTileName "" path of
@@ -124,6 +140,18 @@ getFrameFileNames name = do
         ignore $ char '_'
         s <- many1 digit
         return $ readNote "frameNumber" s
+
+-- | returns all png files in the directory where the tile pngs should be.
+-- Returns Nothing in case a storymode tile is loaded, but the story mode is not available.
+getPngFiles :: Bool -> String -> RM (Maybe [FilePath])
+getPngFiles False name =
+    Just <$> getDataFiles (pngDir </> takeDirectory name) (Just ".png")
+getPngFiles True name =
+    io $ getStoryModeDataFiles (pngDir </> takeDirectory name) (Just ".png")
+
+getPngFileName :: Bool -> FilePath -> RM (Maybe FilePath)
+getPngFileName False file = Just <$> getDataFileName file
+getPngFileName True file = io $ getStoryModeDataFileName file
 
 
 data TSort

@@ -14,6 +14,8 @@ import Data.Set (member)
 import Data.Accessor
 import Data.Maybe
 
+import Text.Logging
+
 import System.FilePath
 
 import Physics.Chipmunk as CM
@@ -23,6 +25,8 @@ import Graphics.Qt as Qt
 import Utils
 
 import Base hiding (pixmap, glyphs)
+
+import qualified Sorts.StoryMode as StoryMode
 
 
 -- * configuration
@@ -37,31 +41,32 @@ textPadding = 28
 bubbleSize = Size 600 172
 textSize = bubbleSize -~ Size textPadding textPadding
 
-signNames :: [String]
-signNames =
-    "npcs/cptbeaugard" :
-    []
-
 
 -- * loading
 
 signDir = pngDir </> "sign"
 
-sorts :: RM [Sort_]
-sorts =
-    catMaybes <$> (forM signNames $ \ name -> do
-        mFile <- io $ getStoryModeDataFileName (signDir </> name ++ "_wait_01" <.> "png")
+sorts = catMaybes <$> storyModeSorts
+
+storyModeSorts :: RM [Maybe Sort_]
+storyModeSorts = 
+    forM StoryMode.signs $ \ name -> do
+        mFile <- io $ getStoryModeDataFileName (signDir </> name <.> "png")
         case mFile of
             Just file -> do
                 pix <- loadSymmetricPixmap (Position 1 1) file
                 speechIcon <- loadSymmetricPixmap (Position 1 1) =<<
-                      getDataFileName (signDir </> "speech-icon" <.> "png")
-                return $ Just $ Sort_ $ SSort name pix speechIcon
-            Nothing -> return Nothing)
+                    getDataFileName (signDir </> "speech-icon" <.> "png")
+                let sortid = "story-mode/sign/" ++ name
+                io $ logg Debug ("sm-sortid: " ++ sortid)
+                return $ Just $ Sort_ $ SSort sortid pix speechIcon
+            Nothing -> do
+                io $ logg Debug ("sm-file not found: " ++ (signDir </> name <.> "png"))
+                return Nothing
 
 data SSort =
     SSort {
-        name :: String,
+        signSortID :: String,
         pixmap :: Pixmap,
         speechIcon :: Pixmap
       }
@@ -105,7 +110,7 @@ mkWrappedMonologue app text =
             in a : bubbleWrap r
 
 instance Sort SSort Sign where
-    sortId sort = SortId ("story-mode/sign/" ++ name sort)
+    sortId sort = SortId (signSortID sort)
     freeSort = freePixmap . pixmap
     size = pixmapSize . pixmap
     renderIconified sort ptr =
