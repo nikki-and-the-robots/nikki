@@ -21,7 +21,7 @@ import Base
 
 names =
     ("box-wood-small", 125) :
-    ("box-wood-large", 370) :
+    ("box-wood-large", 360) : -- 370
     []
 
 -- loading
