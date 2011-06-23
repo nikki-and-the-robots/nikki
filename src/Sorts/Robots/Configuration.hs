@@ -9,13 +9,15 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt
 
+import Utils
+
 import Base
 
 
 -- * physics
 
 -- | robot mass per (square-)pixel
-robotMaterialMass :: CpFloat = 78
+robotMaterialMass :: CpFloat = tweakValue "robotMaterialMass" -- 78
 
 -- | physical attributes of the robots
 -- (Obviously, don't change the collisionType.)

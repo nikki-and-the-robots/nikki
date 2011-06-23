@@ -30,6 +30,24 @@ boostFrameTimes = [0.08]
 jetpackSize :: Size Double
 jetpackSize = fmap fromUber $ Size 27 21
 
+-- | How much gravity is applied to the jetpack robots.
+-- 0 = No gravity at all
+-- 1 = normal gravity
+-- This is mostly responsible for how fast jetpack robots move.
+jetpackGravityFactor = tweakValue "jetpackGravityFactor"
+
+-- | Acceleration created by the jets when in boost mode
+acceleration = tweakValue "jetpackHoverAcceleration" * jetpackGravity
+
+-- | Acceleration for the rotation from arrow keys
+controlTorqueAcceleration = tau * tweakValue "controlTorqueAcceleration"
+
+-- | maximal degree of rotation when in boost mode
+maximalAngle = deg2rad $ tweakValue "jetpackMaximalAngle"
+
+-- | Rotational friction
+jetpackRotationalFriction = tweakValue "jetpackRotationalFriction"
+
 
 -- * loading
 
@@ -214,67 +232,54 @@ pickPixmap now j sort =
 
 -- * chipmunk control
 
+jetpackGravity = gravity * jetpackGravityFactor
+
 controlToChipmunk :: Jetpack -> IO ()
 controlToChipmunk object@Jetpack{chipmunk, boost, direction} = do
     angle <- normalizeAngle $ body chipmunk
-    angVel <- CM.get $ angVel $ body chipmunk
+    angleVel <- CM.get $ angVel $ body chipmunk
 
-    -- hovering
-    hover (body chipmunk) angle boost
+    let appliedTorque =
+            controlTorque direction +
+            springTorque angle boost +
+            frictionTorque angleVel
 
-    -- angle correction
---     correctAngle (robotBoost state) body angle angVel
+        appliedForce = antiGravity +~ hover boost angle
 
-    -- directions
-    let controlTorque = directions direction
-        frictionTorque_ = frictionTorque angVel
-        uprightCorrection_ = uprightCorrection boost direction angle
-
-        appliedTorque = frictionTorque_ +~ controlTorque +~ uprightCorrection_
-
-    torque (body chipmunk) $= (appliedTorque <<| "appliedTorque")
+    applyOnlyForce (body chipmunk) appliedForce zero
+    torque (body chipmunk) $= appliedTorque
 
 
-hover :: Body -> Angle -> Bool -> IO ()
-hover body angle boost =
-    if boost then
-        applyOnlyForce body (jetpackForce <<| "jetpackForce" +~ antiGravity) zero
-      else
-        applyOnlyForce body (antiGravity <<| "antiGravity") zero
+antiGravity =
+    CM.scale (Vector 0 v) jetpackMass
   where
-    antiGravity = Vector 0 (antiGravityFactor * (- gravity) * jetpackMass)
-    antiGravityFactor = 0.8
+    v = (- gravity) + jetpackGravity
 
-    jetpackForce = rotateVector angle (Vector 0 (- jetpackAmount))
-    jetpackAmount = acceleration * jetpackMass
-    acceleration = gravity - (antiGravityFactor * gravity) + 300
+hover False angle = zero
+hover True angle =
+    rotateVector angle (Vector 0 (- force))
+  where
+    force = acceleration * jetpackMass
 
-directions :: Maybe HorizontalDirection -> Torque
-directions Nothing = 0
-directions (Just HLeft) = (- directionForce)
-directions (Just HRight) = directionForce
 
-directionForce :: Torque
-directionForce = (7.5 * jetpackInertia) <<| "directionForce"
+controlTorque direction =
+    case direction of
+        Nothing -> 0
+        Just HLeft -> - controlTorqueAcceleration * jetpackInertia
+        Just HRight -> controlTorqueAcceleration * jetpackInertia
 
-frictionTorque angVel =
-    if abs angVel < epsilon then
-        0
-      else
-        - (signum angVel * directionForce * 0.4)
+-- | ε for angles
+ε = tau * 0.00001
 
-uprightCorrection boost direction angle =
-    if boost && isNothing direction then
-        - (signum angle) * directionForce * 0.6
-      else
-        zero
+springTorque :: Angle -> Bool -> Angle
+springTorque angle boost =
+    if boost && (abs angle > ε) then 
+        jetpackInertia * negate angle * torqueSpringFactor
+      else 0
 
--- -- correctAngle :: Bool -> Body -> Angle -> AngVel -> IO ()
--- -- correctAngle boost body angle angVel = do
--- --     let velocityCorrection = - (sqrt (abs angVel) * signum angVel) * (correctionFactor * 2.3)
--- --         angleCorrection = if boost then - angle * correctionFactor else 0
--- --         correctionFactor = 70
--- --         torque = velocityCorrection + angleCorrection
--- --         maxTorque = 300
--- -- --     when (abs angle > epsilon) $
--- --     setTorque body (clip (- maxTorque, maxTorque) (torque <<? "torque"))
+torqueSpringFactor = controlTorqueAcceleration / maximalAngle
+
+frictionTorque angleVel =
+    if abs angleVel > ε then
+        jetpackRotationalFriction * jetpackInertia * negate angleVel / tau
+      else 0

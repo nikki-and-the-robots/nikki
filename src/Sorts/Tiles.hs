@@ -186,6 +186,17 @@ instance Sort TSort Tile where
 
     initialize app Nothing sort@TSort{} editorPosition Nothing = do
         let pos = editorPosition2QtPosition sort editorPosition
+
+--         let (shapes, baryCenterOffset) = mkShapes $ size sort
+--             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
+--             position = position2vector (editorPosition2QtPosition sort editorPosition)
+--                             +~ baryCenterOffset
+--             bodyAttributes = mkBodyAttributes shapes position (boxMass sort)
+--         chip <- CM.initChipmunk space bodyAttributes
+--                     shapesWithAttributes baryCenterOffset
+--         return $ Box chip
+
+
         return $ Tile $ (ImmutableChipmunk pos 0 0 [])
 
     immutableCopy = es "immutableCopy: use AllTiles"

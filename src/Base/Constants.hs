@@ -27,6 +27,8 @@ toKachel = (/ 16) . toUber
 
 -- * Physics
 
+tau = 2 * pi
+
 gravity :: CpFloat = 1975
 
 -- there are multiple substeps (steps in chipmunk) per superstep.
