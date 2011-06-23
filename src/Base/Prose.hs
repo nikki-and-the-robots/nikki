@@ -9,7 +9,7 @@ module Base.Prose (
     headerFontColor,
     colorizeProse,
     capitalizeProse,
-    getText,
+    getString,
     nullProse,
     lengthProse,
     p,
@@ -27,9 +27,8 @@ module Base.Prose (
 
 
 import Data.Monoid
-import Data.List as List
-import Data.Text as Text
-import Data.Char (chr)
+import Data.List
+import Data.Char (chr, toUpper)
 
 import Control.Arrow
 
@@ -44,28 +43,28 @@ headerFontColor :: Color = QtColor 36 110 128 255
 -- | Type for human readable text.
 -- (utf8 encoded)
 newtype Prose
-    = Prose [(Color, Text)]
+    = Prose [(Color, String)]
   deriving (Show, Monoid)
 
 colorizeProse :: Color -> Prose -> Prose
 colorizeProse color p =
-    Prose $ return $ tuple color $ getText p
+    Prose $ return $ tuple color $ getString p
 
--- | Returns the content of a Prose as a Data.Text.Text
-getText :: Prose -> Text
-getText (Prose list) = Prelude.foldr (+>) empty $ fmap snd list
+-- | Returns the content of a Prose as a String.
+getString :: Prose -> String
+getString (Prose list) = Prelude.foldr (++) "" $ fmap snd list
 
 capitalizeProse :: Prose -> Prose
 capitalizeProse (Prose list) =
-    Prose $ fmap (second toUpper) list
+    Prose $ fmap (second (fmap toUpper)) list
 
 nullProse :: Prose -> Bool
 nullProse (Prose snippets) =
-    List.all Text.null $ fmap snd snippets
+    all null $ fmap snd snippets
 
 lengthProse :: Prose -> Int
 lengthProse (Prose snippets) =
-    sum $ fmap (Text.length . snd) snippets
+    sum $ fmap (length . snd) snippets
 
 -- | Converts haskell Strings to human readable text.
 -- Will be used for translations in the future.
@@ -74,14 +73,14 @@ p = pVerbatim
 
 -- | Convert any (ASCII-) string to Prose without doing any translation.
 pVerbatim :: String -> Prose
-pVerbatim x = Prose [(standardFontColor, pack x)]
+pVerbatim x = Prose [(standardFontColor, x)]
 
 -- | shortcut for pVerbatim
 pv = pVerbatim
 
 -- | inverse of p
 unP :: Prose -> String
-unP = unpack . getText
+unP = getString
 
 -- | Read files and return their content as Prose.
 -- Should be replaced with something that supports
@@ -89,7 +88,7 @@ unP = unpack . getText
 -- (Needs to be separated from p, because it has to return multiple lines.)
 pFile :: FilePath -> IO [Prose]
 pFile file =
-    fmap (Prose . return . tuple standardFontColor) <$> Text.lines <$> pack <$> readFile file
+    fmap (Prose . return . tuple standardFontColor) <$> lines <$> readFile file
 
 -- | special characters
 

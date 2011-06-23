@@ -18,7 +18,6 @@ import Data.Abelian
 import Data.SelectTree
 import Data.Typeable
 import Data.Map hiding (size)
-import Data.Text (Text)
 import Data.Generics
 import Data.Generics.Uniplate.Data
 import Data.Accessor
@@ -112,7 +111,7 @@ data Font = Font {
 -- | save pixmaps in one color on transparent background.
 data ColorVariant = ColorVariant {
         -- ordered: longer keys first
-        glyphs :: [(Text, Pixmap)],
+        glyphs :: [(String, Pixmap)],
         errorSymbol :: Pixmap
       }
 

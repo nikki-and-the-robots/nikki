@@ -4,7 +4,6 @@ module Base.Renderable.Header (header, headerHeight) where
 
 
 import Data.Abelian
-import Data.Text
 
 import Graphics.Qt
 
@@ -43,10 +42,11 @@ data HeaderCube
 -- | converts a glyph into a renderable cube for headers
 glyphToHeaderCube :: Application -> Glyph -> HeaderCube
 glyphToHeaderCube app glyph =
-    if isSpaceGlyph glyph then SpaceCube else StandardCube glyph
+    if equalsSpace glyph then SpaceCube else StandardCube glyph
 
-isSpaceGlyph :: Glyph -> Bool
-isSpaceGlyph g = " " == unpack (character g)
+equalsSpace :: Glyph -> Bool
+equalsSpace (Glyph c _) = " " == c
+equalsSpace ErrorGlyph{} = False
 
 -- | Adds one cube before and one cube after the header.
 addStartAndEndCube :: Application -> [HeaderCube] -> [HeaderCube]

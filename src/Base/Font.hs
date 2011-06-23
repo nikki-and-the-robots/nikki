@@ -22,7 +22,6 @@ import Data.Either
 import Data.List as List
 import Data.Abelian
 import Data.Map (lookup, fromList)
-import Data.Text as Text hiding (concatMap)
 import Data.Char
 
 import Text.Parsec
@@ -76,21 +75,21 @@ proseToGlyphs :: Font -> Prose -> [Glyph]
 proseToGlyphs font (Prose list) =
     concatMap inner list
   where
-    inner :: (Color, Text) -> [Glyph]
+    inner :: (Color, String) -> [Glyph]
     inner (color, string) =
         searchGlyphs (getColorVariant font color) string
 
-searchGlyphs :: ColorVariant -> Text -> [Glyph]
+searchGlyphs :: ColorVariant -> String -> [Glyph]
 searchGlyphs variant =
     inner (glyphs variant)
   where
-    inner _ string | Text.null string = []
+    inner _ string | null string = []
     inner ((key, pixmap) : r) string =
-        if key `Text.isPrefixOf` string then
-            Glyph key pixmap : searchGlyphs variant (Text.drop (Text.length key) string)
+        if key `isPrefixOf` string then
+            Glyph key pixmap : searchGlyphs variant (drop (length key) string)
         else
             inner r string
-    inner [] string = ErrorGlyph (errorSymbol variant) : searchGlyphs variant (Text.tail string)
+    inner [] string = ErrorGlyph (errorSymbol variant) : searchGlyphs variant (tail string)
 
 -- | Returns the width of the given sequence of pixmaps,
 -- including 1 üp for kerning
@@ -121,7 +120,7 @@ data Word = Word {
 -- | a letter with its graphical representation
 data Glyph
     = Glyph {
-        character :: Text,
+        character :: String,
         glyphPixmap :: Pixmap
       }
     | ErrorGlyph {glyphPixmap :: Pixmap}
@@ -131,7 +130,7 @@ glyphSize :: Glyph -> Size Double
 glyphSize = pixmapSize . glyphPixmap
 
 isSpaceGlyph :: Glyph -> Bool
-isSpaceGlyph (Glyph c _) = Text.all isSpace c
+isSpaceGlyph (Glyph c _) = all isSpace c
 isSpaceGlyph ErrorGlyph{} = False
 
 toWords :: [Glyph] -> [Word]
@@ -184,7 +183,7 @@ loadDigitFont :: RM Font = loadFont digitFontColors digitFontDir
 -- | Converts loaded pixmaps to a font.
 -- Also sorts the letter pixmaps (longest keys first).
 -- Does only load the standard color variant at the moment.
-toFont :: [Color] -> [(Either Text ErrorSymbol, Pixmap)] -> IO Font
+toFont :: [Color] -> [(Either String ErrorSymbol, Pixmap)] -> IO Font
 toFont fontColors m =
     toColorVariants fontColors $ ColorVariant sortedLetters errorSymbol
   where
@@ -192,8 +191,8 @@ toFont fontColors m =
     sortedLetters = List.reverse $ sortBy shortestKeyFirst letters
     errorSymbol = lookupJustNote "error symbol not found" (Right ErrorSymbol) m
 
-    shortestKeyFirst :: (Text, b) -> (Text, b) -> Ordering
-    shortestKeyFirst = withView (Text.length . fst) compare
+    shortestKeyFirst :: (String, b) -> (String, b) -> Ordering
+    shortestKeyFirst = withView (length . fst) compare
 
 -- | converts the loaded color variant (white/black) to
 -- the standardColorVariants
@@ -220,12 +219,12 @@ toColorVariants fontColors loadedVariant = do
 data ErrorSymbol = ErrorSymbol
   deriving (Eq, Ord)
 
-loadLetter :: FilePath -> IO (Either Text ErrorSymbol, Pixmap)
+loadLetter :: FilePath -> IO (Either String ErrorSymbol, Pixmap)
 loadLetter file = do
     pixmap <- loadSymmetricPixmap (Position 1 1) file
     return (textString, pixmap)
   where
-    textString = left (pack . fmap chr) $ parseFileName (takeBaseName file)
+    textString = left (fmap chr) $ parseFileName (takeBaseName file)
 
 parseFileName :: String -> Either [Int] ErrorSymbol
 parseFileName name = do
