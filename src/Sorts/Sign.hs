@@ -39,7 +39,7 @@ speechIconPadding = fromUber 4
 textPadding = 28
 
 bubbleSize = Size 800 172
-textSize = bubbleSize -~ Size textPadding textPadding
+textSize = bubbleSize -~ fmap (* 2) (Size textPadding textPadding)
 
 
 -- * loading
