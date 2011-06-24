@@ -9,6 +9,7 @@ import Prelude hiding (catch)
 
 import Data.List
 import Data.Monoid
+import Data.Version (Version, showVersion)
 
 import Control.Monad.Trans.Error
 import Control.Monad.CatchIO

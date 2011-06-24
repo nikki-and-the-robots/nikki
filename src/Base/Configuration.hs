@@ -16,6 +16,7 @@ module Base.Configuration (
 
 import Data.Accessor
 import Data.Initial
+import Data.Version
 
 import System.Console.CmdArgs as CmdArgs
 

@@ -90,10 +90,17 @@ getConfigurationFile = do
 loadConfiguration :: IO Configuration
 loadConfiguration = do
     filteredArgs <- filterUnwantedArgs <$> getArgs
-    mLoadedConfig <- loadConfigurationFromFile
-    let loadedConfig = savedConfigurationToConfiguration $
-                            fromMaybe initial mLoadedConfig
+    mLoadedSavedConfig <- loadConfigurationFromFile
+    let loadedSavedConfig = case mLoadedSavedConfig of
+            Left (logLevel, msg) -> initial
+            Right x -> x
+        loadedConfig = savedConfigurationToConfiguration loadedSavedConfig
     config <- withArgs filteredArgs $ cmdArgs loadedConfig
+    case mLoadedSavedConfig of
+        -- retain error messages till after execution of cmdArgs 
+        -- to prevent pollution of version or help output
+        Left (logLevel, msg) -> logg logLevel msg
+        _ -> return ()
     return config
 
 -- | on OS X there is a default command line argument
@@ -108,22 +115,20 @@ filterUnwantedArgs = case System.Info.os of
 -- | loads the configuration from file.
 -- If the file does not exists, it is initialized with the default configuration.
 -- Also returns a message, if necessary.
-loadConfigurationFromFile :: IO (Maybe SavedConfiguration)
+loadConfigurationFromFile :: IO (Either (LogLevel, String) SavedConfiguration)
 loadConfigurationFromFile = do
     file <- getConfigurationFile
     exists <- doesFileExist file
-    if (not exists) then do
+    if (not exists) then
         -- no config file found
-        logg Info "no configuration file found, using default configuration."
-        return Nothing
+        return $ Left (Info, "no configuration file found, using default configuration.")
       else do
         -- attempting to load configuration
         mLoaded :: Maybe SavedConfiguration <- readMay <$> readFile file
         case mLoaded of
-            Nothing -> do
-                logg Error "unable to read configuration file, using default configuration"
-                return Nothing
-            Just config -> return $ Just config
+            Nothing ->
+                return $ Left (Error, "unable to read configuration file, using default configuration")
+            Just config -> return $ Right config
 
 saveConfigurationToFile :: SavedConfiguration -> IO ()
 saveConfigurationToFile config = do

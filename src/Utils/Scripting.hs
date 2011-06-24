@@ -1,3 +1,4 @@
+{-# language ViewPatterns #-}
 
 -- | scripting stuff
 
@@ -7,8 +8,11 @@ module Utils.Scripting where
 import Safe
 
 import Data.List
+import Data.Version
+import Data.Char
 
 import Text.Logging
+import Text.ParserCombinators.ReadP (readP_to_S)
 
 import Control.Arrow
 import Control.Applicative
@@ -20,6 +24,13 @@ import System.FilePath
 import System.Directory
 import System.Exit
 import System.Process
+
+
+(<~>) :: String -> String -> String
+a <~> b = a ++ " " ++ b
+
+stripWhiteSpaces :: String -> String
+stripWhiteSpaces = dropWhile isSpace . reverse . dropWhile isSpace . reverse
 
 
 -- | executes a unix command on the shell and exits if it does not succeed.
@@ -117,3 +128,32 @@ getFiles dir mExtension =
         (Just extension@('.' : _)) -> takeExtension >>> (== extension)
         (Just extension) -> takeExtension >>> (== ('.' : extension))
         Nothing -> const True
+
+
+-- * version stuff
+
+parseVersion :: String -> Either String Version
+parseVersion (stripWhiteSpaces -> s) =
+    case readP_to_S Data.Version.parseVersion s of
+        (last -> (v, "")) -> Right v
+        x -> Left ("version parse error: " ++ show (s, x))
+
+
+-- | reads the nikki version from a given executable
+readNikkiVersion :: FilePath -> IO Version
+readNikkiVersion nikkiExecutable = do
+    -- get missing configuration warnings out of the way
+    _ <- readProcess nikkiExecutable ["--version"] ""
+    versionString <- readProcess nikkiExecutable ["--version"] ""
+    return $ case parse versionString of
+        Left errMsg -> error errMsg
+        Right version -> version
+  where
+    parse :: String -> Either String Version
+    parse s | prefix `isPrefixOf` s && suffix `isSuffixOf` s =
+        Utils.Scripting.parseVersion versionString
+      where
+        prefix = "Nikki and the Robots ("
+        suffix = ")\n"
+        versionString = drop (length prefix) $ reverse $ drop (length suffix) $ reverse s
+    parse s = Left ("unparseable progamm summary: " ++ show s)

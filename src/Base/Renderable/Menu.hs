@@ -9,6 +9,7 @@ module Base.Renderable.Menu (
 
 import Data.SelectTree (SelectTree(..), labelA)
 import qualified Data.Indexable as I
+import Data.Version
 
 import Control.Concurrent.MVar
 
