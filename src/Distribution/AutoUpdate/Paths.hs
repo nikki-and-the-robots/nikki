@@ -9,6 +9,8 @@ import System.Environment.FindBin
 import System.Directory
 import System.Info
 
+import Utils.Scripting
+
 
 -- | default repo for updates
 defaultRepo = "http://updates.joyridelabs.de/nikki/default"
@@ -81,6 +83,3 @@ osRepoPath = foldr1 (</>) repoPaths
 
 repoPaths :: [String]
 repoPaths = System.Info.os : System.Info.arch : []
-
--- unix style slashes
-a <//> b = a ++ "/" ++ b

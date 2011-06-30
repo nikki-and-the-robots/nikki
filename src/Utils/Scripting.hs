@@ -24,19 +24,28 @@ import System.FilePath
 import System.Directory
 import System.Exit
 import System.Process
+import System.IO
 
 
 (<~>) :: String -> String -> String
 a <~> b = a ++ " " ++ b
 
+-- unix style slashes
+(<//>) :: String -> String -> String
+a <//> b = a ++ "/" ++ b
+
 stripWhiteSpaces :: String -> String
 stripWhiteSpaces = dropWhile isSpace . reverse . dropWhile isSpace . reverse
+
+
+switchOffCaching =
+    mapM_ (\ h -> hSetBuffering h NoBuffering) [stdout, stderr]
 
 
 -- | executes a unix command on the shell and exits if it does not succeed.
 trySystem :: String -> IO ()
 trySystem cmd = do
-    logg Info ("Executing \"" ++ cmd ++ "\" ...")
+    putStrLn ("Executing \"" ++ cmd ++ "\" ...")
     exitcode <- system cmd
     case exitcode of
         ExitSuccess -> return ()
