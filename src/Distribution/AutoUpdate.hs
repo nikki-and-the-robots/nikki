@@ -34,6 +34,7 @@ import Base.Renderable.Message
 import Distribution.AutoUpdate.Paths
 import Distribution.AutoUpdate.Download
 import Distribution.AutoUpdate.Zip
+import Distribution.AutoUpdate.VerifySignatures
 
 
 -- * introduced for more type safety
@@ -78,8 +79,8 @@ autoUpdate app follower = NoGUIAppState $ io $ do
                 io $ logCommand (p "updating...")
                 result <- io $ attemptUpdate app logCommand (Repo repoString) path
                 case result of
-                    (Left errorMessage) ->
-                        return $ message app [p "cannot connect to server:", pVerbatim errorMessage] follower
+                    (Left errorMessages) ->
+                        return $ message app (map pv errorMessages) follower
                     (Right (Just version)) -> do
                         return $ message app
                             (p "update complete" :
@@ -96,7 +97,7 @@ autoUpdate app follower = NoGUIAppState $ io $ do
 -- (Right Nothing) if there is no newer version and
 -- (Left message) if an error occurs.
 attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
-    -> IO (Either String (Maybe Version))
+    -> IO (Either [String] (Maybe Version))
 attemptUpdate app logCommand repo deployPath = runErrorT $ do
     serverVersion :: Version <- (ErrorT . return . parseVersion) =<<
                                 downloadContent (mkUrl repo "version")
@@ -108,7 +109,7 @@ attemptUpdate app logCommand repo deployPath = runErrorT $ do
 
 -- | the actual updating procedure
 update :: Application -> (Prose -> IO ()) -> Repo -> Version -> DeployPath
-    -> ErrorT String IO ()
+    -> ErrorT [String] IO ()
 update app logCommand repo newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
     zipFile <- downloadUpdate app logCommand repo newVersion downloadDir
     newVersionDir <- unzipFile app logCommand zipFile
@@ -116,23 +117,30 @@ update app logCommand repo newVersion deployPath = withSystemTempDirectory "nikk
     withBackup app logCommand deployPath $
         installUpdate newVersionDir deployPath
 
--- | downloads the update to 
+-- | downloads the update.
+-- Also downloads a signature and verifies the downloaded update against that signature.
 downloadUpdate :: Application -> (Prose -> IO ()) -> Repo -> Version -> FilePath
-    -> ErrorT String IO ZipFilePath
+    -> ErrorT [String] IO ZipFilePath
 downloadUpdate app logCommand repo newVersion tmpDir = do
     let zipFile = ("nikki-" ++ showVersion newVersion) <.> "zip"
-    downloadFile app logCommand (mkUrl repo zipFile) (tmpDir </> zipFile)
+        signatureFile = zipFile <.> "signature"
+        qualZipFile = tmpDir </> zipFile
+        qualSignatureFile = tmpDir </> signatureFile
+    downloadFile app logCommand (mkUrl repo zipFile) qualZipFile
+    downloadFile app logCommand (mkUrl repo signatureFile) qualSignatureFile
+    io $ logCommand (p "verifying signature")
+    verifyUpdate qualZipFile qualSignatureFile
     return $ ZipFilePath (tmpDir </> zipFile)
 
 -- | unzips a given zipFile (in the same directory) and returns the path to the unzipped directory
 unzipFile :: Application -> (Prose -> IO ()) -> ZipFilePath
-    -> ErrorT String IO NewVersionDir
+    -> ErrorT [String] IO NewVersionDir
 unzipFile app logCommand (ZipFilePath path) = do
     io $ logCommand (p "uncompressing " `mappend` pVerbatim (takeBaseName path))
     io $ unzipArchive path (takeDirectory path)
     let nikkiDir = takeDirectory path </> mkDeployedFolder "nikki"
     nikkiExists <- io $ doesDirectoryExist nikkiDir
-    when (not nikkiExists) $ throwError ("directory not found: " ++ nikkiDir)
+    when (not nikkiExists) $ throwError ["directory not found:", nikkiDir]
     return $ NewVersionDir nikkiDir
 
 -- | Backups all files to a temporary directory.
@@ -141,16 +149,16 @@ unzipFile app logCommand (ZipFilePath path) = do
 -- Leaves the backup where it is (in a folder called "temporaryBackupSOMETHING",
 -- which will be deleted by the restarter at a later launch.)
 withBackup :: Application -> (Prose -> IO ()) -> DeployPath
-    -> ErrorT String IO a -> ErrorT String IO a
+    -> ErrorT [String] IO a -> ErrorT [String] IO a
 withBackup app logCommand (DeployPath deployPath) action = do
     deployedFiles <- io $ sort <$> getDirectoryRealContents deployPath
     tmpDir <- io $ createTempDirectory deployPath "temporaryBackup"
 
-    let backup :: ErrorT String IO ()
+    let backup :: ErrorT [String] IO ()
         backup = do
             forM_ deployedFiles $ \ f ->
                 rename (deployPath </> f) (tmpDir </> f)
-        restore :: ErrorT String IO ()
+        restore :: ErrorT [String] IO ()
         restore = do
             io $ logCommand (p "restoring backup")
             forM_ deployedFiles $ \ f -> do
@@ -166,6 +174,7 @@ withBackup app logCommand (DeployPath deployPath) action = do
   where
 
     -- | renaming directories and files
+    rename :: FilePath -> FilePath -> ErrorT [String] IO ()
     rename src dest = do
         isFile <- io $ doesFileExist src
         isDirectory <- io $ doesDirectoryExist src
@@ -174,10 +183,10 @@ withBackup app logCommand (DeployPath deployPath) action = do
           else if isDirectory then
             io $ renameDirectory src dest
           else
-            throwError ("file not found: " ++ src)
+            throwError ["file not found: " ++ src]
 
 -- | installs the update
-installUpdate :: NewVersionDir -> DeployPath -> ErrorT String IO ()
+installUpdate :: NewVersionDir -> DeployPath -> ErrorT [String] IO ()
 installUpdate (NewVersionDir newVersionDir) (DeployPath deployPath) = io $ do
     copyDirectory newVersionDir deployPath
     -- adding executable rights to the executables

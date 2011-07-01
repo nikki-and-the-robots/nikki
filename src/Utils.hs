@@ -1,4 +1,5 @@
-{-# language EmptyDataDecls, FlexibleInstances, ViewPatterns, PackageImports #-}
+{-# language EmptyDataDecls, FlexibleInstances, ViewPatterns, PackageImports, 
+    TypeSynonymInstances #-}
 
 module Utils (
     (<$>),
@@ -47,7 +48,7 @@ import Text.Logging
 
 import Control.Applicative ((<$>), (<|>), (<*>), pure)
 import "mtl" Control.Monad.State hiding (forM_)
-import "transformers" Control.Monad.Trans.Error () -- Monad (Either e)
+import "transformers" Control.Monad.Trans.Error (ErrorList(listMsg)) -- Monad (Either e)
 import Control.Arrow ((>>>))
 import Control.Concurrent
 
@@ -196,6 +197,11 @@ runStateTFromIORef ref cmd = do
 
 
 -- * Monad stuff
+
+-- | to allow ErrorT [String] IO a
+instance ErrorList String where
+    listMsg = singleton
+
 
 chainAppM :: Monad m => (b -> a -> m a) -> [b] -> a -> m a
 chainAppM cmd (b : r) a = do
