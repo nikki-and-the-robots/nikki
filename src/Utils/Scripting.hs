@@ -42,6 +42,20 @@ switchOffCaching =
     mapM_ (\ h -> hSetBuffering h NoBuffering) [stdout, stderr]
 
 
+-- | displays a message and waits for the return key.
+waitForReturn msg = do
+    emptyStdin
+    putStrLn msg
+    _ <- getLine
+    return ()
+  where
+    emptyStdin = do
+        r <- hReady stdin
+        when r $ do
+            _ <- hGetChar stdin
+            emptyStdin
+
+
 -- | executes a unix command on the shell and exits if it does not succeed.
 trySystem :: String -> IO ()
 trySystem cmd = do
