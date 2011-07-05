@@ -80,7 +80,7 @@ transition controls cd scene = do
         robotToTerminal controls scene cd,
         nikkiMovedAwayFromTerminal scene,
         lowerLimitHandler scene controlledPosition,
-        gameOver scene,
+        touchesDeadlyHandler scene,
         levelPassed scene
       ]
 
@@ -161,16 +161,16 @@ nikkiMovedAwayFromTerminal scene@Scene{mode_} =
         Nothing
 
 
-gameOver :: Scene Object_ -> Maybe (Scene Object_)
-gameOver scene | isGameOver =
+touchesDeadlyHandler :: Scene Object_ -> Maybe (Scene Object_)
+touchesDeadlyHandler scene | isGameOver =
     Just $ mode ^= (mkLevelFinished scene Failed) $ scene
   where
     now = scene ^. spaceTime
     batteries = scene ^. batteryPower
     isGameOver =
         isGameMode (scene ^. mode)
-        && nikkiTouchesLaser (scene ^. contacts)
-gameOver _ = Nothing
+        && nikkiTouchesDeadly (scene ^. contacts)
+touchesDeadlyHandler _ = Nothing
 
 levelPassed :: Scene Object_ -> Maybe (Scene Object_)
 levelPassed scene =

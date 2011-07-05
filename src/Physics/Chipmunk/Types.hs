@@ -164,7 +164,7 @@ mkShape body ShapeDescription{shapeAttributes = (ShapeAttributes elasticity fric
         shape <- newShape body shapeType shapeOffset
         H.elasticity shape $= elasticity
         H.friction shape $= friction
-        setMyCollisionType shape collisionType
+        setMyCollisionType collisionType shape
         return shape
 
 -- | initially adds shapes to a Chipmunk

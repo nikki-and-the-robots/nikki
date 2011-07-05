@@ -29,8 +29,8 @@ import Physics.Hipmunk.Callbacks ()
 toNumber :: Enum collisionType => collisionType -> CollisionType
 toNumber = toEnum . fromEnum
 
-setMyCollisionType :: Enum collisionType => Shape -> collisionType -> IO ()
-setMyCollisionType s ct = collisionType s $= toNumber ct
+setMyCollisionType :: Enum collisionType => collisionType -> Shape -> IO ()
+setMyCollisionType ct s = collisionType s $= toNumber ct
 
 
 -- * contact ref stuff

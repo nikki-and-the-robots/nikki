@@ -211,7 +211,7 @@ data CameraState
 data Contacts
     = Contacts {
         nikkiCollisions :: [NikkiCollision],
-        nikkiTouchesLaser :: !Bool,
+        nikkiTouchesDeadly :: !Bool,
         triggers :: Set Shape,
         terminals :: Set Shape,
         batteries :: Set Shape,
@@ -228,7 +228,7 @@ data MyCollisionType
 
     | TileCT
     | TerminalCT
-    | LaserCT
+    | DeadlySolidCT
     | RobotCT
     | TriggerCT
     | BatteryCT

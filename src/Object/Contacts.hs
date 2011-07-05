@@ -51,8 +51,8 @@ addNikkiContacts :: Shape -> MyCollisionType -> Vector -> Contacts -> Contacts
 addNikkiContacts s ct v c =
     c{nikkiCollisions = (NikkiCollision s (foldAngle $ toUpAngle v) ct : nikkiCollisions c)}
 
-setNikkiTouchesLaser :: Contacts -> Contacts
-setNikkiTouchesLaser c = c{nikkiTouchesLaser = True}
+setNikkiTouchesDeadly :: Contacts -> Contacts
+setNikkiTouchesDeadly c = c{nikkiTouchesDeadly = True}
 
 addTrigger :: Shape -> Contacts -> Contacts
 addTrigger s c = c{triggers = insert s (triggers c)}
@@ -83,7 +83,6 @@ watchedContacts :: [Callback MyCollisionType Contacts]
 watchedContacts =
     -- normal contacts of nikki
     map (uncurry nikkiCallbacks) (cartesian solidCollisionTypes nikkiCollisionTypes) ++
-    switchCallback :
     nikkiTerminalCallbacks ++
     map terminalSolidCallback solidCollisionTypes ++
     batteryCallbacks ++
@@ -91,7 +90,17 @@ watchedContacts =
     map nikkiFallingTilesCallbacks
         (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
     map signNikkiCallbacks (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
-    map signPermeableCallbacks (solidCollisionTypes ++ filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes)
+    map signPermeableCallbacks (solidCollisionTypes ++ filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes) ++
+    -- deadly solid (patrol robots)
+    map deadlySolidNikki (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
+    map deadlySolidPermeable (
+        filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes ++
+        TerminalCT :
+        SignCT :
+        []) ++
+
+    switchCallback :
+    []
 
 
 nikkiCallbacks solidCT nikkiCollisionType =
@@ -137,3 +146,13 @@ signPermeableCallbacks :: MyCollisionType -> Callback MyCollisionType Contacts
 signPermeableCallbacks solidCT =
     Callback (DontWatch SignCT solidCT) Permeable
 
+-- * deadly solid things
+
+-- | add callbacks to let the level fail
+deadlySolidNikki :: MyCollisionType -> Callback MyCollisionType Contacts
+deadlySolidNikki nikkiCT =
+    Callback (Watch DeadlySolidCT nikkiCT (\ _ _ -> setNikkiTouchesDeadly)) Solid
+
+deadlySolidPermeable :: MyCollisionType -> Callback MyCollisionType Contacts
+deadlySolidPermeable permeableCT =
+    Callback (DontWatch DeadlySolidCT permeableCT) Permeable

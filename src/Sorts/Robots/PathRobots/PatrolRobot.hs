@@ -94,14 +94,15 @@ instance Sort PSort Patrol where
             baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
 
             shape = mkPoly sort
-            shapes = [mkShapeDescription shapeAttributes shape]
+            deadly = oemActive oemState
+            shapes = [mkShapeDescription (shapeAttributes deadly) shape]
 
             pos = position2vector (epToPosition (size sort) ep)
                     +~ baryCenterOffset
         chip <- initChipmunk space (bodyAttributes sort pos) shapes baryCenterOffset
 
         let path = toPath (size sort) oemState
-        return $ Patrol (size sort) chip path (oemActive oemState)
+        return $ Patrol (size sort) chip path deadly
     initialize app Nothing sort ep _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
@@ -151,7 +152,11 @@ bodyAttributes sort pos =
     BodyAttributes pos patrolMass infinity
 
 -- | tile friction to allow better walking
-shapeAttributes = robotShapeAttributes{friction = patrolFriction}
+shapeAttributes deadly =
+    ShapeAttributes
+        (elasticity robotShapeAttributes)
+        patrolFriction
+        (if deadly then DeadlySolidCT else RobotCT)
 
 
 -- * initialising
@@ -165,8 +170,17 @@ toPath size (OEMPath _ _ cursor path _) =
 
 control :: Controls -> (Bool, ControlData) -> Patrol -> IO Patrol
 control config (True, cd) | isRobotActionPressed config cd =
-    return . (deadly ^: not)
+    return . (deadly ^: not) >=>
+    passThrough updateCollisionType
 control _ _ = return
+
+-- | Updates the collision type of the patrol robot.
+-- DeadlySolidCT or RobotCT
+updateCollisionType :: Patrol -> IO ()
+updateCollisionType p =
+    mapM_ (setMyCollisionType ct) $ shapes $ chipmunk p
+  where
+    ct = if p ^. deadly then DeadlySolidCT else RobotCT
 
 -- * physics behaviour
 
