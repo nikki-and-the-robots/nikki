@@ -8,7 +8,7 @@ module Sorts.Robots.PathRobots where
 
 import Base
 
-import qualified Sorts.Robots.PathRobots.Platforms as Platforms
+import qualified Sorts.Robots.PathRobots.Platform as Platform
 
 
 
@@ -16,7 +16,7 @@ import qualified Sorts.Robots.PathRobots.Platforms as Platforms
 
 sorts :: RM [Sort_]
 sorts = do
-    platformSort <- Platforms.sort
+    platformSort <- Platform.sort
     return (
         platformSort :
         [])

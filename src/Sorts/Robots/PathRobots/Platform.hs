@@ -2,7 +2,7 @@
     DeriveDataTypeable, ScopedTypeVariables #-}
 
 
-module Sorts.Robots.PathRobots.Platforms where
+module Sorts.Robots.PathRobots.Platform where
 
 
 import Safe
