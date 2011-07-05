@@ -3,16 +3,25 @@
 module Sorts.Robots.PathRobots.Path where
 
 
+import Safe
+
 import Data.Abelian
 import Data.Typeable
+import Data.Generics
+import Data.Accessor
 
 import Physics.Chipmunk hiding (start, end)
+
+import Graphics.Qt hiding (scale)
 
 import Base
 
 import Utils hiding (distance)
 
 import Sorts.Robots.PathRobots.Configuration
+
+import Editor.Scene.Rendering
+import Editor.Scene.Rendering.Helpers
 
 
 -- | Describes the path of a platform.
@@ -133,6 +142,32 @@ updateSegment path@(Path (a : r) dtg pathLength) =
 
 -- * force
 
+-- | Applies a force to the path robot.
+-- The force is composed of an antiGravity and a path force
+-- that will let the platform follow its path.
+applyPathRobotForce :: Chipmunk -> Path -> IO ()
+applyPathRobotForce chip path = do
+    antiGravity <- getAntiGravity chip
+    motion <- getPathForce chip path
+
+    let force = antiGravity +~ motion
+    applyOnlyForce (body chip) force zero
+    return ()
+
+-- | calculates the force that lets the platform hover
+getAntiGravity :: Chipmunk -> IO Vector
+getAntiGravity chip = do
+    m <- getMass chip
+    return (Vector 0 (- gravity * m))
+
+-- | calculates the force that moves the platform to the next path node
+getPathForce :: Chipmunk -> Path -> IO Vector
+getPathForce chip path = do
+    m <- getMass chip
+    p <- getPosition chip
+    v <- get $ velocity $ body chip
+    return $ mkPathForce path m p v
+
 -- | (pure) calculation of the path force.
 mkPathForce :: Path -> Mass -> Vector -> Vector -> Vector
 mkPathForce (SingleNode aim _) m p v =
@@ -164,3 +199,136 @@ springForce conf mass position velocity aim =
     dynamicDrag = dragFactor conf * mass
         * len velocity / platformStandardVelocity
     dragDirection = normalizeIfNotZero (negateAbelian velocity)
+
+
+-- * object edit mode
+
+oemMethods :: Size Double -> OEMMethods
+oemMethods size = OEMMethods
+    (OEMState . initialState size)
+    (OEMState . unpickle size)
+
+data OEMPath = OEMPath {
+    oemRobotSize :: Size Double,
+    oemStepSize :: Int,
+    oemCursor_ :: EditorPosition,
+    pathPositions :: OEMPathPositions,
+    oemActive :: Bool
+  }
+    deriving (Show, Typeable, Data)
+
+oemCursor :: Accessor OEMPath EditorPosition
+oemCursor = accessor oemCursor_ (\ a r -> r{oemCursor_ = a})
+
+instance IsOEMState OEMPath where
+    oemEnterMode _ = id
+    oemUpdate _ = updateOEMPath
+    oemNormalize _ = id
+    oemRender ptr _ _ = renderOEMState ptr
+    oemPickle (OEMPath _ _ cursor path active) =
+        show ((cursor, getPathList path, active) :: PickleType)
+    oemHelp = const oemHelpText
+
+type PickleType = (EditorPosition, [EditorPosition], Bool)
+
+unpickle :: Size Double -> String -> OEMPath
+unpickle size (readMay -> Just ((cursor, (start : path), active) :: PickleType)) =
+    OEMPath size (fromKachel 1) cursor (OEMPathPositions start path) active
+
+-- | reads an OEMPath and returns the path for the game
+toPath :: Size Double -> OEMPath -> Path
+toPath size (OEMPath _ _ cursor path active) =
+    mkPath active $ map (epToCenterVector size) (getPathList path)
+
+-- | use the position of the object as first node in Path
+initialState :: Size Double -> EditorPosition -> OEMPath
+initialState size p = OEMPath size (fromKachel 1) p (OEMPathPositions p []) True
+
+data OEMPathPositions =
+    OEMPathPositions {
+        startPosition :: EditorPosition,
+        positions :: [EditorPosition]
+      }
+  deriving (Show, Typeable, Data)
+
+getPathList :: OEMPathPositions -> [EditorPosition]
+getPathList (OEMPathPositions start path) = start : path
+
+-- | Adds a point to the path.
+addPathPoint :: EditorPosition -> OEMPathPositions -> OEMPathPositions
+addPathPoint point (OEMPathPositions start path) =
+    OEMPathPositions start (path +: point)
+
+-- | removes the last added point at the given position, if it exists.
+removePathPoint :: EditorPosition -> OEMPathPositions -> OEMPathPositions
+removePathPoint point (OEMPathPositions start path) =
+    OEMPathPositions start (reverse $ deleteNeedle point $ reverse path)
+  where
+    -- deletes the first occurence of a given element
+    deleteNeedle :: Eq a => a -> [a] -> [a]
+    deleteNeedle needle list = case span (/= needle) list of
+        (before, _needle : after) -> before ++ after
+        (before, []) -> before
+
+
+-- * oem logic
+
+updateOEMPath :: Button -> OEMPath -> Maybe OEMPath
+updateOEMPath (KeyboardButton key _) oem@(OEMPath size cursorStep cursor path active) =
+    case key of
+        LeftArrow -> Just $ oemCursor ^: (-~ EditorPosition cursorStepF 0) $ oem
+        RightArrow -> Just $ oemCursor ^: (+~ EditorPosition cursorStepF 0) $ oem
+        UpArrow -> Just $ oemCursor ^: (-~ EditorPosition 0 cursorStepF) $ oem
+        DownArrow -> Just $ oemCursor ^: (+~ EditorPosition 0 cursorStepF) $ oem
+        -- append new path node
+        k | isEditorA k -> Just $ OEMPath size cursorStep cursor (addPathPoint cursor path) active
+        -- delete path node
+        k | isEditorB k -> Just $ OEMPath size cursorStep cursor (removePathPoint cursor path) active
+        W -> Just $ oem{oemStepSize = cursorStep * 2}
+        S -> Just $ oem{oemStepSize = max 1 (cursorStep `div` 2)}
+        Space -> Just $ oem{oemActive = not active}
+        _ -> Nothing
+  where
+    cursorStepF :: Double = fromIntegral cursorStep
+updateOEMPath _ _ = Nothing
+
+
+renderOEMState :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()
+renderOEMState ptr scene (OEMPath robotSize stepSize cursor pathPositions oemActive) = do
+    offset <- transformation ptr cursor robotSize
+    renderScene offset
+    renderCursor offset
+    let stepSizeF = fromIntegral stepSize
+    renderCursorStepSize ptr $ EditorPosition stepSizeF stepSizeF
+  where
+    renderScene offset =
+        renderObjectScene ptr offset scene
+    renderCursor offset =
+        drawColoredBox ptr (epToPosition robotSize cursor +~ offset) robotSize 4 yellow
+
+renderOEMPath :: Size Double -> Ptr QPainter -> Offset Double -> [EditorPosition]
+    -> IO ()
+renderOEMPath size ptr offset paths = do
+    setPenColor ptr green 4
+    mapM_ (renderLine size ptr) (adjacentCyclic paths)
+    mapM_ (drawPathNode size ptr) paths
+
+renderLine :: Size Double -> Ptr QPainter -> (EditorPosition, EditorPosition) -> IO ()
+renderLine size ptr (a, b) =
+    drawLine ptr (epToCenterPosition size a) (epToCenterPosition size b)
+
+drawPathNode :: Size Double -> Ptr QPainter -> EditorPosition -> IO ()
+drawPathNode size ptr n =
+    fillRect ptr (epToPosition size n)
+        size
+        (alpha ^: (* 0.4) $ yellow)
+
+
+-- * oem help text
+
+oemHelpText :: String =
+    "Arrow keys: move cursor\n" ++
+    "Ctrl: add new path node\n" ++
+    "Shift: remove existing node from path\n" ++
+    "Space: change initial state of platform (on / off)\n" ++
+    "W, S: change cursor step size"
