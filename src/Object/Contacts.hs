@@ -11,7 +11,9 @@ module Object.Contacts (
 
 import Data.Set as Set hiding (map, filter)
 import Data.Initial
+import Data.Abelian
 
+import qualified Physics.Hipmunk as Hipmunk
 import Physics.Chipmunk
 
 import Utils
@@ -42,7 +44,7 @@ solidCollisionTypes =
 
 -- initial in the sense that nothing collides
 instance Initial Contacts where
-    initial = Contacts [] False empty empty empty empty empty
+    initial = Contacts [] False empty empty empty empty Nothing
 
 
 -- * setter (boolean to True)
@@ -72,10 +74,19 @@ addFallingTileContact :: Shape -> Contacts -> Contacts
 addFallingTileContact fallingTileShape contacts =
     contacts{fallingTiles = insert fallingTileShape (fallingTiles contacts)}
 
-addSign :: Shape -> Contacts -> Contacts
-addSign s contacts =
-    contacts{signs = insert s (signs contacts)}
-
+-- | sets the sign, if it is closer to Nikki.
+addSign :: Shape -> Shape -> Contacts -> IO Contacts
+addSign nikkiShape signShape contacts = do
+    nikkiPos <- get $ Hipmunk.position $ Hipmunk.body nikkiShape
+    signPos <- get $ Hipmunk.position $ Hipmunk.body signShape
+    let thisDistance = len (nikkiPos -~ signPos)
+    return $ case nearestSign contacts of
+        Nothing -> contacts{nearestSign = Just (signShape, thisDistance)}
+        Just (_, otherDistance) ->
+            if thisDistance < otherDistance then
+                contacts{nearestSign = Just (signShape, thisDistance)}
+              else
+                contacts
 
 -- | callbacks
 
@@ -113,20 +124,20 @@ nikkiCallbacks solidCT nikkiCollisionType =
 
 -- nikki stands in front of a terminal 
 nikkiTerminalCallbacks =
-    map (\ nct -> Callback (Watch nct TerminalCT (\ _ t -> addTerminal t)) Permeable)
+    map (\ nct -> Callback (Watch nct TerminalCT (\ _ t -> return . addTerminal t)) Permeable)
         (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
     map (\ nct -> Callback (DontWatch nct TerminalCT) Permeable)
         (filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes)
 
 batteryCallbacks =
-    map (\ nct -> Callback (Watch nct BatteryCT (\ _ b -> addBattery b)) Permeable)
+    map (\ nct -> Callback (Watch nct BatteryCT (\ _ b -> return . addBattery b)) Permeable)
         (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
     map (\ nct -> Callback (DontWatch nct BatteryCT) Permeable)
         (filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes)
 
 -- a trigger (in a switch) is activated
 switchCallback =
-    Callback (Watch TileCT TriggerCT (\ _ t -> addTrigger t)) Permeable
+    Callback (Watch TileCT TriggerCT (\ _ t -> return . addTrigger t)) Permeable
 
 terminalSolidCallback solidCT =
     Callback (DontWatch TerminalCT solidCT) Permeable
@@ -140,7 +151,7 @@ nikkiFallingTilesCallbacks nct =
 -- * signs
 signNikkiCallbacks :: MyCollisionType -> Callback MyCollisionType Contacts
 signNikkiCallbacks nikkiCT =
-    Callback (Watch nikkiCT SignCT (\ _ signShape -> addSign signShape)) Permeable
+    Callback (Watch nikkiCT SignCT (\ nikkiShape signShape -> addSign nikkiShape signShape)) Permeable
 
 signPermeableCallbacks :: MyCollisionType -> Callback MyCollisionType Contacts
 signPermeableCallbacks solidCT =
@@ -151,7 +162,7 @@ signPermeableCallbacks solidCT =
 -- | add callbacks to let the level fail
 deadlySolidNikki :: MyCollisionType -> Callback MyCollisionType Contacts
 deadlySolidNikki nikkiCT =
-    Callback (Watch DeadlySolidCT nikkiCT (\ _ _ -> setNikkiTouchesDeadly)) Solid
+    Callback (Watch DeadlySolidCT nikkiCT (\ _ _ -> return . setNikkiTouchesDeadly)) Solid
 
 deadlySolidPermeable :: MyCollisionType -> Callback MyCollisionType Contacts
 deadlySolidPermeable permeableCT =

@@ -23,6 +23,8 @@ import Control.Monad.IO.Class
 import Physics.Hipmunk as H hiding (Callback)
 import Physics.Hipmunk.Callbacks ()
 
+import Utils
+
 
 -- * collisionTypes
 
@@ -49,7 +51,7 @@ data Watcher collisionType x
     | Watch
         collisionType
         collisionType
-        (Shape -> Shape -> x -> x)
+        (Shape -> Shape -> x -> IO x)
     | FullWatch
         collisionType
         collisionType
@@ -75,7 +77,7 @@ initContactRef space empty callbacks = do
     installCallback ref (Callback (Watch a b f) permeability) =
         addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
             (shapeA, shapeB) <- shapes
-            liftIO $ modifyIORef ref (f shapeA shapeB)
+            liftIO $ modifyIORefM ref (f shapeA shapeB)
             return (isSolid permeability)
     installCallback ref (Callback (FullWatch a b f) permeability) =
         addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do

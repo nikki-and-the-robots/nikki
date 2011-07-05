@@ -195,6 +195,13 @@ runStateTFromIORef ref cmd = do
     writeIORef ref s'
     return o
 
+-- | is not atomic
+modifyIORefM :: IORef a -> (a -> IO a) -> IO ()
+modifyIORefM ref cmd =
+    readIORef ref >>=
+    cmd >>=
+    writeIORef ref
+
 
 -- * Monad stuff
 

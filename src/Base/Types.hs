@@ -216,7 +216,7 @@ data Contacts
         terminals :: Set Shape,
         batteries :: Set Shape,
         fallingTiles :: Set Shape,
-        signs :: Set Shape
+        nearestSign :: Maybe (Shape, CpFloat)
       }
   deriving Show
 

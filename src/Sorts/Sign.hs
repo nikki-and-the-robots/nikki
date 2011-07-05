@@ -171,24 +171,24 @@ mkPolys size =
 
 updateState :: Controls -> ControlData -> Contacts -> Sign -> WrappedMonologue -> WrappedMonologue
 updateState controls cd contacts sign state =
-    if not (any (`member` signs contacts) (shapes $ chipmunk sign)) then
-        NoContact $ glyphs state
-      else
-        -- nikki stands in front of the sign
-        if not $ isGameContextPressed controls cd then
-            -- just standing there
-            case state of
-                NoContact x -> Contact x
-                x -> x
-          else
-            -- the player pressed the context button
-            case state of
-                ShowingText i glyphs ->
-                    if succ i < length glyphs then
-                        ShowingText (succ i) glyphs
-                      else
-                        Contact glyphs
-                x -> ShowingText 0 $ glyphs x
+    case fmap ((`elem` shapes (chipmunk sign)) . fst) $ nearestSign contacts of
+        Just True ->
+            -- nikki stands in front of the sign
+            if not $ isGameContextPressed controls cd then
+                -- just standing there
+                case state of
+                    NoContact x -> Contact x
+                    x -> x
+            else
+                -- the player pressed the context button
+                case state of
+                    ShowingText i glyphs ->
+                        if succ i < length glyphs then
+                            ShowingText (succ i) glyphs
+                        else
+                            Contact glyphs
+                    x -> ShowingText 0 $ glyphs x
+        _ -> NoContact $ glyphs state
 
 
 -- * rendering
