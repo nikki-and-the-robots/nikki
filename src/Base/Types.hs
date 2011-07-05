@@ -470,7 +470,8 @@ data RenderMode
 
 -- | Class that every sort of objects has to implement. This is the interface between
 -- the game and the implemented objects.
--- Minimal complete definition: 'sortId', 'size', 'sortRender', 'initialize', 'immutableCopy', 'chipmunks', 'render'
+-- Minimal complete definition: 'sortId', 'size', 'sortRender',
+--    'renderIconified', 'initialize', 'immutableCopy', 'chipmunks', 'renderObject'
 
 class (Show sort, Typeable sort, Show object, Typeable object) =>
     Sort sort object |
