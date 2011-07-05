@@ -8,6 +8,8 @@ import Physics.Chipmunk
 import Sorts.Nikki as Nikki (nikkiMass)
 
 
+-- * platforms
+
 -- | The mass of platforms.
 -- (gravity has no effect on platforms
 platformMass :: CpFloat = nikkiMass * 3.5 -- 3
@@ -18,7 +20,19 @@ platformFriction :: CpFloat = 0.75 -- 0.95
 platformStandardVelocity :: CpFloat = 170 -- 150
 
 
--- * spring configuration
+-- * patrol robots
+
+-- | The mass of platforms.
+-- (gravity has no effect on platforms
+patrolMass :: CpFloat = platformMass
+
+patrolFriction :: CpFloat = platformFriction
+
+-- | general velocity of platforms
+patrolStandardVelocity :: CpFloat = platformStandardVelocity
+
+
+-- * spring configuration (for all path robots)
 
 data SpringConfiguration = SpringConfiguration {
     -- When the platform is further than this value away from its aim,

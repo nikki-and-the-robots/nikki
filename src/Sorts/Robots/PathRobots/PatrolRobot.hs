@@ -2,7 +2,7 @@
     DeriveDataTypeable, ScopedTypeVariables #-}
 
 
-module Sorts.Robots.PathRobots.Platform where
+module Sorts.Robots.PathRobots.PatrolRobot where
 
 
 import Safe
@@ -31,39 +31,52 @@ import Sorts.Robots.PathRobots.Path
 
 sort :: RM Sort_
 sort = do
-    path <- getDataFileName (pngDir </> "robots" </> "platform" </> "horizontal-standard_standard_00" <.> "png")
-    pix <- loadSymmetricPixmap (Position 1 1) path
+    off <- load "standard-off"
+    red <- load "standard-on_00"
+    blue <- load "standard-on_01"
     robotEyes <- loadRobotEyesPixmaps
-    return $ Sort_ $ PSort pix robotEyes
+    return $ Sort_ $ PSort off red blue robotEyes
+  where
+    load :: String -> RM Pixmap
+    load name = do
+        path <- getDataFileName (pngDir </> "robots" </> "patrol" </> name <.> "png")
+        loadSymmetricPixmap (Position 21 21) path
+
 
 data PSort = PSort {
-    pix :: Pixmap,
+    offPix :: Pixmap,
+    redPix :: Pixmap,
+    bluePix :: Pixmap,
     robotEyes :: RobotEyesPixmaps
   }
     deriving (Show, Typeable, Data)
 
-data Platform
-    = Platform {
-        platformSize :: Size Double,
+data Patrol
+    = Patrol {
+        robotSize :: Size Double,
         chipmunk :: Chipmunk,
-        path :: Path
+        path :: Path,
+        deadly_ :: Bool
       }
   deriving (Show, Typeable)
 
+deadly :: Accessor Patrol Bool
+deadly = accessor deadly_ (\ a r -> r{deadly_ = a})
 
-instance Sort PSort Platform where
-    sortId _ = SortId "robots/platform/standard"
-    freeSort (PSort a eyes) =
-        freePixmap a >>
+
+instance Sort PSort Patrol where
+    sortId _ = SortId "robots/platform/patrol"
+    freeSort (PSort off red blue eyes) =
+        fmapM_ freePixmap [off, red, blue] >>
         freeRobotEyesPixmaps eyes
                              -- one bigger than actual (to prevent getting stuck on edges)
-    size _ = fmap fromUber $ Size 48 22
+    size _ = fmap fromUber $ Size 28 28
 
     objectEditMode s = Just $ oemMethods $ size s
 
     renderIconified sort ptr = do
         translate ptr physicsPadding
-        renderPixmapSimple ptr (pix sort)
+        renderPixmapSimple ptr (offPix sort)
 
     renderEditorObject ptr offset (EditorObject sort position (Just (OEMState oemState))) =
         case cast oemState of
@@ -72,12 +85,9 @@ instance Sort PSort Platform where
                 translate ptr offset
                 renderOEMPath (size sort) ptr offset $ getPathList $ pathPositions oemPath
                 translate ptr (epToPosition (size sort) position)
-                renderIconified sort ptr
-                let renderPosition = (epToPosition (size sort) $
-                        startPosition $ pathPositions oemPath) +~ physicsPadding
-                    eyesState = if oemActive oemPath then Open else Closed
-                doRenderPixmaps ptr $ singleton $ renderRobotEyes (robotEyes sort)
-                    (renderPosition +~ offset) 0 eyesOffset eyesState 0
+                translate ptr physicsPadding
+                let pix = if oemActive oemPath then redPix sort else offPix sort
+                renderPixmapSimple ptr pix
 
     initialize app (Just space) sort ep (Just (OEMState oemState_)) = io $ do
         let Just oemState = cast oemState_
@@ -91,45 +101,37 @@ instance Sort PSort Platform where
         chip <- initChipmunk space (bodyAttributes sort pos) shapes baryCenterOffset
 
         let path = toPath (size sort) oemState
-        return $ Platform (size sort) chip path
+        return $ Patrol (size sort) chip path (oemActive oemState)
     initialize app Nothing sort ep _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
             vector = position2vector position +~ baryCenterOffset
             path = mkPath False [vector]
             chip = ImmutableChipmunk position 0 baryCenterOffset []
-        return $ Platform (size sort) chip path
+        return $ Patrol (size sort) chip path True
 
     chipmunks p = [chipmunk p]
 
     getControlledChipmunk = const chipmunk
 
-    immutableCopy p@Platform{chipmunk} =
+    immutableCopy p@Patrol{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
     updateNoSceneChange sort config mode now contacts cd =
         control config cd >=>
         return . updateLogic >=>
-        passThrough applyPlatformForce
+        passThrough applyPatrolForce
 
-    renderObject _ _ platform sort ptr offset now = do
-        (position, rad) <- getRenderPositionAndAngle $ chipmunk platform
+    renderObject _ _ patrol sort ptr offset now = do
+        (position, rad) <- getRenderPositionAndAngle $ chipmunk patrol
         let renderPosition = position +~ physicsPadding
-            robot = RenderPixmap (pix sort) renderPosition Nothing
+            robot = RenderPixmap (pickRobotPixmap now sort patrol) renderPosition Nothing
             eyes = renderRobotEyes (robotEyes sort) renderPosition rad eyesOffset
-                (robotEyesState $ path platform) now
+                (robotEyesState patrol) now
         return (robot : eyes : [])
 
--- | Returns the state of the robots eyes dependent on the current Path
-robotEyesState :: Path -> RobotEyesState
-robotEyesState p = case p of
-    Path{} -> Active
-    (SingleNode _ Nothing) -> Idle
-    (SingleNode _ (Just _)) -> Idle
 
-eyesOffset = fmap fromUber $ Position 18 9
-
--- | To prevent platforms from getting stuck everywhere, we
+-- | To prevent ppatrol robots from getting stuck everywhere, we
 -- use a padding of 0.5 Überpixels.
 physicsPadding :: Position Double
 physicsPadding = fmap fromUber $ Position 0.5 0.5
@@ -146,37 +148,45 @@ mkPoly sort = mkRect
 
 bodyAttributes :: PSort -> Vector -> BodyAttributes
 bodyAttributes sort pos =
-    BodyAttributes pos platformMass infinity
+    BodyAttributes pos patrolMass infinity
 
 -- | tile friction to allow better walking
-shapeAttributes = robotShapeAttributes{friction = platformFriction}
+shapeAttributes = robotShapeAttributes{friction = patrolFriction}
+
+
+-- * initialising
 
 -- | reads an OEMPath and returns the path for the game
 toPath :: Size Double -> OEMPath -> Path
-toPath size (OEMPath _ _ cursor path active) =
-    mkPath active $ map (epToCenterVector size) (getPathList path)
-
+toPath size (OEMPath _ _ cursor path _) =
+    mkPath True $ map (epToCenterVector size) (getPathList path)
 
 -- * controlling
 
-control :: Controls -> (Bool, ControlData) -> Platform -> IO Platform
-control config (True, cd) platform | isRobotActionPressed config cd = do
-    newPath <- swapOnOffState (chipmunk platform) $ path platform
-    return platform{path = newPath}
-control _ _ platform = return platform
-
-swapOnOffState :: Chipmunk -> Path -> IO Path
-swapOnOffState c p@(SingleNode n Nothing) = return p
-swapOnOffState c (SingleNode _ (Just p)) = return p
-swapOnOffState c path@Path{} = do
-    position <- getPosition c
-    return $ SingleNode position (Just path)
+control :: Controls -> (Bool, ControlData) -> Patrol -> IO Patrol
+control config (True, cd) | isRobotActionPressed config cd =
+    return . (deadly ^: not)
+control _ _ = return
 
 -- * physics behaviour
 
-updateLogic :: Platform -> Platform
-updateLogic platform@Platform{path} =
-    platform{path = updatePath path}
+updateLogic :: Patrol -> Patrol
+updateLogic patrol@Patrol{path} =
+    patrol{path = updatePath path}
 
-applyPlatformForce :: Platform -> IO ()
-applyPlatformForce p = applyPathRobotForce (chipmunk p) (path p)
+applyPatrolForce :: Patrol -> IO ()
+applyPatrolForce p = applyPathRobotForce (chipmunk p) (path p)
+
+
+-- * rendering
+
+pickRobotPixmap :: Seconds -> PSort -> Patrol -> Pixmap
+pickRobotPixmap now sort patrol =
+    if patrol ^. deadly then redPix sort else offPix sort
+
+-- | Returns the state of the robots eyes dependent on the current Path
+robotEyesState :: Patrol -> RobotEyesState
+robotEyesState p =
+    if p ^. deadly then Active else Idle 
+
+eyesOffset = fmap fromUber $ Position 8 9

@@ -230,15 +230,12 @@ instance IsOEMState OEMPath where
     oemHelp = const oemHelpText
 
 type PickleType = (EditorPosition, [EditorPosition], Bool)
+    -- last component saves, if the path robot is activated or not.
+    -- This means different things in different robots, though.
 
 unpickle :: Size Double -> String -> OEMPath
 unpickle size (readMay -> Just ((cursor, (start : path), active) :: PickleType)) =
     OEMPath size (fromKachel 1) cursor (OEMPathPositions start path) active
-
--- | reads an OEMPath and returns the path for the game
-toPath :: Size Double -> OEMPath -> Path
-toPath size (OEMPath _ _ cursor path active) =
-    mkPath active $ map (epToCenterVector size) (getPathList path)
 
 -- | use the position of the object as first node in Path
 initialState :: Size Double -> EditorPosition -> OEMPath

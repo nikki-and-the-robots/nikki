@@ -9,6 +9,7 @@ module Sorts.Robots.PathRobots where
 import Base
 
 import qualified Sorts.Robots.PathRobots.Platform as Platform
+import qualified Sorts.Robots.PathRobots.PatrolRobot as PatrolRobot
 
 
 
@@ -17,6 +18,8 @@ import qualified Sorts.Robots.PathRobots.Platform as Platform
 sorts :: RM [Sort_]
 sorts = do
     platformSort <- Platform.sort
+    patrolSort <- PatrolRobot.sort
     return (
         platformSort :
+        patrolSort :
         [])
