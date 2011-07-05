@@ -182,7 +182,9 @@ applyPatrolForce p = applyPathRobotForce (chipmunk p) (path p)
 
 pickRobotPixmap :: Seconds -> PSort -> Patrol -> Pixmap
 pickRobotPixmap now sort patrol =
-    if patrol ^. deadly then redPix sort else offPix sort
+    if patrol ^. deadly then activePix else offPix sort
+  where
+    activePix = pickAnimationFrame [redPix sort, bluePix sort] (singleton patrolFrameTime) now
 
 -- | Returns the state of the robots eyes dependent on the current Path
 robotEyesState :: Patrol -> RobotEyesState

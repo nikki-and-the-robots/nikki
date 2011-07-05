@@ -5,6 +5,8 @@ module Sorts.Robots.PathRobots.Configuration where
 
 import Physics.Chipmunk
 
+import Base
+
 import Sorts.Nikki as Nikki (nikkiMass)
 
 
@@ -21,6 +23,9 @@ platformStandardVelocity :: CpFloat = 170 -- 150
 
 
 -- * patrol robots
+
+-- | time for the switch between red and blue lights when switched on
+patrolFrameTime :: Seconds = 0.5
 
 -- | The mass of platforms.
 -- (gravity has no effect on platforms
