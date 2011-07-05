@@ -185,11 +185,11 @@ instance Sort TSort Tile where
         renderPixmapSimple ptr $ head $ tilePixmaps sort
 
     initialize app Nothing sort@TSort{} editorPosition Nothing = do
-        let pos = editorPosition2QtPosition sort editorPosition
+        let pos = epToPosition sort editorPosition
 
 --         let (shapes, baryCenterOffset) = mkShapes $ size sort
 --             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
---             position = position2vector (editorPosition2QtPosition sort editorPosition)
+--             position = position2vector (epToPosition sort editorPosition)
 --                             +~ baryCenterOffset
 --             bodyAttributes = mkBodyAttributes shapes position (boxMass sort)
 --         chip <- CM.initChipmunk space bodyAttributes
@@ -253,7 +253,7 @@ instance Sort AllTilesSort AllTiles where
             Nothing
 
 mkRenderable :: EditorObject TSort -> (TSort, Qt.Position Double)
-mkRenderable (EditorObject sort ep Nothing) = (sort, editorPosition2QtPosition sort ep)
+mkRenderable (EditorObject sort ep Nothing) = (sort, epToPosition sort ep)
 
 initChipmunks :: Space -> [EditorObject TSort] -> IO Chipmunk
 initChipmunks space objects =
@@ -275,7 +275,7 @@ mkAbsoluteShape (EditorObject sort ep Nothing) =
   where
     halfSizeVector = size2vector $ fmap (/ 2) $ size sort
     baryCenterOffset = halfSizeVector
-    chipmunkPosition = position2vector (editorPosition2QtPosition sort ep)
+    chipmunkPosition = position2vector (epToPosition sort ep)
         +~ baryCenterOffset
 
 -- * chipmunk stuff

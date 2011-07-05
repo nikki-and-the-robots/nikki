@@ -72,7 +72,7 @@ instance Sort DebugSort Debug where
             shapesDescriptions =
                 map (mkShapeDescription (shapeAttributes TileCT)) shapes
             pos :: Vector
-            pos = position2vector (editorPosition2QtPosition sort editorPosition)
+            pos = position2vector (epToPosition sort editorPosition)
                     +~ baryCenterOffset
         chip <- initChipmunk space (bodyAttributes pos)
                     shapesDescriptions baryCenterOffset

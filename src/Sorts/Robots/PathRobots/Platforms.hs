@@ -74,7 +74,7 @@ instance Sort PSort Platform where
                 resetMatrix ptr
                 translate ptr offset
                 renderOEMPath sort ptr offset $ getPathList $ pathPositions oemPath
-                translate ptr (editorPosition2QtPosition sort position)
+                translate ptr (epToPosition sort position)
                 renderIconified sort ptr
                 let renderPosition = (epToPosition sort $
                         startPosition $ pathPositions oemPath) +~ physicsPadding
@@ -89,7 +89,7 @@ instance Sort PSort Platform where
             shape = mkPoly sort
             shapes = [mkShapeDescription shapeAttributes shape]
 
-            pos = position2vector (editorPosition2QtPosition sort ep)
+            pos = position2vector (epToPosition sort ep)
                     +~ baryCenterOffset
         chip <- initChipmunk space (bodyAttributes sort pos) shapes baryCenterOffset
 
@@ -97,7 +97,7 @@ instance Sort PSort Platform where
         return $ Platform (size sort) chip path
     initialize app Nothing sort ep _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
-            position = editorPosition2QtPosition sort ep
+            position = epToPosition sort ep
             vector = position2vector position +~ baryCenterOffset
             path = mkPath False [vector]
             chip = ImmutableChipmunk position 0 baryCenterOffset []
@@ -333,16 +333,3 @@ oemHelpText :: String =
     "Shift: remove existing node from path\n" ++
     "Space: change initial state of platform (on / off)\n" ++
     "W, S: change cursor step size"
-
-
--- * position conversions
-
--- from lower left to upper left
-epToPosition :: PSort -> EditorPosition -> Position Double
-epToPosition = editorPosition2QtPosition
-
-epToCenterPosition :: PSort -> EditorPosition -> Position Double
-epToCenterPosition sort ep = epToPosition sort ep +~ fmap (/ 2) (sizeToPosition $ size sort)
-
-epToCenterVector :: PSort -> EditorPosition -> Vector
-epToCenterVector sort = position2vector . epToCenterPosition sort

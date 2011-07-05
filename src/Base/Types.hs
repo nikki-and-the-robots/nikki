@@ -495,7 +495,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
         resetMatrix ptr
         translate ptr offset
         let sort = editorSort editorObject
-        translate ptr (editorPosition2QtPosition sort (editorObject ^. editorPosition))
+        translate ptr (epToPosition sort (editorObject ^. editorPosition))
         renderIconified sort ptr
 
     -- if Nothing is passed as space, this should be an object 
@@ -527,11 +527,20 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     renderObject :: Application -> Configuration
         -> object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
 
-editorPosition2QtPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
-editorPosition2QtPosition sort (EditorPosition x y) =
+-- * position conversions
+
+-- from lower left to upper left
+epToPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
+epToPosition sort (EditorPosition x y) =
     Position x (y - height)
   where
     Size _ height = size sort
+
+epToCenterPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
+epToCenterPosition sort ep = epToPosition sort ep +~ fmap (/ 2) (sizeToPosition $ size sort)
+
+epToCenterVector :: Sort sort o => sort -> EditorPosition -> Vector
+epToCenterVector sort = position2vector . epToCenterPosition sort
 
 
 -- * Sort class wrappers

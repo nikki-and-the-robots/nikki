@@ -101,7 +101,7 @@ instance Sort NSort Nikki where
 
     initialize app (Just space) sort editorPosition Nothing = io $ do
         let (surfaceVelocityShapeType, otherShapes, baryCenterOffset) = mkPolys
-            pos = position2vector (editorPosition2QtPosition sort editorPosition)
+            pos = position2vector (epToPosition sort editorPosition)
                     +~ baryCenterOffset
 
         chip <- CM.initChipmunk space (bodyAttributes pos) (surfaceVelocityShapeType : otherShapes)
@@ -112,7 +112,7 @@ instance Sort NSort Nikki where
         return $ Nikki chip (Strict.Just surfaceVelocityShape) initial 0
     initialize app Nothing sort editorPosition Nothing = do
         let (_, _, baryCenterOffset) = mkPolys
-            position = editorPosition2QtPosition sort editorPosition
+            position = epToPosition sort editorPosition
             chip = ImmutableChipmunk position 0 baryCenterOffset []
         return $ Nikki chip Strict.Nothing initial 0
 

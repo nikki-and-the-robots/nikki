@@ -68,7 +68,7 @@ instance Sort GSort Grid where
             translate ptr (negateAbelian p)
 
     initialize app mSpace sort ep Nothing = do
-        let pos = editorPosition2QtPosition sort ep
+        let pos = epToPosition sort ep
         return $ Grid (size sort) pos
 
     immutableCopy = return
