@@ -34,7 +34,7 @@ import qualified Sorts.Background
 import qualified Sorts.LowerLimit
 
 import qualified Sorts.Robots.Jetpack
-import qualified Sorts.Robots.MovingPlatform
+import qualified Sorts.Robots.PathRobots
 
 -- import qualified Sorts.DebugObject
 
@@ -45,7 +45,7 @@ sortLoaders =
     Sorts.Tiles.sorts :
 
     Sorts.Robots.Jetpack.sorts :
-    Sorts.Robots.MovingPlatform.sorts :
+    Sorts.Robots.PathRobots.sorts :
 
     Sorts.Terminal.sorts :
 

@@ -1,7 +1,11 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
     DeriveDataTypeable, ScopedTypeVariables #-}
 
-module Sorts.Robots.MovingPlatform (sorts) where
+-- | Path robots are:
+--      platform robots
+--      patrol robots
+
+module Sorts.Robots.PathRobots (sorts) where
 
 
 import Safe
@@ -24,8 +28,8 @@ import Base hiding (cursorStep)
 import Sorts.Robots.Configuration
 import Sorts.Robots.Eyes
 
-import Sorts.Robots.MovingPlatform.Configuration
-import Sorts.Robots.MovingPlatform.Path
+import Sorts.Robots.PathRobots.Configuration
+import Sorts.Robots.PathRobots.Path
 
 import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers

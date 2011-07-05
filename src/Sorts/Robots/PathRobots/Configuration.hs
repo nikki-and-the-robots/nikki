@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables #-}
 
-module Sorts.Robots.MovingPlatform.Configuration where
+module Sorts.Robots.PathRobots.Configuration where
 
 
 import Physics.Chipmunk

@@ -1,6 +1,6 @@
 {-# language ViewPatterns, NamedFieldPuns, DeriveDataTypeable, ScopedTypeVariables #-}
 
-module Sorts.Robots.MovingPlatform.Path where
+module Sorts.Robots.PathRobots.Path where
 
 
 import Data.Abelian
@@ -12,7 +12,7 @@ import Base
 
 import Utils hiding (distance)
 
-import Sorts.Robots.MovingPlatform.Configuration
+import Sorts.Robots.PathRobots.Configuration
 
 
 -- | Describes the path of a platform.
