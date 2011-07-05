@@ -5,12 +5,9 @@
 module Sorts.Robots.PathRobots.Platform where
 
 
-import Safe
-
 import Data.Typeable
 import Data.Abelian
 import Data.Generics
-import Data.Accessor
 
 import System.FilePath
 

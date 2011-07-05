@@ -10,7 +10,6 @@ import Safe
 
 import Data.Abelian
 import Data.Data
-import Data.Set (member)
 import Data.Accessor
 import Data.Maybe
 

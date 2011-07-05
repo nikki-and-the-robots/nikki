@@ -21,7 +21,6 @@ module Base.Paths (
 import Safe
 
 import Data.List
-import Data.Maybe
 import Data.Initial
 
 import Text.Logging

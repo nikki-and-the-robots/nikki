@@ -27,7 +27,6 @@ module Base.Prose (
 
 
 import Data.Monoid
-import Data.List
 import Data.Char (chr, toUpper)
 
 import Control.Arrow

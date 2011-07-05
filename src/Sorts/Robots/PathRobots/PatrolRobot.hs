@@ -5,8 +5,6 @@
 module Sorts.Robots.PathRobots.PatrolRobot where
 
 
-import Safe
-
 import Data.Typeable
 import Data.Abelian
 import Data.Generics

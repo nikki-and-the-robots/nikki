@@ -2,8 +2,6 @@
 module Sorts.StoryMode where
 
 
-import System.FilePath
-
 import Graphics.Qt
 
 

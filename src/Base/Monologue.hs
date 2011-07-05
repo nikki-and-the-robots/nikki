@@ -6,7 +6,6 @@ import System.FilePath
 
 import Utils
 
-import Base.Types
 import Base.Prose
 import Base.Paths
 

@@ -37,11 +37,9 @@ import Data.Foldable (Foldable, mapM_, forM_, any)
 import Data.Traversable (Traversable, mapM)
 import Data.IORef
 import qualified Data.Set as Set
-import Data.Char
 import Data.Accessor (Accessor, (^.), (^=), (^:), (.>))
 import Data.Accessor.Monad.MTL.State ((%=), (%:))
 import Data.Monoid
-import Data.Version
 
 import Text.Printf
 import Text.Logging
