@@ -41,6 +41,10 @@ textPadding = 28
 bubbleSize = Size 800 172
 textSize = bubbleSize -~ fmap (* 2) (Size textPadding textPadding)
 
+-- | width of the zone that nikki can activate the signs,
+-- although not standing directly in front of them
+zonePadding :: CpFloat = fromKachel 2
+
 
 -- * loading
 
@@ -156,10 +160,10 @@ mkPolys size =
   where
     rect =
         Polygon [
-            Vector (- wh) (- hh),
-            Vector (- wh) hh,
-            Vector wh hh,
-            Vector wh (- hh)
+            Vector (- (wh + zonePadding)) (- hh),
+            Vector (- (wh + zonePadding)) hh,
+            Vector (wh + zonePadding) hh,
+            Vector (wh + zonePadding) (- hh)
           ]
     (Size wh hh) :: Size CpFloat = fmap realToFrac $ fmap (/ 2) size
     baryCenterOffset = Vector wh hh
