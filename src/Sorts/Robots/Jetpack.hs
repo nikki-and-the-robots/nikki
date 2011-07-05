@@ -107,7 +107,7 @@ instance Sort JSort Jetpack where
 
     initialize app (Just space) sort ep Nothing = io $ do
         let
-            pos = position2vector (epToPosition sort ep)
+            pos = position2vector (epToPosition (size sort) ep)
                     +~ baryCenterOffset
             bodyAttributes = jetpackBodyAttributes pos
             (polys, baryCenterOffset) = mkPolys
@@ -117,7 +117,7 @@ instance Sort JSort Jetpack where
         return $ Jetpack chip False Nothing Idle 0
     initialize app Nothing sort ep Nothing = do
         let (_, baryCenterOffset) = mkPolys
-            position = epToPosition sort ep
+            position = epToPosition (size sort) ep
             chip = ImmutableChipmunk position 0 baryCenterOffset []
         return $ Jetpack chip False Nothing Idle 0
 

@@ -122,7 +122,7 @@ instance Sort SSort Sign where
         let Just oemState :: Maybe SignOEMState = cast oemState_
         monologue <- io $ readStoryModeMonologue $ oemFile oemState
         let pos = position2vector
-                (epToPosition sort editorPosition)
+                (epToPosition (size sort) editorPosition)
                 +~ baryCenterOffset
             bodyAttributes = StaticBodyAttributes{
                 CM.position = pos

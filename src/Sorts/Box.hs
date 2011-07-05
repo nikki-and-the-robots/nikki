@@ -59,7 +59,7 @@ instance Sort BSort Box where
     initialize app (Just space) sort editorPosition Nothing = io $ do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
-            position = position2vector (epToPosition sort editorPosition)
+            position = position2vector (epToPosition (size sort) editorPosition)
                             +~ baryCenterOffset
             bodyAttributes = mkBodyAttributes shapes position (boxMass sort)
         chip <- CM.initChipmunk space bodyAttributes
@@ -67,7 +67,7 @@ instance Sort BSort Box where
         return $ Box chip
     initialize app Nothing sort editorPosition Nothing = io $ do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
-            position = epToPosition sort editorPosition
+            position = epToPosition (size sort) editorPosition
         return $ Box $ ImmutableChipmunk position 0 baryCenterOffset []
     immutableCopy (Box x) = CM.immutableCopy x >>= return . Box
     chipmunks b = [chipmunk b]

@@ -95,7 +95,7 @@ instance Sort TSort FallingTile where
         return $ FallingTile attributes chip Static
     initialize app Nothing sort editorPosition Nothing = io $ do
         let (_, baryCenterOffset) = mkShape sort
-            position = epToPosition sort editorPosition
+            position = epToPosition (size sort) editorPosition
             vector = position2vector position +~ baryCenterOffset
             chip = ImmutableChipmunk position 0 baryCenterOffset []
         return $ FallingTile (StaticBodyAttributes vector) chip Static
@@ -136,7 +136,7 @@ initializeBox space sort ep = do
     let (shape, baryCenterOffset) = mkShape sort
         shapeWithAttributes = (mkShapeDescription shapeAttributes shape)
         pos :: Vector
-        pos = position2vector (epToPosition sort ep)
+        pos = position2vector (epToPosition (size sort) ep)
                 +~ baryCenterOffset
         bodyAttributes = mkMaterialBodyAttributes fallingTilesMaterialMass [shape] pos
         -- this is a hack: mass and inertia set to very large values to simulate static tiles

@@ -68,7 +68,7 @@ renderCursor' ptr offset scene = do
     let cursorPos = cursor scene
         sort = getSelected $ scene ^. availableSorts
         size_ = size sort
-        pos = offset +~ epToPosition sort cursorPos
+        pos = offset +~ epToPosition size_ cursorPos
     resetMatrix ptr
     drawColoredBox ptr pos size_ 5 (alpha ^= 0.5 $ pink)
 
@@ -159,7 +159,7 @@ renderSelectedBoxes ptr offset scene =
 
 drawCopySelectedBox ptr offset object = do
     let sort = editorSort object
-        p = epToPosition sort (object ^. editorPosition) +~ offset
+        p = epToPosition (size sort) (object ^. editorPosition) +~ offset
     drawColoredBox ptr p (size sort) 3 green
 
 

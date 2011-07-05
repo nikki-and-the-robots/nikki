@@ -495,7 +495,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
         resetMatrix ptr
         translate ptr offset
         let sort = editorSort editorObject
-        translate ptr (epToPosition sort (editorObject ^. editorPosition))
+        translate ptr (epToPosition (size sort) (editorObject ^. editorPosition))
         renderIconified sort ptr
 
     -- if Nothing is passed as space, this should be an object 
@@ -530,17 +530,14 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 -- * position conversions
 
 -- from lower left to upper left
-epToPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
-epToPosition sort (EditorPosition x y) =
-    Position x (y - height)
-  where
-    Size _ height = size sort
+epToPosition :: Size Double -> EditorPosition -> Qt.Position Double
+epToPosition size (EditorPosition x y) = Position x (y - height size)
 
-epToCenterPosition :: Sort sort o => sort -> EditorPosition -> Qt.Position Double
-epToCenterPosition sort ep = epToPosition sort ep +~ fmap (/ 2) (sizeToPosition $ size sort)
+epToCenterPosition :: Size Double -> EditorPosition -> Qt.Position Double
+epToCenterPosition size ep = epToPosition size ep +~ fmap (/ 2) (sizeToPosition size)
 
-epToCenterVector :: Sort sort o => sort -> EditorPosition -> Vector
-epToCenterVector sort = position2vector . epToCenterPosition sort
+epToCenterVector :: Size Double -> EditorPosition -> Vector
+epToCenterVector size = position2vector . epToCenterPosition size
 
 
 -- * Sort class wrappers

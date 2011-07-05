@@ -311,7 +311,7 @@ instance Sort TSort Terminal where
                 NoRobots -> []
                 Robots _ _ x -> x
             pos = position2vector
-                (epToPosition sort editorPosition)
+                (epToPosition (size sort) editorPosition)
                 +~ baryCenterOffset
             bodyAttributes = StaticBodyAttributes{
                 CM.position = pos
@@ -326,7 +326,7 @@ instance Sort TSort Terminal where
         chip <- initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
         return $ Terminal chip attached (initialMenuState 0)
     initialize app Nothing sort editorPosition _ = do
-        let position = epToPosition sort editorPosition
+        let position = epToPosition (size sort) editorPosition
             (_, baryCenterOffset) = mkPolys $ size sort
             chip = ImmutableChipmunk position 0 baryCenterOffset []
         return $ Terminal chip [] (initialMenuState 0)
@@ -653,7 +653,7 @@ renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
     renderRobotBox :: Sort sort o => Color -> EditorObject sort -> IO ()
     renderRobotBox color robot = do
         let sort = editorSort robot
-            pos = epToPosition sort $ robot ^. editorPosition
+            pos = epToPosition size_ $ robot ^. editorPosition
             size_ = size sort
         drawColoredBox ptr (pos +~ offset) size_ 4 color
 
