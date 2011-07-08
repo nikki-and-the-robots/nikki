@@ -42,7 +42,7 @@ textSize = bubbleSize -~ fmap (* 2) (Size textPadding textPadding)
 
 -- | width of the zone that nikki can activate the signs,
 -- although not standing directly in front of them
-zonePadding :: CpFloat = fromKachel 2
+zonePadding :: CpFloat = fromKachel 0.5
 
 
 -- * loading
