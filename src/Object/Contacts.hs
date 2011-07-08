@@ -38,7 +38,8 @@ solidCollisionTypes =
   [
     TileCT,
     RobotCT,
-    FallingTileCT
+    FallingTileCT,
+    BatteryCT
   ]
 
 
@@ -93,11 +94,10 @@ addSign nikkiShape signShape contacts = do
 watchedContacts :: [Callback MyCollisionType Contacts]
 watchedContacts =
     -- normal contacts of nikki
-    map (uncurry nikkiCallbacks) (cartesian solidCollisionTypes nikkiCollisionTypes) ++
+    map (uncurry nikkiCallbacks) (cartesian (filter (/= BatteryCT) solidCollisionTypes) nikkiCollisionTypes) ++
     nikkiTerminalCallbacks ++
     map terminalSolidCallback solidCollisionTypes ++
     batteryCallbacks ++
-    Callback (DontWatch BatteryCT TerminalCT) Permeable :
     map nikkiFallingTilesCallbacks
         (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
     map signNikkiCallbacks (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
