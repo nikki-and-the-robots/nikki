@@ -93,7 +93,7 @@ instance Sort BSort Battery where
     update sort config mode now contacts cd i o
         | any (`member` batteries contacts) (shapes $ chipmunk o) = do
             -- the battery is consumed by nikki
-            triggerPolySound $ collectSound sort
+--             triggerPolySound $ collectSound sort
             removeChipmunk $ chipmunk o
             let sceneChange :: Scene o -> Scene o
                 sceneChange = (batteryPower ^: succ) . removeBattery

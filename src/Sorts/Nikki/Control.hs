@@ -89,7 +89,7 @@ control now contacts (True, cd) nsort nikki = do
             modifyApplyOnlyForce chipmunk_ $
                 getJumpingForces now action_ ji
 
-            triggerPolySound (jumpSound nsort)
+--             triggerPolySound (jumpSound nsort)
 
         State Airborne _ _ ji _ ->
             applyAirborneForces now chipmunk_ action_ ji
