@@ -19,6 +19,8 @@ tiles =
     ("tiles/black-blue/panel-standard", Position 1 1, Size 64 64) :
     ("tiles/black-blue/panel-small", Position 1 1, Size 32 32) :
     ("tiles/black-blue/panel-large", Position 1 1, Size 128 128) :
+    ("tiles/black-green/panel-standard", Position 1 1, Size 64 64) :
+    ("tiles/black-green/panel-small", Position 1 1, Size 32 32) :
     ("tiles/black-brown/panel-standard", Position 1 1, Size 64 64) :
     ("tiles/black-brown/panel-small", Position 1 1, Size 32 32) :
     ("tiles/black-brown/rounded-corner-upper-left", Position 1 1, Size 64 64) :
