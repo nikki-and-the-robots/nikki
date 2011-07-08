@@ -27,6 +27,7 @@ toKachel = (/ 16) . toUber
 
 -- * Physics
 
+tau :: Floating a => a
 tau = 2 * pi
 
 gravity :: CpFloat = 1975

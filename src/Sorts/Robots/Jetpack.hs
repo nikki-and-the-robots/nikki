@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, ViewPatterns, MultiParamTypeClasses,
-     FlexibleInstances, DeriveDataTypeable #-}
+     FlexibleInstances, DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Sorts.Robots.Jetpack (sorts) where
 
@@ -40,7 +40,7 @@ acceleration = 1.6 -- tweakValue "jetpackHoverAcceleration"
     * jetpackGravity
 
 -- | Acceleration for the rotation from arrow keys
-controlTorqueAcceleration = tau * 4 -- tweakValue "controlTorqueAcceleration"
+controlTorqueAcceleration :: CpFloat = tau * 4 -- tweakValue "controlTorqueAcceleration"
 
 -- | maximal degree of rotation when in boost mode
 maximalAngle = deg2rad $ 40 -- tweakValue "jetpackMaximalAngle"
