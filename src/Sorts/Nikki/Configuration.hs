@@ -44,17 +44,17 @@ nikkiMass =
 -- | friction for nikkis feet. The higher the friction,
 -- the faster nikki will gain maximum walking speed
 -- and the faster nikki will be able to stop or change direction
-nikkiFeetFriction :: CpFloat = tweakValue "nikkiFeetFriction" -- 1.5789
+nikkiFeetFriction :: CpFloat = 1.65 -- tweakValue "nikkiFeetFriction" -- 1.5789
 
 -- | the friction of the head
 headFriction :: CpFloat = 0.2105
 
 -- | maximum walking speed (pixels per second)
 -- also affects maximal jumping distance
-maximumWalkingVelocity :: CpFloat = tweakValue "maximumWalkingVelocity" -- 415
+maximumWalkingVelocity :: CpFloat = 415 -- tweakValue "maximumWalkingVelocity" -- 415
 
 -- | Time it takes Nikki to accelerate to maximumWalkingVelocity.
-accelerationTime :: CpFloat = tweakValue "accelerationTime" -- 0.3
+accelerationTime :: CpFloat = 0.55 -- tweakValue "accelerationTime" -- 0.3
 
 -- | how strong the horizontal force is while Nikki is airborne
 -- in gravities

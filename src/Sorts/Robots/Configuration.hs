@@ -17,7 +17,7 @@ import Base
 -- * physics
 
 -- | robot mass per (square-)pixel
-robotMaterialMass :: CpFloat = tweakValue "robotMaterialMass" -- 78
+robotMaterialMass :: CpFloat = 2 -- tweakValue "robotMaterialMass" -- 78
 
 -- | physical attributes of the robots
 -- (Obviously, don't change the collisionType.)

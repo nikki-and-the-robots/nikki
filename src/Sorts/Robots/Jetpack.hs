@@ -33,19 +33,20 @@ jetpackSize = fmap fromUber $ Size 27 21
 -- 0 = No gravity at all
 -- 1 = normal gravity
 -- This is mostly responsible for how fast jetpack robots move.
-jetpackGravityFactor = tweakValue "jetpackGravityFactor"
+jetpackGravityFactor = 0.4 -- tweakValue "jetpackGravityFactor"
 
 -- | Acceleration created by the jets when in boost mode
-acceleration = tweakValue "jetpackHoverAcceleration" * jetpackGravity
+acceleration = 1.6 -- tweakValue "jetpackHoverAcceleration"
+    * jetpackGravity
 
 -- | Acceleration for the rotation from arrow keys
-controlTorqueAcceleration = tau * tweakValue "controlTorqueAcceleration"
+controlTorqueAcceleration = tau * 4 -- tweakValue "controlTorqueAcceleration"
 
 -- | maximal degree of rotation when in boost mode
-maximalAngle = deg2rad $ tweakValue "jetpackMaximalAngle"
+maximalAngle = deg2rad $ 40 -- tweakValue "jetpackMaximalAngle"
 
 -- | Rotational friction
-jetpackRotationalFriction = tweakValue "jetpackRotationalFriction"
+jetpackRotationalFriction = 60 -- tweakValue "jetpackRotationalFriction"
 
 
 -- * loading
