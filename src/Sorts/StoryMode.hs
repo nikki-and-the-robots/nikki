@@ -11,6 +11,8 @@ signs =
     "npcs/high-school-girl-2" :
     "npcs/high-school-girl-3" :
     "npcs/high-school-girl-4" :
+    "npcs/monkey" :
+    "npcs/bunny" :
     "data-terminal" :
     []
 
