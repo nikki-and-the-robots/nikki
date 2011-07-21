@@ -29,6 +29,9 @@ boostFrameTimes = [0.08]
 jetpackSize :: Size Double
 jetpackSize = fmap fromUber $ Size 27 21
 
+-- | mass of a jetpack robot
+jetpackMass = 894
+
 -- | How much gravity is applied to the jetpack robots.
 -- 0 = No gravity at all
 -- 1 = normal gravity
@@ -136,9 +139,7 @@ instance Sort JSort Jetpack where
     renderObject _ _ = renderJetpack
 
 jetpackBodyAttributes p =
-    mkMaterialBodyAttributes robotMaterialMass (fst mkPolys) p
-
-jetpackMass = mass $ jetpackBodyAttributes zero
+    mkBodyAttributes (fst mkPolys) p jetpackMass
 
 jetpackInertia = inertia $ jetpackBodyAttributes zero
 
