@@ -21,6 +21,8 @@ tiles =
     ("tiles/black-blue/panel-standard", Position 1 1, Size 64 64) :
     ("tiles/black-blue/panel-small", Position 1 1, Size 32 32) :
     ("tiles/black-blue/panel-large", Position 1 1, Size 128 128) :
+    ("tiles/black-blue/vent-large", Position 1 1, Size 128 128) :
+    ("tiles/black-blue/vent-background-large", Position 1 1, Size 128 128) :
     ("tiles/black-green/panel-standard", Position 1 1, Size 64 64) :
     ("tiles/black-green/panel-small", Position 1 1, Size 32 32) :
     ("tiles/black-brown/panel-standard", Position 1 1, Size 64 64) :
@@ -35,6 +37,14 @@ tiles =
     ("tiles/black-brown/wallpaper-vertical", Position 1 1, Size 64 128) :
     ("tiles/black-brown/shadow-standard", Position 1 1, Size 64 64) :
     ("tiles/black-brown/chain-standard", Position 1 1, Size 40 512) :
+    ("tiles/neon/single-heart", Position 1 1, Size 588 532) :
+    ("tiles/neon/controller", Position 1 1, Size 844 468) :
+    ("tiles/neon/pong", Position 1 1, Size 716 660) :
+    ("tiles/neon/rocket", Position 1 1, Size 972 596) :
+    ("tiles/neon/pac", Position 1 1, Size 716 468) :
+    ("tiles/neon/tetris-01", Position 1 1, Size 332 340) :
+    ("tiles/neon/snake", Position 1 1, Size 844 596) :
+    ("tiles/neon/skull", Position 1 1, Size 588 596) :
 -- temporary tiles (dummy)
     ("tiles/dummy/night-dusk", Position 0 0, Size 1920 1080) :
     ("tiles/dummy/submarine-blue", Position 0 0, Size 1920 1080) :
