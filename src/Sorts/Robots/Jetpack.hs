@@ -30,7 +30,7 @@ jetpackSize :: Size Double
 jetpackSize = fmap fromUber $ Size 27 21
 
 -- | mass of a jetpack robot
-jetpackMass = 894
+jetpackMass = 2000 -- 894
 
 -- | How much gravity is applied to the jetpack robots.
 -- 0 = No gravity at all
@@ -39,11 +39,11 @@ jetpackMass = 894
 jetpackGravityFactor = 0.4 -- tweakValue "jetpackGravityFactor"
 
 -- | Acceleration created by the jets when in boost mode
-acceleration = 1.6 -- tweakValue "jetpackHoverAcceleration"
+acceleration = 1.6 --1.6 -- tweakValue "jetpackHoverAcceleration"
     * jetpackGravity
 
 -- | Acceleration for the rotation from arrow keys
-controlTorqueAcceleration :: CpFloat = tau * 4 -- tweakValue "controlTorqueAcceleration"
+controlTorqueAcceleration :: CpFloat = tau * 3.5 -- 4 -- tweakValue "controlTorqueAcceleration"
 
 -- | maximal degree of rotation when in boost mode
 maximalAngle = deg2rad $ 40 -- tweakValue "jetpackMaximalAngle"
