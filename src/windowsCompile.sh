@@ -25,4 +25,7 @@ cmake -G "MSYS Makefiles" ..
 make
 cd ../..
 
+export C_INCLUDE_PATH=/usr/local/include
+export LIBRARY_PATH=/usr/local/lib
+
 cabal install --with-ar=ar --with-gcc=gcc --with-ld=ld --ghc-options=" -pgmc gcc -pgml gcc -pgma gcc -pgmwindres windres -pgmP \"gcc -E -undef -traditional\"" $@
