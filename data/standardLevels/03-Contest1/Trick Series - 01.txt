@@ -1,0 +1,8 @@
+FORUM http://www.indiedb.com/games/nikki-and-the-robots/forum/thread/jukkeris-levels
+Name: Jukkeri
+Licence: CC-BY
+
+This will be a series of challenges, focused on robots.
+It might look a bit hard, but it is possible.
+
+!!!EDIT: Platforms and some tiles have been repositioned because of tweaked physcis.

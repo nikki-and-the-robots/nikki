@@ -1,0 +1,5 @@
+EMAIL "Level design contest" 2011-06-21
+Name: 3sdras
+I have another CC-BY level called "The abyss", i know how to win but didn't win yet LOL
+
+!!!EDIT: Increased size of gap for the box to make physics work (shahn)

@@ -1,0 +1,9 @@
+EMAIL "Level design contest" 2011-06-20
+Name: 3sdras
+It's CC-BY licensed, for sure.
+
+Here is my level, called "Up and away". It's very simple, but i hope you enjoy it. 
+
+Here is another version of "Up and away"... i think this time we really need the robot... thank you very much!
+
+!!!EDIT: Platform robot repositioned and path adjusted. Reason: Physics changed after contest

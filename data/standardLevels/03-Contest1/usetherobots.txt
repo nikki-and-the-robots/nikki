@@ -1,0 +1,7 @@
+EMAIL "Nikki's First Open Level Design Contest" 2011-06-03 
+Name: Mathias verboven
+These levels are licensed under Creative Commons Attribution Unported 3.0
+
+I might do more levels later, it's 3:30 - I just had to finish one!
+
+!!!EDIT: Small tile added as obstacle for jetpack robot (prevents pushing).

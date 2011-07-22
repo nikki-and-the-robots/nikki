@@ -1,0 +1,3 @@
+EMAIL "Contest levels" 2011-07-04
+Name: 2048Terrabit
+"These levels are licensed under Creative Commons Attribution Unported 3.0" (CC BY)
