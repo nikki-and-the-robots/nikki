@@ -69,11 +69,13 @@ main initialSignals =
                 io $ showGLContext window
 
                 -- sort loading (pixmaps and sounds)
-                withAllSorts $ \ sorts -> withApplicationPixmaps $ \ appPixmaps -> do
+                withAllSorts $ \ sorts ->
+                 withApplicationPixmaps $ \ appPixmaps ->
+                 withApplicationSounds $ \ appSounds -> io $ do
 
                     -- start state logick
                     let app :: Application
-                        app = Application qApp window keyPoller (flip mainMenu 0) appPixmaps sorts
+                        app = Application qApp window keyPoller (flip mainMenu 0) appPixmaps appSounds sorts
                         -- there are two main threads:
                         -- this is the logick [sick!] thread
                         -- dynamic changes of the configuration take place in this thread!

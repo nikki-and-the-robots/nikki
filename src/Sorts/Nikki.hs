@@ -44,8 +44,7 @@ sorts :: RM [Sort_]
 sorts = do
     pixmaps <- loadPixmaps
     psize <- io $ fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
-    soundFile <- getDataFileName (soundDir </> "bfxr/jump.wav")
-    jumpSound <- io $ newPolySound soundFile 4
+    jumpSound <- loadSound "bfxr/jump" 4
     let r = NSort pixmaps jumpSound
     return [Sort_ r]
 

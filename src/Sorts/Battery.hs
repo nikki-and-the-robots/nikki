@@ -42,8 +42,7 @@ sorts :: RM [Sort_]
 sorts = do
     pngFile <- getDataFileName (pngDir </> "battery/standard.png")
     pixmap <- io $ loadPixmap batteryOffset batterySize pngFile
-    soundFile <- getDataFileName (soundDir </> "bfxr/batteryCollect.wav")
-    collectSound <- io $ newPolySound soundFile 8
+    collectSound <- loadSound "bfxr/batteryCollect" 8
     return $ return $ Sort_ $ BSort pixmap collectSound
 
 data BSort

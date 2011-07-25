@@ -28,6 +28,7 @@ module Base (
     module Base.Score,
     module Base.Monologue,
     module Base.Language,
+    module Base.Sound,
   ) where
 
 
@@ -57,3 +58,4 @@ import Base.Options
 import Base.Score
 import Base.Monologue
 import Base.Language
+import Base.Sound

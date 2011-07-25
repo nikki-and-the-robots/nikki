@@ -26,6 +26,7 @@ import Base.Application
 import Base.Prose
 import Base.Font
 import Base.Monad
+import Base.Sound
 
 import Base.Configuration
 import Base.Configuration.Controls
@@ -108,12 +109,20 @@ menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
     inner menu = appState menu $ do
         e <- waitForPressButton app
         controls__ <- gets controls_
-        if isMenuUp controls__ e then return $ inner $ selectPrevious menu
-         else if isMenuDown controls__ e then return $ inner $ selectNext menu
-         else if isMenuConfirmation controls__ e then return $ snd $ selected menu
-         else if isMenuBack controls__ e then case mParent of
-                Just parent -> return parent
-                Nothing -> return $ inner menu
+        if isMenuUp controls__ e then do
+            triggerSound $ menuSelectSound $ applicationSounds app
+            return $ inner $ selectPrevious menu
+         else if isMenuDown controls__ e then do
+            triggerSound $ menuSelectSound $ applicationSounds app
+            return $ inner $ selectNext menu
+         else if isMenuConfirmation controls__ e then do
+            triggerSound $ menuConfirmSound $ applicationSounds app
+            return $ snd $ selected menu
+         else if isMenuBack controls__ e then do
+            triggerSound $ menuCancelSound $ applicationSounds app
+            case mParent of
+               Just parent -> return parent
+               Nothing -> return $ inner menu
          else return $ inner menu
 
 -- * automatic creation

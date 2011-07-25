@@ -18,6 +18,7 @@ import Base.Prose
 import Base.Types
 import Base.Font
 import Base.Monad
+import Base.Sound
 
 import Base.Configuration
 import Base.Configuration.Controls
@@ -81,7 +82,8 @@ instance Renderable Scrollable where
             fmapM (render ptr app config widgetSize) $
             addSpacer $ fmap spacerForNull $
             lines
-        scrollDown <- updateScrollDown (maximalScrollDown h lineRenders) chan scrollDownRef
+        scrollDown <- updateScrollDown (applicationSounds app)
+            (maximalScrollDown h lineRenders) chan scrollDownRef
         let action = forM_ (clipHeight h $ drop scrollDown lineRenders) $
                 \ (itemSize, itemAction) -> do
                     recoverMatrix ptr $ itemAction
@@ -96,10 +98,12 @@ instance Renderable Scrollable where
 
 -- | Updates the scrollDown according to the widget size and events.
 -- Returns the current scrollDown.
-updateScrollDown :: Int -> Chan (Int -> Int) -> IORef Int -> IO Int
-updateScrollDown maximalScrollDown chan ref = do
+updateScrollDown :: ApplicationSounds -> Int -> Chan (Int -> Int) -> IORef Int -> IO Int
+updateScrollDown sounds maximalScrollDown chan ref = do
     events <- pollChannel chan
-    modifyIORef ref (min maximalScrollDown . max 0 . foldr (.) id events)
+    old <- readIORef ref
+    let new = min maximalScrollDown $ max 0 $ foldr (.) id events $ old
+    triggerSound $ (if old == new then errorSound else menuSelectSound) sounds
     readIORef ref
 
 -- | Returns the maximal scrollDown for a given height and child sizes (and actions).

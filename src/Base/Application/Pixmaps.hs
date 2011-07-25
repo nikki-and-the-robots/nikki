@@ -9,7 +9,7 @@ module Base.Application.Pixmaps (
 
 import Data.Abelian
 
-import Control.Exception
+import Control.Monad.CatchIO
 
 import System.FilePath
 
@@ -24,10 +24,9 @@ import Base.Pixmap
 import Base.Font
 
 
-withApplicationPixmaps :: (ApplicationPixmaps -> IO a) -> RM a
-withApplicationPixmaps cmd = do
-    pixmaps <- load
-    io (cmd pixmaps `finally` free pixmaps)
+withApplicationPixmaps :: (ApplicationPixmaps -> RM a) -> RM a
+withApplicationPixmaps cmd =
+    bracket load (io . free) cmd
 
 load :: RM ApplicationPixmaps
 load = do

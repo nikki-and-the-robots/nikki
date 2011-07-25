@@ -32,6 +32,8 @@ import Physics.Chipmunk as CM
 
 import Graphics.Qt as Qt
 
+import Sound.SFML
+
 import Utils
 
 import Base.Constants
@@ -43,7 +45,6 @@ import Base.Pixmap
 
 import Base.Types.Events
 import Base.Types.LevelFile
-
 
 
 -- * type aliases
@@ -77,6 +78,7 @@ data Application
         keyPoller :: KeyPoller,
         getMainMenu_ :: Application -> AppState,
         applicationPixmaps :: ApplicationPixmaps,
+        applicationSounds :: ApplicationSounds,
         allSorts :: SelectTree Sort_
       }
 
@@ -122,6 +124,15 @@ data HeaderCubePixmaps
         spaceCube :: Pixmap,
         endCube :: Pixmap
       }
+
+
+data ApplicationSounds = ApplicationSounds {
+    menuSelectSound :: PolySound,
+    menuConfirmSound :: PolySound,
+    menuCancelSound :: PolySound
+  }
+
+errorSound = menuCancelSound
 
 
 -- * Base.Renderable
