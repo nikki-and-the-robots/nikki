@@ -94,10 +94,16 @@ headUp = up - 0
 headLow = up + fromUber 13
 
 headPoly = Polygon [
-    Vector headLeft headUp,
+    -- upper left
+    Vector (headLeft + earChamfer) headUp,
+    Vector headLeft (headUp + earChamfer),
+    -- lower left
     Vector headLeft (headLow + pawThickness),
+    -- lower right
     Vector headRight (headLow + pawThickness),
-    Vector headRight headUp
+    -- upper right
+    Vector headRight (headUp + earChamfer),
+    Vector (headRight - earChamfer) headUp
     ]
 
 
