@@ -11,8 +11,6 @@ import qualified Data.Strict as Strict
 import Physics.Chipmunk hiding (position, Position)
 import qualified Physics.Hipmunk as Hip
 
-import Sound.SFML
-
 import Utils
 
 import Base
@@ -89,7 +87,7 @@ control now contacts (True, cd) nsort nikki = do
             modifyApplyOnlyForce chipmunk_ $
                 getJumpingForces now action_ ji
 
---             triggerPolySound (jumpSound nsort)
+            triggerSound (jumpSound nsort)
 
         State Airborne _ _ ji _ ->
             applyAirborneForces now chipmunk_ action_ ji
