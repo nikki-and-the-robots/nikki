@@ -37,7 +37,7 @@ Executable dummy
 
     if os(darwin)
         build-depends:
-            cabal-macosx == 0.1.3
+            cabal-macosx == 0.2.*
             , process
             , filepath
             , directory

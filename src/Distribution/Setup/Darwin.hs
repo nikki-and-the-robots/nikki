@@ -31,18 +31,23 @@ macResourcesDir = "resources"
 macPostBuild :: Args -> BuildFlags -> PackageDescription -> LocalBuildInfo -> IO ()
 macPostBuild args buildFlags packageDescription localBuildInfo =
     withTemporaryDirectoryCopy "../data" macResourcesDir $ do
+        -- fiddle in the Qt nib directory
         qtLibDir <- trim <$> readProcess "qmake" ["-query", "QT_INSTALL_LIBS"] ""
         qtNibDir <- lookupQtNibDir qtLibDir
         copyDirectory qtNibDir (macResourcesDir </> "qt_menu.nib")
+
+        -- build the app
         resources <- map (macResourcesDir </>) <$> getFilesRecursive macResourcesDir
         appBundleBuildHook [macApp resources] args buildFlags packageDescription localBuildInfo
         
-        let app = "dist/build/core.app"
-            appExecutableDir = app </> "Contents/MacOS"
-        copyFile "dist/build/nikki/nikki" (appExecutableDir </> "nikki")
-        mapM_ (strip . (appExecutableDir </>)) ["core", "nikki"]
-        writeFile (app </> "yes_nikki_is_deployed") ""
-        copyDirectory app "./nikki.app"
+        let bundle = "dist/build/nikki.app"
+            bundleExecutableDir = bundle </> "Contents/MacOS"
+            bundleResourcesDir = bundle </> "Contents/Resources"
+
+        -- stripping of binaries
+        mapM_ (strip . (bundleExecutableDir </>)) ("nikki" : "core" : [])
+        writeFile (bundle </> "yes_nikki_is_deployed") ""
+        copyDirectory bundle "./nikki.app"
 
 -- | deployment on a mac
 macApp :: [FilePath] -> MacApp
@@ -50,7 +55,8 @@ macApp resourceFiles = MacApp {
     -- use core executable for now (this results in correct dependency chasing,
     -- but the game gets started with the wrong executable, restarting after updates
     -- will not work)
-    appName = "core",
+    appName = "nikki",
+    otherCompiledBins = "core" : [],
     appIcon = Just (macResourcesDir </> "png/icon.icns"),
     appPlist = Nothing,
     resources = resourceFiles,
