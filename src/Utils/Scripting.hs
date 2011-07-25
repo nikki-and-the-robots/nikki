@@ -95,10 +95,10 @@ getFilesRecursive root =
     map normalise <$> inner "."
   where
     inner dir = do
-        content <- map (dir </>) <$> sort <$> getFiles (root </> dir) Nothing
+        content <- map (dir </>) <$> getFiles (root </> dir) Nothing
         (directories, files) <- partitionM (doesDirectoryExist . (root </>)) content
         recursive <- mapM inner $ directories
-        return $ sort (files ++ concat recursive)
+        return $ fileSort (files ++ concat recursive)
 
 partitionM :: (a -> IO Bool) -> [a] -> IO ([a], [a])
 partitionM p (a : r) = do
@@ -128,7 +128,7 @@ removeIfExists f = liftIO $ do
 -- Omit "." and "..".
 getDirectoryRealContents :: FilePath -> IO [FilePath]
 getDirectoryRealContents path =
-    liftIO $ sort <$> filter isContent <$> getDirectoryContents path
+    liftIO $ fileSort <$> filter isContent <$> getDirectoryContents path
   where
     isContent "." = False
     isContent ".." = False
@@ -142,7 +142,7 @@ isHiddenOnUnix = headMay >>> (== Just '.')
 -- @getFiles dir (Just extension)@ returns all files with the given extension.
 getFiles :: FilePath -> Maybe String -> IO [FilePath]
 getFiles dir mExtension =
-    sort <$> filter hasRightExtension <$> filter (not . isHiddenOnUnix) <$>
+    fileSort <$> filter hasRightExtension <$> filter (not . isHiddenOnUnix) <$>
         getDirectoryRealContents dir
   where
     hasRightExtension :: FilePath -> Bool
@@ -151,6 +151,10 @@ getFiles dir mExtension =
         (Just extension@('.' : _)) -> takeExtension >>> (== extension)
         (Just extension) -> takeExtension >>> (== ('.' : extension))
         Nothing -> const True
+
+-- | Sorts files case insensitively
+fileSort :: [String] -> [String]
+fileSort = sortBy (\ a b -> compare (map toUpper $ a) (map toUpper b))
 
 
 -- * version stuff
