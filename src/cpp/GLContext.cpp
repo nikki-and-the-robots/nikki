@@ -137,6 +137,8 @@ extern "C" void resizeGLContext(GLContext* ptr, int x, int y) {
 
 extern "C" void showGLContext(GLContext* ptr) {
     ptr->mainWindow->show();
+    ptr->mainWindow->raise();
+    ptr->mainWindow->activateWindow();
 };
 
 extern "C" void hideGLContext(GLContext* ptr) {
