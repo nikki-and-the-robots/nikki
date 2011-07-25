@@ -32,13 +32,13 @@ sortShadowedTiles = sortBy tilesReadOrdering
 
 tilesReadOrdering :: EditorObject Sort_ -> EditorObject Sort_ -> Ordering
 tilesReadOrdering a b | isTileSort (editorSort a) && isTileSort (editorSort b) =
-    withView (^. editorPosition) tilesOrdering a b
+    on tilesOrdering (^. editorPosition) a b
 tilesReadOrdering _ _ = EQ
 
 -- | Orders left and up first. 45 degrees.
 tilesOrdering :: EditorPosition -> EditorPosition -> Ordering
 tilesOrdering a b =
-    withView (ep2v >>> rot >>> vectorY) compare a b
+    on compare (ep2v >>> rot >>> vectorY) a b
   where
     ep2v :: EditorPosition -> Vector
     ep2v (EditorPosition x y) = Vector (realToFrac x) (realToFrac y)
@@ -60,7 +60,7 @@ tilesOrdering a b =
 -- Batteries
 -- Laser (without Robots)
 sortSorts :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
-sortSorts = sortBy (withView (getSortId . sortId . editorSort) renderOrdering)
+sortSorts = sortBy (renderOrdering `on` (getSortId . sortId . editorSort))
 
 renderOrdering :: FilePath -> FilePath -> Ordering
 renderOrdering a b =

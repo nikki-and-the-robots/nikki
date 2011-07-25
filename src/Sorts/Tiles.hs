@@ -107,8 +107,8 @@ getFrameFileNames storyMode name = do
             files <- mapM (getPngFileName storyMode) $
                     map (pngDir </>) $
                     map third $
-                    sortBy (withView snd3 compare) $
-                    filter (\ (candidateName, _, _) -> withView splitDirectories (==) name candidateName) $
+                    sortBy (compare `on` snd3) $
+                    filter (\ (candidateName, _, _) -> on (==) splitDirectories name candidateName) $
                     map parsePath relativePaths
             return $ Just $ catMaybes files
   where

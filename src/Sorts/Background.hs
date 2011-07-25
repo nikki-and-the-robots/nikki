@@ -47,7 +47,7 @@ mkSort name = do
     pixmaps <- mapM (loadSymmetricPixmap zero) =<< getPngPaths name
     return $ BSort name (sort pixmaps)
   where
-    sort = sortBy (withView (width . pixmapSize) compare)
+    sort = sortBy (compare `on` (width . pixmapSize))
 
 getPngPaths :: String -> RM [FilePath]
 getPngPaths n =

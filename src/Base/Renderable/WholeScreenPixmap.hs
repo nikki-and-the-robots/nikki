@@ -22,8 +22,8 @@ pickWholeScreenPixmap windowSize list =
     headMay $ filter isBiggerThanWindow list
   where
     isBiggerThanWindow (pixmapSize -> pixmapSize) =
-        withView width (>) pixmapSize windowSize &&
-        withView height (>) pixmapSize windowSize
+        on (>) width pixmapSize windowSize &&
+        on (>) height pixmapSize windowSize
 
 renderWholeScreenPixmap :: Ptr QPainter -> Size Double -> [Pixmap] -> IO ()
 renderWholeScreenPixmap ptr size pixmaps = do

@@ -22,6 +22,9 @@ module Utils (
     Accessor,
     (%=),
     (%:),
+
+    -- * other exports
+    on,
   ) where
 
 -- imports
@@ -40,6 +43,7 @@ import qualified Data.Set as Set
 import Data.Accessor (Accessor, (^.), (^=), (^:), (.>))
 import Data.Accessor.Monad.MTL.State ((%=), (%:))
 import Data.Monoid
+import Data.Function
 
 import Text.Printf
 import Text.Logging
@@ -487,9 +491,6 @@ uncurry3 f (a, b, c) = f a b c
 
 uncurry4 :: (a -> b -> c -> d -> e) -> ((a, b, c, d) -> e)
 uncurry4 f (a, b, c, d) = f a b c d
-
-withView :: (a -> b) -> (b -> b -> c) -> a -> a -> c
-withView view operator a b = operator (view a) (view b)
 
 swapOrdering :: Ordering -> Ordering
 swapOrdering LT = GT

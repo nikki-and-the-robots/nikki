@@ -192,7 +192,7 @@ toFont fontColors m =
     errorSymbol = lookupJustNote "error symbol not found" (Right ErrorSymbol) m
 
     shortestKeyFirst :: (String, b) -> (String, b) -> Ordering
-    shortestKeyFirst = withView (length . fst) compare
+    shortestKeyFirst = compare `on` (length . fst)
 
 -- | converts the loaded color variant (white/black) to
 -- the standardColorVariants

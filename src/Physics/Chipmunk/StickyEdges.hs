@@ -119,8 +119,8 @@ moveRightSide a b |
     y (end a) == y (end b)
   = Just [Rectangle s w h]
     where
-        s = Vector (withView (x . start) min a b) (y (start a))
-        w = (withView (x . end) max a b) - x s
+        s = Vector (on min (x . start) a b) (y (start a))
+        w = (on max (x . end) a b) - x s
         h = height a
 
 moveRightSide a b = Nothing

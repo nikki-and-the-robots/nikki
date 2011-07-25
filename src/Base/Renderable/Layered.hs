@@ -24,5 +24,5 @@ instance Renderable Layered where
         bR <- render ptr app config parentSize b
         return (size aR bR, action aR bR)
       where
-        size aR bR = Size (withView (width . fst) max aR bR) (withView (height . fst) max aR bR)
+        size aR bR = Size (on max (width . fst) aR bR) (on max (height . fst) aR bR)
         action aR bR = recoverMatrix ptr (snd aR) >> snd bR

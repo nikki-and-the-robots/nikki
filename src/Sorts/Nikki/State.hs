@@ -321,7 +321,7 @@ jumpCollision considerGhostsState collisions =
         else filter (not . isGhostCollision) cs
 
     -- | sorting collisions: legs, ghost, head
-    sortLegsCollisions = sortBy (withView (nikkiCollisionType >>> toNumber) compare)
+    sortLegsCollisions = sortBy (compare `on` (nikkiCollisionType >>> toNumber))
     toNumber NikkiLegsCT = 1
     toNumber NikkiGhostCT = 2
     toNumber NikkiHeadCT = 3
@@ -329,7 +329,7 @@ jumpCollision considerGhostsState collisions =
 
     -- | sort (more upward first)
     sortByAngle =
-        sortBy (withView (abs . nikkiCollisionAngle) compare)
+        sortBy (compare `on` (abs . nikkiCollisionAngle))
 
     -- | If there are collisions with angles with different signs,
     -- we want a new artificial collision with angle 0.

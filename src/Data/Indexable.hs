@@ -144,7 +144,7 @@ catMaybes = Data.Indexable.filter isJust >>> fmap fromJust
 -- | Stable sorting of Indexables while preserving indices.
 sortBy :: (a -> a -> Ordering) -> Indexable a -> Indexable a
 sortBy ordering (Indexable values) =
-    Indexable $ Vector.fromList $ List.sortBy (withView snd ordering) $ Vector.toList values
+    Indexable $ Vector.fromList $ List.sortBy (ordering `on` snd) $ Vector.toList values
 
 -- | generate an unused Index
 -- (newIndex l) `elem` l == False
