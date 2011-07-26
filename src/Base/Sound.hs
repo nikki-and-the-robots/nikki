@@ -30,9 +30,9 @@ withApplicationSounds =
   where
     load :: RM ApplicationSounds
     load = ApplicationSounds
-        <$> loadSound "bfxr/menuSelect" 2
-        <*> loadSound "bfxr/menuConfirm" 2
-        <*> loadSound "bfxr/menuCancel" 2
+        <$> loadSound "menu/select" 2
+        <*> loadSound "menu/confirm" 2
+        <*> loadSound "menu/cancel" 2
     free (ApplicationSounds a b c) =
         forM_ [a, b, c] freePolySound
 

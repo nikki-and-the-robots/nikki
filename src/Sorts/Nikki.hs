@@ -44,7 +44,7 @@ sorts :: RM [Sort_]
 sorts = do
     pixmaps <- loadPixmaps
     psize <- io $ fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
-    jumpSound <- loadSound "bfxr/jump" 4
+    jumpSound <- loadSound "game/jump" 4
     let r = NSort pixmaps jumpSound
     return [Sort_ r]
 
