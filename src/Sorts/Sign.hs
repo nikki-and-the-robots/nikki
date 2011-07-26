@@ -273,11 +273,11 @@ instance IsOEMState SignOEMState where
 
 question = p "text for the sign"
 
-updateOEM :: Button -> SignOEMState -> Maybe SignOEMState
-updateOEM (KeyboardButton F1 string) _ = Nothing
+updateOEM :: Button -> SignOEMState -> OEMUpdateMonad SignOEMState
+updateOEM (KeyboardButton F1 string) _ = oemNothing
 updateOEM (KeyboardButton key string) (SignOEMState text) =
-    Just $ SignOEMState $ modifyTextField key string text
-updateOEM _ _ = Nothing
+    return $ SignOEMState $ modifyTextField key string text
+updateOEM _ _ = oemNothing
 
 -- * help text
 

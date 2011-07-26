@@ -430,12 +430,24 @@ modifyOEMEditorPositions f o@EditorObject{editorOEMState_ = Just (OEMState state
 
 class (Typeable a, Data a) => IsOEMState a where
     oemEnterMode :: Sort sort o => EditorScene sort -> a -> a
-    oemUpdate :: EditorScene sort -> Button -> a -> Maybe a
+    oemUpdate :: EditorScene sort -> Button -> a -> OEMUpdateMonad a
     oemNormalize :: Sort sort o => EditorScene sort -> a -> a
     oemRender :: Sort sort o => Ptr QPainter -> Application -> Configuration -> EditorScene sort -> a -> IO ()
     oemPickle :: a -> String
     -- phantom type
     oemHelp :: a -> String
+
+type OEMUpdateMonad a = Either OEMException a
+
+oemNothing :: OEMUpdateMonad a
+oemNothing = Left OEMNothing
+
+oemError :: OEMUpdateMonad a
+oemError = Left OEMError
+
+data OEMException
+    = OEMNothing -- Nothing to be done, state is the same (help screen is shown?)
+    | OEMError -- an error occured (emit an error sound)
 
 data OEMState = forall a . IsOEMState a => OEMState a
   deriving Typeable

@@ -270,24 +270,24 @@ removePathPoint point (OEMPathPositions start path) =
 
 -- * oem logic
 
-updateOEMPath :: Button -> OEMPath -> Maybe OEMPath
+updateOEMPath :: Button -> OEMPath -> OEMUpdateMonad OEMPath
 updateOEMPath (KeyboardButton key _) oem@(OEMPath size cursorStep cursor path active) =
     case key of
-        LeftArrow -> Just $ oemCursor ^: (-~ EditorPosition cursorStepF 0) $ oem
-        RightArrow -> Just $ oemCursor ^: (+~ EditorPosition cursorStepF 0) $ oem
-        UpArrow -> Just $ oemCursor ^: (-~ EditorPosition 0 cursorStepF) $ oem
-        DownArrow -> Just $ oemCursor ^: (+~ EditorPosition 0 cursorStepF) $ oem
+        LeftArrow -> return $ oemCursor ^: (-~ EditorPosition cursorStepF 0) $ oem
+        RightArrow -> return $ oemCursor ^: (+~ EditorPosition cursorStepF 0) $ oem
+        UpArrow -> return $ oemCursor ^: (-~ EditorPosition 0 cursorStepF) $ oem
+        DownArrow -> return $ oemCursor ^: (+~ EditorPosition 0 cursorStepF) $ oem
         -- append new path node
-        k | isEditorA k -> Just $ OEMPath size cursorStep cursor (addPathPoint cursor path) active
+        k | isEditorA k -> return $ OEMPath size cursorStep cursor (addPathPoint cursor path) active
         -- delete path node
-        k | isEditorB k -> Just $ OEMPath size cursorStep cursor (removePathPoint cursor path) active
-        W -> Just $ oem{oemStepSize = cursorStep * 2}
-        S -> Just $ oem{oemStepSize = max 1 (cursorStep `div` 2)}
-        Space -> Just $ oem{oemActive = not active}
-        _ -> Nothing
+        k | isEditorB k -> return $ OEMPath size cursorStep cursor (removePathPoint cursor path) active
+        W -> return $ oem{oemStepSize = cursorStep * 2}
+        S -> return $ oem{oemStepSize = max 1 (cursorStep `div` 2)}
+        Space -> return $ oem{oemActive = not active}
+        _ -> oemNothing
   where
     cursorStepF :: Double = fromIntegral cursorStep
-updateOEMPath _ _ = Nothing
+updateOEMPath _ _ = oemNothing
 
 
 renderOEMState :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()

@@ -65,7 +65,7 @@ editorLoop app mvar scene = UnManagedAppState $ do
                 return $ playLevel app (editorLoop app mvar s) True (setNikkiPosition (cursor s) s)
             _ -> do
                 -- other events are handled below (in Editor.Scene)
-                eventHandled <- updateEditorScene event
+                eventHandled <- updateEditorScene app event
                 case (eventHandled, event) of
                     (False, Press _) -> do
                         -- unhandled press event -> help will be displayed

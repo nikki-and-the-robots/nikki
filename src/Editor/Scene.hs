@@ -97,34 +97,43 @@ setNikkiPosition position =
 
 -- | Updates the editor scene for a given key press.
 -- Returns True in case the key was recognized and acted upon.
-updateEditorScene :: MonadState (EditorScene Sort_) m =>
-    AppEvent -> m Bool
-updateEditorScene (Press b@KeyboardButton{}) = do
-    acted <- keyPress b
+updateEditorScene :: (MonadState (EditorScene Sort_) m, MonadIO m) =>
+    Application -> AppEvent -> m Bool
+updateEditorScene app (Press b@KeyboardButton{}) = do
+    acted <- keyPress app b
     when acted $ do
         modify updateSelected
         modify normalizeOEMStates
     return acted
-updateEditorScene _ = return False
+updateEditorScene _ _ = return False
 
 
 -- * gamepad buttons
 -- Start (== Escape) is handled above in Editor.MainLoop
 
-keyPress :: MonadState (EditorScene Sort_) m =>
-    Button -> m Bool
-keyPress b = do
+-- | returns if the keyboard event was handled
+-- (either by updating the state or in case of an exception)
+keyPress :: (MonadState (EditorScene Sort_) m, MonadIO m) =>
+    Application -> Button -> m Bool
+keyPress app b = do
     scene <- get
     let newScene = case editorMode scene of
-            NormalMode -> normalMode (key b) scene
+            NormalMode -> convert $ normalMode (key b) scene
             ObjectEditMode{} -> objectEditModeUpdate b scene
-            SelectionMode{} -> selectionMode (key b) scene
+            SelectionMode{} -> convert $ selectionMode (key b) scene
     case newScene of
-        Nothing -> return False
-        Just newScene -> do
+        (Left OEMNothing) -> return False
+        (Left OEMError) -> do
+            triggerSound $ errorSound $ applicationSounds app
+            return True
+        (Right newScene) -> do
             -- acted on key event
             put newScene
             return True
+  where
+    convert :: Maybe a -> OEMUpdateMonad a
+    convert (Just x) = return x
+    convert Nothing = oemNothing
 
 -- * Main Editor mode
 
@@ -196,12 +205,13 @@ normalMode _ scene = Nothing
 
 -- * object edit mode
 
-objectEditModeUpdate :: Button -> EditorScene Sort_ -> Maybe (EditorScene Sort_)
-objectEditModeUpdate x scene@EditorScene{editorMode = ObjectEditMode i} =
+objectEditModeUpdate :: Button -> EditorScene Sort_ -> OEMUpdateMonad (EditorScene Sort_)
+objectEditModeUpdate x scene@EditorScene{editorMode = ObjectEditMode i} = do
     let Just oldOemState = scene ^. acc
-    in case oemUpdate scene x oldOemState of
-        Nothing -> Nothing
-        Just x -> Just $ acc ^= Just x $ scene
+    case oemUpdate scene x oldOemState of
+        (Left OEMNothing) -> oemNothing
+        (Left OEMError) -> oemError
+        (Right x) -> return $ acc ^= Just x $ scene
   where
     acc :: Accessor (EditorScene Sort_) (Maybe OEMState)
     acc = editorObjects .> mainLayer .> content .> indexA i .> editorOEMState
