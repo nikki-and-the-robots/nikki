@@ -13,7 +13,7 @@ module Base.Pixmap (
     loadSymmetricPixmap,
     freePixmap,
     copyPixmap,
-    mapPixels,
+    mapColors,
     renderPixmapSimple,
     renderPixmap,
     RenderPixmap(RenderPixmap, RenderCommand, RenderOnTop),
@@ -80,18 +80,17 @@ copyPixmap (Pixmap pix size offset imageSize) = do
     pixCopy <- copyQPixmap pix
     return $ Pixmap pixCopy size offset imageSize
 
--- | Change the pixel colors of a given pixmap using the given function.
--- Not very efficient, since the Pixmap is converted to a QImage in between.
-mapPixels :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
-mapPixels f (Pixmap pix size offset realSize) = do
+-- | Iterates over the colors in the color table of the image.
+mapColors :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
+mapColors f (Pixmap pix size offset realSize) = do
     image <- toImageQPixmap pix
     destroyQPixmap pix
     imageSize <- sizeQImage image
-    let xs = [0 .. (width imageSize - 1)]
-        ys = [0 .. (height imageSize - 1)]
-    forM_ (cartesian ys xs)  $ \ (y, x) -> do
-        c <- pixelQImage image (x, y)
-        setPixelQImage image (x, y) (f c)
+
+    colorN <- colorCountQImage image
+    forM_ [0 .. pred colorN] $ \ i ->
+        setColorQImage image i . f =<< colorQImage image i
+
     newPix <- fromImageQPixmap image
     destroyQImage image
     return $ Pixmap newPix size offset realSize

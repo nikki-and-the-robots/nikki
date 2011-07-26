@@ -202,7 +202,7 @@ extern "C" int heightQPixmap(QPixmap* ptr) {
 };
 
 extern "C" QImage* toImageQPixmap(QPixmap* self) {
-    QImage::Format preferred_format = QImage::Format_ARGB32_Premultiplied;
+    QImage::Format preferred_format = QImage::Format_Indexed8;
     return new QImage(self->toImage().convertToFormat(preferred_format));
 };
 
@@ -222,6 +222,18 @@ extern "C" int widthQImage(QImage* ptr) {
 
 extern "C" int heightQImage(QImage* ptr) {
     return ptr->height();
+};
+
+extern "C" int colorCountQImage(QImage* ptr) {
+    return ptr->colorCount();
+};
+
+extern "C" QRgb colorQImage(QImage* ptr, int index) {
+    return ptr->color(index);
+};
+
+extern "C" void setColorQImage(QImage* ptr, int index, QRgb color) {
+    ptr->setColor(index, color);
 };
 
 extern "C" QRgb pixelQImage(QImage* self, int x, int y) {

@@ -17,14 +17,14 @@ import Base.Pixmap
 -- colorvariant while mapping the colors using the given function
 newColorVariant :: (QRgb -> QRgb) -> ColorVariant -> IO ColorVariant
 newColorVariant colorMapping (ColorVariant glyphs errorSymbol) = do
-    newGlyphs <- fmapM (\ (a, b) -> tuple a <$> copyAndColorPix colorMapping b) glyphs
-    newErrorSymbol <- copyAndColorPix colorMapping errorSymbol
+    newGlyphs <- fmapM (\ (a, b) -> tuple a <$> copyAndMapColors colorMapping b) glyphs
+    newErrorSymbol <- copyAndMapColors colorMapping errorSymbol
     return $ ColorVariant newGlyphs newErrorSymbol
 
-copyAndColorPix :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
-copyAndColorPix colorMapping pix = do
+copyAndMapColors :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
+copyAndMapColors colorMapping pix = do
     new <- copyPixmap pix
-    mapPixels colorMapping new
+    mapColors colorMapping new
 
 freeColorVariant :: ColorVariant -> IO ()
 freeColorVariant (ColorVariant glyphs errorSymbol) = do

@@ -62,6 +62,9 @@ module Graphics.Qt.CPPWrapper (
     -- * QImage
     destroyQImage,
     sizeQImage,
+    colorCountQImage,
+    colorQImage,
+    setColorQImage,
     pixelQImage,
     setPixelQImage,
     fromImageQPixmap,
@@ -394,6 +397,12 @@ foreign import ccall heightQImage :: Ptr QImage -> IO QtInt
 
 sizeQImage :: Ptr QImage -> IO (Size QtInt)
 sizeQImage ptr = Size <$> widthQImage ptr <*> heightQImage ptr
+
+foreign import ccall colorCountQImage :: Ptr QImage -> IO Int
+
+foreign import ccall colorQImage :: Ptr QImage -> Int -> IO QRgb
+
+foreign import ccall setColorQImage :: Ptr QImage -> Int -> QRgb -> IO ()
 
 pixelQImage :: Ptr QImage -> (QtInt, QtInt) -> IO QRgb
 pixelQImage ptr (x, y) = cppPixelQImage ptr x y
