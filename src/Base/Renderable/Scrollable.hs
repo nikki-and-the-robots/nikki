@@ -50,7 +50,8 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
           else if isMenuUp controls__ e then
             io (send (subtract 1)) >>
             loop send
-          else
+          else do
+            triggerSound $ menuConfirmSound $ applicationSounds app
             return follower
 
 scrollable :: Application -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
@@ -103,7 +104,9 @@ updateScrollDown sounds maximalScrollDown chan ref = do
     events <- pollChannel chan
     old <- readIORef ref
     let new = min maximalScrollDown $ max 0 $ foldr (.) id events $ old
-    triggerSound $ (if old == new then errorSound else menuSelectSound) sounds
+    when (not $ null events) $
+        triggerSound $ (if old == new then errorSound else menuSelectSound) sounds
+    writeIORef ref new
     readIORef ref
 
 -- | Returns the maximal scrollDown for a given height and child sizes (and actions).
