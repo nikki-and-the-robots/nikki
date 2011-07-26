@@ -33,8 +33,9 @@ withApplicationSounds =
         <$> loadSound "menu/select" 2
         <*> loadSound "menu/confirm" 2
         <*> loadSound "menu/cancel" 2
-    free (ApplicationSounds a b c) =
-        forM_ [a, b, c] freePolySound
+        <*> loadSound "menu/error" 2
+    free (ApplicationSounds a b c d) =
+        forM_ [a, b, c, d] freePolySound
 
 
 loadSound :: String -> Int -> RM PolySound

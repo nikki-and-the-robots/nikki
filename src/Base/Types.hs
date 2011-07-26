@@ -129,10 +129,9 @@ data HeaderCubePixmaps
 data ApplicationSounds = ApplicationSounds {
     menuSelectSound :: PolySound,
     menuConfirmSound :: PolySound,
-    menuCancelSound :: PolySound
+    menuCancelSound :: PolySound,
+    errorSound :: PolySound
   }
-
-errorSound = menuCancelSound
 
 
 -- * Base.Renderable
