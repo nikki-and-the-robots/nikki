@@ -9,6 +9,7 @@ module Graphics.Qt.CPPWrapper (
     QApplication,
     withQApplication,
     execQApplication,
+    processEventsQApplication,
     quitQApplication,
 
     -- * GLContext

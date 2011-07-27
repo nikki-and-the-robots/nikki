@@ -25,7 +25,8 @@ import qualified Data.Map as Map
 import Text.Logging
 
 import Control.Concurrent
-import Control.Monad.CatchIO
+import Control.Monad.Reader
+import Control.Exception
 
 import System.FilePath
 import System.Exit
@@ -46,61 +47,90 @@ import Top.Initialisation
 import Top.Game (playLevel)
 
 
-main :: [Key] -> IO ()
-main initialSignals =
-  withStaticConfiguration $ do
+main :: IO ()
+main = do
+    configuration <- loadConfiguration
+    forkThreads (renderThread configuration) (logicThread configuration)
 
-    configuration <- ask
+-- | Handles forking of the two main threads.
+-- Creates an MVar for the one thread to initialize.
+-- If one threads raises an exception, the other one will be killed.
+forkThreads :: (MVar a -> IO ()) -> (a -> IO ()) -> IO ()
+forkThreads renderThread logicThread = do
+    aRef <- newEmptyMVar
+    waitRef <- newEmptyMVar
+    renderTID <- myThreadId
+    logicTID <- forkIO $ flip finally (putMVar waitRef ()) $ do
+        a <- takeMVar aRef
+        logicThread a `Control.Exception.catch` handleLogicException renderTID
+    renderThread aRef
+    takeMVar waitRef
+  where
+    handleLogicException :: ThreadId -> SomeException -> IO ()
+    handleLogicException tid e = throwTo tid e
 
-    -- qt initialisation
-    withQApplication $ \ qApp -> do
-        let Windowed windowSize = programWindowSize
-        withGLContext 0 (width windowSize) (height windowSize) $ \ window -> do
-            paintEngine <- io $ paintEngineTypeGLContext window
-            io $ logg Debug ("paint engine: " ++ show paintEngine)
 
-            withNikkiIcon window $ do
-                keyPoller <- io $ newKeyPoller window (initial_events configuration ++ initialSignals)
+-- | Rendering thread.
+-- Initialises the Application and puts it in the given MVar.
+-- Enters the Qt event loop after that.
+-- Displays a "loading..." message as soon as possible.
+renderThread :: Configuration -> MVar Application -> IO ()
+renderThread configuration appRef =
+  withQApplication $ \ qApp -> do
+    withGLContext 0 (width defaultWindowSize) (height defaultWindowSize) $ \ window -> do
+      paintEngine <- paintEngineTypeGLContext window
+      logg Debug ("paint engine: " ++ show paintEngine)
+      flip runReaderT configuration $ withNikkiIcon window $ do
+        keyPoller <- io $ newKeyPoller window
+            (initial_events configuration ++ initialDebuggingSignals)
+        -- loading the gui pixmaps
+        withApplicationPixmaps $ \ appPixmaps -> do
+          -- showing main window
+          io $ do
+            let windowMode = if fullscreen configuration
+                  then FullScreen
+                  else Windowed defaultWindowSize
+            setWindowTitle window "Nikki and the Robots"
+            setWindowSize window windowMode
+            showLoadingScreen qApp window appPixmaps configuration
+            showGLContext window
+            processEventsQApplication qApp
 
-                -- showing main window
-                let windowMode = if fullscreen configuration then FullScreen else programWindowSize
-                io $ setWindowTitle window "Nikki and the Robots"
-                io $ setWindowSize window windowMode
-                io $ showGLContext window
-
-                -- sort loading (pixmaps and sounds)
-                withAllSorts $ \ sorts ->
-                 withApplicationPixmaps $ \ appPixmaps ->
-                 withApplicationSounds $ \ appSounds -> io $ do
-
-                    -- start state logick
-                    let app :: Application
-                        app = Application qApp window keyPoller (flip mainMenu 0) appPixmaps appSounds sorts
-                        -- there are two main threads:
-                        -- this is the logick [sick!] thread
-                        -- dynamic changes of the configuration take place in this thread!
-                        logicThread = do
-                            withDynamicConfiguration configuration $
-                                runAppState app (applicationStates app)
-                    exitCodeMVar <- forkLogicThread $ do
-                        logicThread `finally` quitQApplication
-
-                    -- this is the rendering thread (will be quit by the logick thread)
-                    exitCodeFromQApplication <- execQApplication qApp
-
-                    exitCodeFromLogicThread <- takeMVar exitCodeMVar
-
-                    case exitCodeFromLogicThread of
-                        ExitFailure x -> exitWith $ ExitFailure x
-                        ExitSuccess -> case exitCodeFromQApplication of
-                            0 -> return ()
-                            x -> exitWith $ ExitFailure x
+          -- sort loading (pixmaps and sounds)
+          withApplicationPixmaps $ \ appPixmaps ->
+            withAllSorts $ \ sorts ->
+              withApplicationSounds $ \ appSounds -> io $ do
+                -- put the initialised Application in the MVar
+                let app :: Application
+                    app = Application qApp window keyPoller (flip mainMenu 0) appPixmaps appSounds sorts
+                putMVar appRef app
+                -- will be quit by the logick thread
+                exitCode <- execQApplication qApp
+                when (exitCode /= 0) $
+                    logg Error ("error exit code from execQApplication: " ++ show exitCode)
 
 withNikkiIcon :: Ptr GLContext -> RM a -> RM a
 withNikkiIcon qWidget action = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
         getDataFiles pngDir (Just ".png")
     withApplicationIcon qWidget iconPaths action
+
+-- showLoadingScreen :: Application -> Configuration -> IO ()
+showLoadingScreen qApp window applicationPixmaps config = do
+    let app = Application qApp window err err applicationPixmaps err err
+        err = error "uninitialised field in Application: showLoadingScreen"
+    postGUI window $ setRenderingLooped window False
+    io $ setRenderable app config (busyMessage (p "loading..."))
+
+
+-- | Logic thread.
+-- Runs the logic and the physics engine. Sets renderingCallbacks.
+-- Writes the possibly modified Configuration to disk at the end.
+logicThread :: Configuration -> Application -> IO ()
+logicThread configuration app = flip finally quitQApplication $ do
+    -- dynamic changes of the configuration take place in this thread!
+    withDynamicConfiguration configuration $
+        runAppState app (applicationStates app)
 
 
 -- * states

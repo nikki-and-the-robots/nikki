@@ -20,8 +20,7 @@ module Base (
     module Base.Debugging,
     module Base.Configuration,
     module Base.Configuration.Controls,
-    module Base.GlobalCatcher,
-    module Base.GlobalShortcuts,
+module Base.GlobalShortcuts,
     module Base.LevelLoading,
     module Base.Polling,
     module Base.Options,
@@ -50,7 +49,6 @@ import Base.GameGrounds
 import Base.Debugging
 import Base.Configuration
 import Base.Configuration.Controls
-import Base.GlobalCatcher
 import Base.GlobalShortcuts
 import Base.LevelLoading
 import Base.Polling

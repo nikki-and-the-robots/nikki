@@ -9,7 +9,7 @@ module Base.Paths (
     getDataFiles,
     getConfigurationDirectory,
     getConfigurationFile,
-    withStaticConfiguration,
+    loadConfiguration,
     withDynamicConfiguration,
 
     -- * story mode data
@@ -133,12 +133,6 @@ saveConfigurationToFile :: SavedConfiguration -> IO ()
 saveConfigurationToFile config = do
     file <- getConfigurationFile
     writeFile file (show config)
-
--- | reads the configuration
--- configuration should not be changed
-withStaticConfiguration :: ConfigurationReader a -> IO a
-withStaticConfiguration action =
-    runReaderT action =<< loadConfiguration
 
 -- | Executes an M Monad.
 -- Will save changes to the configuration afterwards

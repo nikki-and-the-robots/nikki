@@ -68,8 +68,7 @@ extern "C" char* applicationFilePath() {
 };
 
 extern "C" void processEventsQApplication() {
-    qDebug() << "flush";
-    QApplication::flush();
+    QCoreApplication::processEvents();
 };
 
 extern "C" void setApplicationName(QApplication* app, char* name) {

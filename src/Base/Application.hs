@@ -2,6 +2,7 @@
 module Base.Application (
     appState,
     runAppState,
+    setRenderable,
   ) where
 
 

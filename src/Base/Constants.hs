@@ -62,7 +62,8 @@ templateLevelsDir = "templateLevels"
 -- * misc
 
 -- | initial window size, when not in fullscreen mode
-programWindowSize = Windowed (Size 1024 640)
+defaultWindowSize :: Size Int
+defaultWindowSize = Size 1024 640
 
 windowTitle :: String
 windowTitle = "Nikki and the Robots"
@@ -71,3 +72,13 @@ goldenRatio :: Double
 goldenRatio = (sqrt 5 + 1) / 2
 
 levelEndDuration :: Double = 10
+
+initialDebuggingSignals :: [Key]
+initialDebuggingSignals =
+--     play 1 ++
+    []
+  where
+    edit n = DownArrow : DownArrow : DownArrow : Ctrl :
+             replicate n DownArrow ++ Ctrl : []
+    play n = DownArrow : Ctrl : Ctrl :
+             replicate (n - 1) DownArrow ++ Ctrl : []
