@@ -53,21 +53,21 @@ data State = State {
     direction :: !HorizontalDirection, -- the direction nikki faces
     feetVelocity :: !CpFloat,
     jumpInformation :: !JumpInformation,
-    considerGhostsState :: !Bool -- if ghost shapes should be considered
+    ghostTime :: !(Strict.Maybe (Strict.Pair Seconds NikkiCollision))
 --     dustClouds :: [DustCloud]
   }
     deriving (Show)
 
 instance Initial State where
-    initial = State (Wait False) HRight 0 initial False
+    initial = State Airborne HRight 0 initial Strict.Nothing
 
 data Action
-    = Wait {isGhost :: !Bool}
-    | Walk {afterAirborne :: !Bool, isGhost :: !Bool}
+    = Wait {collision :: !NikkiCollision}
+    | Walk {afterAirborne :: !Bool, collision :: !NikkiCollision}
         -- state for one frame (when a jump starts)
     | JumpImpulse !NikkiCollision
     | Airborne
-    | WallSlide_ [Angle] -- use wallSlide to be strict
+    | WallSlide_ [Angle] !NikkiCollision -- use wallSlide to be strict
     | UsingTerminal
     | SlideToGrip !HorizontalDirection -- to which side is the collision
     | Grip -- when Nikki uses the paws to hold on to something

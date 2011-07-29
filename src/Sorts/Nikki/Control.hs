@@ -42,16 +42,16 @@ control now contacts (True, cd) nsort nikki = do
         action_ = action $ state nikki
     case state nikki of
 
-        State (Wait False) _ _ _ _ ->
+        State Wait{} _ _ _ Strict.Nothing ->
             resetForces $ body chipmunk_
         -- ghost state
-        State (Wait True) _ _ ji _ ->
+        State Wait{} _ _ ji (Strict.Just _) ->
             applyAirborneForces now chipmunk_ action_ ji
 
-        State (Walk afterAirborne False) direction _ _ _ ->
+        State (Walk afterAirborne _) direction _ _ Strict.Nothing ->
             resetForces $ body chipmunk_
         -- ghost state
-        State (Walk afterAirborne True) _ _ ji _ ->
+        State (Walk afterAirborne _) _ _ ji (Strict.Just _) ->
             applyAirborneForces now chipmunk_ action_ ji
 
         -- jumping
@@ -92,7 +92,7 @@ control now contacts (True, cd) nsort nikki = do
         State Airborne _ _ ji _ ->
             applyAirborneForces now chipmunk_ action_ ji
 
-        State (WallSlide_ contactAngles) _ _ ji _ -> do
+        State (WallSlide_ contactAngles _) _ _ ji _ -> do
             modifyApplyOnlyForce chipmunk_ $
                 getJumpingForces now action_ ji
             when (isPushedAwayByLShape contactAngles (jumpButtonDirection ji)) $ do

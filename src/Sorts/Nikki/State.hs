@@ -1,4 +1,4 @@
-{-# language ViewPatterns, NamedFieldPuns #-}
+{-# language ViewPatterns, NamedFieldPuns, ScopedTypeVariables #-}
 
 module Sorts.Nikki.State where
 
@@ -9,6 +9,7 @@ import Data.List (sortBy)
 import Data.Maybe
 import Data.Directions
 import qualified Data.Strict as Strict
+import Data.Strict (Pair(..))
 import Data.Convertable
 
 import Control.Arrow
@@ -35,7 +36,7 @@ updateState config mode now _ (False, _) nikki = do
             (LevelFinished _ result) -> NikkiLevelFinished result
         jumpInformation' = jumpInformation $ state nikki
         State{direction} = state nikki
-        newState = State action direction 0 jumpInformation' False
+        newState = State action direction 0 jumpInformation' Strict.Nothing
     addDustClouds now nikki{state = newState}
 updateState config mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
@@ -46,68 +47,74 @@ updateState config mode now contacts (True, controlData) nikki = do
 newState :: Controls -> Seconds -> Contacts -> ControlData
     -> Nikki -> CM.Position -> Velocity -> State
 newState config now contacts controlData nikki nikkiPos velocity =
-    mkNewState considerGhostsState' -- (dustClouds $ state nikki)
-  where
-    -- function that creates the next state when given the next considerGhosts value.
---     mkNewState :: (Bool -> [DustCloud] -> State)
-    mkNewState :: Bool -> State
-    mkNewState =
-      case (willJump, mJumpImpulseData) of
-        -- nikki jumps
-        (True, Just impulse) ->
-          let specialJumpInformation =
-                JumpInformation (Strict.Just now) (Strict.Just angle) velocity buttonDirection
-              angle = nikkiCollisionAngle impulse
-          in State
-               (JumpImpulse impulse)
-               (jumpImpulseDirection $ nikkiCollisionAngle impulse)
-               airborneFeetVelocity
-               specialJumpInformation
-        -- nikki touches something
-        (False, Just c) ->
-          if isLegsCollision c then
+    case (willJump, mJumpImpulseData) of
+      -- nikki jumps
+      (True, Strict.Just impulse) -> jumpState impulse
+      -- nikki touches something
+      (False, Strict.Just c) ->
+        if isLegsCollision c then
           -- nikki stands on something
-                if nothingHeld then
-                    State (Wait False) newDirection 0 jumpInformation'
-                  else
-                    State (Walk afterAirborne False) newDirection walkingFeetVelocity jumpInformation'
-            else case grips of
-                -- nikki grabs something
-                Just HLeft | rightPressed -> State GripImpulse HLeft 0 jumpInformation'
-                Just HRight | leftPressed -> State GripImpulse HRight 0 jumpInformation'
-                Just gripDirection -> State Grip gripDirection 0 jumpInformation'
-                -- nikki grabs nothing
-                Nothing ->
-                    if isGhostCollision c then
-                    -- nikki is a ghost (boo!) (airborne, but can still jump)
-                    case buttonDirection of
-                        -- no direction -> Wait
-                        Strict.Nothing -> State (Wait True) newDirection
-                                      airborneFeetVelocity jumpInformation'
-                        Strict.Just buttonDirection -> State
-                            (Walk afterAirborne True)
-                            newDirection
-                            airborneFeetVelocity
-                            jumpInformation'
-                      else
-                        -- something touches the head that causes jumping capability
-                        State
-                            (wallSlide (map nikkiCollisionAngle collisions))
-                            (wallSlideDirection $ nikkiCollisionAngle c)
-                            airborneFeetVelocity
-                            jumpInformation'
-        -- nikki cannot jump
-        (_, Nothing) -> case legsCollisions of
-            (coll : _) ->
-            -- nikki cannot jump, but has legs collisions
-            -- the angle is too steep: nikki slides into grip mode (hopefully)
-                let wallDirection = swapHorizontalDirection $
-                        angleDirection $ nikkiCollisionAngle coll
-                in State (SlideToGrip wallDirection)
-                    newDirection airborneFeetVelocity jumpInformation'
-            _ ->
-                -- nikki touches nothing relevant
-                State Airborne newDirection airborneFeetVelocity jumpInformation'
+          if nothingHeld then
+            State (Wait c) newDirection 0 jumpInformation' Strict.Nothing
+           else
+            State (Walk afterAirborne c) newDirection
+              walkingFeetVelocity jumpInformation' Strict.Nothing
+          else case grips of
+            -- nikki grabs something
+            Just HLeft | rightPressed ->
+              State GripImpulse HLeft 0 jumpInformation' Strict.Nothing
+            Just HRight | leftPressed ->
+              State GripImpulse HRight 0 jumpInformation' Strict.Nothing
+            Just gripDirection ->
+              State Grip gripDirection 0 jumpInformation' Strict.Nothing
+            -- nikki grabs nothing
+            Nothing ->
+              -- something touches the head that causes jumping capability
+              State
+                (wallSlide (map nikkiCollisionAngle collisions) c)
+                (wallSlideDirection $ nikkiCollisionAngle c)
+                airborneFeetVelocity
+                jumpInformation'
+                Strict.Nothing
+      (_, Strict.Nothing) ->
+        case ghostTime' of
+          (Strict.Just (_ :!: collision)) ->
+            -- nikki is a ghost (boo!) (airborne, but can still jump)
+            if willJump then
+              jumpState collision
+             else trace (show collision) $
+              case buttonDirection of
+                -- no direction -> Wait
+                Strict.Nothing -> State (Wait collision) newDirection
+                  airborneFeetVelocity jumpInformation'
+                  ghostTime'
+                Strict.Just buttonDirection -> State
+                  (Walk afterAirborne collision)
+                  newDirection
+                  airborneFeetVelocity
+                  jumpInformation'
+                  ghostTime'
+                Strict.Nothing ->
+                  -- nikki cannot jump
+                  case legsCollisions of
+                    (coll : _) ->
+                      -- nikki cannot jump, but has legs collisions
+                      -- the angle is too steep: nikki slides into grip mode (hopefully)
+                      let wallDirection = swapHorizontalDirection $
+                              angleDirection $ nikkiCollisionAngle coll
+                      in State (SlideToGrip wallDirection)
+                           newDirection airborneFeetVelocity jumpInformation'
+                           Strict.Nothing
+                    _ ->
+                      -- nikki touches nothing relevant
+                      State
+                        Airborne
+                        newDirection
+                        airborneFeetVelocity
+                        jumpInformation'
+                        Strict.Nothing
+
+  where
 
     -- Action of nikkis last state
     oldAction = action $ state nikki
@@ -203,8 +210,9 @@ newState config now contacts controlData nikki nikkiPos velocity =
         Strict.Just HRight
 
     -- the contact angle that should be used for jumping (if there are collisions)
-    mJumpImpulseData :: Maybe NikkiCollision
-    mJumpImpulseData = jumpCollision considerGhostsState' collisions
+    mJumpImpulseData :: Strict.Maybe NikkiCollision
+    mJumpImpulseData =
+        jumpCollision collisions
     -- all collisions
     collisions :: [NikkiCollision]
     collisions = nikkiCollisions contacts
@@ -233,31 +241,29 @@ newState config now contacts controlData nikki nikkiPos velocity =
         fromMaybe oldDirection
             (fmap swapHorizontalDirection $ angleMDirection angle)
 
-    -- | There is a state where nikki's jump impulse will be affected by collisions
-    -- with the ghost shapes. These jumps are called ghost jumps.
-    -- This happens when the following conditions are met:
-    --   1. Nikki had leg collisions.
-    --   2. Nikki has no leg collisions anymore
-    --   3. Nikki still touches something with the ghost shapes (has ghost collisions)
-    --   4. Nikki has not performed a (maybe ghost-) jump since the last real leg collision.
-    -- A ghost jump's impulse will be calculated in the same way a normal jump's impulse
-    -- is. It will however additionally consider all collisions with the ghost shape
-    -- like normal collisions.
-    -- condition 2. is not encoded in State.considerGhostsState,
-    -- but is done in mJumpImpulseData
-    considerGhostsState' :: Bool
-    considerGhostsState' =
-        hasLegsCollisions ||
-        (considerGhostsState (state nikki) &&
-         hasGhostCollisions &&
-         not (isJumpImpulseAction oldAction))
+    -- | PRE: null collisions
+    ghostTime' :: Strict.Maybe (Pair Seconds NikkiCollision)
+    ghostTime' = case oldGhostTime of
+        (Strict.Just (t :!: _)) ->
+            if now - ghostDuration < t then oldGhostTime else Strict.Nothing
+        Strict.Nothing -> case oldAction of
+            (Wait collision) -> Strict.Just (now :!: collision)
+            (Walk _ collision) -> Strict.Just (now :!: collision)
+            (WallSlide_ _ collision) -> Strict.Just (now :!: collision)
+            _ -> Strict.Nothing
+    oldGhostTime = ghostTime $ state nikki
 
-    -- | all collisions with the ghost shapes
-    hasGhostCollisions :: Bool
-    hasGhostCollisions =
-        not $ null $
-        filter isGhostCollision $
-        nikkiCollisions contacts
+    jumpState :: NikkiCollision -> State
+    jumpState impulse =
+        let specialJumpInformation =
+                JumpInformation (Strict.Just now) (Strict.Just angle) velocity buttonDirection
+            angle = nikkiCollisionAngle impulse
+        in State
+            (JumpImpulse impulse)
+            (jumpImpulseDirection $ nikkiCollisionAngle impulse)
+            airborneFeetVelocity
+            specialJumpInformation
+            Strict.Nothing
 
 
 -- if a given collision is with nikki's head
@@ -268,9 +274,6 @@ isHeadCollision _ = False
 -- if a given collision is with nikki's legs
 isLegsCollision (NikkiCollision _ _ NikkiLegsCT) = True
 isLegsCollision _ = False
-
-isGhostCollision :: NikkiCollision -> Bool
-isGhostCollision = (NikkiGhostCT ==) . nikkiCollisionType
 
 -- if a given collision angle should lead to nikki standing on feet
 isStandingFeetAngle :: Angle -> Bool
@@ -292,40 +295,29 @@ angleDirection angle = if angle > 0 then HRight else HLeft
 -- Considers ghost collisions depending on the arguments.
 -- Might create an artificial collision if there two or more collisions
 -- with angles with opposite signs.
-jumpCollision :: Bool -> [NikkiCollision] -> Maybe NikkiCollision
-jumpCollision _ [] = Nothing -- provided for clarity (and efficiency?)
-jumpCollision considerGhostsState collisions =
+jumpCollision :: [NikkiCollision] -> Strict.Maybe NikkiCollision
+jumpCollision [] = Strict.Nothing -- provided for clarity (and efficiency?)
+jumpCollision collisions =
   (
     filter (not . isDownward) >>>
-    filterGhostCollisions >>>
     sortLegsCollisions >>>
     sortByAngle >>>
     newSpreadCollisions >>>
     addEmergencyJumpCollision >>>
     filter causingJumps >>>
     listToMaybe
-  ) collisions -- not best point-free-style, cause addEmergencyJumpCollision needs the
+  ) collisions -- not best point-free-style, because addEmergencyJumpCollision needs the
                -- original list of collisions.
   where
 
     -- | remove angles pointing downward
     isDownward c = abs (nikkiCollisionAngle c) > (pi / 2 + deg2rad 3.5)
 
-    -- | consider only ghost collisions
-    -- that have a so called standing feet angle
-    filterGhostCollisions :: [NikkiCollision] -> [NikkiCollision]
-    filterGhostCollisions cs =
-        if considerGhostsState &&
-           (null $ filter isLegsCollision cs)
-        then cs
-        else filter (not . isGhostCollision) cs
-
     -- | sorting collisions: legs, ghost, head
     sortLegsCollisions = sortBy (compare `on` (nikkiCollisionType >>> toNumber))
     toNumber NikkiLegsCT = 1
-    toNumber NikkiGhostCT = 2
-    toNumber NikkiHeadCT = 3
-    toNumber NikkiLeftPawCT = 3
+    toNumber NikkiHeadCT = 2
+    toNumber NikkiLeftPawCT = 2
 
     -- | sort (more upward first)
     sortByAngle =
@@ -335,14 +327,12 @@ jumpCollision considerGhostsState collisions =
     -- we want a new artificial collision with angle 0.
     -- This does not (in no case) consider ghost collisions.
     newSpreadCollisions collisions =
-        if any ((< 0) . nikkiCollisionAngle) consideredCollisions &&
-           any ((> 0) . nikkiCollisionAngle) consideredCollisions
-        then (head consideredCollisions){nikkiCollisionAngle = 0} : collisions
+        if any ((< 0) . nikkiCollisionAngle) collisions &&
+           any ((> 0) . nikkiCollisionAngle) collisions
+        then (head collisions){nikkiCollisionAngle = 0} : collisions
              -- Adds the artificial collision.
              -- Just takes the first collision. The second would probably not be worse, but we have to pick one.
         else collisions
-      where
-        consideredCollisions = filter (not . isGhostCollision) collisions
 
     -- | adds a collision in the case that nikki's best collision is a
     -- leg collision that doesn't count as a standing feet collision
@@ -376,8 +366,8 @@ jumpCollision considerGhostsState collisions =
         (isStandingFeetAngle $ nikkiCollisionAngle x)
 
     -- | putting the head in a Just
-    listToMaybe [] = Nothing
-    listToMaybe (a : _) = Just a
+    listToMaybe [] = Strict.Nothing
+    listToMaybe (a : _) = Strict.Just a
 
 
 -- updates the start time of nikki if applicable

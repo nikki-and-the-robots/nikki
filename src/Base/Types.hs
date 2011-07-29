@@ -234,7 +234,6 @@ data MyCollisionType
     = NikkiHeadCT
     | NikkiLegsCT
     | NikkiLeftPawCT
-    | NikkiGhostCT
 
     | TileCT
     | TerminalCT

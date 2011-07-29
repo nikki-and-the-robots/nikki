@@ -94,14 +94,10 @@ gripAngleLimit :: Angle = deg2rad 18
 gripImpulse :: CpFloat
 gripImpulse = 160
 
--- | There are two so called ghost shapes around Nikki's legs.
--- They enable jumping, when there was a leg collision before.
--- See Sorts.Nikki.State.
--- One is wider than the legs:
-ghostWidthPadding :: CpFloat = fromUber 8
+-- | Duration how long Nikki stays in ghost shape (can still jump)
+-- after being able to jump.
+ghostDuration :: Seconds = 0.1
 
--- and one is longer:
-ghostHeightPadding :: CpFloat = fromUber 3
 
 -- | distance of the ear chamfer.
 -- 0 = no chamfer

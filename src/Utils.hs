@@ -44,11 +44,12 @@ import Data.Accessor (Accessor, (^.), (^=), (^:), (.>))
 import Data.Accessor.Monad.MTL.State ((%=), (%:))
 import Data.Monoid
 import Data.Function
+import qualified Data.Strict as Strict
 
 import Text.Printf
 import Text.Logging
 
-import Control.Applicative ((<$>), (<|>), (<*>), pure)
+import Control.Applicative ((<$>), (<|>), (<*>), pure, Alternative(..), Applicative)
 import "mtl" Control.Monad.State hiding (forM_)
 import "transformers" Control.Monad.Trans.Error (ErrorList(listMsg)) -- Monad (Either e)
 import Control.Arrow ((>>>))
@@ -576,3 +577,15 @@ instance PP Int where
 ppp :: PP p => p -> IO ()
 ppp = pp >>> logg Info
 
+
+-- misc instances
+
+instance Applicative Strict.Maybe where
+    pure = Strict.Just
+    (Strict.Just f) <*> (Strict.Just x) = Strict.Just $ f x
+    _ <*> _ = Strict.Nothing
+
+instance Alternative Strict.Maybe where
+    empty = Strict.Nothing
+    Strict.Nothing <|> x = x
+    (Strict.Just x) <|> _ = Strict.Just x

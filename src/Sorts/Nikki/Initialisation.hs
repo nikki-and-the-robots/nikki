@@ -56,12 +56,6 @@ leftPawShapeAttributes = ShapeAttributes {
     CM.collisionType = NikkiLeftPawCT
   }
 
-ghostShapeAttributes = ShapeAttributes {
-    elasticity    = elasticity_,
-    friction      = headFriction,
-    CM.collisionType = NikkiGhostCT
-  }
-
 mkPolys :: (ShapeDescription, [ShapeDescription], Vector)
 mkPolys =
     (surfaceVelocityShape, otherShapes, baryCenterOffset)
@@ -77,7 +71,6 @@ surfaceVelocityShape =
 otherShapes =
     mkShapeDescription headShapeAttributes headPoly :
     mkShapeDescription leftPawShapeAttributes leftPawPoly :
-    mkShapeDescription ghostShapeAttributes ghostShape :
     []
 
 Size w h = fmap realToFrac nikkiSize
@@ -106,7 +99,6 @@ headPoly = Polygon [
     Vector (headRight - horizontalEarChamfer) headUp
     ]
 
-
 legLeft = left + fromUber 4
 legRight = legLeft + fromUber 5
 legUp = headUp + fromUber 1
@@ -126,13 +118,6 @@ leftPawPoly = Polygon [
     Vector 0 (headLow + pawThickness),
     Vector 0 (headLow + pawThickness - fromUber 1)
     ]
-
--- ghost shape to allow for jumping when nikki stopped touching the ground
-ghostShape :: ShapeType
-ghostShape = mkRectFromPositions
-    (Vector (legLeft - ghostWidthPadding) legUp)
-    (Vector (legRight + ghostWidthPadding) (low + ghostHeightPadding))
-
 
 -- | the angle of the line from the edge of the feet to the lower edge of the head
 -- as an upAngle

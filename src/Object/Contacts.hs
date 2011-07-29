@@ -21,7 +21,7 @@ import Utils
 import Base
 
 
-nikkiCollisionTypes = [NikkiLegsCT, NikkiHeadCT, NikkiLeftPawCT, NikkiGhostCT]
+nikkiCollisionTypes = [NikkiLegsCT, NikkiHeadCT, NikkiLeftPawCT]
 
 isSolidNikkiCollisionType NikkiLegsCT = True
 isSolidNikkiCollisionType NikkiHeadCT = True

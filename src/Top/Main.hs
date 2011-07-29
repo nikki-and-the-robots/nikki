@@ -29,7 +29,6 @@ import Control.Monad.Reader
 import Control.Exception
 
 import System.FilePath
-import System.Exit
 
 import Graphics.Qt
 
