@@ -82,7 +82,7 @@ newState config now contacts controlData nikki nikkiPos velocity =
             -- nikki is a ghost (boo!) (airborne, but can still jump)
             if willJump then
               jumpState collision
-             else trace (show collision) $
+             else
               case buttonDirection of
                 -- no direction -> Wait
                 Strict.Nothing -> State (Wait collision) newDirection
