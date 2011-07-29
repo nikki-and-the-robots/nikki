@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Sorts.Nikki.Initialisation (
     mkPolys,
@@ -56,6 +57,12 @@ leftPawShapeAttributes = ShapeAttributes {
     CM.collisionType = NikkiLeftPawCT
   }
 
+ghostShapeAttributes = ShapeAttributes {
+    elasticity    = elasticity_,
+    friction      = headFriction,
+    CM.collisionType = NikkiGhostCT
+  }
+
 mkPolys :: (ShapeDescription, [ShapeDescription], Vector)
 mkPolys =
     (surfaceVelocityShape, otherShapes, baryCenterOffset)
@@ -71,6 +78,7 @@ surfaceVelocityShape =
 otherShapes =
     mkShapeDescription headShapeAttributes headPoly :
     mkShapeDescription leftPawShapeAttributes leftPawPoly :
+    mkShapeDescription ghostShapeAttributes ghostShape :
     []
 
 Size w h = fmap realToFrac nikkiSize
@@ -98,6 +106,13 @@ headPoly = Polygon [
     Vector headRight (headUp + verticalEarChamfer),
     Vector (headRight - horizontalEarChamfer) headUp
     ]
+
+ghostShape = Polygon (
+    Vector (headLeft - ghostPadding) headUp :
+    Vector (headLeft - ghostPadding) (headLow + pawThickness) :
+    Vector (headRight + ghostPadding) (headLow + pawThickness) :
+    Vector (headRight + ghostPadding) headUp :
+    [])
 
 legLeft = left + fromUber 4
 legRight = legLeft + fromUber 5

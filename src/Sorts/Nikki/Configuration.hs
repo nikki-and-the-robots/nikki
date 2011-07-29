@@ -98,6 +98,9 @@ gripImpulse = 160
 -- after being able to jump.
 ghostDuration :: Seconds = 0.1
 
+-- | size of vertical head ghost shape.
+-- Allows Nikki to perform a wall jump when not really touching a wall.
+ghostPadding :: CpFloat = fromUber 0.5
 
 -- | distance of the ear chamfer.
 -- 0 = no chamfer

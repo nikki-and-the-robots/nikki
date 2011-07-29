@@ -12,6 +12,8 @@ import qualified Data.Strict as Strict
 import Data.Strict (Pair(..))
 import Data.Convertable
 
+import Text.Logging
+
 import Control.Arrow
 import Control.Applicative ((<|>))
 
@@ -71,7 +73,7 @@ newState config now contacts controlData nikki nikkiPos velocity =
             Nothing ->
               -- something touches the head that causes jumping capability
               State
-                (wallSlide (map nikkiCollisionAngle collisions) c)
+                (wallSlide collisions c)
                 (wallSlideDirection $ nikkiCollisionAngle c)
                 airborneFeetVelocity
                 jumpInformation'
@@ -269,6 +271,7 @@ newState config now contacts controlData nikki nikkiPos velocity =
 -- if a given collision is with nikki's head
 isHeadCollision (NikkiCollision _ normal NikkiHeadCT) = True
 isHeadCollision (NikkiCollision _ normal NikkiLeftPawCT) = True
+isHeadCollision (NikkiCollision _ normal NikkiGhostCT) = True
 isHeadCollision _ = False
 
 -- if a given collision is with nikki's legs
@@ -315,9 +318,10 @@ jumpCollision collisions =
 
     -- | sorting collisions: legs, ghost, head
     sortLegsCollisions = sortBy (compare `on` (nikkiCollisionType >>> toNumber))
-    toNumber NikkiLegsCT = 1
-    toNumber NikkiHeadCT = 2
+    toNumber NikkiLegsCT    = 1
+    toNumber NikkiHeadCT    = 2
     toNumber NikkiLeftPawCT = 2
+    toNumber NikkiGhostCT   = 2
 
     -- | sort (more upward first)
     sortByAngle =

@@ -123,8 +123,8 @@ applyAirborneForces now chip action ji = do
 -- | returns if nikki's horizontal velocity should be set to 0
 -- to prevent nikki from being pushed away from L-shaped tiles.
 -- (This is a hack, but seems to be necessary)
-isPushedAwayByLShape :: [Angle] -> Strict.Maybe HorizontalDirection -> Bool
-isPushedAwayByLShape contactAngles buttonDirection =
+isPushedAwayByLShape :: [NikkiCollision] -> Strict.Maybe HorizontalDirection -> Bool
+isPushedAwayByLShape collisions buttonDirection =
     Strict.isNothing buttonDirection &&
     (left || right)
   where
@@ -133,6 +133,10 @@ isPushedAwayByLShape contactAngles buttonDirection =
     touchesWedge angle =
         any (\ a -> a /= angle && abs (a - angle) < angleLimit) contactAngles &&
         any (== angle) contactAngles
+    contactAngles =
+        map nikkiCollisionAngle $
+        filter ((NikkiHeadCT ==) . nikkiCollisionType) $
+        collisions
 
 -- maximal angle the wedges should have
 -- (little more than atan (1 / 32), where 32 would be the smallest tile size)

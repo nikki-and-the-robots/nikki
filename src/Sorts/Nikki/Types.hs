@@ -67,7 +67,7 @@ data Action
         -- state for one frame (when a jump starts)
     | JumpImpulse !NikkiCollision
     | Airborne
-    | WallSlide_ [Angle] !NikkiCollision -- use wallSlide to be strict
+    | WallSlide_ [NikkiCollision] !NikkiCollision -- use wallSlide to be strict
     | UsingTerminal
     | SlideToGrip !HorizontalDirection -- to which side is the collision
     | Grip -- when Nikki uses the paws to hold on to something

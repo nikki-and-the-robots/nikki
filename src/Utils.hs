@@ -416,6 +416,11 @@ justWhen False = const Nothing
 
 -- * math stuff
 
+(==>) :: Bool -> Bool -> Bool
+False ==> _ = True
+True  ==> x = x
+infixr 2 ==>
+
 (~=) :: (Ord n, Fractional n) => n -> n -> Bool
 a ~= b = distance a b < epsilon
 
