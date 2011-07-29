@@ -94,25 +94,25 @@ newState config now contacts controlData nikki nikkiPos velocity =
                   airborneFeetVelocity
                   jumpInformation'
                   ghostTime'
-                Strict.Nothing ->
-                  -- nikki cannot jump
-                  case legsCollisions of
-                    (coll : _) ->
-                      -- nikki cannot jump, but has legs collisions
-                      -- the angle is too steep: nikki slides into grip mode (hopefully)
-                      let wallDirection = swapHorizontalDirection $
-                              angleDirection $ nikkiCollisionAngle coll
-                      in State (SlideToGrip wallDirection)
-                           newDirection airborneFeetVelocity jumpInformation'
-                           Strict.Nothing
-                    _ ->
-                      -- nikki touches nothing relevant
-                      State
-                        Airborne
-                        newDirection
-                        airborneFeetVelocity
-                        jumpInformation'
-                        Strict.Nothing
+          Strict.Nothing ->
+            -- nikki cannot jump
+            case legsCollisions of
+              (coll : _) ->
+                -- nikki cannot jump, but has legs collisions
+                -- the angle is too steep: nikki slides into grip mode (hopefully)
+                let wallDirection = swapHorizontalDirection $
+                           angleDirection $ nikkiCollisionAngle coll
+                in State (SlideToGrip wallDirection)
+                     newDirection airborneFeetVelocity jumpInformation'
+                     Strict.Nothing
+              _ ->
+                -- nikki touches nothing relevant
+                State
+                  Airborne
+                  newDirection
+                  airborneFeetVelocity
+                  jumpInformation'
+                  Strict.Nothing
 
   where
 
