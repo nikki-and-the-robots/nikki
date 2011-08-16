@@ -8,6 +8,8 @@ module Legacy.Old1 (
   ) where
 
 
+import Safe
+
 import Data.Convertable
 import Data.Map as Map (Map, toList)
 import Data.IntMap as IntMap (IntMap, fromList)
@@ -99,7 +101,7 @@ instance Convertable Index Data.Indexable.Index where
 
 convertOEMStates :: String -> String
 convertOEMStates s =
-    case readM s :: Maybe TerminalOEMState of
+    case readMay s :: Maybe TerminalOEMState of
         Nothing -> s
         Just x -> show $ ((convert x) :: Sorts.Terminal.TerminalOEMState)
 

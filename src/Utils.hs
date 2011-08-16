@@ -481,17 +481,6 @@ third (_, _, x) = x
 
 -- * misc
 
-readE :: Read r => String -> r
-readE r = case readM r of
-    Right x -> x
-    Left msg -> error msg
-
-readM :: (Monad m, Read r) => String -> m r
-readM x = unsafePerformIO $
-    Prelude.catch
-        (return <$> readIO x)
-        (const $ return (fail ("readM: no parse: " ++ take 100000 x)))
-
 uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
 uncurry3 f (a, b, c) = f a b c
 

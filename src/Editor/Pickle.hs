@@ -4,6 +4,7 @@ module Editor.Pickle where
 
 
 import Prelude hiding (readFile, writeFile)
+import Safe
 
 import Data.Convertable
 
@@ -47,9 +48,9 @@ writeSaved file level = writeFile file (saveToFile level :: FileFormat)
 -- * parsing
 
 parse :: FileFormat -> Maybe SaveType
-parse (readM -> Just x :: Maybe SaveType) = Just x
-parse (readM -> Just x :: Maybe Old2.SaveType) = Just $ convert x
-parse (readM -> Just x :: Maybe Old1.SaveType) =
+parse (readMay -> Just x :: Maybe SaveType) = Just x
+parse (readMay -> Just x :: Maybe Old2.SaveType) = Just $ convert x
+parse (readMay -> Just x :: Maybe Old1.SaveType) =
     Just $ convert $ asTypeOf (undefined :: Old2.SaveType) $ convert x
 parse _ = Nothing
 
