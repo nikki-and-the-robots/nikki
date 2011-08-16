@@ -156,9 +156,7 @@ getStoryModeDataFileName path = do
     dirExists <- doesDirectoryExist file
     if (fileExists || dirExists)
         then return $ Just file
-        else do
-            logg Debug ("sm-file not found: " ++ path)
-            return Nothing
+        else return Nothing
 
 getStoryModeDataFiles :: FilePath -> (Maybe String) -> IO (Maybe [FilePath])
 getStoryModeDataFiles path_ extension = do

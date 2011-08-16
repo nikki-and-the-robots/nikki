@@ -74,7 +74,7 @@ todo = error "just working on this (Utils.todo)"
 tweakValue :: Read a => FilePath -> a
 tweakValue file = System.IO.Unsafe.unsafePerformIO $ do
     value <- readFile file
-    putStrLn (file ++ " = " ++ value)
+    logg Info (file ++ " = " ++ value)
     return $ read value
 {-# noinline tweakValue #-}
 
