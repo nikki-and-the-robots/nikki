@@ -91,7 +91,7 @@ Executable  nikki
     if os(linux)
         build-depends:
             -- for setting LD_LIBRARY_PATH
-            unix == 2.4.*
+            unix == 2.*
 
     if os(mingw32)
         ld-options:
