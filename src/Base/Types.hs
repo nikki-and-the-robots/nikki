@@ -256,6 +256,10 @@ data NikkiCollision = NikkiCollision {
   }
     deriving (Show)
 
+instance PP NikkiCollision where
+    pp (NikkiCollision a b c) =
+        "NikkiCollision " ++ show a <~> pp b <~> pp c
+
 -- * mode for the game scene
 data Mode
     = NikkiMode {

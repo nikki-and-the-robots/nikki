@@ -45,6 +45,7 @@ import Data.Accessor.Monad.MTL.State ((%=), (%:))
 import Data.Monoid
 import Data.Function
 import qualified Data.Strict as Strict
+import Data.Strict (Pair(..))
 
 import Text.Printf
 import Text.Logging
@@ -534,6 +535,9 @@ class PP a where
 instance (PP a, PP b) => PP (a, b) where
     pp (a, b) = "(" ++ pp a ++ ", " ++ pp b ++ ")"
 
+instance (PP a, PP b) => PP (Pair a b) where
+    pp (a :!: b) = "(" ++ pp a ++ " :!: " ++ pp b ++ ")"
+
 instance (PP a, PP b, PP c) => PP (a, b, c) where
     pp (a, b, c) = "(" ++ pp a ++ ", " ++ pp b ++ ", " ++ pp c ++ ")"
 
@@ -558,6 +562,9 @@ instance PP a => PP (Maybe a) where
     pp Nothing = "Nothing"
     pp (Just x) = "Just (" ++ pp x ++ ")"
 
+instance PP a => PP (Strict.Maybe a) where
+    pp Strict.Nothing = "Strict.Nothing"
+    pp (Strict.Just x) = "Strict.Just (" ++ pp x ++ ")"
 
 instance PP Double where
     pp = printf "%8.3f"
