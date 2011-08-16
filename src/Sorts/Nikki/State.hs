@@ -271,7 +271,6 @@ newState config now contacts controlData nikki nikkiPos velocity =
 -- if a given collision is with nikki's head
 isHeadCollision (NikkiCollision _ normal NikkiHeadCT) = True
 isHeadCollision (NikkiCollision _ normal NikkiLeftPawCT) = True
-isHeadCollision (NikkiCollision _ normal NikkiGhostCT) = True
 isHeadCollision _ = False
 
 -- if a given collision is with nikki's legs
@@ -319,9 +318,9 @@ jumpCollision collisions =
     -- | sorting collisions: legs, ghost, head
     sortLegsCollisions = sortBy (compare `on` (nikkiCollisionType >>> toNumber))
     toNumber NikkiLegsCT    = 1
-    toNumber NikkiHeadCT    = 2
-    toNumber NikkiLeftPawCT = 2
     toNumber NikkiGhostCT   = 2
+    toNumber NikkiHeadCT    = 3
+    toNumber NikkiLeftPawCT = 3
 
     -- | sort (more upward first)
     sortByAngle =
