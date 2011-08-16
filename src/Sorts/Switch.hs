@@ -39,11 +39,15 @@ stampMaterialMass = 1.7677053824362605
 -- * loading
 
 sorts :: RM [Sort_]
-sorts = do
-    boxOffPix <- mkPath "switch-standard-off" >>= loadSymmetricPixmap (Position 1 1)
-    boxOnPix <- mkPath "switch-standard-on" >>= loadSymmetricPixmap (Position 1 1)
-    stampPix <- mkPath "switch-platform" >>= loadSymmetricPixmap (Position 1 1)
-    return $ map Sort_ [SwitchSort boxOffPix boxOnPix stampPix]
+sorts =
+    mapM mkSort (False : True : [])
+  where
+    mkSort :: Bool -> RM Sort_
+    mkSort transient = do
+        boxOffPix <- mkPath "switch-standard-off" >>= loadSymmetricPixmap (Position 1 1)
+        boxOnPix <- mkPath "switch-standard-on" >>= loadSymmetricPixmap (Position 1 1)
+        stampPix <- mkPath "switch-platform" >>= loadSymmetricPixmap (Position 1 1)
+        return $ Sort_ $ SwitchSort boxOffPix boxOnPix stampPix transient
 
 mkPath :: String -> RM FilePath
 mkPath name = getDataFileName (pngDir </> "objects" </> name <.> "png")
@@ -53,12 +57,14 @@ data SwitchSort
     = SwitchSort {
         boxOffPix :: Pixmap,
         boxOnPix :: Pixmap,
-        stampPix :: Pixmap
+        stampPix :: Pixmap,
+        transientSort :: Bool
       }
   deriving (Typeable, Show)
 
 data Switch
     = Switch {
+        transient :: Bool,
         boxChipmunk :: Chipmunk,
         stampChipmunk :: Chipmunk,
         triggerChipmunk :: Chipmunk,
@@ -90,8 +96,12 @@ countSwitches = I.length . I.filter (isSwitch . sort_)
 editorPadding = Vector (fromUber 1) (- fromUber 1)
 
 instance Sort SwitchSort Switch where
-    sortId _ = SortId "switch/levelExit"
-    freeSort (SwitchSort a b c) =
+    sortId SwitchSort{transientSort} =
+        if not transientSort then
+            SortId "switch/levelExit"
+          else
+            SortId "switch/levelExitTransient"
+    freeSort (SwitchSort a b c _) =
         fmapM_ freePixmap (a : b : c : [])
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
                 +~ fmap ((* 2) . abs) (vector2size editorPadding)
@@ -120,7 +130,8 @@ instance Sort SwitchSort Switch where
             stampAttributes = stampBodyAttributes stampPos
         stampChip <- initChipmunk space stampAttributes stampShapes stampBaryCenterOffset
 
-        let switch = Switch boxChip stampChip triggerChip triggerShape False
+        let switch = Switch (transientSort sort)
+                        boxChip stampChip triggerChip triggerShape False
         updateAntiGravity switch
 
         return switch
@@ -142,9 +153,16 @@ instance Sort SwitchSort Switch where
         newStampChipmunk <- CM.immutableCopy stampChipmunk
         return s{boxChipmunk = newBoxChipmunk, stampChipmunk = newStampChipmunk}
 
-    chipmunks (Switch a b c _ _) = [a, b, c]
+    chipmunks (Switch _ a b c _ _) = [a, b, c]
 
     update _ _ _ _ _ _ _ switch@StaticSwitch{} = return (id, switch)
+    update sort controls scene now contacts cd index switch@Switch{transient = True} = do
+        let new = switch{triggered_ = triggerShape switch `member` triggers contacts}
+            sceneMod = case (triggered_ switch, triggered_ new) of
+                (False, True) -> switches ^: first succ
+                (True, False) -> switches ^: first pred
+                _ -> id
+        return (sceneMod, new)
     update sort controls scene now contacts cd index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
             let new = switch{triggered_ = True}
@@ -307,7 +325,7 @@ updateAntiGravity switch = do
     applyOnlyForce (body $ stampChipmunk switch) (force stampMass) zero
   where
     force stampMass =
-        if not $ triggered switch then
+        if (not $ triggered switch) || transient switch then
             (Vector 0 (- (gravity * (stampMass + nikkiMass * 0.4))))
         else
             zero
