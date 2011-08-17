@@ -7,7 +7,6 @@ module Utils (
     pure,
     (>>>),
     (>=>),
-    trace,
     forM,
     forM_,
     when,
@@ -59,8 +58,6 @@ import Control.Concurrent
 import System.IO.Unsafe
 import System.FilePath
 
-import Debug.Trace
-
 import Utils.Scripting
 
 
@@ -95,6 +92,12 @@ a <<? msg = trace (msg ++ ": " ++ show a) a
 -- | useful for temporarily deactivating $<<?$
 (<<|) :: Show a => a -> String -> a
 a <<| _ = a
+
+-- | re-implementation of trace that uses Text.Logging.logg
+trace :: String -> a -> a
+trace msg x = unsafePerformIO $ do
+    logg Debug msg
+    return x
 
 traceThis :: String -> (x -> String) -> x -> x
 traceThis "" showFun x = trace (showFun x) x
