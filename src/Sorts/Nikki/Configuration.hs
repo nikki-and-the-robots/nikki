@@ -104,8 +104,8 @@ ghostPadding :: CpFloat = fromUber 0.5
 
 -- | distance of the ear chamfer.
 -- 0 = no chamfer
-horizontalEarChamfer :: CpFloat = fromUber 1
-verticalEarChamfer :: CpFloat = fromUber 3
+horizontalEarChamfer :: CpFloat = fromUber 2
+verticalEarChamfer :: CpFloat = fromUber 0.5
 
 
 
