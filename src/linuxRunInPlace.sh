@@ -7,4 +7,4 @@ exit 1
 }
 trap error ERR
 
-dist/build/core/core --run-in-place $@
+dist/build/core/core --run-in-place "$@"
