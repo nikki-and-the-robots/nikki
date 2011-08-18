@@ -506,6 +506,10 @@ infix 4 ~>
 True ~> x = x
 False ~> _ = True
 
+infix 4 ~.>
+(~.>) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
+(a ~.> b) x = a x ~> b x
+
 fixpoint :: Eq e => (e -> e) -> e -> e
 fixpoint f x = if fx == x then x else fixpoint f fx
   where

@@ -98,7 +98,10 @@ grips =
     filter isHeadCollision >>>
     filter isGripCollision >>>
     toGripCollision
-    where
+  where
+    -- if a given head collision should be treated as nikki grabbing something
+    isGripCollision c = abs (nikkiCollisionAngle c) < gripAngleLimit
+
     toGripCollision [] = Nothing
     toGripCollision gripCollisions = Just $
         if any ((NikkiLeftPawCT ==) . nikkiCollisionType) gripCollisions
@@ -270,9 +273,6 @@ isHeadCollision _ = False
 isLegsCollision (NikkiCollision _ _ NikkiLegsCT) = True
 isLegsCollision _ = False
 
--- if a given head collision should be treated as nikki grabbing something
-isGripCollision c = abs (nikkiCollisionAngle c) < gripAngleLimit
-
 -- if a given collision angle should lead to nikki standing on feet
 isStandingFeetAngle :: Angle -> Bool
 isStandingFeetAngle angle =
@@ -299,6 +299,7 @@ jumpCollision collisions =
   (
     filter (not . isDownward) >>>
     sortLegsCollisions >>>
+    filter (isGhostCollision ~.> isHorizontalCollision) >>>
     sortByAngle >>>
     newSpreadCollisions >>>
     addEmergencyJumpCollision >>>
@@ -317,6 +318,12 @@ jumpCollision collisions =
     toNumber NikkiGhostCT   = 2
     toNumber NikkiHeadCT    = 3
     toNumber NikkiLeftPawCT = 3
+
+    isGhostCollision c = NikkiGhostCT == nikkiCollisionType c
+    isHorizontalCollision c = abs (nikkiCollisionAngle c) =~= (tau / 4)
+      where
+        a =~= b = abs (a - b) < eps
+        eps = deg2rad 3.5
 
     -- | sort (more upward first)
     sortByAngle =
