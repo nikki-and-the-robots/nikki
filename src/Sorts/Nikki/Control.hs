@@ -48,10 +48,10 @@ control now contacts (True, cd) nsort nikki = do
         State Wait{} _ _ ji (Strict.Just _) ->
             applyAirborneForces now chipmunk_ action_ ji
 
-        State (Walk afterAirborne _) direction _ _ Strict.Nothing ->
+        State (Walk afterAirborne _ _) direction _ _ Strict.Nothing ->
             resetForces $ body chipmunk_
         -- ghost state
-        State (Walk afterAirborne _) _ _ ji (Strict.Just _) ->
+        State (Walk afterAirborne _ _) _ _ ji (Strict.Just _) ->
             applyAirborneForces now chipmunk_ action_ ji
 
         -- jumping

@@ -62,8 +62,8 @@ instance Initial State where
     initial = State Airborne HRight 0 initial Strict.Nothing
 
 data Action
-    = Wait {collision :: !NikkiCollision}
-    | Walk {afterAirborne :: !Bool, collision :: !NikkiCollision}
+    = Wait {collision :: !NikkiCollision, ghost :: !Bool}
+    | Walk {afterAirborne :: !Bool, collision :: !NikkiCollision, ghost :: !Bool}
         -- state for one frame (when a jump starts)
     | JumpImpulse !NikkiCollision
     | Airborne
@@ -81,7 +81,7 @@ toActionNumber Wait{}               = 0
 toActionNumber Walk{}               = 1
 toActionNumber JumpImpulse{}        = 2
 toActionNumber Airborne{}           = 3
-toActionNumber WallSlide_{}          = 4
+toActionNumber WallSlide_{}         = 4
 toActionNumber UsingTerminal        = 5
 toActionNumber SlideToGrip{}        = 6
 toActionNumber Grip                 = 7

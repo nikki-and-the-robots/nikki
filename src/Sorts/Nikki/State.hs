@@ -43,59 +43,95 @@ updateState config mode now _ (False, _) nikki = do
 updateState config mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
     nikkiPos <- getPosition $ chipmunk nikki
-    let newState_ = newState config now contacts controlData nikki nikkiPos velocity_
+    let newState_ = nextState config now contacts controlData nikki nikkiPos velocity_
     addDustClouds now nikki{state = newState_}
 
-newState :: Controls -> Seconds -> Contacts -> ControlData
+nextState :: Controls -> Seconds -> Contacts -> ControlData
     -> Nikki -> CM.Position -> Velocity -> State
-newState config now contacts controlData nikki nikkiPos velocity =
+nextState config now contacts controlData nikki nikkiPos velocity =
+    let ghostTime' = nextGhostTime now (state nikki)
+        grips' :: Maybe HorizontalDirection = grips collisions
+        action' :: Action = nextAction config (state nikki) controlData nothingHeld
+                                buttonDirection contacts ghostTime' grips'
+        jumpInformation' = nextJumpInformation (state nikki)
+                            config controlData buttonDirection now velocity action'
+        direction' :: HorizontalDirection = nextDirection (state nikki)
+                                            buttonDirection action' grips'
+        feetVelocity' :: CpFloat = nextFeetVelocity (state nikki)
+                                        collisions velocity
+                                        action' direction'
+    in State action' direction' feetVelocity' jumpInformation' ghostTime'
+  where
+    -- all collisions
+    collisions :: [NikkiCollision]
+    collisions = nikkiCollisions contacts
+
+    rightHeld = isGameRightHeld config controlData
+    leftHeld = isGameLeftHeld config controlData
+    nothingHeld = not (rightHeld `xor` leftHeld)
+    -- the direction indicated by the buttons (if any)
+    buttonDirection :: Strict.Maybe HorizontalDirection
+    buttonDirection =
+        if nothingHeld then Strict.Nothing else
+        if leftHeld then Strict.Just HLeft else
+        Strict.Just HRight
+
+nextGhostTime :: Seconds -> State -> Strict.Maybe (Pair Seconds NikkiCollision)
+nextGhostTime now oldState = case oldAction of
+    JumpImpulse{} -> Strict.Nothing
+    (Wait collision False) -> Strict.Just (now :!: collision)
+    (Walk _ collision False) -> Strict.Just (now :!: collision)
+    (WallSlide_ _ collision) ->
+            trace (pp $ nikkiCollisionAngle collision) $
+            Strict.Just (now :!: collision)
+    _ -> case oldGhostTime of
+        (Strict.Just (t :!: _)) ->
+            if now - ghostDuration < t then oldGhostTime else Strict.Nothing
+        Strict.Nothing -> Strict.Nothing
+  where
+    oldGhostTime = ghostTime oldState
+    oldAction = action oldState
+
+-- returns if nikki grabs something (and if yes, which direction)
+grips :: [NikkiCollision] -> Maybe HorizontalDirection
+grips =
+    filter isHeadCollision >>>
+    filter isGripCollision >>>
+    toGripCollision
+    where
+    toGripCollision [] = Nothing
+    toGripCollision gripCollisions = Just $
+        if any ((NikkiLeftPawCT ==) . nikkiCollisionType) gripCollisions
+        then HLeft else HRight
+
+
+nextAction config oldState controlData nothingHeld buttonDirection contacts ghostTime' grips =
     case (willJump, mJumpImpulseData) of
       -- nikki jumps
-      (True, Strict.Just impulse) -> jumpState impulse
+      (True, Strict.Just impulse) -> JumpImpulse impulse
       -- nikki touches something
       (False, Strict.Just c) ->
         if isLegsCollision c then
           -- nikki stands on something
-          if nothingHeld then
-            State (Wait c) newDirection 0 jumpInformation' Strict.Nothing
-           else
-            State (Walk afterAirborne c) newDirection
-              walkingFeetVelocity jumpInformation' Strict.Nothing
-          else case grips of
+          if nothingHeld
+          then Wait c False
+          else Walk afterAirborne c False
+        else case grips of
             -- nikki grabs something
-            Just HLeft | rightPressed ->
-              State GripImpulse HLeft 0 jumpInformation' Strict.Nothing
-            Just HRight | leftPressed ->
-              State GripImpulse HRight 0 jumpInformation' Strict.Nothing
-            Just gripDirection ->
-              State Grip gripDirection 0 jumpInformation' Strict.Nothing
-            -- nikki grabs nothing
-            Nothing ->
-              -- something touches the head that causes jumping capability
-              State
-                (wallSlide collisions c)
-                (wallSlideDirection $ nikkiCollisionAngle c)
-                airborneFeetVelocity
-                jumpInformation'
-                Strict.Nothing
+            Just _ | rightPressed || leftPressed -> GripImpulse
+            Just _ -> Grip
+            -- something touches the head that causes jumping capability
+            Nothing -> wallSlide (nikkiCollisions contacts) c
       (_, Strict.Nothing) ->
         case ghostTime' of
           (Strict.Just (_ :!: collision)) ->
             -- nikki is a ghost (boo!) (airborne, but can still jump)
-            if willJump then
-              jumpState collision
-             else
-              case buttonDirection of
+            if willJump
+              then JumpImpulse collision
+              else case buttonDirection of
                 -- no direction -> Wait
-                Strict.Nothing -> State (Wait collision) newDirection
-                  airborneFeetVelocity jumpInformation'
-                  ghostTime'
-                Strict.Just buttonDirection -> State
-                  (Walk afterAirborne collision)
-                  newDirection
-                  airborneFeetVelocity
-                  jumpInformation'
-                  ghostTime'
+                Strict.Nothing -> Wait collision True
+                Strict.Just buttonDirection -> Walk afterAirborne collision True
           Strict.Nothing ->
             -- nikki cannot jump
             case legsCollisions of
@@ -104,58 +140,13 @@ newState config now contacts controlData nikki nikkiPos velocity =
                 -- the angle is too steep: nikki slides into grip mode (hopefully)
                 let wallDirection = swapHorizontalDirection $
                            angleDirection $ nikkiCollisionAngle coll
-                in State (SlideToGrip wallDirection)
-                     newDirection airborneFeetVelocity jumpInformation'
-                     Strict.Nothing
-              _ ->
-                -- nikki touches nothing relevant
-                State
-                  Airborne
-                  newDirection
-                  airborneFeetVelocity
-                  jumpInformation'
-                  Strict.Nothing
+                in SlideToGrip wallDirection
+              -- nikki touches nothing relevant
+              _ -> Airborne
 
   where
-
     -- Action of nikkis last state
-    oldAction = action $ state nikki
-    -- nikkis previous horizontal direction
-    oldDirection :: HorizontalDirection
-    oldDirection = direction $ state nikki
-    -- previous feet velocity
-    oldFeetVelocity = feetVelocity $ state nikki
-
-    -- velocity of nikki's feet when airborne
-    airborneFeetVelocity =
-        if xVel > 0
-        then max (- maximumWalkingVelocity) (- xVel)
-        else min maximumWalkingVelocity (- xVel)
-      where
-        xVel = vectorX velocity
-
-    -- Velocity of nikki's feet when walking.
-    -- If no arrow key is pressed, the feet velocity stops immediately (is set to 0).
-    -- If we are for some reason in the situation (for example after a jump),
-    -- that the oldFeetVelocity and the wanted feetVelocity have different signs,
-    -- we should set the feetVelocity to zero also, to ensure a consistent feel.
-    walkingFeetVelocity = case newDirection of
-        HLeft -> min
-            maximumWalkingVelocity
-            (oldFeetVelocityOrZero + feetAcceleration)
-          where
-            oldFeetVelocityOrZero = max 0 oldFeetVelocity
-        HRight -> max
-            (- maximumWalkingVelocity)
-            (oldFeetVelocityOrZero - feetAcceleration)
-          where
-            oldFeetVelocityOrZero = min 0 oldFeetVelocity
-
-    -- The acceleration that can be applied to the feet's surface velocity
-    -- when walking. (per stepQuantum)
-    feetAcceleration :: CpFloat
-    feetAcceleration = (maximumWalkingVelocity / accelerationTime) * updateStepQuantum
-
+    oldAction = action oldState
 
     -- if the actual action came after being airborne
     -- (assuming the actual action is Walk)
@@ -170,68 +161,48 @@ newState config now contacts controlData nikki nikkiPos velocity =
     willJump = jumpButtonPushed &&
         not (isSlideToGripAction oldAction)
 
-    -- nikki's new horizontal direction
-    newDirection :: HorizontalDirection
-    newDirection = Strict.fromMaybe oldDirection buttonDirection
-
-    -- returns if nikki grabs something (and if yes, which direction)
-    grips :: Maybe HorizontalDirection
-    grips =
-        (nikkiCollisions >>>
-         filter isHeadCollision >>>
-         filter isGripCollision >>>
-         toGripCollision) contacts
-      where
-        toGripCollision [] = Nothing
-        toGripCollision gripCollisions = Just $
-            if any ((NikkiLeftPawCT ==) . nikkiCollisionType) gripCollisions
-            then HLeft else HRight
-    -- if a given head collision should be treated as nikki grabbing something
-    isGripCollision c =
-        abs (nikkiCollisionAngle c) < gripAngleLimit
-
     -- collisions with the legs
     legsCollisions = filter isLegsCollision $ nikkiCollisions contacts
 
-    hasLegsCollisions = not $ null $ legsCollisions
-
     -- button events
     jumpButtonPushed = isGameJumpPressed config controlData
-    jumpButtonHeld = isGameJumpHeld config controlData
     rightPressed = isGameRightPressed config controlData
     leftPressed = isGameLeftPressed config controlData
-    rightHeld = isGameRightHeld config controlData
-    leftHeld = isGameLeftHeld config controlData
-    nothingHeld = not (rightHeld `xor` leftHeld)
-
-    -- the direction indicated by the buttons (if any)
-    buttonDirection :: Strict.Maybe HorizontalDirection
-    buttonDirection =
-        if nothingHeld then Strict.Nothing else
-        if leftHeld then Strict.Just HLeft else
-        Strict.Just HRight
 
     -- the contact angle that should be used for jumping (if there are collisions)
     mJumpImpulseData :: Strict.Maybe NikkiCollision
     mJumpImpulseData =
-        jumpCollision collisions
-    -- all collisions
-    collisions :: [NikkiCollision]
-    collisions = nikkiCollisions contacts
+        jumpCollision (nikkiCollisions contacts)
 
-    -- while nikki is in the air, this describes the state
-    jumpInformation' =
-        JumpInformation jumpStartTime_ jumpCollisionAngle_ velocity buttonDirection
-
+-- while nikki is in the air, this describes the state
+nextJumpInformation oldState config controlData buttonDirection now velocity action =
+  case action of
+    JumpImpulse impulse ->
+        JumpInformation
+            (Strict.Just now)
+            (Strict.Just (nikkiCollisionAngle impulse))
+            velocity buttonDirection
+    _ -> JumpInformation jumpStartTime_ jumpCollisionAngle_ velocity buttonDirection
+  where
     -- when the jump button is held, this saves the time of the jump's start
     jumpStartTime_ :: Strict.Maybe Seconds
     jumpCollisionAngle_ :: Strict.Maybe Angle
     (jumpStartTime_, jumpCollisionAngle_) =
         if jumpButtonHeld
-        then (jumpStartTime ji, jumpCollisionAngle ji)
+        then (jumpStartTime oldJi, jumpCollisionAngle oldJi)
         else (Strict.Nothing, Strict.Nothing)
       where
-        ji = jumpInformation $ state nikki
+        oldJi = jumpInformation oldState
+    jumpButtonHeld = isGameJumpHeld config controlData
+
+
+nextDirection oldState buttonDirection action grips = case grips of
+    Just d -> d
+    Nothing -> case action of
+        JumpImpulse impulse -> jumpImpulseDirection $ nikkiCollisionAngle impulse
+        WallSlide_ _ c -> wallSlideDirection $ nikkiCollisionAngle c
+        _ -> newDirection
+  where
 
     -- | direction when starting a jump
     jumpImpulseDirection angle =
@@ -243,29 +214,51 @@ newState config now contacts controlData nikki nikkiPos velocity =
         fromMaybe oldDirection
             (fmap swapHorizontalDirection $ angleMDirection angle)
 
-    -- | PRE: null collisions
-    ghostTime' :: Strict.Maybe (Pair Seconds NikkiCollision)
-    ghostTime' = case oldGhostTime of
-        (Strict.Just (t :!: _)) ->
-            if now - ghostDuration < t then oldGhostTime else Strict.Nothing
-        Strict.Nothing -> case oldAction of
-            (Wait collision) -> Strict.Just (now :!: collision)
-            (Walk _ collision) -> Strict.Just (now :!: collision)
-            (WallSlide_ _ collision) -> Strict.Just (now :!: collision)
-            _ -> Strict.Nothing
-    oldGhostTime = ghostTime $ state nikki
+    -- nikki's new horizontal direction
+    newDirection :: HorizontalDirection
+    newDirection = Strict.fromMaybe oldDirection buttonDirection
+    -- nikkis previous horizontal direction
+    oldDirection :: HorizontalDirection
+    oldDirection = direction oldState
 
-    jumpState :: NikkiCollision -> State
-    jumpState impulse =
-        let specialJumpInformation =
-                JumpInformation (Strict.Just now) (Strict.Just angle) velocity buttonDirection
-            angle = nikkiCollisionAngle impulse
-        in State
-            (JumpImpulse impulse)
-            (jumpImpulseDirection $ nikkiCollisionAngle impulse)
-            airborneFeetVelocity
-            specialJumpInformation
-            Strict.Nothing
+
+nextFeetVelocity :: State -> [NikkiCollision] -> Velocity -> Action
+    -> HorizontalDirection -> CpFloat
+nextFeetVelocity oldState collisions velocity action direction = case action of
+    WallSlide_{} -> airborneFeetVelocity
+    Walk{} -> walkingFeetVelocity
+    _ -> if null collisions
+        then airborneFeetVelocity
+        else 0
+  where
+    -- velocity of nikki's feet when airborne
+    airborneFeetVelocity =
+        if xVel > 0
+        then max (- maximumWalkingVelocity) (- xVel)
+        else min maximumWalkingVelocity (- xVel)
+    xVel = vectorX velocity
+    -- Velocity of nikki's feet when walking.
+    -- If no arrow key is pressed, the feet velocity stops immediately (is set to 0).
+    -- If we are for some reason in the situation (for example after a jump),
+    -- that the oldFeetVelocity and the wanted feetVelocity have different signs,
+    -- we should set the feetVelocity to zero also, to ensure a consistent feel.
+    walkingFeetVelocity = case direction of
+        HLeft -> min
+            maximumWalkingVelocity
+            (oldFeetVelocityOrZero + feetAcceleration)
+          where
+            oldFeetVelocityOrZero = max 0 oldFeetVelocity
+        HRight -> max
+            (- maximumWalkingVelocity)
+            (oldFeetVelocityOrZero - feetAcceleration)
+          where
+            oldFeetVelocityOrZero = min 0 oldFeetVelocity
+    -- The acceleration that can be applied to the feet's surface velocity
+    -- when walking. (per stepQuantum)
+    feetAcceleration :: CpFloat
+    feetAcceleration = (maximumWalkingVelocity / accelerationTime) * updateStepQuantum
+    -- previous feet velocity
+    oldFeetVelocity = feetVelocity oldState
 
 
 -- if a given collision is with nikki's head
@@ -277,12 +270,14 @@ isHeadCollision _ = False
 isLegsCollision (NikkiCollision _ _ NikkiLegsCT) = True
 isLegsCollision _ = False
 
+-- if a given head collision should be treated as nikki grabbing something
+isGripCollision c = abs (nikkiCollisionAngle c) < gripAngleLimit
+
 -- if a given collision angle should lead to nikki standing on feet
 isStandingFeetAngle :: Angle -> Bool
 isStandingFeetAngle angle =
     abs angle < (deg2rad 90 - footToHeadAngle + deg2rad 1)
                                                 -- angle epsilon
-
 -- | returns the horizontal direction of a given angle
 angleMDirection :: Angle -> Maybe HorizontalDirection
 angleMDirection angle =
@@ -292,6 +287,7 @@ angleMDirection angle =
 
 angleDirection :: Angle -> HorizontalDirection
 angleDirection angle = if angle > 0 then HRight else HLeft
+
 
 -- | Calculates the collision causing possible jump.
 -- Considers ghost collisions depending on the arguments.
