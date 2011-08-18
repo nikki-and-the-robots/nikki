@@ -11,12 +11,16 @@ import Data.Initial
 import Data.Abelian
 import Data.Directions
 import qualified Data.Strict as Strict
+import Data.Strict (Pair(..))
+import Data.Accessor
 
 import Graphics.Qt as Qt hiding (rotate, scale)
 
 import Sound.SFML
 
 import Physics.Chipmunk hiding (position, Position)
+
+import Utils
 
 import Base
 
@@ -53,13 +57,13 @@ data State = State {
     direction :: !HorizontalDirection, -- the direction nikki faces
     feetVelocity :: !CpFloat,
     jumpInformation :: !JumpInformation,
-    ghostTime :: !(Strict.Maybe (Strict.Pair Seconds NikkiCollision))
+    ghostTimes :: !GhostTimes
 --     dustClouds :: [DustCloud]
   }
     deriving (Show)
 
 instance Initial State where
-    initial = State Airborne HRight 0 initial Strict.Nothing
+    initial = State Airborne HRight 0 initial initial
 
 data Action
     = Wait {collision :: !NikkiCollision, ghost :: !Bool}
@@ -109,6 +113,31 @@ data JumpInformation =
 
 instance Initial JumpInformation where
     initial = JumpInformation Strict.Nothing Strict.Nothing zero Strict.Nothing
+
+data GhostTimes
+    = GhostTimes {
+        standingGhostTime_ :: !(Strict.Maybe (Pair Seconds NikkiCollision)),
+        wallSlideGhostTime_ :: !(Strict.Maybe (Pair Seconds NikkiCollision))
+      }
+  deriving (Show)
+
+standingGhostTime, wallSlideGhostTime ::
+    Accessor GhostTimes (Strict.Maybe (Pair Seconds NikkiCollision))
+standingGhostTime = accessor standingGhostTime_ (\ a r -> r{standingGhostTime_ = a})
+wallSlideGhostTime = accessor wallSlideGhostTime_ (\ a r -> r{wallSlideGhostTime_ = a})
+
+instance Initial GhostTimes where
+    initial = GhostTimes Strict.Nothing Strict.Nothing
+
+instance PP GhostTimes where
+    pp (GhostTimes a b) = i a <~> "|" <~> i b
+      where
+        i Strict.Nothing = "-"
+        i (Strict.Just (_ :!: c)) = pp (nikkiCollisionAngle c)
+
+flattenGhostTime :: GhostTimes -> Strict.Maybe (Pair Seconds NikkiCollision)
+flattenGhostTime (GhostTimes a b) =
+    a <|> b
 
 data DustCloud
     = DustCloud {

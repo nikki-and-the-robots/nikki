@@ -11,6 +11,7 @@ import Data.Directions
 import qualified Data.Strict as Strict
 import Data.Strict (Pair(..))
 import Data.Convertable
+import Data.Initial
 
 import Text.Logging
 
@@ -38,7 +39,7 @@ updateState config mode now _ (False, _) nikki = do
             (LevelFinished _ result) -> NikkiLevelFinished result
         jumpInformation' = jumpInformation $ state nikki
         State{direction} = state nikki
-        newState = State action direction 0 jumpInformation' Strict.Nothing
+        newState = State action direction 0 jumpInformation' initial
     addDustClouds now nikki{state = newState}
 updateState config mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
@@ -49,10 +50,11 @@ updateState config mode now contacts (True, controlData) nikki = do
 nextState :: Controls -> Seconds -> Contacts -> ControlData
     -> Nikki -> CM.Position -> Velocity -> State
 nextState config now contacts controlData nikki nikkiPos velocity =
-    let ghostTime' = nextGhostTime now (state nikki)
-        grips' :: Maybe HorizontalDirection = grips collisions
+    let ghostTimes' = nextGhostTimes now (state nikki)
+        grips' :: Maybe HorizontalDirection =
+            grips collisions
         action' :: Action = nextAction config (state nikki) controlData nothingHeld
-                                buttonDirection contacts ghostTime' grips'
+                                buttonDirection contacts ghostTimes' grips'
         jumpInformation' = nextJumpInformation (state nikki)
                             config controlData buttonDirection now velocity action'
         direction' :: HorizontalDirection = nextDirection (state nikki)
@@ -60,7 +62,7 @@ nextState config now contacts controlData nikki nikkiPos velocity =
         feetVelocity' :: CpFloat = nextFeetVelocity (state nikki)
                                         collisions velocity
                                         action' direction'
-    in State action' direction' feetVelocity' jumpInformation' ghostTime'
+    in State action' direction' feetVelocity' jumpInformation' ghostTimes'
   where
     -- all collisions
     collisions :: [NikkiCollision]
@@ -76,21 +78,26 @@ nextState config now contacts controlData nikki nikkiPos velocity =
         if leftHeld then Strict.Just HLeft else
         Strict.Just HRight
 
-nextGhostTime :: Seconds -> State -> Strict.Maybe (Pair Seconds NikkiCollision)
-nextGhostTime now oldState = case oldAction of
-    JumpImpulse{} -> Strict.Nothing
-    (Wait collision False) -> Strict.Just (now :!: collision)
-    (Walk _ collision False) -> Strict.Just (now :!: collision)
+nextGhostTimes :: Seconds -> State -> GhostTimes
+nextGhostTimes now oldState = case oldAction of
+    JumpImpulse{} -> initial
+    (Wait collision False) -> GhostTimes (Strict.Just (now :!: collision)) Strict.Nothing
+    (Walk _ collision False) -> GhostTimes (Strict.Just (now :!: collision)) Strict.Nothing
     (WallSlide_ _ collision) ->
-            trace (pp $ nikkiCollisionAngle collision) $
-            Strict.Just (now :!: collision)
-    _ -> case oldGhostTime of
-        (Strict.Just (t :!: _)) ->
-            if now - ghostDuration < t then oldGhostTime else Strict.Nothing
-        Strict.Nothing -> Strict.Nothing
+        wallSlideGhostTime ^= (Strict.Just (now :!: collision)) $
+            updateStanding oldGhostTimes
+    _ -> updateStanding $ updateWallSlide oldGhostTimes
   where
-    oldGhostTime = ghostTime oldState
+    oldGhostTimes = ghostTimes oldState
     oldAction = action oldState
+
+    updateStanding = standingGhostTime ^: update
+    updateWallSlide = wallSlideGhostTime ^: update
+    update :: Strict.Maybe (Pair Seconds NikkiCollision) -> Strict.Maybe (Pair Seconds NikkiCollision)
+    update oldGhostTime = case oldGhostTime of
+        Strict.Nothing -> Strict.Nothing
+        Strict.Just (t :!: _) ->
+            if now - ghostDuration < t then oldGhostTime else Strict.Nothing
 
 -- returns if nikki grabs something (and if yes, which direction)
 grips :: [NikkiCollision] -> Maybe HorizontalDirection
@@ -108,10 +115,13 @@ grips =
         then HLeft else HRight
 
 
-nextAction config oldState controlData nothingHeld buttonDirection contacts ghostTime' grips =
+nextAction config oldState controlData nothingHeld buttonDirection contacts ghostTimes' grips =
     case (willJump, mJumpImpulseData) of
       -- nikki jumps
-      (True, Strict.Just impulse) -> JumpImpulse impulse
+      (True, Strict.Just impulse) ->
+        case (oldAction, ghostTimes' ^. standingGhostTime) of
+          (WallSlide_{}, Strict.Just (_ :!: ghostImpulse)) -> JumpImpulse ghostImpulse
+          _ -> JumpImpulse impulse
       -- nikki touches something
       (False, Strict.Just c) ->
         if isLegsCollision c then
@@ -124,9 +134,10 @@ nextAction config oldState controlData nothingHeld buttonDirection contacts ghos
             Just _ | rightPressed || leftPressed -> GripImpulse
             Just _ -> Grip
             -- something touches the head that causes jumping capability
-            Nothing -> wallSlide (nikkiCollisions contacts) c
+            Nothing ->
+                wallSlide (nikkiCollisions contacts) c
       (_, Strict.Nothing) ->
-        case ghostTime' of
+        case flattenGhostTime ghostTimes' of
           (Strict.Just (_ :!: collision)) ->
             -- nikki is a ghost (boo!) (airborne, but can still jump)
             if willJump

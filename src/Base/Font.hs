@@ -32,7 +32,7 @@ import System.FilePath
 
 import Graphics.Qt
 
-import Utils
+import Utils hiding ((<|>))
 
 import Base.Types
 import Base.Constants
