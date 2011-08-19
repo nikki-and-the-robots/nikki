@@ -6,6 +6,7 @@ module Sorts.Tiles (
     isTileSort,
     tileShapeAttributes,
     mkAllTiles,
+    cacheTiles,
   ) where
 
 
@@ -15,6 +16,7 @@ import Data.Abelian
 import Data.Generics
 import Data.List
 import Data.Maybe
+import qualified Data.Indexable as I
 
 import Text.Parsec
 import Text.Logging
@@ -184,7 +186,7 @@ instance Sort TSort Tile where
     renderIconified sort ptr =
         renderPixmapSimple ptr $ head $ tilePixmaps sort
 
-    initialize app Nothing sort@TSort{} editorPosition Nothing = do
+    initialize app Nothing sort@TSort{} editorPosition Nothing _ = do
         let pos = epToPosition (size sort) editorPosition
 
 --         let (shapes, baryCenterOffset) = mkShapes $ size sort
@@ -212,10 +214,14 @@ instance Sort TSort Tile where
 -- 1. Tiles are static
 -- 2. Tiles are being rendered above everything else in the physics layer
 
-unwrapTSort :: Sort_ -> TSort
-unwrapTSort (Sort_ s) = case cast s of
-    Just x -> x
+unwrapTSort :: Sort_ -> Maybe TSort
+unwrapTSort (Sort_ s) = cast s
 
+unwrapTSortEditorObject :: EditorObject Sort_ -> Maybe (EditorObject TSort)
+unwrapTSortEditorObject (EditorObject sort pos oem) =
+    case unwrapTSort sort of
+        Just tsort -> Just $ EditorObject tsort pos oem
+        Nothing -> Nothing
 
 data AllTilesSort
     = AllTilesSort [EditorObject TSort]
@@ -226,16 +232,18 @@ data AllTiles
   deriving (Show, Typeable)
 
 mkAllTiles :: [EditorObject Sort_] -> EditorObject Sort_
-mkAllTiles tiles = EditorObject (Sort_ (AllTilesSort (fmap (fmap unwrapTSort) tiles)))  zero Nothing
+mkAllTiles tiles =
+    EditorObject (Sort_ (AllTilesSort (catMaybes (fmap unwrapTSortEditorObject tiles)))) zero Nothing
 
 instance Sort AllTilesSort AllTiles where
     sortId _ = SortId "allTiles"
     freeSort = error "freeSort: not in use for AllTiles"
     size = error "size: not in use for AllTiles"
     renderIconified = error "renderIconified: not in use for AllTiles"
-    initialize app (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing = io $ do
+    initialize app (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
+      cachedTiles = io $ do
         let renderables = map mkRenderable editorObjects
-        chipmunks <- initChipmunks space editorObjects
+        chipmunks <- initChipmunks space cachedTiles editorObjects
         return $ AllTiles chipmunks renderables
 
     immutableCopy (AllTiles c x) = do
@@ -255,18 +263,19 @@ instance Sort AllTilesSort AllTiles where
 mkRenderable :: EditorObject TSort -> (TSort, Qt.Position Double)
 mkRenderable (EditorObject sort ep Nothing) = (sort, epToPosition (size sort) ep)
 
-initChipmunks :: Space -> [EditorObject TSort] -> IO Chipmunk
-initChipmunks space objects =
-    initShapes space $ mkAbsoluteShapes objects
+initChipmunks :: Space -> CachedTiles -> [EditorObject TSort] -> IO Chipmunk
+initChipmunks space cachedTiles objects =
+    initShapes space $ mkAbsoluteShapes cachedTiles objects
 
 -- * polygon logick
 
 -- | creates ShapeTypes with absolute coordinates
 -- here the actual merging of Tiles takes place
-mkAbsoluteShapes :: [EditorObject TSort] -> [ShapeType]
-mkAbsoluteShapes =
+mkAbsoluteShapes :: CachedTiles -> [EditorObject TSort] -> [ShapeType]
+mkAbsoluteShapes Nothing =
     map mkAbsoluteShape
     >>> removeStickyEdges tileMergingEpsilon
+mkAbsoluteShapes (Just x) = const x
 
 mkAbsoluteShape :: EditorObject TSort -> ShapeType
 mkAbsoluteShape (EditorObject sort ep Nothing) =
@@ -277,6 +286,13 @@ mkAbsoluteShape (EditorObject sort ep Nothing) =
     baryCenterOffset = halfSizeVector
     chipmunkPosition = position2vector (epToPosition (size sort) ep)
         +~ baryCenterOffset
+
+-- * caching
+
+cacheTiles :: I.Indexable (EditorObject Sort_) -> [ShapeType]
+cacheTiles ixs =
+    let tiles = catMaybes $ I.toList $ fmap unwrapTSortEditorObject ixs
+    in mkAbsoluteShapes Nothing tiles
 
 -- * chipmunk stuff
 

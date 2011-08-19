@@ -59,10 +59,13 @@ editorLoop app mvar scene = UnManagedAppState $ do
             (_, Press (KeyboardButton Escape _)) -> return $ editorMenu app mvar s 0
             (NormalMode, Press (KeyboardButton T _)) ->
                 -- test the level
-                return $ playLevel app (editorLoop app mvar s) True s
+                return $ playLevel app (editorLoop app mvar s) True
+                    (cachedTiles ^= Nothing $ s)
             (NormalMode, Press (KeyboardButton H _)) ->
                 -- test the level with Nikki at cursor position
-                return $ playLevel app (editorLoop app mvar s) True (setNikkiPosition (cursor s) s)
+                return $ playLevel app (editorLoop app mvar s) True $
+                    cachedTiles ^= Nothing $
+                    (setNikkiPosition (cursor s) s)
             _ -> do
                 -- other events are handled below (in Editor.Scene)
                 eventHandled <- updateEditorScene app event

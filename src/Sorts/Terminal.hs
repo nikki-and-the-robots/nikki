@@ -305,7 +305,7 @@ instance Sort TSort Terminal where
 
     objectEditMode _ = Just oemMethods
 
-    initialize app (Just space) sort editorPosition (Just (OEMState oemState_)) = io $ do
+    initialize app (Just space) sort editorPosition (Just (OEMState oemState_)) _ = io $ do
         let Just oemState :: Maybe TerminalOEMState = cast oemState_
             attached = fmap Controllable $ case oemState of
                 NoRobots -> []
@@ -325,7 +325,7 @@ instance Sort TSort Terminal where
             polysAndAttributes = map (mkShapeDescription shapeAttributes) polys
         chip <- initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
         return $ Terminal chip attached (initialMenuState 0)
-    initialize app Nothing sort editorPosition _ = do
+    initialize app Nothing sort editorPosition _ _ = do
         let position = epToPosition (size sort) editorPosition
             (_, baryCenterOffset) = mkPolys $ size sort
             chip = ImmutableChipmunk position 0 baryCenterOffset []

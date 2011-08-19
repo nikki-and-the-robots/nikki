@@ -87,7 +87,7 @@ instance Sort PSort Patrol where
                 let pix = if oemActive oemPath then redPix sort else offPix sort
                 renderPixmapSimple ptr pix
 
-    initialize app (Just space) sort ep (Just (OEMState oemState_)) = io $ do
+    initialize app (Just space) sort ep (Just (OEMState oemState_)) _ = io $ do
         let Just oemState = cast oemState_
             baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
 
@@ -101,7 +101,7 @@ instance Sort PSort Patrol where
 
         let path = toPath (size sort) oemState
         return $ Patrol (size sort) chip path deadly
-    initialize app Nothing sort ep _ = do
+    initialize app Nothing sort ep _ _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
             vector = position2vector position +~ baryCenterOffset

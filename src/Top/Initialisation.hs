@@ -91,26 +91,28 @@ freeAllSorts sorts = do
     fmapM_ freeSort sorts
 
 
-initScene :: Application -> LevelFile -> Space -> Grounds (EditorObject Sort_) -> RM (Scene Object_)
-initScene app levelFile space =
+initScene :: Application -> LevelFile -> Space -> CachedTiles
+    -> Grounds (EditorObject Sort_) -> RM (Scene Object_)
+initScene app levelFile space cachedTiles =
     return . Sorts.Nikki.uniqueNikki app >=>
     secondKleisli (
         return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
         return . groundsMergeTiles >=>
-        initializeObjects app space) >=>
+        initializeObjects app space cachedTiles) >=>
     io . mkScene levelFile space >=>
     return . Sorts.LowerLimit.promoteLowerLimit
 
-initializeObjects :: Application -> Space -> Grounds (EditorObject Sort_) -> RM (Grounds Object_)
-initializeObjects app space (Grounds backgrounds mainLayer foregrounds) = do
-    bgs' <- fmapM (fmapM (editorObject2Object app Nothing)) backgrounds
-    ml' <- fmapM (editorObject2Object app (Just space)) mainLayer
-    fgs' <- fmapM (fmapM (editorObject2Object app Nothing)) foregrounds
+initializeObjects :: Application -> Space -> CachedTiles
+    -> Grounds (EditorObject Sort_) -> RM (Grounds Object_)
+initializeObjects app space cachedTiles (Grounds backgrounds mainLayer foregrounds) = do
+    bgs' <- fmapM (fmapM (editorObject2Object app Nothing cachedTiles)) backgrounds
+    ml' <- fmapM (editorObject2Object app (Just space) cachedTiles) mainLayer
+    fgs' <- fmapM (fmapM (editorObject2Object app Nothing cachedTiles)) foregrounds
     return $ Grounds bgs' ml' fgs'
 
-editorObject2Object :: Application -> Maybe Space -> EditorObject Sort_ -> RM Object_
-editorObject2Object app mspace (EditorObject sort pos state) =
-    initialize app mspace sort pos state
+editorObject2Object :: Application -> Maybe Space -> CachedTiles -> EditorObject Sort_ -> RM Object_
+editorObject2Object app mspace cachedTiles (EditorObject sort pos state) =
+    initialize app mspace sort pos state cachedTiles
 
 mkScene :: LevelFile -> Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene levelFile space (nikki, objects) = do
@@ -126,7 +128,6 @@ groundsMergeTiles =
 
 mergeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
 mergeEditorObjects ixs =
-    otherObjects >: Sorts.Tiles.mkAllTiles tiles
+    otherObjects >: Sorts.Tiles.mkAllTiles (I.toList ixs)
   where
-    tiles = I.toList $ I.filter (isTileSort . editorSort) ixs
     otherObjects = I.filter (not . isTileSort . editorSort) ixs

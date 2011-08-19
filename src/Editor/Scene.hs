@@ -61,9 +61,9 @@ updateSelected s = s{selected = searchSelectedObject s}
 -- * constructors
 
 -- | the initial editor scene
-initEditorScene :: SelectTree Sort_ -> LevelFile -> Grounds (EditorObject Sort_)
-    -> IO (EditorScene Sort_)
-initEditorScene sorts editorLevelFile objects = flip evalStateT empty $ do
+initEditorScene :: SelectTree Sort_ -> LevelFile -> CachedTiles
+    -> Grounds (EditorObject Sort_) -> IO (EditorScene Sort_)
+initEditorScene sorts editorLevelFile cachedTiles objects = flip evalStateT empty $ do
     pixmap <- get
     return $ updateSelected EditorScene{
         editorLevelFile,
@@ -74,7 +74,8 @@ initEditorScene sorts editorLevelFile objects = flip evalStateT empty $ do
         selectedLayer = MainLayer,
         selected = Nothing,
         editorMode = NormalMode,
-        clipBoard = []
+        clipBoard = [],
+        cachedTiles_ = cachedTiles
       }
 
 removeTutorialSorts :: SelectTree Sort_ -> SelectTree Sort_

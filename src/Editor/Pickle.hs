@@ -17,6 +17,8 @@ import Utils
 
 import Base
 
+import Sorts.Tiles
+
 import Editor.Pickle.Types
 
 import qualified Legacy.Old1 as Old1
@@ -57,7 +59,8 @@ parse _ = Nothing
 
 -- * loading
 
-loadByFilePath :: [Sort_] -> FilePath -> IO (Either [Prose] (Grounds (EditorObject Sort_)))
+loadByFilePath :: [Sort_] -> FilePath
+    -> IO (Either [Prose] (Grounds (EditorObject Sort_), CachedTiles))
 loadByFilePath allSorts path = do
     exists <- doesFileExist path
     when (not exists) $
@@ -72,4 +75,5 @@ loadByFilePath allSorts path = do
 
 writeObjectsToDisk :: FilePath -> Grounds (EditorObject Sort_) -> IO ()
 writeObjectsToDisk file objects = do
-    writeSaved file $ pickle objects
+    let mainlayerObjects = objects ^. mainLayer .> content
+    writeSaved file $ pickle (Just $ cacheTiles mainlayerObjects) objects

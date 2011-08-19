@@ -16,6 +16,8 @@ import qualified Data.Vector
 
 import Control.Arrow
 
+import Physics.Chipmunk
+
 import Utils
 
 import Base
@@ -33,6 +35,12 @@ data SaveType
         pbackgrounds :: [PLayer],
         physicsLayer :: [(Int, PObject)],
         pforegrounds :: [PLayer]
+      }
+    | PGrounds_2 { -- 0.3.3.0.90
+        pbackgrounds :: [PLayer],
+        physicsLayer :: [(Int, PObject)],
+        pforegrounds :: [PLayer],
+        pCachedTiles :: Maybe [ShapeType]
       }
   deriving (Show, Read)
 
@@ -55,9 +63,9 @@ data PObject
 
 -- * pickling
 
-pickle :: Grounds (EditorObject Sort_) -> SaveType
-pickle (Grounds bgs pl fgs) =
-    PGrounds_1 (pickleMultiLayers bgs) pickledPl (pickleMultiLayers fgs)
+pickle :: CachedTiles -> Grounds (EditorObject Sort_) -> SaveType
+pickle cachedTiles (Grounds bgs pl fgs) =
+    PGrounds_2 (pickleMultiLayers bgs) pickledPl (pickleMultiLayers fgs) cachedTiles
   where
     pickledPl = map (\ k -> (index k, pickleObject ((pl ^. content) !!! k))) $
         keys (pl ^. content)
@@ -79,12 +87,20 @@ pickleObject (EditorObject sort pos oemState) =
 
 -- * unpickling
 
-unpickle :: [Sort_] -> SaveType -> Either [Prose] (Grounds (EditorObject Sort_))
-unpickle allSorts (PGrounds_1 bgs pl fgs) =
-    Grounds <$>
-        (unpickleMultiLayers allSorts bgs) <*>
-        (unpicklePhysicsLayer allSorts pl) <*>
-        (unpickleMultiLayers allSorts fgs)
+unpickle :: [Sort_] -> SaveType -> Either [Prose] (Grounds (EditorObject Sort_), CachedTiles)
+unpickle allSorts (PGrounds_2 bgs pl fgs cachedTiles) = do
+    grounds <- Grounds <$>
+        unpickleMultiLayers allSorts bgs <*>
+        unpicklePhysicsLayer allSorts pl <*>
+        unpickleMultiLayers allSorts fgs
+    return (grounds, cachedTiles)
+unpickle allSorts (PGrounds_1 bgs pl fgs) = do
+    grounds <- Grounds <$>
+        unpickleMultiLayers allSorts bgs <*>
+        unpicklePhysicsLayer allSorts pl <*>
+        unpickleMultiLayers allSorts fgs
+    let cachedTiles = Nothing
+    return (grounds, cachedTiles)
 
 -- | unpickle layers (without preserving indices)
 unpickleMultiLayers :: [Sort_] -> [PLayer] -> Either [Prose] (Indexable (Layer (EditorObject Sort_)))

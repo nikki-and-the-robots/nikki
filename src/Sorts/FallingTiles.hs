@@ -89,11 +89,11 @@ instance Sort TSort FallingTile where
         drawLine ptr zero (Position w h)
         drawLine ptr (Position w 0) (Position 0 h)
 
-    initialize app (Just space) sort@TSort{} editorPosition Nothing = io $ do
+    initialize app (Just space) sort@TSort{} editorPosition Nothing _ = io $ do
         (chip, attributes) <- initializeBox space sort editorPosition
         modifyApplyForce chip (CM.scale (Vector 0 (- gravity)) staticMass)
         return $ FallingTile attributes chip Static
-    initialize app Nothing sort editorPosition Nothing = io $ do
+    initialize app Nothing sort editorPosition Nothing _ = io $ do
         let (_, baryCenterOffset) = mkShape sort
             position = epToPosition (size sort) editorPosition
             vector = position2vector position +~ baryCenterOffset

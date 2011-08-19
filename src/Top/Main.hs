@@ -262,11 +262,11 @@ loadingEditorScene :: Application -> LevelFile -> AppState
     -> (EditorScene Sort_ -> AppState) -> AppState
 loadingEditorScene app file abortion follower =
     appState (busyMessage $ p "loading...") $ io $ do
-        grounds <- loadByFilePath (leafs $ allSorts app) (levelFilePath file)
-        case grounds of
-            Right x -> do
+        eGrounds <- loadByFilePath (leafs $ allSorts app) (levelFilePath file)
+        case eGrounds of
+            Right (grounds, cachedTiles) -> do
                 -- level successfully loaded
-                editorScene <- initEditorScene (allSorts app) file x
+                editorScene <- initEditorScene (allSorts app) file cachedTiles grounds
                 return $ follower editorScene
             Left errMsg -> do
                 return $ message app errMsg abortion
