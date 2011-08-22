@@ -22,24 +22,24 @@ import Editor.Pickle.LevelFile
 
 -- | Returns all files that can be played.
 -- Looks in the freeLevelsDirectory and in data/standardLevels
-lookupPlayableLevels :: [Sort_] -> RM (SelectTree LevelFile)
-lookupPlayableLevels allSorts = do
+lookupPlayableLevels :: RM (SelectTree LevelFile)
+lookupPlayableLevels = do
     standardLevelsDir <- getDataFileName "standardLevels"
     standardLevels :: SelectTree LevelFile <-
-        io $ (fmapM (mkStandardLevel allSorts standardLevelsDir) =<<
+        io $ (fmapM (mkStandardLevel standardLevelsDir) =<<
         dirToLevels "standard levels" standardLevelsDir)
 --     downloadedLevels <- lookupDownloadedLevels
-    ownedLevels <- io $ lookupUserLevels allSorts "your levels"
+    ownedLevels <- io $ lookupUserLevels "your levels"
     return $
         addChild ownedLevels $
         addChild standardLevels $
         EmptyNode ""
 
 -- | returns all levels created by the user (that can be edited)
-lookupUserLevels :: [Sort_] -> String -> IO (SelectTree LevelFile)
-lookupUserLevels allSorts title = do
+lookupUserLevels :: String -> IO (SelectTree LevelFile)
+lookupUserLevels title = do
     userLevelsDir <- getUserLevelsDirectory
-    fmapM (mkUserLevel allSorts userLevelsDir) =<< dirToLevels title userLevelsDir
+    fmapM (mkUserLevel userLevelsDir) =<< dirToLevels title userLevelsDir
 
 -- | Return the directory where levels are (and should be) saved.
 -- A standard directory is returned (using getAppUserDataDirectory "nikki-free-levels").

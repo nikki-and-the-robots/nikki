@@ -12,6 +12,8 @@ import Safe
 import Data.Convertable
 
 import Control.Monad
+import Control.Monad.Error
+import Control.Monad.Trans.Error (ErrorList(..))
 
 import qualified System.IO as IO
 import System.Directory
@@ -23,6 +25,7 @@ import Base
 import Sorts.Tiles
 
 import Editor.Pickle.Types
+import Editor.Pickle.MetaData
 
 import qualified Legacy.Old1 as Old1
 import qualified Legacy.Old2 as Old2
@@ -43,8 +46,8 @@ writeFile :: FilePath -> FileFormat -> IO ()
 writeFile = IO.writeFile
 
 
-parseSaved :: FilePath -> IO (Maybe SaveType)
-parseSaved file = (readFile file :: IO FileFormat) >>= return . parse
+parseSaved :: FilePath -> ErrorT [Prose] IO SaveType
+parseSaved file = io (readFile file :: IO FileFormat) >>= parse file
 
 writeSaved :: FilePath -> SaveType -> IO ()
 writeSaved file level = writeFile file (saveToFile level :: FileFormat)
@@ -52,26 +55,30 @@ writeSaved file level = writeFile file (saveToFile level :: FileFormat)
 
 -- * parsing
 
-parse :: FileFormat -> Maybe SaveType
-parse (readMay -> Just x :: Maybe SaveType) = Just x
-parse (readMay -> Just x :: Maybe Old2.SaveType) = Just $ convert x
-parse (readMay -> Just x :: Maybe Old1.SaveType) =
-    Just $ convert $ asTypeOf (undefined :: Old2.SaveType) $ convert x
-parse _ = Nothing
+parse :: FilePath -> FileFormat -> ErrorT [Prose] IO SaveType
+parse _ (readMay -> Just x :: Maybe SaveType) = return x
+parse _ (readMay -> Just x :: Maybe Old2.SaveType) = return $ convert x
+parse _ (readMay -> Just x :: Maybe Old1.SaveType) =
+    return $ convert $ asTypeOf (undefined :: Old2.SaveType) $ convert x
+parse path _ =
+    throwError (p "Sorry, this file is not a correct nikki level file:" : pv path : [])
 
 
 -- * loading
 
+instance ErrorList Prose where
+    listMsg = error "Editor.Pickle.listMsg"
+
 loadByFilePath :: [Sort_] -> FilePath
-    -> IO (Either [Prose] DiskLevel)
+    -> ErrorT [Prose] IO (LevelMetaData, DiskLevel)
 loadByFilePath allSorts path = do
-    exists <- doesFileExist path
+    exists <- io $ doesFileExist path
     when (not exists) $
-        error ("Sorry, the file \"" ++ path ++ "\" does not exist.")
-    mR <- parseSaved path
-    return $ case mR of
-        Just x -> unpickle allSorts x
-        Nothing -> Left (p "Sorry, this file is not a correct nikki level file: " : pv path : [])
+        throwError (p "file not found:" : pv path : [])
+    x <- parseSaved path
+    unpickled <- ErrorT $ return $ unpickle allSorts x
+    meta <- io $ loadMetaData path
+    return (meta, unpickled)
 
 
 -- * saving
@@ -79,5 +86,6 @@ loadByFilePath allSorts path = do
 writeObjectsToDisk :: FilePath -> LevelMetaData -> Grounds (EditorObject Sort_) -> IO ()
 writeObjectsToDisk file metaData objects = do
     let cachedTiles = cacheTiles (objects ^. mainLayer .> content)
-        diskLevel = DiskLevel objects (Just cachedTiles) metaData
+        diskLevel = DiskLevel objects (Just cachedTiles)
     writeSaved file $ pickle diskLevel
+    saveMetaData file metaData

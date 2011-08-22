@@ -9,6 +9,7 @@ import Data.SelectTree
 import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Control.Monad.Error
 
 import System.Console.CmdArgs
 
@@ -39,11 +40,12 @@ main = withQApplication $ \ qApp -> do
         fs <- files <$> cmdArgs sample
         forM_ fs $ \ file -> do
             putStrLn ("loading " ++ file)
-            loaded <- loadByFilePath (leafs sortTree) file
+            loaded <- runErrorT $ loadByFilePath (leafs sortTree) file
             case loaded of
-                Right (DiskLevel grounds Nothing meta) -> do
+                Right (meta, DiskLevel grounds Nothing) -> do
                     putStrLn ("writing " ++ file)
                     writeObjectsToDisk file meta grounds
-                Right (DiskLevel grounds (Just x) _) ->
+                Right (_, DiskLevel grounds (Just x)) ->
                     putStrLn ("Is already converted: " ++ file)
                 Left errors -> putStrLn ("Warning: " ++ show errors)
+        quitQApplication

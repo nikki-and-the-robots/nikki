@@ -221,7 +221,6 @@ modifyIORefM ref cmd =
 instance ErrorList String where
     listMsg = singleton
 
-
 chainAppM :: Monad m => (b -> a -> m a) -> [b] -> a -> m a
 chainAppM cmd (b : r) a = do
     a' <- cmd b a

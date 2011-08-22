@@ -21,7 +21,7 @@ main = do
     let path = dir </> "empty.nl"
     putStrLn ("writing empty level to " ++ show path)
     writeSaved path $ pickle $
-        DiskLevel initial Nothing emptyLevelMetaData
+        DiskLevel initial Nothing
 
 
 dir = "../../data/templateLevels"

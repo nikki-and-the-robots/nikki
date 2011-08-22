@@ -20,6 +20,7 @@ import Data.Aeson
 import Text.Logging
 
 import Control.Monad
+import Control.Monad.Error
 
 import System.FilePath
 
@@ -28,21 +29,17 @@ import Utils
 import Base
 
 import Editor.Pickle
+import Editor.Pickle.MetaData
 
 
-mkStandardLevel :: [Sort_] -> FilePath -> FilePath -> IO LevelFile
+mkStandardLevel :: FilePath -> FilePath -> IO LevelFile
 mkStandardLevel = mkLevelWithMetaData StandardLevel
 
-mkUserLevel :: [Sort_] -> FilePath -> FilePath -> IO LevelFile
+mkUserLevel :: FilePath -> FilePath -> IO LevelFile
 mkUserLevel = mkLevelWithMetaData UserLevel
 
-mkLevelWithMetaData constructor allSorts levelDir levelFile = do
-    eLevel <- loadByFilePath allSorts levelFile
-    return $ case eLevel of
-        Left msg ->
-            error $ ("level file not readable: " ++ levelFile ++ "\n" ++ unlines (map unP msg))
-        Right (DiskLevel _ _ meta) ->
-            constructor levelDir levelFile meta
+mkLevelWithMetaData constructor levelDir levelFile =
+    constructor levelDir levelFile <$> loadMetaData levelFile
 
 mkUnknownLevel :: FilePath -> IO LevelFile
 mkUnknownLevel = return . UnknownLevelType

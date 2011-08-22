@@ -25,6 +25,7 @@ import qualified Data.Map as Map
 import Text.Logging
 
 import Control.Concurrent
+import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Exception
 
@@ -43,6 +44,7 @@ import Editor.Menu (editLevel)
 import Editor.Pickle
 import Editor.Pickle.LevelFile
 import Editor.Pickle.LevelLoading
+import Editor.Pickle.MetaData
 
 import Top.Initialisation
 import Top.Game (playLevel)
@@ -201,7 +203,7 @@ quit app parent =
 -- | select a saved level.
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
-    levelFiles <- lookupPlayableLevels (leafs $ allSorts app)
+    levelFiles <- lookupPlayableLevels
     return $ if null $ leafs levelFiles then
         message app [p "no levels found :("] parent
       else
@@ -242,7 +244,7 @@ pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
             const $ edit app parent (TemplateLevel templatePath))
 
 selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
-    editableLevels <- lookupUserLevels (leafs $ allSorts app) "your levels"
+    editableLevels <- lookupUserLevels "your levels"
     return $ if null $ leafs editableLevels then
         message app [p "no levels found :("] parent
       else
@@ -264,11 +266,11 @@ loadingEditorScene :: Application -> LevelFile -> AppState
     -> (EditorScene Sort_ -> AppState) -> AppState
 loadingEditorScene app file abortion follower =
     appState (busyMessage $ p "loading...") $ io $ do
-        eGrounds <- loadByFilePath (leafs $ allSorts app) (levelFilePath file)
+        eGrounds <- runErrorT $ loadByFilePath (leafs $ allSorts app) (levelFilePath file)
         case eGrounds of
-            Right diskLevel -> do
+            Right (metaData, diskLevel) -> do
                 -- level successfully loaded
-                editorScene <- initEditorScene (allSorts app) file diskLevel
+                editorScene <- initEditorScene (allSorts app) file metaData diskLevel
                 return $ follower editorScene
             Left errMsg -> do
                 return $ message app errMsg abortion

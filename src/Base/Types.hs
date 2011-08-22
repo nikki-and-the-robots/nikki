@@ -672,7 +672,7 @@ data LevelMetaData
         meta_levelName :: Maybe String,
         meta_author :: Maybe String
       }
-  deriving (Show)
+  deriving (Eq, Show)
 
 emptyLevelMetaData = LevelMetaData Nothing Nothing
 
