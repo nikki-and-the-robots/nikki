@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances,
-    DeriveDataTypeable, ScopedTypeVariables, ViewPatterns #-}
+    DeriveDataTypeable, ScopedTypeVariables, ViewPatterns, PackageImports #-}
 
 module Sorts.Tiles (
     sorts,
@@ -18,7 +18,7 @@ import Data.List
 import Data.Maybe
 import qualified Data.Indexable as I
 
-import Text.Parsec
+import "parsec3" Text.Parsec
 import Text.Logging
 
 import Control.Monad

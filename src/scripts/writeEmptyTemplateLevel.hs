@@ -18,7 +18,7 @@ main = do
         error (dir ++ " does not exist")
     let path = dir </> "empty.nl"
     putStrLn ("writing empty level to " ++ show path)
-    writeSaved path $ pickle initial
+    writeSaved path $ pickle Nothing initial
 
 
 dir = "../../data/templateLevels"

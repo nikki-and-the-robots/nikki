@@ -76,7 +76,6 @@ getAllSorts = do
     sorts <- concat <$> mapM id sortLoaders
     io $ checkUniqueSortIds sorts
     return $ mkSortsSelectTree sorts
-  where
 
 checkUniqueSortIds :: [Sort_] -> IO ()
 checkUniqueSortIds sorts =

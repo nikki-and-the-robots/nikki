@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables, ViewPatterns #-}
+{-# language ScopedTypeVariables, ViewPatterns, PackageImports #-}
 
 module Base.Font (
     loadAlphaNumericFont,
@@ -24,7 +24,7 @@ import Data.Abelian
 import Data.Map (lookup, fromList)
 import Data.Char
 
-import Text.Parsec
+import "parsec3" Text.Parsec
 
 import Control.Arrow (left)
 

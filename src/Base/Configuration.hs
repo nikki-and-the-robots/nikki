@@ -9,6 +9,8 @@ module Base.Configuration (
     show_battery_OSD,
     show_time_OSD,
     show_switch_OSD,
+
+    defaultConfiguration,
     savedConfigurationToConfiguration,
     configurationToSavedConfiguration,
   ) where
