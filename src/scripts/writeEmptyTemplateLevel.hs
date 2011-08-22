@@ -8,6 +8,8 @@ import Control.Monad
 import System.Directory
 import System.FilePath
 
+import Base
+
 import Editor.Pickle
 import Editor.Pickle.Types
 
@@ -18,7 +20,8 @@ main = do
         error (dir ++ " does not exist")
     let path = dir </> "empty.nl"
     putStrLn ("writing empty level to " ++ show path)
-    writeSaved path $ pickle Nothing initial
+    writeSaved path $ pickle $
+        DiskLevel initial Nothing emptyLevelMetaData
 
 
 dir = "../../data/templateLevels"

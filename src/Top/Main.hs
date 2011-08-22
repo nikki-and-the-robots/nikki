@@ -39,8 +39,10 @@ import Distribution.AutoUpdate
 import Base
 
 import Editor.Scene (initEditorScene)
-import Editor.Pickle
 import Editor.Menu (editLevel)
+import Editor.Pickle
+import Editor.Pickle.LevelFile
+import Editor.Pickle.LevelLoading
 
 import Top.Initialisation
 import Top.Game (playLevel)
@@ -141,7 +143,7 @@ applicationStates app = NoGUIAppState $ do
     play_levelA %= Nothing
     case mLevel of
         Nothing -> return $ mainMenu app 0
-        Just file -> return $ play app (mainMenu app 0) (unknownLevel file)
+        Just file -> io $ play app (mainMenu app 0) <$> mkUnknownLevel file
 
 mainMenu :: Application -> Int -> AppState
 mainMenu app ps =
@@ -199,7 +201,7 @@ quit app parent =
 -- | select a saved level.
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
-    levelFiles <- lookupPlayableLevels
+    levelFiles <- lookupPlayableLevels (leafs $ allSorts app)
     return $ if null $ leafs levelFiles then
         message app [p "no levels found :("] parent
       else
@@ -231,16 +233,16 @@ pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
                           getDataFiles templateLevelsDir (Just ".nl")
     return $ menuAppState app menuType (Just parent) (
         map mkMenuItem templateLevelPaths ++
-        (p "empty level", const $ edit app parent (templateLevel pathToEmptyLevel)) :
+        (p "empty level", const $ edit app parent (TemplateLevel pathToEmptyLevel)) :
         []) 0
   where
     menuType = NormalMenu (p "new level") (Just $ p "choose a template to start from")
     mkMenuItem templatePath =
         (pVerbatim $ takeBaseName templatePath,
-            const $ edit app parent (templateLevel templatePath))
+            const $ edit app parent (TemplateLevel templatePath))
 
 selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
-    editableLevels <- lookupUserLevels "your levels"
+    editableLevels <- lookupUserLevels (leafs $ allSorts app) "your levels"
     return $ if null $ leafs editableLevels then
         message app [p "no levels found :("] parent
       else
@@ -264,9 +266,9 @@ loadingEditorScene app file abortion follower =
     appState (busyMessage $ p "loading...") $ io $ do
         eGrounds <- loadByFilePath (leafs $ allSorts app) (levelFilePath file)
         case eGrounds of
-            Right (grounds, cachedTiles) -> do
+            Right diskLevel -> do
                 -- level successfully loaded
-                editorScene <- initEditorScene (allSorts app) file cachedTiles grounds
+                editorScene <- initEditorScene (allSorts app) file diskLevel
                 return $ follower editorScene
             Left errMsg -> do
                 return $ message app errMsg abortion

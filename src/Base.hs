@@ -20,8 +20,7 @@ module Base (
     module Base.Debugging,
     module Base.Configuration,
     module Base.Configuration.Controls,
-module Base.GlobalShortcuts,
-    module Base.LevelLoading,
+    module Base.GlobalShortcuts,
     module Base.Polling,
     module Base.Options,
     module Base.Score,
@@ -50,7 +49,6 @@ import Base.Debugging
 import Base.Configuration
 import Base.Configuration.Controls
 import Base.GlobalShortcuts
-import Base.LevelLoading
 import Base.Polling
 import Base.Options
 import Base.Score

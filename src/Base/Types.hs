@@ -1,5 +1,5 @@
 {-# language NamedFieldPuns, FlexibleInstances, DeriveDataTypeable, ExistentialQuantification,
-    MultiParamTypeClasses, FunctionalDependencies #-}
+    MultiParamTypeClasses, FunctionalDependencies, RecordWildCards, OverloadedStrings #-}
 
 
 -- module for often used types (in one Base module, to avoid module import cycles.)
@@ -7,7 +7,6 @@
 module Base.Types (
     module Base.Types,
     module Base.Types.Events,
-    module Base.Types.LevelFile,
     Offset,
   ) where
 
@@ -23,10 +22,13 @@ import Data.Generics.Uniplate.Data
 import Data.Accessor
 import Data.IORef
 import qualified Data.Binary as Binary
+import Data.Aeson
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Control.Monad.CatchState
+
+import System.FilePath
 
 import Physics.Chipmunk as CM
 
@@ -44,7 +46,6 @@ import Base.GameGrounds
 import Base.Pixmap
 
 import Base.Types.Events
-import Base.Types.LevelFile
 
 
 -- * type aliases
@@ -626,3 +627,65 @@ instance Sort Sort_ Object_ where
 
 sort_ :: Object_ -> Sort_
 sort_ (Object_ sort _) = Sort_ sort
+
+
+-- * level files
+
+data LevelFile
+    = StandardLevel {
+          levelDirectory :: FilePath
+        , levelFilePath :: FilePath
+        , levelMetaData_ :: LevelMetaData
+      }
+    | UserLevel {
+          levelDirectory :: FilePath
+        , levelFilePath :: FilePath
+        , levelMetaData_ :: LevelMetaData
+      }
+    | TemplateLevel {levelFilePath :: FilePath}
+    | UnknownLevelType {levelFilePath :: FilePath}
+  deriving (Show)
+
+levelMetaData :: LevelFile -> LevelMetaData
+levelMetaData StandardLevel{..} = levelMetaData_
+levelMetaData UserLevel{..} = levelMetaData_
+levelMetaData _ = emptyLevelMetaData
+
+type LevelUID = String
+
+-- | unique  ID of a level
+levelUID :: LevelFile -> LevelUID
+levelUID (StandardLevel levelDir levelPath meta) =
+    "standardLevels" </> dropPrefix levelDir levelPath
+levelUID (UserLevel levelDir levelPath meta) =
+    "userLevels" </> dropPrefix levelDir levelPath
+levelUID (TemplateLevel path) = path
+levelUID (UnknownLevelType path) = path
+
+
+-- * level meta data
+
+-- | This will be saved as JSON, so it will hopefully be extendable.
+-- (This is an experimental alternative to versioned constructors.)
+data LevelMetaData
+    = LevelMetaData {
+        meta_levelName :: Maybe String,
+        meta_author :: Maybe String
+      }
+  deriving (Show)
+
+emptyLevelMetaData = LevelMetaData Nothing Nothing
+
+instance ToJSON LevelMetaData where
+    toJSON (LevelMetaData meta_levelName meta_author) =
+      object (
+        "levelName" .= meta_levelName :
+        "author" .= meta_author :
+        [])
+
+instance FromJSON LevelMetaData where
+    parseJSON (Object meta) =
+        LevelMetaData <$>
+        meta .:? "levelName" <*>
+        meta .:? "author"
+    parseJSON _ = mzero

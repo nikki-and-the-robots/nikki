@@ -1,5 +1,6 @@
+{-# language ScopedTypeVariables #-}
 
-module Base.LevelLoading (
+module Editor.Pickle.LevelLoading (
     lookupPlayableLevels,
     lookupUserLevels,
     getSaveLevelDirectory,
@@ -16,26 +17,29 @@ import Utils
 import Base.Types
 import Base.Paths
 
+import Editor.Pickle.LevelFile
+
 
 -- | Returns all files that can be played.
 -- Looks in the freeLevelsDirectory and in data/standardLevels
-lookupPlayableLevels :: RM (SelectTree LevelFile)
-lookupPlayableLevels = do
+lookupPlayableLevels :: [Sort_] -> RM (SelectTree LevelFile)
+lookupPlayableLevels allSorts = do
     standardLevelsDir <- getDataFileName "standardLevels"
-    standardLevels <- io $ fmap (standardLevel standardLevelsDir) <$>
-        dirToLevels "standard levels" standardLevelsDir
+    standardLevels :: SelectTree LevelFile <-
+        io $ (fmapM (mkStandardLevel allSorts standardLevelsDir) =<<
+        dirToLevels "standard levels" standardLevelsDir)
 --     downloadedLevels <- lookupDownloadedLevels
-    ownedLevels <- io $ lookupUserLevels "your levels"
+    ownedLevels <- io $ lookupUserLevels allSorts "your levels"
     return $
         addChild ownedLevels $
         addChild standardLevels $
         EmptyNode ""
 
 -- | returns all levels created by the user (that can be edited)
-lookupUserLevels :: String -> IO (SelectTree LevelFile)
-lookupUserLevels title = do
+lookupUserLevels :: [Sort_] -> String -> IO (SelectTree LevelFile)
+lookupUserLevels allSorts title = do
     userLevelsDir <- getUserLevelsDirectory
-    fmap (userLevel userLevelsDir) <$> dirToLevels title userLevelsDir
+    fmapM (mkUserLevel allSorts userLevelsDir) =<< dirToLevels title userLevelsDir
 
 -- | Return the directory where levels are (and should be) saved.
 -- A standard directory is returned (using getAppUserDataDirectory "nikki-free-levels").

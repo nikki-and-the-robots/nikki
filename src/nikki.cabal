@@ -170,6 +170,8 @@ Executable core
         , strict >= 0.3.2
         , vector >= 0.7.0.1
         , RSA == 1.*
+        , aeson == 0.3.*
+        , attoparsec == 0.9.*
 
     if os(linux)
         extra-libraries:

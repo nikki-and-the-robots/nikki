@@ -1,6 +1,9 @@
 {-# language ScopedTypeVariables, NamedFieldPuns, ViewPatterns #-}
 
-module Editor.Pickle where
+module Editor.Pickle (
+    module Editor.Pickle,
+    module Editor.Pickle.Types,
+  ) where
 
 
 import Prelude hiding (readFile, writeFile)
@@ -60,7 +63,7 @@ parse _ = Nothing
 -- * loading
 
 loadByFilePath :: [Sort_] -> FilePath
-    -> IO (Either [Prose] (Grounds (EditorObject Sort_), CachedTiles))
+    -> IO (Either [Prose] DiskLevel)
 loadByFilePath allSorts path = do
     exists <- doesFileExist path
     when (not exists) $
@@ -73,7 +76,8 @@ loadByFilePath allSorts path = do
 
 -- * saving
 
-writeObjectsToDisk :: FilePath -> Grounds (EditorObject Sort_) -> IO ()
-writeObjectsToDisk file objects = do
-    let mainlayerObjects = objects ^. mainLayer .> content
-    writeSaved file $ pickle (Just $ cacheTiles mainlayerObjects) objects
+writeObjectsToDisk :: FilePath -> LevelMetaData -> Grounds (EditorObject Sort_) -> IO ()
+writeObjectsToDisk file metaData objects = do
+    let cachedTiles = cacheTiles (objects ^. mainLayer .> content)
+        diskLevel = DiskLevel objects (Just cachedTiles) metaData
+    writeSaved file $ pickle diskLevel

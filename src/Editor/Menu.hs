@@ -21,6 +21,8 @@ import Base
 import Editor.Scene
 import Editor.Scene.Types
 import Editor.Pickle
+import Editor.Pickle.LevelFile
+import Editor.Pickle.LevelLoading
 
 import Top.Game
 
@@ -113,9 +115,8 @@ editorMenu app mvar scene ps =
                 []) ps
   where
     menuTitle = p "editor"
-    menuSubTitle = if isTemplateLevel $ editorLevelFile scene
-        then p "untitled level"
-        else pVerbatim $ levelName $ editorLevelFile scene
+    menuSubTitle = maybe (p "untitled level") pv
+        (meta_levelName $ levelMetaData $ editorLevelFile scene)
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app mvar (updateSelected s)
     this = editorMenu app mvar scene
@@ -130,28 +131,43 @@ editorMenu app mvar scene ps =
 
 saveLevel :: Application -> (LevelFile -> AppState) -> EditorScene Sort_
     -> Parent -> AppState
-saveLevel app follower EditorScene{editorLevelFile, editorObjects_} _parent 
+saveLevel app follower EditorScene{editorLevelFile, editorObjects_} parent
   | isUserLevel editorLevelFile =
-    let path = levelFilePath editorLevelFile
-    in appState (busyMessage $ p "saving level...") $ io $ do
-        writeObjectsToDisk path editorObjects_
-        return $ follower editorLevelFile
+    completeMetaData app parent (levelMetaData editorLevelFile) $
+      \ metaData ->
+        let path = levelFilePath editorLevelFile
+        in appState (busyMessage $ p "saving level...") $ io $ do
+            writeObjectsToDisk path metaData editorObjects_
+            return $ follower editorLevelFile{levelMetaData_ = metaData}
 saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
   | isTemplateLevel editorLevelFile =
-    askString app parent (p "level name") $ \ name -> NoGUIAppState $ io $ do
+    completeMetaData app parent emptyLevelMetaData $
+    \ metaData@(LevelMetaData (Just name) _) ->
+      NoGUIAppState $ io $ do
         levelDirectory <- getSaveLevelDirectory
         let path = levelDirectory </> name <..> "nl"
-            levelFile = userLevel levelDirectory path
+            levelFile = UserLevel levelDirectory path metaData
         exists <- doesFileExist path
         if exists then
-            return $ fileExists app this path editorObjects_
+            return $ fileExists app this path metaData editorObjects_
           else return $ appState (busyMessage $ p "saving level...") $ io $ do
-            writeObjectsToDisk path editorObjects_
-            return $ follower levelFile
+            writeObjectsToDisk path metaData editorObjects_
+            return $ follower levelFile{levelMetaData_ = metaData}
   where
     this = saveLevel app follower scene parent
 
-fileExists app save path objects =
+-- | completes the needed metadata
+completeMetaData a pa (LevelMetaData Nothing author) f =
+    askString a pa (p "level name") $ \ name ->
+    completeMetaData a pa (LevelMetaData (Just name) author) f
+completeMetaData a pa (LevelMetaData (Just name) Nothing) f =
+    askString a pa (p "author name") $ \ author ->
+    f (LevelMetaData (Just name) (Just author))
+completeMetaData a pa m@(LevelMetaData (Just _) (Just _)) f =
+    f m
+
+
+fileExists app save path metaData objects =
     menuAppState app menuType (Just save) (
         (p "no", const save) :
         (p "yes", const writeAnyway) :
@@ -159,7 +175,7 @@ fileExists app save path objects =
   where
     menuType = NormalMenu (p "saving level") (Just (pVerbatim path +> p " already exists"))
     writeAnyway = appState (busyMessage $ p "saving level...") $ io $ do
-        writeObjectsToDisk path objects
+        writeObjectsToDisk path metaData objects
         return $ getMainMenu app
 
 reallyExitEditor :: Application -> Parent -> AppState

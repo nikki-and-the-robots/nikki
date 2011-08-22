@@ -41,9 +41,9 @@ main = withQApplication $ \ qApp -> do
             putStrLn ("loading " ++ file)
             loaded <- loadByFilePath (leafs sortTree) file
             case loaded of
-                Right (grounds, Nothing) -> do
+                Right (DiskLevel grounds Nothing meta) -> do
                     putStrLn ("writing " ++ file)
-                    writeObjectsToDisk file grounds
-                Right (grounds, Just x) ->
+                    writeObjectsToDisk file meta grounds
+                Right (DiskLevel grounds (Just x) _) ->
                     putStrLn ("Is already converted: " ++ file)
                 Left errors -> putStrLn ("Warning: " ++ show errors)

@@ -36,6 +36,7 @@ import Object
 
 import Sorts.Nikki
 
+import Editor.Pickle
 import Editor.Scene.Types
 import Editor.Scene.Rendering
 import qualified Editor.Scene.RenderOrdering as RenderOrdering
@@ -61,9 +62,10 @@ updateSelected s = s{selected = searchSelectedObject s}
 -- * constructors
 
 -- | the initial editor scene
-initEditorScene :: SelectTree Sort_ -> LevelFile -> CachedTiles
-    -> Grounds (EditorObject Sort_) -> IO (EditorScene Sort_)
-initEditorScene sorts editorLevelFile cachedTiles objects = flip evalStateT empty $ do
+initEditorScene :: SelectTree Sort_ -> LevelFile
+    -> DiskLevel -> IO (EditorScene Sort_)
+initEditorScene sorts editorLevelFile (DiskLevel objects cachedTiles metaData) =
+  flip evalStateT empty $ do
     pixmap <- get
     return $ updateSelected EditorScene{
         editorLevelFile,

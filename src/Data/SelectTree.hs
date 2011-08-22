@@ -27,6 +27,7 @@ import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, catMaybes)
 import qualified Data.Tree as T
 import Data.Foldable (Foldable, foldMap)
+import Data.Traversable (Traversable(..))
 import Data.Accessor
 
 import System.Directory
@@ -53,6 +54,12 @@ instance Foldable SelectTree where
     foldMap f (Leaf _ a) = f a
     foldMap f (Node _ cs _) = foldMap (foldMap f) cs
 
+instance Traversable SelectTree where
+    traverse f (Node l ixs i) =
+        Node l <$> traverse (traverse f) ixs <*> pure i
+    traverse f (Leaf l a) =
+        Leaf l <$> f a
+    traverse f (EmptyNode l) = pure (EmptyNode l)
 
 mkNode :: String -> [SelectTree a] -> SelectTree a
 mkNode label [] = EmptyNode label

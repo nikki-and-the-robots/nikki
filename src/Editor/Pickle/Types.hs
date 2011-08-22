@@ -13,6 +13,10 @@ module Editor.Pickle.Types where
 
 import Data.Indexable
 import qualified Data.Vector
+import Data.ByteString.Lazy (ByteString)
+import Data.Aeson
+import Data.Aeson.Types
+import Data.Attoparsec
 
 import Control.Arrow
 
@@ -40,9 +44,12 @@ data SaveType
         pbackgrounds :: [PLayer],
         physicsLayer :: [(Int, PObject)],
         pforegrounds :: [PLayer],
-        pCachedTiles :: Maybe [ShapeType]
+        pCachedTiles :: Maybe [ShapeType],
+        pMetaData :: JSONString
       }
   deriving (Show, Read)
+
+type JSONString = ByteString
 
 data PLayer
     = PLayer_1 {
@@ -63,9 +70,14 @@ data PObject
 
 -- * pickling
 
-pickle :: CachedTiles -> Grounds (EditorObject Sort_) -> SaveType
-pickle cachedTiles (Grounds bgs pl fgs) =
-    PGrounds_2 (pickleMultiLayers bgs) pickledPl (pickleMultiLayers fgs) cachedTiles
+pickle :: DiskLevel -> SaveType
+pickle (DiskLevel (Grounds bgs pl fgs) cachedTiles metaData) =
+    PGrounds_2
+        (pickleMultiLayers bgs)
+        pickledPl
+        (pickleMultiLayers fgs)
+        cachedTiles
+        (encode metaData)
   where
     pickledPl = map (\ k -> (index k, pickleObject ((pl ^. content) !!! k))) $
         keys (pl ^. content)
@@ -87,20 +99,30 @@ pickleObject (EditorObject sort pos oemState) =
 
 -- * unpickling
 
-unpickle :: [Sort_] -> SaveType -> Either [Prose] (Grounds (EditorObject Sort_), CachedTiles)
-unpickle allSorts (PGrounds_2 bgs pl fgs cachedTiles) = do
+-- | Levels to be saved and loaded to and from disk
+data DiskLevel
+    = DiskLevel
+        (Grounds (EditorObject Sort_))
+        CachedTiles
+        LevelMetaData
+
+unpickle :: [Sort_] -> SaveType -> Either [Prose] DiskLevel
+unpickle allSorts (PGrounds_2 bgs pl fgs cachedTiles metaDataJSON) = do
     grounds <- Grounds <$>
         unpickleMultiLayers allSorts bgs <*>
         unpicklePhysicsLayer allSorts pl <*>
         unpickleMultiLayers allSorts fgs
-    return (grounds, cachedTiles)
+    metaData <- mapLeft (\ msg -> [p "error while parsing level meta data:", pv msg]) $
+            decodeJSON metaDataJSON
+    return $ DiskLevel grounds cachedTiles metaData
 unpickle allSorts (PGrounds_1 bgs pl fgs) = do
     grounds <- Grounds <$>
         unpickleMultiLayers allSorts bgs <*>
         unpicklePhysicsLayer allSorts pl <*>
         unpickleMultiLayers allSorts fgs
     let cachedTiles = Nothing
-    return (grounds, cachedTiles)
+        metaData = emptyLevelMetaData
+    return $ DiskLevel grounds cachedTiles metaData
 
 -- | unpickle layers (without preserving indices)
 unpickleMultiLayers :: [Sort_] -> [PLayer] -> Either [Prose] (Indexable (Layer (EditorObject Sort_)))
