@@ -28,6 +28,12 @@ runAppState app (AppState renderable cmd) = do
     config <- get
     io $ setRenderable app config renderable
     cmd >>= runAppState app
+runAppState app (AppStateLooped renderable cmd) = do
+    io $ postGUI (window app) $ setRenderingLooped (window app) True
+    io $ postGUI (window app) $ setArrowAutoRepeat (window app) True
+    config <- get
+    io $ setRenderable app config renderable
+    cmd >>= runAppState app
 runAppState app (NoGUIAppState cmd) = do
     io $ postGUI (window app) $ setRenderingLooped (window app) False
     cmd >>= runAppState app

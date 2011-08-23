@@ -15,6 +15,9 @@ import Base.Renderable.CenterHorizontally
 import Base.Renderable.VBox
 import Base.Renderable.Spacer
 
+import Game.Scene
+import Game.BackgroundScene
+
 
 pauseMenu :: Application -> AppState -> Int -> AppState
 pauseMenu app follower = menuAppState app PauseMenu (Just follower) (
@@ -43,13 +46,18 @@ failureMenu app = menuAppState app FailureMenu Nothing (
     []) 0
 
 -- | show a textual message and wait for a keypress
-successMessage :: Application -> Score -> (Maybe Score, Record, Record) -> AppState
-successMessage app score (mHighScore, timeRecord, batteryRecord) = appState renderableInstance $ do
-    controls__ <- controls_ <$> getConfiguration
-    ignore $ waitForSpecialPressButton app (isMenuConfirmation controls__)
-    return FinalAppState
+successMessage :: Application -> RenderStateRefs -> GameState
+    -> Score -> (Maybe Score, Record, Record) -> AppState
+successMessage app sceneRenderState gameState score
+  (mHighScore, timeRecord, batteryRecord) =
+     AppStateLooped (renderable renderableInstance) $ do
+        startBackgroundThread app gameState (sceneMVar sceneRenderState) logic
   where
-    renderableInstance = MenuBackground |:>
+    logic :: ControlData -> Maybe AppState
+    logic cd = if not $ null $ pressed cd then Just FinalAppState else Nothing
+
+    renderableInstance =
+        sceneRenderState |:>
         addKeysHint (menuConfirmationKeysHint (Base.p "ok"))
             (centered $ vBox (length lines) $ fmap centerHorizontally lines)
     lines :: [RenderableInstance]

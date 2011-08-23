@@ -5,6 +5,7 @@ module Base.Types.Events where
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.Maybe
+import Data.Initial
 
 import Graphics.Qt
 
@@ -58,6 +59,9 @@ data ControlData = ControlData {
     held :: Set Button
   }
     deriving Show
+
+instance Initial ControlData where
+    initial = ControlData [] Set.empty
 
 -- | return all Pressed Buttons from the ControlData.
 pressed :: ControlData -> [Button]

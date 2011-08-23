@@ -3,7 +3,8 @@
 module Game.Scene (
     Scene,
     stepScene,
-    RenderState(..),
+    RenderStateRefs(..),
+    SceneMVar,
     mkRenderState,
     sceneImmutableCopy,
     renderScene,
@@ -236,23 +237,25 @@ updateScene controlsConfig cd scene = do
 -- * rendering
 
 -- | type for rendering the scene
-data RenderState
-    = RenderState {
-        sceneMVar :: MVar (Scene Object_, DebuggingCommand),
+data RenderStateRefs
+    = RenderStateRefs {
+        sceneMVar :: SceneMVar,
         cameraStateRef :: IORef CameraState,
         fpsRef :: FPSRef
     }
 
+type SceneMVar = MVar (Scene Object_, DebuggingCommand)
+
 -- | RenderScene (for the rendering thread)
 -- Gets created in the logic thread
-mkRenderState :: IORef CameraState -> Scene Object_ -> M RenderState
+mkRenderState :: IORef CameraState -> Scene Object_ -> M RenderStateRefs
 mkRenderState cameraStateRef scene = do
     let noop :: DebuggingCommand = const $ const $ return ()
     newScene <- io $ sceneImmutableCopy scene
     sceneMVar <- io $ newMVar (newScene, noop)
     fpsRef <- initialFPSRef
 
-    return $ RenderState sceneMVar cameraStateRef fpsRef
+    return $ RenderStateRefs sceneMVar cameraStateRef fpsRef
 
 sceneImmutableCopy :: Scene Object_ -> IO (Scene Object_)
 sceneImmutableCopy scene = do
@@ -263,9 +266,9 @@ sceneImmutableCopy scene = do
     acc = objects .> gameMainLayer
 
 -- let renderable_ = renderable (fpsRef, cameraStateRef :: IORef CameraState, sceneMVar :: MVar (RenderScene, DebuggingCommand))
-instance Renderable RenderState where
+instance Renderable RenderStateRefs where
     label = const "RenderScene"
-    render ptr app config size (RenderState sceneMVar cameraStateRef fpsRef) = do
+    render ptr app config size (RenderStateRefs sceneMVar cameraStateRef fpsRef) = do
         return $ tuple size $ do
             (scene, debugging) <- readMVar sceneMVar
             runStateTFromIORef cameraStateRef $

@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables #-}
+{-# language ScopedTypeVariables, NamedFieldPuns #-}
 
 -- | The (real) main (that is, entry-) module for the game
 
@@ -13,6 +13,7 @@ import Text.Logging
 
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
+
 import Clocked
 
 import Graphics.Qt
@@ -35,15 +36,17 @@ debugQtVersion = do
 gameAppState :: Application -> Bool -> GameState -> AppState
 gameAppState app editorTestMode initialState = NoGUIAppState $ do
     renderState <- mkRenderState (Base.cameraStateRef initialState) (scene initialState)
-    let sceneMVar_ = sceneMVar renderState
-    return $ GameAppState (renderable renderState) (gameLoop app editorTestMode sceneMVar_) initialState
+    return $ GameAppState
+        (renderable renderState)
+        (gameLoop app editorTestMode renderState)
+        initialState
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
 -- The returned AppState is somehow independent from the other AppState.
 -- Returns FinalState to return to the level selection.
-gameLoop :: Application -> Bool -> MVar (Scene Object_, DebuggingCommand) -> GameMonad AppState
-gameLoop app editorTestMode sceneMVar =
+gameLoop :: Application -> Bool -> RenderStateRefs -> GameMonad AppState
+gameLoop app editorTestMode rsr@RenderStateRefs{sceneMVar} =
     withTimer loopSuperStep
   where
     -- | loops to perform supersteps
@@ -75,15 +78,18 @@ gameLoop app editorTestMode sceneMVar =
 
         swapSceneMVar =<< io getDebugging
 
+        state <- get
+
         case sc' ^. mode of
             LevelFinished _ Failed ->
                 return $ Just $ failureMenu app
             LevelFinished score Passed ->
                 if editorTestMode then
-                    return $ Just $ successMessage app score (Nothing, NoNewRecord, NoNewRecord)
+                    return $ Just $ successMessage app rsr state score
+                                        (Nothing, NoNewRecord, NoNewRecord)
                   else do
                     records <- io $ saveScore (levelFile sc') score
-                    return $ Just $ successMessage app score records
+                    return $ Just $ successMessage app rsr state score records
             _ -> if isGameBackPressed (configuration ^. controls) controlData then 
                 if editorTestMode then
                     return $ Just FinalAppState
@@ -100,3 +106,4 @@ gameLoop app editorTestMode sceneMVar =
         immutableCopyOfScene <- io $ sceneImmutableCopy s
         io $ modifyMVar_ sceneMVar (const $ return (immutableCopyOfScene, debugging))
         return ()
+

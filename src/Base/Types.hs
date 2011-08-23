@@ -88,6 +88,7 @@ getMainMenu app = getMainMenu_ app app
 
 data AppState
     = AppState RenderableInstance (M AppState)
+    | AppStateLooped RenderableInstance (M AppState)
     | NoGUIAppState (M AppState)
     | GameAppState RenderableInstance (GameMonad AppState) GameState
     | UnManagedAppState (M AppState) -- manages rendering by itself
