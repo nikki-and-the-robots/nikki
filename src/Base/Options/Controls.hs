@@ -43,7 +43,7 @@ controlConfigurationMenu app ps parent = NoGUIAppState $ do
 
 configure :: Application -> Prose -> Accessor Controls Key -> (Int -> Parent) -> Int -> AppState
 configure app text keyAcc parent parentPreSelection = AppState (renderable widget) $ do
-    b <- waitForPressButton app
+    b <- waitForPressedButton app
     case b of
         (KeyboardButton Escape _) -> return $ parent parentPreSelection
         (KeyboardButton k _) -> do

@@ -24,7 +24,7 @@ import Base.Renderable.StickToBottom
 message :: Application -> [Prose] -> AppState -> AppState
 message app text follower = appState renderable $ do
     controls__ <- controls_ <$> getConfiguration
-    ignore $ waitForPressButton app
+    ignore $ waitForPressedButton app
     return follower
   where
     renderable = MenuBackground |:>

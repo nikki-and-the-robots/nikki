@@ -96,18 +96,22 @@ selectPrevious m@(Menu typ [] selected after scrolling) =
     items = selected : after
 selectPrevious (Menu t b s a sc) = Menu t (init b) (last b) (s : a) sc
 
+menuAppState :: Application -> MenuType -> Maybe AppState
+    -> [(Prose, Int -> AppState)] -> Int -> AppState
+menuAppState app = menuAppStateWithPoller app (waitForPressedButton app)
+
 -- | Creates a menu.
 -- If a title is given, it will be displayed. If not, the main menu will be assumed.
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
-menuAppState :: Application -> MenuType -> Maybe AppState
+menuAppStateWithPoller :: Application -> M Button -> MenuType -> Maybe AppState
     -> [(Prose, Int -> AppState)] -> Int -> AppState
-menuAppState app menuType mParent children preSelection = NoGUIAppState $ io $
+menuAppStateWithPoller app yourPoller menuType mParent children preSelection = NoGUIAppState $ io $
     inner <$> mkMenu menuType children preSelection
   where
     inner :: Menu -> AppState
     inner menu = appState menu $ do
-        e <- waitForPressButton app
+        e <- yourPoller
         controls__ <- gets controls_
         if isMenuUp controls__ e then do
             triggerSound $ menuSelectSound $ applicationSounds app

@@ -51,7 +51,7 @@ successMessage :: Application -> RenderStateRefs -> GameState
 successMessage app sceneRenderState gameState score
   (mHighScore, timeRecord, batteryRecord) =
      AppStateLooped (renderable renderableInstance) $ do
-        ignore $ BackgroundScene.waitForPressButton gameState (sceneMVar sceneRenderState) app
+        ignore $ BackgroundScene.waitForPressedButton app gameState (sceneMVar sceneRenderState)
         return FinalAppState
   where
     renderableInstance =
