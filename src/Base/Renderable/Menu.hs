@@ -2,6 +2,7 @@
 
 module Base.Renderable.Menu (
     menuAppState,
+    menuAppStateSpecialized,
     MenuType(..),
     treeToMenu,
   ) where
@@ -22,7 +23,6 @@ import Version
 
 import Base.Types hiding (selected)
 import Base.Pixmap
-import Base.Application
 import Base.Prose
 import Base.Font
 import Base.Monad
@@ -45,6 +45,7 @@ import Base.Renderable.Message
 
 data Menu
     = Menu {
+        menuBackgroundRenderable :: RenderableInstance,
         menuType :: MenuType,
         before :: [(Prose, AppState)],
         selected :: (Prose, AppState),
@@ -68,8 +69,8 @@ normalizeMenuType (NormalMenu t st) =
     nullToNothing Nothing = Nothing
 normalizeMenuType x = x
 
-mkMenu :: MenuType -> [(Prose, Int -> AppState)] -> Int -> IO Menu
-mkMenu menuType items =
+mkMenu :: RenderableInstance -> MenuType -> [(Prose, Int -> AppState)] -> Int -> IO Menu
+mkMenu background menuType items =
     inner $ zipWith (\ (label, appStateFun) n -> (capitalizeProse label, appStateFun n)) items [0..]
   where
     inner items n =
@@ -80,37 +81,44 @@ mkMenu menuType items =
           else do
             let (before, selected : after) = splitAt n items
             scrollingRef <- newMVar 0
-            return $ Menu (normalizeMenuType menuType) before selected after scrollingRef
+            return $ Menu background (normalizeMenuType menuType)
+                        before selected after scrollingRef
 
 selectNext :: Menu -> Menu
-selectNext (Menu t b s (a : r) sc) = Menu t (b +: s) a r sc
-selectNext m@(Menu typ before selected [] scrolling) =
-    Menu typ [] a r scrolling
+selectNext (Menu bg t b s (a : r) sc) = Menu bg t (b +: s) a r sc
+selectNext m@(Menu bg typ before selected [] scrolling) =
+    Menu bg typ [] a r scrolling
   where
     (a : r) = before +: selected
 
 selectPrevious :: Menu -> Menu
-selectPrevious m@(Menu typ [] selected after scrolling) =
-    Menu typ (init items) (last items) [] scrolling
+selectPrevious m@(Menu bg typ [] selected after scrolling) =
+    Menu bg typ (init items) (last items) [] scrolling
   where
     items = selected : after
-selectPrevious (Menu t b s a sc) = Menu t (init b) (last b) (s : a) sc
+selectPrevious (Menu bg t b s a sc) = Menu bg t (init b) (last b) (s : a) sc
 
 menuAppState :: Application -> MenuType -> Maybe AppState
     -> [(Prose, Int -> AppState)] -> Int -> AppState
-menuAppState app = menuAppStateWithPoller app (waitForPressedButton app)
+menuAppState app =
+    menuAppStateSpecialized app
+    (waitForPressedButton app)
+    (renderable MenuBackground)
+    AppState
 
 -- | Creates a menu.
 -- If a title is given, it will be displayed. If not, the main menu will be assumed.
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
-menuAppStateWithPoller :: Application -> M Button -> MenuType -> Maybe AppState
-    -> [(Prose, Int -> AppState)] -> Int -> AppState
-menuAppStateWithPoller app yourPoller menuType mParent children preSelection = NoGUIAppState $ io $
-    inner <$> mkMenu menuType children preSelection
+menuAppStateSpecialized :: Application
+    -> M Button -> RenderableInstance -> (RenderableInstance -> M AppState -> AppState)
+    -> MenuType -> Maybe AppState -> [(Prose, Int -> AppState)] -> Int -> AppState
+menuAppStateSpecialized app yourPoller background appStateCons menuType mParent children preSelection =
+    NoGUIAppState $ io $
+        inner <$> mkMenu background menuType children preSelection
   where
     inner :: Menu -> AppState
-    inner menu = appState menu $ do
+    inner menu = appStateCons (renderable menu) $ do
         e <- yourPoller
         controls__ <- gets controls_
         if isMenuUp controls__ e then do
@@ -167,7 +175,7 @@ instance Renderable Menu where
         case menuType menu of
             MainMenu -> render ptr app config parentSize
                 -- main menu
-                (MenuBackground |:>
+                (menuBackgroundRenderable menu |:>
                 (addKeysHint (menuKeysHint False) $
                  centered $ vBox (length menuHeader + 2) $ addFrame $ fmap centerHorizontally lines))
               where
@@ -179,7 +187,7 @@ instance Renderable Menu where
                 mainMenuPixmap = renderable $ menuTitlePixmap $ applicationPixmaps app
             NormalMenu title subtitle -> render ptr app config parentSize
                 -- normal menu
-                (MenuBackground |:>
+                (menuBackgroundRenderable menu |:>
                 (addKeysHint (menuKeysHint True) $
                  centered $ vBox (length menuHeader + 2) $
                     addFrame $ fmap centerHorizontally lines))
@@ -194,7 +202,7 @@ instance Renderable Menu where
             FailureMenu -> pixmapGameMenu scroll failurePixmap
       where
         pixmapGameMenu scroll selector = render ptr app config parentSize
-                (MenuBackground |:>
+                (menuBackgroundRenderable menu |:>
                  (addKeysHint (menuKeysHint True) $
                  centered $ vBox 4 $ addFrame $ fmap centerHorizontally lines))
               where
@@ -203,7 +211,7 @@ instance Renderable Menu where
 
 -- | return the items (entries) of the menu
 toLines :: Menu -> [RenderableInstance]
-toLines (Menu _ before selected after _) = fmap renderable $
+toLines (Menu _ _ before selected after _) = fmap renderable $
     map fst before ++
     (colorizeProse white $ proseSelect $ fst selected) :
     map fst after
