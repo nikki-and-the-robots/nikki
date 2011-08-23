@@ -47,7 +47,9 @@ sorts =
         boxOffPix <- mkPath "switch-standard-off" >>= loadSymmetricPixmap (Position 1 1)
         boxOnPix <- mkPath "switch-standard-on" >>= loadSymmetricPixmap (Position 1 1)
         stampPix <- mkPath "switch-platform" >>= loadSymmetricPixmap (Position 1 1)
-        return $ Sort_ $ SwitchSort boxOffPix boxOnPix stampPix transient
+        onSound <- loadSound "game/switch_on" 2
+        offSound <- loadSound "game/switch_off" 2
+        return $ Sort_ $ SwitchSort boxOffPix boxOnPix stampPix onSound offSound transient
 
 mkPath :: String -> RM FilePath
 mkPath name = getDataFileName (pngDir </> "objects" </> name <.> "png")
@@ -58,6 +60,8 @@ data SwitchSort
         boxOffPix :: Pixmap,
         boxOnPix :: Pixmap,
         stampPix :: Pixmap,
+        onSound :: PolySound,
+        offSound :: PolySound,
         transientSort :: Bool
       }
   deriving (Typeable, Show)
@@ -101,8 +105,9 @@ instance Sort SwitchSort Switch where
             SortId "switch/levelExit"
           else
             SortId "switch/levelExitTransient"
-    freeSort (SwitchSort a b c _) =
-        fmapM_ freePixmap (a : b : c : [])
+    freeSort (SwitchSort a b c d e _) =
+        fmapM_ freePixmap (a : b : c : []) >>
+        fmapM_ freePolySound (d : e : [])
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
                 +~ fmap ((* 2) . abs) (vector2size editorPadding)
 
@@ -158,13 +163,17 @@ instance Sort SwitchSort Switch where
     update _ _ _ _ _ _ _ switch@StaticSwitch{} = return (id, switch)
     update sort controls scene now contacts cd index switch@Switch{transient = True} = do
         let new = switch{triggered_ = triggerShape switch `member` triggers contacts}
-            sceneMod = case (triggered_ switch, triggered_ new) of
-                (False, True) -> switches ^: first succ
-                (True, False) -> switches ^: first pred
-                _ -> id
+            (sceneMod, mSound) = case (triggered_ switch, triggered_ new) of
+                (False, True) -> (switches ^: first succ, Just onSound)
+                (True, False) -> (switches ^: first pred, Just offSound)
+                _ -> (id, Nothing)
+        whenMaybe mSound $ \ sound ->
+            triggerSound $ sound sort
         return (sceneMod, new)
     update sort controls scene now contacts cd index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
+            -- triggered
+            triggerSound $ onSound sort
             let new = switch{triggered_ = True}
             updateAntiGravity new
             return (switches ^: (first succ), new)
