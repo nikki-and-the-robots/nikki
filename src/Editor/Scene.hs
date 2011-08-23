@@ -64,7 +64,7 @@ updateSelected s = s{selected = searchSelectedObject s}
 -- | the initial editor scene
 initEditorScene :: SelectTree Sort_ -> LevelFile
     -> DiskLevel -> IO (EditorScene Sort_)
-initEditorScene sorts editorLevelFile (DiskLevel objects cachedTiles metaData) =
+initEditorScene sorts editorLevelFile (DiskLevel objects cachedTiles) =
   flip evalStateT empty $ do
     pixmap <- get
     return $ updateSelected EditorScene{

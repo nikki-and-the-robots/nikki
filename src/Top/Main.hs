@@ -254,10 +254,10 @@ selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
 
 
 play :: Application -> Parent -> LevelFile -> AppState
-play app parent levelUID = loadingEditorScene app levelUID parent (playLevel app parent False)
+play app parent levelFile = loadingEditorScene app levelFile parent (playLevel app parent False)
 
 edit :: Application -> Parent -> LevelFile -> AppState
-edit app parent levelUID = loadingEditorScene app levelUID parent (editLevel app)
+edit app parent levelFile = loadingEditorScene app levelFile parent (editLevel app)
 
 -- | load a level, got to playing state afterwards
 -- This AppState is a hack to do things from the logic thread 
@@ -268,9 +268,9 @@ loadingEditorScene app file abortion follower =
     appState (busyMessage $ p "loading...") $ io $ do
         eGrounds <- runErrorT $ loadByFilePath (leafs $ allSorts app) (levelFilePath file)
         case eGrounds of
-            Right (metaData, diskLevel) -> do
+            Right diskLevel -> do
                 -- level successfully loaded
-                editorScene <- initEditorScene (allSorts app) file metaData diskLevel
+                editorScene <- initEditorScene (allSorts app) file diskLevel
                 return $ follower editorScene
             Left errMsg -> do
                 return $ message app errMsg abortion

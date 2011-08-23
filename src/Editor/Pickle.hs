@@ -70,15 +70,13 @@ instance ErrorList Prose where
     listMsg = error "Editor.Pickle.listMsg"
 
 loadByFilePath :: [Sort_] -> FilePath
-    -> ErrorT [Prose] IO (LevelMetaData, DiskLevel)
+    -> ErrorT [Prose] IO DiskLevel
 loadByFilePath allSorts path = do
     exists <- io $ doesFileExist path
     when (not exists) $
         throwError (p "file not found:" : pv path : [])
     x <- parseSaved path
-    unpickled <- ErrorT $ return $ unpickle allSorts x
-    meta <- io $ loadMetaData path
-    return (meta, unpickled)
+    ErrorT $ return $ unpickle allSorts x
 
 
 -- * saving
