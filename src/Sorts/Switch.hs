@@ -43,13 +43,22 @@ sorts =
     mapM mkSort (False : True : [])
   where
     mkSort :: Bool -> RM Sort_
-    mkSort transient = do
-        boxOffPix <- mkPath "switch-standard-off" >>= loadSymmetricPixmap (Position 1 1)
-        boxOnPix <- mkPath "switch-standard-on" >>= loadSymmetricPixmap (Position 1 1)
-        stampPix <- mkPath "switch-platform" >>= loadSymmetricPixmap (Position 1 1)
-        onSound <- loadSound "game/switch_on" 2
-        offSound <- loadSound "game/switch_off" 2
-        return $ Sort_ $ SwitchSort boxOffPix boxOnPix stampPix onSound offSound transient
+    mkSort transient =
+        Sort_ <$> (SwitchSort <$>
+            loadPix 0 "switch-standard-base" <*>
+            loadPix 0 "switch-transient-base" <*>
+            loadPix 0 "switch-standard-top" <*>
+            loadPix 0 "switch-transient-top" <*>
+            loadPix 2 "switch-light-white" <*>
+            loadPix 2 "switch-light-green" <*>
+
+            loadSound "game/switch_on" 2 <*>
+            loadSound "game/switch_off" 2 <*>
+            pure transient)
+    loadPix offsetUberPixel name =
+        mkPath name >>=
+        loadSymmetricPixmap (Position 1 1 +~
+            fmap fromUber (Position offsetUberPixel offsetUberPixel))
 
 mkPath :: String -> RM FilePath
 mkPath name = getDataFileName (pngDir </> "objects" </> name <.> "png")
@@ -57,18 +66,25 @@ mkPath name = getDataFileName (pngDir </> "objects" </> name <.> "png")
 
 data SwitchSort
     = SwitchSort {
-        boxOffPix :: Pixmap,
-        boxOnPix :: Pixmap,
-        stampPix :: Pixmap,
+        standardBox :: Pixmap,
+        transientBox :: Pixmap,
+        standardStamp :: Pixmap,
+        transientStamp :: Pixmap,
+        whiteLight :: Pixmap,
+        greenLight :: Pixmap,
+
         onSound :: PolySound,
         offSound :: PolySound,
-        transientSort :: Bool
+
+        transient :: Bool
       }
   deriving (Typeable, Show)
 
+getBoxPix sort = if transient sort then transientBox sort else standardBox sort
+getStampPix sort = if transient sort then transientStamp sort else standardStamp sort
+
 data Switch
     = Switch {
-        transient :: Bool,
         boxChipmunk :: Chipmunk,
         stampChipmunk :: Chipmunk,
         triggerChipmunk :: Chipmunk,
@@ -100,22 +116,22 @@ countSwitches = I.length . I.filter (isSwitch . sort_)
 editorPadding = Vector (fromUber 1) (- fromUber 1)
 
 instance Sort SwitchSort Switch where
-    sortId SwitchSort{transientSort} =
-        if not transientSort then
+    sortId SwitchSort{transient} =
+        if not transient then
             SortId "switch/levelExit"
           else
             SortId "switch/levelExitTransient"
-    freeSort (SwitchSort a b c d e _) =
-        fmapM_ freePixmap (a : b : c : []) >>
-        fmapM_ freePolySound (d : e : [])
+    freeSort (SwitchSort a b c d e f g h _) =
+        fmapM_ freePixmap (a : b : c : d : e : f : []) >>
+        fmapM_ freePolySound (g : h : [])
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
                 +~ fmap ((* 2) . abs) (vector2size editorPadding)
 
     renderIconified sort ptr = do
         translate ptr $ fmap abs $ vector2position editorPadding
-        renderPixmapSimple ptr (stampPix sort)
+        renderPixmapSimple ptr (getStampPix sort)
         translate ptr (Position 0 (fromUber 7))
-        renderPixmapSimple ptr (boxOffPix sort)
+        renderPixmapSimple ptr (getBoxPix sort)
 
     initialize app (Just space) sort ep Nothing _ = io $ do
         let ex = realToFrac (editorX ep) + vectorX editorPadding
@@ -135,9 +151,8 @@ instance Sort SwitchSort Switch where
             stampAttributes = stampBodyAttributes stampPos
         stampChip <- initChipmunk space stampAttributes stampShapes stampBaryCenterOffset
 
-        let switch = Switch (transientSort sort)
-                        boxChip stampChip triggerChip triggerShape False
-        updateAntiGravity switch
+        let switch = Switch boxChip stampChip triggerChip triggerShape False
+        updateAntiGravity sort switch
 
         return switch
     initialize app Nothing sort ep Nothing _ = do
@@ -158,10 +173,10 @@ instance Sort SwitchSort Switch where
         newStampChipmunk <- CM.immutableCopy stampChipmunk
         return s{boxChipmunk = newBoxChipmunk, stampChipmunk = newStampChipmunk}
 
-    chipmunks (Switch _ a b c _ _) = [a, b, c]
+    chipmunks (Switch a b c _ _) = [a, b, c]
 
     update _ _ _ _ _ _ _ switch@StaticSwitch{} = return (id, switch)
-    update sort controls scene now contacts cd index switch@Switch{transient = True} = do
+    update sort@SwitchSort{transient = True} controls scene now contacts cd index switch = do
         let new = switch{triggered_ = triggerShape switch `member` triggers contacts}
             (sceneMod, mSound) = case (triggered_ switch, triggered_ new) of
                 (False, True) -> (switches ^: first succ, Just onSound)
@@ -175,7 +190,7 @@ instance Sort SwitchSort Switch where
             -- triggered
             triggerSound $ onSound sort
             let new = switch{triggered_ = True}
-            updateAntiGravity new
+            updateAntiGravity sort new
             return (switches ^: (first succ), new)
           else
             return (id, switch)
@@ -183,11 +198,16 @@ instance Sort SwitchSort Switch where
 
     renderObject _ _ switch sort _ _ now = do
         (stampPos, stampAngle) <- getRenderPositionAndAngle (stampChipmunk switch)
-        let stamp = RenderPixmap (stampPix sort) stampPos (Just stampAngle)
-            boxPix = if triggered switch then boxOnPix sort else boxOffPix sort
         boxPos <- fst <$> getRenderPositionAndAngle (boxChipmunk switch)
-        let box = RenderPixmap boxPix boxPos Nothing
-        return (stamp : box : [])
+        let stamp = RenderPixmap (getStampPix sort) stampPos (Just stampAngle)
+            box = RenderPixmap (getBoxPix sort) boxPos Nothing
+            light = if triggered switch
+                then [RenderPixmap (whiteLight sort) (boxPos +~ lightOffset) Nothing]
+                else []
+        return (stamp : box : light ++ [])
+
+lightOffset :: Qt.Position Double
+lightOffset = fmap fromUber $ Position 19 5
 
 
 boxAttributes :: Vector -> BodyAttributes
@@ -328,13 +348,13 @@ boxUpper = - boxLower
 -- * Physics
 
 -- | switches the anti-gravity on or off that pushes the switch stamp up.
-updateAntiGravity :: Switch -> IO ()
-updateAntiGravity switch = do
+updateAntiGravity :: SwitchSort -> Switch -> IO ()
+updateAntiGravity sort switch = do
     stampMass <- getMass $ stampChipmunk switch
     applyOnlyForce (body $ stampChipmunk switch) (force stampMass) zero
   where
     force stampMass =
-        if (not $ triggered switch) || transient switch then
+        if (not $ triggered switch) || transient sort then
             (Vector 0 (- (gravity * (stampMass + nikkiMass * 0.4))))
         else
             zero
