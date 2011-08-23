@@ -160,7 +160,7 @@ data Scene object
         objects_ :: GameGrounds object,
         lowerLimit_ :: Maybe CpFloat,
         batteryPower_ :: !Integer, -- makes it possible to have REALLY BIG amounts of power :)
-        switches_ :: !(Int, Int),
+        switches_ :: !(Pair Int Int),
         contactRef :: !(ContactRef Contacts),
         contacts_ :: !Contacts,
         mode_ :: Mode
@@ -180,7 +180,7 @@ lowerLimit = accessor lowerLimit_ (\ a r -> r{lowerLimit_ = a})
 batteryPower :: Accessor (Scene o) Integer
 batteryPower = accessor batteryPower_ (\ a r -> r{batteryPower_ = a})
 
-switches :: Accessor (Scene o) (Int, Int)
+switches :: Accessor (Scene o) (Pair Int Int)
 switches = accessor switches_ (\ a r -> r{switches_ = a})
 
 contacts :: Accessor (Scene o) Contacts

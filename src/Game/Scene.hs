@@ -179,7 +179,7 @@ levelPassed scene =
         Nothing
   where
     allTriggered = pressed >= total && total > 0
-    (pressed, total) = scene ^. switches
+    (pressed :!: total) = scene ^. switches
     now = scene ^. spaceTime
     batteries = scene ^. batteryPower
 
@@ -379,7 +379,7 @@ renderGameTime ptr app configuration windowSize now = do
         Position ((width windowSize - width osdSize) / 2) osdPadding
 
 renderSwitchesOSD ptr app configuration windowSize scene = do
-    let (pressed, total) = scene ^. switches
+    let (pressed :!: total) = scene ^. switches
         text = pv $ printf (switchChar : zeroSpaceChar : "%02i/%02i") pressed total
     renderOSD ptr app configuration windowSize text $
         const $ Position osdPadding osdPadding

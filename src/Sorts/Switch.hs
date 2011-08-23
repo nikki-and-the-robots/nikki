@@ -15,8 +15,6 @@ import Data.Abelian
 import Data.Set (member)
 import qualified Data.Indexable as I
 
-import Control.Arrow
-
 import System.FilePath
 
 import Physics.Chipmunk as CM
@@ -179,8 +177,8 @@ instance Sort SwitchSort Switch where
     update sort@SwitchSort{transient = True} controls scene now contacts cd index switch = do
         let new = switch{triggered_ = triggerShape switch `member` triggers contacts}
             (sceneMod, mSound) = case (triggered_ switch, triggered_ new) of
-                (False, True) -> (switches ^: first succ, Just onSound)
-                (True, False) -> (switches ^: first pred, Just offSound)
+                (False, True) -> (switches ^: firstStrict succ, Just onSound)
+                (True, False) -> (switches ^: firstStrict pred, Just offSound)
                 _ -> (id, Nothing)
         whenMaybe mSound $ \ sound ->
             triggerSound $ sound sort
@@ -191,7 +189,7 @@ instance Sort SwitchSort Switch where
             triggerSound $ onSound sort
             let new = switch{triggered_ = True}
             updateAntiGravity sort new
-            return (switches ^: (first succ), new)
+            return (switches ^: firstStrict succ, new)
           else
             return (id, switch)
     update s _ _ _ _ _ _ o = return (id, o)

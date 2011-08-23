@@ -9,7 +9,6 @@ import Data.List (sortBy)
 import Data.Maybe
 import Data.Directions
 import qualified Data.Strict as Strict
-import Data.Strict (Pair(..))
 import Data.Convertable
 import Data.Initial
 

@@ -11,7 +11,6 @@ import Data.Initial
 import Data.Abelian
 import Data.Directions
 import qualified Data.Strict as Strict
-import Data.Strict (Pair(..))
 import Data.Accessor
 
 import Graphics.Qt as Qt hiding (rotate, scale)

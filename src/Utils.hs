@@ -25,6 +25,7 @@ module Utils (
 
     -- * other exports
     on,
+    Pair(..),
   ) where
 
 -- imports
@@ -607,7 +608,7 @@ ppp :: PP p => p -> IO ()
 ppp = pp >>> logg Info
 
 
--- misc instances
+-- misc
 
 instance Applicative Strict.Maybe where
     pure = Strict.Just
@@ -618,3 +619,6 @@ instance Alternative Strict.Maybe where
     empty = Strict.Nothing
     Strict.Nothing <|> x = x
     (Strict.Just x) <|> _ = Strict.Just x
+
+firstStrict :: (a -> b) -> (Pair a c) -> (Pair b c)
+firstStrict f (a :!: c) = f a :!: c
