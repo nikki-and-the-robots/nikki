@@ -82,7 +82,7 @@ gameLoop app editorTestMode rsr@RenderStateRefs{sceneMVar} =
 
         case sc' ^. mode of
             LevelFinished _ Failed ->
-                return $ Just $ failureMenu app
+                return $ Just $ failureMenu app rsr state
             LevelFinished score Passed ->
                 if editorTestMode then
                     return $ Just $ successMessage app rsr state score

@@ -38,12 +38,20 @@ playHelp app parent = NoGUIAppState $ do
     text <- io $ pFile file
     return $ scrollingAppState app text parent
 
-failureMenu :: Application -> AppState
-failureMenu app = menuAppState app FailureMenu Nothing (
+failureMenu :: Application -> RenderStateRefs -> GameState
+    -> AppState
+failureMenu app sceneRenderState gameState =
+    menuAppStateSpecialized app poller (renderable backGround) AppStateLooped
+    FailureMenu Nothing (
 --     (p "rewind to last savepoint", todo) :
 --     (p "retry from beginning", todo) :
-    (p "quit level", const FinalAppState) :
-    []) 0
+        (p "quit level", const FinalAppState) :
+        []) 0
+  where
+    poller = BackgroundScene.waitForPressedButton app gameState (sceneMVar sceneRenderState)
+    backGround =
+        sceneRenderState |:>
+        MenuBackgroundTransparent
 
 -- | show a textual message and wait for a keypress
 successMessage :: Application -> RenderStateRefs -> GameState
