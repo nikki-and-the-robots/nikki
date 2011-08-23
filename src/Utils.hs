@@ -77,7 +77,9 @@ tweakValue :: Read a => FilePath -> a
 tweakValue file = System.IO.Unsafe.unsafePerformIO $ do
     value <- readFile file
     logg Info (file ++ " = " ++ value)
-    return $ read value
+    return $ case readMay value of
+        Nothing -> error ("cannot read: " ++ value)
+        Just x -> x
 {-# noinline tweakValue #-}
 
 -- | prints debug messages (as unsafe side effects)
