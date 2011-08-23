@@ -29,18 +29,21 @@ withApplicationPixmaps cmd =
     bracket load (io . free) cmd
 
 load :: RM ApplicationPixmaps
-load = do
-    menubackgrounds <- mapM (loadSymmetricPixmap zero) =<<
-            getDataFiles (osdDir </> "background") (Just ".png")
-    alphaNumericFont <- loadAlphaNumericFont
-    digitFont <- loadDigitFont
-    headerCubePixmaps <- loadHeaderCubePixmaps
-    menuTitlePixmap <- loadOsd (Position 32 32) (Size 772 268) "menuTitle"
-    pausePixmap <- loadOsd (Position 32 32) (Size 472 88) "pause"
-    successPixmap <- loadOsd (Position 32 32) (Size 664 88) "success"
-    failurePixmap <- loadOsd (Position 32 32) (Size 600 88) "failure"
-    return $ ApplicationPixmaps menubackgrounds alphaNumericFont digitFont headerCubePixmaps
-        menuTitlePixmap pausePixmap successPixmap failurePixmap
+load =
+    ApplicationPixmaps <$>
+        (loadBackground "background") <*>
+        (loadBackground "backgroundOverlay") <*>
+        loadAlphaNumericFont <*>
+        loadDigitFont <*>
+        loadHeaderCubePixmaps <*>
+        (loadOsd (Position 32 32) (Size 772 268) "menuTitle") <*>
+        (loadOsd (Position 32 32) (Size 472 88) "pause") <*>
+        (loadOsd (Position 32 32) (Size 664 88) "success") <*>
+        (loadOsd (Position 32 32) (Size 600 88) "failure")
+
+loadBackground name =
+    mapM (loadSymmetricPixmap zero) =<<
+        getDataFiles (osdDir </> name) (Just ".png")
 
 loadHeaderCubePixmaps :: RM HeaderCubePixmaps
 loadHeaderCubePixmaps = do
@@ -56,9 +59,11 @@ loadOsd offset size name = io . loadPixmap offset size =<< getDataFileName (osdD
 osdDir = pngDir </> "osd"
 
 free :: ApplicationPixmaps -> IO ()
-free (ApplicationPixmaps menuBackgrounds alphaFont digitFont cubePixmaps
+free (ApplicationPixmaps menuBackground menuBackgroundTransparent
+  alphaFont digitFont cubePixmaps
   menuTitle pause success failure) = do
-    fmapM_ freePixmap menuBackgrounds
+    fmapM_ freePixmap menuBackground
+    fmapM_ freePixmap menuBackgroundTransparent
     freeFont alphaFont
     freeFont digitFont
     freeHeaderCubePixmaps cubePixmaps

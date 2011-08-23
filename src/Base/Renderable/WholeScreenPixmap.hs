@@ -40,6 +40,7 @@ renderWholeScreenPixmap ptr size pixmaps = do
 
 data WholeScreenPixmap
     = MenuBackground
+    | MenuBackgroundTransparent
   deriving Show
 
 instance Renderable WholeScreenPixmap where
@@ -48,4 +49,7 @@ instance Renderable WholeScreenPixmap where
     label = show
 
 typPixmaps :: Application -> WholeScreenPixmap -> [Pixmap]
-typPixmaps app MenuBackground = menuBackgrounds $ applicationPixmaps app
+typPixmaps app MenuBackground =
+    menuBackground $ applicationPixmaps app
+typPixmaps app MenuBackgroundTransparent =
+    menuBackgroundTransparent $ applicationPixmaps app

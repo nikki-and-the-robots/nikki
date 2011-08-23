@@ -98,7 +98,8 @@ type Parent = AppState
 
 
 data ApplicationPixmaps = ApplicationPixmaps {
-    menuBackgrounds :: [Pixmap],
+    menuBackground :: [Pixmap],
+    menuBackgroundTransparent :: [Pixmap],
     alphaNumericFont :: Font,
     pixmapsDigitFont :: Font,
     headerCubePixmaps :: HeaderCubePixmaps,

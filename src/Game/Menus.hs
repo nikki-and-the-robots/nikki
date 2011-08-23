@@ -58,6 +58,7 @@ successMessage app sceneRenderState gameState score
 
     renderableInstance =
         sceneRenderState |:>
+        MenuBackgroundTransparent |:>
         addKeysHint (menuConfirmationKeysHint (Base.p "ok"))
             (centered $ vBox (length lines) $ fmap centerHorizontally lines)
     lines :: [RenderableInstance]
