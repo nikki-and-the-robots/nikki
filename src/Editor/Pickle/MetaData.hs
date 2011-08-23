@@ -42,6 +42,7 @@ loadMetaData levelFile = do
 guessName :: FilePath -> LevelMetaData -> LevelMetaData
 guessName levelFile (LevelMetaData Nothing author) =
     LevelMetaData (Just (takeBaseName levelFile)) author
+guessName levelFile x = x
 
 saveMetaData :: FilePath -> LevelMetaData -> IO ()
 saveMetaData file meta = BSL.writeFile (metaFile file) (encode meta)
