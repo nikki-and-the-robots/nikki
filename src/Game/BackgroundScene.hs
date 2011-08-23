@@ -20,22 +20,22 @@ import Game.Scene
 
 
 -- | advances the scene until the given action returns a result
-startBackgroundThread :: forall a . Application -> GameState -> SceneMVar
-    -> (ControlData -> Maybe a)
-    -> M a
-startBackgroundThread app gameState sceneMVar logic =
+waitForPressButton :: forall a . GameState -> SceneMVar ->
+    (Application -> M Button)
+waitForPressButton gameState sceneMVar app =
     flip evalStateT gameState $ withTimer loopSuperStep
   where
     -- | loops to perform supersteps
-    loopSuperStep :: Timer -> GameMonad a
+    loopSuperStep :: Timer -> GameMonad Button
     loopSuperStep timer = do
         performSubSteps timer subStepsPerSuperStep
-        controlData <- lift $ pollAppEvents app
-        case logic controlData of
-            Nothing -> do
+        mEvent <- lift $ nextAppEvent app
+        let continue = do
                 io $ waitTimer timer (realToFrac (superStepQuantum / timeFactor))
                 loopSuperStep timer
-            Just x -> return x
+        case mEvent of
+            Just (Press b) -> return b
+            _ -> continue
 
     -- | performs n substeps. Aborts in case of level end. Returns (Just AppState) in
     -- that case. Nothing means, the game should continue.

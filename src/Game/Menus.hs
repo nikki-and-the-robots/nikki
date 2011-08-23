@@ -16,7 +16,7 @@ import Base.Renderable.VBox
 import Base.Renderable.Spacer
 
 import Game.Scene
-import Game.BackgroundScene
+import Game.BackgroundScene as BackgroundScene
 
 
 pauseMenu :: Application -> AppState -> Int -> AppState
@@ -51,11 +51,9 @@ successMessage :: Application -> RenderStateRefs -> GameState
 successMessage app sceneRenderState gameState score
   (mHighScore, timeRecord, batteryRecord) =
      AppStateLooped (renderable renderableInstance) $ do
-        startBackgroundThread app gameState (sceneMVar sceneRenderState) logic
+        ignore $ BackgroundScene.waitForPressButton gameState (sceneMVar sceneRenderState) app
+        return FinalAppState
   where
-    logic :: ControlData -> Maybe AppState
-    logic cd = if not $ null $ pressed cd then Just FinalAppState else Nothing
-
     renderableInstance =
         sceneRenderState |:>
         MenuBackgroundTransparent |:>

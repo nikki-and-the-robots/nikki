@@ -61,6 +61,16 @@ waitForAppEvent app = do
             io $ threadDelay (round (0.01 * 10 ^ 6))
             waitForAppEvent app
 
+-- | returns the next AppEvent, if it was already received
+nextAppEvent :: Application -> M (Maybe AppEvent)
+nextAppEvent app = do
+    ControlData events _ <- pollAppEvents app
+    case events of
+        (a : r) -> io $ do
+            unpollAppEvents r
+            return $ Just a
+        [] -> return Nothing
+
 updateKeyState :: AppEvent -> Set Button -> Set Button
 updateKeyState (Press   k) = insert k
 updateKeyState (Release k) = delete k
