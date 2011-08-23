@@ -5,6 +5,7 @@ module Text.Logging (LogLevel(..), logg) where
 
 
 import Control.Monad
+import Control.Monad.IO.Class
 
 import System.Info
 import System.FilePath
@@ -20,9 +21,9 @@ printLogLevel = Info
 
 -- | Logs a message with the given log level.
 -- Prints to stdout on unix, uses a logFile on windows.
-logg :: LogLevel -> String -> IO ()
+logg :: (MonadIO m) => LogLevel -> String -> m ()
 logg ll msg =
-    when (ll >= printLogLevel) $
+    liftIO $ when (ll >= printLogLevel) $
     inner $ mkMsg ll msg
   where
     inner = case System.Info.os of
