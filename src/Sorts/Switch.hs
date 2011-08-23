@@ -33,6 +33,8 @@ import Sorts.Nikki (nikkiMass)
 
 stampMaterialMass = 1.7677053824362605
 
+greenLightBlinkTime :: Seconds = 1
+
 
 -- * loading
 
@@ -87,7 +89,8 @@ data Switch
         stampChipmunk :: Chipmunk,
         triggerChipmunk :: Chipmunk,
         triggerShape :: Shape,
-        triggered_ :: Bool
+        triggered_ :: Bool,
+        lastSwitch :: Maybe Seconds
       }
     | StaticSwitch {
         boxChipmunk :: Chipmunk,
@@ -149,7 +152,7 @@ instance Sort SwitchSort Switch where
             stampAttributes = stampBodyAttributes stampPos
         stampChip <- initChipmunk space stampAttributes stampShapes stampBaryCenterOffset
 
-        let switch = Switch boxChip stampChip triggerChip triggerShape False
+        let switch = Switch boxChip stampChip triggerChip triggerShape False Nothing
         updateAntiGravity sort switch
 
         return switch
@@ -171,7 +174,7 @@ instance Sort SwitchSort Switch where
         newStampChipmunk <- CM.immutableCopy stampChipmunk
         return s{boxChipmunk = newBoxChipmunk, stampChipmunk = newStampChipmunk}
 
-    chipmunks (Switch a b c _ _) = [a, b, c]
+    chipmunks (Switch a b c _ _ _) = [a, b, c]
 
     update _ _ _ _ _ _ _ switch@StaticSwitch{} = return (id, switch)
     update sort@SwitchSort{transient = True} controls scene now contacts cd index switch = do
@@ -182,7 +185,7 @@ instance Sort SwitchSort Switch where
                 _ -> (id, Nothing)
         whenMaybe mSound $ \ sound ->
             triggerSound $ sound sort
-        return (sceneMod, new)
+        return (sceneMod, updateIfLast (sceneMod scene) now new)
     update sort controls scene now contacts cd index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
             -- triggered
@@ -191,7 +194,7 @@ instance Sort SwitchSort Switch where
             updateAntiGravity sort new
             return (switches ^: firstStrict succ, new)
           else
-            return (id, switch)
+            return (id, updateIfLast scene now switch)
     update s _ _ _ _ _ _ o = return (id, o)
 
     renderObject _ _ switch sort _ _ now = do
@@ -201,11 +204,21 @@ instance Sort SwitchSort Switch where
             box = RenderPixmap (getBoxPix sort) boxPos Nothing
             light = if triggered switch
                 then [RenderPixmap (whiteLight sort) (boxPos +~ lightOffset) Nothing]
-                else []
+                else renderGreenLight now sort switch (boxPos +~ lightOffset)
         return (stamp : box : light ++ [])
 
 lightOffset :: Qt.Position Double
 lightOffset = fmap fromUber $ Position 19 5
+
+renderGreenLight :: Seconds -> SwitchSort -> Switch -> Qt.Position Double
+    -> [RenderPixmap]
+renderGreenLight now sort switch lightPosition =
+    case lastSwitch switch of
+        Nothing -> []
+        Just since -> pickAnimationFrame
+            [[RenderPixmap (greenLight sort) lightPosition Nothing], []]
+            [greenLightBlinkTime]
+            (now - since)
 
 
 boxAttributes :: Vector -> BodyAttributes
@@ -356,3 +369,16 @@ updateAntiGravity sort switch = do
             (Vector 0 (- (gravity * (stampMass + nikkiMass * 0.4))))
         else
             zero
+
+
+-- * logic
+
+updateIfLast :: Scene Object_ -> Seconds -> Switch -> Switch
+updateIfLast _ _ s@StaticSwitch{} = s
+updateIfLast scene now s@Switch{lastSwitch} =
+    let (down :!: total) = scene ^. switches
+        isLastSwitch = succ down == total
+    in case (isLastSwitch, lastSwitch) of
+        (True, Nothing) -> s{lastSwitch = Just now}
+        (False, Just _) -> s{lastSwitch = Nothing}
+        _ -> s
