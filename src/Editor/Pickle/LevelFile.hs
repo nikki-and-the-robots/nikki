@@ -15,12 +15,7 @@ module Editor.Pickle.LevelFile (
   ) where
 
 
-import Data.Aeson
-
-import Text.Logging
-
 import Control.Monad
-import Control.Monad.Error
 
 import System.FilePath
 
@@ -28,7 +23,6 @@ import Utils
 
 import Base
 
-import Editor.Pickle
 import Editor.Pickle.MetaData
 
 

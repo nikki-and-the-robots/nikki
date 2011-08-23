@@ -30,7 +30,6 @@ module Utils (
 -- imports
 
 import Prelude hiding (catch)
-import qualified Prelude
 
 import Safe
 

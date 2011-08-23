@@ -14,9 +14,6 @@ module Editor.Pickle.Types where
 import Data.Indexable
 import qualified Data.Vector
 import Data.ByteString.Lazy (ByteString)
-import Data.Aeson
-import Data.Aeson.Types
-import Data.Attoparsec
 
 import Control.Arrow
 

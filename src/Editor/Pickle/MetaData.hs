@@ -18,8 +18,6 @@ import Utils
 
 import Base
 
-import Editor.Pickle.Types
-
 
 metaFile :: FilePath -> FilePath
 metaFile a = a <.> "meta"

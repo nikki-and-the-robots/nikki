@@ -21,7 +21,6 @@ import Text.Printf
 
 import Control.Monad
 import Control.Monad.State (StateT(..))
-import Control.Applicative ((<|>))
 
 import Control.Concurrent.MVar
 

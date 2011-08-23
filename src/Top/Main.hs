@@ -44,7 +44,6 @@ import Editor.Menu (editLevel)
 import Editor.Pickle
 import Editor.Pickle.LevelFile
 import Editor.Pickle.LevelLoading
-import Editor.Pickle.MetaData
 
 import Top.Initialisation
 import Top.Game (playLevel)
