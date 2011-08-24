@@ -21,6 +21,6 @@ instance Renderable Centered where
     label = const "Centered"
     render ptr app config parentSize (Centered child) = return $ tuple parentSize $ do
         (childSize, action) <- render ptr app config parentSize child
-        let offset = sizeToPosition $ fmap (fromIntegral . round . (/ 2)) (parentSize -~ childSize)
+        let offset = size2position $ fmap (fromIntegral . round . (/ 2)) (parentSize -~ childSize)
         translate ptr offset
         action

@@ -90,8 +90,8 @@ byteIntToDouble x | x >= 0 && x <= 255 =
 
 -- * utils
 
-sizeToPosition :: Size a -> Position a
-sizeToPosition (Size x y) = Position x y
+size2position :: Size a -> Position a
+size2position (Size x y) = Position x y
 
-positionToSize :: Position a -> Size a
-positionToSize (Position x y) = Size x y
+position2size :: Position a -> Size a
+position2size (Position x y) = Size x y

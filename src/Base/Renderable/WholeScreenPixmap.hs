@@ -29,7 +29,7 @@ renderWholeScreenPixmap :: Ptr QPainter -> Size Double -> [Pixmap] -> IO ()
 renderWholeScreenPixmap ptr size pixmaps = do
     let mPix = pickWholeScreenPixmap size pixmaps
         pix = fromMaybe (last pixmaps) mPix
-        offset = sizeToPosition $ fmap (/ 2) (size -~ pixmapSize pix)
+        offset = size2position $ fmap (/ 2) (size -~ pixmapSize pix)
     when (isNothing mPix) $
         -- background image is too small
         clearScreen ptr black

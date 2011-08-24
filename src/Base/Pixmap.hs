@@ -59,7 +59,7 @@ loadSymmetricPixmap padding path = io $ do
     return $ Pixmap
         pix
         (fmap negate padding)
-        (size -~ fmap (* 2) (positionToSize padding))
+        (size -~ fmap (* 2) (position2size padding))
         size
 
 -- | Loads a pixmap.

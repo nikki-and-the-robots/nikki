@@ -456,7 +456,7 @@ renderLight pixmaps pos colorStates color =
         Off -> Nothing
         Disabled -> Just $ RenderCommand (pos +~ lightOffset) $ \ ptr -> do
             setPenColor ptr (alpha ^= 0.5 $ pink) 4
-            drawLine ptr zero (sizeToPosition $ pixmapSize pixmap)
+            drawLine ptr zero (size2position $ pixmapSize pixmap)
 
 littleLightOffsets :: ColorLights (Offset Double)
 littleLightOffsets = ColorLights {
@@ -503,7 +503,7 @@ renderTerminalOSD _ _ _ = return ()
 
 osdPosition :: Size Double -> Pixmap -> Qt.Position Int
 osdPosition windowSize (pixmapSize -> pixSize) =
-    fmap round (position -~ fmap (/ 2) (sizeToPosition pixSize))
+    fmap round (position -~ fmap (/ 2) (size2position pixSize))
   where
     position = Position (width windowSize * 0.5) (height windowSize * (1 - recip goldenRatio))
 
@@ -520,7 +520,7 @@ renderOsdCenters ptr offset pixmaps states =
             translate ptr (offset +~ (color osdCenterOffsets))
             setPenColor ptr (alpha ^= 0.5 $ pink) 4
             let pixmap = color (osdCenters pixmaps)
-            drawLine ptr zero (sizeToPosition $ pixmapSize pixmap)
+            drawLine ptr zero (size2position $ pixmapSize pixmap)
 
 renderOsdFrames ptr offset pixmaps state selected =
     case (row state) of

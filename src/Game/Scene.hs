@@ -313,7 +313,7 @@ renderObjects app config size ptr offset now gameGrounds =
     when (not $ omit_pixmap_rendering config) $ do
         renderPixmaps <- gameGroundsToRenderPixmaps app config size ptr offset now gameGrounds
         let fakeSize = Size 800 600
-            fakeOffset = sizeToPosition $ fmap (/ 2) (size -~ fakeSize)
+            fakeOffset = size2position $ fmap (/ 2) (size -~ fakeSize)
             fakeMod = fmap (renderPosition ^: (+~ fakeOffset))
         doRenderPixmaps ptr $ fakeMod $ optimize fakeSize renderPixmaps
         resetMatrix ptr

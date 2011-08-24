@@ -571,7 +571,7 @@ epToPosition :: Size Double -> EditorPosition -> Qt.Position Double
 epToPosition size (EditorPosition x y) = Position x (y - height size)
 
 epToCenterPosition :: Size Double -> EditorPosition -> Qt.Position Double
-epToCenterPosition size ep = epToPosition size ep +~ fmap (/ 2) (sizeToPosition size)
+epToCenterPosition size ep = epToPosition size ep +~ fmap (/ 2) (size2position size)
 
 epToCenterVector :: Size Double -> EditorPosition -> Vector
 epToCenterVector size = position2vector . epToCenterPosition size
