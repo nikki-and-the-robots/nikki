@@ -35,14 +35,14 @@ renderGrid ptr offset chip = do
 renderShapeType :: Ptr QPainter -> ShapeDescription -> IO ()
 renderShapeType ptr ShapeDescription{shapeType, shapeOffset} =
     case (shapeType, shapeOffset) of
-        (Polygon{vertices}, Vector 0 0) ->
-            mapM_ (uncurry (renderVectorLine ptr)) (adjacentCyclic vertices)
+        (Polygon{vertices}, offset) ->
+            mapM_ (uncurry (renderVectorLine ptr)) (adjacentCyclic $ map (offset +~) vertices)
         (LineSegment start end thickness, offset) ->
             renderVectorLine ptr (start +~ offset) (end +~ offset)
         (Circle radius, vec) -> do
             setPenColor ptr signalRed 1
             drawCircle ptr (vector2position vec) (realToFrac radius)
-        st -> nm "renderShape" st
+        st -> nm "renderShapeType" st
 
 renderVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
 renderVectorLine ptr a b = do
