@@ -13,6 +13,7 @@ module Base.Debugging (
 
 import Data.Initial
 import Data.IORef
+import Data.Abelian
 
 import System.IO.Unsafe
 
@@ -50,8 +51,13 @@ debugPoint :: Color -> Vector -> IO ()
 debugPoint color p = addDebugging $ \ ptr offset -> do
     resetMatrix ptr
     translate ptr offset
-    setPenColor ptr color 2
-    drawCircle ptr (vector2position p) 5
+    setPenColor ptr color 1
+    let point = vector2position p
+        len = 5
+        slashDistance = Position len (- len)
+        backSlashDistance = Position len len
+    drawLine ptr (point -~ slashDistance) (point +~ slashDistance)
+    drawLine ptr (point -~ backSlashDistance) (point +~ backSlashDistance)
 
 debugLine :: Color -> Vector -> Vector -> IO ()
 debugLine color a b = addDebugging $ \ ptr offset -> do
