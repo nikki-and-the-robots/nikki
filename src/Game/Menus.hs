@@ -48,7 +48,7 @@ failureMenu app sceneRenderState gameState =
         (p "quit level", const FinalAppState) :
         []) 0
   where
-    poller = BackgroundScene.waitForPressedButton app gameState (sceneMVar sceneRenderState)
+    poller = waitForPressedButtonBackgroundScene app gameState (sceneMVar sceneRenderState)
     backGround =
         sceneRenderState |:>
         MenuBackgroundTransparent
@@ -59,7 +59,7 @@ successMessage :: Application -> RenderStateRefs -> GameState
 successMessage app sceneRenderState gameState score
   (mHighScore, timeRecord, batteryRecord) =
      AppStateLooped (renderable renderableInstance) $ do
-        ignore $ BackgroundScene.waitForPressedButton app gameState (sceneMVar sceneRenderState)
+        ignore $ waitForPressedButtonBackgroundScene app gameState (sceneMVar sceneRenderState)
         return FinalAppState
   where
     renderableInstance =

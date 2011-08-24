@@ -20,8 +20,9 @@ import Game.Scene
 
 
 -- | advances the scene until the given action returns a result
-waitForPressedButton :: forall a . Application -> GameState -> SceneMVar -> M Button
-waitForPressedButton app gameState sceneMVar =
+waitForPressedButtonBackgroundScene :: forall a . Application -> GameState -> SceneMVar
+    -> M Button
+waitForPressedButtonBackgroundScene app gameState sceneMVar =
     flip evalStateT gameState $ withTimer loopSuperStep
   where
     -- | loops to perform supersteps

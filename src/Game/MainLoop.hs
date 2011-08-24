@@ -106,4 +106,3 @@ gameLoop app editorTestMode rsr@RenderStateRefs{sceneMVar} =
         immutableCopyOfScene <- io $ sceneImmutableCopy s
         io $ modifyMVar_ sceneMVar (const $ return (immutableCopyOfScene, debugging))
         return ()
-
