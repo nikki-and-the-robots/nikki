@@ -436,7 +436,7 @@ renderDisplayBlinkenLights sort now pos =
                  [blinkenLightSpeed] now
     in RenderPixmap pixmap (pos +~ blinkenLightOffset) Nothing
 
-blinkenLightOffset = fmap fromUber $ Position 13 13
+blinkenLightOffset = fmap fromUber $ Position 13 18
 
 -- | renders the little colored lights (for the associated robots) on the terminal in the scene
 renderLittleColorLights sort now t pos =
