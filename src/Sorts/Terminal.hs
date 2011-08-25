@@ -24,6 +24,7 @@ import Data.Traversable
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 import Data.Maybe
+import Data.Accessor
 
 import System.FilePath
 
@@ -189,9 +190,12 @@ isTerminal _ = False
 data Terminal = Terminal {
     chipmunk :: Chipmunk,
     robots :: [RobotIndex],
-    state :: State
+    state_ :: State
   }
     deriving (Show, Typeable)
+
+state :: Accessor Terminal State
+state = accessor state_ (\ a r -> r{state_ = a})
 
 unwrapTerminal :: Object_ -> Maybe Terminal
 unwrapTerminal (Object_ sort o) = cast o
@@ -200,7 +204,7 @@ unwrapTerminalSort :: Sort_ -> Maybe TSort
 unwrapTerminalSort (Sort_ sort) = cast sort
 
 terminalExitMode :: Terminal -> ExitMode
-terminalExitMode = state >>> exitMode
+terminalExitMode = state_ >>> exitMode
 
 
 data RobotIndex
@@ -211,13 +215,16 @@ data RobotIndex
 
 data State
     = State {
-        gameMode :: GameMode,
+        gameMode_ :: GameMode,
         row :: MenuState,
         robotIndex :: Int,
         changedTime :: Seconds,
         exitMode :: ExitMode
       }
   deriving Show
+
+gameMode :: Accessor State GameMode
+gameMode = accessor gameMode_ (\ a r -> r{gameMode_ = a})
 
 data MenuState = NikkiState | RobotState
   deriving (Eq, Show)
@@ -270,7 +277,7 @@ blinkenLightsState now robots state =
     mapRobots Nothing = Off
 
     blinkingOut = blinkingMode && even (floor ((now - changedTime state) / blinkLength))
-    blinkingMode = case gameMode state of
+    blinkingMode = case state ^. gameMode of
         NikkiMode -> False
         _ -> True
 
@@ -347,13 +354,17 @@ instance Sort TSort Terminal where
 
     chipmunks = chipmunk >>> return
 
-    startControl now t = t{state = reset (now - blinkLength) (robots t) (state t)}
+    startControl now t =
+        state ^= reset (now - blinkLength) (robots t) (t ^. state) $
+        t
 
     updateNoSceneChange sort config _ scene now contacts (False, cd) terminal =
+        updateGameMode contacts <$>
         updateControllableStates scene terminal
     updateNoSceneChange sort config _ scene now contacts (True, cd) terminal =
-        updateControllableStates scene
-            terminal{state = updateState config now cd (robots terminal) (state terminal)}
+        updateControllableStates scene $
+            state ^= updateState config now cd (robots terminal) (terminal ^. state) $
+            terminal
 
     renderObject _ _ terminal sort ptr offset now = do
         pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
@@ -381,6 +392,17 @@ mkPolys size =
 
 
 -- * controlling
+
+-- | updates the gameMode if Nikki doesn't touch it anymore
+updateGameMode :: Contacts -> Terminal -> Terminal
+updateGameMode contacts terminal =
+    if fany (hasTerminalShape terminal) (terminals contacts)
+    -- Nikki still touches the terminal
+    then terminal
+    -- Nikki doesn't touch the terminal, so back to NikkiMode
+    else
+        state .> gameMode ^= NikkiMode $
+        terminal
 
 -- | updates the controllable states of the attached robots
 updateControllableStates :: Scene Object_ -> Terminal -> IO Terminal
@@ -447,7 +469,7 @@ blinkenLightOffset = fmap fromUber $ Position 13 18
 
 -- | renders the little colored lights (for the associated robots) on the terminal in the scene
 renderLittleColorLights sort now t pos =
-    let colorStates = fst $ blinkenLightsState now (robots t) (state t)
+    let colorStates = fst $ blinkenLightsState now (robots t) (t ^. state)
     in map
         (renderLight
             (littleColorLights $ pixmaps sort)
@@ -505,11 +527,11 @@ renderTerminalOSD ptr now scene@Scene{mode_ = mode@Base.TerminalMode{}} =
                 position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)
                 -- states of lights
                 (colorStates, exitState) =
-                    blinkenLightsState now (robots terminal) (state terminal)
+                    blinkenLightsState now (robots terminal) (terminal ^. state)
             renderPixmap ptr zero position Nothing (osdBackground pixmaps)
             renderOsdCenters ptr position pixmaps colorStates
-            renderOsdFrames ptr position pixmaps (state terminal) (selectedColorLights (robotIndex (state terminal)))
-            renderOsdExit ptr position now pixmaps (state terminal) exitState
+            renderOsdFrames ptr position pixmaps (terminal ^. state) (selectedColorLights (robotIndex (terminal ^. state)))
+            renderOsdExit ptr position now pixmaps (terminal ^. state) exitState
 renderTerminalOSD _ _ _ = return ()
 
 osdPosition :: Size Double -> Pixmap -> Qt.Position Int
