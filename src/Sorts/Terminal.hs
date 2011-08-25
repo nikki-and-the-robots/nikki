@@ -72,9 +72,11 @@ sorts = do
         "display_03" :
       [])
     littleColors <- readColorLights (\ color -> toPngPath ("terminal-" ++ color))
+    littleDefunctColors <- readColorLights (\ color -> toPngPath ("terminal-defunct-" ++ color))
     osdPixmaps <- loadOsdPixmaps
-    let r = TSort (Pixmaps backgroundPixmap displayBlinkenLights littleColors) osdPixmaps
-    return [Sort_ r]
+    return $ singleton $ Sort_ $ TSort
+        (Pixmaps backgroundPixmap displayBlinkenLights littleColors littleDefunctColors)
+        osdPixmaps
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
@@ -91,10 +93,11 @@ loadOsdPixmaps = do
         load :: Double ->  String -> RM Pixmap
         load offset = toOsdPath >=> loadSymmetricPixmap (Position offset offset)
     centers <- fmapM (load 40) $ fmap (++ "-center") colors
+    defunctCenters <- fmapM (load 40) $ fmap (++ "-center-defunct") colors
     frames <- fmapM (load 38) $ fmap (++ "-frame") colors
     exitCenter <- (load 40) "exit-center"
     exitFrame <- (load 38) "exit-frame"
-    return $ OsdPixmaps background centers frames exitCenter exitFrame
+    return $ OsdPixmaps background centers defunctCenters frames exitCenter exitFrame
   where
     osdPath = pngDir </> "terminals" </> "osd"
     toOsdPath :: String -> RM FilePath
@@ -142,30 +145,34 @@ selectedColorLights i = ColorLights (i == 0) (i == 1) (i == 2) (i == 3)
 data Pixmaps = Pixmaps {
     background :: Pixmap,
     blinkenLights :: [Pixmap],
-    littleColorLights :: ColorLights Pixmap
+    littleColorLights :: ColorLights Pixmap,
+    littleDefunctColorLights :: ColorLights Pixmap
   }
     deriving Show
 
-freeTerminalPixmaps (Pixmaps a bs cs) =
+freeTerminalPixmaps (Pixmaps a bs cs dcs) =
     freePixmap a >>
     fmapM_ freePixmap bs >>
-    fmapM_ freePixmap cs
+    fmapM_ freePixmap cs >>
+    fmapM_ freePixmap dcs
 
 data OsdPixmaps = OsdPixmaps {
     osdBackground :: Pixmap,
     osdCenters :: ColorLights Pixmap,
+    osdDefunctCenters :: ColorLights Pixmap,
     osdFrames :: ColorLights Pixmap,
     osdExitCenter :: Pixmap,
     osdExitFrame :: Pixmap
   }
     deriving (Show, Typeable)
 
-freeOsdPixmaps (OsdPixmaps a bs cs d e) = do
+freeOsdPixmaps (OsdPixmaps a bs cs ds e f) = do
     freePixmap a
     fmapM_ freePixmap bs
     fmapM_ freePixmap cs
-    freePixmap d
+    fmapM_ freePixmap ds
     freePixmap e
+    freePixmap f
 
 
 data TSort = TSort {
@@ -232,7 +239,7 @@ reset t robots (State _ _ i _ _) =
 data LightState
     = On
     | Off
-    | Disabled -- when robots are uncontrollable
+    | Defunct -- when robots are uncontrollable
 
 -- | returns robot states and exit (aka nikki or eject) state
 blinkenLightsState :: Seconds -> [RobotIndex] -> State -> (ColorLights LightState, Bool)
@@ -253,13 +260,13 @@ blinkenLightsState now robots state =
     zipRobotsSelected (Just (Controllable _)) selected =
         if not selected || not blinkingOut then On else Off
     zipRobotsSelected (Just (Uncontrollable _)) selected =
-        Disabled
+        Defunct
     zipRobotsSelected Nothing _ =
         Off
 
     mapRobots :: Maybe RobotIndex -> LightState
     mapRobots (Just (Controllable _)) = On
-    mapRobots (Just (Uncontrollable _)) = Disabled
+    mapRobots (Just (Uncontrollable _)) = Defunct
     mapRobots Nothing = Off
 
     blinkingOut = blinkingMode && even (floor ((now - changedTime state) / blinkLength))
@@ -442,21 +449,25 @@ blinkenLightOffset = fmap fromUber $ Position 13 18
 renderLittleColorLights sort now t pos =
     let colorStates = fst $ blinkenLightsState now (robots t) (state t)
     in map
-        (renderLight (littleColorLights $ pixmaps sort) pos colorStates)
+        (renderLight
+            (littleColorLights $ pixmaps sort)
+            (littleDefunctColorLights $ pixmaps sort)
+            pos colorStates)
         allSelectors
 
-renderLight :: ColorLights Pixmap -> Qt.Position Double -> ColorLights LightState
+renderLight :: ColorLights Pixmap -> ColorLights Pixmap
+    -> Qt.Position Double -> ColorLights LightState
     -> (forall a . (ColorLights a -> a))
     -> Maybe RenderPixmap
-renderLight pixmaps pos colorStates color =
+renderLight pixmaps defunctPixmaps pos colorStates color =
     let lightOffset = color littleLightOffsets
         pixmap = color pixmaps
+        defunctPixmap = color defunctPixmaps
+        render p = Just $ RenderPixmap p (pos +~ lightOffset) Nothing
     in case color colorStates of
-        On -> Just $ RenderPixmap pixmap (pos +~ lightOffset) Nothing
+        On -> render pixmap
         Off -> Nothing
-        Disabled -> Just $ RenderCommand (pos +~ lightOffset) $ \ ptr -> do
-            setPenColor ptr (alpha ^= 0.5 $ pink) 4
-            drawLine ptr zero (size2position $ pixmapSize pixmap)
+        Defunct -> render defunctPixmap
 
 littleLightOffsets :: ColorLights (Offset Double)
 littleLightOffsets = ColorLights {
@@ -513,14 +524,12 @@ renderOsdCenters ptr offset pixmaps states =
   where
     inner :: (forall a . (ColorLights a -> a)) -> IO ()
     inner color = case (color states) of
-        On -> renderPixmap ptr offset (color osdCenterOffsets) Nothing (color (osdCenters pixmaps))
+        On -> renderCenter color osdCenters
         Off -> return ()
-        Disabled -> do
-            resetMatrix ptr
-            translate ptr (offset +~ (color osdCenterOffsets))
-            setPenColor ptr (alpha ^= 0.5 $ pink) 4
-            let pixmap = color (osdCenters pixmaps)
-            drawLine ptr zero (size2position $ pixmapSize pixmap)
+        Defunct -> renderCenter color osdDefunctCenters
+    renderCenter (color :: forall a . (ColorLights a -> a)) pixmapsGetter =
+        renderPixmap ptr offset
+            (color osdCenterOffsets) Nothing (color (pixmapsGetter pixmaps))
 
 renderOsdFrames ptr offset pixmaps state selected =
     case (row state) of
