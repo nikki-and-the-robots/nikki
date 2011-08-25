@@ -38,6 +38,7 @@ module Physics.Chipmunk (
     translateVector,
     renderGrids,
     rotateVector,
+    rotateVectorAround,
     position2vector,
     vector2position,
     size2vector,

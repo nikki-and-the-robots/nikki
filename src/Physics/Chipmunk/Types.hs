@@ -316,6 +316,14 @@ rotateVector angle (Vector x y) =
     x' = cos angle * x - sin angle * y
     y' = sin angle * x + cos angle * y
 
+rotateVectorAround :: Vector -> Angle -> Vector -> Vector
+rotateVectorAround pinPoint angle (Vector x y) =
+    Vector x' y'
+  where
+    x' = cos angle * (x - pinX) - sin angle * (y - pinY) + pinX
+    y' = sin angle * (x - pinX) + cos angle * (y - pinY) + pinY
+    (Vector pinX pinY) = pinPoint
+
 translateVector :: Ptr QPainter -> Vector -> IO ()
 translateVector ptr v = translate ptr $ vector2position v
 

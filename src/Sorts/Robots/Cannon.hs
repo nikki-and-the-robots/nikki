@@ -13,7 +13,7 @@ import Control.Arrow
 
 import System.FilePath
 
-import Physics.Hipmunk hiding (initChipmunk, body)
+import Physics.Hipmunk as Hipmunk hiding (initChipmunk, body)
 import Physics.Chipmunk as CM
 
 import Graphics.Qt as Qt
@@ -27,11 +27,17 @@ import Sorts.Robots.Configuration
 
 -- * configuration
 
+-- | angle that the barrel has initially
+barrelInitialAngle = - tau / 8
+
+-- | angular velocity with which the barrel can be controlled (radians per second)
 barrelAngleVelocity = tau * 0.15
 
-cannonballMaterialMass = 50 -- tweakValue "cannonballMaterialMass"
+-- | mass of one uber-pixel of a cannonball
+cannonballMaterialMass = 50
 
-cannonballVelocity = 1500 -- tweakValue "cannonballVelocity"
+-- | velocity of a cannonball after being shot
+cannonballVelocity = 1500
 
 
 -- * sort loading
@@ -104,8 +110,6 @@ pinOffset = vmap fromUber $ Vector 8 (- 16)
 barrelSize = fmap fromUber $ Size 11 12
 
 barrelOffset = fmap fromUber $ Position 18 (- 24)
-
-barrelInitialAngle = - tau / 8
 
 maxBarrelAngle = tau / 4
 
@@ -225,9 +229,20 @@ initConstraint space pin base barrel = do
           }
     rotary <- newConstraint (body base) (body barrel) consValues
     spaceAdd space rotary
+
+    rotateBarrel barrel pin
+
     let setter angle =
             redefineC rotary consValues{dampedRotRestAngle = angle}
     return setter
+
+-- | rotates the barrel in its initial position, specified by barrelInitialAngle
+rotateBarrel barrel pin = do
+    pos <- getPosition barrel
+    angle (body barrel) $= (- barrelInitialAngle)
+    Hipmunk.position (body barrel) $= (rotateVectorAround pin (- barrelInitialAngle) pos)
+
+
 
 
 -- * updating
