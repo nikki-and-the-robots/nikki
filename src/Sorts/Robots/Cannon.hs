@@ -23,6 +23,7 @@ import Utils
 import Base
 
 import Sorts.Robots.Configuration
+import Sorts.Robots.Eyes
 
 
 -- * configuration
@@ -49,6 +50,7 @@ sorts =
     (CannonSort <$>
         (loadPix "base-standard_00") <*>
         (loadPix "cannon-standard_00") <*>
+        loadRobotEyesPixmaps <*>
         (loadPix "cannonball-standard_00"))
   where
     loadPix :: String -> RM Pixmap
@@ -59,6 +61,7 @@ sorts =
 data CannonSort = CannonSort {
     basePix :: Pixmap,
     barrelPix :: Pixmap,
+    robotEyes :: RobotEyesPixmaps,
     ball :: Pixmap
   }
     deriving (Show, Typeable)
@@ -67,12 +70,16 @@ data Cannon
   = Cannon {
     base :: Chipmunk,
     barrel :: Chipmunk,
+    controlled_ :: Bool,
     barrelAngle_ :: Angle,
     barrelAngleSetter :: Angle -> IO (),
     followedBall_ :: Maybe Chipmunk,
     unfollowedBalls_ :: [Chipmunk]
   }
     deriving (Show, Typeable)
+
+controlled :: Accessor Cannon Bool
+controlled = accessor controlled_ (\ a r -> r{controlled_ = a})
 
 barrelAngle :: Accessor Cannon Angle
 barrelAngle = accessor barrelAngle_ (\ a r -> r{barrelAngle_ = a})
@@ -86,10 +93,11 @@ unfollowedBalls = accessor unfollowedBalls_ (\ a r -> r{unfollowedBalls_ = a})
 instance Show (CpFloat -> IO ()) where
     show _ = "<CpFloat -> IO ()>"
 
-mapMChipmunks f (Cannon base barrel angle angleSetter followed unfollowed) =
+mapMChipmunks f (Cannon base barrel controlled angle angleSetter followed unfollowed) =
     Cannon <$>
         f base <*>
         f barrel <*>
+        pure controlled <*>
         pure angle <*>
         pure angleSetter <*>
         fmapM f followed <*>
@@ -113,14 +121,17 @@ barrelOffset = fmap fromUber $ Position 18 (- 24)
 
 maxBarrelAngle = tau / 4
 
+eyesOffset = fmap fromUber $ Position 2 3
+
 -- | offset of newly created cannonballs relative to the barrel
 cannonballOffset = fmap fromUber $ Position 5.5 (- 3.5)
 
 
 instance Sort CannonSort Cannon where
     sortId _ = SortId "robots/cannon"
-    freeSort (CannonSort a b c) =
-        fmapM_ freePixmap [a, b, c]
+    freeSort (CannonSort a b c d) =
+        fmapM_ freePixmap [a, b, d] >>
+        freeRobotEyesPixmaps c
     size _ = robotSize
     renderIconified sort ptr =
         renderPixmapSimple ptr (basePix sort)
@@ -131,23 +142,24 @@ instance Sort CannonSort Cannon where
             barrelBaryCenterOffset = size2vector $ fmap (/ 2) $ barrelSize
             barrel = ImmutableChipmunk (position +~ barrelOffset) barrelInitialAngle barrelBaryCenterOffset []
             noopSetter _ = return ()
-        return $ Cannon base barrel barrelInitialAngle noopSetter Nothing []
+        return $ Cannon base barrel False barrelInitialAngle noopSetter Nothing []
     initialize app (Just space) sort ep Nothing _ = io $ do
         (base, pin) <- initBase space ep
         barrel <- initBarrel space ep
         angleSetter <- initConstraint space pin base barrel
-        return $ Cannon base barrel barrelInitialAngle angleSetter Nothing []
+        return $ Cannon base barrel False barrelInitialAngle angleSetter Nothing []
     immutableCopy =
         mapMChipmunks CM.immutableCopy
-    chipmunks (Cannon base barrel _ _ followed unfollowed) =
+    chipmunks (Cannon base barrel _ _ _ followed unfollowed) =
         base : barrel : maybeToList followed ++ unfollowed
 
     getControlledChipmunk _ c = base c -- fromMaybe (base c) (c ^. followedBall)
 
     updateNoSceneChange _ _ _ _ _ _ (False, _) =
-        return
+        return . (controlled ^= False)
 --         passThrough debug
     updateNoSceneChange sort config space scene now contacts (True, cd) =
+        return . (controlled ^= True) >=>
         return . updateAngleState config cd >=>
         passThrough setAngle >=>
         return . unfollowCannonBall cd >=>
@@ -162,9 +174,11 @@ instance Sort CannonSort Cannon where
                     (basePosition -~ rotatePosition baseAngle baseOffset)
                     (Just baseAngle)
             barrel = RenderPixmap (barrelPix sort) barrelPosition (Just barrelAngle)
+            eyes = renderRobotEyes (robotEyes sort) basePosition baseAngle eyesOffset
+                        (robotEyesState cannon) now
         cannonballs <- fmapM (mkCannonballRenderPixmap sort)
                 (maybeToList (cannon ^. followedBall) ++ cannon ^. unfollowedBalls)
-        return (barrel : base : cannonballs ++ [])
+        return (barrel : base : eyes : cannonballs ++ [])
 
 debug c =
     debugChipmunk (base c) >>
@@ -263,6 +277,14 @@ angleStep = barrelAngleVelocity * subStepQuantum
 setAngle :: Cannon -> IO ()
 setAngle c =
     barrelAngleSetter c (c ^. barrelAngle)
+
+
+-- * eyes
+
+robotEyesState :: Cannon -> RobotEyesState
+robotEyesState cannon = case cannon ^. controlled of
+    True -> Active
+    False -> Idle
 
 
 -- * cannon balls
