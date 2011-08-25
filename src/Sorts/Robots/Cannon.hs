@@ -9,12 +9,14 @@ import Data.Abelian
 import Data.Maybe
 import Data.Accessor
 
+import Control.Arrow
+
 import System.FilePath
 
 import Physics.Hipmunk hiding (initChipmunk, body)
 import Physics.Chipmunk as CM
 
-import Graphics.Qt
+import Graphics.Qt as Qt
 
 import Utils
 
@@ -22,6 +24,17 @@ import Base
 
 import Sorts.Robots.Configuration
 
+
+-- * configuration
+
+barrelAngleVelocity = tau * 0.08
+
+cannonballMaterialMass = 50 -- tweakValue "cannonballMaterialMass"
+
+cannonballVelocity = 4000 -- tweakValue "cannonballVelocity"
+
+
+-- * sort loading
 
 sorts :: RM [Sort_]
 sorts =
@@ -50,13 +63,19 @@ data Cannon
     barrel :: Chipmunk,
     barrelAngle_ :: Angle,
     barrelAngleSetter :: Angle -> IO (),
-    followedBall :: Maybe Chipmunk,
-    unfollowedBalls :: [Chipmunk]
+    followedBall_ :: Maybe Chipmunk,
+    unfollowedBalls_ :: [Chipmunk]
   }
     deriving (Show, Typeable)
 
 barrelAngle :: Accessor Cannon Angle
 barrelAngle = accessor barrelAngle_ (\ a r -> r{barrelAngle_ = a})
+
+followedBall :: Accessor Cannon (Maybe Chipmunk)
+followedBall = accessor followedBall_ (\ a r -> r{followedBall_ = a})
+
+unfollowedBalls :: Accessor Cannon [Chipmunk]
+unfollowedBalls = accessor unfollowedBalls_ (\ a r -> r{unfollowedBalls_ = a})
 
 instance Show (CpFloat -> IO ()) where
     show _ = "<CpFloat -> IO ()>"
@@ -72,14 +91,14 @@ mapMChipmunks f (Cannon base barrel angle angleSetter followed unfollowed) =
 
 
 -- | size of the whole robot (background pix)
-cannonSize = fmap fromUber $ Size 31 28
+robotSize = fmap fromUber $ Size 31 28
 
 -- | size of the base of the cannon
 baseSize = fmap fromUber $ Size 31 21
 
-baseOffset = size2position (cannonSize -~ baseSize)
+baseOffset = size2position (robotSize -~ baseSize)
 
-pinOffset = position2vector $ fmap fromUber $ Position 8 (- 14)
+pinOffset = vmap fromUber $ Vector 8 (- 14)
 
 -- | size of the upright barrel
 barrelSize = fmap fromUber $ Size 11 12
@@ -90,14 +109,15 @@ barrelInitialAngle = - tau / 8
 
 maxBarrelAngle = tau / 8
 
-barrelAngleVelocity = tau / 16
+-- | offset of newly created cannonballs relative to the barrel
+cannonballOffset = fmap fromUber $ Position 5.5 (- 3.5)
 
 
 instance Sort CannonSort Cannon where
     sortId _ = SortId "robots/cannon"
     freeSort (CannonSort a b c) =
         fmapM_ freePixmap [a, b, c]
-    size _ = cannonSize
+    size _ = robotSize
     renderIconified sort ptr =
         renderPixmapSimple ptr (basePix sort)
     initialize app Nothing sort ep Nothing _ = do
@@ -118,19 +138,40 @@ instance Sort CannonSort Cannon where
     chipmunks (Cannon base barrel _ _ followed unfollowed) =
         base : barrel : maybeToList followed ++ unfollowed
 
-    getControlledChipmunk _ (Cannon base _ _ _ Nothing _) = base
+    getControlledChipmunk _ c = fromMaybe (base c) (c ^. followedBall)
 
-    updateNoSceneChange _ _ _ _ _ (False, _) = return
-    updateNoSceneChange sort config scene now contacts (True, cd) =
+    updateNoSceneChange _ _ _ _ _ _ (False, _) =
+        return
+--         passThrough debug
+    updateNoSceneChange sort config space scene now contacts (True, cd) =
         return . updateAngleState config cd >=>
-        passThrough setAngle
+        passThrough setAngle >=>
+        return . unfollowCannonBall cd >=>
+        shootCannonBall space config cd >=>
+--         passThrough debug >=>
+        return
 
     renderObject _ _ cannon sort ptr offset now = do
         (basePosition, baseAngle) <- getRenderPositionAndAngle (base cannon)
         (barrelPosition, barrelAngle) <- getRenderPositionAndAngle $ barrel cannon
-        let base = RenderPixmap (basePix sort) (basePosition -~ baseOffset) (Just baseAngle)
+        let base = RenderPixmap (basePix sort)
+                    (basePosition -~ rotatePosition baseAngle baseOffset)
+                    (Just baseAngle)
             barrel = RenderPixmap (barrelPix sort) barrelPosition (Just barrelAngle)
-        return (barrel : base : [])
+        cannonballs <- fmapM (mkCannonballRenderPixmap sort)
+                (maybeToList (cannon ^. followedBall) ++ cannon ^. unfollowedBalls)
+        return (barrel : base : cannonballs ++ [])
+
+debug c =
+    debugChipmunk (base c) >>
+    debugChipmunk (barrel c) >>
+    fmapM_ debugChipmunk (c ^. followedBall) >>
+    fmapM_ debugChipmunk (c ^. unfollowedBalls)
+
+debugChipmunk chip = do
+    (pos, angle) <- first position2vector <$> getRenderPositionAndAngle chip
+    debugPoint yellow pos
+    debugPoint pink (rotateVector angle (baryCenterOffset chip) +~ pos)
 
 
 shapeAttributes = robotShapeAttributes
@@ -141,8 +182,8 @@ initBase space ep = do
         end = baryCenterOffset
         shapeType = mkRectFromPositions start end
         shape = mkShapeDescription shapeAttributes shapeType
-        pos = position2vector (epToPosition baseSize ep)
-                    +~ baryCenterOffset
+        pos = position2vector (epToPosition robotSize ep)
+                    +~ baryCenterOffset +~ position2vector baseOffset
         pin = pos +~ pinOffset
         attributes =
             mkMaterialBodyAttributes robotMaterialMass [shapeType] pos
@@ -207,3 +248,52 @@ angleStep = barrelAngleVelocity * subStepQuantum
 setAngle :: Cannon -> IO ()
 setAngle c =
     barrelAngleSetter c (c ^. barrelAngle)
+
+
+-- * cannon balls
+
+unfollowCannonBall :: ControlData -> Cannon -> Cannon
+unfollowCannonBall cd cannon@Cannon{followedBall_ = Just followed} =
+    if not (null (pressed cd)) then
+        followedBall ^= Nothing $
+        unfollowedBalls ^: (followed :) $
+        cannon
+      else
+        cannon
+unfollowCannonBall _ c = c
+
+shootCannonBall :: Space -> Controls -> ControlData -> Cannon -> IO Cannon
+shootCannonBall space controls cd cannon@Cannon{followedBall_ = Nothing}
+  | isRobotActionPressed controls cd = do
+    barrelValues <- getRenderPositionAndAngle (barrel cannon)
+    ball <- mkCannonball space barrelValues
+    return $
+        followedBall ^= Just ball $
+        cannon
+shootCannonBall _ _ _ c = return c
+
+mkCannonball :: Space -> (Qt.Position Double, Angle) -> IO Chipmunk
+mkCannonball space (barrelPosition, barrelAngle) = do
+    let ball = Circle (fromUber 3.5)
+        ballDesc = mkShapeDescription cannonballShapeAttributes ball
+        baryCenterOffset = vmap fromUber (Vector 3.5 3.5)
+        pos = position2vector
+            (barrelPosition +~ rotatePosition barrelAngle cannonballOffset)
+        cannonballAttributes =
+            mkMaterialBodyAttributes cannonballMaterialMass [ball] pos
+    chip <- initChipmunk space cannonballAttributes [ballDesc] baryCenterOffset
+    velocity (body chip) $= vmap (* cannonballVelocity) (fromAngle (barrelAngle +~ tau / 4))
+    return chip
+
+cannonballShapeAttributes = ShapeAttributes{
+    CM.elasticity = 0.4,
+    CM.friction = 0.2,
+    CM.collisionType = RobotCT
+  }
+
+mkCannonballRenderPixmap :: CannonSort -> Chipmunk -> IO RenderPixmap
+mkCannonballRenderPixmap sort chip = do
+    pos <- getPosition chip
+    return $ RenderPixmap (ball sort) (vector2position pos -~ baryCenterOffset) Nothing
+  where
+    baryCenterOffset = fmap fromUber $ Position 3.5 3.5

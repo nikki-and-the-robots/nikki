@@ -87,7 +87,7 @@ instance Sort BSort Battery where
 
     chipmunks = chipmunk >>> return
 
-    update sort config mode now contacts cd i o
+    update sort config _ mode now contacts cd i o
         | any (`member` batteries contacts) (shapes $ chipmunk o) = do
             -- the battery is consumed by nikki
             triggerSound $ collectSound sort
@@ -96,7 +96,7 @@ instance Sort BSort Battery where
                 sceneChange = (batteryPower ^: succ) . removeBattery
                 removeBattery = objects .> gameMainLayer ^: deleteByIndex i
             return (sceneChange, Consumed $ chipmunk o)
-    update sort config mode now contacts cd i o = return (id, o) -- no change
+    update sort config _ mode now contacts cd i o = return (id, o) -- no change
 
     renderObject _ _ o@Battery{} sort ptr offset now = do
         (pos, angle) <- getRenderPositionAndAngle (chipmunk o)

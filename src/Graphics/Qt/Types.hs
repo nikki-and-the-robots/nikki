@@ -43,6 +43,13 @@ instance Binary a => Binary (Position a) where
 instance PP p => PP (Position p) where
     pp (Position x y) = unwords ["Position", pp x, pp y]
 
+rotatePosition :: Floating a => a -> Position a -> Position a
+rotatePosition angle (Position x y) =
+    Position x' y'
+  where
+    x' = cos angle * x - sin angle * y
+    y' = sin angle * x + cos angle * y
+
 
 -- * Size
 

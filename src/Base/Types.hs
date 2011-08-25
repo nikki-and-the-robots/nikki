@@ -551,15 +551,17 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     startControl :: Seconds -> object -> object
     startControl now = id
 
-    update :: sort -> Controls -> Scene Object_ -> Seconds -> Contacts -> (Bool, ControlData)
+    update :: sort -> Controls -> Space -> Scene Object_ -> Seconds
+        -> Contacts -> (Bool, ControlData)
         -> Index -> object -> IO (Scene Object_ -> Scene Object_, object)
-    update sort controls scene now contacts cd i o = do
-        o' <- updateNoSceneChange sort controls scene now contacts cd o
+    update sort controls space scene now contacts cd i o = do
+        o' <- updateNoSceneChange sort controls space scene now contacts cd o
         return (id, o')
 
-    updateNoSceneChange :: sort -> Controls -> Scene Object_ -> Seconds -> Contacts -> (Bool, ControlData)
+    updateNoSceneChange :: sort -> Controls -> Space -> Scene Object_ -> Seconds
+        -> Contacts -> (Bool, ControlData)
         -> object -> IO object
-    updateNoSceneChange _ _ _ _ _ _ o = return o
+    updateNoSceneChange _ _ _ _ _ _ _ o = return o
 
     renderObject :: Application -> Configuration
         -> object -> sort -> Ptr QPainter -> Offset Double -> Seconds -> IO [RenderPixmap]
@@ -620,11 +622,11 @@ instance Sort Sort_ Object_ where
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o
     startControl now (Object_ sort o) = Object_ sort $ startControl now o
-    update DummySort controls mode now contacts cd i (Object_ sort o) = do
-        (f, o') <- Base.Types.update sort controls mode now contacts cd i o
+    update DummySort controls space mode now contacts cd i (Object_ sort o) = do
+        (f, o') <- Base.Types.update sort controls space mode now contacts cd i o
         return (f, Object_ sort o')
-    updateNoSceneChange DummySort controls mode now contacts cd (Object_ sort o) =
-        Object_ sort <$> updateNoSceneChange sort controls mode now contacts cd o
+    updateNoSceneChange DummySort controls space mode now contacts cd (Object_ sort o) =
+        Object_ sort <$> updateNoSceneChange sort controls space mode now contacts cd o
     renderObject = error "Don't use this function, use render_ instead (that's type safe)"
 
 sort_ :: Object_ -> Sort_

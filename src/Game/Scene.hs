@@ -56,7 +56,7 @@ import Sorts.LowerLimit
 
 stepScene :: Configuration -> Space -> ControlData -> Scene Object_ -> IO (Scene Object_)
 stepScene configuration space controlData =
-    updateScene (configuration ^. controls) controlData >=>
+    updateScene space (configuration ^. controls) controlData >=>
     stepSpace space >=>
     maybeAbort configuration >=>
     transition (configuration ^. controls) controlData
@@ -211,8 +211,8 @@ maybeAbort config = case abort_level config of
 -- * object updating
 
 -- | updates every object
-updateScene :: Controls -> ControlData -> Scene Object_ -> IO (Scene Object_)
-updateScene controlsConfig cd scene = do
+updateScene :: Space -> Controls -> ControlData -> Scene Object_ -> IO (Scene Object_)
+updateScene space controlsConfig cd scene = do
     -- NOTE: Currently only the physics layer is updated
     (sceneChange, physicsContent') <- updateMainLayer $ scene ^. objects ^. gameMainLayer
     return $ sceneChange $ objects .> gameMainLayer ^= physicsContent' $ scene
@@ -226,7 +226,7 @@ updateScene controlsConfig cd scene = do
     -- each object has to know, if it's controlled
     updateMainLayer ix = do
         ix' <- fmapMWithIndex (\ i o ->
-                update DummySort controlsConfig scene now (scene ^. contacts)
+                update DummySort controlsConfig space scene now (scene ^. contacts)
                     (Just i == controlled, cd) i o)
                 ix
         let changes = foldr (.) id $ fmap fst ix'

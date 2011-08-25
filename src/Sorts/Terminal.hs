@@ -342,9 +342,9 @@ instance Sort TSort Terminal where
 
     startControl now t = t{state = reset (now - blinkLength) (robots t) (state t)}
 
-    updateNoSceneChange sort config scene now contacts (False, cd) terminal =
+    updateNoSceneChange sort config _ scene now contacts (False, cd) terminal =
         updateControllableStates scene terminal
-    updateNoSceneChange sort config scene now contacts (True, cd) terminal =
+    updateNoSceneChange sort config _ scene now contacts (True, cd) terminal =
         updateControllableStates scene
             terminal{state = updateState config now cd (robots terminal) (state terminal)}
 

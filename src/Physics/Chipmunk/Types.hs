@@ -3,7 +3,6 @@
 
 module Physics.Chipmunk.Types where
 
-import Data.Complex
 import Data.Abelian
 import Data.StateVar
 import Data.Typeable
@@ -311,13 +310,11 @@ componentWithToAngle (toAngleFunction, fromAngleFunction) alpha b =
 
 
 rotateVector :: Angle -> Vector -> Vector
-rotateVector angle (Vector a b) =
-    Vector a' b'
+rotateVector angle (Vector x y) =
+    Vector x' y'
   where
-    (a' :+ b') = v * nullVector
-    v = a :+ b
-    (Vector nva nvb) = fromAngle angle
-    nullVector = nva :+ nvb
+    x' = cos angle * x - sin angle * y
+    y' = sin angle * x + cos angle * y
 
 translateVector :: Ptr QPainter -> Vector -> IO ()
 translateVector ptr v = translate ptr $ vector2position v
