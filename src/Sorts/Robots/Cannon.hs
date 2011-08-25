@@ -282,7 +282,8 @@ mkCannonball space (barrelPosition, barrelAngle) = do
         cannonballAttributes =
             mkMaterialBodyAttributes cannonballMaterialMass [ball] pos
     chip <- initChipmunk space cannonballAttributes [ballDesc] baryCenterOffset
-    velocity (body chip) $= vmap (* cannonballVelocity) (fromAngle (barrelAngle +~ tau / 4))
+    velocity (body chip) $= vmap (* cannonballVelocity)
+        (fromAngle (barrelAngle -~ tau / 4))
     return chip
 
 cannonballShapeAttributes = ShapeAttributes{
