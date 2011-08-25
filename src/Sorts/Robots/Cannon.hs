@@ -138,7 +138,7 @@ instance Sort CannonSort Cannon where
     chipmunks (Cannon base barrel _ _ followed unfollowed) =
         base : barrel : maybeToList followed ++ unfollowed
 
-    getControlledChipmunk _ c = fromMaybe (base c) (c ^. followedBall)
+    getControlledChipmunk _ c = base c -- fromMaybe (base c) (c ^. followedBall)
 
     updateNoSceneChange _ _ _ _ _ _ (False, _) =
         return
