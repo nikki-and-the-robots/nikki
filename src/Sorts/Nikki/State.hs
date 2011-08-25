@@ -127,7 +127,8 @@ nextAction config oldState controlData nothingHeld buttonDirection contacts ghos
           else Walk afterAirborne c False
         else case grips of
             -- nikki grabs something
-            Just _ | rightPressed || leftPressed -> GripImpulse
+            Just HLeft  | rightPressed -> GripImpulse
+            Just HRight | leftPressed  -> GripImpulse
             Just _ -> Grip
             -- something touches the head that causes jumping capability
             Nothing ->
