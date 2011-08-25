@@ -31,7 +31,7 @@ barrelAngleVelocity = tau * 0.15
 
 cannonballMaterialMass = 50 -- tweakValue "cannonballMaterialMass"
 
-cannonballVelocity = 4000 -- tweakValue "cannonballVelocity"
+cannonballVelocity = 1500 -- tweakValue "cannonballVelocity"
 
 
 -- * sort loading
