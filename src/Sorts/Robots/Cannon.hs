@@ -265,15 +265,15 @@ unfollowCannonBall _ c = c
 shootCannonBall :: Space -> Controls -> ControlData -> Cannon -> IO Cannon
 shootCannonBall space controls cd cannon@Cannon{followedBall_ = Nothing}
   | isRobotActionPressed controls cd = do
-    barrelValues <- getRenderPositionAndAngle (barrel cannon)
-    ball <- mkCannonball space barrelValues
+    ball <- mkCannonball space cannon
     return $
         followedBall ^= Just ball $
         cannon
 shootCannonBall _ _ _ c = return c
 
-mkCannonball :: Space -> (Qt.Position Double, Angle) -> IO Chipmunk
-mkCannonball space (barrelPosition, barrelAngle) = do
+mkCannonball :: Space -> Cannon -> IO Chipmunk
+mkCannonball space cannon = do
+    (barrelPosition, barrelAngle) <- getRenderPositionAndAngle (barrel cannon)
     let ball = Circle (fromUber 3.5)
         ballDesc = mkShapeDescription cannonballShapeAttributes ball
         baryCenterOffset = vmap fromUber (Vector 3.5 3.5)
@@ -281,9 +281,14 @@ mkCannonball space (barrelPosition, barrelAngle) = do
             (barrelPosition +~ rotatePosition barrelAngle cannonballOffset)
         cannonballAttributes =
             mkMaterialBodyAttributes cannonballMaterialMass [ball] pos
+        cMass = CM.mass cannonballAttributes
     chip <- initChipmunk space cannonballAttributes [ballDesc] baryCenterOffset
-    velocity (body chip) $= vmap (* cannonballVelocity)
-        (fromAngle (barrelAngle -~ tau / 4))
+
+    let impulse = vmap (* (cannonballVelocity * cMass))
+            (fromAngle (barrelAngle -~ tau / 4))
+    modifyApplyImpulse chip impulse
+    -- apply a backstroke to the barrel
+    modifyApplyImpulse (barrel cannon) (negateAbelian impulse)
     return chip
 
 cannonballShapeAttributes = ShapeAttributes{
