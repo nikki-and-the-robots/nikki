@@ -27,7 +27,7 @@ import Sorts.Robots.Configuration
 
 -- * configuration
 
-barrelAngleVelocity = tau * 0.08
+barrelAngleVelocity = tau * 0.15
 
 cannonballMaterialMass = 50 -- tweakValue "cannonballMaterialMass"
 
@@ -98,7 +98,7 @@ baseSize = fmap fromUber $ Size 31 21
 
 baseOffset = size2position (robotSize -~ baseSize)
 
-pinOffset = vmap fromUber $ Vector 8 (- 14)
+pinOffset = vmap fromUber $ Vector 8 (- 16)
 
 -- | size of the upright barrel
 barrelSize = fmap fromUber $ Size 11 12
@@ -107,7 +107,7 @@ barrelOffset = fmap fromUber $ Position 18 (- 24)
 
 barrelInitialAngle = - tau / 8
 
-maxBarrelAngle = tau / 8
+maxBarrelAngle = tau / 4
 
 -- | offset of newly created cannonballs relative to the barrel
 cannonballOffset = fmap fromUber $ Position 5.5 (- 3.5)
