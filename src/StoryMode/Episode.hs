@@ -2,6 +2,10 @@
 module StoryMode.Episode where
 
 
+import Data.Maybe
+import Data.Initial
+import qualified Data.Map as Map
+
 import System.FilePath
 
 import Utils
@@ -30,3 +34,8 @@ loadEpisodes = do
         let levelPath = epPath </> pathSnippet
             levelFile = levelPath </> name <.> "nl"
         in mkEpisodeLevel levelPath levelFile
+
+getEpisodeScore :: EpisodeUID -> IO EpisodeScore
+getEpisodeScore euid = do
+    m <- episodeScores <$> getScore
+    return $ fromMaybe initial (Map.lookup euid m)

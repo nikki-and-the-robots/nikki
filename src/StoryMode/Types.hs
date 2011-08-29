@@ -5,6 +5,7 @@ module StoryMode.Types where
 import Data.Binary
 import Data.Foldable
 import Data.Traversable
+import Data.Initial
 
 import Utils
 
@@ -17,17 +18,22 @@ import Utils
 -- (Which stage is available (intro, body, outro) should be calculated by the highscores.)
 data EpisodeScore
     = EpisodeScore_0 {
+        usedBatteryTerminal :: Bool,
         batteriesInTerminal :: Int
       }
   deriving Show
 
+instance Initial EpisodeScore where
+    initial = EpisodeScore_0 False 0
+
 instance Binary EpisodeScore where
-    put (EpisodeScore_0 batts) = do
+    put (EpisodeScore_0 ubt batts) = do
         putWord8 0
+        put ubt
         put batts
     get = do
         0 <- getWord8
-        EpisodeScore_0 <$> get
+        EpisodeScore_0 <$> get <*> get
 
 data EpisodeUID
     = Episode_1

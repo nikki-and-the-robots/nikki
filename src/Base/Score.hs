@@ -1,8 +1,10 @@
 {-# language ViewPatterns, ScopedTypeVariables #-}
 
 module Base.Score (
+    HighScoreFile(..),
     Record(..),
     saveScore,
+    getScore,
     getHighScores,
     mkScoreString,
     timeFormat,
@@ -114,15 +116,18 @@ saveScore (levelUID -> uid) currentScore = do
 
 type Compare a = a -> a -> Ordering
 
-getHighScores :: IO (Map LevelUID Score)
-getHighScores = do
+getScore :: IO HighScoreFile
+getScore = do
     filePath <- getHighScoreFilePath
     content :: Maybe HighScoreFile <- decodeFileStrict filePath
     case content of
         Nothing -> do
             logg Warning "highscore file not readable."
-            return empty
-        Just c -> return $ highScores c
+            return initial
+        Just c -> return c
+
+getHighScores :: IO (Map LevelUID Score)
+getHighScores = highScores <$> getScore
 
 setHighScores :: Map LevelUID Score -> IO ()
 setHighScores m = do

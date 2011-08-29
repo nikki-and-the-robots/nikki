@@ -13,12 +13,14 @@ module Editor.Pickle.LevelFile (
     levelUID,
     LevelMetaData(..),
     emptyLevelMetaData,
+    showLevelTreeForMenu,
     showLevelForMenu,
   ) where
 
 
 import Data.SelectTree
 import qualified Data.Map as Map
+import Data.Maybe
 
 import Control.Monad
 
@@ -46,6 +48,7 @@ mkLevelWithMetaData constructor levelDir levelFile =
 mkUnknownLevel :: FilePath -> IO LevelFile
 mkUnknownLevel = return . UnknownLevelType
 
+levelName :: LevelFile -> Maybe String
 levelName StandardLevel{..} = meta_levelName levelMetaData_
 levelName UserLevel{..}     = meta_levelName levelMetaData_
 levelName EpisodeLevel{..}  = meta_levelName levelMetaData_
@@ -58,11 +61,14 @@ isTemplateLevel :: LevelFile -> Bool
 isTemplateLevel TemplateLevel{} = True
 isTemplateLevel _ = False
 
-showLevelForMenu :: SelectTree LevelFile -> IO Prose
-showLevelForMenu (Leaf label level) = do
+showLevelTreeForMenu :: SelectTree LevelFile -> IO Prose
+showLevelTreeForMenu (Leaf label level) = showLevelForMenu level
+showLevelTreeForMenu x = return $ pVerbatim (x ^. labelA)
+
+showLevelForMenu :: LevelFile -> IO Prose
+showLevelForMenu level = do
+    let name = fromMaybe "???" $ levelName level
     highScores <- getHighScores
     return $ case Map.lookup (levelUID level) highScores of
-        Nothing -> pVerbatim label
-        Just highScore -> pVerbatim (
-            label ++ " " ++ mkScoreString highScore)
-showLevelForMenu x = return $ pVerbatim (x ^. labelA)
+        Nothing -> pVerbatim name
+        Just highScore -> pVerbatim (name ++ " " ++ mkScoreString highScore)

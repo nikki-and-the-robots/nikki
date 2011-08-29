@@ -2,8 +2,8 @@
 module StoryMode.Menus where
 
 
-import Data.SelectTree
 import Data.Maybe
+import Data.Map (Map, member)
 
 import Utils
 
@@ -16,8 +16,10 @@ import StoryMode.Configuration
 import StoryMode.Episode
 
 
+type Play = Parent -> LevelFile -> AppState
+
 -- | shows a text describing our plans with the story mode
-storyMode :: Application -> (Parent -> LevelFile -> AppState) -> Parent -> AppState
+storyMode :: Application -> Play -> Parent -> AppState
 storyMode app play parent = NoGUIAppState $ do
     mEpisodes <- io $ loadEpisodes
     case mEpisodes of
@@ -25,21 +27,44 @@ storyMode app play parent = NoGUIAppState $ do
             file <- rm2m $ getDataFileName "manual/storyModeNotBought"
             prose <- io $ pFile file
             return $ scrollingAppState app prose parent
-        Just episodes -> do
-            let epTree = mkEpisodesTree episodes
-            return $ treeToMenu app parent (p "choose a level") showLevelForMenu epTree
-                play 0
+        Just episodes -> return $ mkEpisodesMenu app play parent episodes 0
 
-mkEpisodesTree :: [Episode LevelFile] -> SelectTree LevelFile
-mkEpisodesTree = mkNode "story mode" . fmap mkEpisodeTree
-
-mkEpisodeTree :: Episode LevelFile -> SelectTree LevelFile
-mkEpisodeTree e =
-    mkNode (epTitle $ euid e) (
-        Leaf "intro" (intro e) :
-        bodyNode :
-        Leaf "outro" (outro e) :
-        [])
+mkEpisodesMenu :: Application -> Play -> Parent -> [Episode LevelFile] -> Int -> AppState
+mkEpisodesMenu app play parent episodes =
+    menuAppState app
+        (NormalMenu (p "story mode") (Just $ p "choose an episode"))
+        (Just parent)
+        (map (mkMenuItem app play this) episodes)
   where
-    bodyNode = mkNode "body levels" (map mkLevelLeaf $ body e)
-    mkLevelLeaf l = Leaf (fromMaybe "???" (levelName l)) l
+    this = mkEpisodesMenu app play parent episodes
+
+mkMenuItem :: Application -> Play -> (Int -> Parent)
+    -> Episode LevelFile -> (Prose, Int -> AppState)
+mkMenuItem app play parent e =
+    (pv $ epTitle $ euid e, \ i -> mkEpisodeMenu app play (parent i) e 0)
+
+mkEpisodeMenu :: Application -> Play -> Parent
+    -> Episode LevelFile -> Int -> AppState
+mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
+    scores <- io $ getHighScores
+    let passedIntro = hasPassedIntro scores ep
+    introItem <- mkItem (intro ep)
+    restItems <- if not passedIntro then return [] else do
+        bodyItems <- mapM mkItem (body ep)
+        outroItem <- mkItem (outro ep)
+        return (bodyItems +: outroItem)
+    return $ menuAppState app
+        (NormalMenu (p "story mode") (Just $ p "choose a level"))
+        (Just parent)
+        (introItem :
+        restItems ++
+        [])
+        ps
+  where
+    mkItem level = io $ do
+        label <- showLevelForMenu level
+        return (label, \ i -> play (this i) level)
+    this = mkEpisodeMenu app play parent ep
+
+hasPassedIntro :: Map LevelUID Score -> Episode LevelFile -> Bool
+hasPassedIntro scores e = member (levelUID $ intro e) scores

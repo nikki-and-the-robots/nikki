@@ -200,7 +200,7 @@ selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
     return $ if null $ leafs levelFiles then
         message app [p "no levels found :("] parent
       else
-        treeToMenu app parent (p "choose a level") showLevelForMenu levelFiles (play app) 0
+        treeToMenu app parent (p "choose a level") showLevelTreeForMenu levelFiles (play app) 0
 
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState
