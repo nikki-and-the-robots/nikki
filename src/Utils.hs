@@ -72,6 +72,9 @@ data Todo
 todo :: Todo
 todo = error "just working on this (Utils.todo)"
 
+todoError :: String -> a
+todoError = error
+
 
 -- | can be used to try out different values for constants without recompiling
 tweakValue :: Read a => FilePath -> a

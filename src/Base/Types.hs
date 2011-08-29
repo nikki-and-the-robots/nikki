@@ -646,6 +646,11 @@ data LevelFile
         , levelFilePath :: FilePath
         , levelMetaData_ :: LevelMetaData
       }
+    | EpisodeLevel {
+          levelDirectory :: FilePath
+        , levelFilePath :: FilePath
+        , levelMetaData_ :: LevelMetaData
+      }
     | TemplateLevel {levelFilePath :: FilePath}
     | UnknownLevelType {levelFilePath :: FilePath}
   deriving (Show)
@@ -663,6 +668,8 @@ levelUID (StandardLevel levelDir levelPath meta) =
     "standardLevels" </> dropPrefix levelDir levelPath
 levelUID (UserLevel levelDir levelPath meta) =
     "userLevels" </> dropPrefix levelDir levelPath
+levelUID (EpisodeLevel levelDir levelPath meta) =
+    "storyModeLevels" </> dropPrefix levelDir levelPath
 levelUID (TemplateLevel path) = path
 levelUID (UnknownLevelType path) = path
 

@@ -19,8 +19,7 @@ module Top.Main where
 
 
 import Data.List as List
-import Data.SelectTree (SelectTree(..), leafs, labelA)
-import qualified Data.Map as Map
+import Data.SelectTree (leafs, labelA)
 
 import Text.Logging
 
@@ -44,6 +43,8 @@ import Editor.Menu (editLevel)
 import Editor.Pickle
 import Editor.Pickle.LevelFile
 import Editor.Pickle.LevelLoading
+
+import StoryMode.Menus
 
 import Top.Initialisation
 import Top.Game (playLevel)
@@ -149,7 +150,7 @@ applicationStates app = NoGUIAppState $ do
 mainMenu :: Application -> Int -> AppState
 mainMenu app ps =
     menuAppState app MainMenu Nothing (
-        (p "story mode", storyMode app . this) :
+        (p "story mode", storyMode app (play app) . this) :
         (p "community levels", community app 0 . this) :
         (p "options", generalOptions app 0 . this) :
         (p "help", mainMenuHelp app . this) :
@@ -159,13 +160,6 @@ mainMenu app ps =
         []) ps
   where
     this = mainMenu app
-
--- | shows a text describing our plans with the story mode
-storyMode :: Application -> Parent -> AppState
-storyMode app parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
-    prose <- io $ pFile file
-    return $ scrollingAppState app prose parent
 
 credits :: Application -> Parent -> AppState
 credits app parent = NoGUIAppState $ do
@@ -206,16 +200,7 @@ selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
     return $ if null $ leafs levelFiles then
         message app [p "no levels found :("] parent
       else
-        treeToMenu app parent (p "choose a level") showLevel levelFiles (play app) 0
-  where
-    showLevel :: SelectTree LevelFile -> IO Prose
-    showLevel (Leaf label level) = do
-        highScores <- getHighScores
-        return $ case Map.lookup (levelUID level) highScores of
-            Nothing -> pVerbatim label
-            Just highScore -> pVerbatim (
-                label ++ " " ++ mkScoreString highScore)
-    showLevel x = return $ pVerbatim (x ^. labelA)
+        treeToMenu app parent (p "choose a level") showLevelForMenu levelFiles (play app) 0
 
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState
@@ -252,6 +237,7 @@ selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
             (\ parent chosen -> edit app parent chosen) 0
 
 
+-- | loads a level and plays it.
 play :: Application -> Parent -> LevelFile -> AppState
 play app parent levelFile = loadingEditorScene app levelFile parent (playLevel app parent False)
 

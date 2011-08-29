@@ -15,6 +15,7 @@ module Base.Paths (
     -- * story mode data
     getStoryModeDataFileName,
     getStoryModeDataFiles,
+    getStoryModeLevelsPath,
   ) where
 
 
@@ -149,14 +150,8 @@ withDynamicConfiguration configuration action =
 -- * Story mode data
 
 getStoryModeDataFileName :: FilePath -> IO (Maybe FilePath)
-getStoryModeDataFileName path = do
-    dir <- getAppUserDataDirectory "nikki-story-mode"
-    let file = dir </> "data" </> path
-    fileExists <- doesFileExist file
-    dirExists <- doesDirectoryExist file
-    if (fileExists || dirExists)
-        then return $ Just file
-        else return Nothing
+getStoryModeDataFileName path =
+    fmap (</> ("data" </> path)) <$> getStoryModePath
 
 getStoryModeDataFiles :: FilePath -> (Maybe String) -> IO (Maybe [FilePath])
 getStoryModeDataFiles path_ extension = do
@@ -164,3 +159,13 @@ getStoryModeDataFiles path_ extension = do
     case mPath of
         Nothing -> return Nothing
         Just path -> Just <$> map (path </>) <$> io (getFiles path extension)
+
+getStoryModeLevelsPath :: IO (Maybe FilePath)
+getStoryModeLevelsPath =
+    fmap (</> "levels") <$> getStoryModePath
+
+getStoryModePath :: IO (Maybe FilePath)
+getStoryModePath = do
+    dir <- getAppUserDataDirectory "nikki-story-mode"
+    exists <- doesDirectoryExist dir
+    return $ if exists then Just dir else Nothing

@@ -25,33 +25,47 @@ import System.Directory
 import Utils
 
 import Base.Paths
-
 import Base.Types
+
+import StoryMode.Types
 
 
 -- | type representing the Map of HighScores,
 -- which will be written to file.
 -- HighScoreFile has versioned constructors.
 -- Serialisation uses the Binary class.
-data HighScoreFile =
-    HighScoreFile_0 {highScores :: (Map LevelUID Score)}
+data HighScoreFile
+    = HighScoreFile_0 {
+        highScores :: Map LevelUID Score
+      }
+    | HighScoreFile_1 {
+        highScores :: Map LevelUID Score,
+        episodeScores :: Map EpisodeUID EpisodeScore
+      }
   deriving Show
 
 instance Initial HighScoreFile where
-    initial = HighScoreFile_0 empty
+    initial = HighScoreFile_1 empty empty
+
+convertToNewest :: HighScoreFile -> HighScoreFile
+convertToNewest (HighScoreFile_0 lhs) = HighScoreFile_1 lhs empty
+convertToNewest x = x
 
 -- Binary instance for serialisation
 -- (to provide minimal cheating protection).
 -- This instance has to work with the versioned
 -- constructors!!!
 instance Binary HighScoreFile where
-    put (HighScoreFile_0 x) = do
-        putWord8 0
-        put x
+    put s@(HighScoreFile_0 x) = put $ convertToNewest s
+    put (HighScoreFile_1 lhs ehs) = do
+        putWord8 1
+        put lhs
+        put ehs
     get = do
         i <- getWord8
         case i of
-            0 -> HighScoreFile_0 <$> get
+            0 -> convertToNewest <$> HighScoreFile_0 <$> get
+            1 -> HighScoreFile_1 <$> get <*> get
 
 
 data Record
