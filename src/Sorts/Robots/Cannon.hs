@@ -143,7 +143,7 @@ instance Sort CannonSort Cannon where
     size _ = robotSize
     renderIconified sort ptr =
         renderPixmapSimple ptr (basePix sort)
-    initialize app Nothing sort ep Nothing _ = do
+    initialize app _ Nothing sort ep Nothing _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
             base = ImmutableChipmunk position 0 baryCenterOffset []
@@ -151,7 +151,7 @@ instance Sort CannonSort Cannon where
             barrel = ImmutableChipmunk (position +~ barrelOffset) barrelInitialAngle barrelBaryCenterOffset []
             noopSetter _ = return ()
         return $ Cannon base barrel False Nothing barrelInitialAngle noopSetter Nothing []
-    initialize app (Just space) sort ep Nothing _ = io $ do
+    initialize app _ (Just space) sort ep Nothing _ = io $ do
         (base, pin) <- initBase space ep
         barrel <- initBarrel space ep
         angleSetter <- initConstraint space pin base barrel

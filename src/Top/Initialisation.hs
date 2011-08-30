@@ -94,26 +94,27 @@ freeAllSorts sorts = do
 
 initScene :: Application -> LevelFile -> Space -> CachedTiles
     -> Grounds (EditorObject Sort_) -> RM (Scene Object_)
-initScene app levelFile space cachedTiles =
+initScene app file space cachedTiles =
     return . Sorts.Nikki.uniqueNikki app >=>
     secondKleisli (
         return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
         return . groundsMergeTiles >=>
-        initializeObjects app space cachedTiles) >=>
-    io . mkScene levelFile space >=>
+        initializeObjects app file space cachedTiles) >=>
+    io . mkScene file space >=>
     return . Sorts.LowerLimit.promoteLowerLimit
 
-initializeObjects :: Application -> Space -> CachedTiles
+initializeObjects :: Application -> LevelFile -> Space -> CachedTiles
     -> Grounds (EditorObject Sort_) -> RM (Grounds Object_)
-initializeObjects app space cachedTiles (Grounds backgrounds mainLayer foregrounds) = do
-    bgs' <- fmapM (fmapM (editorObject2Object app Nothing cachedTiles)) backgrounds
-    ml' <- fmapM (editorObject2Object app (Just space) cachedTiles) mainLayer
-    fgs' <- fmapM (fmapM (editorObject2Object app Nothing cachedTiles)) foregrounds
+initializeObjects app file space cachedTiles (Grounds backgrounds mainLayer foregrounds) = do
+    bgs' <- fmapM (fmapM (editorObject2Object app file Nothing cachedTiles)) backgrounds
+    ml' <- fmapM (editorObject2Object app file (Just space) cachedTiles) mainLayer
+    fgs' <- fmapM (fmapM (editorObject2Object app file Nothing cachedTiles)) foregrounds
     return $ Grounds bgs' ml' fgs'
 
-editorObject2Object :: Application -> Maybe Space -> CachedTiles -> EditorObject Sort_ -> RM Object_
-editorObject2Object app mspace cachedTiles (EditorObject sort pos state) =
-    initialize app mspace sort pos state cachedTiles
+editorObject2Object :: Application -> LevelFile -> Maybe Space -> CachedTiles
+    -> EditorObject Sort_ -> RM Object_
+editorObject2Object app file mspace cachedTiles (EditorObject sort pos state) =
+    initialize app file mspace sort pos state cachedTiles
 
 mkScene :: LevelFile -> Space -> (Index, Grounds Object_) -> IO (Scene Object_)
 mkScene levelFile space (nikki, objects) = do

@@ -67,7 +67,7 @@ instance Sort GSort Grid where
             renderPixmapSimple ptr pix
             translate ptr (negateAbelian p)
 
-    initialize app mSpace sort ep Nothing _ = do
+    initialize app _ mSpace sort ep Nothing _ = do
         let pos = epToPosition (size sort) ep
         return $ Grid (size sort) pos
 

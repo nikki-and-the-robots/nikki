@@ -186,7 +186,7 @@ instance Sort TSort Tile where
     renderIconified sort ptr =
         renderPixmapSimple ptr $ head $ tilePixmaps sort
 
-    initialize app Nothing sort@TSort{} editorPosition Nothing _ = do
+    initialize app _ Nothing sort@TSort{} editorPosition Nothing _ = do
         let pos = epToPosition (size sort) editorPosition
 
 --         let (shapes, baryCenterOffset) = mkShapes $ size sort
@@ -240,7 +240,7 @@ instance Sort AllTilesSort AllTiles where
     freeSort = error "freeSort: not in use for AllTiles"
     size = error "size: not in use for AllTiles"
     renderIconified = error "renderIconified: not in use for AllTiles"
-    initialize app (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
+    initialize app _ (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
       cachedTiles = io $ do
         let renderables = map mkRenderable editorObjects
         chipmunks <- initChipmunks space cachedTiles editorObjects

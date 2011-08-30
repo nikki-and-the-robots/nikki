@@ -68,7 +68,7 @@ instance Sort BSort Battery where
     renderIconified sort ptr =
         renderPixmapSimple ptr (batteryPixmap sort)
 
-    initialize app (Just space) sort ep Nothing _ = io $ do
+    initialize app _ (Just space) sort ep Nothing _ = io $ do
         let baryCenterOffset = size2vector $ fmap (/2) batterySize
             shapes = fmap (mkShapeDescription shapeAttributes) mkShapes
             pos = position2vector (epToPosition (size sort) ep)
@@ -76,7 +76,7 @@ instance Sort BSort Battery where
             bodyAttributes = mkMaterialBodyAttributes batteryMaterialMass mkShapes pos
         chip <- initChipmunk space bodyAttributes shapes baryCenterOffset
         return $ Battery chip
-    initialize app Nothing sort ep Nothing _ = return $
+    initialize app _ Nothing sort ep Nothing _ = return $
         let baryCenterOffset = size2vector $ fmap (/2) batterySize
             position = epToPosition (size sort) ep
             chip = ImmutableChipmunk position 0 baryCenterOffset []

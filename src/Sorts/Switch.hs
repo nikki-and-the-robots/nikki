@@ -134,7 +134,7 @@ instance Sort SwitchSort Switch where
         translate ptr (Position 0 (fromUber 7))
         renderPixmapSimple ptr (getBoxPix sort)
 
-    initialize app (Just space) sort ep Nothing _ = io $ do
+    initialize app _ (Just space) sort ep Nothing _ = io $ do
         let ex = realToFrac (editorX ep) + vectorX editorPadding
             ey = realToFrac (editorY ep) + vectorY editorPadding
             ((boxShapes, boxBaryCenterOffset), triggerShapes, (stampShapes, stampBaryCenterOffset)) =
@@ -156,7 +156,7 @@ instance Sort SwitchSort Switch where
         updateAntiGravity sort switch
 
         return switch
-    initialize app Nothing sort ep Nothing _ = do
+    initialize app _ Nothing sort ep Nothing _ = do
         let ex = realToFrac (editorX ep) + vectorX editorPadding
             ey = realToFrac (editorY ep) + vectorY editorPadding
             ((_, boxBaryCenterOffset), _, (_, stampBaryCenterOffset)) = switchShapes

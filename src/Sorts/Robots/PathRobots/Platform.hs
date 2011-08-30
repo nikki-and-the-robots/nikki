@@ -76,7 +76,7 @@ instance Sort PSort Platform where
                 doRenderPixmaps ptr $ singleton $ renderRobotEyes (robotEyes sort)
                     (renderPosition +~ offset) 0 eyesOffset eyesState 0
 
-    initialize app (Just space) sort ep (Just (OEMState oemState_)) _ = io $ do
+    initialize app _ (Just space) sort ep (Just (OEMState oemState_)) _ = io $ do
         let Just oemState = cast oemState_
             baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
 
@@ -89,7 +89,7 @@ instance Sort PSort Platform where
 
         let path = toPath (size sort) oemState
         return $ Platform (size sort) chip path
-    initialize app Nothing sort ep _ _ = do
+    initialize app _ Nothing sort ep _ _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
             vector = position2vector position +~ baryCenterOffset

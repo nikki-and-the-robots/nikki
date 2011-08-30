@@ -121,7 +121,7 @@ instance Sort SSort Sign where
 
     objectEditMode _ = Just oemMethods
 
-    initialize app (Just space) sort editorPosition (Just (OEMState oemState_)) _ = do
+    initialize app _ (Just space) sort editorPosition (Just (OEMState oemState_)) _ = do
         let Just oemState :: Maybe SignOEMState = cast oemState_
         monologue <- io $ readStoryModeMonologue $ oemFile oemState
         let pos = position2vector

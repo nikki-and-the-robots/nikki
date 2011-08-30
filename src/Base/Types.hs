@@ -537,7 +537,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 
     -- if Nothing is passed as space, this should be an object 
     -- that is not added to the chipmunk space (i.e. background tiles)
-    initialize :: Application -> Maybe Space
+    initialize :: Application -> LevelFile -> Maybe Space
         -> sort -> EditorPosition -> Maybe OEMState -> CachedTiles -> RM object
 
     immutableCopy :: object -> IO object
@@ -616,8 +616,8 @@ instance Sort Sort_ Object_ where
         case editorSort editorObject of
             (Sort_ innerSort) ->
                 renderEditorObject ptr offset editorObject{editorSort = innerSort}
-    initialize app space (Sort_ sort) editorPosition state cachedTiles =
-        Object_ sort <$> initialize app space sort editorPosition state cachedTiles
+    initialize app file space (Sort_ sort) editorPosition state cachedTiles =
+        Object_ sort <$> initialize app file space sort editorPosition state cachedTiles
     immutableCopy (Object_ s o) = Object_ s <$> Base.Types.immutableCopy o
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o
