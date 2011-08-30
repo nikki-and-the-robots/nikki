@@ -19,7 +19,7 @@ import Utils
 data EpisodeScore
     = EpisodeScore_0 {
         usedBatteryTerminal :: Bool,
-        batteriesInTerminal :: Int
+        batteriesInTerminal :: Integer
       }
   deriving Show
 
@@ -51,6 +51,7 @@ data Episode a = Episode {
     body :: [a],
     outro :: a
   }
+    deriving Show
 
 instance Functor Episode where
     fmap f (Episode uid i b o) =

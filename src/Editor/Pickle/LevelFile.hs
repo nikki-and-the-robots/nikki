@@ -32,18 +32,21 @@ import Base
 
 import Editor.Pickle.MetaData
 
+import StoryMode.Types
+
 
 mkStandardLevel :: FilePath -> FilePath -> IO LevelFile
-mkStandardLevel = mkLevelWithMetaData StandardLevel
+mkStandardLevel levelDir levelFile =
+    StandardLevel levelDir levelFile <$> loadMetaData levelFile
 
 mkUserLevel :: FilePath -> FilePath -> IO LevelFile
-mkUserLevel = mkLevelWithMetaData UserLevel
+mkUserLevel levelDir levelFile =
+    UserLevel levelDir levelFile <$> loadMetaData levelFile
 
-mkEpisodeLevel :: FilePath -> FilePath -> IO LevelFile
-mkEpisodeLevel = mkLevelWithMetaData EpisodeLevel
-
-mkLevelWithMetaData constructor levelDir levelFile =
-    constructor levelDir levelFile <$> loadMetaData levelFile
+mkEpisodeLevel :: FilePath -> FilePath -> IO (Episode LevelFile -> LevelFile)
+mkEpisodeLevel levelDir levelFile = do
+    m <- loadMetaData levelFile
+    return $ \ e -> EpisodeLevel e levelDir levelFile m
 
 mkUnknownLevel :: FilePath -> IO LevelFile
 mkUnknownLevel = return . UnknownLevelType

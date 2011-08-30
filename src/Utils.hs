@@ -243,6 +243,11 @@ applyTimesM 0 m = return
 applyTimesM n m =
     m >=> applyTimesM (pred n) m
 
+infixl 8 ^^:
+(^^:) :: Functor m => Accessor r a -> (a -> m a) -> r -> m r
+acc ^^: f = \ r ->
+    fmap (\ a' -> acc ^= a' $ r) (f (r ^. acc))
+
 
 -- * either stuff
 

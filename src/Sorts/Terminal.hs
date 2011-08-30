@@ -1,5 +1,6 @@
 {-# language NamedFieldPuns, MultiParamTypeClasses, ScopedTypeVariables,
-     ViewPatterns, DeriveDataTypeable, Rank2Types, FlexibleInstances, ImpredicativeTypes #-}
+    ViewPatterns, DeriveDataTypeable, Rank2Types, FlexibleInstances,
+    ImpredicativeTypes, RecordWildCards #-}
 
 {-# OPTIONS_GHC -fno-warn-deprecated-flags #-}
 
@@ -26,6 +27,8 @@ import Data.Monoid
 import Data.Maybe
 import Data.Accessor
 
+import Text.Logging
+
 import System.FilePath
 
 import Physics.Chipmunk as CM
@@ -35,7 +38,7 @@ import qualified Graphics.Qt as Qt
 
 import Utils
 
-import Base hiding (Mode(..))
+import Base hiding (Mode(..), update)
 import qualified Base
 
 import Sorts.Nikki.Configuration (nikkiSize)
@@ -44,6 +47,9 @@ import Sorts.LowerLimit (isBelowLowerLimit)
 import Editor.Scene.Types
 import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
+
+import StoryMode.Types
+import StoryMode.Episode
 
 
 -- * terminal configuration
@@ -54,11 +60,25 @@ blinkenLightSpeed = 0.5
 blinkLength :: Seconds
 blinkLength = 0.4
 
+batteryTerminalSize = fmap fromUber $ Size 72 48
+
+batteryNumberNeeded = 100
 
 -- * sort loading
 
 sorts :: RM [Sort_]
 sorts = do
+    a <- terminalSort
+    mPngDir <- io $ getStoryModeDataFileName "png"
+    sorts <- case mPngDir of
+        Nothing -> return [a]
+        Just pngDir -> do
+            b <- batteryTerminalSort pngDir a
+            return [a, b]
+    return $ map Sort_ $ sorts
+
+terminalSort :: RM TSort
+terminalSort = do
     let nameToPixmap =
             return . toPngPath >=>
             getDataFileName
@@ -75,7 +95,7 @@ sorts = do
     littleColors <- readColorLights (\ color -> toPngPath ("terminal-" ++ color))
     littleDefunctColors <- readColorLights (\ color -> toPngPath ("terminal-defunct-" ++ color))
     osdPixmaps <- loadOsdPixmaps
-    return $ singleton $ Sort_ $ TSort
+    return $ TSort
         (Pixmaps backgroundPixmap displayBlinkenLights littleColors littleDefunctColors)
         osdPixmaps
 
@@ -109,6 +129,25 @@ loadOsdPixmaps = do
     removeUberPixelShadow p@Pixmap{pixmapSize} =
         p{pixmapSize = pixmapSize -~ fmap fromUber (Size 1 1)}
 
+batteryTerminalSort :: FilePath -> TSort -> RM TSort
+batteryTerminalSort pngDir tsort = do
+    BatteryTSort tsort <$>
+        loadPixmap (Position 5 5) batteryTerminalSize (mkPath "battery-terminal") <*>
+        loadPix 9 "beam-white" <*>
+        loadPix 9 "beam-green" <*>
+        loadPix 9 "light-green" <*>
+        fmapM (loadPix 9) bootingPix
+  where
+    loadPix n name =
+        loadSymmetricPixmap (Position n n) (mkPath name)
+    mkPath name = pngDir </> "battery-terminal" </> name <.> "png"
+    bootingPix =
+        "display_standby_00" :
+        "display_booting_01" :
+        "display_booting_02" :
+        "display_booting_03" :
+        "display_booting_04" :
+        []
 
 -- | type to bundle things for the four terminal colors: red, blue, green and yellow (in that order)
 data ColorLights a = ColorLights {
@@ -176,26 +215,54 @@ freeOsdPixmaps (OsdPixmaps a bs cs ds e f) = do
     freePixmap f
 
 
-data TSort = TSort {
+data TSort
+  = TSort {
     pixmaps :: Pixmaps,
     osdPixmaps :: OsdPixmaps
   }
+  | BatteryTSort {
+    tsort :: TSort,
+    btBackground :: Pixmap,
+    whiteBeam :: Pixmap,
+    greenBeam :: Pixmap,
+    greenTop :: Pixmap,
+    bootingPixmaps :: [Pixmap]
+  }
     deriving (Show, Typeable)
+
+getOsdPixmaps :: TSort -> OsdPixmaps
+getOsdPixmaps TSort{..} = osdPixmaps
+getOsdPixmaps BatteryTSort{..} = getOsdPixmaps tsort
 
 isTerminal :: Sort sort o => sort -> Bool
 isTerminal (cast -> Just _ :: Maybe TSort) = True
 isTerminal (cast -> Just (Sort_ inner) :: Maybe Sort_) = isTerminal inner
 isTerminal _ = False
 
-data Terminal = Terminal {
+data Terminal
+  = Terminal {
     chipmunk :: Chipmunk,
-    robots :: [RobotIndex],
+    robots_ :: [RobotIndex],
     state_ :: State
+  }
+  | StandbyBatteryTerminal {
+    chipmunk :: Chipmunk,
+    robots_ :: [RobotIndex],
+    batteryNumber :: Integer
+  }
+  | BatteryTerminal {
+    chipmunk :: Chipmunk,
+    robots_ :: [RobotIndex],
+    state_ :: State,
+    onTime :: Seconds
   }
     deriving (Show, Typeable)
 
 state :: Accessor Terminal State
 state = accessor state_ (\ a r -> r{state_ = a})
+
+robots :: Accessor Terminal [RobotIndex]
+robots = accessor robots_ (\ a r -> r{robots_ = a})
 
 unwrapTerminal :: Object_ -> Maybe Terminal
 unwrapTerminal (Object_ sort o) = cast o
@@ -204,7 +271,9 @@ unwrapTerminalSort :: Sort_ -> Maybe TSort
 unwrapTerminalSort (Sort_ sort) = cast sort
 
 terminalExitMode :: Terminal -> ExitMode
-terminalExitMode = state_ >>> exitMode
+terminalExitMode Terminal{..} = exitMode state_
+terminalExitMode BatteryTerminal{..} = exitMode state_
+terminalExitMode StandbyBatteryTerminal{} = ExitToNikki -- exit to nikki immediately
 
 
 data RobotIndex
@@ -309,17 +378,23 @@ data ExitMode
 -- * Sort implementation
 
 instance Sort TSort Terminal where
-    sortId = const $ SortId "terminal"
+    sortId TSort{} = SortId "terminal"
+    sortId BatteryTSort{} = SortId "story-mode/batteryTerminal"
     freeSort (TSort terminalPixmaps osdPixmaps) =
         freeTerminalPixmaps terminalPixmaps >>
         freeOsdPixmaps osdPixmaps
-    size = const $ Size (fromUber 48) (fromUber 48)
-    renderIconified sort ptr =
-        renderPixmapSimple ptr $ background $ pixmaps sort
+    freeSort (BatteryTSort _ a b c d e) =
+        fmapM_ freePixmap (a : b : c : d : e)
+    size TSort{} = fmap fromUber $ Size 48 48
+    size BatteryTSort{} = batteryTerminalSize
+    renderIconified sort@TSort{..} ptr =
+        renderPixmapSimple ptr $ background pixmaps
+    renderIconified sort@BatteryTSort{btBackground} ptr =
+        renderPixmapSimple ptr btBackground
 
     objectEditMode _ = Just oemMethods
 
-    initialize app (Just space) sort editorPosition (Just (OEMState oemState_)) _ = io $ do
+    initialize app file (Just space) sort editorPosition (Just (OEMState oemState_)) _ = io $ do
         let Just oemState :: Maybe TerminalOEMState = cast oemState_
             attached = fmap Controllable $ case oemState of
                 NoRobots -> []
@@ -338,12 +413,16 @@ instance Sort TSort Terminal where
             (polys, baryCenterOffset) = mkPolys $ size sort
             polysAndAttributes = map (mkShapeDescription shapeAttributes) polys
         chip <- initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
-        return $ Terminal chip attached (initialMenuState 0)
-    initialize app Nothing sort editorPosition _ _ = do
+        case sort of
+            TSort{} -> return $ Terminal chip attached (initialMenuState 0)
+            BatteryTSort{} -> mkBatteryTerminal file chip attached
+    initialize app _ Nothing sort@TSort{} editorPosition _ _ = do
         let position = epToPosition (size sort) editorPosition
             (_, baryCenterOffset) = mkPolys $ size sort
             chip = ImmutableChipmunk position 0 baryCenterOffset []
-        return $ Terminal chip [] (initialMenuState 0)
+        return $ case sort of
+            TSort{} -> Terminal chip [] (initialMenuState 0)
+            BatteryTSort{} -> StandbyBatteryTerminal chip [] 0
 
     immutableCopy t =
         CM.immutableCopy (chipmunk t) >>= \ x -> return t{chipmunk = x}
@@ -354,17 +433,12 @@ instance Sort TSort Terminal where
 
     chipmunks = chipmunk >>> return
 
+    startControl now t@StandbyBatteryTerminal{} = t
     startControl now t =
-        state ^= reset (now - blinkLength) (robots t) (t ^. state) $
+        state ^= reset (now - blinkLength) (t ^. robots) (t ^. state) $
         t
 
-    updateNoSceneChange sort config _ scene now contacts (False, cd) terminal =
-        updateGameMode contacts <$>
-        updateControllableStates scene terminal
-    updateNoSceneChange sort config _ scene now contacts (True, cd) terminal =
-        updateControllableStates scene $
-            state ^= updateState config now cd (robots terminal) (terminal ^. state) $
-            terminal
+    updateNoSceneChange = update
 
     renderObject _ _ terminal sort ptr offset now = do
         pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
@@ -393,22 +467,41 @@ mkPolys size =
 
 -- * controlling
 
--- | updates the gameMode if Nikki doesn't touch it anymore
-updateGameMode :: Contacts -> Terminal -> Terminal
-updateGameMode contacts terminal =
-    if fany (hasTerminalShape terminal) (terminals contacts)
-    -- Nikki still touches the terminal
-    then terminal
-    -- Nikki doesn't touch the terminal, so back to NikkiMode
-    else
-        state .> gameMode ^= NikkiMode $
+update sort config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} = do
+    logg Debug $ show $ batteryNumber terminal
+    logg Debug $ take 10 $ show terminal
+    return terminal
+update sort config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} = do
+    logg Debug $ show $ batteryNumber terminal
+    logg Debug $ take 10 $ show terminal
+    updateStandbyState now <$>
+        putBatteriesInTerminal scene now terminal
+update sort config _ scene now contacts (False, cd) terminal = do
+    logg Debug $ take 10 $ show terminal
+    (state ^: updateGameMode contacts terminal) <$>
+        (robots ^^: updateControllableStates scene) terminal
+update sort config _ scene now contacts (True, cd) terminal = do
+    logg Debug $ take 10 $ show terminal
+    (robots ^^: updateControllableStates scene) $
+        state ^= updateState config now cd (terminal ^. robots) (terminal ^. state) $
         terminal
 
+
+-- | updates the gameMode if Nikki doesn't touch it anymore
+updateGameMode :: Contacts -> Terminal -> State -> State
+updateGameMode contacts terminal state =
+    if fany (hasTerminalShape terminal) (terminals contacts)
+    -- Nikki still touches the terminal
+    then state
+    -- Nikki doesn't touch the terminal, so back to NikkiMode
+    else
+        gameMode ^= NikkiMode $
+        state
+
 -- | updates the controllable states of the attached robots
-updateControllableStates :: Scene Object_ -> Terminal -> IO Terminal
-updateControllableStates scene terminal = do
-    robots' <- fmapM (updateControllableState scene) $ robots terminal
-    return terminal{robots = robots'}
+updateControllableStates :: Scene Object_ -> [RobotIndex] -> IO [RobotIndex]
+updateControllableStates scene =
+    fmapM (updateControllableState scene)
 
 updateControllableState :: Scene Object_ -> RobotIndex -> IO RobotIndex
 updateControllableState scene (unwrapRobotIndex -> i) = do
@@ -445,16 +538,53 @@ updateState _ _ _ _ t = t
 exitToNikki :: State -> State
 exitToNikki state = state{exitMode = ExitToNikki, robotIndex = 0}
 
+-- | initializes battery terminals
+mkBatteryTerminal :: LevelFile -> Chipmunk -> [RobotIndex] -> IO Terminal
+mkBatteryTerminal file chip robots =
+    updateStandbyState 0 <$>
+    case file of
+        (EpisodeLevel episode _ _ _) -> do
+            batteries <- batteriesInTerminal <$> getEpisodeScore (euid episode)
+            return $ StandbyBatteryTerminal chip robots batteries
+
+putBatteriesInTerminal :: Scene o -> Seconds -> Terminal -> IO Terminal
+putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
+    case levelFile scene of
+        (EpisodeLevel episode _ _ _) -> do
+            score <- getEpisodeScore $ euid episode
+            batteries <- collectedBatteries episode <$> getHighScores
+            setEpisodeScore (euid episode) (EpisodeScore_0 True batteries)
+            return $ StandbyBatteryTerminal
+                (chipmunk t)
+                (t ^. robots)
+                batteries
+        _ -> return t
+
+updateStandbyState :: Seconds -> Terminal -> Terminal
+updateStandbyState now t@StandbyBatteryTerminal{..} =
+    if batteryNumber < batteryNumberNeeded then t else
+        BatteryTerminal chipmunk robots_ (initialMenuState now) now
+
 
 -- * game rendering
 
 renderTerminal :: TSort -> Seconds
     -> Terminal -> Qt.Position Double
     -> [RenderPixmap]
-renderTerminal sort now t pos =
+renderTerminal sort@TSort{} now t pos =
     renderTerminalBackground sort pos :
     renderDisplayBlinkenLights sort now pos :
     catMaybes (renderLittleColorLights sort now t pos)
+renderTerminal sort@BatteryTSort{..} now t pos =
+    let background = RenderPixmap btBackground pos Nothing
+        blinkenLights = renderDisplayBlinkenLights tsort now pos
+        batteryBar = renderBatteryBar sort pos
+        booting = renderBootingAnimation sort pos
+    in  background :
+--         blinkenLights :
+        batteryBar :
+        booting :
+        []
 
 renderTerminalBackground sort pos =
     RenderPixmap (background $ pixmaps sort) pos Nothing
@@ -469,7 +599,7 @@ blinkenLightOffset = fmap fromUber $ Position 13 18
 
 -- | renders the little colored lights (for the associated robots) on the terminal in the scene
 renderLittleColorLights sort now t pos =
-    let colorStates = fst $ blinkenLightsState now (robots t) (t ^. state)
+    let colorStates = fst $ blinkenLightsState now (t ^. robots) (t ^. state)
     in map
         (renderLight
             (littleColorLights $ pixmaps sort)
@@ -512,6 +642,19 @@ boxWidth = fromUber 3
 padding = fromUber 2
 
 
+-- * battery terminal rendering
+
+renderBatteryBar BatteryTSort{..} p =
+    RenderPixmap whiteBeam (p +~ whiteBeamOffset) Nothing
+
+whiteBeamOffset = fmap fromUber $ Position 55 32
+
+renderBootingAnimation BatteryTSort{..} p =
+    RenderPixmap (head bootingPixmaps) (p +~ bootingOffset) Nothing
+
+bootingOffset = fmap fromUber $ Position 30 20
+
+
 -- * rendering of game OSD
 
 renderTerminalOSD :: Ptr QPainter -> Seconds -> Scene Object_ -> IO ()
@@ -520,14 +663,16 @@ renderTerminalOSD ptr now scene@Scene{mode_ = mode@Base.TerminalMode{}} =
         object = scene ^. mainLayerObjectA terminal
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
+        (Just sort, Just terminal@StandbyBatteryTerminal{}) ->
+            return ()
         (Just sort, Just terminal) -> do
             clearScreen ptr $ alpha ^= 0.6 $ black
             windowSize <- sizeQPainter ptr
-            let pixmaps = osdPixmaps sort
+            let pixmaps = getOsdPixmaps sort
                 position = fmap fromIntegral $ osdPosition windowSize (osdBackground pixmaps)
                 -- states of lights
                 (colorStates, exitState) =
-                    blinkenLightsState now (robots terminal) (terminal ^. state)
+                    blinkenLightsState now (terminal ^. robots) (terminal ^. state)
             renderPixmap ptr zero position Nothing (osdBackground pixmaps)
             renderOsdCenters ptr position pixmaps colorStates
             renderOsdFrames ptr position pixmaps (terminal ^. state) (selectedColorLights (robotIndex (terminal ^. state)))

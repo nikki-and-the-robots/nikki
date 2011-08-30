@@ -4,19 +4,22 @@ module Base.Score (
     HighScoreFile(..),
     Record(..),
     saveScore,
-    getScore,
+    getScores,
+    setScores,
     getHighScores,
+    collectedBatteries,
     mkScoreString,
     timeFormat,
     batteryFormat,
   ) where
 
 
-import Data.Map as Map
+import Data.Map as Map (Map, empty, lookup, insert)
 import Data.Binary
 import Data.Binary.Strict
 import Data.Initial
 import Data.Accessor
+import Data.Foldable (toList)
 
 import Text.Printf
 import Text.Logging
@@ -69,6 +72,14 @@ instance Binary HighScoreFile where
             0 -> convertToNewest <$> HighScoreFile_0 <$> get
             1 -> HighScoreFile_1 <$> get <*> get
 
+-- | returns all collected batteries for one episode
+collectedBatteries :: Episode LevelFile -> Map LevelUID Score -> Integer
+collectedBatteries e m =
+    sum $ toList $ fmap (getBatteryNumber m) e
+  where
+    getBatteryNumber :: Map LevelUID Score -> LevelFile -> Integer
+    getBatteryNumber m l =
+        maybe 0 (^. scoreBatteryPower) (Map.lookup (levelUID l) m)
 
 data Record
     = NoNewRecord
@@ -116,8 +127,8 @@ saveScore (levelUID -> uid) currentScore = do
 
 type Compare a = a -> a -> Ordering
 
-getScore :: IO HighScoreFile
-getScore = do
+getScores :: IO HighScoreFile
+getScores = do
     filePath <- getHighScoreFilePath
     content :: Maybe HighScoreFile <- decodeFileStrict filePath
     case content of
@@ -126,14 +137,18 @@ getScore = do
             return initial
         Just c -> return c
 
+setScores scores = do
+    filePath <- getHighScoreFilePath
+    encodeFileStrict filePath scores
+
 getHighScores :: IO (Map LevelUID Score)
-getHighScores = highScores <$> getScore
+getHighScores = highScores <$> getScores
 
 setHighScores :: Map LevelUID Score -> IO ()
 setHighScores m = do
-    let content :: HighScoreFile = HighScoreFile_0 m
-    filePath <- getHighScoreFilePath
-    encodeFileStrict filePath content
+    eps <- episodeScores <$> getScores
+    let content :: HighScoreFile = HighScoreFile_1 m eps
+    setScores content
 
 setHighScore :: LevelUID -> Score -> IO ()
 setHighScore uid score = do

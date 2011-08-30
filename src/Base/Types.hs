@@ -47,6 +47,8 @@ import Base.Pixmap
 
 import Base.Types.Events
 
+import StoryMode.Types
+
 
 -- * type aliases
 
@@ -647,7 +649,8 @@ data LevelFile
         , levelMetaData_ :: LevelMetaData
       }
     | EpisodeLevel {
-          levelDirectory :: FilePath
+          levelEpisode :: Episode LevelFile
+        , levelDirectory :: FilePath
         , levelFilePath :: FilePath
         , levelMetaData_ :: LevelMetaData
       }
@@ -668,7 +671,7 @@ levelUID (StandardLevel levelDir levelPath meta) =
     "standardLevels" </> dropPrefix levelDir levelPath
 levelUID (UserLevel levelDir levelPath meta) =
     "userLevels" </> dropPrefix levelDir levelPath
-levelUID (EpisodeLevel levelDir levelPath meta) =
+levelUID (EpisodeLevel _ levelDir levelPath meta) =
     "storyModeLevels" </> dropPrefix levelDir levelPath
 levelUID (TemplateLevel path) = path
 levelUID (UnknownLevelType path) = path

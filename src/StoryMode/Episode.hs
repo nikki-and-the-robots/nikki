@@ -28,8 +28,11 @@ loadEpisodes = do
             Just <$> fmapM (loadEpisode epPath) episodes
   where
     loadEpisode :: FilePath -> Episode String -> IO (Episode LevelFile)
-    loadEpisode epPath e = fmapM (loadFile epPath (epPathSnippet $ euid e)) e
-    loadFile :: FilePath -> String -> String -> IO LevelFile
+    loadEpisode epPath e = do
+        epF <- fmapM (loadFile epPath (epPathSnippet $ euid e)) e
+        let ep = fmap (\ f -> f ep) epF
+        return ep
+    loadFile :: FilePath -> String -> String -> IO (Episode LevelFile -> LevelFile)
     loadFile epPath pathSnippet name =
         let levelPath = epPath </> pathSnippet
             levelFile = levelPath </> name <.> "nl"
@@ -37,5 +40,10 @@ loadEpisodes = do
 
 getEpisodeScore :: EpisodeUID -> IO EpisodeScore
 getEpisodeScore euid = do
-    m <- episodeScores <$> getScore
+    m <- episodeScores <$> getScores
     return $ fromMaybe initial (Map.lookup euid m)
+
+setEpisodeScore :: EpisodeUID -> EpisodeScore -> IO ()
+setEpisodeScore euid score = do
+    s <- getScores
+    setScores s{episodeScores = Map.insert euid score (episodeScores s)}
