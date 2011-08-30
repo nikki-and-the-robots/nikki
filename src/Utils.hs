@@ -58,7 +58,6 @@ import Control.Applicative ((<$>), (<|>), (<*>), pure, Alternative(..), Applicat
 import "mtl" Control.Monad.State hiding (forM_)
 import "transformers" Control.Monad.Trans.Error (ErrorList(listMsg)) -- Monad (Either e)
 import Control.Arrow ((>>>))
-import Control.Concurrent
 
 import System.IO.Unsafe
 import System.FilePath
@@ -547,16 +546,6 @@ superApply n f = foldr (.) id $ replicate n f
 -- | returns all possible values, sorted.
 allValues :: (Enum a, Bounded a) => [a]
 allValues = [minBound .. maxBound]
-
-pollChannel :: Chan a -> IO [a]
-pollChannel chan = do
-    empty <- isEmptyChan chan
-    if empty
-        then return []
-        else do
-            a <- readChan chan
-            r <- pollChannel chan
-            return (a : r)
 
 
 -- * Pretty Printing

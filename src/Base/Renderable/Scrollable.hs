@@ -109,6 +109,16 @@ updateScrollDown sounds maximalScrollDown chan ref = do
     writeIORef ref new
     readIORef ref
 
+pollChannel :: Chan a -> IO [a]
+pollChannel chan = do
+    empty <- isEmptyChan chan
+    if empty
+        then return []
+        else do
+            a <- readChan chan
+            r <- pollChannel chan
+            return (a : r)
+
 -- | Returns the maximal scrollDown for a given height and child sizes (and actions).
 maximalScrollDown :: Double -> [(Size Double, IO ())] -> Int
 maximalScrollDown h [] = 0
