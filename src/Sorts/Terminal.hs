@@ -63,6 +63,8 @@ blinkLength = 0.4
 
 batteryTerminalSize = fmap fromUber $ Size 72 48
 
+beamBlinkingTime :: Seconds = blinkLength
+
 batteryNumberNeeded = 100
 
 -- * sort loading
@@ -600,11 +602,11 @@ renderTerminal sort@TSort{} now t pos =
 renderTerminal sort@BatteryTSort{..} now t pos =
     let background = RenderPixmap btBackground pos Nothing
         blinkenLights = renderDisplayBlinkenLights tsort now pos
-        batteryBar = renderBatteryBar sort pos
+        batteryBar = renderBatteryBar sort now t pos
         booting = renderBootingAnimation sort pos
     in  background :
         blinkenLights :
-        batteryBar :
+        batteryBar ++
         booting :
         []
 
@@ -668,10 +670,46 @@ padding = fromUber 2
 
 -- * battery terminal rendering
 
-renderBatteryBar BatteryTSort{..} p =
-    RenderPixmap whiteBeam (p +~ whiteBeamOffset) Nothing
+firstBeamOffset = fmap fromUber $ Position 55 32
 
-whiteBeamOffset = fmap fromUber $ Position 55 32
+-- | offset from one beam to the next
+beamIncrement = Position 0 (- fromUber 2)
+
+-- | number of beams including the top
+numberOfBeams = 9
+
+renderBatteryBar sort@BatteryTSort{..} now t@StandbyBatteryTerminal{batteryNumber} p =
+    case roundToBars batteryNumber of
+        0 -> if pickAnimationFrame [True, False] [beamBlinkingTime] now
+             then singleton $ RenderPixmap whiteBeam (p +~ firstBeamOffset) Nothing
+             else []
+        n -> renderGreenBeams sort n p -- (roundToBars n) p
+renderBatteryBar sort@BatteryTSort{..} now t@BatteryTerminal{} p =
+    renderGreenBeams sort numberOfBeams p
+
+roundToBars :: Integer -> Int
+roundToBars n =
+    1 + floor (
+        fromIntegral (n - 1) *
+        fromIntegral (numberOfBeams - 1) /
+        fromIntegral (batteryNumberNeeded - 1))
+
+renderGreenBeams BatteryTSort{..} (n :: Int) p =
+    map inner [1 .. n]
+  where
+    inner n =
+        let (pixmap, offset) = pix n
+        in RenderPixmap
+            pixmap
+            (p +~ offset)
+        Nothing
+    pix n =
+        if n < numberOfBeams then
+            (greenBeam, firstBeamOffset +~ fmap (* fromIntegral (n - 1)) beamIncrement)
+          else if n == numberOfBeams then
+            (greenTop, firstBeamOffset +~ Position 0 (- fromUber 17))
+          else
+            error "renderGreenBeams"
 
 renderBootingAnimation BatteryTSort{..} p =
     RenderPixmap (head bootingPixmaps) (p +~ colorBarOffset) Nothing
