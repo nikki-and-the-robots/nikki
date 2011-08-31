@@ -13,6 +13,8 @@ module Sorts.Terminal (
     ExitMode(..),
     renderTerminalOSD,
     TerminalOEMState(..),
+
+    roundToBars, -- for testing
   ) where
 
 
