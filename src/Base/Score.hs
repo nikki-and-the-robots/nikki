@@ -20,6 +20,7 @@ import Data.Binary.Strict
 import Data.Initial
 import Data.Accessor
 import Data.Foldable (toList)
+import Data.Maybe
 
 import Text.Printf
 import Text.Logging
@@ -73,13 +74,13 @@ instance Binary HighScoreFile where
             1 -> HighScoreFile_1 <$> get <*> get
 
 -- | returns all collected batteries for one episode
-collectedBatteries :: Episode LevelFile -> Map LevelUID Score -> Integer
+collectedBatteries :: Episode LevelFile -> Map LevelUID Integer -> Integer
 collectedBatteries e m =
     sum $ toList $ fmap (getBatteryNumber m) e
   where
-    getBatteryNumber :: Map LevelUID Score -> LevelFile -> Integer
+    getBatteryNumber :: Map LevelUID Integer -> LevelFile -> Integer
     getBatteryNumber m l =
-        maybe 0 (^. scoreBatteryPower) (Map.lookup (levelUID l) m)
+        fromMaybe 0 (Map.lookup (levelUID l) m)
 
 data Record
     = NoNewRecord

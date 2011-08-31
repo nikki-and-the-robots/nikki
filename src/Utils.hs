@@ -248,6 +248,9 @@ infixl 8 ^^:
 acc ^^: f = \ r ->
     fmap (\ a' -> acc ^= a' $ r) (f (r ^. acc))
 
+(>$>) :: Functor m => m a -> (a -> b) -> m b
+(>$>) = flip fmap
+
 
 -- * either stuff
 

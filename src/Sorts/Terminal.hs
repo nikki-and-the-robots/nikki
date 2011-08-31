@@ -26,6 +26,7 @@ import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 import Data.Maybe
 import Data.Accessor
+import Data.Map (alter)
 
 import Text.Logging
 
@@ -552,13 +553,24 @@ putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
     case levelFile scene of
         (EpisodeLevel episode _ _ _) -> do
             score <- getEpisodeScore $ euid episode
-            batteries <- collectedBatteries episode <$> getHighScores
+            batteries <- getCollectedBatteries scene episode
             setEpisodeScore (euid episode) (EpisodeScore_0 True batteries)
             return $ StandbyBatteryTerminal
                 (chipmunk t)
                 (t ^. robots)
                 batteries
         _ -> return t
+
+getCollectedBatteries scene episode =
+    getHighScores >$> \ hs ->
+        -- insert the actual collected batteries for the current level
+    let file = levelFile scene
+        upToDateScore = alter alteration (levelUID file) $ fmap (^. scoreBatteryPower) hs
+        alteration :: Maybe Integer -> Maybe Integer
+        alteration Nothing = Just $ (scene ^. batteryPower)
+        alteration (Just s) = Just $ max (scene ^. batteryPower) s
+    -- TODO: pretend, there are no batteries in the outro level for now
+    in collectedBatteries episode $ fmap (^. scoreBatteryPower) hs -- upToDateScore
 
 updateStandbyState :: Seconds -> Terminal -> Terminal
 updateStandbyState now t@StandbyBatteryTerminal{..} =
