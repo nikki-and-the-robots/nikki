@@ -561,7 +561,11 @@ putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
                 (chipmunk t)
                 (t ^. robots)
                 batteries
-        _ -> return t
+        -- for testing in normal mode
+        _ -> return $ StandbyBatteryTerminal
+                (chipmunk t)
+                (t ^. robots)
+                (scene ^. batteryPower)
 
 getCollectedBatteries scene episode =
     getHighScores >$> \ hs ->
