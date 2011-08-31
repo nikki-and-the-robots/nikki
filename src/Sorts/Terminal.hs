@@ -547,6 +547,8 @@ mkBatteryTerminal file chip robots =
         (EpisodeLevel episode _ _ _) -> do
             batteries <- batteriesInTerminal <$> getEpisodeScore (euid episode)
             return $ StandbyBatteryTerminal chip robots batteries
+        -- not in story-mode (shouldn't happen at all, just for testing)
+        _ -> return $ StandbyBatteryTerminal chip robots 0
 
 putBatteriesInTerminal :: Scene o -> Seconds -> Terminal -> IO Terminal
 putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
