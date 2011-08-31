@@ -87,6 +87,7 @@ terminalSort = do
         backgroundSize = fmap fromUber $ Size 48 48
     backgroundPixmap <- loadPixmap backgroundOffset backgroundSize =<<
         nameToPixmap "terminal-standard"
+    colorBar <- loadSymmetricPixmap (Position 9 9) =<< nameToPixmap "display-colors"
     displayBlinkenLights <- fmapM (nameToPixmap >=> loadSymmetricPixmap (Position 1 1)) (
         "display_00" :
         "display_01" :
@@ -97,7 +98,7 @@ terminalSort = do
     littleDefunctColors <- readColorLights (\ color -> toPngPath ("terminal-defunct-" ++ color))
     osdPixmaps <- loadOsdPixmaps
     return $ TSort
-        (Pixmaps backgroundPixmap displayBlinkenLights littleColors littleDefunctColors)
+        (Pixmaps backgroundPixmap displayBlinkenLights colorBar littleColors littleDefunctColors)
         osdPixmaps
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
@@ -186,16 +187,18 @@ selectedColorLights i = ColorLights (i == 0) (i == 1) (i == 2) (i == 3)
 data Pixmaps = Pixmaps {
     background :: Pixmap,
     blinkenLights :: [Pixmap],
+    colorBar :: Pixmap,
     littleColorLights :: ColorLights Pixmap,
     littleDefunctColorLights :: ColorLights Pixmap
   }
     deriving Show
 
-freeTerminalPixmaps (Pixmaps a bs cs dcs) =
+freeTerminalPixmaps (Pixmaps a bs c ds es) =
     freePixmap a >>
     fmapM_ freePixmap bs >>
-    fmapM_ freePixmap cs >>
-    fmapM_ freePixmap dcs
+    freePixmap c >>
+    fmapM_ freePixmap ds >>
+    fmapM_ freePixmap es
 
 data OsdPixmaps = OsdPixmaps {
     osdBackground :: Pixmap,
@@ -592,6 +595,7 @@ renderTerminal :: TSort -> Seconds
 renderTerminal sort@TSort{} now t pos =
     renderTerminalBackground sort pos :
     renderDisplayBlinkenLights sort now pos :
+    RenderPixmap (colorBar $ pixmaps sort) (pos +~ colorBarOffset) Nothing :
     catMaybes (renderLittleColorLights sort now t pos)
 renderTerminal sort@BatteryTSort{..} now t pos =
     let background = RenderPixmap btBackground pos Nothing
@@ -599,10 +603,12 @@ renderTerminal sort@BatteryTSort{..} now t pos =
         batteryBar = renderBatteryBar sort pos
         booting = renderBootingAnimation sort pos
     in  background :
---         blinkenLights :
+        blinkenLights :
         batteryBar :
         booting :
         []
+
+colorBarOffset = fmap fromUber $ Position 30 20
 
 renderTerminalBackground sort pos =
     RenderPixmap (background $ pixmaps sort) pos Nothing
@@ -668,9 +674,7 @@ renderBatteryBar BatteryTSort{..} p =
 whiteBeamOffset = fmap fromUber $ Position 55 32
 
 renderBootingAnimation BatteryTSort{..} p =
-    RenderPixmap (head bootingPixmaps) (p +~ bootingOffset) Nothing
-
-bootingOffset = fmap fromUber $ Position 30 20
+    RenderPixmap (head bootingPixmaps) (p +~ colorBarOffset) Nothing
 
 
 -- * rendering of game OSD
