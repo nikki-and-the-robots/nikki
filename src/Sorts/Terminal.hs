@@ -65,6 +65,9 @@ batteryTerminalSize = fmap fromUber $ Size 72 48
 
 beamBlinkingTime :: Seconds = blinkLength
 
+bootingFrameTime :: Seconds = 0.2
+bootingAnimationSteps :: Int = 3
+
 batteryNumberNeeded = 100
 
 -- * sort loading
@@ -140,17 +143,16 @@ batteryTerminalSort pngDir tsort = do
         loadPix 9 "beam-white" <*>
         loadPix 9 "beam-green" <*>
         loadPix 9 "light-green" <*>
+        loadPix 9 "display_standby_00" <*>
         fmapM (loadPix 9) bootingPix
   where
     loadPix n name =
         loadSymmetricPixmap (Position n n) (mkPath name)
     mkPath name = pngDir </> "battery-terminal" </> name <.> "png"
     bootingPix =
-        "display_standby_00" :
         "display_booting_01" :
         "display_booting_02" :
         "display_booting_03" :
-        "display_booting_04" :
         []
 
 -- | type to bundle things for the four terminal colors: red, blue, green and yellow (in that order)
@@ -232,6 +234,7 @@ data TSort
     whiteBeam :: Pixmap,
     greenBeam :: Pixmap,
     greenTop :: Pixmap,
+    bootingStandBy :: Pixmap,
     bootingPixmaps :: [Pixmap]
   }
     deriving (Show, Typeable)
@@ -254,13 +257,13 @@ data Terminal
   | StandbyBatteryTerminal {
     chipmunk :: Chipmunk,
     robots_ :: [RobotIndex],
-    batteryNumber :: Integer
+    batteryNumber :: Integer,
+    onTime :: Maybe Seconds
   }
   | BatteryTerminal {
     chipmunk :: Chipmunk,
     robots_ :: [RobotIndex],
-    state_ :: State,
-    onTime :: Seconds
+    state_ :: State
   }
     deriving (Show, Typeable)
 
@@ -389,8 +392,8 @@ instance Sort TSort Terminal where
     freeSort (TSort terminalPixmaps osdPixmaps) =
         freeTerminalPixmaps terminalPixmaps >>
         freeOsdPixmaps osdPixmaps
-    freeSort (BatteryTSort _ a b c d e) =
-        fmapM_ freePixmap (a : b : c : d : e)
+    freeSort (BatteryTSort _ a b c d e fs) =
+        fmapM_ freePixmap (a : b : c : d : e : fs)
     size TSort{} = fmap fromUber $ Size 48 48
     size BatteryTSort{} = batteryTerminalSize
     renderIconified sort@TSort{..} ptr =
@@ -428,7 +431,7 @@ instance Sort TSort Terminal where
             chip = ImmutableChipmunk position 0 baryCenterOffset []
         return $ case sort of
             TSort{} -> Terminal chip [] (initialMenuState 0)
-            BatteryTSort{} -> StandbyBatteryTerminal chip [] 0
+            BatteryTSort{} -> StandbyBatteryTerminal chip [] 0 Nothing
 
     immutableCopy t =
         CM.immutableCopy (chipmunk t) >>= \ x -> return t{chipmunk = x}
@@ -476,11 +479,11 @@ mkPolys size =
 update sort config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} = do
     logg Debug $ show $ batteryNumber terminal
     logg Debug $ take 10 $ show terminal
-    return terminal
+    return $ updateStandby now terminal
 update sort config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} = do
     logg Debug $ show $ batteryNumber terminal
     logg Debug $ take 10 $ show terminal
-    updateStandbyState now <$>
+    updateOnTime now <$>
         putBatteriesInTerminal scene now terminal
 update sort config _ scene now contacts (False, cd) terminal = do
     logg Debug $ take 10 $ show terminal
@@ -547,13 +550,14 @@ exitToNikki state = state{exitMode = ExitToNikki, robotIndex = 0}
 -- | initializes battery terminals
 mkBatteryTerminal :: LevelFile -> Chipmunk -> [RobotIndex] -> IO Terminal
 mkBatteryTerminal file chip robots =
-    updateStandbyState 0 <$>
+    updateStandby 0 <$>
+    updateOnTime (- bootingAnimationTime) <$>
     case file of
         (EpisodeLevel episode _ _ _) -> do
             batteries <- batteriesInTerminal <$> getEpisodeScore (euid episode)
-            return $ StandbyBatteryTerminal chip robots batteries
+            return $ StandbyBatteryTerminal chip robots batteries Nothing
         -- not in story-mode (shouldn't happen at all, just for testing)
-        _ -> return $ StandbyBatteryTerminal chip robots 0
+        _ -> return $ StandbyBatteryTerminal chip robots 0 Nothing
 
 putBatteriesInTerminal :: Scene o -> Seconds -> Terminal -> IO Terminal
 putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
@@ -566,11 +570,13 @@ putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
                 (chipmunk t)
                 (t ^. robots)
                 batteries
+                (onTime t)
         -- for testing in normal mode
         _ -> return $ StandbyBatteryTerminal
                 (chipmunk t)
                 (t ^. robots)
                 (scene ^. batteryPower)
+                (onTime t)
 
 getCollectedBatteries scene episode =
     getHighScores >$> \ hs ->
@@ -583,10 +589,24 @@ getCollectedBatteries scene episode =
     -- TODO: pretend, there are no batteries in the outro level for now
     in collectedBatteries episode $ fmap (^. scoreBatteryPower) hs -- upToDateScore
 
-updateStandbyState :: Seconds -> Terminal -> Terminal
-updateStandbyState now t@StandbyBatteryTerminal{..} =
-    if batteryNumber < batteryNumberNeeded then t else
-        BatteryTerminal chipmunk robots_ (initialMenuState now) now
+bootingAnimationTime = bootingFrameTime * fromIntegral bootingAnimationSteps
+
+-- | sets the onTime field if appropriate
+updateOnTime :: Seconds -> Terminal -> Terminal
+updateOnTime now t@StandbyBatteryTerminal{..} = case onTime of
+    Nothing -> if batteryNumber >= batteryNumberNeeded
+        then t{onTime = Just now}
+        else t
+    Just x -> t
+
+-- | changes from Standby to BatteryTerminal if appropriate
+updateStandby :: Seconds -> Terminal -> Terminal
+updateStandby now t@StandbyBatteryTerminal{..} = case onTime of
+    Nothing -> t
+    Just onTime ->
+        if onTime + bootingAnimationTime <= now
+        then BatteryTerminal chipmunk robots_ (initialMenuState now)
+        else t
 
 
 -- * game rendering
@@ -603,11 +623,11 @@ renderTerminal sort@BatteryTSort{..} now t pos =
     let background = RenderPixmap btBackground pos Nothing
         blinkenLights = renderDisplayBlinkenLights tsort now pos
         batteryBar = renderBatteryBar sort now t pos
-        booting = renderBootingAnimation sort pos
+        booting = renderBootingAnimation sort t now pos
     in  background :
         blinkenLights :
         batteryBar ++
-        booting :
+        booting ++
         []
 
 colorBarOffset = fmap fromUber $ Position 30 20
@@ -679,22 +699,25 @@ beamIncrement = Position 0 (- fromUber 2)
 numberOfBeams = 9
 
 renderBatteryBar sort@BatteryTSort{..} now t@StandbyBatteryTerminal{batteryNumber} p =
-    case roundToBars batteryNumber of
-        0 -> if pickAnimationFrame [True, False] [beamBlinkingTime] now
+    case roundToBars numberOfBeams batteryNumberNeeded batteryNumber of
+        0 -> trace (pp now) $
+            if pickAnimationFrame [True, False] [beamBlinkingTime] now
              then singleton $ RenderPixmap whiteBeam (p +~ firstBeamOffset) Nothing
              else []
-        n -> renderGreenBeams sort n p -- (roundToBars n) p
+        n -> renderGreenBeams sort n p
 renderBatteryBar sort@BatteryTSort{..} now t@BatteryTerminal{} p =
     renderGreenBeams sort numberOfBeams p
 
-roundToBars :: Integer -> Int
-roundToBars n =
-    1 + floor (
-        fromIntegral (n - 1) *
-        fromIntegral (numberOfBeams - 1) /
-        fromIntegral (batteryNumberNeeded - 1))
+roundToBars :: Integer -> Integer -> Integer -> Integer
+roundToBars numberOfBeams batteryNumberNeeded n | n >= batteryNumberNeeded =
+    numberOfBeams
+roundToBars numberOfBeams batteryNumberNeeded n | n <= 0 =
+    0
+roundToBars numberOfBeams batteryNumberNeeded n =
+    succ $ floor
+        (fromIntegral (pred n * pred numberOfBeams) / fromIntegral (pred batteryNumberNeeded))
 
-renderGreenBeams BatteryTSort{..} (n :: Int) p =
+renderGreenBeams BatteryTSort{..} (n :: Integer) p =
     map inner [1 .. n]
   where
     inner n =
@@ -711,9 +734,15 @@ renderGreenBeams BatteryTSort{..} (n :: Int) p =
           else
             error "renderGreenBeams"
 
-renderBootingAnimation BatteryTSort{..} p =
-    RenderPixmap (head bootingPixmaps) (p +~ colorBarOffset) Nothing
-
+renderBootingAnimation BatteryTSort{..} StandbyBatteryTerminal{onTime} now p = case onTime of
+    Nothing -> if pickAnimationFrame [True, False] [beamBlinkingTime] now
+        then singleton $ RenderPixmap bootingStandBy (p +~ colorBarOffset) Nothing
+        else []
+    Just onTime ->
+        let pix = pickAnimationFrame bootingPixmaps [bootingFrameTime] (now - onTime)
+        in singleton $ RenderPixmap pix (p +~ colorBarOffset) Nothing
+renderBootingAnimation BatteryTSort{..} BatteryTerminal{} now p =
+    singleton $ RenderPixmap (colorBar $ pixmaps tsort) (p +~ colorBarOffset) Nothing
 
 -- * rendering of game OSD
 
