@@ -13,7 +13,7 @@ import qualified Data.Vector as Vector
 import Control.Monad.State
 import Control.Arrow
 
-import Utils
+import Utils hiding (==>)
 
 import Test.QuickCheck
 

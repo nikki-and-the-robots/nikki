@@ -112,7 +112,7 @@ missesArea testPolys@(fromTestPolygons -> polys) =
     offenders = filter (not . treatedEqually) points
     treatedEqually :: Vector -> Bool
     treatedEqually point =
-        withView (insidePolys True point) (==) polys outputPolys
+        on (==) (insidePolys True point) polys outputPolys
     outputPolys = removeStickyEdges testEpsilon polys
     points :: [Vector]
     points = do

@@ -95,7 +95,7 @@ componentUpAngleSameAngle angle vector =
         (expected ~~= result ||
         (expected + (deg2rad 180)) ~~= result)
   where
-    (~~=) = withView foldAngle (~=)
+    (~~=) = on (~=) foldAngle
 
 componentSameAngle angle vector =
     printTestCase "componentSameAngle" $
@@ -105,4 +105,4 @@ componentSameAngle angle vector =
         (expected ~~= result ||
         (expected + (deg2rad 180)) ~~= result)
   where
-    (~~=) = withView foldAngle (~=)
+    (~~=) = on (~=) foldAngle

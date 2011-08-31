@@ -39,30 +39,38 @@ Executable testsuite
 
     ghc-options:
         -O2
-        -Werror
         -fwarn-unused-imports
 
     build-depends:
         base >= 4 && < 5
         , filepath
         , directory
-        , haskell98
         , mtl
         , containers
         , binary
         , syb
-        , Hipmunk == 5.2.0.2
+        , Hipmunk == 5.2.*
         , array
         , safe
         , transformers
         , StateVar
-        , QuickCheck == 2.4.0.1
+        , QuickCheck == 2.4.*
         , random
         , process
         , MonadCatchIO-transformers >= 0.2.2.2
         , data-accessor >= 0.2.1.7
+        , data-accessor-mtl
         , stm >= 2.2.0.1
         , vector >= 0.7.0.1
+        , FindBin
+        , attoparsec
+        , aeson
+        , bytestring
+        , strict
+        , cmdargs
+        , sfml-audio
+        , uniplate
+        , parsec3
 
     extra-libraries:
         qtwrapper, QtOpenGL
