@@ -36,7 +36,7 @@ import System.FilePath
 import System.Directory
 import System.Environment
 import System.Environment.FindBin
-import System.Console.CmdArgs as CmdArgs
+import System.Console.CmdArgs.Missing
 
 import Utils
 
@@ -95,8 +95,7 @@ loadConfiguration = do
             Left (logLevel, msg) -> initial
             Right x -> x
         loadedConfig = savedConfigurationToConfiguration loadedSavedConfig
-    config <- -- withArgs filteredArgs $
-              cmdArgs loadedConfig
+    config <- cmdTheseArgs loadedConfig filteredArgs
     case mLoadedSavedConfig of
         -- retain error messages till after execution of cmdArgs 
         -- to prevent pollution of version or help output
