@@ -6,6 +6,7 @@ module Game.BackgroundScene where
 
 
 import Data.Initial
+import Data.IORef
 
 import Control.Monad.State.Strict
 import Control.Concurrent
@@ -20,10 +21,13 @@ import Game.Scene
 
 
 -- | advances the scene until the given action returns a result
-waitForPressedButtonBackgroundScene :: forall a . Application -> GameState -> SceneMVar
+waitForPressedButtonBackgroundScene :: forall a . Application -> IORef GameState -> SceneMVar
     -> M Button
-waitForPressedButtonBackgroundScene app gameState sceneMVar =
-    flip evalStateT gameState $ withTimer loopSuperStep
+waitForPressedButtonBackgroundScene app gameStateRef sceneMVar = do
+    gameState <- io $ readIORef gameStateRef
+    (button, gameState') <- runStateT (withTimer loopSuperStep) gameState
+    io $ writeIORef gameStateRef gameState'
+    return button
   where
     -- | loops to perform supersteps
     loopSuperStep :: Timer -> GameMonad Button

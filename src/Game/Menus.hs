@@ -2,6 +2,8 @@
 module Game.Menus where
 
 
+import Data.IORef
+
 import Graphics.Qt
 
 import Utils
@@ -40,15 +42,18 @@ playHelp app parent = NoGUIAppState $ do
 
 failureMenu :: Application -> RenderStateRefs -> GameState
     -> AppState
-failureMenu app sceneRenderState gameState =
-    menuAppStateSpecialized app poller (renderable backGround) AppStateLooped
-    FailureMenu Nothing (
+failureMenu app sceneRenderState gameState = NoGUIAppState $ do
+    gameStateRef <- io $ newIORef gameState
+    return $ menuAppStateSpecialized app (poller gameStateRef)
+        (renderable backGround) AppStateLooped
+        FailureMenu Nothing (
 --     (p "rewind to last savepoint", todo) :
 --     (p "retry from beginning", todo) :
-        (p "quit level", const FinalAppState) :
-        []) 0
+            (p "quit level", const FinalAppState) :
+            []) 0
   where
-    poller = waitForPressedButtonBackgroundScene app gameState (sceneMVar sceneRenderState)
+    poller gameStateRef =
+        waitForPressedButtonBackgroundScene app gameStateRef (sceneMVar sceneRenderState)
     backGround =
         sceneRenderState |:>
         MenuBackgroundTransparent
@@ -59,7 +64,8 @@ successMessage :: Application -> RenderStateRefs -> GameState
 successMessage app sceneRenderState gameState score
   (mHighScore, timeRecord, batteryRecord) =
      AppStateLooped (renderable renderableInstance) $ do
-        ignore $ waitForPressedButtonBackgroundScene app gameState (sceneMVar sceneRenderState)
+        ref <- io $ newIORef gameState
+        ignore $ waitForPressedButtonBackgroundScene app ref (sceneMVar sceneRenderState)
         return FinalAppState
   where
     renderableInstance =
