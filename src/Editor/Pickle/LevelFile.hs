@@ -12,7 +12,6 @@ module Editor.Pickle.LevelFile (
     LevelUID,
     levelUID,
     LevelMetaData(..),
-    emptyLevelMetaData,
     showLevelTreeForMenu,
     showLevelForMenu,
   ) where
@@ -51,7 +50,7 @@ mkEpisodeLevel levelDir levelFile = do
 mkUnknownLevel :: FilePath -> IO LevelFile
 mkUnknownLevel = return . UnknownLevelType
 
-levelName :: LevelFile -> Maybe String
+levelName :: LevelFile -> String
 levelName StandardLevel{..} = meta_levelName levelMetaData_
 levelName UserLevel{..}     = meta_levelName levelMetaData_
 levelName EpisodeLevel{..}  = meta_levelName levelMetaData_
@@ -70,7 +69,7 @@ showLevelTreeForMenu x = return $ pVerbatim (x ^. labelA)
 
 showLevelForMenu :: LevelFile -> IO Prose
 showLevelForMenu level = do
-    let name = fromMaybe "???" $ levelName level
+    let name = levelName level
     highScores <- getHighScores
     return $ case Map.lookup (levelUID level) highScores of
         Nothing -> pVerbatim name

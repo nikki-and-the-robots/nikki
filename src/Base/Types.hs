@@ -661,7 +661,11 @@ data LevelFile
 levelMetaData :: LevelFile -> LevelMetaData
 levelMetaData StandardLevel{..} = levelMetaData_
 levelMetaData UserLevel{..} = levelMetaData_
-levelMetaData _ = emptyLevelMetaData
+levelMetaData file = LevelMetaData (guessName $ levelFilePath file) Nothing
+
+guessName :: FilePath -> String
+guessName = takeBaseName
+
 
 type LevelUID = String
 
@@ -683,12 +687,10 @@ levelUID (UnknownLevelType path) = path
 -- (This is an experimental alternative to versioned constructors.)
 data LevelMetaData
     = LevelMetaData {
-        meta_levelName :: Maybe String,
+        meta_levelName :: String,
         meta_author :: Maybe String
       }
   deriving (Eq, Show)
-
-emptyLevelMetaData = LevelMetaData Nothing Nothing
 
 instance ToJSON LevelMetaData where
     toJSON (LevelMetaData meta_levelName meta_author) =
@@ -700,6 +702,6 @@ instance ToJSON LevelMetaData where
 instance FromJSON LevelMetaData where
     parseJSON (Object meta) =
         LevelMetaData <$>
-        meta .:? "levelName" <*>
+        meta .: "levelName" <*>
         meta .:? "author"
     parseJSON _ = mzero

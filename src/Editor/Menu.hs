@@ -115,8 +115,9 @@ editorMenu app mvar scene ps =
                 []) ps
   where
     menuTitle = p "editor"
-    menuSubTitle = maybe (p "untitled level") pv
-        (meta_levelName $ levelMetaData $ editorLevelFile scene)
+    menuSubTitle = case editorLevelFile scene of
+        TemplateLevel{} -> p "untitled level"
+        f -> pv $ meta_levelName $ levelMetaData f
     edit :: EditorScene Sort_ -> AppState
     edit s = editorLoop app mvar (updateSelected s)
     this = editorMenu app mvar scene
@@ -133,7 +134,7 @@ saveLevel :: Application -> (LevelFile -> AppState) -> EditorScene Sort_
     -> Parent -> AppState
 saveLevel app follower EditorScene{editorLevelFile, editorObjects_} parent
   | isUserLevel editorLevelFile =
-    completeMetaData app parent (levelMetaData editorLevelFile) $
+    completeMetaData app parent (Just $ levelMetaData editorLevelFile) $
       \ metaData ->
         let path = levelFilePath editorLevelFile
         in appState (busyMessage $ p "saving level...") $ io $ do
@@ -141,8 +142,8 @@ saveLevel app follower EditorScene{editorLevelFile, editorObjects_} parent
             return $ follower editorLevelFile{levelMetaData_ = metaData}
 saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
   | isTemplateLevel editorLevelFile =
-    completeMetaData app parent emptyLevelMetaData $
-    \ metaData@(LevelMetaData (Just name) _) ->
+    completeMetaData app parent Nothing $
+    \ metaData@(LevelMetaData name _) ->
       NoGUIAppState $ io $ do
         levelDirectory <- getSaveLevelDirectory
         let path = levelDirectory </> name <..> "nl"
@@ -157,13 +158,15 @@ saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
     this = saveLevel app follower scene parent
 
 -- | completes the needed metadata
-completeMetaData a pa (LevelMetaData Nothing author) f =
+completeMetaData :: Application -> Parent -> Maybe LevelMetaData
+    -> (LevelMetaData -> AppState) -> AppState
+completeMetaData a pa Nothing f =
     askString a pa (p "level name") $ \ name ->
-    completeMetaData a pa (LevelMetaData (Just name) author) f
-completeMetaData a pa (LevelMetaData (Just name) Nothing) f =
+    completeMetaData a pa (Just (LevelMetaData name Nothing)) f
+completeMetaData a pa (Just (LevelMetaData name Nothing)) f =
     askString a pa (p "author name") $ \ author ->
-    f (LevelMetaData (Just name) (Just author))
-completeMetaData a pa m@(LevelMetaData (Just _) (Just _)) f =
+    f (LevelMetaData name (Just author))
+completeMetaData a pa (Just m@(LevelMetaData _ (Just _))) f =
     f m
 
 
