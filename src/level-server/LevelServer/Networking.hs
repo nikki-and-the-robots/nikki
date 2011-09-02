@@ -29,7 +29,7 @@ spec = serverSpec{address = IP "localhost" port}
 
 askServer :: ClientToServer -> IO ServerToClient
 askServer msg = do
-    h <- connectTo "localhost" (PortNumber port)
+    h <- connectTo "joyridelabs.de" (PortNumber port)
     bc <- binaryCom h
     sendFlush bc msg
     receive bc
