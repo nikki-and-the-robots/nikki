@@ -349,7 +349,7 @@ cannonballShapeAttributes = ShapeAttributes{
 
 mkCannonballRenderPixmap :: CannonSort -> Chipmunk -> IO RenderPixmap
 mkCannonballRenderPixmap sort chip = do
-    pos <- getPosition chip
-    return $ RenderPixmap (ball sort) (vector2position pos -~ baryCenterOffset) Nothing
+    (pos, angle) <- getRenderPositionAndAngle chip
+    return $ RenderPixmap (ball sort) pos (Just angle)
   where
     baryCenterOffset = fmap fromUber $ Position 3.5 3.5
