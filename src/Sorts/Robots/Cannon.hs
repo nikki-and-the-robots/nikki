@@ -132,7 +132,7 @@ maxBarrelAngle = tau / 4
 eyesOffset = fmap fromUber $ Position 2 3
 
 -- | offset of newly created cannonballs relative to the barrel
-cannonballOffset = fmap fromUber $ Position 5.5 (- 3.5)
+cannonballOffset = fmap fromUber $ Position 5.5 3.5
 
 
 instance Sort CannonSort Cannon where
@@ -187,7 +187,7 @@ instance Sort CannonSort Cannon where
                         (robotEyesState now cannon) now
         cannonballs <- fmapM (mkCannonballRenderPixmap sort)
                 (maybeToList (cannon ^. followedBall) ++ cannon ^. unfollowedBalls)
-        return (barrel : base : eyes : cannonballs ++ [])
+        return (cannonballs ++ barrel : base : eyes : [])
 
 debug c =
     debugChipmunk (base c) >>
@@ -221,25 +221,38 @@ initBase space ep = do
 initBarrel space ep = do
     let baryCenterOffset = size2vector $ fmap (/ 2) barrelSize
         start = negateAbelian baryCenterOffset
-        shapeType = barrelShapeType start
-        shape = mkShapeDescription shapeAttributes shapeType
+        shapeTypes = barrelShapeTypes start
+        shapes = map (mkShapeDescription shapeAttributes) shapeTypes
         pos = position2vector (epToPosition barrelSize ep)
                     +~ baryCenterOffset +~ position2vector barrelOffset
         attributes =
-            mkMaterialBodyAttributes robotMaterialMass [shapeType] pos
-    c <- initChipmunk space attributes [shape] baryCenterOffset
+            mkMaterialBodyAttributes robotMaterialMass shapeTypes pos
+    c <- initChipmunk space attributes shapes baryCenterOffset
     return c
 
-barrelShapeType start = Polygon (
-    start :
-    start +~ Vector 0 (height - chamfer) :
-    start +~ Vector chamfer height :
-    start +~ size -~ Vector chamfer 0 :
-    start +~ size -~ Vector 0 chamfer :
-    start +~ Vector width 0 :
-    [])
+barrelShapeTypes start =
+    leftSide :
+    bottom :
+    rightSide :
+    []
   where
+    leftSide = side start
+    rightSide = side (start +~ Vector (width - wallThickness) 0)
+    side start = Polygon (
+        start :
+        start +~ Vector 0 (height - chamfer) :
+        start +~ Vector wallThickness (height - chamfer) :
+        start +~ Vector wallThickness 0 :
+        [])
+    bottom = Polygon (
+        start +~ Vector 0 (height - chamfer) :
+        start +~ Vector chamfer height :
+        start +~ Vector (width - chamfer) height :
+        start +~ Vector width (height - chamfer) :
+        [])
+
     chamfer = fromUber 3
+    wallThickness = fromUber 1
     size@(Vector width height) = size2vector barrelSize
 
 initConstraint :: Space -> Vector -> Chipmunk -> Chipmunk -> IO (Angle -> IO ())
