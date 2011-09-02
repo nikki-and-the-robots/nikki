@@ -12,7 +12,7 @@ import LevelServer.Types
 
 main = do
     hSetBuffering stdout NoBuffering
-    print "started"
+    putStrLn ("listening on port " ++ show port)
     options <- cmdArgs defaultOptions
     levelFiles <- getFiles (levelDir options) (Just ".nl")
     runServer $ serve options levelFiles
