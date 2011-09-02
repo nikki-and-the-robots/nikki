@@ -134,7 +134,8 @@ maxBarrelAngle = tau / 4
 eyesOffset = fmap fromUber $ Position 2 3
 
 -- | offset of newly created cannonballs relative to the barrel
-cannonballOffset = fmap fromUber $ Position 5.5 3.5
+cannonballOffset =
+    Position (fromUber 5.5) (height barrelSize - barrelChamfer - fromUber 3.5)
 
 
 instance Sort CannonSort Cannon where
@@ -241,20 +242,22 @@ barrelShapeTypes start =
     rightSide = side (start +~ Vector (width - wallThickness) 0)
     side start = Polygon (
         start :
-        start +~ Vector 0 (height - chamfer) :
-        start +~ Vector wallThickness (height - chamfer) :
+        start +~ Vector 0 (height - barrelChamfer) :
+        start +~ Vector wallThickness (height - barrelChamfer) :
         start +~ Vector wallThickness 0 :
         [])
     bottom = Polygon (
-        start +~ Vector 0 (height - chamfer) :
-        start +~ Vector chamfer height :
-        start +~ Vector (width - chamfer) height :
-        start +~ Vector width (height - chamfer) :
+        start +~ Vector 0 (height - barrelChamfer) :
+        start +~ Vector barrelChamfer height :
+        start +~ Vector (width - barrelChamfer) height :
+        start +~ Vector width (height - barrelChamfer) :
         [])
 
-    chamfer = fromUber 3
     wallThickness = fromUber 1
     size@(Vector width height) = size2vector barrelSize
+
+barrelChamfer = fromUber 3
+
 
 initConstraint :: Space -> Vector -> Chipmunk -> Chipmunk -> IO (Angle -> IO ())
 initConstraint space pin base barrel = do
