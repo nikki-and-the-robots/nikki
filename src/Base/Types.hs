@@ -98,6 +98,7 @@ data AppState
 
 type Parent = AppState
 
+type Play = Parent -> LevelFile -> AppState
 
 data ApplicationPixmaps = ApplicationPixmaps {
     menuBackground :: [Pixmap],

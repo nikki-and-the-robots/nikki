@@ -46,6 +46,8 @@ import Editor.Pickle.LevelLoading
 
 import StoryMode.Menus
 
+import LevelServer.Downloading
+
 import Top.Initialisation
 import Top.Game (playLevel)
 
@@ -171,19 +173,11 @@ community :: Application -> Int -> Parent -> AppState
 community app ps parent =
     menuAppState app (NormalMenu (p "community levels") Nothing) (Just parent) (
         (p "play levels", selectLevelPlay app . this) :
-        (p "download levels", downloadLevels app . this) :
+        (p "download levels", downloadedLevels app (play app) 0 . this) :
         (p "editor", selectLevelEdit app 0 . this) :
         []) ps
   where
     this ps = community app ps parent
-
-
-downloadLevels :: Application -> Parent -> AppState
-downloadLevels app parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName "manual/downloadLevels"
-    prose <- io $ pFile file
-    return $ scrollingAppState app prose parent
-
 
 -- | asks, if the user really wants to quit
 quit :: Application -> AppState -> Int -> AppState

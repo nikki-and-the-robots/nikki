@@ -17,8 +17,6 @@ import StoryMode.Episode
 import StoryMode.Purchasing
 
 
-type Play = Parent -> LevelFile -> AppState
-
 -- | shows a text describing our plans with the story mode
 storyMode :: Application -> Play -> Parent -> AppState
 storyMode app play parent = NoGUIAppState $ do
