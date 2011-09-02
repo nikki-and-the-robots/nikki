@@ -32,7 +32,11 @@ a <~> b = a ++ " " ++ b
 
 -- unix style slashes
 (<//>) :: String -> String -> String
-a <//> b = a ++ "/" ++ b
+a <//> b =
+    stripEndSlashes a ++ "/" ++ stripStartSlashes b
+  where
+    stripStartSlashes = dropWhile (== '/')
+    stripEndSlashes = reverse . stripStartSlashes . reverse
 
 stripWhiteSpaces :: String -> String
 stripWhiteSpaces = dropWhile isSpace . reverse . dropWhile isSpace . reverse
