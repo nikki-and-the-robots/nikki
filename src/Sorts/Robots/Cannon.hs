@@ -10,6 +10,7 @@ import Data.Maybe
 import Data.Accessor
 
 import Control.Arrow
+import Control.Applicative
 
 import System.FilePath
 
@@ -39,6 +40,9 @@ cannonballMaterialMass = 50
 
 -- | velocity of a cannonball after being shot
 cannonballVelocity = 1500
+
+-- | After a cannonball has been around for its lifespan, it gets removed.
+cannonballLifeSpan :: Seconds = 10
 
 -- | how long the robot will keep its eyes closed after shooting
 eyesClosedTime :: Seconds = 0.3
@@ -77,8 +81,7 @@ data Cannon
     shotTime_ :: Maybe Seconds,
     barrelAngle_ :: Angle,
     barrelAngleSetter :: Angle -> IO (),
-    followedBall_ :: Maybe Chipmunk,
-    unfollowedBalls_ :: [Chipmunk]
+    cannonballs_ :: [Cannonball]
   }
     deriving (Show, Typeable)
 
@@ -91,16 +94,14 @@ shotTime = accessor shotTime_ (\ a r -> r{shotTime_ = a})
 barrelAngle :: Accessor Cannon Angle
 barrelAngle = accessor barrelAngle_ (\ a r -> r{barrelAngle_ = a})
 
-followedBall :: Accessor Cannon (Maybe Chipmunk)
-followedBall = accessor followedBall_ (\ a r -> r{followedBall_ = a})
-
-unfollowedBalls :: Accessor Cannon [Chipmunk]
-unfollowedBalls = accessor unfollowedBalls_ (\ a r -> r{unfollowedBalls_ = a})
+cannonballs :: Accessor Cannon [Cannonball]
+cannonballs = accessor cannonballs_ (\ a r -> r{cannonballs_ = a})
 
 instance Show (CpFloat -> IO ()) where
     show _ = "<CpFloat -> IO ()>"
 
-mapMChipmunks f (Cannon base barrel controlled shotTime angle angleSetter followed unfollowed) =
+mapMChipmunks :: (Applicative f, Monad f) => (Chipmunk -> f Chipmunk) -> Cannon -> f Cannon
+mapMChipmunks f (Cannon base barrel controlled shotTime angle angleSetter cannonballs) =
     Cannon <$>
         f base <*>
         f barrel <*>
@@ -108,8 +109,9 @@ mapMChipmunks f (Cannon base barrel controlled shotTime angle angleSetter follow
         pure shotTime <*>
         pure angle <*>
         pure angleSetter <*>
-        fmapM f followed <*>
-        fmapM f unfollowed
+        fmapM (secondKleisli f) cannonballs
+
+type Cannonball = (Seconds, Chipmunk)
 
 
 -- | size of the whole robot (background pix)
@@ -150,29 +152,30 @@ instance Sort CannonSort Cannon where
             barrelBaryCenterOffset = size2vector $ fmap (/ 2) $ barrelSize
             barrel = ImmutableChipmunk (position +~ barrelOffset) barrelInitialAngle barrelBaryCenterOffset []
             noopSetter _ = return ()
-        return $ Cannon base barrel False Nothing barrelInitialAngle noopSetter Nothing []
+        return $ Cannon base barrel False Nothing barrelInitialAngle noopSetter []
     initialize app _ (Just space) sort ep Nothing _ = io $ do
         (base, pin) <- initBase space ep
         barrel <- initBarrel space ep
         angleSetter <- initConstraint space pin base barrel
-        return $ Cannon base barrel False Nothing barrelInitialAngle angleSetter Nothing []
+        return $ Cannon base barrel False Nothing barrelInitialAngle angleSetter []
     immutableCopy =
         mapMChipmunks CM.immutableCopy
-    chipmunks (Cannon base barrel _ _ _ _ followed unfollowed) =
-        base : barrel : maybeToList followed ++ unfollowed
+    chipmunks (Cannon base barrel _ _ _ _ cannonballs) =
+        base : barrel : map snd cannonballs
 
     getControlledChipmunk _ c = base c -- fromMaybe (base c) (c ^. followedBall)
 
-    updateNoSceneChange _ _ _ _ _ _ (False, _) =
+    updateNoSceneChange _ _ space _ now _ (False, _) =
         return . (controlled ^= False) >=>
+        destroyCannonballs space now >=>
 --         passThrough debug >=>
         return
     updateNoSceneChange sort config space scene now contacts (True, cd) =
         return . (controlled ^= True) >=>
         return . updateAngleState config cd >=>
         passThrough setAngle >=>
-        return . unfollowCannonBall cd >=>
-        shootCannonBall space config now cd >=>
+        destroyCannonballs space now >=>
+        shootCannonball space config now cd >=>
 --         passThrough debug >=>
         return
 
@@ -185,15 +188,13 @@ instance Sort CannonSort Cannon where
             barrel = RenderPixmap (barrelPix sort) barrelPosition (Just barrelAngle)
             eyes = renderRobotEyes (robotEyes sort) basePosition baseAngle eyesOffset
                         (robotEyesState now cannon) now
-        cannonballs <- fmapM (mkCannonballRenderPixmap sort)
-                (maybeToList (cannon ^. followedBall) ++ cannon ^. unfollowedBalls)
+        cannonballs <- fmapM (mkCannonballRenderPixmap sort) (cannon ^. cannonballs)
         return (cannonballs ++ barrel : base : eyes : [])
 
 debug c =
     debugChipmunk (base c) >>
     debugChipmunk (barrel c) >>
-    fmapM_ debugChipmunk (c ^. followedBall) >>
-    fmapM_ debugChipmunk (c ^. unfollowedBalls) >>
+    fmapM_ debugChipmunk (map snd $ (c ^. cannonballs)) >>
     ppp (c ^. shotTime)
 
 debugChipmunk chip = do
@@ -314,25 +315,28 @@ robotEyesState now cannon = case (cannon ^. controlled, cannon ^. shotTime) of
 
 -- * cannon balls
 
-unfollowCannonBall :: ControlData -> Cannon -> Cannon
-unfollowCannonBall cd cannon@Cannon{followedBall_ = Just followed} =
-    if not (null (pressed cd)) then
-        followedBall ^= Nothing $
-        unfollowedBalls ^: (followed :) $
-        cannon
-      else
-        cannon
-unfollowCannonBall _ c = c
+-- | Removes cannonballs after their lifetime exceeded.
+destroyCannonballs :: Space -> Seconds -> Cannon -> IO Cannon
+destroyCannonballs space now =
+    cannonballs ^^: (\ bs -> catMaybes <$> mapM inner bs)
+  where
+    inner :: Cannonball -> IO (Maybe Cannonball)
+    inner cb@(time, chip) =
+        if now - time > cannonballLifeSpan then do
+            -- cannonball gets removed
+            removeChipmunk chip
+            return Nothing
+          else
+            return $ Just cb
 
-shootCannonBall :: Space -> Controls -> Seconds -> ControlData -> Cannon -> IO Cannon
-shootCannonBall space controls now cd cannon@Cannon{followedBall_ = Nothing}
-  | isRobotActionPressed controls cd = do
+shootCannonball :: Space -> Controls -> Seconds -> ControlData -> Cannon -> IO Cannon
+shootCannonball space controls now cd cannon | isRobotActionPressed controls cd = do
     ball <- mkCannonball space cannon
     return $
         shotTime ^= Just now $
-        followedBall ^= Just ball $
+        cannonballs ^: ((now, ball) :) $
         cannon
-shootCannonBall _ _ _ _ c = return c
+shootCannonball _ _ _ _ c = return c
 
 mkCannonball :: Space -> Cannon -> IO Chipmunk
 mkCannonball space cannon = do
@@ -360,8 +364,8 @@ cannonballShapeAttributes = ShapeAttributes{
     CM.collisionType = RobotCT
   }
 
-mkCannonballRenderPixmap :: CannonSort -> Chipmunk -> IO RenderPixmap
-mkCannonballRenderPixmap sort chip = do
+mkCannonballRenderPixmap :: CannonSort -> Cannonball -> IO RenderPixmap
+mkCannonballRenderPixmap sort (_, chip) = do
     (pos, angle) <- getRenderPositionAndAngle chip
     return $ RenderPixmap (ball sort) pos (Just angle)
   where

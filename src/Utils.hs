@@ -170,10 +170,9 @@ a |> f = f a
 passThrough :: Monad m => (a -> m ()) -> (a -> m a)
 passThrough cmd a = cmd a >> return a
 
-secondKleisli :: Monad m => (a -> m b) -> ((x, a) -> m (x, b))
-secondKleisli cmd (x, a) = do
-    b <- cmd a
-    return (x, b)
+secondKleisli :: Functor f => (a -> f b) -> ((x, a) -> f (x, b))
+secondKleisli cmd (x, a) =
+    fmap (tuple x) $ cmd a
 
 (<>>) :: Functor m => m a -> (a -> b) -> m b
 action <>> f = f <$> action
