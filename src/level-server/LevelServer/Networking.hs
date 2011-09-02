@@ -24,7 +24,7 @@ runServer serve = do
         receive bc >>= serve >>= sendFlush bc
 
 
-spec = serverSpec{address = IP "localhost" port}
+spec = serverSpec{address = IP "0.0.0.0" port}
 
 
 askServer :: ClientToServer -> IO ServerToClient
