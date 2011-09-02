@@ -28,7 +28,7 @@ Executable level-server
         network >= 2.3.0.5,
         binary-communicator >= 1.0.1,
         process,
-        directory >= 1.1.0.1,
+        directory,
         filepath >= 1.2.0.1,
         transformers >= 0.2.2.0,
         FindBin >= 0.0.5,
