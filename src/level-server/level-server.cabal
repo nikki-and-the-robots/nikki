@@ -29,7 +29,7 @@ Executable level-server
         binary-communicator >= 1.0.1,
         process,
         directory,
-        filepath >= 1.2.0.1,
+        filepath,
         transformers >= 0.2.2.0,
         FindBin >= 0.0.5,
         safe >= 0.3,
