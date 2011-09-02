@@ -4,6 +4,7 @@ module Graphics.Qt.CPPWrapper (
 
     -- * globale
     qtVersion,
+    qtOpenUrl,
 
     -- * QApplication
     QApplication,
@@ -104,6 +105,10 @@ qtVersion :: IO String
 qtVersion = cppQtVersion >>= peekCString
 
 foreign import ccall "qtVersion" cppQtVersion :: IO CString
+
+qtOpenUrl :: String -> IO Bool
+qtOpenUrl s = withCString s cppQtOpenUrl
+foreign import ccall "qtOpenUrl" cppQtOpenUrl :: CString -> IO Bool
 
 
 -- ** Objects

@@ -24,6 +24,10 @@ extern "C" const char* qtVersion() {
     return qVersion();
 };
 
+extern "C" bool qtOpenUrl(char* url) {
+    return QDesktopServices::openUrl(QUrl(QString(url)));
+};
+
 void error(QString msg);
 
 // * QApplication
