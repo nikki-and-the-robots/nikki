@@ -32,7 +32,7 @@ import Sorts.Robots.Eyes
 barrelInitialAngle = - tau / 8
 
 -- | angular velocity with which the barrel can be controlled (radians per second)
-barrelAngleVelocity = tau * 0.15
+barrelAngleVelocity = tau * 0.25
 
 -- | mass of one uber-pixel of a cannonball
 cannonballMaterialMass = 50
@@ -41,7 +41,7 @@ cannonballMaterialMass = 50
 cannonballVelocity = 1500
 
 -- | how long the robot will keep its eyes closed after shooting
-eyesClosedTime :: Seconds = 0.4
+eyesClosedTime :: Seconds = 0.3
 
 
 -- * sort loading
