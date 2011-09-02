@@ -7,6 +7,7 @@ import Data.Binary
 import Control.Applicative
 
 
+port :: Num n => n
 port = 8143
 
 data ClientToServer
