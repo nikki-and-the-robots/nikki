@@ -14,6 +14,7 @@ import Editor.Pickle.LevelFile
 import StoryMode.Types
 import StoryMode.Configuration
 import StoryMode.Episode
+import StoryMode.Purchasing
 
 
 type Play = Parent -> LevelFile -> AppState
@@ -23,10 +24,7 @@ storyMode :: Application -> Play -> Parent -> AppState
 storyMode app play parent = NoGUIAppState $ do
     mEpisodes <- io $ loadEpisodes
     case mEpisodes of
-        Nothing -> do
-            file <- rm2m $ getDataFileName "manual/storyModeNotBought"
-            prose <- io $ pFile file
-            return $ scrollingAppState app prose parent
+        Nothing -> return $ suggestPurchase app parent 0
         Just episodes -> return $ mkEpisodesMenu app play parent episodes 0
 
 mkEpisodesMenu :: Application -> Play -> Parent -> [Episode LevelFile] -> Int -> AppState
