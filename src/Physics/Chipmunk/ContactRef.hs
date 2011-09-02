@@ -57,11 +57,20 @@ data Watcher collisionType x
         collisionType
         (Shape -> Shape -> Vector -> x -> x)
 
-data Permeability = Permeable | Solid
+collisionShapes :: Watcher ct x -> (ct, ct)
+collisionShapes (DontWatch a b) = (a, b)
+collisionShapes (Watch a b _) = (a, b)
+collisionShapes (FullWatch a b _) = (a, b)
 
-isSolid :: Permeability -> Bool
-isSolid Solid = True
-isSolid _ = False
+data Permeability
+    = Permeable
+--     | Semipermeable
+    | Solid
+
+isSolidInPresolve :: Permeability -> Bool
+isSolidInPresolve Solid = True
+-- isSolidInPresolve Semipermeable = True
+isSolidInPresolve Permeable = False
 
 -- | needs an empty contacts value
 initContactRef :: Enum collisionType =>
@@ -71,22 +80,31 @@ initContactRef space empty callbacks = do
     mapM_ (installCallback ref) callbacks
     return $ ContactRef empty ref
   where
-    installCallback _ref (Callback (DontWatch a b) permeability) =
-        addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
-            return $ isSolid permeability
-    installCallback ref (Callback (Watch a b f) permeability) =
-        addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
-            (shapeA, shapeB) <- shapes
-            liftIO $ modifyIORefM ref (f shapeA shapeB)
-            return (isSolid permeability)
-    installCallback ref (Callback (FullWatch a b f) permeability) =
-        addCollisionHandler space (toNumber a) (toNumber b) $ mkPreSolve $ do
-            (shapeA, shapeB) <- shapes
-            normal_ <- normal
-            liftIO $ modifyIORef ref (f shapeA shapeB normal_)
-            return (isSolid permeability)
+    installCallback ref (Callback watching permeability) = do
+        let (a, b) = collisionShapes watching
+        addCollisionHandler space (toNumber a) (toNumber b) $ mkHandler ref watching permeability
 
-mkPreSolve x = Handler Nothing (Just x) Nothing Nothing
+mkHandler :: IORef x -> Watcher collisionType x -> Permeability -> CollisionHandler
+mkHandler ref watcher permeability =
+    Handler (mkBegin permeability) (Just $ mkPreSolve ref watcher permeability) Nothing Nothing
+
+{-mkBegin Semipermeable = Just $ do
+    (_, movingShape) <- shapes
+    velocity@(Vector x y) <- io $ get $ velocity $ body movingShape
+    return $ (y >= 0)-}
+mkBegin _ = Nothing
+
+mkPreSolve _ (DontWatch _ _) permeability =
+    return $ isSolidInPresolve permeability
+mkPreSolve ref (Watch _ _ f) permeability = do
+    (shapeA, shapeB) <- shapes
+    liftIO $ modifyIORefM ref (f shapeA shapeB)
+    return $ isSolidInPresolve permeability
+mkPreSolve ref (FullWatch _ _ f) permeability = do
+    (shapeA, shapeB) <- shapes
+    normal_ <- normal
+    liftIO $ modifyIORef ref (f shapeA shapeB normal_)
+    return $ isSolidInPresolve permeability
 
 
 -- updating
