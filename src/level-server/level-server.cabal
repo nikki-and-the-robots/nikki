@@ -21,6 +21,8 @@ Executable level-server-test-client
 Executable level-server
     Main-is: LevelServer.hs
     hs-source-dirs: ., ..
+    extensions:
+        DeriveDataTypeable
     Build-depends:
         base,
         network-fancy >= 0.1.5,
@@ -33,4 +35,6 @@ Executable level-server
         transformers >= 0.2.2.0,
         FindBin >= 0.0.5,
         safe >= 0.3,
-        cmdargs >= 0.8
+        cmdargs >= 0.8,
+        time,
+        old-locale

@@ -12,15 +12,18 @@ import Network.Fancy (streamServer, sleepForever, serverSpec, ServerSpec(..), Ad
 import LevelServer.Types
 
 
-runServer :: (ClientToServer -> IO ServerToClient) -> IO ()
-runServer serve = do
-    streamServer spec inner
+runServer :: (String -> IO ()) -> (ClientToServer -> IO ServerToClient) -> IO ()
+runServer serverLog serve = do
+    _ <- streamServer spec inner
     sleepForever
   where
     inner handle address = do
-        print address
         bc <- binaryCom handle
-        receive bc >>= serve >>= sendFlush bc
+        input <- receive bc
+        serverLog $ show input
+        output <- serve input
+        serverLog $ show output
+        sendFlush bc output
 
 
 spec = serverSpec{address = IP "0.0.0.0" port}
