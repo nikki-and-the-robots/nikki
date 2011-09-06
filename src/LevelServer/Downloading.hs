@@ -6,6 +6,8 @@ import qualified Data.ByteString.Lazy as BSL
 
 import Text.Logging
 
+import Control.Monad.Error
+
 import System.FilePath
 import System.Directory
 
@@ -49,18 +51,45 @@ getDownloadedLevelsPath = do
 downloadNewLevels :: Application -> AppState -> AppState
 downloadNewLevels app follower = appState (busyMessage $ p "downloading levels...") $ io $ do
     dir <- getDownloadedLevelsPath
-    (LevelList urls) <- askServer GetLevelList
-    mapM_ (down dir) urls
-    return follower
+    eLevelList <- askServer GetLevelList
+    case eLevelList of
+        Right (LevelList urls) -> runDownloads app
+            (mapM_ (down dir) urls)
+            follower
+        Left exception -> do
+            logg Warning $ show exception
+            let msg =
+                    p "SERVER ERROR:" :
+                    p "The level server seems to be down." :
+                    p "Sorry." :
+                    []
+            return $ message app msg follower
+
   where
     down dir url = do
         download dir url
         let metaUrl = url <.> "meta"
         download dir metaUrl
+    download :: FilePath -> String -> ErrorT String IO ()
     download dir url = do
         logg Info ("downloading " ++ url)
         let dest = dir </> takeFileName url
-        eContent <- openLazyURI url
+        eContent <- io $ openLazyURI url
         case eContent of
-            Right content -> do
-                BSL.writeFile dest content
+            Left curlMsg -> do
+                logg Warning curlMsg
+                throwError url
+            Right content ->
+                io $ BSL.writeFile dest content
+
+    runDownloads :: Application -> ErrorT String IO () -> AppState -> IO AppState
+    runDownloads app m follower = do
+        er <- runErrorT m
+        case er of
+            Left url -> do
+                let proseMsg = (
+                        p "An error occurred while downloading:" :
+                        pv url :
+                        [])
+                return $ message app proseMsg follower
+            Right () -> return follower
