@@ -185,6 +185,8 @@ Executable core
         , network-fancy >= 0.1.5
         , network >= 2.3.0.5
         , binary-communicator >= 1.0.1
+        , deepseq
+        , old-locale
 
 
     if os(linux)

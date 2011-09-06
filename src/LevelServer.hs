@@ -1,7 +1,5 @@
 
 
-import Data.Time
-
 import Control.Applicative
 
 import System.IO
@@ -20,7 +18,7 @@ main = do
     putStrLn ("listening on port " ++ show port)
     options <- cmdArgs defaultOptions
     levelFiles <- getFiles (levelDir options) (Just ".nl")
-    runServer serverLog $ serve options levelFiles
+    runServer $ serve options levelFiles
 
 serve :: ServerOptions -> [FilePath] -> ClientToServer -> IO ServerToClient
 serve options levelFiles GetLevelList =
@@ -44,16 +42,3 @@ defaultOptions = ServerOptions {
         &= typ "URL"
   }
     &= helpArg [explicit, name "h", name "help"]
-
-
--- * logging
-
-serverLog :: String -> IO ()
-serverLog msg =
-    putStrLn =<< mkLogMsg msg 
-
-mkLogMsg msg = do
-    time <- formatTime defaultTimeLocale timeFormat <$> getCurrentTime
-    return (time ++ " : " ++ msg)
-
-timeFormat = "%Y-%m-%d-%H:%M:%S"

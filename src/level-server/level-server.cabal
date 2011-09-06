@@ -11,18 +11,25 @@ Cabal-version:       >=1.8
 Executable level-server-test-client
     Main-is: ClientTest.hs
     hs-source-dirs: ., ..
+    extensions:
+        DeriveDataTypeable,
+        ScopedTypeVariables
     Build-depends:
         base,
         binary >= 0.5.0.2,
         network >= 2.3.0.5,
         network-fancy >= 0.1.5,
-        binary-communicator >= 1.0.1
+        binary-communicator >= 1.0.1,
+        deepseq,
+        old-locale,
+        time
 
 Executable level-server
     Main-is: LevelServer.hs
     hs-source-dirs: ., ..
     extensions:
-        DeriveDataTypeable
+        DeriveDataTypeable,
+        ScopedTypeVariables
     Build-depends:
         base,
         network-fancy >= 0.1.5,
@@ -37,4 +44,5 @@ Executable level-server
         safe >= 0.3,
         cmdargs >= 0.8,
         time,
-        old-locale
+        old-locale,
+        deepseq
