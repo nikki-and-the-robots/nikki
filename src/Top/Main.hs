@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns, ScopedTypeVariables #-}
 
 -- | The game is made up of different 'AppState's (see Top.Application), but basically
 -- these are just IO-operations. They represent the top level menu, the loading stages and

@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns #-}
 
 -- | module to compute the camera position
 

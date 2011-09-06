@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns #-}
 
 -- | module for the detection and saving of collisions while chipmunk simulation
 

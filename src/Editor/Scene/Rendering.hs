@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns, DeriveDataTypeable, ScopedTypeVariables, ViewPatterns #-}
+{-# language ViewPatterns #-}
 
 module Editor.Scene.Rendering (
     renderEditorScene,

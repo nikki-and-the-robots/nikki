@@ -1,4 +1,3 @@
-{-# language ViewPatterns, ScopedTypeVariables #-}
 
 -- | There is a problem with multiple shapes forming bigger geometrical structures in chipmunk:
 -- shapes, that are moving while touching these shapes, might get stuck on

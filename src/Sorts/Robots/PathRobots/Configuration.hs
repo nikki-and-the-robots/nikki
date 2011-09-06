@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables #-}
 
 module Sorts.Robots.PathRobots.Configuration where
 

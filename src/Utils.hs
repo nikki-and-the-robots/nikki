@@ -1,5 +1,4 @@
-{-# language EmptyDataDecls, FlexibleInstances, ViewPatterns, PackageImports, 
-    TypeSynonymInstances, ScopedTypeVariables #-}
+{-# language ViewPatterns #-}
 
 module Utils (
     (<$>),

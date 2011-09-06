@@ -1,5 +1,4 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable, NamedFieldPuns, ScopedTypeVariables,
-    ViewPatterns #-}
+{-# language ViewPatterns #-}
 
 module Sorts.Switch (
     sorts, 

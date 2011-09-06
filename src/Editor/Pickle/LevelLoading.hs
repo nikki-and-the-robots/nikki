@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables #-}
 
 module Editor.Pickle.LevelLoading (
     lookupPlayableLevels,

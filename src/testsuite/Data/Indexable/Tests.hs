@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables #-}
+{-# language Ã¶ ScopedTypeVariables #-}
 
 module Data.Indexable.Tests where
 

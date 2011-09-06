@@ -1,4 +1,3 @@
-{-# language DeriveDataTypeable, MultiParamTypeClasses, NamedFieldPuns #-}
 
 module Sorts.Battery where
 

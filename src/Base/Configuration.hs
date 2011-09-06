@@ -1,4 +1,3 @@
-{-# language DeriveDataTypeable #-}
 
 module Base.Configuration (
     SavedConfiguration,

@@ -1,4 +1,4 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable #-}
+{-# language Ã¶ MultiParamTypeClasses, DeriveDataTypeable #-}
 {-# OPTIONS_HADDOCK ignore-exports #-}
 
 -- | An object with some static physical lines for debugging the game mode.

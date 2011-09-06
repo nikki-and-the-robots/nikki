@@ -1,4 +1,4 @@
-{-# language ViewPatterns, NamedFieldPuns, DeriveDataTypeable, ScopedTypeVariables #-}
+{-# language ViewPatterns #-}
 
 module Sorts.Robots.PathRobots.Path where
 

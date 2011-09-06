@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language Ã¶ ViewPatterns #-}
 
 module Physics.Chipmunk.StickyEdges.Tests.Rendering where
 

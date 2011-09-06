@@ -1,6 +1,4 @@
-{-# language NamedFieldPuns, MultiParamTypeClasses, ScopedTypeVariables,
-    ViewPatterns, DeriveDataTypeable, Rank2Types, FlexibleInstances,
-    ImpredicativeTypes, RecordWildCards #-}
+{-# language ViewPatterns, Rank2Types, ImpredicativeTypes, RecordWildCards #-}
 
 {-# OPTIONS_GHC -fno-warn-deprecated-flags #-}
 

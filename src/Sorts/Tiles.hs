@@ -1,5 +1,4 @@
-{-# language NamedFieldPuns, MultiParamTypeClasses, FlexibleInstances,
-    DeriveDataTypeable, ScopedTypeVariables, ViewPatterns, PackageImports #-}
+{-# language ViewPatterns #-}
 
 module Sorts.Tiles (
     sorts,

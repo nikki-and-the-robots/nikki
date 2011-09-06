@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables #-}
 
 -- | module to continue the physics simulation of the scene in a background thread.
 

@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns #-}
 
 module Object.Contacts (
     MyCollisionType(..),

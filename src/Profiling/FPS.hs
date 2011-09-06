@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns #-}
 
 -- module to analyse the performance (FPS == Frames Per Second)
 

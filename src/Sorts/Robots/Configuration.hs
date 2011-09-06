@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables #-}
 
 -- | Contains configuration values for all robots.
 

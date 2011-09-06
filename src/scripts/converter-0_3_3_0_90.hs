@@ -1,6 +1,6 @@
 #!/usr/bin/env runghc
 
-{-# language DeriveDataTypeable #-}
+{-# language Ã¶ DeriveDataTypeable #-}
 
 
 import Data.Initial

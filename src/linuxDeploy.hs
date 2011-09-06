@@ -1,6 +1,6 @@
 #!/usr/bin/env runghc
 
-{-# language PackageImports #-}
+{-# language Ã¶ PackageImports #-}
 
 
 import Prelude hiding (any)

@@ -1,4 +1,4 @@
-{-# language ViewPatterns, ScopedTypeVariables #-}
+{-# language ViewPatterns #-}
 
 module Base.Score (
     HighScoreFile(..),

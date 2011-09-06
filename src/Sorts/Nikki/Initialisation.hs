@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables #-}
 
 module Sorts.Nikki.Initialisation (
     mkPolys,

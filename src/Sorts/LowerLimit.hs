@@ -1,5 +1,4 @@
-{-# language DeriveDataTypeable, MultiParamTypeClasses, ViewPatterns, ScopedTypeVariables,
-    NamedFieldPuns #-}
+{-# language ViewPatterns #-}
 
 -- | Implements a lower limit for a scene.
 -- If Nikki is below that limit, the level is ended with failure.

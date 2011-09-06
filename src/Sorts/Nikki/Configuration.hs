@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables, NamedFieldPuns #-}
 
 module Sorts.Nikki.Configuration where
 

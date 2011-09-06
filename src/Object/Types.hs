@@ -1,5 +1,4 @@
-{-# language MultiParamTypeClasses, FunctionalDependencies, NamedFieldPuns,
-     ViewPatterns, ExistentialQuantification, DeriveDataTypeable #-}
+{-# language FunctionalDependencies, ViewPatterns, ExistentialQuantification #-}
 
 module Object.Types where
 

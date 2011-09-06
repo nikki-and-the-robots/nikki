@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables #-}
 
 module Graphics.Qt (
     module Graphics.Qt,

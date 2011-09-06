@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables #-}
 
 module Base.Renderable.Menu (
     menuAppState,

@@ -1,6 +1,5 @@
 {-# language ViewPatterns #-}
 
-
 -- Module for trees with one selected item, that can be stepped through
 
 module Data.SelectTree (

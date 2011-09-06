@@ -1,5 +1,3 @@
-{-# language DeriveDataTypeable #-}
-
 
 module Base.Configuration.Controls (
 

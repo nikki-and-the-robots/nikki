@@ -1,4 +1,3 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable #-}
 
 module Sorts.Grids where
 

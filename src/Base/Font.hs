@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables, ViewPatterns, PackageImports #-}
+{-# language ViewPatterns #-}
 
 module Base.Font (
     loadAlphaNumericFont,

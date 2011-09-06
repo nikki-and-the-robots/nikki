@@ -1,4 +1,3 @@
-{-# language DeriveDataTypeable #-}
 
 module Graphics.Qt.Events (
     QtEvent(..),

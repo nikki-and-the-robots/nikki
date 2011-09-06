@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables, NamedFieldPuns #-}
 
 -- | The (real) main (that is, entry-) module for the game
 

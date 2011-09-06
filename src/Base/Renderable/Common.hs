@@ -1,4 +1,3 @@
-{-# language ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances #-}
 
 -- | Things used in multiple Widgets.
 

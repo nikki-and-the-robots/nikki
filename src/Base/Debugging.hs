@@ -1,4 +1,3 @@
-{-# language TypeSynonymInstances, FlexibleInstances #-}
 
 module Base.Debugging (
     DebuggingCommand,

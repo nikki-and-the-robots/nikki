@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns, ScopedTypeVariables #-}
 
 module Editor.Menu (editLevel) where
 

@@ -1,4 +1,3 @@
-{-# language StandaloneDeriving, ScopedTypeVariables #-}
 
 module LevelServer.Networking where
 

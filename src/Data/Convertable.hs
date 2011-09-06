@@ -1,4 +1,3 @@
-{-# language MultiParamTypeClasses #-}
 
 module Data.Convertable where
 

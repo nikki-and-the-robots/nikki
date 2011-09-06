@@ -1,4 +1,3 @@
-{-# language FlexibleInstances #-}
 
 module Base.Renderable.Spacer (emptySpacer, parentSpacer, lineSpacer) where
 

@@ -1,4 +1,3 @@
-{-# language ViewPatterns, DeriveDataTypeable, FlexibleInstances #-}
 
 -- | provides a data type for pixmaps that saves the size and the internal offset (padding)
 -- of the image.

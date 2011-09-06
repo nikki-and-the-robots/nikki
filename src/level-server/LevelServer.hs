@@ -1,4 +1,4 @@
-{-# language DeriveDataTypeable #-}
+{-# language Ã¶ DeriveDataTypeable #-}
 
 import System.IO
 import System.Console.CmdArgs

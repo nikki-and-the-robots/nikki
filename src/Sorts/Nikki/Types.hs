@@ -1,4 +1,4 @@
-{-# language FlexibleInstances, DeriveDataTypeable, ViewPatterns, ScopedTypeVariables #-}
+{-# language ViewPatterns #-}
 
 module Sorts.Nikki.Types where
 

@@ -1,5 +1,4 @@
-{-# language NamedFieldPuns, ExistentialQuantification, StandaloneDeriving, DeriveDataTypeable,
-    ViewPatterns #-}
+{-# language ExistentialQuantification, ViewPatterns #-}
 
 module Physics.Chipmunk.Types where
 

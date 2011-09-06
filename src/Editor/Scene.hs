@@ -1,5 +1,4 @@
-{-# language PatternGuards, NamedFieldPuns, DeriveDataTypeable, ScopedTypeVariables,
-    FlexibleContexts #-}
+{-# language FlexibleContexts #-}
 
 -- | Here the scene used in the level editor is implemented.
 -- The scene contains all available objects and all set objects.

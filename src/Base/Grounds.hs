@@ -1,4 +1,3 @@
-{-# language DeriveDataTypeable, NamedFieldPuns, ViewPatterns #-}
 
 module Base.Grounds where
 

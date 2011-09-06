@@ -1,4 +1,4 @@
-{-# language NamedFieldPuns, ViewPatterns #-}
+{-# language Ã¶ NamedFieldPuns, ViewPatterns #-}
 
 module Object.Robots.Laser where
 

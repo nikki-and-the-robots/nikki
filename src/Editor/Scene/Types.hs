@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns, FlexibleInstances, DeriveDataTypeable, ScopedTypeVariables #-}
 
 module Editor.Scene.Types where
 

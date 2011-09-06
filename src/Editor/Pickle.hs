@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables, NamedFieldPuns, ViewPatterns #-}
+{-# language ViewPatterns #-}
 
 module Editor.Pickle (
     module Editor.Pickle,

@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns #-}
 
 module Data.Abelian where
 

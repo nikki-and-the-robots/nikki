@@ -1,5 +1,3 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable, ScopedTypeVariables #-}
-
 
 -- | A Sign is an object that generates a speech bubble if activated. Could be an NPC as well.
 

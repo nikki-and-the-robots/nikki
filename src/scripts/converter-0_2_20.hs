@@ -1,4 +1,4 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable #-}
+{-# language Ã¶ MultiParamTypeClasses, DeriveDataTypeable #-}
 
 
 import Safe

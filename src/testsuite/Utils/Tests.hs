@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language Ã¶ ViewPatterns #-}
 -- | This module is both the place for testing the Utils module
 -- and for providing utility functions for the testsuite
 -- (which is admittedly unelegant)

@@ -1,4 +1,3 @@
-{-# language NamedFieldPuns #-}
 
 module Physics.Chipmunk (
     Chipmunk(..),
