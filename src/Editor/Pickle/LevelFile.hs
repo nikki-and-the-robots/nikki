@@ -6,9 +6,11 @@ module Editor.Pickle.LevelFile (
     mkUserLevel,
     mkEpisodeLevel,
     mkUnknownLevel,
+    getAbsoluteFilePath,
     levelName,
     isUserLevel,
     isTemplateLevel,
+    levelMetaData,
     LevelUID,
     levelUID,
     LevelMetaData(..),
@@ -24,6 +26,7 @@ import Data.Maybe
 import Control.Monad
 
 import System.FilePath
+import System.Directory
 
 import Utils
 
@@ -35,20 +38,36 @@ import StoryMode.Types
 
 
 mkStandardLevel :: FilePath -> FilePath -> IO LevelFile
-mkStandardLevel levelDir levelFile =
-    StandardLevel levelDir levelFile <$> loadMetaData levelFile
+mkStandardLevel levelDir levelFile = do
+    (dir, package, file) <- mkLevelPath levelDir levelFile
+    passThrough print =<< StandardLevel dir package file <$> loadMetaData levelFile
 
 mkUserLevel :: FilePath -> FilePath -> IO LevelFile
-mkUserLevel levelDir levelFile =
-    UserLevel levelDir levelFile <$> loadMetaData levelFile
+mkUserLevel levelDir levelFile = do
+    (dir, package, file) <- mkLevelPath levelDir levelFile
+    UserLevel dir package file <$> loadMetaData levelFile
 
 mkEpisodeLevel :: FilePath -> FilePath -> IO (Episode LevelFile -> LevelFile)
-mkEpisodeLevel levelDir levelFile = do
-    m <- loadMetaData levelFile
-    return $ \ e -> EpisodeLevel e levelDir levelFile m
+mkEpisodeLevel dir_ file_ = do
+    (dir, package, file) <- mkLevelPath dir_ file_
+    m <- loadMetaData (dir </> package </> file)
+    return $ \ e -> EpisodeLevel e dir package file m
+
+mkLevelPath levelDir_ levelFile_ = do
+    dir <- canonicalizePath levelDir_
+    levelFile <- canonicalizePath levelFile_
+    let withoutDir = dropWhile (`elem` pathSeparators) $ dropPrefix dir levelFile
+        package = dropFileName withoutDir
+        file = takeFileName withoutDir
+    return (dir, package, file)
 
 mkUnknownLevel :: FilePath -> IO LevelFile
 mkUnknownLevel = return . UnknownLevelType
+
+getAbsoluteFilePath :: LevelFile -> FilePath
+getAbsoluteFilePath (TemplateLevel p) = p
+getAbsoluteFilePath (UnknownLevelType p) = p
+getAbsoluteFilePath x = levelPath x </> levelPackage x </> levelFileName x
 
 levelName :: LevelFile -> String
 levelName StandardLevel{..} = meta_levelName levelMetaData_
@@ -62,6 +81,11 @@ isUserLevel _ = False
 isTemplateLevel :: LevelFile -> Bool
 isTemplateLevel TemplateLevel{} = True
 isTemplateLevel _ = False
+
+levelMetaData :: LevelFile -> LevelMetaData
+levelMetaData StandardLevel{..} = levelMetaData_
+levelMetaData UserLevel{..} = levelMetaData_
+levelMetaData file = LevelMetaData (guessName $ getAbsoluteFilePath file) Nothing
 
 showLevelTreeForMenu :: SelectTree LevelFile -> IO Prose
 showLevelTreeForMenu (Leaf label level) = showLevelForMenu level

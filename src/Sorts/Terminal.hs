@@ -553,7 +553,7 @@ mkBatteryTerminal file chip robots =
     updateStandby 0 <$>
     updateOnTime (- bootingAnimationTime) <$>
     case file of
-        (EpisodeLevel episode _ _ _) -> do
+        (EpisodeLevel episode _ _ _ _) -> do
             batteries <- batteriesInTerminal <$> getEpisodeScore (euid episode)
             return $ StandbyBatteryTerminal chip robots batteries Nothing
         -- not in story-mode (shouldn't happen at all, just for testing)
@@ -562,7 +562,7 @@ mkBatteryTerminal file chip robots =
 putBatteriesInTerminal :: Scene o -> Seconds -> Terminal -> IO Terminal
 putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
     case levelFile scene of
-        (EpisodeLevel episode _ _ _) -> do
+        (EpisodeLevel episode _ _ _ _) -> do
             score <- getEpisodeScore $ euid episode
             batteries <- getCollectedBatteries scene episode
             setEpisodeScore (euid episode) (EpisodeScore_0 True batteries)

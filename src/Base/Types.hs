@@ -640,29 +640,27 @@ sort_ (Object_ sort _) = Sort_ sort
 
 data LevelFile
     = StandardLevel {
-          levelDirectory :: FilePath
-        , levelFilePath :: FilePath
+          levelPath :: FilePath
+        , levelPackage :: FilePath
+        , levelFileName :: FilePath
         , levelMetaData_ :: LevelMetaData
       }
     | UserLevel {
-          levelDirectory :: FilePath
-        , levelFilePath :: FilePath
+          levelPath :: FilePath
+        , levelPackage :: FilePath
+        , levelFileName :: FilePath
         , levelMetaData_ :: LevelMetaData
       }
     | EpisodeLevel {
           levelEpisode :: Episode LevelFile
-        , levelDirectory :: FilePath
-        , levelFilePath :: FilePath
+        , levelPath :: FilePath
+        , levelPackage :: FilePath
+        , levelFileName :: FilePath
         , levelMetaData_ :: LevelMetaData
       }
     | TemplateLevel {levelFilePath :: FilePath}
     | UnknownLevelType {levelFilePath :: FilePath}
   deriving (Show)
-
-levelMetaData :: LevelFile -> LevelMetaData
-levelMetaData StandardLevel{..} = levelMetaData_
-levelMetaData UserLevel{..} = levelMetaData_
-levelMetaData file = LevelMetaData (guessName $ levelFilePath file) Nothing
 
 guessName :: FilePath -> String
 guessName = takeBaseName
@@ -672,14 +670,16 @@ type LevelUID = String
 
 -- | unique  ID of a level
 levelUID :: LevelFile -> LevelUID
-levelUID (StandardLevel levelDir levelPath meta) =
-    "standardLevels" </> dropPrefix levelDir levelPath
-levelUID (UserLevel levelDir levelPath meta) =
-    "userLevels" </> dropPrefix levelDir levelPath
-levelUID (EpisodeLevel _ levelDir levelPath meta) =
-    "storyModeLevels" </> dropPrefix levelDir levelPath
-levelUID (TemplateLevel path) = path
-levelUID (UnknownLevelType path) = path
+levelUID (StandardLevel dir package file meta) =
+    "standardLevels" <//> package <//> file
+levelUID (UserLevel dir package file meta) =
+    "userLevels" <//> package <//> file
+levelUID (EpisodeLevel _ dir package file meta) =
+    "storyModeLevels" <//> package <//> file
+levelUID (TemplateLevel path) =
+    "templateLevels" <//> path
+levelUID (UnknownLevelType path) =
+    "unknownLevels" <//> path
 
 
 -- * level meta data

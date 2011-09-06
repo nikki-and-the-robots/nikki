@@ -244,7 +244,7 @@ loadingEditorScene :: Application -> LevelFile -> AppState
     -> (EditorScene Sort_ -> AppState) -> AppState
 loadingEditorScene app file abortion follower =
     appState (busyMessage $ p "loading...") $ io $ do
-        eGrounds <- runErrorT $ loadByFilePath (leafs $ allSorts app) (levelFilePath file)
+        eGrounds <- runErrorT $ loadByFilePath (leafs $ allSorts app) (getAbsoluteFilePath file)
         case eGrounds of
             Right diskLevel -> do
                 -- level successfully loaded

@@ -135,7 +135,7 @@ saveLevel app follower EditorScene{editorLevelFile, editorObjects_} parent
   | isUserLevel editorLevelFile =
     completeMetaData app parent (Just $ levelMetaData editorLevelFile) $
       \ metaData ->
-        let path = levelFilePath editorLevelFile
+        let path = getAbsoluteFilePath editorLevelFile
         in appState (busyMessage $ p "saving level...") $ io $ do
             writeObjectsToDisk path metaData editorObjects_
             return $ follower editorLevelFile{levelMetaData_ = metaData}
@@ -145,8 +145,8 @@ saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
     \ metaData@(LevelMetaData name _) ->
       NoGUIAppState $ io $ do
         levelDirectory <- getSaveLevelDirectory
-        let path = levelDirectory </> name <..> "nl"
-            levelFile = UserLevel levelDirectory path metaData
+        let levelFile = UserLevel levelDirectory "" (name <..> "nl") metaData
+            path = getAbsoluteFilePath levelFile
         exists <- doesFileExist path
         if exists then
             return $ fileExists app this path metaData editorObjects_
