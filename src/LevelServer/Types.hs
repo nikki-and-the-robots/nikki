@@ -21,6 +21,9 @@ instance Binary Version where
         143 <- getWord8
         Version <$> get <*> get
 
+instance NFData Version where
+    rnf (Version a b) = rnf a `seq` rnf b
+
 
 data ClientToServer
     = GetLevelList
@@ -35,6 +38,10 @@ instance Binary ClientToServer where
     get = do
         0 <- getWord8
         return GetLevelList
+
+instance NFData ClientToServer where
+    rnf GetLevelList = ()
+    rnf (UploadLevel a b) = rnf a `seq` rnf b
 
 
 data ServerToClient

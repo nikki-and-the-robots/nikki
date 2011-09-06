@@ -78,6 +78,7 @@ downloadNewLevels app follower = appState (busyMessage $ p "downloading levels..
         flip catch errorCall $
         flip catch ioException $
         flip catch curlException $
+        flip catch timeout $
         a
 
     all :: SomeException -> IO AppState
@@ -114,6 +115,14 @@ downloadNewLevels app follower = appState (busyMessage $ p "downloading levels..
                 p "An error occurred while downloading:" :
                 pv url :
                 pv ("(" ++ curlMsg ++ ")") :
+                []
+        return $ message app msg follower
+
+    timeout :: Timeout -> IO AppState
+    timeout t = do
+        logg Warning $ show t
+        let msg =
+                p "The connection timed out." :
                 []
         return $ message app msg follower
 
