@@ -102,8 +102,6 @@ Executable  nikki
 Executable core
     main-is:
         Main.hs
-    hs-source-dirs:
-        ., level-server
     other-modules:
         Paths_nikki
 
