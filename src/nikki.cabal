@@ -142,7 +142,6 @@ Executable core
         FlexibleInstances,
         NamedFieldPuns,
         DeriveDataTypeable,
-        TypeSynonymInstances,
         PackageImports
 
     if os(darwin)
