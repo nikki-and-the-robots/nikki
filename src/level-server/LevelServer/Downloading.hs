@@ -24,13 +24,16 @@ import LevelServer.Networking
 downloadedLevels :: Application -> Play -> Int -> Parent -> AppState
 downloadedLevels app play ps parent = NoGUIAppState $ io $ do
     levels <- lookupDownloadedLevels
+    levelItems <- mapM mkLevelItem levels
     return $ menuAppState app (NormalMenu (p "downloaded levels") Nothing) (Just parent) (
         (p "download new levels", downloadNewLevels app . this) :
-        map mkLevelItem levels ++
+        levelItems ++
         []) ps
   where
     this ps = downloadedLevels app play ps parent
-    mkLevelItem (file :: LevelFile) = (pv $ levelName file, \ ps -> play (this ps) file)
+    mkLevelItem (file :: LevelFile) = do
+        label <- showLevelForMenu file
+        return (label, \ ps -> play (this ps) file)
 
 lookupDownloadedLevels :: IO [LevelFile]
 lookupDownloadedLevels = do
