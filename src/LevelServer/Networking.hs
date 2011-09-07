@@ -92,7 +92,7 @@ timeFormat = "%Y-%m-%d-%H:%M:%S"
 -- | Can throw IOException and ErrorCall
 askServer :: ClientToServer -> IO ServerToClient
 askServer msg = do
-    h <- connectTo "localhost" (PortNumber port)
+    h <- connectTo "joyridelabs.de" (PortNumber port)
     bc <- binaryCom h
     send bc protocolVersion
     sendFlush bc msg
