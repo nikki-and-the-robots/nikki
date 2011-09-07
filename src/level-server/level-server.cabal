@@ -17,11 +17,12 @@ Executable level-server
         StandaloneDeriving,
         MultiParamTypeClasses,
         FlexibleInstances,
+        TypeSynonymInstances,
         NamedFieldPuns,
         DeriveDataTypeable,
         PackageImports
     Build-depends:
-        base,
+        base == 4.*,
         network-fancy >= 0.1.5,
         binary >= 0.5.0.2,
         network >= 2.3.0.5,
