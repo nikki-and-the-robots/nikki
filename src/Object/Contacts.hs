@@ -20,7 +20,7 @@ import Utils
 import Base
 
 
-nikkiCollisionTypes = [NikkiLegsCT, NikkiHeadCT, NikkiLeftPawCT, NikkiGhostCT]
+nikkiCollisionTypes = [NikkiLegsCT, NikkiHeadCT, NikkiGhostCT]
 
 isSolidNikkiCollisionType NikkiLegsCT = True
 isSolidNikkiCollisionType NikkiHeadCT = True
@@ -49,9 +49,9 @@ instance Initial Contacts where
 
 -- * setter (boolean to True)
 
-addNikkiContacts :: Shape -> MyCollisionType -> Vector -> Contacts -> Contacts
-addNikkiContacts s ct v c =
-    c{nikkiCollisions = (NikkiCollision s (foldAngle $ toUpAngle v) ct : nikkiCollisions c)}
+addNikkiContacts :: Shape -> MyCollisionType -> (Vector, Vector) -> Contacts -> Contacts
+addNikkiContacts s ct (v, pos) c =
+    c{nikkiCollisions = (NikkiCollision s (foldAngle $ toUpAngle v) pos ct : nikkiCollisions c)}
 
 setNikkiTouchesDeadly :: Contacts -> Contacts
 setNikkiTouchesDeadly c = c{nikkiTouchesDeadly = True}

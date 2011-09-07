@@ -11,6 +11,7 @@ import Data.Directions
 import qualified Data.Strict as Strict
 import Data.Convertable
 import Data.Initial
+import Data.Abelian
 
 import Control.Arrow
 
@@ -48,7 +49,7 @@ nextState :: Controls -> Seconds -> Contacts -> ControlData
 nextState config now contacts controlData nikki nikkiPos velocity =
     let ghostTimes' = nextGhostTimes now (state nikki)
         grips' :: Maybe HorizontalDirection =
-            grips collisions
+            grips nikkiPos collisions
         action' :: Action = nextAction config (state nikki) controlData nothingHeld
                                 buttonDirection contacts ghostTimes' grips'
         jumpInformation' = nextJumpInformation (state nikki)
@@ -96,8 +97,8 @@ nextGhostTimes now oldState = case oldAction of
             if now - ghostDuration < t then oldGhostTime else Strict.Nothing
 
 -- returns if nikki grabs something (and if yes, which direction)
-grips :: [NikkiCollision] -> Maybe HorizontalDirection
-grips =
+grips :: CM.Position -> [NikkiCollision] -> Maybe HorizontalDirection
+grips nikkiPos =
     filter isHeadCollision >>>
     filter isGripCollision >>>
     toGripCollision
@@ -107,8 +108,10 @@ grips =
 
     toGripCollision [] = Nothing
     toGripCollision gripCollisions = Just $
-        if any ((NikkiLeftPawCT ==) . nikkiCollisionType) gripCollisions
-        then HLeft else HRight
+        if any isLeftCollision gripCollisions then HLeft else HRight
+    isLeftCollision collision =
+        let collisionPosition = nikkiCollisionPosition collision -~ nikkiPos
+        in vectorX collisionPosition < 0
 
 
 nextAction config oldState controlData nothingHeld buttonDirection contacts ghostTimes' grips =
@@ -273,12 +276,11 @@ nextFeetVelocity oldState collisions velocity action direction = case action of
 
 
 -- if a given collision is with nikki's head
-isHeadCollision (NikkiCollision _ normal NikkiHeadCT) = True
-isHeadCollision (NikkiCollision _ normal NikkiLeftPawCT) = True
+isHeadCollision (NikkiCollision _ normal _ NikkiHeadCT) = True
 isHeadCollision _ = False
 
 -- if a given collision is with nikki's legs
-isLegsCollision (NikkiCollision _ _ NikkiLegsCT) = True
+isLegsCollision (NikkiCollision _ _ _ NikkiLegsCT) = True
 isLegsCollision _ = False
 
 -- if a given collision angle should lead to nikki standing on feet
@@ -325,7 +327,6 @@ jumpCollision collisions =
     toNumber NikkiLegsCT    = 1
     toNumber NikkiGhostCT   = 2
     toNumber NikkiHeadCT    = 3
-    toNumber NikkiLeftPawCT = 3
 
     isGhostCollision c = NikkiGhostCT == nikkiCollisionType c
     isHorizontalCollision c = abs (nikkiCollisionAngle c) =~= (tau / 4)

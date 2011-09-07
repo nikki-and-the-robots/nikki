@@ -239,7 +239,6 @@ data Contacts
 data MyCollisionType
     = NikkiHeadCT
     | NikkiLegsCT
-    | NikkiLeftPawCT
     | NikkiGhostCT
 
     | TileCT
@@ -258,13 +257,14 @@ instance PP MyCollisionType where
 data NikkiCollision = NikkiCollision {
     nikkiCollisionShape :: !Shape,
     nikkiCollisionAngle :: !Angle,
+    nikkiCollisionPosition :: !Vector,
     nikkiCollisionType :: !MyCollisionType
   }
     deriving (Show)
 
 instance PP NikkiCollision where
-    pp (NikkiCollision a b c) =
-        "NikkiCollision " ++ show a <~> pp b <~> pp c
+    pp (NikkiCollision a b c d) =
+        "NikkiCollision " ++ show a <~> pp b <~> pp c <~> pp d
 
 -- * mode for the game scene
 data Mode

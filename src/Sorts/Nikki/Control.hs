@@ -79,7 +79,7 @@ control now contacts (True, cd) nsort nikki = do
         -- at the peak of the jump. This function will decide, how high Nikki can
         -- can jump maximally.
         -- (see Sorts.Nikki.JumpingForces)
-        State (JumpImpulse (NikkiCollision shape contactAngle _)) _ _ ji _ -> do
+        State (JumpImpulse (NikkiCollision shape contactAngle _ _)) _ _ ji _ -> do
             let velocity = jumpNikkiVelocity ji
             collisionObjectVelocity <- get (Hip.velocity (Hip.body shape))
             modifyApplyImpulse chipmunk_ $

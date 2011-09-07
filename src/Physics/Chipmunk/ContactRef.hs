@@ -14,6 +14,8 @@ module Physics.Chipmunk.ContactRef (
   ) where
 
 
+import Safe
+
 import Data.IORef
 import Data.StateVar
 
@@ -54,7 +56,7 @@ data Watcher collisionType x
     | FullWatch
         collisionType
         collisionType
-        (Shape -> Shape -> Vector -> x -> x)
+        (Shape -> Shape -> (Vector, Vector) -> x -> x)
 
 collisionShapes :: Watcher ct x -> (ct, ct)
 collisionShapes (DontWatch a b) = (a, b)
@@ -102,7 +104,9 @@ mkPreSolve ref (Watch _ _ f) permeability = do
 mkPreSolve ref (FullWatch _ _ f) permeability = do
     (shapeA, shapeB) <- shapes
     normal_ <- normal
-    liftIO $ modifyIORef ref (f shapeA shapeB normal_)
+    points_ <- points
+    let point = headNote "mkPreSolve" points_ -- this is a bit inaccurate, but should be ok
+    liftIO $ modifyIORef ref (f shapeA shapeB (normal_, point))
     return $ isSolidInPresolve permeability
 
 

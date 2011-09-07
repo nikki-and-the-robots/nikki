@@ -50,12 +50,6 @@ headShapeAttributes = ShapeAttributes {
     CM.collisionType = NikkiHeadCT
   }
 
-leftPawShapeAttributes = ShapeAttributes {
-    elasticity    = elasticity_,
-    friction      = headFriction,
-    CM.collisionType = NikkiLeftPawCT
-  }
-
 ghostShapeAttributes = ShapeAttributes {
     elasticity    = elasticity_,
     friction      = headFriction,
@@ -76,7 +70,6 @@ surfaceVelocityShape =
 
 otherShapes =
     mkShapeDescription headShapeAttributes headPoly :
-    mkShapeDescription leftPawShapeAttributes leftPawPoly :
     mkShapeDescription ghostShapeAttributes ghostShape :
     []
 
@@ -122,15 +115,6 @@ legs = Polygon [
     Vector legLeft low,
     Vector legRight low,
     Vector legRight legUp
-    ]
-
--- does not provide collisions
--- just for position detection
-leftPawPoly = Polygon [
-    Vector headLeft (headLow + pawThickness - fromUber 1),
-    Vector headLeft (headLow + pawThickness),
-    Vector 0 (headLow + pawThickness),
-    Vector 0 (headLow + pawThickness - fromUber 1)
     ]
 
 -- | the angle of the line from the edge of the feet to the lower edge of the head
