@@ -29,6 +29,9 @@ spec = serverSpec{address = IP "0.0.0.0" port}
 -- | in seconds
 receiveTimeout = 10
 
+-- | maximal number of characters in one log message
+maxLogLength = 120
+
 runServer :: (ClientToServer -> IO ServerToClient) -> IO ()
 runServer serve = do
     _ <- streamServer spec inner
@@ -43,7 +46,7 @@ runServer serve = do
                 logAndSend bc $ Error ["Client version too old,", "please update your game."]
               else do
                 input :: ClientToServer <- receiveTO bc
-                serverLog $ show input
+                serverLog $ take maxLogLength $ show input
                 logAndSend bc =<< serve input
 
 catchProtocolErrorsOnServer bc a =
@@ -60,12 +63,11 @@ catchProtocolErrorsOnServer bc a =
         serverLog "client time out"
 
 logAndSend bc x = do
-    serverLog $ show x
+    serverLog $ take maxLogLength $ show x
     sendFlush bc x
 
 receiveTO bc = do
     mr <- timeout (receiveTimeout * 10 ^ 6) $ deepseqIOId =<< receive bc
-    print mr
     maybe (throwIO Timeout) return mr
 
 data Timeout = Timeout

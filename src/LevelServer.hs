@@ -5,24 +5,39 @@ import Control.Applicative
 import System.IO
 import System.Console.CmdArgs
 import System.Locale
+import System.Directory
+import System.FilePath
 
+import Utils
 import Utils.Scripting
+
+import Base.Types.LevelMetaData
 
 import LevelServer.Networking
 import LevelServer.Types
-
 
 
 main = do
     hSetBuffering stdout NoBuffering
     putStrLn ("listening on port " ++ show port)
     options <- cmdArgs defaultOptions
-    levelFiles <- getFiles (levelDir options) (Just ".nl")
-    runServer $ serve options levelFiles
+    runServer $ serve options
 
-serve :: ServerOptions -> [FilePath] -> ClientToServer -> IO ServerToClient
-serve options levelFiles GetLevelList =
+serve :: ServerOptions -> ClientToServer -> IO ServerToClient
+serve options GetLevelList = do
+    levelFiles <- getFiles (levelDir options) (Just ".nl")
     return $ LevelList $ map (baseURL options <//>) levelFiles
+serve options (UploadLevel meta level) = do
+    let path = levelDir options </> meta_levelName meta <..> ".nl"
+    exists <- doesFileExist path
+    if exists then
+        -- name clash
+        return UploadNameClash
+      else do
+        writeFile path level
+        saveMetaData path meta
+        return UploadSucceeded
+serve _ x = error ("NYI: " ++ show x)
 
 -- * server arguments
 

@@ -18,9 +18,6 @@ import Utils
 import Base
 
 
-metaFile :: FilePath -> FilePath
-metaFile a = a <.> "meta"
-
 loadMetaData :: FilePath -> IO LevelMetaData
 loadMetaData levelFile = do
     exists <- doesFileExist (metaFile levelFile)
@@ -37,6 +34,3 @@ loadMetaData levelFile = do
                 logg Warning ("meta data not parseable: " ++ levelFile)
                 return $ LevelMetaData (guessName levelFile) Nothing
             Right x -> return x
-
-saveMetaData :: FilePath -> LevelMetaData -> IO ()
-saveMetaData file meta = BSL.writeFile (metaFile file) (encode meta)

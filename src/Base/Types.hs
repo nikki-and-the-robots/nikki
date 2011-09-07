@@ -1,5 +1,4 @@
-{-# language ExistentialQuantification, FunctionalDependencies, RecordWildCards,
-    OverloadedStrings #-}
+{-# language ExistentialQuantification, FunctionalDependencies, RecordWildCards #-}
 
 
 -- module for often used types (in one Base module, to avoid module import cycles.)
@@ -7,6 +6,7 @@
 module Base.Types (
     module Base.Types,
     module Base.Types.Events,
+    module Base.Types.LevelMetaData,
     Offset,
   ) where
 
@@ -22,7 +22,6 @@ import Data.Generics.Uniplate.Data
 import Data.Accessor
 import Data.IORef
 import qualified Data.Binary as Binary
-import Data.Aeson
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -46,6 +45,7 @@ import Base.GameGrounds
 import Base.Pixmap
 
 import Base.Types.Events
+import Base.Types.LevelMetaData
 
 import StoryMode.Types
 
@@ -680,29 +680,3 @@ levelUID (TemplateLevel path) =
     "templateLevels" <//> path
 levelUID (UnknownLevelType path) =
     "unknownLevels" <//> path
-
-
--- * level meta data
-
--- | This will be saved as JSON, so it will hopefully be extendable.
--- (This is an experimental alternative to versioned constructors.)
-data LevelMetaData
-    = LevelMetaData {
-        meta_levelName :: String,
-        meta_author :: Maybe String
-      }
-  deriving (Eq, Show)
-
-instance ToJSON LevelMetaData where
-    toJSON (LevelMetaData meta_levelName meta_author) =
-      object (
-        "levelName" .= meta_levelName :
-        "author" .= meta_author :
-        [])
-
-instance FromJSON LevelMetaData where
-    parseJSON (Object meta) =
-        LevelMetaData <$>
-        meta .: "levelName" <*>
-        meta .:? "author"
-    parseJSON _ = mzero

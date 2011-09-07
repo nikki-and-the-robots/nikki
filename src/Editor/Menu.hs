@@ -9,7 +9,6 @@ import Control.Concurrent
 import Control.Monad.State
 
 import System.Directory
-import System.FilePath
 
 import Graphics.Qt
 
@@ -22,6 +21,8 @@ import Editor.Scene.Types
 import Editor.Pickle
 import Editor.Pickle.LevelFile
 import Editor.Pickle.LevelLoading
+
+import LevelServer.Client
 
 import Top.Game
 
@@ -100,7 +101,8 @@ editorMenu app mvar scene ps =
                     const $ edit (toSelectionMode scene)) :
                 (p "try playing the level", const $ playLevel app (edit scene) True scene) :
                 (p "save level", saveLevel app editWithFilePath scene . this) :
-                (p "save level and exit editor",
+                (p "save & upload", saveAndUpload app scene . this) :
+                (p "save level & exit editor",
                     saveLevel app (const $ getMainMenu app) scene . this) :
                 (p "exit editor without saving", reallyExitEditor app . this) :
               [])) ps
@@ -127,6 +129,10 @@ editorMenu app mvar scene ps =
     lEnterOEM = case enterOEM app mvar scene of
         Nothing -> []
         Just x -> [(p "edit object", const x)]
+
+
+saveAndUpload app scene parent =
+    saveLevel app (uploadLevel app parent) scene parent
 
 
 saveLevel :: Application -> (LevelFile -> AppState) -> EditorScene Sort_

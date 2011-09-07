@@ -45,7 +45,7 @@ import Editor.Pickle.LevelLoading
 
 import StoryMode.Menus
 
-import LevelServer.Downloading
+import LevelServer.Client
 
 import Top.Initialisation
 import Top.Game (playLevel)

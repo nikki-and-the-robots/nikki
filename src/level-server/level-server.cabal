@@ -28,8 +28,14 @@ Executable level-server
     Main-is: LevelServer.hs
     hs-source-dirs: ., ..
     extensions:
+        ScopedTypeVariables,
+        EmptyDataDecls,
+        StandaloneDeriving,
+        MultiParamTypeClasses,
+        FlexibleInstances,
+        NamedFieldPuns,
         DeriveDataTypeable,
-        ScopedTypeVariables
+        PackageImports
     Build-depends:
         base,
         network-fancy >= 0.1.5,
@@ -45,4 +51,12 @@ Executable level-server
         cmdargs >= 0.8,
         time,
         old-locale,
-        deepseq
+        deepseq,
+        aeson,
+        attoparsec,
+        bytestring,
+        strict,
+        data-accessor,
+        containers,
+        data-accessor-mtl,
+        mtl
