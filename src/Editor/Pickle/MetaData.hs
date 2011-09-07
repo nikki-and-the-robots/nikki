@@ -6,7 +6,6 @@ module Editor.Pickle.MetaData (
 
 
 import Data.ByteString.Lazy as BSL
-import Data.Aeson
 
 import Text.Logging
 

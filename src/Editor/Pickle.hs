@@ -25,7 +25,6 @@ import Base
 import Sorts.Tiles
 
 import Editor.Pickle.Types
-import Editor.Pickle.MetaData
 
 import qualified Legacy.Old1 as Old1
 import qualified Legacy.Old2 as Old2
