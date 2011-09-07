@@ -138,6 +138,7 @@ Executable core
         StandaloneDeriving,
         MultiParamTypeClasses,
         FlexibleInstances,
+        TypeSynonymInstances,
         NamedFieldPuns,
         DeriveDataTypeable,
         PackageImports
