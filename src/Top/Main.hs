@@ -18,7 +18,6 @@ module Top.Main where
 
 
 import Data.List as List
-import Data.SelectTree (leafs, labelA)
 
 import Text.Logging
 
@@ -33,22 +32,12 @@ import Graphics.Qt
 
 import Utils
 
-import Distribution.AutoUpdate
-
 import Base
 
-import Editor.Scene (initEditorScene)
-import Editor.Menu (editLevel)
-import Editor.Pickle
 import Editor.Pickle.LevelFile
-import Editor.Pickle.LevelLoading
-
-import StoryMode.Menus
-
-import LevelServer.Client
 
 import Top.Initialisation
-import Top.Game (playLevel)
+import Top.Menu
 
 
 main :: IO ()
@@ -148,113 +137,3 @@ applicationStates app = NoGUIAppState $ do
         Nothing -> return $ mainMenu app 0
         Just file -> io $ play app (mainMenu app 0) <$> mkUnknownLevel file
 
-mainMenu :: Application -> Int -> AppState
-mainMenu app ps =
-    menuAppState app MainMenu Nothing (
-        (p "story mode", storyMode app (play app) . this) :
-        (p "community levels", community app 0 . this) :
-        (p "options", generalOptions app 0 . this) :
-        (p "help", mainMenuHelp app . this) :
-        (p "online update", autoUpdate app . this) :
-        (p "credits", credits app . this) :
-        (p "quit", const $ FinalAppState) :
-        []) ps
-  where
-    this = mainMenu app
-
-credits :: Application -> Parent -> AppState
-credits app parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName "manual/credits"
-    prose <- io $ pFile file
-    return $ scrollingAppState app prose parent
-
-community :: Application -> Int -> Parent -> AppState
-community app ps parent =
-    menuAppState app (NormalMenu (p "community levels") Nothing) (Just parent) (
-        (p "play levels", selectLevelPlay app . this) :
-        (p "download levels", downloadedLevels app (play app) 0 . this) :
-        (p "editor", selectLevelEdit app 0 . this) :
-        []) ps
-  where
-    this ps = community app ps parent
-
--- | asks, if the user really wants to quit
-quit :: Application -> AppState -> Int -> AppState
-quit app parent =
-    menuAppState app (NormalMenu (p "quitting") (Just $ p "are you sure?")) (Just parent) (
-        (p "no", const $ parent) :
-        (p "yes", const $ FinalAppState) :
-        [])
-
--- | select a saved level.
-selectLevelPlay :: Application -> Parent -> AppState
-selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
-    levelFiles <- lookupPlayableLevels
-    return $ if null $ leafs levelFiles then
-        message app [p "no levels found :("] parent
-      else
-        treeToMenu app parent (p "choose a level") showLevelTreeForMenu levelFiles (play app) 0
-
-
-selectLevelEdit :: Application -> Int -> Parent -> AppState
-selectLevelEdit app ps parent = menuAppState app menuType (Just parent) (
-    (p "new level", pickNewLevelEdit app . this) :
-    (p "edit existing level", selectExistingLevelEdit app . this) :
-    []) ps
-  where
-    menuType = NormalMenu (p "editor") (Just $ p "create a new level or edit an existing one?")
-    this ps = selectLevelEdit app ps parent
-
-pickNewLevelEdit :: Application -> AppState -> AppState
-pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
-    pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
-    templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
-                          getDataFiles templateLevelsDir (Just ".nl")
-    return $ menuAppState app menuType (Just parent) (
-        map mkMenuItem templateLevelPaths ++
-        (p "empty level", const $ edit app parent (TemplateLevel pathToEmptyLevel)) :
-        []) 0
-  where
-    menuType = NormalMenu (p "new level") (Just $ p "choose a template to start from")
-    mkMenuItem templatePath =
-        (pVerbatim $ takeBaseName templatePath,
-            const $ edit app parent (TemplateLevel templatePath))
-
-selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
-    editableLevels <- lookupUserLevels "your levels"
-    return $ if null $ leafs editableLevels then
-        message app [p "no levels found :("] parent
-      else
-        treeToMenu app parent (p "choose a level to edit") (return . pVerbatim . (^. labelA))
-            editableLevels
-            (\ parent chosen -> edit app parent chosen) 0
-
-
--- | loads a level and plays it.
-play :: Application -> Parent -> LevelFile -> AppState
-play app parent levelFile = loadingEditorScene app levelFile parent (playLevel app parent False)
-
-edit :: Application -> Parent -> LevelFile -> AppState
-edit app parent levelFile = loadingEditorScene app levelFile parent (editLevel app)
-
--- | load a level, got to playing state afterwards
--- This AppState is a hack to do things from the logic thread 
--- in the rendering thread. Cause Qt's pixmap loading is not threadsafe.
-loadingEditorScene :: Application -> LevelFile -> AppState
-    -> (EditorScene Sort_ -> AppState) -> AppState
-loadingEditorScene app file abortion follower =
-    appState (busyMessage $ p "loading...") $ io $ do
-        eGrounds <- runErrorT $ loadByFilePath (leafs $ allSorts app) (getAbsoluteFilePath file)
-        case eGrounds of
-            Right diskLevel -> do
-                -- level successfully loaded
-                editorScene <- initEditorScene (allSorts app) file diskLevel
-                return $ follower editorScene
-            Left errMsg -> do
-                return $ message app errMsg abortion
-
-mainMenuHelp :: Application -> Parent -> AppState
-mainMenuHelp app parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName "manual/mainMenuHelp.txt"
-    text <- io $ pFile file
-    return $ scrollingAppState app text parent
