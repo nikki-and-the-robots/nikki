@@ -9,6 +9,7 @@ module Base.Renderable (
     module Base.Renderable.Message,
     module Base.Renderable.BusyMessage,
     module Base.Renderable.GameOSD,
+    module Base.Renderable.OpenUrl,
   ) where
 
 
@@ -21,3 +22,4 @@ import Base.Renderable.AskString
 import Base.Renderable.Message
 import Base.Renderable.BusyMessage
 import Base.Renderable.GameOSD
+import Base.Renderable.OpenUrl

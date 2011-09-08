@@ -5,8 +5,8 @@ module StoryMode.Configuration where
 import StoryMode.Types
 
 
-purchasingURL :: String
-purchasingURL = "http://joyridelabs.de/game/download"
+purchasingUrl :: String
+purchasingUrl = "http://joyridelabs.de/game/download"
 
 episodes :: [Episode FilePath]
 episodes =
