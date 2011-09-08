@@ -8,6 +8,8 @@ import System.Locale
 import System.Directory
 import System.FilePath
 
+import Network.URI
+
 import Utils
 import Utils.Scripting
 
@@ -26,7 +28,9 @@ main = do
 serve :: ServerOptions -> ClientToServer -> IO ServerToClient
 serve options GetLevelList = do
     levelFiles <- getFiles (levelDir options) (Just ".nl")
-    return $ LevelList $ map (baseURL options <//>) levelFiles
+    return $ LevelList $
+        map (escapeURIString isUnescapedInURI) $
+        map (baseURL options <//>) levelFiles
 serve options (UploadLevel meta level) = do
     let path = levelDir options </> meta_levelName meta <..> ".nl"
     exists <- doesFileExist path
