@@ -34,8 +34,6 @@ import Utils
 
 import Base
 
-import Editor.Pickle.LevelFile
-
 import Top.Initialisation
 import Top.Menu
 
@@ -95,7 +93,7 @@ renderThread configuration appRef =
               withApplicationSounds $ \ appSounds -> io $ do
                 -- put the initialised Application in the MVar
                 let app :: Application
-                    app = Application qApp window keyPoller (flip mainMenu 0) appPixmaps appSounds sorts
+                    app = Application qApp window keyPoller startAppState appPixmaps appSounds sorts
                 putMVar appRef app
                 -- will be quit by the logick thread
                 exitCode <- execQApplication qApp
@@ -123,17 +121,4 @@ logicThread :: Configuration -> Application -> IO ()
 logicThread configuration app = flip finally quitQApplication $ do
     -- dynamic changes of the configuration take place in this thread!
     withDynamicConfiguration configuration $
-        runAppState app (applicationStates app)
-
-
--- * states
-
--- | top level application state
-applicationStates :: Application -> AppState
-applicationStates app = NoGUIAppState $ do
-    mLevel <- gets play_level
-    play_levelA %= Nothing
-    case mLevel of
-        Nothing -> return $ mainMenu app 0
-        Just file -> io $ play app (mainMenu app 0) <$> mkUnknownLevel file
-
+        runAppState app (startAppState app)

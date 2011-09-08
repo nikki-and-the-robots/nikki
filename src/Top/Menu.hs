@@ -28,6 +28,15 @@ import StoryMode.Menus
 import LevelServer.Client
 
 
+-- | top level application state
+startAppState :: Application -> AppState
+startAppState app = NoGUIAppState $ do
+    mLevel <- gets play_level
+    play_levelA %= Nothing
+    case mLevel of
+        Nothing -> return $ mainMenu app 0
+        Just file -> io $ play app (mainMenu app 0) <$> mkUnknownLevel file
+
 mainMenu :: Application -> Int -> AppState
 mainMenu app ps =
     menuAppState app MainMenu Nothing (
