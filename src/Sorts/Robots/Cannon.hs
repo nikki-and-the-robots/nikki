@@ -56,7 +56,11 @@ sorts =
         (loadPix "base-standard_00") <*>
         (loadPix "cannon-standard_00") <*>
         loadRobotEyesPixmaps <*>
-        (loadPix "cannonball-standard_00"))
+        (mapM loadPix ("cannonball-standard_00" :
+                       "cannonball-standard_01" :
+                       "cannonball-standard_02" :
+                       "cannonball-standard_03" :
+                       [])))
   where
     loadPix :: String -> RM Pixmap
     loadPix name = do
@@ -67,7 +71,7 @@ data CannonSort = CannonSort {
     basePix :: Pixmap,
     barrelPix :: Pixmap,
     robotEyes :: RobotEyesPixmaps,
-    ball :: Pixmap
+    ballPixmaps :: [Pixmap]
   }
     deriving (Show, Typeable)
 
@@ -139,8 +143,9 @@ cannonballOffset =
 instance Sort CannonSort Cannon where
     sortId _ = SortId "robots/cannon"
     freeSort (CannonSort a b c d) =
-        fmapM_ freePixmap [a, b, d] >>
-        freeRobotEyesPixmaps c
+        fmapM_ freePixmap [a, b] >>
+        freeRobotEyesPixmaps c >>
+        fmapM_ freePixmap d
     size _ = robotSize
     renderIconified sort ptr =
         renderPixmapSimple ptr (basePix sort)
@@ -367,7 +372,15 @@ cannonballShapeAttributes = ShapeAttributes{
 
 mkCannonballRenderPixmap :: CannonSort -> Cannonball -> IO RenderPixmap
 mkCannonballRenderPixmap sort (_, chip) = do
-    (pos, angle) <- getRenderPositionAndAngle chip
-    return $ RenderPixmap (ball sort) pos (Just angle)
+    (chipPos, angle) <- getChipmunkPosition chip
+    let renderPos = vector2position chipPos -~ baryCenterOffset
+        pixmap = pickAnimationFrame (ballPixmaps sort) [specAngleRange] angle
+    return $ RenderPixmap pixmap renderPos Nothing
   where
     baryCenterOffset = fmap fromUber $ Position 3.5 3.5
+
+-- | Cannonball pixmaps are not rotated, cannonballs have animated spec lights.
+-- This is the angular range for one animation frame.
+specAngleRange = tau / specAnimationFrameNumber
+
+specAnimationFrameNumber = 4
