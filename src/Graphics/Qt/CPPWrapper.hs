@@ -87,7 +87,6 @@ import Control.Monad.CatchIO
 import Foreign (Ptr, FunPtr, nullPtr)
 import Foreign.C.String
 import Foreign.C.Types
-import Foreign.Marshal.Alloc (free)
 import Foreign.ForeignPtr
 
 import System.Directory
@@ -462,11 +461,23 @@ foreign import ccall "addFileQIcon" cppAddFileQIcon :: Ptr QIcon -> CString -> I
 
 foreign import ccall keyQKeyEvent :: Ptr QKeyEvent -> IO QtInt
 
-foreign import ccall "textQKeyEvent" cppTextQKeyEvent :: Ptr QKeyEvent -> IO CString
+foreign import ccall "textQKeyEvent" cppTextQKeyEvent :: Ptr QKeyEvent -> IO (Ptr QByteArray)
 
 textQKeyEvent :: Ptr QKeyEvent -> IO String
 textQKeyEvent ptr = do
-    cs <- cppTextQKeyEvent ptr
-    r <- peekCString cs
-    free cs
+    byteArray <- cppTextQKeyEvent ptr
+    r <- stringQByteArray byteArray
+    destroyQByteArray byteArray
     return r
+
+-- * QByteArray
+
+data QByteArray
+
+foreign import ccall destroyQByteArray :: Ptr QByteArray -> IO ()
+
+foreign import ccall dataQByteArray :: Ptr QByteArray -> IO CString
+
+stringQByteArray :: Ptr QByteArray -> IO String
+stringQByteArray ptr =
+    peekCString =<< dataQByteArray ptr

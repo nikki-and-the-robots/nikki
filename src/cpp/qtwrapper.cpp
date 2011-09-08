@@ -277,13 +277,9 @@ extern "C" QTime* newQTime() {
 
 // * QString
 
-char* QStringToCString(QString x) {
-    char* arr = (char*) malloc(sizeof(char) * (x.size() + 1));
-    for (int i = 0; i < x.size(); i++) {
-        arr[i] = x.at(i).toAscii();
-    };
-    arr[x.size()] = 0;
-    return arr;
+// | creates a new QByteArray
+QByteArray* QStringToCString(QString x) {
+    return new QByteArray(x.toUtf8());
 };
 
 // * QKeyEvent
@@ -291,6 +287,15 @@ extern "C" int keyQKeyEvent(QKeyEvent* ptr) {
     return ptr->key();
 };
 
-extern "C" char* textQKeyEvent(QKeyEvent* ptr) {
+extern "C" QByteArray* textQKeyEvent(QKeyEvent* ptr) {
     return QStringToCString(ptr->text());
+};
+
+// * QByteArray
+extern "C" void destroyQByteArray(QByteArray* ptr) {
+    delete ptr;
+};
+
+extern "C" char* dataQByteArray(QByteArray* ptr) {
+    return ptr->data();
 };
