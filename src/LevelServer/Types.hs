@@ -11,9 +11,6 @@ import Control.DeepSeq
 import Base.Types.LevelMetaData
 
 
-port :: Num n => n
-port = 8143
-
 protocolVersion :: Version =
     Version [0, 1] []
 

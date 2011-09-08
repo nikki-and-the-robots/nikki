@@ -17,11 +17,12 @@ import Base.Types.LevelMetaData
 
 import LevelServer.Networking
 import LevelServer.Types
+import LevelServer.Configuration
 
 
 main = do
     hSetBuffering stdout NoBuffering
-    putStrLn ("listening on port " ++ show port)
+    putStrLn ("listening on port " ++ show levelServerPort)
     options <- cmdArgs defaultOptions
     runServer $ serve options
 

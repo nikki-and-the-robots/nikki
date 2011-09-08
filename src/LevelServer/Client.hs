@@ -24,6 +24,7 @@ import Base
 import Editor.Pickle.LevelFile
 
 import LevelServer.Types
+import LevelServer.Configuration
 import LevelServer.Networking
 import LevelServer.Client.Exceptions
 
@@ -96,7 +97,7 @@ uploadLevel app parent file =
 -- | opens the level license in a browser and returns to the given state
 openLicense :: AppState -> AppState
 openLicense follower = NoGUIAppState $ io $ do
-    qtOpenUrl licenseUrl
+    qtOpenUrl levelServerLicenseUrl
     return follower
 
 

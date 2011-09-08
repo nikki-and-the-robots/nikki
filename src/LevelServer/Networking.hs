@@ -20,11 +20,12 @@ import Network
 import Network.Fancy (streamServer, sleepForever, serverSpec, ServerSpec(..), Address(..))
 
 import LevelServer.Types
+import LevelServer.Configuration
 
 -- this module is used by the level server and shouldn't import Utils or Base or anything similar.
 
 
-spec = serverSpec{address = IP "0.0.0.0" port}
+spec = serverSpec{address = IP "0.0.0.0" levelServerPort}
 
 -- | in seconds
 receiveTimeout = 10
@@ -94,7 +95,7 @@ timeFormat = "%Y-%m-%d-%H:%M:%S"
 -- | Can throw IOException and ErrorCall
 askServer :: ClientToServer -> IO ServerToClient
 askServer msg = do
-    h <- connectTo "joyridelabs.de" (PortNumber port)
+    h <- connectTo levelServerHost (PortNumber levelServerPort)
     bc <- binaryCom h
     flushAfter bc $ \ bc -> do
         send bc protocolVersion
