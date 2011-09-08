@@ -166,7 +166,7 @@ Executable core
         , StateVar
         , transformers
         , time
-        , parsec3 >= 1.0.0.0
+        , parsec == 3.*
         , FindBin >= 0.0.5
         , clocked == 0.4
         , cmdargs >= 0.6.6

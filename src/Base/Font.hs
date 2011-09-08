@@ -24,7 +24,7 @@ import Data.Abelian
 import Data.Map (lookup, fromList)
 import Data.Char
 
-import "parsec3" Text.Parsec
+import Text.Parsec
 
 import Control.Arrow (left)
 

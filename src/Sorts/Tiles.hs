@@ -17,7 +17,7 @@ import Data.List
 import Data.Maybe
 import qualified Data.Indexable as I
 
-import "parsec3" Text.Parsec
+import Text.Parsec
 import Text.Logging
 
 import Control.Monad
