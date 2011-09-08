@@ -13,6 +13,8 @@ import Control.Exception
 import System.FilePath
 import System.Directory
 
+import Graphics.Qt
+
 import Network.Curl.Download.Lazy
 
 import Utils
@@ -78,8 +80,28 @@ downloadNewLevels app follower =
 
 -- * level updloading
 
-uploadLevel :: Application -> AppState -> LevelFile -> AppState
-uploadLevel app follower file =
+-- | asking for licensing before uploading the level
+uploadLevel :: Application -> Parent -> LevelFile -> Int -> AppState
+uploadLevel app parent file =
+    menuAppState app (NormalMenu (p "level license") (Just text)) (Just parent) (
+        (p "read the license (opens URL)", openLicense . this) :
+        (p "agree & upload", const $ justUploadLevel app parent file) :
+        (p "disagree & cancel", const $ parent) :
+        [])
+  where
+    text = p "By uploading the level you agree to license your level under Creative Commons Attribution license."
+    this = uploadLevel app parent file
+
+
+-- | opens the level license in a browser and returns to the given state
+openLicense :: AppState -> AppState
+openLicense follower = NoGUIAppState $ io $ do
+    qtOpenUrl licenseUrl
+    return follower
+
+
+-- | updaload the level without asking for licensing
+justUploadLevel app follower file =
     appState (busyMessage $ p "uploading...") $ io $ networkTry app follower $ do
         let metadata = levelMetaData file
         levelData <- readFile $ getAbsoluteFilePath file

@@ -101,7 +101,7 @@ editorMenu app mvar scene ps =
                     const $ edit (toSelectionMode scene)) :
                 (p "try playing the level", const $ playLevel app (edit scene) True scene) :
                 (p "save level", saveLevel app editWithFilePath scene . this) :
-                (p "save & upload", saveAndUpload app scene . this) :
+                (p "save & upload", \ ps -> saveAndUpload app scene (this ps) editWithFilePath) :
                 (p "save level & exit editor",
                     saveLevel app (const $ getMainMenu app) scene . this) :
                 (p "exit editor without saving", reallyExitEditor app . this) :
@@ -131,8 +131,8 @@ editorMenu app mvar scene ps =
         Just x -> [(p "edit object", const x)]
 
 
-saveAndUpload app scene parent =
-    saveLevel app (uploadLevel app parent) scene parent
+saveAndUpload app scene parent afterSaveFollower =
+    saveLevel app (\ file -> uploadLevel app (afterSaveFollower file) file 0) scene parent
 
 
 saveLevel :: Application -> (LevelFile -> AppState) -> EditorScene Sort_

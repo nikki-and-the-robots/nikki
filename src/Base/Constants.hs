@@ -58,6 +58,11 @@ templateLevelsDir :: FilePath
 templateLevelsDir = "templateLevels"
 
 
+-- * urls and hosts
+
+licenseUrl = "http://creativecommons.org/licenses/by/3.0/"
+
+
 -- * misc
 
 -- | initial window size, when not in fullscreen mode
