@@ -185,7 +185,7 @@ Executable core
         , attoparsec == 0.9.*
         , network-fancy >= 0.1.5
         , network >= 2.3.0.5
-        , binary-communicator >= 1.0.1
+        , binary-communicator >= 1.0.2
         , deepseq
         , old-locale
 

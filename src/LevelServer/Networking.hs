@@ -64,7 +64,7 @@ catchProtocolErrorsOnServer bc a =
 
 logAndSend bc x = do
     serverLog $ take maxLogLength $ show x
-    sendFlush bc x
+    send bc x
 
 receiveTO bc = do
     mr <- timeout (receiveTimeout * 10 ^ 6) $ deepseqIOId =<< receive bc
@@ -96,8 +96,9 @@ askServer :: ClientToServer -> IO ServerToClient
 askServer msg = do
     h <- connectTo "joyridelabs.de" (PortNumber port)
     bc <- binaryCom h
-    send bc protocolVersion
-    sendFlush bc msg
+    flushAfter bc $ \ bc -> do
+        send bc protocolVersion
+        send bc msg
     deepseqIOId =<< receiveTO bc
 
 deepseqIOId :: NFData a => a -> IO a
