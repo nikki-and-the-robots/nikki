@@ -1,4 +1,4 @@
-{-# language FlexibleContexts #-}
+{-# language FlexibleContexts, NamedFieldPuns #-}
 
 -- | Here the scene used in the level editor is implemented.
 -- The scene contains all available objects and all set objects.

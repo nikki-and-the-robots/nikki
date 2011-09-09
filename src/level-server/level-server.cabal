@@ -11,16 +11,6 @@ Cabal-version:       >=1.8
 Executable level-server
     Main-is: LevelServer.hs
     hs-source-dirs: ., ..
-    extensions:
-        ScopedTypeVariables,
-        EmptyDataDecls,
-        StandaloneDeriving,
-        MultiParamTypeClasses,
-        FlexibleInstances,
-        TypeSynonymInstances,
-        NamedFieldPuns,
-        DeriveDataTypeable,
-        PackageImports
     Build-depends:
         base == 4.*,
         network-fancy >= 0.1.5,

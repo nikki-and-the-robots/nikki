@@ -1,3 +1,4 @@
+{-# language NamedFieldPuns #-}
 
 module Editor.Scene.Types where
 

@@ -1,4 +1,4 @@
-{-# language GeneralizedNewtypeDeriving #-}
+{-# language GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
 
 
 -- | Module for human readable text.

@@ -1,4 +1,5 @@
-{-# language GeneralizedNewtypeDeriving #-}
+{-# language GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleInstances,
+    DeriveDataTypeable #-}
 
 -- | version of the save type from 2011-03-25
 

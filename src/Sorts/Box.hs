@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables, MultiParamTypeClasses, DeriveDataTypeable #-}
 
 module Sorts.Box (sorts) where
 

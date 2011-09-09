@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, NamedFieldPuns, ScopedTypeVariables #-}
 
 module Sorts.Nikki.State where
 

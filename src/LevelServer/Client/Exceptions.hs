@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables, DeriveDataTypeable #-}
 
 module LevelServer.Client.Exceptions where
 

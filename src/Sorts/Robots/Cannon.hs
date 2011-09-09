@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances, DeriveDataTypeable #-}
 
 module Sorts.Robots.Cannon where
 

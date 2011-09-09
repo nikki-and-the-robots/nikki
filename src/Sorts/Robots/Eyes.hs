@@ -1,3 +1,4 @@
+{-# language DeriveDataTypeable #-}
 
 -- | module for rendering the eyes of the robots
 

@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, NamedFieldPuns, MultiParamTypeClasses #-}
 
 module Sorts.Nikki (
     sorts,

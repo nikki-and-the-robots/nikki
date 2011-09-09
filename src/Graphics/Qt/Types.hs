@@ -1,3 +1,4 @@
+{-# language EmptyDataDecls, DeriveDataTypeable #-}
 
 module Graphics.Qt.Types where
 

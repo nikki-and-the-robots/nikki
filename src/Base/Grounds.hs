@@ -1,3 +1,4 @@
+{-# language NamedFieldPuns, DeriveDataTypeable #-}
 
 module Base.Grounds where
 

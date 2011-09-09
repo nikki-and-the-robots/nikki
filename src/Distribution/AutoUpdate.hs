@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, ScopedTypeVariables #-}
 
 -- | auto-updating for Nikki
 

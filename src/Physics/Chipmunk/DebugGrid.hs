@@ -1,3 +1,4 @@
+{-# language NamedFieldPuns #-}
 
 module Physics.Chipmunk.DebugGrid (
     renderGrids,

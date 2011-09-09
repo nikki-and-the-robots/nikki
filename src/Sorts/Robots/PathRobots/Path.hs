@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, ScopedTypeVariables, DeriveDataTypeable #-}
 
 module Sorts.Robots.PathRobots.Path where
 

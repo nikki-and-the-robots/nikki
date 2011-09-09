@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables, DeriveDataTypeable, NamedFieldPuns, MultiParamTypeClasses #-}
 
 -- | objects that seem like tiles, but move when Nikki touches them
 

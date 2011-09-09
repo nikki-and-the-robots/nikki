@@ -1,3 +1,4 @@
+{-# language DeriveDataTypeable #-}
 
 module Base.GameGrounds (
     GameGrounds(GameGrounds),

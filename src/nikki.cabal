@@ -132,17 +132,6 @@ Executable core
         -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
 
-    extensions:
-        ScopedTypeVariables,
-        EmptyDataDecls,
-        StandaloneDeriving,
-        MultiParamTypeClasses,
-        FlexibleInstances,
-        TypeSynonymInstances,
-        NamedFieldPuns,
-        DeriveDataTypeable,
-        PackageImports
-
     if os(darwin)
         cc-options:
             -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5

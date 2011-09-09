@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, ScopedTypeVariables, NamedFieldPuns #-}
 
 module Game.Scene (
     Scene,

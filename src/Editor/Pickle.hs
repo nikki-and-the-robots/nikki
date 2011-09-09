@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, ScopedTypeVariables #-}
 
 module Editor.Pickle (
     module Editor.Pickle,

@@ -1,4 +1,5 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, NamedFieldPuns, ScopedTypeVariables, MultiParamTypeClasses,
+    DeriveDataTypeable #-}
 
 
 module Sorts.Robots.PathRobots.PatrolRobot where

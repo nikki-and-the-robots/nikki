@@ -1,3 +1,4 @@
+{-# language FlexibleInstances #-}
 
 module Base.Renderable.Prose where
 

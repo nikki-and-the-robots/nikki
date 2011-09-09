@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, MultiParamTypeClasses, DeriveDataTypeable #-}
 
 -- | backgrounds are rendered statically centered on the screen,
 -- no matter which layer they are in. Every background consists of multiple

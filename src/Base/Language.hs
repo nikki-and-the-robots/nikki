@@ -1,3 +1,4 @@
+{-# language DeriveDataTypeable #-}
 
 module Base.Language where
 

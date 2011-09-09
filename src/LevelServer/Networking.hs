@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables, DeriveDataTypeable #-}
 
 module LevelServer.Networking where
 

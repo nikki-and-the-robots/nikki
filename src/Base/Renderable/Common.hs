@@ -1,3 +1,4 @@
+{-# language FlexibleInstances #-}
 
 -- | Things used in multiple Widgets.
 

@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Top.Game (playLevel) where
 

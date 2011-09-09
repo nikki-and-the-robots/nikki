@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Base.Constants where
 

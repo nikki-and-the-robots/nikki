@@ -1,3 +1,4 @@
+{-# language FlexibleInstances, MultiParamTypeClasses #-}
 
 -- | state monad that can be caught
 

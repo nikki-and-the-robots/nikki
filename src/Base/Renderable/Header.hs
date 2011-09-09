@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Base.Renderable.Header (header, headerHeight) where
 

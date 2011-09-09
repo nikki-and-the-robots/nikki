@@ -1,4 +1,4 @@
-{-# language GeneralizedNewtypeDeriving, ViewPatterns #-}
+{-# language GeneralizedNewtypeDeriving, ViewPatterns, DeriveDataTypeable #-}
 
 -- | module for a Bag of indexed things. 
 -- They have an order (can be converted to a list.)
