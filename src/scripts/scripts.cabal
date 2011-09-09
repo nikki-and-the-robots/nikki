@@ -58,7 +58,7 @@ Executable writeEmptyTemplateLevel
         , StateVar
         , transformers
         , time
-        , parsec3 >= 1.0.0.0
+        , parsec == 3.*
         , FindBin
         , clocked
         , cmdargs >= 0.6.6
@@ -74,6 +74,7 @@ Executable writeEmptyTemplateLevel
         , strict
         , attoparsec
         , aeson
+        , deepseq
 
   extra-libraries:
     qtwrapper, QtOpenGL

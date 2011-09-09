@@ -1,4 +1,4 @@
-
+{-# language DeriveDataTypeable #-}
 
 import Control.Applicative
 

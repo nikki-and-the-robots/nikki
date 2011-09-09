@@ -1,6 +1,6 @@
 #!/usr/bin/env runghc
 
-{-# language Ã¶ DeriveDataTypeable #-}
+{-# language DeriveDataTypeable #-}
 
 
 import Data.Initial
@@ -48,7 +48,7 @@ main = withQApplication $ \ qApp -> do
             case loaded of
                 Right (DiskLevel grounds Nothing) -> do
                     meta <- loadMetaData file
-                    putStr ("author of " ++ fromJust (meta_levelName meta) ++ ": ")
+                    putStr ("author of " ++ meta_levelName meta ++ ": ")
                     author <- getLine
                     putStrLn ("writing " ++ file)
                     writeObjectsToDisk file meta{meta_author = Just author} grounds
