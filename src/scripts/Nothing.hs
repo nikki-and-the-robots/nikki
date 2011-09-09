@@ -1,5 +1,3 @@
 
--- | do nothing
-
+-- do nothing
 main = return ()
-
