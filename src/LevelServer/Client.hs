@@ -83,7 +83,7 @@ downloadNewLevels app follower =
 uploadLevel :: Application -> Parent -> LevelFile -> Int -> AppState
 uploadLevel app parent file =
     menuAppState app (NormalMenu (p "level license") (Just text)) (Just parent) (
-        (p "read the license (opens URL)", openLicense app . this) :
+        (p "read the license (opens in browser)", openLicense app . this) :
         (p "agree & upload", const $ justUploadLevel app parent file) :
         (p "disagree & cancel", const $ parent) :
         [])
