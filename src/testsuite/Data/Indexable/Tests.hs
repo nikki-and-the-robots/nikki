@@ -1,4 +1,3 @@
-{-# language Ã¶ ScopedTypeVariables #-}
 
 module Data.Indexable.Tests where
 
@@ -13,7 +12,7 @@ import qualified Data.Vector as Vector
 import Control.Monad.State
 import Control.Arrow
 
-import Utils hiding (==>)
+import Utils hiding ((==>))
 
 import Test.QuickCheck
 

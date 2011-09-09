@@ -1,5 +1,4 @@
-{-# language Ã¶ ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances, ViewPatterns,
-    DeriveDataTypeable, StandaloneDeriving #-}
+{-# language ViewPatterns #-}
 
 module Physics.Chipmunk.StickyEdges.Tests where
 

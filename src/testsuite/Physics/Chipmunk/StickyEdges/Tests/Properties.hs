@@ -1,5 +1,4 @@
-{-# language Ã¶ StandaloneDeriving, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances, DeriveDataTypeable,
-    ViewPatterns #-}
+{-# language ViewPatterns #-}
 
 -- | module for evaluating attributes of our beloved rectangles
 
