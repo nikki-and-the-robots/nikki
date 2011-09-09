@@ -32,7 +32,7 @@ render app config ptr spaceTime | physics_profiling config = do
     text <- tick spaceTime
     resetMatrix ptr
     translate ptr (Position (fromUber 1) 0)
-    snd =<< Base.render ptr app config zero text
+    snd =<< Base.render ptr app config zero (False, text)
 render _ _ _ _ = return ()
 
 -- | calculate the information to be shown

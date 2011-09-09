@@ -20,6 +20,7 @@ import Base.Configuration.Controls
 
 import Base.Renderable.Common ()
 import Base.Renderable.CenterHorizontally
+import Base.Renderable.Prose ()
 
 
 -- | Implements a Renderable that has one child that gets rendered as
@@ -34,7 +35,7 @@ stickToBottom head bottom = renderable $ StickToBottom (renderable head) (render
 -- | adds a hint which keys are in use at the bottom.
 addKeysHint :: Renderable r => KeysHint -> r -> RenderableInstance
 addKeysHint keys mainChild = stickToBottom mainChild
-    (centerHorizontally $ formatKeys keys)
+    (centerHorizontally $ (False, formatKeys keys))
 
 -- | Converts a list of key hints to a user readable string.
 formatKeys :: KeysHint -> Prose

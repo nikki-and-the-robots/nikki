@@ -54,4 +54,4 @@ configure app text keyAcc parent parentPreSelection = AppState (renderable widge
     this = configure app text keyAcc parent parentPreSelection
     widget =
         MenuBackground |:>
-        centered text
+        centered (False, text)

@@ -2,7 +2,7 @@
 module Base.Renderable.Menu (
     menuAppState,
     menuAppStateSpecialized,
-    MenuType(..),
+    MenuHeader(..),
     treeToMenu,
   ) where
 
@@ -45,31 +45,31 @@ import Base.Renderable.Message
 data Menu
     = Menu {
         menuBackgroundRenderable :: RenderableInstance,
-        menuType :: MenuType,
+        menuHeader :: MenuHeader,
         before :: [(Prose, AppState)],
         selected :: (Prose, AppState),
         after :: [(Prose, AppState)],
         scrolling :: MVar Int
       }
 
-data MenuType
+data MenuHeader
     = MainMenu
     | NormalMenu {title :: Prose, subtitle :: Maybe Prose}
     | PauseMenu
     | FailureMenu
 
--- | capitalizes the strings contained in the MenuType
-normalizeMenuType :: MenuType -> MenuType
-normalizeMenuType (NormalMenu t st) =
+-- | capitalizes the strings contained in the MenuHeader
+normalizeMenuHeader :: MenuHeader -> MenuHeader
+normalizeMenuHeader (NormalMenu t st) =
     NormalMenu (capitalizeProse t) (nullToNothing $ fmap capitalizeProse st)
   where
     nullToNothing (Just p) =
         if nullProse p then Nothing else Just p
     nullToNothing Nothing = Nothing
-normalizeMenuType x = x
+normalizeMenuHeader x = x
 
-mkMenu :: RenderableInstance -> MenuType -> [(Prose, Int -> AppState)] -> Int -> IO Menu
-mkMenu background menuType items =
+mkMenu :: RenderableInstance -> MenuHeader -> [(Prose, Int -> AppState)] -> Int -> IO Menu
+mkMenu background menuHeader items =
     inner $ zipWith (\ (label, appStateFun) n -> (capitalizeProse label, appStateFun n)) items [0..]
   where
     inner items n =
@@ -80,7 +80,7 @@ mkMenu background menuType items =
           else do
             let (before, selected : after) = splitAt n items
             scrollingRef <- newMVar 0
-            return $ Menu background (normalizeMenuType menuType)
+            return $ Menu background (normalizeMenuHeader menuHeader)
                         before selected after scrollingRef
 
 selectNext :: Menu -> Menu
@@ -97,7 +97,7 @@ selectPrevious m@(Menu bg typ [] selected after scrolling) =
     items = selected : after
 selectPrevious (Menu bg t b s a sc) = Menu bg t (init b) (last b) (s : a) sc
 
-menuAppState :: Application -> MenuType -> Maybe AppState
+menuAppState :: Application -> MenuHeader -> Maybe AppState
     -> [(Prose, Int -> AppState)] -> Int -> AppState
 menuAppState app =
     menuAppStateSpecialized app
@@ -111,10 +111,10 @@ menuAppState app =
 -- The prechoice will determine the initially selected menu item.
 menuAppStateSpecialized :: Application
     -> M Button -> RenderableInstance -> (RenderableInstance -> M AppState -> AppState)
-    -> MenuType -> Maybe AppState -> [(Prose, Int -> AppState)] -> Int -> AppState
-menuAppStateSpecialized app yourPoller background appStateCons menuType mParent children preSelection =
+    -> MenuHeader -> Maybe AppState -> [(Prose, Int -> AppState)] -> Int -> AppState
+menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParent children preSelection =
     NoGUIAppState $ io $
-        inner <$> mkMenu background menuType children preSelection
+        inner <$> mkMenu background menuHeader children preSelection
   where
     inner :: Menu -> AppState
     inner menu = appStateCons (renderable menu) $ do
@@ -171,14 +171,16 @@ instance Renderable Menu where
     render ptr app config parentSize menu = do
         scrolling <- updateScrollingIO app parentSize menu
         let scroll = drop scrolling
-        case menuType menu of
+        case menuHeader menu of
             MainMenu -> render ptr app config parentSize
                 -- main menu
                 (menuBackgroundRenderable menu |:>
                 (addKeysHint (menuKeysHint False) $
                  centered $ vBox (length menuHeader + 2) $ addFrame $ fmap centerHorizontally lines))
               where
-                proseVersion = renderable $ capitalizeProse $
+                proseVersion = renderable $
+                    tuple False $
+                    capitalizeProse $
                     pVerbatim "(" +> p "version" +>
                     pVerbatim (" " ++ showVersion nikkiVersion ++ ")")
                 menuHeader = mainMenuPixmap : proseVersion : lineSpacer : []
@@ -194,9 +196,8 @@ instance Renderable Menu where
                 menuHeader = titleLine : lineSpacer : subtitleLines ++ []
                 lines = menuHeader ++ scroll (toLines menu)
                 titleLine = header app title
-                subtitleLines = case subtitle of
-                    Nothing -> []
-                    Just p -> renderable p : lineSpacer : []
+                subtitleLines :: [RenderableInstance]
+                subtitleLines = maybe [] (\ p -> renderable (True, p) : lineSpacer : []) subtitle
             PauseMenu -> pixmapGameMenu scroll pausePixmap
             FailureMenu -> pixmapGameMenu scroll failurePixmap
       where
@@ -210,7 +211,7 @@ instance Renderable Menu where
 
 -- | return the items (entries) of the menu
 toLines :: Menu -> [RenderableInstance]
-toLines (Menu _ _ before selected after _) = fmap renderable $
+toLines (Menu _ _ before selected after _) = fmap (renderable . tuple False) $
     map fst before ++
     (colorizeProse white $ proseSelect $ fst selected) :
     map fst after
@@ -252,7 +253,7 @@ updateScrolling app parentSize menu oldScrolling =
     itemsSpaceF :: Int = floor ((height parentSize - menuHeaderHeight) / fontHeight)
     -- height of the headers of the menu
     menuHeaderHeight = 3 * fontHeight + titleHeight
-    titleHeight = case menuType menu of
+    titleHeight = case menuHeader menu of
         MainMenu -> pixmapHeight menuTitlePixmap + fontHeight
         NormalMenu _ Nothing -> headerHeight
         NormalMenu _ (Just _) -> headerHeight + 2 * fontHeight

@@ -9,11 +9,12 @@ import Base.Font ()
 import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.Centered
+import Base.Renderable.Prose ()
 
 
 busyMessage :: Prose -> RenderableInstance
 busyMessage text =
     RenderableInstance (
         MenuBackground |:>
-        (centered $ text)
+        (centered $ (True, text))
       )

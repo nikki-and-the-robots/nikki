@@ -29,7 +29,7 @@ import Base.Configuration as Configuration
 import Base.Types
 import Base.Monad
 import Base.Prose
-import Base.Renderable.Common ()
+import Base.Renderable ()
 
 
 -- | returns the seconds since epoch start
@@ -88,7 +88,7 @@ renderFPS :: Application -> Configuration -> Ptr QPainter -> Prose -> IO ()
 renderFPS app config ptr fps = do
     resetMatrix ptr
     size <- sizeQPainter ptr
-    (renderSize, action) <- render ptr app config size fps
+    (renderSize, action) <- render ptr app config size (False, fps)
     translate ptr $ Position (fromUber 1) (height size - height renderSize)
     action
 

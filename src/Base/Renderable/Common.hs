@@ -15,7 +15,6 @@ import Base.Configuration
 import Base.Types
 import Base.Polling
 import Base.Pixmap
-import Base.Prose
 import Base.Font
 
 
@@ -83,9 +82,3 @@ instance Renderable [Glyph] where
                 (snd =<< render ptr app config size (glyphPixmap glyph))
             translate ptr (Position (width (glyphSize glyph) + fromUber 1) 0)
     label = const "[Glyph]"
-
--- | text rendering without word wrapping
-instance Renderable Prose where
-    render ptr app config size prose =
-        render ptr app config size $ proseToGlyphs (standardFont app) prose
-    label = const "Prose"

@@ -22,6 +22,7 @@ import Base.Renderable.WholeScreenPixmap
 import Base.Renderable.Layered
 import Base.Renderable.Centered
 import Base.Renderable.VBox
+import Base.Renderable.Prose ()
 
 
 -- | Gets a string from the user.
@@ -46,9 +47,10 @@ mkAskStringWidget :: Prose -> String -> RenderableInstance
 mkAskStringWidget question answer =
     RenderableInstance (
         MenuBackground |:>
-        (centered $ vBox 1 text)
+        (centered $ vBox 1 $ map (tuple False) text)
       )
   where
+    text :: [Prose]
     text =
         (question +> pVerbatim ": ") :
         pVerbatim answer :

@@ -27,4 +27,4 @@ message app text follower = appState renderable $ do
     return follower
   where
     renderable = MenuBackground |:>
-        addKeysHint PressAnyKey (centered (vBox 1 text))
+        addKeysHint PressAnyKey (centered (vBox 1 $ map (tuple False) text))
