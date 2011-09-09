@@ -3,6 +3,7 @@
 module Physics.Chipmunk (
     Chipmunk(..),
     BodyAttributes(..),
+    inertia,
     ShapeAttributes(..),
     ShapeDescription(ShapeDescription, shapeType),
     mkShapeDescription,

@@ -6,6 +6,7 @@ import Data.Abelian
 import Data.StateVar
 import Data.Typeable
 import Data.Maybe
+import Data.Accessor
 
 import Graphics.Qt (Ptr, QPainter, translate)
 import qualified Graphics.Qt as Qt
@@ -47,12 +48,15 @@ data BodyAttributes
     = BodyAttributes {
         position :: Position,
         mass :: Mass,
-        inertia :: Moment
+        inertia_ :: Moment
       }
     | StaticBodyAttributes {
         position :: Vector
       }
     deriving Show
+
+inertia :: Accessor BodyAttributes Moment
+inertia = accessor inertia_ (\ a r -> r{inertia_ = a})
 
 data ShapeAttributes =
   forall collisionType . (Enum collisionType, Show collisionType) =>
@@ -133,8 +137,8 @@ mkMaterialBodyAttributes mpup shapes pos =
 mkBodyAttributes :: [ShapeType] -> Position -> Mass -> BodyAttributes
 mkBodyAttributes shapes pos objectMass = BodyAttributes {
     position = pos,
-    mass        = objectMass,
-    inertia     = sum (map (momentForMaterialShape mpp Nothing) shapes)
+    mass     = objectMass,
+    inertia_ = sum (map (momentForMaterialShape mpp Nothing) shapes)
   }
     where mpp = objectMass / sum (fmap areaForShape shapes)
 
@@ -155,8 +159,8 @@ initChipmunk space as@BodyAttributes{} shapeTypes baryCenterOffset = do
 
 
 mkBody :: BodyAttributes -> IO Body
-mkBody BodyAttributes{position, mass, inertia} = do
-    body <- newBody mass inertia
+mkBody BodyAttributes{position, mass, inertia_} = do
+    body <- newBody mass inertia_
     H.position body $= position
     return body
 

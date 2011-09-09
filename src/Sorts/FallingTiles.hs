@@ -117,7 +117,7 @@ instance Sort TSort FallingTile where
                     modifyApplyOnlyForce (chipmunk fallingTile) zero
                     let b = body $ chipmunk fallingTile
                     H.mass b $= (mass $ tileAttributes fallingTile)
-                    moment b $= (inertia $ tileAttributes fallingTile)
+                    moment b $= (inertia_ $ tileAttributes fallingTile)
                     angVel <- randomRIO (-2, 2)
                     modifyAngVel (chipmunk fallingTile) (const angVel)
                     return $ fallingTile{status = Loose}
@@ -140,7 +140,7 @@ initializeBox space sort ep = do
                 +~ baryCenterOffset
         bodyAttributes = mkMaterialBodyAttributes fallingTilesMaterialMass [shape] pos
         -- this is a hack: mass and inertia set to very large values to simulate static tiles
-        staticBodyAttributes = bodyAttributes{mass = staticMass, inertia = staticInertia}
+        staticBodyAttributes = bodyAttributes{mass = staticMass, inertia_ = staticInertia}
     chip <- initChipmunk space staticBodyAttributes [shapeWithAttributes] baryCenterOffset
     return (chip, bodyAttributes)
 

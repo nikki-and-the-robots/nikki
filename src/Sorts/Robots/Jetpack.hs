@@ -141,7 +141,7 @@ instance Sort JSort Jetpack where
 jetpackBodyAttributes p =
     mkBodyAttributes (fst mkPolys) p jetpackMass
 
-jetpackInertia = inertia $ jetpackBodyAttributes zero
+jetpackInertia = inertia_ $ jetpackBodyAttributes zero
 
 
 mkPolys :: ([ShapeType], Vector)

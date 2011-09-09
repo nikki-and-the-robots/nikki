@@ -200,12 +200,19 @@ debug c =
     debugChipmunk (base c) >>
     debugChipmunk (barrel c) >>
     fmapM_ debugChipmunk (map snd $ (c ^. cannonballs)) >>
-    ppp (c ^. shotTime)
+    ppp (c ^. shotTime) >>
+    debugBarrelAngle (barrel c)
 
 debugChipmunk chip = do
     (pos, angle) <- first position2vector <$> getRenderPositionAndAngle chip
     debugPoint yellow pos
     debugPoint pink (rotateVector angle (baryCenterOffset chip) +~ pos)
+
+debugBarrelAngle barrel = do
+    (p, a) <- first position2vector <$> getRenderPositionAndAngle barrel
+    let av = vmap (* (cannonballVelocity * 100))
+                (fromAngle (a -~ tau / 4))
+    debugLine yellow p (p +~ av)
 
 
 shapeAttributes = robotShapeAttributes
@@ -232,6 +239,7 @@ initBarrel space ep = do
         pos = position2vector (epToPosition barrelSize ep)
                     +~ baryCenterOffset +~ position2vector barrelOffset
         attributes =
+            inertia ^: (* 100) $
             mkMaterialBodyAttributes robotMaterialMass shapeTypes pos
     c <- initChipmunk space attributes shapes baryCenterOffset
     return c
@@ -269,8 +277,8 @@ initConstraint space pin base barrel = do
     spaceAdd space pivot
     let consValues = DampedRotarySpring {
             dampedRotRestAngle = barrelInitialAngle,
-            dampedRotStiffness = 80000000,
-            dampedRotDamping = 800000
+            dampedRotStiffness = 8000000000,
+            dampedRotDamping = 80000000
           }
     rotary <- newConstraint (body base) (body barrel) consValues
     spaceAdd space rotary
@@ -286,8 +294,6 @@ rotateBarrel barrel pin = do
     pos <- getPosition barrel
     angle (body barrel) $= (- barrelInitialAngle)
     Hipmunk.position (body barrel) $= (rotateVectorAround pin (- barrelInitialAngle) pos)
-
-
 
 
 -- * updating

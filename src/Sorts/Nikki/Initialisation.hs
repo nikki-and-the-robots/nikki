@@ -31,7 +31,7 @@ bodyAttributes :: CM.Position -> BodyAttributes
 bodyAttributes pos = BodyAttributes {
     CM.position         = pos,
     mass                = nikkiMass,
-    inertia             = infinity
+    inertia_            = infinity
   }
 
 legsShapeAttributes :: ShapeAttributes
