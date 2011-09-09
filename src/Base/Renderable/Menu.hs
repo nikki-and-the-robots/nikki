@@ -142,7 +142,7 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
 -- | Converts a SelectTree to a menu.
 -- Uses pVerbatim (and unP) to convert to (and from) Prose.
 -- (Doesn't get translated therefore.)
-treeToMenu :: Application -> AppState -> Prose -> (SelectTree a -> IO Prose)
+treeToMenu :: forall a . Application -> AppState -> Prose -> (SelectTree a -> IO Prose)
     -> SelectTree a -> (Parent -> a -> AppState) -> Int -> AppState
 treeToMenu app parent title showAction (EmptyNode label) f _ =
     message app [p "there is nothing here :(", p "MAKE SOME LEVELS!!!"] parent
@@ -152,7 +152,7 @@ treeToMenu app parent title showAction (Node label children i) f preSelection = 
     return $ menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)
         items preSelection
   where
---     mkItem :: SelectTree a -> IO (Prose, Int -> AppState)
+    mkItem :: SelectTree a -> IO (Prose, Int -> AppState)
     mkItem t = do
         label <- showAction $ labelA ^: toItem $ t
         let follower ps = treeToMenu app (this ps) title showAction t f 0
