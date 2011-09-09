@@ -1,6 +1,6 @@
 #!/usr/bin/env runghc
 
-{-# language Ã¶ PackageImports #-}
+{-# language PackageImports #-}
 
 
 import Prelude hiding (any)
@@ -11,7 +11,7 @@ import Data.Set
 import Data.List (isInfixOf)
 import Data.Foldable (any)
 
-import "parsec3" Text.Parsec
+import Text.Parsec
 
 import Control.Exception
 
@@ -19,7 +19,7 @@ import System.FilePath
 import System.Directory
 import System.Process
 
-import Utils
+import Utils hiding ((<|>))
 
 
 executables = "dist" </> "build"
