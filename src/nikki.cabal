@@ -177,6 +177,7 @@ Executable core
         , binary-communicator >= 1.0.2
         , deepseq
         , old-locale
+        , text
 
 
     if os(linux)

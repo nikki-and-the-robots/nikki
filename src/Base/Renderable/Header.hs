@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables #-}
+{-# language ScopedTypeVariables, OverloadedStrings #-}
 
 module Base.Renderable.Header (header, headerHeight) where
 

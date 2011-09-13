@@ -1,4 +1,4 @@
-{-# language GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
+{-# language GeneralizedNewtypeDeriving, ScopedTypeVariables, OverloadedStrings #-}
 
 
 -- | Module for human readable text.
@@ -9,7 +9,7 @@ module Base.Prose (
     headerFontColor,
     colorizeProse,
     capitalizeProse,
-    getString,
+    getText,
     nullProse,
     lengthProse,
     p,
@@ -27,7 +27,8 @@ module Base.Prose (
 
 
 import Data.Monoid
-import Data.Char (chr, toUpper)
+import Data.Char (chr)
+import Data.Text as Text hiding (all)
 
 import Control.Arrow
 
@@ -42,28 +43,28 @@ headerFontColor :: Color = QtColor 36 110 128 255
 -- | Type for human readable text.
 -- (utf8 encoded)
 newtype Prose
-    = Prose [(Color, String)]
+    = Prose [(Color, Text)]
   deriving (Show, Monoid)
 
 colorizeProse :: Color -> Prose -> Prose
 colorizeProse color p =
-    Prose $ return $ tuple color $ getString p
+    Prose $ return $ tuple color $ getText p
 
--- | Returns the content of a Prose as a String.
-getString :: Prose -> String
-getString (Prose list) = Prelude.foldr (++) "" $ fmap snd list
+-- | Returns the content of a Prose as a Text.
+getText :: Prose -> Text
+getText (Prose list) = Prelude.foldr (append) "" $ fmap snd list
 
 capitalizeProse :: Prose -> Prose
 capitalizeProse (Prose list) =
-    Prose $ fmap (second (fmap toUpper)) list
+    Prose $ fmap (second toUpper) list
 
 nullProse :: Prose -> Bool
 nullProse (Prose snippets) =
-    all null $ fmap snd snippets
+    all Text.null $ fmap snd snippets
 
 lengthProse :: Prose -> Int
 lengthProse (Prose snippets) =
-    sum $ fmap (length . snd) snippets
+    sum $ fmap (Text.length . snd) snippets
 
 -- | Converts haskell Strings to human readable text.
 -- Will be used for translations in the future.
@@ -72,14 +73,14 @@ p = pVerbatim
 
 -- | Convert any (ASCII-) string to Prose without doing any translation.
 pVerbatim :: String -> Prose
-pVerbatim x = Prose [(standardFontColor, x)]
+pVerbatim x = Prose [(standardFontColor, pack x)]
 
 -- | shortcut for pVerbatim
 pv = pVerbatim
 
 -- | inverse of p
 unP :: Prose -> String
-unP = getString
+unP = getText >>> unpack
 
 -- | Read files and return their content as Prose.
 -- Should be replaced with something that supports
@@ -87,7 +88,7 @@ unP = getString
 -- (Needs to be separated from p, because it has to return multiple lines.)
 pFile :: FilePath -> IO [Prose]
 pFile file =
-    fmap (Prose . return . tuple standardFontColor) <$> lines <$> readFile file
+    fmap (Prose . return . tuple standardFontColor) <$> Text.lines <$> pack <$> readFile file
 
 -- | special characters
 

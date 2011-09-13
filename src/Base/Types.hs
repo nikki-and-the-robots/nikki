@@ -23,6 +23,7 @@ import Data.Generics.Uniplate.Data
 import Data.Accessor
 import Data.IORef
 import qualified Data.Binary as Binary
+import qualified Data.Text as T
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -120,7 +121,7 @@ data Font = Font {
 -- | save pixmaps in one color on transparent background.
 data ColorVariant = ColorVariant {
         -- ordered: longer keys first
-        glyphs :: [(String, Pixmap)],
+        glyphs :: [(T.Text, Pixmap)],
         errorSymbol :: Pixmap
       }
 
