@@ -4,6 +4,7 @@
 module Base (
     module Base.Types,
     module Base.Prose,
+    module Base.Prose.Template,
     module Base.Font,
     module Base.Application,
     module Base.Application.Pixmaps,
@@ -32,6 +33,7 @@ module Base (
 
 import Base.Types hiding (Offset)
 import Base.Prose
+import Base.Prose.Template
 import Base.Font
 import Base.Application
 import Base.Application.Pixmaps

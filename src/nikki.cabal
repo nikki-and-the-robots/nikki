@@ -178,6 +178,7 @@ Executable core
         , deepseq
         , old-locale
         , text
+        , template == 0.2.*
 
 
     if os(linux)
