@@ -46,6 +46,7 @@ import qualified Base
 
 import Sorts.Nikki.Configuration (nikkiSize)
 import Sorts.LowerLimit (isBelowLowerLimit)
+import Sorts.Sign (renderSpeechBubble, bubbleTextSize)
 
 import Editor.Scene.Types
 import Editor.Scene.Rendering
@@ -256,10 +257,11 @@ data Terminal
     robots_ :: [RobotIndex],
     state_ :: State
   }
-  | StandbyBatteryTerminal {
+  | StandbyBatteryTerminal { -- battery terminal without enough batteries
     chipmunk :: Chipmunk,
     robots_ :: [RobotIndex],
-    batteryNumber :: Integer,
+    batteryNumber_ :: Integer,
+    showingBubble_ :: Bool,
     onTime :: Maybe Seconds
   }
   | BatteryTerminal {
@@ -274,6 +276,12 @@ state = accessor state_ (\ a r -> r{state_ = a})
 
 robots :: Accessor Terminal [RobotIndex]
 robots = accessor robots_ (\ a r -> r{robots_ = a})
+
+batteryNumber :: Accessor Terminal Integer
+batteryNumber = accessor batteryNumber_ (\ a r -> r{batteryNumber_ = a})
+
+showingBubble :: Accessor Terminal Bool
+showingBubble = accessor showingBubble_ (\ a r -> r{showingBubble_ = a})
 
 unwrapTerminal :: Object_ -> Maybe Terminal
 unwrapTerminal (Object_ sort o) = cast o
@@ -433,7 +441,7 @@ instance Sort TSort Terminal where
             chip = ImmutableChipmunk position 0 baryCenterOffset []
         return $ case sort of
             TSort{} -> Terminal chip [] (initialMenuState 0)
-            BatteryTSort{} -> StandbyBatteryTerminal chip [] 0 Nothing
+            BatteryTSort{} -> StandbyBatteryTerminal chip [] 0 False Nothing
 
     immutableCopy t =
         CM.immutableCopy (chipmunk t) >>= \ x -> return t{chipmunk = x}
@@ -451,9 +459,9 @@ instance Sort TSort Terminal where
 
     updateNoSceneChange = update
 
-    renderObject _ _ terminal sort ptr offset now = do
+    renderObject app config terminal sort ptr offset now = do
         pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
-        return $ renderTerminal sort now terminal pos
+        return $ renderTerminal app config sort offset now terminal pos
 
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
@@ -479,13 +487,14 @@ mkPolys size =
 -- * controlling
 
 update sort config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} = do
-    logg Debug $ show $ batteryNumber terminal
-    logg Debug $ take 10 $ show terminal
-    return $ updateStandby now terminal
+    debugStandbyBatteryTerminal terminal
+    return $
+        updateShowingBubble contacts $
+        updateUncontrolledStandby now terminal
 update sort config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} = do
-    logg Debug $ show $ batteryNumber terminal
-    logg Debug $ take 10 $ show terminal
+    debugStandbyBatteryTerminal terminal
     updateOnTime now <$>
+        showingBubble ^= True <$>
         putBatteriesInTerminal scene now terminal
 update sort config _ scene now contacts (False, cd) terminal = do
     logg Debug $ take 10 $ show terminal
@@ -496,6 +505,11 @@ update sort config _ scene now contacts (True, cd) terminal = do
     (robots ^^: updateControllableStates scene) $
         state ^= updateState config now cd (terminal ^. robots) (terminal ^. state) $
         terminal
+
+debugStandbyBatteryTerminal terminal = do
+    logg Debug $ show $ terminal ^. batteryNumber
+    logg Debug $ take 10 $ show terminal
+    logg Debug $ show $ terminal ^. showingBubble
 
 
 -- | updates the gameMode if Nikki doesn't touch it anymore
@@ -552,14 +566,14 @@ exitToNikki state = state{exitMode = ExitToNikki, robotIndex = 0}
 -- | initializes battery terminals
 mkBatteryTerminal :: LevelFile -> Chipmunk -> [RobotIndex] -> IO Terminal
 mkBatteryTerminal file chip robots =
-    updateStandby 0 <$>
+    updateUncontrolledStandby 0 <$>
     updateOnTime (- bootingAnimationTime) <$>
     case file of
         (EpisodeLevel episode _ _ _ _) -> do
             batteries <- batteriesInTerminal <$> getEpisodeScore (euid episode)
-            return $ StandbyBatteryTerminal chip robots batteries Nothing
+            return $ StandbyBatteryTerminal chip robots batteries False Nothing
         -- not in story-mode (shouldn't happen at all, just for testing)
-        _ -> return $ StandbyBatteryTerminal chip robots 0 Nothing
+        _ -> return $ StandbyBatteryTerminal chip robots 0 False Nothing
 
 putBatteriesInTerminal :: Scene o -> Seconds -> Terminal -> IO Terminal
 putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
@@ -568,17 +582,9 @@ putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
             score <- getEpisodeScore $ euid episode
             batteries <- getCollectedBatteries scene episode
             setEpisodeScore (euid episode) (EpisodeScore_0 True batteries)
-            return $ StandbyBatteryTerminal
-                (chipmunk t)
-                (t ^. robots)
-                batteries
-                (onTime t)
+            return $ batteryNumber ^= batteries $ t
         -- for testing in normal mode
-        _ -> return $ StandbyBatteryTerminal
-                (chipmunk t)
-                (t ^. robots)
-                (scene ^. batteryPower)
-                (onTime t)
+        _ -> return $ batteryNumber ^= (scene ^. batteryPower) $ t
 
 getCollectedBatteries scene episode =
     getHighScores >$> \ hs ->
@@ -596,41 +602,44 @@ bootingAnimationTime = bootingFrameTime * fromIntegral bootingAnimationSteps
 -- | sets the onTime field if appropriate
 updateOnTime :: Seconds -> Terminal -> Terminal
 updateOnTime now t@StandbyBatteryTerminal{..} = case onTime of
-    Nothing -> if batteryNumber >= batteryNumberNeeded
+    Nothing -> if batteryNumber_ >= batteryNumberNeeded
         then t{onTime = Just now}
         else t
     Just x -> t
 
 -- | changes from Standby to BatteryTerminal if appropriate
-updateStandby :: Seconds -> Terminal -> Terminal
-updateStandby now t@StandbyBatteryTerminal{..} = case onTime of
+updateUncontrolledStandby :: Seconds -> Terminal -> Terminal
+updateUncontrolledStandby now t@StandbyBatteryTerminal{..} = case onTime of
     Nothing -> t
     Just onTime ->
         if onTime + bootingAnimationTime <= now
         then BatteryTerminal chipmunk robots_ (initialMenuState now)
         else t
 
+updateShowingBubble :: Contacts -> Terminal -> Terminal
+updateShowingBubble contacts terminal =
+    if fany (hasTerminalShape terminal) (terminals contacts) then
+        -- touching -> do nothing
+        terminal
+      else
+        showingBubble ^= False $
+        terminal
+
 
 -- * game rendering
 
-renderTerminal :: TSort -> Seconds
-    -> Terminal -> Qt.Position Double
-    -> [RenderPixmap]
-renderTerminal sort@TSort{} now t pos =
+renderTerminal _ _ sort@TSort{} _ now t pos =
     renderTerminalBackground sort pos :
     renderDisplayBlinkenLights sort now pos :
     RenderPixmap (colorBar $ pixmaps sort) (pos +~ colorBarOffset) Nothing :
     catMaybes (renderLittleColorLights sort now t pos)
-renderTerminal sort@BatteryTSort{..} now t pos =
-    let background = RenderPixmap btBackground pos Nothing
-        blinkenLights = renderDisplayBlinkenLights tsort now pos
-        batteryBar = renderBatteryBar sort now t pos
-        booting = renderBootingAnimation sort t now pos
-    in  background :
-        blinkenLights :
-        batteryBar ++
-        booting ++
-        []
+renderTerminal app config sort@BatteryTSort{..} offset now t pos =
+    RenderPixmap btBackground pos Nothing :
+    renderDisplayBlinkenLights tsort now pos :
+    renderBatteryBar sort now t pos ++
+    renderBootingAnimation sort t now pos ++
+    renderTerminalSpeechBubble app config offset sort pos t ++
+    []
 
 colorBarOffset = fmap fromUber $ Position 30 20
 
@@ -700,8 +709,8 @@ beamIncrement = Position 0 (- fromUber 2)
 -- | number of beams including the top
 numberOfBeams = 9
 
-renderBatteryBar sort@BatteryTSort{..} now t@StandbyBatteryTerminal{batteryNumber} p =
-    case roundToBars numberOfBeams batteryNumberNeeded batteryNumber of
+renderBatteryBar sort@BatteryTSort{..} now t@StandbyBatteryTerminal{batteryNumber_} p =
+    case roundToBars numberOfBeams batteryNumberNeeded batteryNumber_ of
         0 -> trace (pp now) $
             if pickAnimationFrame [True, False] [beamBlinkingTime] now
              then singleton $ RenderPixmap whiteBeam (p +~ firstBeamOffset) Nothing
@@ -745,6 +754,16 @@ renderBootingAnimation BatteryTSort{..} StandbyBatteryTerminal{onTime} now p = c
         in singleton $ RenderPixmap pix (p +~ colorBarOffset) Nothing
 renderBootingAnimation BatteryTSort{..} BatteryTerminal{} now p =
     singleton $ RenderPixmap (colorBar $ pixmaps tsort) (p +~ colorBarOffset) Nothing
+
+renderTerminalSpeechBubble app config offset sort terminalPos terminal@StandbyBatteryTerminal{onTime} =
+    if terminal ^. showingBubble && isNothing onTime then
+        let glyphs = wordWrap (standardFont app) (width bubbleTextSize)
+                (p "You still need more batteries to use this terminal")
+        in singleton $ renderSpeechBubble app config offset terminalPos (size sort) glyphs
+      else
+        []
+renderTerminalSpeechBubble _ _ _ _ _ _ = []
+
 
 -- * rendering of game OSD
 
