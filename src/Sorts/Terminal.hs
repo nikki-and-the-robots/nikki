@@ -742,10 +742,20 @@ renderBootingAnimation BatteryTSort{..} StandbyBatteryTerminal{onTime} now p = c
 renderBootingAnimation BatteryTSort{..} BatteryTerminal{} now p =
     singleton $ RenderPixmap (colorBar $ pixmaps tsort) (p +~ colorBarOffset) Nothing
 
-renderTerminalSpeechBubble app config offset sort terminalPos terminal@StandbyBatteryTerminal{onTime} =
+renderTerminalSpeechBubble app config offset sort terminalPos
+  terminal@StandbyBatteryTerminal{onTime} =
     if terminal ^. showingBubble && isNothing onTime then
-        let glyphs = wordWrap (standardFont app) (width bubbleTextSize)
-                (p "You still need more batteries to use this terminal")
+        let context = ("supplied", show (terminal ^. batteryNumber)) :
+                      ("needed", show batteryNumberNeeded) :
+                      []
+            glyphs = concat $
+                fmap (wordWrap (standardFont app) (width bubbleTextSize) .
+                      capitalizeProse .
+                      substitute context .
+                      p) $
+                ("Supplied batteries: ${supplied}/${needed}." :
+                 "EOL" :
+                 [])
         in singleton $ renderSpeechBubble app config offset terminalPos (size sort) glyphs
       else
         []
