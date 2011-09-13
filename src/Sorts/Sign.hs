@@ -2,7 +2,11 @@
 
 -- | A Sign is an object that generates a speech bubble if activated. Could be an NPC as well.
 
-module Sorts.Sign where
+module Sorts.Sign (
+    sorts,
+    bubbleTextSize,
+    renderSpeechBubble,
+  ) where
 
 
 import Safe
@@ -37,7 +41,7 @@ speechIconPadding = fromUber 4
 textPadding = 28
 
 bubbleSize = Size 800 172
-textSize = bubbleSize -~ fmap (* 2) (Size textPadding textPadding)
+bubbleTextSize = bubbleSize -~ fmap (* 2) (Size textPadding textPadding)
 
 -- | width of the zone that nikki can activate the signs,
 -- although not standing directly in front of them
@@ -101,7 +105,7 @@ data WrappedMonologue
 
 mkWrappedMonologue :: Application -> [Prose] -> WrappedMonologue
 mkWrappedMonologue app text =
-    NoContact $ concat $ map bubbleWrap $ map (wordWrap (standardFont app) (width textSize)) text
+    NoContact $ concat $ map bubbleWrap $ map (wordWrap (standardFont app) (width bubbleTextSize)) text
   where
     bubbleWrap :: [[Glyph]] -> [[[Glyph]]]
     bubbleWrap chunk =
@@ -216,15 +220,21 @@ renderState app config offset sort signPos state = case state of
                                           (- (height iconSize + speechIconPadding))
             signSize = size sort
             iconSize = pixmapSize $ speechIcon sort
-    ShowingText i glyphs -> Just $ RenderOnTop $ RenderCommand zero $ \ ptr -> do
-        -- render a big beautiful bubble
+    ShowingText i glyphs -> Just $
+        renderSpeechBubble app config offset signPos (size sort) (glyphs !! i)
+
+-- | Renders a big beautiful bubble
+renderSpeechBubble :: Application -> Configuration -> Offset Double
+    -> Qt.Position Double -> Size Double -> [[Glyph]] -> RenderPixmap
+renderSpeechBubble app config offset signPos signSize glyphs =
+    RenderOnTop $ RenderCommand zero $ \ ptr -> do
         windowSize <- sizeQPainter ptr
         let position = bubblePosition windowSize offset signPos
         resetMatrix ptr
         translate ptr position
         renderBubbleBackground ptr
         translate ptr (Position textPadding (textPadding + fontHeightOffset))
-        forM_ (glyphs !! i) $ \ line -> do
+        forM_ glyphs $ \ line -> do
             recoverMatrix ptr $ do
                 snd =<< render ptr app config bubbleSize line
             translate ptr (Position 0 fontHeight)
