@@ -229,7 +229,7 @@ renderSpeechBubble :: Application -> Configuration -> Offset Double
 renderSpeechBubble app config offset signPos signSize glyphs =
     RenderOnTop $ RenderCommand zero $ \ ptr -> do
         windowSize <- sizeQPainter ptr
-        let position = bubblePosition windowSize offset signPos
+        let position = bubblePosition windowSize offset signPos signSize
         resetMatrix ptr
         translate ptr position
         renderBubbleBackground ptr
@@ -239,13 +239,14 @@ renderSpeechBubble app config offset signPos signSize glyphs =
                 snd =<< render ptr app config bubbleSize line
             translate ptr (Position 0 fontHeight)
 
-bubblePosition :: Size Double -> Offset Double -> Qt.Position Double -> Qt.Position Double
-bubblePosition windowSize offset signPos =
+bubblePosition :: Size Double -> Offset Double
+    -> Qt.Position Double -> Size Double -> Qt.Position Double
+bubblePosition windowSize offset signPos signSize =
     fmap (fromIntegral . round) $ Position x y
   where
     x = (width windowSize - width bubbleSize) / 2
     cameraY = - positionY offset
-    y = if positionY signPos >= cameraY + (height windowSize / 2) then
+    y = if positionY signPos + (height signSize / 2) >= cameraY + (height windowSize / 2) then
         -- sign below center of the screen
         osdPadding
       else
