@@ -30,8 +30,6 @@ import Data.Maybe
 import Data.Accessor
 import Data.Map (alter)
 
-import Text.Logging
-
 import System.FilePath
 
 import Physics.Chipmunk as CM
@@ -486,31 +484,21 @@ mkPolys size =
 
 -- * controlling
 
-update sort config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} = do
-    debugStandbyBatteryTerminal terminal
-    return $
-        updateShowingBubble contacts $
-        updateUncontrolledStandby now terminal
-update sort config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} = do
-    debugStandbyBatteryTerminal terminal
+update sort config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} = return $
+    updateShowingBubble contacts $
+    updateUncontrolledStandby now $
+    terminal
+update sort config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} =
     updateOnTime now <$>
-        showingBubble ^= True <$>
-        putBatteriesInTerminal scene now terminal
-update sort config _ scene now contacts (False, cd) terminal = do
-    logg Debug $ take 10 $ show terminal
+    showingBubble ^= True <$>
+    putBatteriesInTerminal scene now terminal
+update sort config _ scene now contacts (False, cd) terminal =
     (state ^: updateGameMode contacts terminal) <$>
-        (robots ^^: updateControllableStates scene) terminal
-update sort config _ scene now contacts (True, cd) terminal = do
-    logg Debug $ take 10 $ show terminal
+    (robots ^^: updateControllableStates scene) terminal
+update sort config _ scene now contacts (True, cd) terminal =
     (robots ^^: updateControllableStates scene) $
-        state ^= updateState config now cd (terminal ^. robots) (terminal ^. state) $
-        terminal
-
-debugStandbyBatteryTerminal terminal = do
-    logg Debug $ show $ terminal ^. batteryNumber
-    logg Debug $ take 10 $ show terminal
-    logg Debug $ show $ terminal ^. showingBubble
-
+    state ^= updateState config now cd (terminal ^. robots) (terminal ^. state) $
+    terminal
 
 -- | updates the gameMode if Nikki doesn't touch it anymore
 updateGameMode :: Contacts -> Terminal -> State -> State
@@ -711,8 +699,7 @@ numberOfBeams = 9
 
 renderBatteryBar sort@BatteryTSort{..} now t@StandbyBatteryTerminal{batteryNumber_} p =
     case roundToBars numberOfBeams batteryNumberNeeded batteryNumber_ of
-        0 -> trace (pp now) $
-            if pickAnimationFrame [True, False] [beamBlinkingTime] now
+        0 -> if pickAnimationFrame [True, False] [beamBlinkingTime] now
              then singleton $ RenderPixmap whiteBeam (p +~ firstBeamOffset) Nothing
              else []
         n -> renderGreenBeams sort n p
