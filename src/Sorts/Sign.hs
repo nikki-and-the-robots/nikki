@@ -150,7 +150,7 @@ instance Sort SSort Sign where
         return $ (monologue ^: (updateState controls cd contacts sign)) sign
 
     renderObject app config sign sort ptr offset now = return $
-        renderSign app config sort sign
+        renderSign app config offset sort sign
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
 mkPolys size =
@@ -195,18 +195,18 @@ updateState controls cd contacts sign state =
 
 -- * rendering
 
-renderSign :: Application -> Configuration -> SSort -> Sign -> [RenderPixmap]
-renderSign app config sort (Sign (ImmutableChipmunk position _ _ _) _ state) =
+renderSign :: Application -> Configuration -> Offset Double -> SSort -> Sign -> [RenderPixmap]
+renderSign app config offset sort (Sign (ImmutableChipmunk position _ _ _) _ state) =
     let sign = RenderPixmap (pixmap sort) position Nothing
-        mState = renderState app config sort position state
+        mState = renderState app config offset sort position state
     in 
         sign :
         maybe [] singleton mState ++
         []
 
-renderState :: Application -> Configuration
+renderState :: Application -> Configuration -> Offset Double
     -> SSort -> Qt.Position Double -> WrappedMonologue -> Maybe RenderPixmap
-renderState app config sort signPos state = case state of
+renderState app config offset sort signPos state = case state of
     NoContact _ -> Nothing
     Contact _ ->
         -- render the speech icon
@@ -219,10 +219,7 @@ renderState app config sort signPos state = case state of
     ShowingText i glyphs -> Just $ RenderOnTop $ RenderCommand zero $ \ ptr -> do
         -- render a big beautiful bubble
         windowSize <- sizeQPainter ptr
-        let position =
-                fmap (fromIntegral . round) $
-                (Position ((width windowSize - width bubbleSize) / 2)
-                          (height windowSize - osdPadding - height bubbleSize))
+        let position = bubblePosition windowSize offset signPos
         resetMatrix ptr
         translate ptr position
         renderBubbleBackground ptr
@@ -231,6 +228,18 @@ renderState app config sort signPos state = case state of
             recoverMatrix ptr $ do
                 snd =<< render ptr app config bubbleSize line
             translate ptr (Position 0 fontHeight)
+
+bubblePosition :: Size Double -> Offset Double -> Qt.Position Double -> Qt.Position Double
+bubblePosition windowSize offset signPos =
+    fmap (fromIntegral . round) $ Position x y
+  where
+    x = (width windowSize - width bubbleSize) / 2
+    cameraY = - positionY offset
+    y = if positionY signPos >= cameraY + (height windowSize / 2) then
+        -- sign below center of the screen
+        osdPadding
+      else
+        height windowSize - osdPadding - height bubbleSize
 
 -- | render the background of a bubble
 renderBubbleBackground :: Ptr QPainter -> IO ()
