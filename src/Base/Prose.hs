@@ -10,6 +10,7 @@ module Base.Prose (
     colorizeProse,
     capitalizeProse,
     getText,
+    getString,
     nullProse,
     lengthProse,
     p,
@@ -54,6 +55,9 @@ colorizeProse color p =
 getText :: Prose -> Text
 getText (Prose list) = Prelude.foldr (append) "" $ fmap snd list
 
+getString :: Prose -> String
+getString = getText >>> unpack
+
 capitalizeProse :: Prose -> Prose
 capitalizeProse (Prose list) =
     Prose $ fmap (second toUpper) list
@@ -80,7 +84,7 @@ pv = pVerbatim
 
 -- | inverse of p
 unP :: Prose -> String
-unP = getText >>> unpack
+unP = getString
 
 -- | Read files and return their content as Prose.
 -- Should be replaced with something that supports

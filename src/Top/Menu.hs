@@ -5,6 +5,8 @@ module Top.Menu where
 import Data.SelectTree
 import Data.List as List
 
+import Text.Logging
+
 import Control.Monad.Error
 
 import System.FilePath
@@ -140,6 +142,7 @@ loadingEditorScene app file abortion follower =
                 editorScene <- initEditorScene (allSorts app) file diskLevel
                 return $ follower editorScene
             Left errMsg -> do
+                fmapM_ (logg Error) $ fmap getString errMsg
                 return $ message app errMsg abortion
 
 mainMenuHelp :: Application -> Parent -> AppState
