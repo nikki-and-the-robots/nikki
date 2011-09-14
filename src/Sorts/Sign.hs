@@ -43,10 +43,10 @@ textPadding = 28
 bubbleSize = Size 800 172
 bubbleTextWidths :: [Double]
 bubbleTextWidths =
-    normal : []
+    normal : normal : diminished : []
   where
     normal = width bubbleSize - 2 * textPadding
-    diminished = normal - fromUber 29
+    diminished = normal - fromUber 35
 
 -- | width of the zone that nikki can activate the signs,
 -- although not standing directly in front of them
@@ -244,6 +244,7 @@ renderSpeechBubble app config offset signPos signSize glyphs =
             recoverMatrix ptr $ do
                 snd =<< render ptr app config bubbleSize line
             translate ptr (Position 0 fontHeight)
+        renderContinueButton app config ptr position
 
 bubblePosition :: Size Double -> Offset Double
     -> Qt.Position Double -> Size Double -> Qt.Position Double
@@ -274,6 +275,14 @@ renderBubbleBackground ptr = do
     fillRect ptr (Position (width bubbleSize - fromUber 1) (fromUber 1))
         sideStripeSize
         osdBackgroundColor
+
+renderContinueButton app config ptr position = do
+    (buttonSize, renderButton) <- render ptr app config zero (False, pv "[Shift]")
+    resetMatrix ptr
+    translate ptr (position +~
+        size2position (bubbleSize -~ Size textPadding textPadding -~ buttonSize) -~
+        Position 0 fontHeightOffset)
+    renderButton
 
 
 -- * OEM
