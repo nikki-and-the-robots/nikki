@@ -4,7 +4,7 @@
 
 module Sorts.Sign (
     sorts,
-    bubbleTextSize,
+    bubbleTextWidths,
     renderSpeechBubble,
   ) where
 
@@ -41,7 +41,12 @@ speechIconPadding = fromUber 4
 textPadding = 28
 
 bubbleSize = Size 800 172
-bubbleTextSize = bubbleSize -~ fmap (* 2) (Size textPadding textPadding)
+bubbleTextWidths :: [Double]
+bubbleTextWidths =
+    normal : []
+  where
+    normal = width bubbleSize - 2 * textPadding
+    diminished = normal - fromUber 29
 
 -- | width of the zone that nikki can activate the signs,
 -- although not standing directly in front of them
@@ -105,7 +110,8 @@ data WrappedMonologue
 
 mkWrappedMonologue :: Application -> [Prose] -> WrappedMonologue
 mkWrappedMonologue app text =
-    NoContact $ concat $ map bubbleWrap $ map (wordWrap (standardFont app) (width bubbleTextSize)) text
+    NoContact $ concat $ map bubbleWrap $
+        map (wordWrap (standardFont app) bubbleTextWidths) text
   where
     bubbleWrap :: [[Glyph]] -> [[[Glyph]]]
     bubbleWrap chunk =

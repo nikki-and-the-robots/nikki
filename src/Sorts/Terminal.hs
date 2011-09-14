@@ -44,7 +44,7 @@ import qualified Base
 
 import Sorts.Nikki.Configuration (nikkiSize)
 import Sorts.LowerLimit (isBelowLowerLimit)
-import Sorts.Sign (renderSpeechBubble, bubbleTextSize)
+import Sorts.Sign (renderSpeechBubble, bubbleTextWidths)
 
 import Editor.Scene.Types
 import Editor.Scene.Rendering
@@ -749,7 +749,7 @@ renderTerminalSpeechBubble app config offset sort terminalPos
                       ("needed", show batteryNumberNeeded) :
                       []
             glyphs = concat $
-                fmap (wordWrap (standardFont app) (width bubbleTextSize) .
+                fmap (wordWrap (standardFont app) bubbleTextWidths .
                       capitalizeProse .
                       substitute context .
                       p) $

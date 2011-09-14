@@ -15,7 +15,7 @@ import Base.Renderable.VBox
 -- | text rendering with and without word wrapping
 instance Renderable (Bool, Prose) where
     render ptr app config size (True, prose) =
-        let glyphs = wordWrap (standardFont app) (width size) prose
+        let glyphs = wordWrap (standardFont app) [width size] prose
         in render ptr app config size (vBox (length glyphs) glyphs)
     render ptr app config size (False, prose) =
         render ptr app config size (proseToGlyphs (standardFont app) prose)

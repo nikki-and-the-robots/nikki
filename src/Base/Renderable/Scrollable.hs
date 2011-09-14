@@ -77,7 +77,7 @@ instance Renderable Scrollable where
     render ptr app config parentSize (Scrollable children chan scrollDownRef) = do
         let h = height parentSize
             widgetSize = parentSize
-            lines = concatMap (wordWrap (standardFont app) (width parentSize)) children
+            lines = concatMap (wordWrap (standardFont app) [width parentSize]) children
         lineRenders <-
             fmapM (render ptr app config widgetSize) $
             addSpacer $ fmap spacerForNull $

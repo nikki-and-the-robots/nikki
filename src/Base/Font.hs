@@ -150,22 +150,26 @@ fromWords :: [Word] -> [Glyph]
 fromWords = concatMap wordPixmaps
 
 -- | implements a word wrap on a list of glyph pixmaps
-wordWrapGlyphs :: Double -> [Glyph] -> [[Glyph]]
-wordWrapGlyphs wrapWidth =
+wordWrapGlyphs :: [Double] -> [Glyph] -> [[Glyph]]
+wordWrapGlyphs wrapWidths =
     toWords >>>
-    inner 0 [] >>>
+    inner wrapWidths 0 [] >>>
     fmap fromWords
   where
-    inner :: Double -> [Word] -> [Word] -> [[Word]]
-    inner w akk (a : r) =
+    inner :: [Double] -> Double -> [Word] -> [Word] -> [[Word]]
+    inner [] w akk ws = inner wrapWidths w akk ws
+    inner wrapWidths@(wrapWidth : restWidths) w akk (a : r) =
         if List.null akk || (w + wordWidth a <= wrapWidth) then
-            inner (w + wordYOffsetDelta a + fromUber 1) (a : akk) r
+            inner wrapWidths (w + wordYOffsetDelta a + fromUber 1) (a : akk) r
           else
-            List.reverse akk : inner 0 [] (a : r)
-    inner _ akk [] = List.reverse akk : []
+            List.reverse akk : inner restWidths 0 [] (a : r)
+    inner _ _ akk [] = List.reverse akk : []
 
-wordWrap :: Font -> Double -> Prose -> [[Glyph]]
-wordWrap font w = wordWrapGlyphs w . proseToGlyphs font
+-- | Wraps a Prose according to the given list of line widths.
+-- Cycles the list of line widths.
+-- If you have a constant line width, use @wordWrap font [lineWidth] prose@.
+wordWrap :: Font -> [Double] -> Prose -> [[Glyph]]
+wordWrap font ws = wordWrapGlyphs ws . proseToGlyphs font
 
 
 -- * loading
