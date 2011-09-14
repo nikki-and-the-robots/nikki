@@ -20,10 +20,6 @@ import StoryMode.Purchasing
 -- | shows a text describing our plans with the story mode
 storyMode :: Application -> Play -> Parent -> AppState
 storyMode app play parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
-    prose <- io $ pFile file
-    return $ scrollingAppState app prose parent
-storyMode app play parent = NoGUIAppState $ do
     mEpisodes <- io $ loadEpisodes
     case mEpisodes of
         Nothing -> return $ suggestPurchase app parent 0
