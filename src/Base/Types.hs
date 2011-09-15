@@ -1,5 +1,5 @@
-{-# language ExistentialQuantification, FunctionalDependencies, RecordWildCards, NamedFieldPuns,
-    FlexibleInstances, DeriveDataTypeable #-}
+{-# language ExistentialQuantification, FunctionalDependencies, RecordWildCards,
+    NamedFieldPuns, FlexibleInstances, DeriveDataTypeable, MultiParamTypeClasses #-}
 
 
 -- module for often used types (in one Base module, to avoid module import cycles.)
