@@ -168,7 +168,7 @@ Executable core
         , data-accessor >= 0.2.1.7
         , data-accessor-mtl >= 0.2.0.2
         , strict >= 0.3.2
-        , vector >= 0.7.0.1
+        , vector >= 0.9
         , RSA == 1.*
         , aeson == 0.3.*
         , attoparsec == 0.9.*

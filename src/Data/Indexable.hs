@@ -275,7 +275,7 @@ mergeVectorSome p vector = case decons vector of
     getInner (Right b) = b
 
 
--- * vector utils (instances stolen from hackage: vector-instances)
+-- * vector utils
 
 lefts :: Vector (Either a b) -> Vector a
 lefts = Vector.filter isLeft >>> map fromLeft
@@ -288,22 +288,3 @@ lefts = Vector.filter isLeft >>> map fromLeft
 decons :: Vector a -> Maybe (a, Vector a)
 decons v =
     if null v then Nothing else Just (head v, tail v)
-
-instance Traversable Vector where
-    traverse f v
-        = Vector.fromListN (Vector.length v) <$> traverse f (Vector.toList v)
-    {-# INLINE traverse #-}
-
-instance Functor Vector where
-    fmap = Vector.map
-    {-# INLINE fmap #-}
-
-instance Foldable Vector where
-    foldl = Vector.foldl
-    {-# INLINE foldl #-}
-    foldr = Vector.foldr
-    {-# INLINE foldr #-}
-    foldl1 = Vector.foldl1
-    {-# INLINE foldl1 #-}
-    foldr1 = Vector.foldr1
-    {-# INLINE foldr1 #-}
