@@ -9,7 +9,7 @@ import System.Process
 import System.FilePath
 import System.Exit
 
-import Utils
+import Utils.Scripting
 
 
 deploymentDir = "nikki"
@@ -45,8 +45,9 @@ clean :: IO ()
 clean = do
     putStrLn "cleaning..."
     exists <- doesDirectoryExist deploymentDir
-    if exists then
-        ignore $ system ("rm -rf " ++ deploymentDir ++ "/*")
+    if exists then do
+        _ <- system ("rm -rf " ++ deploymentDir ++ "/*")
+        return ()
       else
         createDirectory deploymentDir
 
