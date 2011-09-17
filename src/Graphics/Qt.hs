@@ -8,6 +8,7 @@ module Graphics.Qt (
     QtEvent(..),
     modifyTextField,
     Key(..),
+    keyDescription,
     Ptr,
   ) where
 

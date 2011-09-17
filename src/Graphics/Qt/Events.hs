@@ -3,6 +3,7 @@
 module Graphics.Qt.Events (
     QtEvent(..),
     Key(..),
+    keyDescription,
     translateQtKey,
     modifyTextField,
   ) where
@@ -125,6 +126,46 @@ data Key
     | UnknownKey
 
   deriving (Eq, Ord, Enum, Bounded, Show, Read, Typeable, Data)
+
+
+-- | Converts a key and a given key text to a human readable description of the key.
+keyDescription :: Key -> String -> String
+keyDescription k text = case k of
+    -- characters see below
+    Space       -> "Space"
+    Return      -> "⏎"
+    Enter       -> "⏎" -- num pad
+    Escape      -> "Esc"
+    Tab         -> "Tab"
+    Delete      -> "Delete"
+    BackSpace   -> "Backspace"
+
+    UpArrow     -> "↑"
+    DownArrow   -> "↓"
+    LeftArrow   -> "←"
+    RightArrow  -> "→"
+
+    Meta        -> "Meta"
+    Shift       -> "Shift"
+    Ctrl        -> "Ctrl"
+    Alt         -> "Alt"
+    AltGr       -> "Alt Gr"
+
+    K1          -> "1"
+    K2          -> "2"
+    K3          -> "3"
+    K4          -> "4"
+    K5          -> "5"
+    K6          -> "6"
+    K7          -> "7"
+    K8          -> "8"
+    K9          -> "9"
+    K0          -> "0"
+
+    CloseWindowKey -> error "keyDescription: CloseWindowKey? Really?"
+    UnknownKey  -> "unknown key"
+
+    k -> text
 
 
 -- | modifies the contents of a text field

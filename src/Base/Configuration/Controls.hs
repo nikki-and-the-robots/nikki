@@ -11,6 +11,7 @@ module Base.Configuration.Controls (
     contextKey,
     KeysHint(..),
     isFullscreenSwapShortcut,
+    keysContext,
 
     -- * menu
     isMenuUp,
@@ -50,10 +51,13 @@ module Base.Configuration.Controls (
   ) where
 
 
-import Data.Set
+import Data.Set (Set)
 import Data.Data
 import Data.Initial
 import Data.Accessor
+import Data.Char (toUpper)
+
+import Control.Arrow
 
 import Graphics.Qt
 
@@ -67,16 +71,16 @@ import Base.Prose
 -- Uses versioned constructors (is saved as part of the configuration).
 
 data Controls = Controls_0 {
-    leftKey_ :: Key,
-    rightKey_ :: Key,
-    upKey_ :: Key,
-    downKey_ :: Key,
-    jumpKey_ :: Key,
-    contextKey_ :: Key
+    leftKey_ :: (Key, String),
+    rightKey_ :: (Key, String),
+    upKey_ :: (Key, String),
+    downKey_ :: (Key, String),
+    jumpKey_ :: (Key, String),
+    contextKey_ :: (Key, String)
   }
     deriving (Show, Read, Typeable, Data)
 
-leftKey, rightKey, upKey, downKey, jumpKey, contextKey :: Accessor Controls Key
+leftKey, rightKey, upKey, downKey, jumpKey, contextKey :: Accessor Controls (Key, String)
 leftKey = accessor leftKey_ (\ a r -> r{leftKey_ = a})
 rightKey = accessor rightKey_ (\ a r -> r{rightKey_ = a})
 upKey = accessor upKey_ (\ a r -> r{upKey_ = a})
@@ -86,14 +90,16 @@ contextKey = accessor contextKey_ (\ a r -> r{contextKey_ = a})
 
 instance Initial Controls where
     initial = Controls_0 {
-        leftKey_ = LeftArrow,
-        rightKey_ = RightArrow,
-        upKey_ = UpArrow,
-        downKey_ = DownArrow,
-        jumpKey_ = Ctrl,
-        contextKey_ = Shift
+        leftKey_ = mkKey LeftArrow,
+        rightKey_ = mkKey RightArrow,
+        upKey_ = mkKey UpArrow,
+        downKey_ = mkKey DownArrow,
+        jumpKey_ = mkKey Ctrl,
+        contextKey_ = mkKey Shift
       }
-
+        where
+            mkKey k =
+                (k, keyDescription k (error "please don't use the given key text"))
 
 -- | represents hints for keys for user readable output
 data KeysHint
@@ -101,11 +107,29 @@ data KeysHint
     | PressAnyKey
 
 
+-- * context for templates
+
+keysContext :: Controls -> [(String, String)]
+keysContext controls = map (second (map toUpper) . mk) $
+    ("leftKey", leftKey) :
+    ("rightKey", rightKey) :
+    ("upKey", upKey) :
+    ("downKey", downKey) :
+    ("jumpKey", jumpKey) :
+    ("contextKey", contextKey) :
+    []
+  where
+    mk :: (String, Accessor Controls (Key, String)) -> (String, String)
+    mk (label, acc) = (label, snd (controls ^. acc))
+
 -- * internals
 
 isKey :: Key -> (Button -> Bool)
 isKey a (KeyboardButton b _) = a == b
 isKey _ _ = False
+
+isKeyWS :: (Key, String) -> (Button -> Bool)
+isKeyWS = isKey . fst
 
 
 -- ** externals
@@ -155,17 +179,17 @@ isTextFieldConfirmation k = isKey Return k || isKey Enter k
 -- * game
 
 isGameLeftHeld, isGameRightHeld, isGameJumpHeld :: Controls -> ControlData -> Bool
-isGameLeftHeld controls = fany (isKey (controls ^. leftKey)) . held
-isGameRightHeld controls = fany (isKey (controls ^. rightKey)) . held
-isGameJumpHeld controls = fany (isKey (controls ^. jumpKey)) . held
+isGameLeftHeld controls = fany (isKeyWS (controls ^. leftKey)) . held
+isGameRightHeld controls = fany (isKeyWS (controls ^. rightKey)) . held
+isGameJumpHeld controls = fany (isKeyWS (controls ^. jumpKey)) . held
 
 isGameLeftPressed, isGameRightPressed, isGameJumpPressed, isGameContextPressed,
     isGameBackPressed
     :: Controls -> ControlData -> Bool
-isGameLeftPressed controls = fany (isKey (controls ^. leftKey)) . pressed
-isGameRightPressed controls = fany (isKey (controls ^. rightKey)) . pressed
-isGameJumpPressed controls = fany (isKey (controls ^. jumpKey)) . pressed
-isGameContextPressed controls = fany (isKey (controls ^. contextKey)) . pressed
+isGameLeftPressed controls = fany (isKeyWS (controls ^. leftKey)) . pressed
+isGameRightPressed controls = fany (isKeyWS (controls ^. rightKey)) . pressed
+isGameJumpPressed controls = fany (isKeyWS (controls ^. jumpKey)) . pressed
+isGameContextPressed controls = fany (isKeyWS (controls ^. contextKey)) . pressed
 isGameBackPressed _ = fany (isKey Escape) . pressed
 
 
@@ -175,18 +199,18 @@ isTerminalConfirmationPressed :: Controls -> ControlData -> Bool
 isTerminalConfirmationPressed controls =
     fany is . pressed
   where
-    is k = isKey (controls ^. jumpKey) k ||
+    is k = isKeyWS (controls ^. jumpKey) k ||
            isMenuConfirmation controls k
 
 
 -- * robots (in game)
 
 isRobotActionHeld :: Controls -> ControlData -> Bool
-isRobotActionHeld controls = fany (isKey (controls ^. jumpKey)) . held
+isRobotActionHeld controls = fany (isKeyWS (controls ^. jumpKey)) . held
 
 isRobotActionPressed, isRobotBackPressed :: Controls -> ControlData -> Bool
-isRobotActionPressed controls = fany (isKey (controls ^. jumpKey)) . pressed
-isRobotBackPressed controls = fany (isKey (controls ^. contextKey)) . pressed
+isRobotActionPressed controls = fany (isKeyWS (controls ^. jumpKey)) . pressed
+isRobotBackPressed controls = fany (isKeyWS (controls ^. contextKey)) . pressed
 
 
 -- * editor

@@ -277,7 +277,8 @@ renderBubbleBackground ptr = do
         osdBackgroundColor
 
 renderContinueButton app config ptr position = do
-    (buttonSize, renderButton) <- render ptr app config zero (False, pv "[Shift]")
+    (buttonSize, renderButton) <- render ptr app config zero
+        (False, substitute (keysContext $ config ^. controls) $ pv "[$contextKey]")
     resetMatrix ptr
     translate ptr (position +~
         size2position (bubbleSize -~ Size textPadding textPadding -~ buttonSize) -~

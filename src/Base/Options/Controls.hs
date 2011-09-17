@@ -38,16 +38,16 @@ controlConfigurationMenu app ps parent = NoGUIAppState $ do
   where
     this ps = controlConfigurationMenu app ps parent
     mkItem controls (itemLabel, messageText, keyAcc) =
-        (itemLabel +> pv ": " +> p (show (controls ^. keyAcc)),
+        (itemLabel +> pv ": " +> p (snd (controls ^. keyAcc)),
          configure app messageText keyAcc this)
 
-configure :: Application -> Prose -> Accessor Controls Key -> (Int -> Parent) -> Int -> AppState
+configure :: Application -> Prose -> Accessor Controls (Key, String) -> (Int -> Parent) -> Int -> AppState
 configure app text keyAcc parent parentPreSelection = AppState (renderable widget) $ do
     b <- waitForPressedButton app
     case b of
         (KeyboardButton Escape _) -> return $ parent parentPreSelection
-        (KeyboardButton k _) -> do
-            (controls .> keyAcc) %= k
+        (KeyboardButton k t) -> do
+            (controls .> keyAcc) %= (k, keyDescription k t)
             return $ parent $ succ parentPreSelection
         _ -> return this
   where
