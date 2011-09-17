@@ -252,10 +252,12 @@ bubblePosition windowSize offset signPos signSize =
     fmap (fromIntegral . round) $ Position x y
   where
     x = (width windowSize - width bubbleSize) / 2
+    frameHeight = height windowSize - (osdPadding + osdHeight)
     cameraY = - positionY offset
-    y = if positionY signPos + (height signSize / 2) >= cameraY + (height windowSize / 2) then
-        -- sign below center of the screen
-        osdPadding
+    limit = cameraY + osdPadding + osdHeight + (frameHeight / 2)
+    y = if positionY signPos + (height signSize / 2) >= limit then
+        -- sign below center of the frame
+        osdPadding + osdHeight + osdPadding
       else
         height windowSize - osdPadding - height bubbleSize
 

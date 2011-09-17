@@ -7,6 +7,7 @@ module Base.Font (
     digitFont,
     freeFont,
     fontHeight,
+    osdHeight,
     fontHeightOffset,
 
     Glyph(..),
@@ -60,6 +61,9 @@ digitFontColors = nub $
 
 fontHeight :: Num n => n
 fontHeight = 48
+
+-- | height of the in game OSDs
+osdHeight :: Double = fromUber 9
 
 -- | vertical offset that has to be applied to have capital letters aligned.
 fontHeightOffset :: Double
