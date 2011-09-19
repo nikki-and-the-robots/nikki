@@ -246,6 +246,7 @@ data MyCollisionType
     | TileCT
     | TerminalCT
     | DeadlySolidCT
+    | DeadlyPermeableCT
     | RobotCT
     | TriggerCT
     | BatteryCT

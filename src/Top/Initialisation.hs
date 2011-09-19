@@ -26,6 +26,7 @@ import qualified Sorts.Terminal
 import qualified Sorts.Tiles
 import qualified Sorts.Sign
 import qualified Sorts.FallingTiles
+import qualified Sorts.DeathStones
 import qualified Sorts.Box
 import qualified Sorts.Battery
 import qualified Sorts.Grids
@@ -58,6 +59,7 @@ sortLoaders =
     Sorts.Sign.sorts :
     Sorts.Box.sorts :
     Sorts.FallingTiles.sorts :
+    Sorts.DeathStones.sorts :
     Sorts.LowerLimit.sorts :
 
     Sorts.Background.sorts :

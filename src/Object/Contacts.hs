@@ -109,6 +109,11 @@ watchedContacts =
         TerminalCT :
         SignCT :
         []) ++
+    -- deadly permeable (lasers)
+    map deadlyPermeableNikki (filter isSolidNikkiCollisionType nikkiCollisionTypes) ++
+    map deadlyPermeableSolid (
+        filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes ++
+        solidCollisionTypes) ++
 
     switchCallback :
     []
@@ -167,3 +172,14 @@ deadlySolidNikki nikkiCT =
 deadlySolidPermeable :: MyCollisionType -> Callback MyCollisionType Contacts
 deadlySolidPermeable permeableCT =
     Callback (DontWatch DeadlySolidCT permeableCT) Permeable
+
+
+-- * deadly permeable things
+
+-- | add callbacks to let the level fail
+deadlyPermeableNikki nct =
+    Callback (Watch DeadlyPermeableCT nct (\ _ _ -> return . setNikkiTouchesDeadly)) Permeable
+
+deadlyPermeableSolid solidCT =
+    Callback (DontWatch DeadlyPermeableCT solidCT) Permeable
+
