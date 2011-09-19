@@ -51,7 +51,7 @@ runAppState app (UnManagedAppState cmd) = do
 runAppState _ FinalAppState = return ()
 
 setRenderable app config renderable = do
-    setDrawingCallbackGLContext (window app) (Just renderCallback)
+    setDrawingCallbackMainWindow (window app) (Just renderCallback)
   where
     renderCallback :: Ptr QPainter -> IO ()
     renderCallback ptr = do

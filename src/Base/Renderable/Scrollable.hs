@@ -64,7 +64,7 @@ scrollable app children = do
             Scrollable children chan scrollDownRef)
         send fun = do
             writeChan chan fun
-            updateGLContext (window app)
+            updateMainWindow (window app)
     return (renderable r, send)
 
 data Scrollable = Scrollable [Prose] (Chan (Int -> Int)) (IORef Int)

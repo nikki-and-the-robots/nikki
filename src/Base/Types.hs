@@ -79,7 +79,7 @@ setScene scene (GameState space camRef _) = GameState space camRef scene
 data Application
     = Application {
         application :: Ptr QApplication,
-        window :: Ptr GLContext,
+        window :: Ptr MainWindow,
         keyPoller :: KeyPoller,
         getMainMenu_ :: Application -> AppState,
         applicationPixmaps :: ApplicationPixmaps,

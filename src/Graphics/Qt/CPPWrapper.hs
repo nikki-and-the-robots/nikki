@@ -13,18 +13,18 @@ module Graphics.Qt.CPPWrapper (
     processEventsQApplication,
     quitQApplication,
 
-    -- * GLContext
-    GLContext,
-    paintEngineTypeGLContext,
-    withGLContext,
+    -- * MainWindow
+    MainWindow,
+    paintEngineTypeMainWindow,
+    withMainWindow,
     setWindowTitle,
     setWindowIcon,
-    setFullscreenGLContext,
-    showGLContext,
-    resizeGLContext,
-    updateGLContext,
-    setDrawingCallbackGLContext,
-    setKeyCallbackGLContext,
+    setFullscreenMainWindow,
+    showMainWindow,
+    resizeMainWindow,
+    updateMainWindow,
+    setDrawingCallbackMainWindow,
+    setKeyCallbackMainWindow,
     setArrowAutoRepeat,
     setRenderingLooped,
 
@@ -140,51 +140,51 @@ setApplicationName ptr s = withCString s (cppSetApplicationName ptr)
 
 foreign import ccall "setApplicationName" cppSetApplicationName :: Ptr QApplication -> CString -> IO ()
 
--- * GLContext
+-- * MainWindow
 
-data GLContext
+data MainWindow
 
-foreign import ccall newGLContext :: Int -> Int -> Int -> IO (Ptr GLContext)
+foreign import ccall newMainWindow :: Int -> Int -> Int -> IO (Ptr MainWindow)
 
-foreign import ccall destroyGLContext :: Ptr GLContext -> IO ()
+foreign import ccall destroyMainWindow :: Ptr MainWindow -> IO ()
 
-withGLContext :: MonadCatchIO m => Int -> Int -> Int -> (Ptr GLContext -> m a) -> m a
-withGLContext swapInterval width height =
-    bracket (io $ newGLContext swapInterval width height) (io . destroyGLContext)
+withMainWindow :: MonadCatchIO m => Int -> Int -> Int -> (Ptr MainWindow -> m a) -> m a
+withMainWindow swapInterval width height =
+    bracket (io $ newMainWindow swapInterval width height) (io . destroyMainWindow)
 
-foreign import ccall setWindowIcon :: Ptr GLContext -> Ptr QIcon -> IO ()
+foreign import ccall setWindowIcon :: Ptr MainWindow -> Ptr QIcon -> IO ()
 
-foreign import ccall setRenderingLooped :: Ptr GLContext -> Bool -> IO ()
+foreign import ccall setRenderingLooped :: Ptr MainWindow -> Bool -> IO ()
 
-foreign import ccall setArrowAutoRepeat :: Ptr GLContext -> Bool -> IO ()
+foreign import ccall setArrowAutoRepeat :: Ptr MainWindow -> Bool -> IO ()
 
-foreign import ccall updateGLContext :: Ptr GLContext -> IO ()
+foreign import ccall updateMainWindow :: Ptr MainWindow -> IO ()
 
--- | sets the GLContext fullscreen mode.
+-- | sets the MainWindow fullscreen mode.
 -- In fullscreen mode the mouse cursor is hidden
-foreign import ccall setFullscreenGLContext :: Ptr GLContext -> Bool -> IO ()
+foreign import ccall setFullscreenMainWindow :: Ptr MainWindow -> Bool -> IO ()
 
-foreign import ccall resizeGLContext :: Ptr GLContext -> QtInt -> QtInt -> IO ()
+foreign import ccall resizeMainWindow :: Ptr MainWindow -> QtInt -> QtInt -> IO ()
 
 foreign import ccall "setWindowTitle" cppSetWindowTitle ::
-    Ptr GLContext -> CString -> IO ()
+    Ptr MainWindow -> CString -> IO ()
 
-setWindowTitle :: Ptr GLContext -> String -> IO ()
+setWindowTitle :: Ptr MainWindow -> String -> IO ()
 setWindowTitle ptr t = withCString t (cppSetWindowTitle ptr)
 
-foreign import ccall showGLContext :: Ptr GLContext -> IO ()
+foreign import ccall showMainWindow :: Ptr MainWindow -> IO ()
 
-foreign import ccall hideGLContext :: Ptr GLContext -> IO ()
+foreign import ccall hideMainWindow :: Ptr MainWindow -> IO ()
 
-foreign import ccall directRenderingGLContext :: Ptr GLContext -> IO Bool
+foreign import ccall directRenderingMainWindow :: Ptr MainWindow -> IO Bool
 
-paintEngineTypeGLContext :: Ptr GLContext -> IO PaintEngineType
-paintEngineTypeGLContext ptr = do
-    i <- cppPaintEngineTypeGLContext ptr
+paintEngineTypeMainWindow :: Ptr MainWindow -> IO PaintEngineType
+paintEngineTypeMainWindow ptr = do
+    i <- cppPaintEngineTypeMainWindow ptr
     return $ int2PaintEngineType i
 
-foreign import ccall "paintEngineTypeGLContext" cppPaintEngineTypeGLContext ::
-    Ptr GLContext -> IO QtInt
+foreign import ccall "paintEngineTypeMainWindow" cppPaintEngineTypeMainWindow ::
+    Ptr MainWindow -> IO QtInt
 
 data PaintEngineType
     = X11
@@ -201,36 +201,36 @@ int2PaintEngineType 7 = OpenGL
 int2PaintEngineType 14 = OpenGL2
 int2PaintEngineType x = UnknownPaintEngine x
 
--- drawing callbacks (GLContext)
+-- drawing callbacks (MainWindow)
 
-foreign import ccall "setDrawingCallbackGLContext" cppSetDrawingCallbackGLContext ::
-    Ptr GLContext -> FunPtr (Ptr QPainter -> IO ()) -> IO ()
+foreign import ccall "setDrawingCallbackMainWindow" cppSetDrawingCallbackMainWindow ::
+    Ptr MainWindow -> FunPtr (Ptr QPainter -> IO ()) -> IO ()
 
 foreign import ccall "wrapper" wrapDrawingCallback ::
     (Ptr QPainter -> IO ()) -> IO (FunPtr (Ptr QPainter -> IO ()))
 
-setDrawingCallbackGLContext ::
-    Ptr GLContext -> Maybe (Ptr QPainter -> IO ()) -> IO ()
-setDrawingCallbackGLContext ptr (Just cb) =
+setDrawingCallbackMainWindow ::
+    Ptr MainWindow -> Maybe (Ptr QPainter -> IO ()) -> IO ()
+setDrawingCallbackMainWindow ptr (Just cb) =
     wrapDrawingCallback cb >>=
-        cppSetDrawingCallbackGLContext ptr
-setDrawingCallbackGLContext ptr Nothing =
-    cppSetDrawingCallbackGLContext ptr =<< wrapDrawingCallback (const $ return ())
+        cppSetDrawingCallbackMainWindow ptr
+setDrawingCallbackMainWindow ptr Nothing =
+    cppSetDrawingCallbackMainWindow ptr =<< wrapDrawingCallback (const $ return ())
 
 
 -- event callbacks
 
-foreign import ccall "setKeyCallbackGLContext" cppSetKeyCallbackGLContext ::
-    Ptr GLContext -> FunPtr (Int -> Ptr QKeyEvent -> IO ()) -> IO ()
+foreign import ccall "setKeyCallbackMainWindow" cppSetKeyCallbackMainWindow ::
+    Ptr MainWindow -> FunPtr (Int -> Ptr QKeyEvent -> IO ()) -> IO ()
 
 foreign import ccall "wrapper" wrapKeyCallback ::
     (Int -> Ptr QKeyEvent -> IO ()) -> IO (FunPtr (Int -> Ptr QKeyEvent -> IO ()))
 -- True means Press, False means Release
 
-setKeyCallbackGLContext :: Ptr GLContext -> (QtEvent -> IO ()) -> IO ()
-setKeyCallbackGLContext ptr cmd =
+setKeyCallbackMainWindow :: Ptr MainWindow -> (QtEvent -> IO ()) -> IO ()
+setKeyCallbackMainWindow ptr cmd =
     wrapKeyCallback preWrap >>=
-        cppSetKeyCallbackGLContext ptr
+        cppSetKeyCallbackMainWindow ptr
   where
     preWrap :: (Int -> Ptr QKeyEvent -> IO ())
     preWrap n ptr = case n of

@@ -36,7 +36,7 @@ updateSceneMVar app mvar = do
     s <- get
     io $ do
         modifyMVar_ mvar (const $ return s)
-        updateGLContext $ window app
+        updateMainWindow $ window app
 
 
 -- * menus and states
@@ -50,7 +50,7 @@ editLevel app s = NoGUIAppState $ io $ do
 editorLoop :: Application -> MVar (EditorScene Sort_) -> EditorScene Sort_ -> AppState
 editorLoop app mvar scene = UnManagedAppState $ do
     config <- getConfiguration
-    io $ setDrawingCallbackGLContext (window app) (Just $ render config mvar)
+    io $ setDrawingCallbackMainWindow (window app) (Just $ render config mvar)
     evalStateT worker scene
   where
     worker :: MM AppState

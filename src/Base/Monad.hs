@@ -35,4 +35,4 @@ swapFullScreen app = do
     fullscreen' <- not <$> gets fullscreen
     modify (\ c -> c{fullscreen = fullscreen'})
     io $ postGUI (window app) $ do
-        setFullscreenGLContext (window app) fullscreen'
+        setFullscreenMainWindow (window app) fullscreen'

@@ -34,7 +34,7 @@ import Utils
 -- * entry points
 
 qtRendering :: Ptr QApplication
-    -> Ptr GLContext
+    -> Ptr MainWindow
     -> String
     -> WindowSize
     -> ([QtEvent] -> Ptr QPainter -> IO ())
@@ -50,9 +50,9 @@ qtRendering app window title windowSize renderCmd catcher initialSignals = do
             events <- pollEvents keyPoller
             renderCmd events qPainter
 
-    setDrawingCallbackGLContext window (Just loop)
+    setDrawingCallbackMainWindow window (Just loop)
 
-    showGLContext window
+    showMainWindow window
     code <- execQApplication app
 
     return $ case code of
@@ -60,7 +60,7 @@ qtRendering app window title windowSize renderCmd catcher initialSignals = do
         c -> ExitFailure c
 
 -- | sets a list of files that can be used as application icons (for the window manager)
-withApplicationIcon :: MonadCatchIO m => Ptr GLContext -> [FilePath] -> m a -> m a
+withApplicationIcon :: MonadCatchIO m => Ptr MainWindow -> [FilePath] -> m a -> m a
 withApplicationIcon window iconPaths action =
     withQIcon $ \ qIcon -> do
         io $ mapM_ (addFileQIcon qIcon) iconPaths
@@ -70,11 +70,11 @@ withApplicationIcon window iconPaths action =
 
 data WindowSize = Windowed (Size QtInt) | FullScreen
 
-setWindowSize :: Ptr GLContext -> WindowSize -> IO ()
+setWindowSize :: Ptr MainWindow -> WindowSize -> IO ()
 setWindowSize win (Windowed (Size width height)) =
-    resizeGLContext win width height
+    resizeMainWindow win width height
 setWindowSize win FullScreen =
-    setFullscreenGLContext win True
+    setFullscreenMainWindow win True
 
 
 -- * matrix
@@ -132,10 +132,10 @@ clearScreen ptr color = do
 
 newtype KeyPoller = KeyPoller (Chan QtEvent)
 
-newKeyPoller :: Ptr GLContext -> [Key] -> IO KeyPoller
+newKeyPoller :: Ptr MainWindow -> [Key] -> IO KeyPoller
 newKeyPoller widget signals = do
     chan <- newChan
-    setKeyCallbackGLContext widget (writeChan chan)
+    setKeyCallbackMainWindow widget (writeChan chan)
     sendInitialSignals chan signals
     return $ KeyPoller chan
 

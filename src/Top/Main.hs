@@ -10,7 +10,7 @@
 -- 1. The logic thread. This will do the physics simulation as well as game logic
 -- 2. The rendering thread (which is also the bound main thread). 
 --    This will just render to the widget.
---    Most of the states will use 'setDrawingCallbackGLContext' to set the rendering function.
+--    Most of the states will use 'setDrawingCallbackMainWindow' to set the rendering function.
 --    This is the way, to let the rendering thread do stuff.
 --
 -- Forking takes place once in 'Top.main' forking the logic thread.
@@ -69,8 +69,8 @@ forkThreads renderThread logicThread = do
 renderThread :: Configuration -> MVar Application -> IO ()
 renderThread configuration appRef =
   withQApplication $ \ qApp -> do
-    withGLContext 0 (width defaultWindowSize) (height defaultWindowSize) $ \ window -> do
-      paintEngine <- paintEngineTypeGLContext window
+    withMainWindow 0 (width defaultWindowSize) (height defaultWindowSize) $ \ window -> do
+      paintEngine <- paintEngineTypeMainWindow window
       logg Debug ("paint engine: " ++ show paintEngine)
       flip runReaderT configuration $ withNikkiIcon window $ do
         keyPoller <- io $ newKeyPoller window
@@ -85,7 +85,7 @@ renderThread configuration appRef =
             setWindowTitle window "Nikki and the Robots"
             setWindowSize window windowMode
             showLoadingScreen qApp window appPixmaps configuration
-            showGLContext window
+            showMainWindow window
             processEventsQApplication qApp
 
           -- sort loading (pixmaps and sounds)
@@ -101,7 +101,7 @@ renderThread configuration appRef =
                 when (exitCode /= 0) $
                     logg Error ("error exit code from execQApplication: " ++ show exitCode)
 
-withNikkiIcon :: Ptr GLContext -> RM a -> RM a
+withNikkiIcon :: Ptr MainWindow -> RM a -> RM a
 withNikkiIcon qWidget action = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
         getDataFiles pngDir (Just ".png")

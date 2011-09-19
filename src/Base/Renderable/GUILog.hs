@@ -25,7 +25,7 @@ mkGuiLog app = do
     logMVar <- newMVar []
     let logCommand t = do
             modifyMVar_ logMVar (\ log -> return (log +: t))
-            updateGLContext $ window app
+            updateMainWindow $ window app
     return (RenderableInstance $ GuiLog logMVar, logCommand)
 
 data GuiLog = GuiLog (MVar [Prose])
