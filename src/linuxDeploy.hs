@@ -9,17 +9,19 @@ import Data.Char
 import Data.Maybe
 import Data.Set
 import Data.List (isInfixOf)
-import Data.Foldable (any)
+import Data.Foldable as Foldable (any, mapM_)
 
 import Text.Parsec
 
+import Control.Monad
+import Control.Applicative ((<$>))
 import Control.Exception
 
 import System.FilePath
 import System.Directory
 import System.Process
 
-import Utils hiding ((<|>))
+import Utils.Scripting
 
 
 executables = "dist" </> "build"
@@ -35,7 +37,7 @@ main = do
     copy nikkiExe
     copy coreExe
     copy (".." </> "data")
-    fmapM_ copy =<< getDynamicDependencies
+    Foldable.mapM_ copy =<< getDynamicDependencies
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
     copyDeploymentLicenses
     fiddleInStartScript
@@ -200,7 +202,8 @@ renameNikkiExe =
 copyStartScript :: IO ()
 copyStartScript = do
     copyFile src dest
-    ignore $ system ("chmod +x " ++ dest)
+    _ <- system ("chmod +x " ++ dest)
+    return ()
   where
     name = "nikki.sh"
     src = "bash" </> name
