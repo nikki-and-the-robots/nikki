@@ -172,7 +172,7 @@ Executable core
         , RSA == 1.*
         , aeson == 0.3.*
         , attoparsec == 0.9.*
-        , network >= 2.3.0.5
+        , network == 2.*
         , binary-communicator >= 1.0.2
         , deepseq
         , old-locale
