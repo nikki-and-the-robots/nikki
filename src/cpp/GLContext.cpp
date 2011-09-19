@@ -13,14 +13,3 @@ void GLContext::paintEvent(QPaintEvent* event) {
     painter.setRenderHints(QPainter::SmoothPixmapTransform, true);
     this->drawingCallback(&painter);
 };
-
-
-// the postGUI signal-slot-pair is necessary to execute a command in the
-// GUI thread.
-void GLContext::postGUI(guiAction* action) {
-    emit postGUISignal(action);
-};
-
-void GLContext::postGUISlot(guiAction* action) {
-    action();
-};

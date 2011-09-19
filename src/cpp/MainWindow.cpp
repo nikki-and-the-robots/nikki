@@ -29,8 +29,8 @@ MainWindow::MainWindow(int swapInterval, int width, int height) {
 
     QObject::connect(this->repaintTimer, SIGNAL(timeout()),
                      child, SLOT(update()));
-    QObject::connect(child, SIGNAL(postGUISignal(guiAction*)),
-                     child, SLOT(postGUISlot(guiAction*)));
+    QObject::connect(this, SIGNAL(postGUISignal(guiAction*)),
+                     this, SLOT(postGUISlot(guiAction*)));
     layout->addWidget(child);
 
     resize(width, height);
@@ -94,7 +94,7 @@ extern "C" void setWindowIcon(MainWindow* self, QIcon* icon) {
 };
 
 extern "C" void postGUI(MainWindow* self, guiAction* action) {
-    self->child->postGUI(action);
+    self->postGUI(action);
 };
 
 extern "C" void setRenderingLooped(MainWindow* self, bool looped) {
@@ -152,4 +152,14 @@ extern "C" void setDrawingCallbackMainWindow(MainWindow* ptr, drawingCallbackFun
     ptr->child->drawingCallback = cb;
     // since we have a new drawing callback, we might want to use it ;)
     ptr->child->update();
+};
+
+// the postGUI signal-slot-pair is necessary to execute a command in the
+// GUI thread.
+void MainWindow::postGUI(guiAction* action) {
+    emit postGUISignal(action);
+};
+
+void MainWindow::postGUISlot(guiAction* action) {
+    action();
 };

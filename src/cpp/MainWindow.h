@@ -19,6 +19,10 @@ typedef void (keyCallbackFunction) (int eventCode, QKeyEvent*);
 //  3 - window close event (from the window manager)
 
 
+// type for arbitrary actions to be performed in the GUI thread
+typedef void (guiAction) ();
+
+
 class MainWindow : public QWidget {
 
 Q_OBJECT
@@ -42,6 +46,11 @@ public:
     // timer for repainting
     QTimer* repaintTimer;
 
-
+    // postGUI stuff
+    void postGUI(guiAction* action);
+signals:
+    void postGUISignal(guiAction* action);
+public slots:
+    void postGUISlot(guiAction* action);
 
 };
