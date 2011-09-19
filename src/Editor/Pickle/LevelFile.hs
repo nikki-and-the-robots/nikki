@@ -40,7 +40,7 @@ import StoryMode.Types
 mkStandardLevel :: FilePath -> FilePath -> IO LevelFile
 mkStandardLevel levelDir levelFile = do
     (dir, package, file) <- mkLevelPath levelDir levelFile
-    passThrough print =<< StandardLevel dir package file <$> loadMetaData levelFile
+    StandardLevel dir package file <$> loadMetaData levelFile
 
 mkUserLevel :: FilePath -> FilePath -> IO LevelFile
 mkUserLevel levelDir levelFile = do
