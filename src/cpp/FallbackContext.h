@@ -1,17 +1,15 @@
 
-#include <QtGui>
-#include <QGLWidget>
+
+#include <QWidget>
 
 #include "utils.h"
 
-class GLContext : public QGLWidget {
+
+class FallbackContext : public QWidget {
 
 Q_OBJECT
 
 public:
-
-    GLContext(const QGLFormat& format);
-
     drawingCallbackFunction* drawingCallback;
 
     void paintEvent(QPaintEvent* event);

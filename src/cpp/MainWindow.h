@@ -8,7 +8,9 @@
 #include <QtGui>
 #include <QtOpenGL>
 
+#include "utils.h"
 #include "GLContext.h"
+#include "FallbackContext.h"
 
                                           // nullptr for window close event
 typedef void (keyCallbackFunction) (int eventCode, QKeyEvent*);
@@ -30,10 +32,12 @@ Q_OBJECT
 public:
 
     MainWindow(int swapInterval, int width, int height);
-    GLContext* child;
-
-    // embeds a child widget
-    void setChild(GLContext* child);
+    // can be NULL
+    GLContext* glContext;
+    // can be NULL
+    FallbackContext* fallbackContext;
+    // The one context that was successfully initialized.
+    QWidget* generalContext;
 
     // key callbacks
     keyCallbackFunction* keyCallback;

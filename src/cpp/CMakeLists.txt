@@ -14,9 +14,9 @@ find_package(Qt4 REQUIRED)
 set(QT_USE_QTOPENGL TRUE)
 include(${QT_USE_FILE})
 
-set(CLASS_HEADERS MainWindow.h GLContext.h)
+set(CLASS_HEADERS MainWindow.h GLContext.h FallbackContext.h)
 qt4_wrap_cpp(MOCFILES ${CLASS_HEADERS})
-set(SRCS utils.cpp MainWindow.cpp GLContext.cpp qtwrapper.cpp ${MOCFILES})
+set(SRCS utils.cpp MainWindow.cpp GLContext.cpp FallbackContext.cpp qtwrapper.cpp ${MOCFILES})
 add_library(qtwrapper ${SRCS})
 
 # added for ghci debugging

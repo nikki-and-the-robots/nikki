@@ -13,27 +13,35 @@ MainWindow::MainWindow(int swapInterval, int width, int height) {
     QVBoxLayout* layout = new QVBoxLayout();
     layout->setContentsMargins(QMargins());
     this->setLayout(layout);
+    resize(width, height);
+
+    QObject::connect(this, SIGNAL(postGUISignal(guiAction*)),
+                     this, SLOT(postGUISlot(guiAction*)));
 
     // child widget
     QGLFormat format = QGLFormat::defaultFormat();
     format.setSwapInterval(swapInterval);
+    glContext = new GLContext(format);
+    if (glContext->isValid()) {
+        fallbackContext = 0;
+        generalContext = glContext;
 
-    child = new GLContext(format);
-    if (!(child->isValid())) {
-        error("GL context not valid");
+        glContext->drawingCallback = emptyDrawingCallback;
+    } else {
+        glContext = 0;
+        fallbackContext = new FallbackContext();
+        generalContext = fallbackContext;
+
+        fallbackContext->drawingCallback = emptyDrawingCallback;
     };
-    child->drawingCallback = emptyDrawingCallback;
-    child->setAutoFillBackground(false);
-    child->setCursor(Qt::BlankCursor);
-    child->setFocusPolicy(Qt::StrongFocus);
+
+    generalContext->setAutoFillBackground(false);
+    generalContext->setCursor(Qt::BlankCursor);
+    generalContext->setFocusPolicy(Qt::StrongFocus);
 
     QObject::connect(this->repaintTimer, SIGNAL(timeout()),
-                     child, SLOT(update()));
-    QObject::connect(this, SIGNAL(postGUISignal(guiAction*)),
-                     this, SLOT(postGUISlot(guiAction*)));
-    layout->addWidget(child);
-
-    resize(width, height);
+                     generalContext, SLOT(update()));
+    layout->addWidget(generalContext);
 };
 
 
@@ -85,7 +93,7 @@ extern "C" MainWindow* newMainWindow(int swapInterval, int width, int height) {
 };
 
 extern "C" void destroyMainWindow(MainWindow* ptr) {
-    delete ptr->child;
+    delete ptr->generalContext;
     delete ptr;
 };
 
@@ -106,7 +114,7 @@ extern "C" void setRenderingLooped(MainWindow* self, bool looped) {
 };
 
 extern "C" void updateMainWindow(MainWindow* self) {
-    self->child->update();
+    self->generalContext->update();
 };
 
 
@@ -141,17 +149,23 @@ extern "C" void hideMainWindow(MainWindow* ptr) {
 };
 
 extern "C" bool directRenderingMainWindow(MainWindow* ptr) {
-    return ptr->child->format().directRendering();
+    if (ptr->glContext != 0)
+        return ptr->glContext->format().directRendering();
+    else
+        return false;
 };
 
 extern "C" int paintEngineTypeMainWindow(MainWindow* self) {
-    return self->child->paintEngine()->type();
+    return self->generalContext->paintEngine()->type();
 };
 
 extern "C" void setDrawingCallbackMainWindow(MainWindow* ptr, drawingCallbackFunction cb) {
-    ptr->child->drawingCallback = cb;
+    if (ptr->glContext != 0)
+        ptr->glContext->drawingCallback = cb;
+    else
+        ptr->fallbackContext->drawingCallback = cb;
     // since we have a new drawing callback, we might want to use it ;)
-    ptr->child->update();
+    ptr->generalContext->update();
 };
 
 // the postGUI signal-slot-pair is necessary to execute a command in the
