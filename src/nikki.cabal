@@ -151,7 +151,7 @@ Executable core
         , Hipmunk >= 5.2.0.2
         , sfml-audio >= 0.2.1706.1
         , safe
-        , random
+        , random < 1.0.1
         , StateVar
         , transformers
         , time
