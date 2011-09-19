@@ -13,8 +13,6 @@ Q_OBJECT
 
 public:
 
-    QWidget* mainWindow;
-
     GLContext(const QGLFormat& format);
 
     drawingCallbackFunction* drawingCallback;
