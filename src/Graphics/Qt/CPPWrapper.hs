@@ -188,6 +188,7 @@ foreign import ccall "paintEngineTypeMainWindow" cppPaintEngineTypeMainWindow ::
 
 data PaintEngineType
     = X11
+    | CoreGraphics
     | OpenGL
     | OpenGL2
 
@@ -197,6 +198,7 @@ data PaintEngineType
 int2PaintEngineType :: QtInt -> PaintEngineType
 int2PaintEngineType 0 = X11
 -- int2PaintEngineType 1 = Windows
+int2PaintEngineType 3 = CoreGraphics
 int2PaintEngineType 7 = OpenGL
 int2PaintEngineType 14 = OpenGL2
 int2PaintEngineType x = UnknownPaintEngine x
