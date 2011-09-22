@@ -40,6 +40,7 @@ Executable testsuite
     ghc-options:
         -O2
         -fwarn-unused-imports
+        -threaded
 
     build-depends:
         base >= 4 && < 5
@@ -73,6 +74,14 @@ Executable testsuite
         , deepseq
         , text
         , template
+        , network == 2.*
+        , binary-communicator
+        , download-curl
+        , RSA
+        , LibZip
+        , temporary
+        , time
+        , clocked
 
     extra-libraries:
         qtwrapper, QtOpenGL

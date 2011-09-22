@@ -9,9 +9,12 @@ import Physics.Chipmunk.StickyEdges.Tests
 
 import Sorts.Terminal.Tests
 
+import Top.Main.Tests
+
 
 main :: IO ()
 main = do
+    Top.Main.Tests.tests
     Data.Indexable.Tests.tests
     Sorts.Terminal.Tests.tests
     Utils.Tests.tests
