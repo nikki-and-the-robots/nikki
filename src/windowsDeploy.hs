@@ -111,6 +111,7 @@ deploymentFiles = (
     -- mingw deps
     "mingwm10.dll" :
     "libgcc_s_dw2-1.dll" :
+    "libstdc++-6.dll" :
     [])
     
 -- | copy the needed licenses to the deployment folder
