@@ -8,9 +8,7 @@ import Prelude hiding (catch)
 import Data.Typeable
 
 import Control.Applicative
-import Control.Monad
 import Control.Concurrent
-import Control.Concurrent.MVar
 import Control.Exception
 
 import System.Exit
@@ -29,8 +27,9 @@ tests = do
     quickCheckOnce exitCodeByLogicThread
 
 
-exceptionByLogicThread = assertException (E "exception") $
+exceptionByLogicThread = assertException (E "exception") $ do
     forkThreads render logic
+    return ()
   where
     render mvar = do
         putMVar mvar ()
@@ -44,8 +43,9 @@ data E = E String
   deriving (Show, Eq, Typeable)
 instance Exception E
 
-exitCodeByLogicThread = assertException (ExitFailure 42) $
+exitCodeByLogicThread = assertException (ExitFailure 42) $ do
     forkThreads render logic
+    return ()
   where
     render mvar = do
         putMVar mvar ()
@@ -71,3 +71,4 @@ assertException e cmd = morallyDubiousIOProperty $ do
     handle thrown = return $
         printTestCase (show e ++ "\n/=\n" ++ show thrown) $
         (thrown == e)
+

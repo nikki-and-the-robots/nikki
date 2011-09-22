@@ -83,11 +83,33 @@ Executable testsuite
         , time
         , clocked
 
-    extra-libraries:
-        qtwrapper, QtOpenGL
-    extra-lib-dirs:
-        ../cpp/dist
 
+    if os(linux)
+        extra-libraries:
+            qtwrapper, QtOpenGL, QtGui
+        extra-lib-dirs:
+            ../cpp/dist
+
+    -- * windows linking :(
+    if os(mingw32)
+        ld-options:
+            -- omit the console on windows. You can't use stdout without causing errors then...
+            -mwindows
+        ghc-options:
+            -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
+        extra-libraries:
+            qtwrapper, QtOpenGL4, QtGui4, QtCore4, stdc++
+        extra-lib-dirs:
+            ../cpp/dist/,
+            C:/Qt/2010.02.1/qt/lib/
+
+    if os(darwin)
+        extra-libraries:
+            qtwrapper
+        extra-lib-dirs:
+            ../cpp/dist/
+        frameworks:
+            QtOpenGL, QtGui, QtCore
 
 Executable searchCrashes
     hs-source-dirs: ., .., ../dist/build/autogen
