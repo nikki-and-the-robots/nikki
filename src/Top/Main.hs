@@ -19,6 +19,7 @@ module Top.Main where
 
 
 import Data.List as List
+import Data.Typeable
 
 import Text.Logging
 
@@ -28,6 +29,7 @@ import Control.Monad.Reader
 import Control.Exception
 
 import System.FilePath
+import System.Exit
 
 import Graphics.Qt
 
@@ -42,24 +44,32 @@ import Top.Menu
 main :: IO ()
 main = do
     configuration <- loadConfiguration
-    forkThreads (renderThread configuration) (logicThread configuration)
+    exitWith =<< forkThreads (renderThread configuration) (logicThread configuration)
 
 -- | Handles forking of the two main threads.
 -- Creates an MVar for the one thread to initialize.
 -- If one threads raises an exception, the other one will be killed.
-forkThreads :: (MVar a -> IO ()) -> (a -> IO ()) -> IO ()
+forkThreads :: (MVar a -> IO ()) -> (a -> IO ()) -> IO ExitCode
 forkThreads renderThread logicThread = do
     aRef <- newEmptyMVar
+    logicExceptionRef <- newEmptyMVar
     waitRef <- newEmptyMVar
     renderTID <- myThreadId
     logicTID <- forkOS $ flip finally (putMVar waitRef ()) $ do
         a <- takeMVar aRef
-        logicThread a `Control.Exception.catch` handleLogicException renderTID
+        (logicThread a >> noException logicExceptionRef)
+             `Control.Exception.catch` handleLogicException renderTID logicExceptionRef
     renderThread aRef
     takeMVar waitRef
+    takeMVar logicExceptionRef
   where
-    handleLogicException :: ThreadId -> SomeException -> IO ()
-    handleLogicException tid e = throwTo tid e
+    noException logicExceptionRef = putMVar logicExceptionRef ExitSuccess
+    handleLogicException :: ThreadId -> MVar ExitCode -> SomeException -> IO ()
+    handleLogicException tid logicExceptionRef (SomeException e) = do
+        case cast e :: Maybe ExitCode of
+            Nothing -> putMVar logicExceptionRef (ExitFailure 1)
+            Just exitCode -> putMVar logicExceptionRef exitCode
+        throwTo tid e
 
 
 -- | Rendering thread.
