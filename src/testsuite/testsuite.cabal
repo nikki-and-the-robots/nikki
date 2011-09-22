@@ -71,6 +71,8 @@ Executable testsuite
         , uniplate
         , parsec == 3.*
         , deepseq
+        , text
+        , template
 
     extra-libraries:
         qtwrapper, QtOpenGL
