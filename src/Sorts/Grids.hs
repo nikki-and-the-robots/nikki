@@ -91,7 +91,6 @@ instance Sort GSort Grid where
             translate ptr p
             renderPixmapSimple ptr pix
             translate ptr (negateAbelian p)
---         fillRect ptr zero (size sort) (alpha ^= 0.5 $ red)
 
 
     initialize app _ mSpace sort ep Nothing _ = do
@@ -112,8 +111,6 @@ renderGrid sort offset position windowSize =
         positions = calculateGridRenderPositions windowSize
                         (gridType sort) (size sort) (position +~ offset)
     in (flip map positions $ \ p -> RenderPixmap pix (position +~ p) Nothing)
---         +: RenderCommand position
---             (\ ptr -> fillRect ptr zero (size sort) (alpha ^= 0.5 $ red))
 
 
 -- | calculates where to render the grid, so that every space of the screen is filled
