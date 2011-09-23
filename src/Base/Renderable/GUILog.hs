@@ -1,5 +1,5 @@
 
-module Base.Renderable.GUILog (mkGuiLog) where
+module Base.Renderable.GUILog (guiLog) where
 
 
 import Control.Concurrent.MVar
@@ -17,6 +17,12 @@ import Base.Renderable.Layered
 import Base.Renderable.VBox
 import Base.Renderable.Centered
 
+
+guiLog :: Application -> ((Prose -> IO ()) -> M AppState) -> AppState
+guiLog app inner = NoGUIAppState $ io $ do
+    (renderable, logCommand) <- mkGuiLog app
+    return $ AppState renderable $
+        (inner logCommand)
 
 -- | Initializes logging in the GUI.
 -- Returns a Renderable and a logging command

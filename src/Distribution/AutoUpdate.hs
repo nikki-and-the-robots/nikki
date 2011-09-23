@@ -68,28 +68,26 @@ isDeployed = do
 
 -- | doing the auto update
 autoUpdate :: Application -> AppState -> AppState
-autoUpdate app follower = NoGUIAppState $ io $ do
-    (renderable, logCommand) <- mkGuiLog app
-    return $ AppState renderable $ do
-        repoString <- gets update_repo
-        mDeployed <- io $ isDeployed
-        case mDeployed of
-            Nothing -> return $ message app [p "not deployed: updating disabled"] follower
-            Just path@(DeployPath dp) -> do
-                io $ logCommand (p "updating...")
-                result <- io $ attemptUpdate app logCommand (Repo repoString) path
-                case result of
-                    (Left errorMessages) ->
-                        return $ message app (map pv errorMessages) follower
-                    (Right (Just version)) -> do
-                        return $ message app
-                            (p "update complete" :
-                             p "new version: " +> pVerbatim (showVersion version) :
-                             p "restarting..." :
-                             []) $ NoGUIAppState $ io $ do
-                                exitWith $ ExitFailure 143
-                    (Right Nothing) ->
-                        return $ message app [p "no updates available"] follower
+autoUpdate app follower = guiLog app $ \ logCommand -> do
+    repoString <- gets update_repo
+    mDeployed <- io $ isDeployed
+    case mDeployed of
+        Nothing -> return $ message app [p "not deployed: updating disabled"] follower
+        Just path@(DeployPath dp) -> do
+            io $ logCommand (p "updating...")
+            result <- io $ attemptUpdate app logCommand (Repo repoString) path
+            case result of
+                (Left errorMessages) ->
+                    return $ message app (map pv errorMessages) follower
+                (Right (Just version)) -> do
+                    return $ message app
+                        (p "update complete" :
+                            p "new version: " +> pVerbatim (showVersion version) :
+                            p "restarting..." :
+                            []) $ NoGUIAppState $ io $ do
+                            exitWith $ ExitFailure 143
+                (Right Nothing) ->
+                    return $ message app [p "no updates available"] follower
 
 -- | Looks for updates on the server.
 -- If found, updates the program.
