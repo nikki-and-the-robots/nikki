@@ -24,13 +24,13 @@ type StoneDescription = (SortId, [String], Offset Double)
 stones :: [StoneDescription]
 stones =
     (SortId "deathstones/lasers/horizontal",
-     ("robots" </> "laser" </> "laser-horizontal-standard_00") :
-        ("robots" </> "laser" </> "laser-horizontal-standard_01") :
+     ("objects" </> "laser-horizontal_00") :
+        ("objects" </> "laser-horizontal_01") :
         [],
      Position 1 17) :
     (SortId "deathstones/lasers/vertical",
-     ("robots" </> "laser" </> "laser-vertical-standard_00") :
-        ("robots" </> "laser" </> "laser-vertical-standard_01") :
+     ("objects" </> "laser-vertical_00") :
+        ("objects" </> "laser-vertical_01") :
         [],
      Position 17 1) :
     []
