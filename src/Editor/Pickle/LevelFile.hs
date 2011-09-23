@@ -53,13 +53,17 @@ mkEpisodeLevel dir_ file_ = do
     m <- loadMetaData (dir </> package </> file)
     return $ \ e -> EpisodeLevel e dir package file m
 
-mkLevelPath levelDir_ levelFile_ = do
+-- | PRE: levelDir_ `isPrefixOf` levelFile
+mkLevelPath levelDir_ levelFile = do
     dir <- canonicalizePath levelDir_
-    levelFile <- canonicalizePath levelFile_
-    let withoutDir = dropWhile (`elem` pathSeparators) $ dropPrefix dir levelFile
-        package = dropFileName withoutDir
-        file = takeFileName withoutDir
-    return (dir, package, file)
+    let withoutDirM = fmap (dropWhile (`elem` pathSeparators)) $
+            dropPrefixMay levelDir_ levelFile
+    return $ case withoutDirM of
+        Nothing -> error ("mkLevelPath: " ++ show (levelDir_, levelFile))
+        Just withoutDir ->
+            let package = dropFileName withoutDir
+                file = takeFileName withoutDir
+            in (dir, package, file)
 
 mkUnknownLevel :: FilePath -> IO LevelFile
 mkUnknownLevel = return . UnknownLevelType
