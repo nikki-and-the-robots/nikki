@@ -61,7 +61,10 @@ sorts =
                        "cannonball-standard_01" :
                        "cannonball-standard_02" :
                        "cannonball-standard_03" :
-                       [])))
+                       [])) <*>
+        (loadSound ("game" </> "cannon_shot") 8) <*>
+        (loadSound ("game" </> "cannonball_disappear") 8)
+      )
   where
     loadPix :: String -> RM Pixmap
     loadPix name = do
@@ -72,7 +75,10 @@ data CannonSort = CannonSort {
     basePix :: Pixmap,
     barrelPix :: Pixmap,
     robotEyes :: RobotEyesPixmaps,
-    ballPixmaps :: [Pixmap]
+    ballPixmaps :: [Pixmap],
+
+    shootSound :: PolySound,
+    disappearSound :: PolySound
   }
     deriving (Show, Typeable)
 
@@ -143,10 +149,11 @@ cannonballOffset =
 
 instance Sort CannonSort Cannon where
     sortId _ = SortId "robots/cannon"
-    freeSort (CannonSort a b c d) =
+    freeSort (CannonSort a b c d e f) =
         fmapM_ freePixmap [a, b] >>
         freeRobotEyesPixmaps c >>
-        fmapM_ freePixmap d
+        fmapM_ freePixmap d >>
+        fmapM_ freePolySound [e, f]
     size _ = robotSize
     renderIconified sort ptr =
         renderPixmapSimple ptr (basePix sort)
@@ -170,17 +177,17 @@ instance Sort CannonSort Cannon where
 
     getControlledChipmunk _ c = base c -- fromMaybe (base c) (c ^. followedBall)
 
-    updateNoSceneChange _ _ space _ now _ (False, _) =
+    updateNoSceneChange sort _ space _ now _ (False, _) =
         return . (controlled ^= False) >=>
-        destroyCannonballs space now >=>
+        destroyCannonballs space now sort >=>
 --         passThrough debug >=>
         return
     updateNoSceneChange sort config space scene now contacts (True, cd) =
         return . (controlled ^= True) >=>
         return . updateAngleState config cd >=>
         passThrough setAngle >=>
-        destroyCannonballs space now >=>
-        shootCannonball space config now cd >=>
+        destroyCannonballs space now sort >=>
+        shootCannonball space config now cd sort >=>
 --         passThrough debug >=>
         return
 
@@ -329,27 +336,30 @@ robotEyesState now cannon = case (cannon ^. controlled, cannon ^. shotTime) of
 -- * cannon balls
 
 -- | Removes cannonballs after their lifetime exceeded.
-destroyCannonballs :: Space -> Seconds -> Cannon -> IO Cannon
-destroyCannonballs space now =
+destroyCannonballs :: Space -> Seconds -> CannonSort -> Cannon -> IO Cannon
+destroyCannonballs space now sort =
     cannonballs ^^: (\ bs -> catMaybes <$> mapM inner bs)
   where
     inner :: Cannonball -> IO (Maybe Cannonball)
     inner cb@(time, chip) =
         if now - time > cannonballLifeSpan then do
             -- cannonball gets removed
+            playDisappearSound sort
             removeChipmunk chip
             return Nothing
           else
             return $ Just cb
 
-shootCannonball :: Space -> Controls -> Seconds -> ControlData -> Cannon -> IO Cannon
-shootCannonball space controls now cd cannon | isRobotActionPressed controls cd = do
+shootCannonball :: Space -> Controls -> Seconds -> ControlData
+    -> CannonSort -> Cannon -> IO Cannon
+shootCannonball space controls now cd sort cannon | isRobotActionPressed controls cd = do
+    playShootSound sort
     ball <- mkCannonball space cannon
     return $
         shotTime ^= Just now $
         cannonballs ^: ((now, ball) :) $
         cannon
-shootCannonball _ _ _ _ c = return c
+shootCannonball _ _ _ _ _ c = return c
 
 mkCannonball :: Space -> Cannon -> IO Chipmunk
 mkCannonball space cannon = do
@@ -391,3 +401,12 @@ mkCannonballRenderPixmap sort (_, chip) = do
 specAngleRange = tau / specAnimationFrameNumber
 
 specAnimationFrameNumber = 4
+
+
+-- * Sounds
+
+playShootSound :: CannonSort -> IO ()
+playShootSound = triggerSound . shootSound
+
+playDisappearSound :: CannonSort -> IO ()
+playDisappearSound = triggerSound . disappearSound

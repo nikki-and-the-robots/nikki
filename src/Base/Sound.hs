@@ -1,4 +1,6 @@
 
+-- | (Re-)exports functions to play sounds.
+
 module Base.Sound (
     loadSound,
     withApplicationSounds,
