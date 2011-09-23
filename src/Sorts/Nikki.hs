@@ -129,8 +129,8 @@ instance Sort NSort Nikki where
 
     renderObject _ _ nikki sort _ _ now = do
         let pixmap = pickPixmap now sort nikki
-        pos <- fst <$> getRenderPositionAndAngle (chipmunk nikki)
-        return [RenderPixmap pixmap pos Nothing]
+        (pos, angle) <- getRenderPositionAndAngle (chipmunk nikki)
+        return [RenderPixmap pixmap pos (Just angle)]
 
 
 pickPixmap :: Seconds -> NSort -> Nikki -> Pixmap

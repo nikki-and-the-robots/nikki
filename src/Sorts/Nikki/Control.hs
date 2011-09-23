@@ -36,6 +36,10 @@ control :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO ()
 control _ _ (False, _) _ nikki = do
     setNikkiSurfaceVelocity nikki zero
     resetForces $ body $ chipmunk nikki
+    case action $ state nikki of
+        NikkiLevelFinished Failed ->
+            moment (body (chipmunk nikki)) $= nikkiDeadMoment
+        _ -> return ()
 control now contacts (True, cd) nsort nikki = do
     setNikkiSurfaceVelocity nikki (feetVelocity $ state $ nikki)
     let chipmunk_ = chipmunk nikki

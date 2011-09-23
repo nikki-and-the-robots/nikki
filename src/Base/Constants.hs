@@ -13,6 +13,9 @@ import Graphics.Qt
 fromUber :: Num n => n -> n
 fromUber = (* 4)
 
+fromSquaredUber :: Num n => n -> n
+fromSquaredUber = (* 16)
+
 -- | converts pixels to uberpixels
 toUber :: Fractional n => n -> n
 toUber = (/ 4)

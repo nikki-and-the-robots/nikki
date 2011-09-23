@@ -7,7 +7,9 @@ import Prelude hiding (lookup)
 
 import Data.Map (Map, fromList)
 import Data.Directions
+import Data.Abelian
 
+import Physics.Hipmunk
 import Physics.Chipmunk
 
 import Graphics.Qt
@@ -39,6 +41,13 @@ nikkiNumberOfUberPixels = 256
 nikkiMass :: Mass
 nikkiMass =
     nikkiMaterialMass * nikkiNumberOfUberPixels
+
+-- | Nikki's moment of inertia, when dead
+nikkiDeadMoment :: Moment
+nikkiDeadMoment =
+    momentForShape nikkiMass (Circle fakeRadius) zero
+  where
+    fakeRadius = sqrt (fromSquaredUber nikkiNumberOfUberPixels / pi)
 
 
 -- | friction for nikkis feet. The higher the friction,
