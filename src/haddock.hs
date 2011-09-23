@@ -12,6 +12,7 @@ import System.Process
 import System.Exit
 
 
+topModules :: [String]
 topModules =
     words
     ("dist/build/autogen/Paths_nikki " ++
@@ -20,7 +21,6 @@ topModules =
 outputDir = "dist/doc/code"
 
 main = do
-    trySystem "./linuxCompile.sh"
     srcFiles <- concat <$> mapM lookupModules topModules
     mapM_ hsColour srcFiles
     haddock
