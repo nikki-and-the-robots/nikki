@@ -57,7 +57,8 @@ downloadNewLevels :: Application -> AppState -> AppState
 downloadNewLevels app follower =
     appState (busyMessage $ p "downloading levels...") $ io $ networkTry app follower $ do
         dir <- getDownloadedLevelsPath
-        (LevelList levelList) <- askLevelServer GetLevelList
+        -- todo: what in case of an error
+        Right (LevelList levelList) <- askLevelServer GetLevelList
         mapM_ (down dir) levelList
         return follower
   where
@@ -106,12 +107,13 @@ justUploadLevel app follower file =
         levelData <- readFile $ getAbsoluteFilePath file
         response <- askLevelServer $ UploadLevel metadata levelData
         let msgs = case response of
-                UploadSucceeded -> [p "Level uploaded!"]
-                UploadNameClash ->
+                Right UploadSucceeded -> [p "Level uploaded!"]
+                Right UploadNameClash ->
                     (p "There is already a level by that name." :
                     p "Upload failed!" :
                     [])
-                _ -> [p "Unexpected server response."]
+                Right _ -> [p "Unexpected server response."]
+                Left err -> [p "server error: ", pv err]
         return $ message app msgs follower
 
 askLevelServer = askServer levelServerHost levelServerPort

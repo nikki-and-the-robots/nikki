@@ -63,7 +63,7 @@ loginAndInstall app storyModeMenu email key =
         logCommand (p "asking server for authorization")
         answer <- Client.askForStoryModeZip email key
         case answer of
-            Confirmed zipUrl version -> do
+            Right (Confirmed zipUrl version) -> do
                 logCommand $
                     substitute [("version", showVersion version)] $
                     p "downloading story mode ($version)"

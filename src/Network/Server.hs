@@ -1,10 +1,12 @@
 {-# language ScopedTypeVariables #-}
 
-module LevelServer.Server where
+module Network.Server where
+
 
 import Prelude hiding (catch)
 
 import Data.Version
+import Data.Binary
 import Data.BinaryCom
 import Data.Time
 import Data.Typeable
@@ -18,16 +20,15 @@ import System.Timeout
 
 import Network
 import Network.Fancy (streamServer, sleepForever, serverSpec, ServerSpec(..), Address(..))
-
-import LevelServer.Types
-import LevelServer.Configuration
 import Network.Client
 
+import Utils
 
-spec = serverSpec{address = IP "0.0.0.0" levelServerPort}
 
-runServer :: (ClientToServer -> IO ServerToClient) -> IO ()
-runServer serve = do
+runServer :: forall clientToServer serverToClient .
+    Protocol clientToServer serverToClient =>
+    ServerSpec -> (clientToServer -> IO serverToClient) -> IO ()
+runServer spec serve = do
     _ <- streamServer spec inner
     sleepForever
   where
@@ -35,14 +36,18 @@ runServer serve = do
         bc <- binaryCom handle
         catchProtocolErrorsOnServer bc $ do
             clientVersion :: Version <- receiveTO bc
-            if clientVersion < protocolVersion then do
+            let protocolVersion_ = protocolVersion
+                    (undefined :: clientToServer)
+                    (undefined :: serverToClient)
+            if clientVersion < protocolVersion_ then do
                 serverLog ("client-version too old: " ++ show clientVersion)
-                logAndSend bc $ Error ["Client version too old,", "please update your game."]
+                logAndSendError bc $ "Client version too old,\nplease update your game."
               else do
-                input :: ClientToServer <- receiveTO bc
+                input :: clientToServer <- receiveTO bc
                 serverLog $ take maxLogLength $ show input
-                logAndSend bc =<< serve input
+                logAndSendSuccess bc =<< serve input
 
+catchProtocolErrorsOnServer :: BinaryCom -> IO () -> IO ()
 catchProtocolErrorsOnServer bc a =
     flip catch handler $
     flip catch timeout $
@@ -50,7 +55,7 @@ catchProtocolErrorsOnServer bc a =
   where
     handler :: SomeException -> IO ()
     handler (SomeException e) = do
-        logAndSend bc $ Error [show e]
+        logAndSendError bc (show e)
 
     timeout :: Timeout -> IO ()
     timeout Timeout = do
@@ -62,7 +67,13 @@ catchProtocolErrorsOnServer bc a =
 -- | maximal number of characters in one log message
 maxLogLength = 120
 
+logAndSendError :: BinaryCom -> String -> IO ()
+logAndSendError bc err = logAndSend bc (Left err :: Either String ())
 
+logAndSendSuccess :: (Show a, Binary a) => BinaryCom -> a -> IO ()
+logAndSendSuccess bc a = logAndSend bc (Right a)
+
+logAndSend :: (Show a, Binary a) => BinaryCom -> Either String a -> IO ()
 logAndSend bc x = do
     serverLog $ take maxLogLength $ show x
     send bc x

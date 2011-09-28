@@ -10,7 +10,6 @@ module StoryMode.Client (
 
 
 import Data.Version
-import Data.BinaryCom
 import Data.Binary
 
 import Text.Email.Validate
@@ -18,8 +17,6 @@ import Text.Email.Validate
 import Control.DeepSeq
 
 import Network.Client
-
-import Utils
 
 
 -- * configuration
@@ -33,11 +30,21 @@ storyModeServerPort = 8144
 
 data ClientToServer
     = StoryModeDownload EmailAddress String
+  deriving (Show)
 
 instance Binary ClientToServer
 
+instance NFData ClientToServer where
+    rnf (StoryModeDownload a b) =
+        rnf a `seq` rnf b
+
+instance NFData EmailAddress where
+    rnf (EmailAddress a b) =
+        rnf a `seq` rnf b
+
 data ServerToClient
     = Confirmed String Version
+  deriving (Show)
 
 instance Binary ServerToClient where
 
@@ -50,7 +57,7 @@ instance Protocol ClientToServer ServerToClient where
 
 -- * client side
 
-askForStoryModeZip :: EmailAddress -> String -> IO ServerToClient
+askForStoryModeZip :: EmailAddress -> String -> IO (Either String ServerToClient)
 askForStoryModeZip email key =
     askStoryModeServer (StoryModeDownload email key)
 

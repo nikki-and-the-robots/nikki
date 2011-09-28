@@ -9,6 +9,9 @@ import System.Directory
 import System.FilePath
 
 import Network.URI
+import Network.Fancy
+import Network.Client
+import Network.Server
 
 import Utils
 import Utils.Scripting
@@ -17,15 +20,15 @@ import Base.Types.LevelMetaData
 
 import LevelServer.Types
 import LevelServer.Configuration
-import Network.Client
-import LevelServer.Server
 
+
+spec = serverSpec{address = IP "0.0.0.0" levelServerPort}
 
 main = do
     hSetBuffering stdout NoBuffering
-    putStrLn ("listening on port " ++ show levelServerPort)
     options <- cmdArgs defaultOptions
-    runServer $ serve options
+    putStrLn ("listening on port " ++ show levelServerPort)
+    runServer spec $ serve options
 
 serve :: ServerOptions -> ClientToServer -> IO ServerToClient
 serve options GetLevelList = do

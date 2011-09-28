@@ -20,8 +20,10 @@ import System.Timeout
 import Network
 
 
-class (Binary a, Binary b, NFData b) => Protocol a b where
-    protocolVersion :: a -> b -> Version -- phantom values
+class (Show toServer, Binary toServer, NFData toServer,
+       Show fromServer, Binary fromServer, NFData fromServer) =>
+    Protocol toServer fromServer where
+        protocolVersion :: toServer -> fromServer -> Version -- phantom values
 
 instance Binary Version where
     put (Version a b) = putWord8 143 >> put a >> put b
@@ -34,7 +36,7 @@ instance NFData Version where
 
 
 -- | Can throw IOException and ErrorCall
-askServer :: forall a b . Protocol a b => String -> PortNumber -> a -> IO b
+askServer :: forall a b . Protocol a b => String -> PortNumber -> a -> IO (Either String b)
 askServer host port msg = do
     h <- connectTo host (PortNumber port)
     bc <- binaryCom h

@@ -37,30 +37,26 @@ instance NFData ClientToServer where
 
 
 data ServerToClient
-    = Error [String]
-    | LevelList [String]
+    = LevelList [String]
     | UploadSucceeded
     | UploadNameClash
   deriving (Show)
 
 instance Binary ServerToClient where
-    put (Error l) = putWord8 0 >> put l
-    put (LevelList l) = putWord8 1 >> put l
-    put UploadSucceeded = putWord8 2
-    put UploadNameClash = putWord8 3
+    put (LevelList l) = putWord8 0 >> put l
+    put UploadSucceeded = putWord8 1
+    put UploadNameClash = putWord8 2
     get = do
         c <- getWord8
         case c of
-            0 -> Error <$> get
-            1 -> LevelList <$> get
-            2 -> return UploadSucceeded
-            3 -> return UploadNameClash
+            0 -> LevelList <$> get
+            1 -> return UploadSucceeded
+            2 -> return UploadNameClash
 
 instance NFData ServerToClient where
-    rnf (Error a) = rnf a
     rnf (LevelList a) = rnf a
     rnf UploadSucceeded = ()
     rnf UploadNameClash = ()
 
 instance Protocol ClientToServer ServerToClient where
-    protocolVersion _ _ = Version [0, 1] []
+    protocolVersion _ _ = Version [0, 2] []
