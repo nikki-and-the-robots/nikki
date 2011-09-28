@@ -2,12 +2,18 @@
 module StoryMode.Purchasing where
 
 
+import Utils
+
 import Base
 
 import StoryMode.Configuration
 
 
 suggestPurchase :: Application -> Parent -> Int -> AppState
+storyMode app parent = \ ps -> NoGUIAppState $ do
+    file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
+    prose <- io $ pFile file
+    return $ scrollingAppState app prose parent
 suggestPurchase app parent =
     menuAppState app
         (NormalMenu (p "story mode") (Just $ p "the story mode is not installed"))
