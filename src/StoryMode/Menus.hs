@@ -22,8 +22,11 @@ storyMode :: Application -> Play -> Parent -> AppState
 storyMode app play parent = NoGUIAppState $ do
     mEpisodes <- io $ loadEpisodes
     case mEpisodes of
-        Nothing -> return $ suggestPurchase app parent 0
+        Nothing -> return $ suggestPurchase app this parent 0
         Just episodes -> return $ mkEpisodesMenu app play parent episodes 0
+  where
+    this :: AppState
+    this = storyMode app play parent
 
 mkEpisodesMenu :: Application -> Play -> Parent -> [Episode LevelFile] -> Int -> AppState
 mkEpisodesMenu app play parent episodes =

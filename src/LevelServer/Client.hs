@@ -15,6 +15,8 @@ import System.FilePath
 import System.Directory
 
 import Network.Curl.Download.Lazy
+import Network.Client
+import Network.Client.Exceptions
 
 import Utils
 
@@ -24,8 +26,6 @@ import Editor.Pickle.LevelFile
 
 import LevelServer.Types
 import LevelServer.Configuration
-import LevelServer.Networking
-import LevelServer.Client.Exceptions
 
 
 downloadedLevels :: Application -> Play -> Int -> Parent -> AppState
@@ -57,7 +57,7 @@ downloadNewLevels :: Application -> AppState -> AppState
 downloadNewLevels app follower =
     appState (busyMessage $ p "downloading levels...") $ io $ networkTry app follower $ do
         dir <- getDownloadedLevelsPath
-        (LevelList levelList) <- askServer GetLevelList
+        (LevelList levelList) <- askLevelServer GetLevelList
         mapM_ (down dir) levelList
         return follower
   where
@@ -104,7 +104,7 @@ justUploadLevel app follower file =
     appState (busyMessage $ p "uploading...") $ io $ networkTry app follower $ do
         let metadata = levelMetaData file
         levelData <- readFile $ getAbsoluteFilePath file
-        response <- askServer $ UploadLevel metadata levelData
+        response <- askLevelServer $ UploadLevel metadata levelData
         let msgs = case response of
                 UploadSucceeded -> [p "Level uploaded!"]
                 UploadNameClash ->
@@ -113,3 +113,5 @@ justUploadLevel app follower file =
                     [])
                 _ -> [p "Unexpected server response."]
         return $ message app msgs follower
+
+askLevelServer = askServer levelServerHost levelServerPort

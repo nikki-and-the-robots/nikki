@@ -3,6 +3,8 @@
 module Editor.Menu (editLevel) where
 
 
+import Safe
+
 import Data.SelectTree
 import Data.Indexable (indexA)
 
@@ -249,8 +251,8 @@ editLayers app mvar scene ps parent =
 changeLayerDistance :: Application -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Parent -> AppState
 changeLayerDistance app mvar scene parent =
-    askStringRead app parent (p "x distance") $ \ x ->
-    askStringRead app parent (p "y distance") $ \ y ->
+    askStringParse app parent (p "x distance") readMay $ \ x ->
+    askStringParse app parent (p "y distance") readMay $ \ y ->
         editorLoop app mvar
             (editorObjects .> layerA (selectedLayer scene) ^:
                 (setYDistance y . setXDistance x) $ scene)

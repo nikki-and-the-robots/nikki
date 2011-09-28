@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables, DeriveDataTypeable #-}
 
-module LevelServer.Client.Exceptions where
+module Network.Client.Exceptions where
 
 
 import Prelude hiding (catch)
@@ -13,7 +13,7 @@ import Control.Exception
 
 import Base
 
-import LevelServer.Networking
+import Network.Client
 
 
 networkTry :: Application -> Parent -> IO AppState -> IO AppState

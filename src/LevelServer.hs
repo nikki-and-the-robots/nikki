@@ -17,7 +17,7 @@ import Base.Types.LevelMetaData
 
 import LevelServer.Types
 import LevelServer.Configuration
-import LevelServer.Networking
+import Network.Client
 import LevelServer.Server
 
 

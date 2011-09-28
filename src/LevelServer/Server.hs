@@ -21,7 +21,7 @@ import Network.Fancy (streamServer, sleepForever, serverSpec, ServerSpec(..), Ad
 
 import LevelServer.Types
 import LevelServer.Configuration
-import LevelServer.Networking
+import Network.Client
 
 
 spec = serverSpec{address = IP "0.0.0.0" levelServerPort}

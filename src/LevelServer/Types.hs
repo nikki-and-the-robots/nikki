@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables #-}
+{-# language ScopedTypeVariables, MultiParamTypeClasses #-}
 
 module LevelServer.Types where
 
@@ -9,20 +9,9 @@ import Data.Version
 import Control.Applicative
 import Control.DeepSeq
 
+import Network.Client
+
 import Base.Types.LevelMetaData
-
-
-protocolVersion :: Version =
-    Version [0, 1] []
-
-instance Binary Version where
-    put (Version a b) = putWord8 143 >> put a >> put b
-    get = do
-        143 <- getWord8
-        Version <$> get <*> get
-
-instance NFData Version where
-    rnf (Version a b) = rnf a `seq` rnf b
 
 
 data ClientToServer
@@ -72,3 +61,6 @@ instance NFData ServerToClient where
     rnf (LevelList a) = rnf a
     rnf UploadSucceeded = ()
     rnf UploadNameClash = ()
+
+instance Protocol ClientToServer ServerToClient where
+    protocolVersion _ _ = Version [0, 1] []

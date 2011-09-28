@@ -1,7 +1,7 @@
 
 module Base.Renderable.AskString (
     askString,
-    askStringRead,
+    askStringParse,
     mkAskStringWidget,
   ) where
 
@@ -56,12 +56,14 @@ mkAskStringWidget question answer =
         pVerbatim answer :
         []
 
--- | Like askString, but reads (parses with Read) the given String. Asks again, if not parsable.
-askStringRead :: Read a => Application -> AppState -> Prose -> (a -> AppState) -> AppState
-askStringRead app parent question follower =
+-- | Like askString, but reads the given String with the given function.
+-- Asks again, if not parsable.
+askStringParse :: Application -> AppState -> Prose
+    -> (String -> Maybe a) -> (a -> AppState) -> AppState
+askStringParse app parent question parse follower =
     askString app parent question wrapper
   where
     wrapper :: String -> AppState
-    wrapper s = case readMay s of
-        Nothing -> askStringRead app parent question follower -- try again
+    wrapper s = case parse s of
+        Nothing -> askStringParse app parent question parse follower -- try again
         Just r -> follower r

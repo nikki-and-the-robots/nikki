@@ -16,6 +16,7 @@ module Base.Paths (
     getStoryModeDataFileName,
     getStoryModeDataFiles,
     getStoryModeLevelsPath,
+    createStoryModePath,
   ) where
 
 
@@ -168,3 +169,9 @@ getStoryModePath = do
     dir <- getAppUserDataDirectory "nikki-story-mode"
     exists <- doesDirectoryExist dir
     return $ if exists then Just dir else Nothing
+
+createStoryModePath :: IO FilePath
+createStoryModePath = do
+    dir <- getAppUserDataDirectory "nikki-story-mode"
+    createDirectory dir
+    return dir

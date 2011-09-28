@@ -178,6 +178,7 @@ Executable core
         , old-locale
         , text
         , template == 0.2.*
+        , email-validate
 
 
     if os(linux)
