@@ -5,6 +5,7 @@ module Utils (
     (<$>),
     (<*>),
     (<|>),
+    (*>),
     pure,
     (>>>),
     (>=>),
@@ -54,7 +55,7 @@ import qualified Data.Attoparsec.Lazy
 import Text.Printf
 import Text.Logging
 
-import Control.Applicative ((<$>), (<|>), (<*>), pure, Alternative(..), Applicative)
+import Control.Applicative ((<$>), (<|>), (<*>), (*>), pure, Alternative(..), Applicative)
 import "mtl" Control.Monad.State hiding (forM_)
 import "transformers" Control.Monad.Trans.Error (ErrorList(listMsg)) -- Monad (Either e)
 import Control.Arrow ((>>>))

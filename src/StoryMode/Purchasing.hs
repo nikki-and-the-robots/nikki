@@ -63,7 +63,15 @@ loginAndInstall app storyModeMenu email key =
         logCommand (p "asking server for authorization")
         answer <- Client.askForStoryModeZip email key
         case answer of
-            Right (Confirmed zipUrl version) -> do
+            Left err ->
+                return $ message app text storyModeMenu
+              where
+                text = p "SERVER-ERROR:" : fmap pv (lines err)
+            Right (Unauthorized err) ->
+                return $ message app text storyModeMenu
+              where
+                text = p "UNAUTHORIZED REQUEST:" : fmap pv (lines err)
+            Right (Authorized zipUrl version) -> do
                 logCommand $
                     substitute [("version", showVersion version)] $
                     p "downloading story mode ($version)"

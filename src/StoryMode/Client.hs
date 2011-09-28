@@ -4,6 +4,8 @@
 -- client-server-communication for the story-mode.
 
 module StoryMode.Client (
+    storyModeServerPort,
+    ClientToServer(..),
     ServerToClient(..),
     askForStoryModeZip,
   ) where
@@ -14,6 +16,7 @@ import Data.Binary
 
 import Text.Email.Validate
 
+import Control.Applicative
 import Control.DeepSeq
 
 import Network.Client
@@ -23,6 +26,7 @@ import Network.Client
 
 storyModeServerHost = "joyridelabs.de"
 
+storyModeServerPort :: Num n => n
 storyModeServerPort = 8144
 
 
@@ -32,7 +36,21 @@ data ClientToServer
     = StoryModeDownload EmailAddress String
   deriving (Show)
 
-instance Binary ClientToServer
+instance Binary ClientToServer where
+    put (StoryModeDownload a b) =
+        putWord8 0 *> put a *> put b
+    get = do
+        c <- getWord8
+        case c of
+            0 -> StoryModeDownload <$> get <*> get
+
+instance Binary EmailAddress where
+    put (EmailAddress a b) =
+        putWord8 0 *> put a *> put b
+    get = do
+        c <- getWord8
+        case c of
+            0 -> EmailAddress <$> get <*> get
 
 instance NFData ClientToServer where
     rnf (StoryModeDownload a b) =
@@ -43,13 +61,24 @@ instance NFData EmailAddress where
         rnf a `seq` rnf b
 
 data ServerToClient
-    = Confirmed String Version
+    = Authorized String Version -- zipUrl version
+    | Unauthorized String -- error message
   deriving (Show)
 
 instance Binary ServerToClient where
+    put (Authorized a b) =
+        putWord8 0 *> put a *> put b
+    put (Unauthorized a) =
+        putWord8 1 *> put a
+    get = do
+        c <- getWord8
+        case c of
+            0 -> Authorized <$> get <*> get
+            1 -> Unauthorized <$> get
 
 instance NFData ServerToClient where
-    rnf (Confirmed a b) = rnf a `seq` rnf b
+    rnf (Authorized a b) = rnf a `seq` rnf b
+    rnf (Unauthorized a) = rnf a
 
 instance Protocol ClientToServer ServerToClient where
     protocolVersion _ _ = Version [0, 1] []

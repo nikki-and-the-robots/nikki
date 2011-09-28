@@ -16,7 +16,7 @@ topModules :: [String]
 topModules =
     words
     ("dist/build/autogen/Paths_nikki " ++
-     "Base Control Data Editor Game Graphics Main.hs Object Paths Physics Sorts Top Utils")
+     "Base Control Data Editor Game Graphics Main.hs Network Object Paths Physics Sorts Top Utils")
 
 outputDir = "dist/doc/code"
 

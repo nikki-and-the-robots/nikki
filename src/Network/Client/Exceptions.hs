@@ -11,9 +11,9 @@ import Text.Logging
 
 import Control.Exception
 
-import Base
-
 import Network.Client
+
+import Base
 
 
 networkTry :: Application -> Parent -> IO AppState -> IO AppState

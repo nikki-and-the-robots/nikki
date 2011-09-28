@@ -1,5 +1,6 @@
 {-# language ScopedTypeVariables #-}
 
+-- | Server side of network communication using the 'Protocol' type class.
 module Network.Server where
 
 
@@ -21,8 +22,6 @@ import System.Timeout
 import Network
 import Network.Fancy (streamServer, sleepForever, serverSpec, ServerSpec(..), Address(..))
 import Network.Client
-
-import Utils
 
 
 runServer :: forall clientToServer serverToClient .
