@@ -1,14 +1,20 @@
+{-# language ScopedTypeVariables #-}
 
 module Top.Initialisation where
 
+
+import Prelude hiding (catch)
 
 import qualified Data.Indexable as I
 import Data.Indexable (Index, Indexable, (>:))
 import Data.Initial
 import Data.SelectTree
 
-import Control.Monad.CatchIO
+import Text.Logging
+
 import Control.Monad
+import Control.Monad.CatchIO
+import Control.Exception (IOException)
 
 import Physics.Chipmunk
 
@@ -77,9 +83,15 @@ withAllSorts cmd = do
 -- | returns all sorts in a nicely sorted SelectTree
 getAllSorts :: RM (SelectTree Sort_)
 getAllSorts = do
-    sorts <- concat <$> mapM id sortLoaders
+    sorts <- concat <$> mapM catchExceptions sortLoaders
     io $ checkUniqueSortIds sorts
     return $ mkSortsSelectTree sorts
+  where
+    catchExceptions :: RM [a] -> RM [a]
+    catchExceptions action =
+        catch action $ \ (e :: IOException) -> io $ do
+            logg Error ("cannot load all sorts: " ++ show e)
+            return []
 
 checkUniqueSortIds :: [Sort_] -> IO ()
 checkUniqueSortIds sorts =
