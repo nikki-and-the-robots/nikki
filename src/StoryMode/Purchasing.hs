@@ -13,6 +13,7 @@ import Control.Exception
 
 import System.IO
 import System.IO.Temp
+import System.Exit
 
 import Network.Curl.Download.Lazy
 import Network.Client.Exceptions
@@ -81,7 +82,13 @@ loginAndInstall app storyModeMenu email key =
                     logCommand $ p "uncompressing..."
                     storyModeDir <- createStoryModePath
                     unzipArchive tempZipFile storyModeDir
-                return $ storyModeMenu
+                return $ message app
+                        (p "installation complete" :
+                            p "story-mode version: " +> pVerbatim (showVersion version) :
+                            p "restarting..." :
+                            []) $ NoGUIAppState $ io $
+                                exitWith $ ExitFailure 143
+
 
 downloadFile :: String -> FilePath -> IO ()
 downloadFile url destFile = do
