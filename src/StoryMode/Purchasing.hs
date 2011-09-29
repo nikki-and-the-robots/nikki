@@ -75,11 +75,11 @@ loginAndInstall app storyModeMenu email key =
                 logCommand $
                     substitute [("version", showVersion version)] $
                     p "downloading story mode ($version)"
-                storyModeDir <- createStoryModePath
                 withSystemTempFile "storyModeDownload" $ \ tempZipFile handle -> do
                     hClose handle
                     downloadFile zipUrl tempZipFile
                     logCommand $ p "uncompressing..."
+                    storyModeDir <- createStoryModePath
                     unzipArchive tempZipFile storyModeDir
                 return $ storyModeMenu
 
