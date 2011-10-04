@@ -25,7 +25,7 @@ import Network.Client
 
 
 runServer :: forall clientToServer serverToClient .
-    Protocol clientToServer serverToClient =>
+    (Protocol clientToServer, Protocol serverToClient) =>
     ServerSpec -> (clientToServer -> IO serverToClient) -> IO ()
 runServer spec serve = do
     _ <- streamServer spec inner
@@ -35,10 +35,8 @@ runServer spec serve = do
         bc <- binaryCom handle
         catchProtocolErrorsOnServer bc $ do
             clientVersion :: Version <- receiveTO bc
-            let protocolVersion_ = protocolVersion
-                    (undefined :: clientToServer)
-                    (undefined :: serverToClient)
-            if clientVersion < protocolVersion_ then do
+            let serverVersion = protocolVersion (undefined :: serverToClient)
+            if clientVersion < serverVersion then do
                 serverLog ("client-version too old: " ++ show clientVersion)
                 logAndSendError bc $ "Client version too old,\nplease update your game."
               else do

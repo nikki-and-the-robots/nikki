@@ -58,5 +58,8 @@ instance NFData ServerToClient where
     rnf UploadSucceeded = ()
     rnf UploadNameClash = ()
 
-instance Protocol ClientToServer ServerToClient where
-    protocolVersion _ _ = Version [0, 2] []
+instance Protocol ClientToServer where
+    protocolVersion _ = Version [0, 2] []
+
+instance Protocol ServerToClient where
+    protocolVersion _ = Version [0, 2] []

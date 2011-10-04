@@ -80,8 +80,11 @@ instance NFData ServerToClient where
     rnf (Authorized a b) = rnf a `seq` rnf b
     rnf (Unauthorized a) = rnf a
 
-instance Protocol ClientToServer ServerToClient where
-    protocolVersion _ _ = Version [0, 1] []
+instance Protocol ClientToServer where
+    protocolVersion _ = Version [0, 1] []
+
+instance Protocol ServerToClient where
+    protocolVersion _ = Version [0, 1] []
 
 
 -- * client side
