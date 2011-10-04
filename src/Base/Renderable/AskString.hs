@@ -23,6 +23,7 @@ import Base.Renderable.Layered
 import Base.Renderable.Centered
 import Base.Renderable.VBox
 import Base.Renderable.Prose ()
+import Base.Renderable.Message
 
 
 -- | Gets a string from the user.
@@ -59,11 +60,13 @@ mkAskStringWidget question answer =
 -- | Like askString, but reads the given String with the given function.
 -- Asks again, if not parsable.
 askStringParse :: Application -> AppState -> Prose
-    -> (String -> Maybe a) -> (a -> AppState) -> AppState
+    -> (String -> Either [Prose] a) -> (a -> AppState) -> AppState
 askStringParse app parent question parse follower =
     askString app parent question wrapper
   where
     wrapper :: String -> AppState
     wrapper s = case parse s of
-        Nothing -> askStringParse app parent question parse follower -- try again
-        Just r -> follower r
+        Left err ->
+            message app err $ -- show error message
+            askStringParse app parent question parse follower -- try again
+        Right r -> follower r

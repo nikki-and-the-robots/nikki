@@ -7,6 +7,7 @@ import Safe
 
 import Data.SelectTree
 import Data.Indexable (indexA)
+import Data.Maybe
 
 import Control.Concurrent
 import Control.Monad.State
@@ -251,11 +252,14 @@ editLayers app mvar scene ps parent =
 changeLayerDistance :: Application -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Parent -> AppState
 changeLayerDistance app mvar scene parent =
-    askStringParse app parent (p "x distance") readMay $ \ x ->
-    askStringParse app parent (p "y distance") readMay $ \ y ->
+    askStringParse app parent (p "x distance") readEither $ \ x ->
+    askStringParse app parent (p "y distance") readEither $ \ y ->
         editorLoop app mvar
             (editorObjects .> layerA (selectedLayer scene) ^:
                 (setYDistance y . setXDistance x) $ scene)
+  where
+    readEither :: String -> Either [Prose] Double
+    readEither s = maybe (Left [p "not an integer: " +> pv s]) Right (readMay s)
 
 -- | shows an editor help corresponding to the current editor mode
 showEditorHelp :: Application -> AppState -> EditorScene Sort_ -> AppState

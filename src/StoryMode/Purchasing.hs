@@ -6,6 +6,7 @@ module StoryMode.Purchasing where
 import Data.Version
 import Data.ByteString.Lazy as BSL
 import Data.Typeable
+import Data.Bifunctor
 
 import Text.Email.Validate
 
@@ -54,8 +55,8 @@ loginAsking app storyModeMenu parent =
     this :: AppState
     this = loginAsking app storyModeMenu parent
 
-    parseEmail :: String -> Maybe EmailAddress
-    parseEmail s = either (const Nothing) Just $ validate s
+    parseEmail :: String -> Either [Prose] EmailAddress
+    parseEmail s = first (const [p "invalid email-address"]) $ validate s
 
 loginAndInstall :: Application -> AppState -> EmailAddress -> String -> AppState
 loginAndInstall app storyModeMenu email key =

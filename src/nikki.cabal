@@ -179,7 +179,7 @@ Executable core
         , text
         , template == 0.2.*
         , email-validate
-
+        , bifunctors
 
     if os(linux)
         extra-libraries:
