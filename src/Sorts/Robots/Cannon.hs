@@ -398,7 +398,7 @@ mkCannonballRenderPixmap sort (_, chip) = do
 
 -- | Cannonball pixmaps are not rotated, cannonballs have animated spec lights.
 -- This is the angular range for one animation frame.
-specAngleRange = tau / specAnimationFrameNumber
+specAngleRange = tau / (specAnimationFrameNumber * 2) -- doubled animation speed
 
 specAnimationFrameNumber = 4
 
