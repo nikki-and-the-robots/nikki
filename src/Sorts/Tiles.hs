@@ -19,7 +19,6 @@ import Data.Maybe
 import qualified Data.Indexable as I
 
 import Text.Parsec
-import Text.Logging
 
 import Control.Monad
 
@@ -90,7 +89,6 @@ mkSort storyMode name offset size = do
             when (null pngFiles) $
                 fail ("no png files found for tile: " ++ name)
             let sortID = if storyMode then ("story-mode/" ++ name) else name
-            io $ logg Debug ("tile sort: " ++ sortID)
             Just <$> Sort_ <$> TSort sortID <$> mapM mkTilePixmap pngFiles
   where
     mkTilePixmap file = loadPixmap (fmap fromIntegral offset) size file

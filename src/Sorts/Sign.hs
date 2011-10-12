@@ -69,7 +69,6 @@ storyModeSorts =
                 speechIcon <- loadSymmetricPixmap (Position 1 1) =<<
                     getDataFileName (signDir </> "speech-icon" <.> "png")
                 let sortid = "story-mode/sign/" ++ name
-                io $ logg Debug ("sm-sortid: " ++ sortid)
                 return $ Just $ Sort_ $ SSort sortid pix speechIcon
             Nothing -> do
                 io $ logg Debug ("sm-file not found: " ++ (signDir </> name <.> "png"))
