@@ -281,6 +281,10 @@ extern "C" QByteArray* textQKeyEvent(QKeyEvent* ptr) {
     return QStringToCString(ptr->text());
 };
 
+extern "C" int modifiersQKeyEvent(QKeyEvent* ptr) {
+    return ptr->modifiers();
+};
+
 // * QByteArray
 extern "C" void destroyQByteArray(QByteArray* ptr) {
     delete ptr;

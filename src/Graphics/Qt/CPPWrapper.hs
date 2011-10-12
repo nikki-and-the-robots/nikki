@@ -87,6 +87,7 @@ module Graphics.Qt.CPPWrapper (
 
 import Data.Generics
 import Data.Abelian
+import Data.Set
 
 import Control.Monad
 import Control.Monad.CatchIO
@@ -245,18 +246,20 @@ setKeyCallbackMainWindow ptr cmd =
     preWrap :: (Int -> Ptr QKeyEvent -> IO ())
     preWrap n ptr = case n of
         0 -> do
-            (key, text) <- peekQKeyEvent
-            cmd $ KeyPress (translateQtKey key) text
+            (key, text, modifiers) <- peekQKeyEvent
+            cmd $ KeyPress key text modifiers
         1 -> do
-            (key, text) <- peekQKeyEvent
-            cmd $ KeyRelease (translateQtKey key) text
+            (key, text, modifiers) <- peekQKeyEvent
+            cmd $ KeyRelease key text modifiers
         2 -> cmd FocusOut
         3 -> cmd CloseWindow
       where
+        peekQKeyEvent :: IO (Key, String, Set QKeyboardModifier)
         peekQKeyEvent = do
             key <- keyQKeyEvent ptr
             text <- textQKeyEvent ptr
-            return (key, text)
+            modifierFlags <- modifiersQKeyEvent ptr
+            return (translateQtKey key, text, marshallKeyboardModifiers modifierFlags)
 
 
 -- * QPainter
@@ -472,6 +475,8 @@ textQKeyEvent ptr = do
     r <- stringQByteArray byteArray
     destroyQByteArray byteArray
     return r
+
+foreign import ccall modifiersQKeyEvent :: Ptr QKeyEvent -> IO QtInt
 
 
 -- * QByteArray

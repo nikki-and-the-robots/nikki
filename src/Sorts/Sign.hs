@@ -310,8 +310,8 @@ instance IsOEMState SignOEMState where
 question = p "text for the sign"
 
 updateOEM :: Button -> SignOEMState -> OEMUpdateMonad SignOEMState
-updateOEM (KeyboardButton F1 string) _ = oemNothing
-updateOEM (KeyboardButton key string) (SignOEMState text) =
+updateOEM (KeyboardButton F1 string _) _ = oemNothing
+updateOEM (KeyboardButton key string _) (SignOEMState text) =
     return $ SignOEMState $ modifyTextField key string text
 updateOEM _ _ = oemNothing
 

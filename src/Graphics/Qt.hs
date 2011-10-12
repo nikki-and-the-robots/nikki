@@ -8,11 +8,13 @@ module Graphics.Qt (
     modifyTextField,
     Key(..),
     keyDescription,
+    QKeyboardModifier(..),
     Ptr,
   ) where
 
 
 import Data.Abelian
+import Data.Set
 
 import Control.Monad.CatchIO
 import Control.Concurrent
@@ -161,8 +163,8 @@ sendInitialSignals c signals = ignore $ forkOS $ do
   where
     worker k = do
         threadDelay $ round (0.8 * 10 ^ 6)
-        writeChan c (KeyPress k (text k))
-        writeChan c (KeyRelease k (text k))
+        writeChan c (KeyPress k (text k) empty)
+        writeChan c (KeyRelease k (text k) empty)
     text K0 = "0"
     text K5 = "5"
     text Dot = "."

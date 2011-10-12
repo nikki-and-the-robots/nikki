@@ -880,11 +880,11 @@ enterMode scene (Robots _ selected attached) =
 
 editorUpdate :: EditorScene sort -> Button -> TerminalOEMState
     -> OEMUpdateMonad TerminalOEMState
-editorUpdate _ (KeyboardButton key _) NoRobots | key `elem` keys = return NoRobots
+editorUpdate _ (KeyboardButton key _ _) NoRobots | key `elem` keys = return NoRobots
   where
     keys = (RightArrow : LeftArrow : Return : Enter : [])
 editorUpdate _ _ NoRobots = oemNothing
-editorUpdate scene (KeyboardButton key _) state@(Robots available selected attached) =
+editorUpdate scene (KeyboardButton key _ _) state@(Robots available selected attached) =
   case key of
     RightArrow -> return state{selectedRobot = searchNext selected available}
     LeftArrow -> return state{selectedRobot = searchNext selected (reverse available)}

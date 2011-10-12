@@ -24,7 +24,8 @@ isPress _ = False
 data Button
     = KeyboardButton {
         key :: Key,
-        keyString :: String
+        keyString :: String,
+        keyModifiers :: Set QKeyboardModifier
     }
 --     | GamepadButton TODO
   deriving (Show)
@@ -39,7 +40,7 @@ instance Ord Button where
 
 
 isArrowButton :: Button -> Bool
-isArrowButton (KeyboardButton k _) =
+isArrowButton (KeyboardButton k _ _) =
     k `elem` (UpArrow : DownArrow : LeftArrow : RightArrow : [])
 
 -- | all arrow keys

@@ -45,8 +45,8 @@ configure :: Application -> Prose -> Accessor Controls (Key, String) -> (Int -> 
 configure app text keyAcc parent parentPreSelection = AppState (renderable widget) $ do
     b <- waitForPressedButton app
     case b of
-        (KeyboardButton Escape _) -> return $ parent parentPreSelection
-        (KeyboardButton k t) -> do
+        (KeyboardButton Escape _ _) -> return $ parent parentPreSelection
+        (KeyboardButton k t _) -> do
             (controls .> keyAcc) %= (k, keyDescription k t)
             return $ parent $ succ parentPreSelection
         _ -> return this

@@ -271,7 +271,7 @@ removePathPoint point (OEMPathPositions start path) =
 -- * oem logic
 
 updateOEMPath :: Button -> OEMPath -> OEMUpdateMonad OEMPath
-updateOEMPath (KeyboardButton key _) oem@(OEMPath size cursorStep cursor path active) =
+updateOEMPath (KeyboardButton key _ _) oem@(OEMPath size cursorStep cursor path active) =
     case key of
         LeftArrow -> return $ oemCursor ^: (-~ EditorPosition cursorStepF 0) $ oem
         RightArrow -> return $ oemCursor ^: (+~ EditorPosition cursorStepF 0) $ oem

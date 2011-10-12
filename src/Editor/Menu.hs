@@ -62,12 +62,12 @@ editorLoop app mvar scene = UnManagedAppState $ do
         event <- lift $ waitForAppEvent app
         s <- get
         case (editorMode s, event) of
-            (_, Press (KeyboardButton Escape _)) -> return $ editorMenu app mvar s 0
-            (NormalMode, Press (KeyboardButton T _)) ->
+            (_, Press (KeyboardButton Escape _ _)) -> return $ editorMenu app mvar s 0
+            (NormalMode, Press (KeyboardButton T _ _)) ->
                 -- test the level
                 return $ playLevel app (editorLoop app mvar s) True
                     (cachedTiles ^= Nothing $ s)
-            (NormalMode, Press (KeyboardButton H _)) ->
+            (NormalMode, Press (KeyboardButton H _ _)) ->
                 -- test the level with Nikki at cursor position
                 return $ playLevel app (editorLoop app mvar s) True $
                     cachedTiles ^= Nothing $

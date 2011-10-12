@@ -8,6 +8,8 @@ module Base.Renderable.AskString (
 
 import Safe
 
+import Data.Set (member)
+
 import Utils
 
 import Graphics.Qt
@@ -40,11 +42,12 @@ askString app parent question follower =
                 return parent
             Press e | isTextFieldConfirmation e ->
                 return $ follower answer
-            Press (KeyboardButton k "#") -> do
+            Press (KeyboardButton V _ mods) | ControlModifier `member` mods -> do
+                -- paste shortcut
                 clipped <- io $ textQClipboard $ window app
                 let processClipped x = headDef "" $ dropWhile null $ lines x
                 return $ loop $ (answer ++ processClipped clipped)
-            Press (KeyboardButton k text) ->
+            Press (KeyboardButton k text _) ->
                 return $ loop $ modifyTextField k text answer
             _ -> return $ loop answer
 

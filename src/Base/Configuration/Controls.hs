@@ -125,7 +125,7 @@ keysContext controls = map (second (map toUpper) . mk) $
 -- * internals
 
 isKey :: Key -> (Button -> Bool)
-isKey a (KeyboardButton b _) = a == b
+isKey a (KeyboardButton b _ _) = a == b
 isKey _ _ = False
 
 isKeyWS :: (Key, String) -> (Button -> Bool)

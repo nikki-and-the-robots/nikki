@@ -6,11 +6,15 @@ module Graphics.Qt.Events (
     keyDescription,
     translateQtKey,
     modifyTextField,
+    QKeyboardModifier(..),
+    marshallKeyboardModifiers,
   ) where
 
 
-import Data.Map
+import Data.Map (Map, member, (!), fromList)
 import Data.Data
+import Data.Set (Set, fromList)
+import Data.Bits
 
 import Graphics.Qt.Types
 
@@ -20,8 +24,8 @@ import Utils
 
 
 data QtEvent
-    = KeyPress Key String
-    | KeyRelease Key String
+    = KeyPress Key String (Set QKeyboardModifier)
+    | KeyRelease Key String (Set QKeyboardModifier)
     | FocusOut
     | CloseWindow
   deriving (Show)
@@ -184,7 +188,7 @@ translateQtKey x =
     UnknownKey -- error ("translateQtKey: " ++ show x)
 
 keyMap :: Map QtInt Key
-keyMap = fromList keyMapping
+keyMap = Data.Map.fromList keyMapping
 
 keyMapping :: [(QtInt, Key)]
 keyMapping = [
@@ -298,3 +302,30 @@ realCtrl :: Key
 realCtrl = case System.Info.os of
     "darwin" -> Meta
     _ -> Ctrl
+
+
+-- * keyboard modifiers
+
+data QKeyboardModifier
+    = ShiftModifier
+    | ControlModifier
+    | AltModifier
+    | MetaModifier
+    | KeypadModifier
+    | GroupSwitchModifier
+  deriving (Show, Eq, Ord, Enum, Bounded)
+
+marshallKeyboardModifiers :: QtInt -> Set QKeyboardModifier
+marshallKeyboardModifiers flags =
+    Data.Set.fromList $ filter isInFlags allValues
+  where
+    isInFlags :: QKeyboardModifier -> Bool
+    isInFlags mod = (toFlag mod .&. flags) > 0
+
+    toFlag m = case m of
+        ShiftModifier       -> 0x02000000
+        ControlModifier     -> 0x04000000
+        AltModifier         -> 0x08000000
+        MetaModifier        -> 0x10000000
+        KeypadModifier      -> 0x20000000
+        GroupSwitchModifier -> 0x40000000
