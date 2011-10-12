@@ -51,7 +51,6 @@ module Base.Configuration.Controls (
   ) where
 
 
-import Data.Set (Set)
 import Data.Data
 import Data.Initial
 import Data.Accessor
@@ -134,9 +133,9 @@ isKeyWS = isKey . fst
 
 -- ** externals
 
-isFullscreenSwapShortcut :: Set Button -> Button -> Bool
-isFullscreenSwapShortcut held k =
-    ((isKey Enter k || isKey Return k) && fany (isKey Alt) held) ||
+isFullscreenSwapShortcut :: Button -> Bool
+isFullscreenSwapShortcut k =
+    ((isKey Enter k || isKey Return k) && fany (== AltModifier) (keyModifiers k)) ||
     (isKey F11 k)
 
 
