@@ -40,6 +40,10 @@ askString app parent question follower =
                 return parent
             Press e | isTextFieldConfirmation e ->
                 return $ follower answer
+            Press (KeyboardButton k "#") -> do
+                clipped <- io $ textQClipboard $ window app
+                let processClipped x = headDef "" $ dropWhile null $ lines x
+                return $ loop $ (answer ++ processClipped clipped)
             Press (KeyboardButton k text) ->
                 return $ loop $ modifyTextField k text answer
             _ -> return $ loop answer

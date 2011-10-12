@@ -4,7 +4,6 @@ module Graphics.Qt (
     module Graphics.Qt,
     module Graphics.Qt.Types,
     module Graphics.Qt.CPPWrapper,
-    module Graphics.Qt.PostGUI,
     QtEvent(..),
     modifyTextField,
     Key(..),
@@ -21,7 +20,6 @@ import Control.Concurrent
 import Graphics.Qt.Types
 import Graphics.Qt.CPPWrapper
 import Graphics.Qt.Events
-import Graphics.Qt.PostGUI
 
 import Foreign.Ptr
 

@@ -289,3 +289,8 @@ extern "C" void destroyQByteArray(QByteArray* ptr) {
 extern "C" char* dataQByteArray(QByteArray* ptr) {
     return ptr->data();
 };
+
+// * QClipboard
+extern "C" QByteArray* textQClipboard() {
+    return QStringToCString(QApplication::clipboard()->text());
+};

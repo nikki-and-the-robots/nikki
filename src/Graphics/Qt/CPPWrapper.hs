@@ -75,6 +75,13 @@ module Graphics.Qt.CPPWrapper (
     QRgb,
     colorToQRgb,
 
+    -- * QClipboard
+    textQClipboard,
+
+    -- * GUI-thread
+    postGUI,
+    postGUIBlocking,
+
   ) where
 
 
@@ -83,6 +90,7 @@ import Data.Abelian
 
 import Control.Monad
 import Control.Monad.CatchIO
+import Control.Concurrent.MVar
 
 import Foreign (Ptr, FunPtr, nullPtr)
 import Foreign.C.String
@@ -465,6 +473,7 @@ textQKeyEvent ptr = do
     destroyQByteArray byteArray
     return r
 
+
 -- * QByteArray
 
 data QByteArray
@@ -476,3 +485,35 @@ foreign import ccall dataQByteArray :: Ptr QByteArray -> IO CString
 stringQByteArray :: Ptr QByteArray -> IO String
 stringQByteArray ptr =
     peekCString =<< dataQByteArray ptr
+
+
+-- * QClipboard
+
+textQClipboard :: Ptr MainWindow -> IO String
+textQClipboard win = postGUIBlocking win $ do
+    byteArray <- cppTextQClipboard
+    r <- stringQByteArray byteArray
+    destroyQByteArray byteArray
+    return r
+
+foreign import ccall "textQClipboard" cppTextQClipboard :: IO (Ptr QByteArray)
+
+
+-- * Execute IO-operations in the GUI-thread
+
+-- | Non-blocking operation, that gets the gui thread to perform the given action.
+postGUI :: Ptr MainWindow -> IO () -> IO ()
+postGUI widget action = cppPostGUI widget =<< wrapGuiAction action
+
+foreign import ccall "postGUI" cppPostGUI :: Ptr MainWindow -> FunPtr (IO ()) -> IO ()
+
+foreign import ccall "wrapper" wrapGuiAction ::
+    IO () -> IO (FunPtr (IO ()))
+
+-- | Blocking operation, that gets the gui thread to perform a given action and
+-- returns its result.
+postGUIBlocking :: Ptr MainWindow -> IO a -> IO a
+postGUIBlocking window a = do
+    ref <- newEmptyMVar
+    postGUI window (a >>= putMVar ref)
+    takeMVar ref
