@@ -28,12 +28,13 @@ getTags =
 -- | Converts a tag to a regexp matching (hopefully) only that one tag.
 toRegexp :: String -> String
 toRegexp =
-    (\ t -> "^" ++ t ++ "$") >>>
-    concatMap (\ c -> if c == '.' then "\\." else [c])
+    (\ t -> "\"^" ++ t ++ "$\"") >>>
+    concatMap (\ c -> if c `elem` ['.', '(', ')'] then '\\' : c : [] else [c])
 
 mkTarball :: String -> String -> IO ()
 mkTarball tag regexp = do
-    let cmd = "darcs dist --store-in-memory -t " ++ regexp ++ " -d \"nikki-" ++ tag ++ "\""
+    let cmd = "darcs dist --store-in-memory -t " ++ regexp ++
+              " -d \"nikki-" ++ tag ++ "\""
     putStrLn cmd
     ExitSuccess <- system cmd
     return ()
