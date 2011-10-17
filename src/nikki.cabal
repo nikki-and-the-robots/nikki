@@ -157,7 +157,7 @@ Executable core
         , time
         , parsec == 3.*
         , FindBin >= 0.0.5
-        , clocked == 0.4
+        , clocked == 0.4.1
         , cmdargs >= 0.6.6
         , MonadCatchIO-transformers >= 0.2.2.2
         , download-curl >= 0.1.3
