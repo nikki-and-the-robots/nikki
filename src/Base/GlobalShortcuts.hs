@@ -2,8 +2,6 @@
 module Base.GlobalShortcuts (handleGlobalShortcuts) where
 
 
-import Data.Set
-
 import Control.Monad
 
 import System.Exit

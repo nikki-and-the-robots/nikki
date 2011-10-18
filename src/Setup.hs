@@ -11,14 +11,10 @@ import Distribution.Setup.Darwin
 
 
 main =
-  defaultMainWithHooks nikkiUserHooks{instHook = installHook}
+  defaultMainWithHooks nikkiUserHooks
 
 #ifdef darwin_HOST_OS
 nikkiUserHooks = macUserHooks
 #else
 nikkiUserHooks = simpleUserHooks
 #endif
-
--- | prevent cabal install
-installHook :: a -> b -> c -> d -> IO ()
-installHook _ _ _ _ = putStrLn "\"cabal install\" is not supported. The game compiled fine, though."

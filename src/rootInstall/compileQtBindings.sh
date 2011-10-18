@@ -8,13 +8,9 @@ exit 1
 trap error ERR
 
 # building c++-part (qt-bindings)
-cd cpp
+cd ../cpp
 mkdir -p dist
 cd dist
 cmake ..
 make
-cd ../..
-
-cabal install --only-dependencies
-cabal configure $@
-cabal build
+cd -

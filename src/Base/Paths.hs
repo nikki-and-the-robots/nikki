@@ -36,32 +36,14 @@ import System.Info
 import System.FilePath
 import System.Directory
 import System.Environment
-import System.Environment.FindBin
 import System.Console.CmdArgs.Missing
 
 import Utils
 
 import Base.Types
 import Base.Configuration
+import Base.Paths.GetDataFileName
 
-
-getDataFileName :: FilePath -> RM FilePath
-getDataFileName p = do
-    inPlace <- asks run_in_place
-    if inPlace then
-        return (".." </> "data" </> p)
-      else do
-        progPath <- io getProgPath
-        case os of
-            "linux" ->
-                return (progPath </> "data" </> p)
-            "mingw32" ->
-                -- works if the application is deployed in one folder
-                return (progPath </> "data" </> p)
-            "darwin" ->
-                -- works if the application is bundled in an app
-                return (progPath </> ".." </> "Resources" </> p)
-            x -> error ("unsupported os: " ++ os)
 
 -- | returns unhidden files with a given extension in a given data directory.
 getDataFiles :: FilePath -> (Maybe String) -> RM [FilePath]
