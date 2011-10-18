@@ -55,7 +55,7 @@ mainMenu app ps =
 
 credits :: Application -> Parent -> AppState
 credits app parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName "manual/credits"
+    file <- rm2m $ getDataFileName ("manual" </> "credits" <.> "txt")
     prose <- io $ pFile file
     return $ scrollingAppState app prose parent
 

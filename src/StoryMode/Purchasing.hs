@@ -15,6 +15,7 @@ import Control.Exception
 import System.IO
 import System.IO.Temp
 import System.Exit
+import System.FilePath
 
 import Network.Curl.Download.Lazy
 import Network.Client.Exceptions
@@ -32,7 +33,7 @@ import StoryMode.Client as Client
 -- | PRE: the story-mode is not installed.
 suggestPurchase :: Application -> AppState -> Parent -> Int -> AppState
 suggestPurchase app storyModeMenu parent = \ ps -> NoGUIAppState $ do
-    file <- rm2m $ getDataFileName "manual/storyModeIntroduction"
+    file <- rm2m $ getDataFileName ("manual" </> "storyModeIntroduction" <.> "txt")
     prose <- io $ pFile file
     return $ scrollingAppState app prose parent
 suggestPurchase app storyModeMenu parent =
