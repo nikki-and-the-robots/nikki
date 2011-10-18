@@ -15,6 +15,8 @@ import Utils.Scripting
 -- | default repo for updates
 defaultRepo = "http://updates.joyridelabs.de/nikki/default"
 
+downloadWebsite = "http://joyridelabs.de/game/download/"
+
 osError msg = error ("unsupported os for updates: " ++ System.Info.os ++ " (" ++ msg ++ ")")
 
 -- | Find the core executable (using FindBin).

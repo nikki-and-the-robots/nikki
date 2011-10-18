@@ -1,4 +1,4 @@
-{-# language ViewPatterns, ScopedTypeVariables #-}
+{-# language CPP, ViewPatterns, ScopedTypeVariables #-}
 
 -- | auto-updating for Nikki
 
@@ -26,10 +26,13 @@ import Utils
 
 import Base.Types hiding (update)
 import Base.Prose
+import Base.Prose.Template
 import Base.Monad
 import Base.Configuration
 import Base.Renderable.GUILog
 import Base.Renderable.Message
+import Base.Renderable.Menu
+import Base.Renderable.OpenUrl
 
 import Distribution.AutoUpdate.Paths
 import Distribution.AutoUpdate.Download
@@ -66,8 +69,32 @@ isDeployed = do
       else
         Nothing
 
+-- | gracefully fail, if the game is compiled to be installed as root.
+autoUpdateRootInstall :: Application -> AppState -> AppState
+autoUpdateRootInstall app follower = NoGUIAppState $ do
+    repo <- Repo <$> gets update_repo
+    v <- io $ runErrorT $ newGameVersion repo
+    return $ case v of
+        Left errors -> message app (map pv errors) follower
+        Right Nothing ->
+            -- no new version available
+            message app [p "no updates available"] follower
+        Right (Just newVersion) ->
+            menuAppState app (typ newVersion) (Just follower) (
+                (p "Download manually (opens browser)",
+                    const $ openUrl app downloadWebsite follower) :
+                []) 0
+  where
+    typ newVersion = NormalMenu (pv "new version") (Just $
+       substitute [("newVersion", showVersion newVersion)] $ p
+        ("A new version of Nikki and the Robots is available: $newVersion! " ++
+         "Try using the software manager to get it or download it manually!"))
+
 -- | doing the auto update
 autoUpdate :: Application -> AppState -> AppState
+#ifdef RootInstall
+autoUpdate app follower = autoUpdateRootInstall app follower
+#endif
 autoUpdate app follower = guiLog app $ \ logCommand -> do
     repoString <- gets update_repo
     mDeployed <- io $ isDeployed
@@ -97,13 +124,21 @@ autoUpdate app follower = guiLog app $ \ logCommand -> do
 attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
     -> IO (Either [String] (Maybe Version))
 attemptUpdate app logCommand repo deployPath = runErrorT $ do
-    serverVersion :: Version <- (ErrorT . return . parseVersion) =<<
-                                downloadContent (mkUrl repo "version")
-    if serverVersion > Version.nikkiVersion then do
-        update app logCommand repo serverVersion deployPath
-        return $ Just serverVersion
+    mVersion <- newGameVersion repo
+    case mVersion of
+        Just serverVersion -> do
+            update app logCommand repo serverVersion deployPath
+            return $ Just serverVersion
+        Nothing -> return Nothing
+
+-- | Returns (Just newVersion), if a newer version is available from the update server.
+newGameVersion :: Repo -> ErrorT [String] IO (Maybe Version)
+newGameVersion repo = do
+    serverVersion <- (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
+    return $ if serverVersion > Version.nikkiVersion then
+        Just serverVersion
       else
-        return Nothing
+        Nothing
 
 -- | the actual updating procedure
 update :: Application -> (Prose -> IO ()) -> Repo -> Version -> DeployPath
