@@ -24,10 +24,12 @@ import Data.Accessor
 import Data.IORef
 import qualified Data.Binary as Binary
 import qualified Data.Text as T
+import Data.Version
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Control.Monad.CatchState
+import Control.Concurrent.MVar
 
 import System.FilePath
 
@@ -81,6 +83,7 @@ data Application
         application :: Ptr QApplication,
         window :: Ptr MainWindow,
         keyPoller :: KeyPoller,
+        autoUpdateVersion :: MVar (Maybe Version),
         getMainMenu_ :: Application -> AppState,
         applicationPixmaps :: ApplicationPixmaps,
         applicationSounds :: ApplicationSounds,

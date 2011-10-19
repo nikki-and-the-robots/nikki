@@ -24,6 +24,7 @@ import Editor.Pickle.LevelLoading
 import Top.Game (playLevel)
 
 import Distribution.AutoUpdate
+import Distribution.AutoUpdate.MenuItem
 
 import StoryMode.Menus
 
@@ -42,15 +43,19 @@ startAppState app = NoGUIAppState $ do
 mainMenu :: Application -> Int -> AppState
 mainMenu app ps =
     menuAppState app MainMenu Nothing (
-        (p "story mode", storyMode app (play app) . this) :
-        (p "community levels", community app 0 . this) :
-        (p "options", generalOptions app 0 . this) :
-        (p "help", mainMenuHelp app . this) :
-        (p "online update", autoUpdate app . this) :
-        (p "credits", credits app . this) :
-        (p "quit", const $ FinalAppState) :
+        (r $ p "story mode", storyMode app (play app) . this) :
+        (r $ p "community levels", community app 0 . this) :
+        (r $ p "options", generalOptions app 0 . this) :
+        (r $ p "help", mainMenuHelp app . this) :
+        (r autoUpdateMenuItem, autoUpdate app . this) :
+        (r $ p "credits", credits app . this) :
+        (r $ p "quit", const $ FinalAppState) :
         []) ps
   where
+    r :: Renderable a => a -> RenderableInstance
+    r = renderable
+
+    this :: Int -> AppState
     this = mainMenu app
 
 credits :: Application -> Parent -> AppState

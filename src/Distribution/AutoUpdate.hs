@@ -2,7 +2,11 @@
 
 -- | auto-updating for Nikki
 
-module Distribution.AutoUpdate (autoUpdate) where
+module Distribution.AutoUpdate (
+    autoUpdate,
+    getUpdateVersion,
+    Repo(..),
+  ) where
 
 
 import Prelude hiding (catch)
@@ -73,7 +77,7 @@ isDeployed = do
 autoUpdateRootInstall :: Application -> AppState -> AppState
 autoUpdateRootInstall app follower = NoGUIAppState $ do
     repo <- Repo <$> gets update_repo
-    v <- io $ runErrorT $ newGameVersion repo
+    v <- io $ runErrorT $ getUpdateVersion repo
     return $ case v of
         Left errors -> message app (map pv errors) follower
         Right Nothing ->
@@ -124,7 +128,7 @@ autoUpdate app follower = guiLog app $ \ logCommand -> do
 attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
     -> IO (Either [String] (Maybe Version))
 attemptUpdate app logCommand repo deployPath = runErrorT $ do
-    mVersion <- newGameVersion repo
+    mVersion <- getUpdateVersion repo
     case mVersion of
         Just serverVersion -> do
             update app logCommand repo serverVersion deployPath
@@ -132,8 +136,8 @@ attemptUpdate app logCommand repo deployPath = runErrorT $ do
         Nothing -> return Nothing
 
 -- | Returns (Just newVersion), if a newer version is available from the update server.
-newGameVersion :: Repo -> ErrorT [String] IO (Maybe Version)
-newGameVersion repo = do
+getUpdateVersion :: Repo -> ErrorT [String] IO (Maybe Version)
+getUpdateVersion repo = do
     serverVersion <- (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
     return $ if serverVersion > Version.nikkiVersion then
         Just serverVersion
