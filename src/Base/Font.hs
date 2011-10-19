@@ -53,6 +53,7 @@ alphaNumericFontColors = nub $
     standardFontColor :
     headerFontColor :
     white :
+    yellow :
     []
 digitFontColors = nub $
     standardFontColor :

@@ -49,14 +49,17 @@ lookupUpdateVersion config = do
 
 
 autoUpdateMenuItem :: AutoUpdateMenuItem
-autoUpdateMenuItem = AutoUpdateMenuItem id
+autoUpdateMenuItem = AutoUpdateMenuItem False
 
-data AutoUpdateMenuItem = AutoUpdateMenuItem (Prose -> Prose)
+data AutoUpdateMenuItem = AutoUpdateMenuItem {selected :: Bool}
 
 instance Renderable AutoUpdateMenuItem where
-    render ptr app config size (AutoUpdateMenuItem proseMod) = do
+    render ptr app config size (AutoUpdateMenuItem selected) = do
         v <- tryReadMVar $ autoUpdateVersion app
-        let r = render ptr app config size . proseMod
+        let r = render ptr app config size . proseMod v
+            selectionMod = if selected then select else deselect
+            proseMod (Just (Just _)) = colorizeProse yellow . selectionMod
+            proseMod _ = selectionMod
         case v of
             -- no information yet
             Nothing -> r $ p "online update"
@@ -66,8 +69,8 @@ instance Renderable AutoUpdateMenuItem where
             Just (Just newVersion) -> r $ substitute [("version", showVersion newVersion)] $
                 p "new version available: $version"
     label = const "AutoUpdateMenuItem"
-    select (AutoUpdateMenuItem f) = AutoUpdateMenuItem (select . f)
-    deselect (AutoUpdateMenuItem f) = AutoUpdateMenuItem (deselect . f)
+    select = const $ AutoUpdateMenuItem True
+    deselect = const $ AutoUpdateMenuItem False
 
 tryReadMVar :: MVar a -> IO (Maybe a)
 tryReadMVar mvar = do
