@@ -47,9 +47,9 @@ data Menu
     = Menu {
         menuBackgroundRenderable :: RenderableInstance,
         menuHeader :: MenuHeader,
-        before :: [(Prose, AppState)],
-        selected :: (Prose, AppState),
-        after :: [(Prose, AppState)],
+        before :: [(RenderableInstance, AppState)],
+        selected :: (RenderableInstance, AppState),
+        after :: [(RenderableInstance, AppState)],
         scrolling :: MVar Int
       }
 
@@ -69,9 +69,10 @@ normalizeMenuHeader (NormalMenu t st) =
     nullToNothing Nothing = Nothing
 normalizeMenuHeader x = x
 
-mkMenu :: RenderableInstance -> MenuHeader -> [(Prose, Int -> AppState)] -> Int -> IO Menu
+mkMenu :: Renderable renderable => RenderableInstance -> MenuHeader
+    -> [(renderable, Int -> AppState)] -> Int -> IO Menu
 mkMenu background menuHeader items =
-    inner $ zipWith (\ (label, appStateFun) n -> (capitalizeProse label, appStateFun n)) items [0..]
+    inner $ zipWith (\ (label, appStateFun) n -> (renderable label, appStateFun n)) items [0..]
   where
     inner items n =
         if n < 0 then
@@ -98,8 +99,8 @@ selectPrevious m@(Menu bg typ [] selected after scrolling) =
     items = selected : after
 selectPrevious (Menu bg t b s a sc) = Menu bg t (init b) (last b) (s : a) sc
 
-menuAppState :: Application -> MenuHeader -> Maybe AppState
-    -> [(Prose, Int -> AppState)] -> Int -> AppState
+menuAppState :: Renderable renderable => Application -> MenuHeader -> Maybe AppState
+    -> [(renderable, Int -> AppState)] -> Int -> AppState
 menuAppState app =
     menuAppStateSpecialized app
     (waitForPressedButton app)
@@ -110,9 +111,9 @@ menuAppState app =
 -- If a title is given, it will be displayed. If not, the main menu will be assumed.
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
-menuAppStateSpecialized :: Application
+menuAppStateSpecialized :: Renderable renderable => Application
     -> M Button -> RenderableInstance -> (RenderableInstance -> M AppState -> AppState)
-    -> MenuHeader -> Maybe AppState -> [(Prose, Int -> AppState)] -> Int -> AppState
+    -> MenuHeader -> Maybe AppState -> [(renderable, Int -> AppState)] -> Int -> AppState
 menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParent children preSelection =
     NoGUIAppState $ io $
         inner <$> mkMenu background menuHeader children preSelection
@@ -212,13 +213,10 @@ instance Renderable Menu where
 
 -- | return the items (entries) of the menu
 toLines :: Menu -> [RenderableInstance]
-toLines (Menu _ _ before selected after _) = fmap (renderable . tuple False) $
-    map fst before ++
-    (colorizeProse white $ proseSelect $ fst selected) :
-    map fst after
-  where
-    proseSelect :: Prose -> Prose
-    proseSelect p = pVerbatim "⇨ " +> p +> pVerbatim " ⇦"
+toLines (Menu _ _ before selected after _) =
+    map (deselect . fst) before ++
+    (select $ fst selected) :
+    map (deselect . fst) after
 
 -- | adds a spacer before and after the menu
 addFrame :: [RenderableInstance] -> [RenderableInstance]

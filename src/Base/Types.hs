@@ -149,6 +149,12 @@ class Renderable r where
         -> Size Double -> r -> IO (Size Double, IO ())
     label :: r -> String
 
+    -- for usage in menus
+    select :: r -> r
+    select = id
+    deselect :: r -> r
+    deselect = id
+
 data RenderableInstance =
     forall r . Renderable r => RenderableInstance r
 

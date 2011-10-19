@@ -49,6 +49,9 @@ instance Renderable RenderableInstance where
         render ptr app config size r
     label (RenderableInstance r) = label r
 
+    select (RenderableInstance r) = RenderableInstance $ select r
+    deselect (RenderableInstance r) = RenderableInstance $ deselect r
+
 fiddleInDebugging ptr renderable (widgetSize, action) =
     (widgetSize, recoverMatrix ptr action >> debugRender)
   where
