@@ -16,7 +16,7 @@ Executable level-server
         network-fancy >= 0.1.5,
         binary >= 0.5.0.2,
         network >= 2.3.0.5,
-        binary-communicator >= 1.0.1,
+        binary-communicator >= 1.0.2.1,
         process,
         directory,
         filepath,
