@@ -75,13 +75,15 @@ tileMergingEpsilon = 1
 
 sorts :: RM [Sort_]
 sorts = do
-    freeSorts <- mapM (\ (a, b, c) -> mkSort False a b c defaultFrameTime) names
-    storyModeSorts <- mapM (\ (a, b, c, frameTime) -> mkSort True a b c frameTime) Sorts.StoryMode.tiles
+    freeSorts <- mapM (\ (a, b, c) -> mkSort False a b c defaultFrameTime Nothing) names
+    storyModeSorts <- mapM (\ (a, b, c, frameTime, frameOrder) ->
+        mkSort True a b c frameTime frameOrder) Sorts.StoryMode.tiles
     return $ catMaybes (freeSorts ++ storyModeSorts)
 
 -- | returns Nothing if a story mode tile is not available
-mkSort :: Bool -> String -> Offset Int -> Size Double -> Seconds -> RM (Maybe Sort_)
-mkSort storyMode name offset size frameDuration = do
+mkSort :: Bool -> String -> Offset Int -> Size Double -> Seconds -> Maybe [Int]
+    -> RM (Maybe Sort_)
+mkSort storyMode name offset size frameDuration frameOrder = do
     mPngFiles <- getFrameFileNames storyMode name
     case mPngFiles of
         Nothing -> return Nothing
@@ -89,9 +91,15 @@ mkSort storyMode name offset size frameDuration = do
             when (null pngFiles) $
                 fail ("no png files found for tile: " ++ name)
             let sortID = if storyMode then ("story-mode/" ++ name) else name
-            Just <$> Sort_ <$> TSort sortID frameDuration <$> mapM mkTilePixmap pngFiles
+            frames <- reorderFrames <$> mapM mkTilePixmap pngFiles
+            return $ Just $ Sort_ $ TSort sortID frameDuration frames
   where
     mkTilePixmap file = loadPixmap (fmap fromIntegral offset) size file
+
+    reorderFrames :: [Pixmap] -> [Pixmap]
+    reorderFrames pixmaps = maybe pixmaps
+        (map (\ i -> atNote (note i) pixmaps i)) frameOrder
+    note i = name ++ " has no frame with number " ++ show i
 
 -- | Returns the list of filenames for all the frames with the given name
 -- Returns Nothing in case a story mode tile is not available.
