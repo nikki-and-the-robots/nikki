@@ -37,7 +37,7 @@ import qualified Sorts.StoryMode
 
 -- * Tile configuration
 
-frameDuration :: Seconds = 1.0
+defaultFrameTime :: Seconds = 1.0
 
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
@@ -75,13 +75,13 @@ tileMergingEpsilon = 1
 
 sorts :: RM [Sort_]
 sorts = do
-    freeSorts <- mapM (\ (a, b, c) -> mkSort False a b c) names
-    storyModeSorts <- mapM (\ (a, b, c) -> mkSort True a b c) Sorts.StoryMode.tiles
+    freeSorts <- mapM (\ (a, b, c) -> mkSort False a b c defaultFrameTime) names
+    storyModeSorts <- mapM (\ (a, b, c, frameTime) -> mkSort True a b c frameTime) Sorts.StoryMode.tiles
     return $ catMaybes (freeSorts ++ storyModeSorts)
 
 -- | returns Nothing if a story mode tile is not available
-mkSort :: Bool -> String -> Offset Int -> Size Double -> RM (Maybe Sort_)
-mkSort storyMode name offset size = do
+mkSort :: Bool -> String -> Offset Int -> Size Double -> Seconds -> RM (Maybe Sort_)
+mkSort storyMode name offset size frameDuration = do
     mPngFiles <- getFrameFileNames storyMode name
     case mPngFiles of
         Nothing -> return Nothing
@@ -89,7 +89,7 @@ mkSort storyMode name offset size = do
             when (null pngFiles) $
                 fail ("no png files found for tile: " ++ name)
             let sortID = if storyMode then ("story-mode/" ++ name) else name
-            Just <$> Sort_ <$> TSort sortID <$> mapM mkTilePixmap pngFiles
+            Just <$> Sort_ <$> TSort sortID frameDuration <$> mapM mkTilePixmap pngFiles
   where
     mkTilePixmap file = loadPixmap (fmap fromIntegral offset) size file
 
@@ -158,6 +158,7 @@ getPngFileName True file = io $ getStoryModeDataFileName file
 data TSort
     = TSort {
         name :: String,
+        frameDuration :: Seconds,
         tilePixmaps :: [Pixmap]
       }
     deriving (Show, Typeable)
@@ -179,7 +180,7 @@ instance Sort TSort Tile where
 
     freeSort = fmapM_ freePixmap . tilePixmaps
 
-    size (TSort _ pixmaps) = pixmapSize $ head pixmaps
+    size (TSort _ _ pixmaps) = pixmapSize $ head pixmaps
 
     renderIconified sort ptr =
         renderPixmapSimple ptr $ head $ tilePixmaps sort
@@ -204,7 +205,7 @@ instance Sort TSort Tile where
     renderObject _ _ (Tile (ImmutableChipmunk position _ _ _)) sort _ offset now = return $
         return $ RenderPixmap pix position Nothing
       where
-        pix = pickAnimationFrame (tilePixmaps sort) [frameDuration] now
+        pix = pickAnimationFrame (tilePixmaps sort) [frameDuration sort] now
 
 -- before initializing the scene, all tiles in the physics scene are being merged 
 -- (in Top.Initialisation), resulting in an AllTiles object. 
@@ -250,11 +251,11 @@ instance Sort AllTilesSort AllTiles where
 
     chipmunks (AllTiles c _) = [c]
 
-    renderObject _ _ (AllTiles _ renderables) _ _ _ now = return $
+    renderObject _ _ (AllTiles _ renderables) sort _ _ now = return $
         fmap inner renderables
       where
         inner (sort, pos) = RenderPixmap
-            (pickAnimationFrame (tilePixmaps sort) [frameDuration] now)
+            (pickAnimationFrame (tilePixmaps sort) [frameDuration sort] now)
             pos
             Nothing
 
