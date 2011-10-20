@@ -95,6 +95,7 @@ nonStandardLibraries = fromList (
     "libaudio" :
     "libgmp" :
     "libpng" :
+    "libcurl" :
     [])
 
 
