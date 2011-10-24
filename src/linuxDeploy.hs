@@ -8,7 +8,7 @@ import Prelude hiding (any)
 import Data.Char
 import Data.Maybe
 import Data.Set
-import Data.List (isInfixOf)
+import Data.List (isInfixOf, isPrefixOf)
 import Data.Foldable as Foldable (any, mapM_)
 
 import Text.Parsec
@@ -75,9 +75,7 @@ getDynamicDependencies = do
 -- The library is given with its full path on the current system.
 isStandardLibrary :: FilePath -> Bool
 isStandardLibrary s =
-    not (libName `member` nonStandardLibraries)
-  where
-    libName = takeWhile isAlpha $ takeFileName s
+    not (any (`isPrefixOf` takeFileName s) nonStandardLibraries)
 
 -- | Set of libraries expected not to be on every standard linux system.
 nonStandardLibraries :: Set String
