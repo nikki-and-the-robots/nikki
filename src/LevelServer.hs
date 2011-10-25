@@ -1,5 +1,6 @@
 {-# language DeriveDataTypeable #-}
 
+
 import Control.Applicative
 
 import System.IO
@@ -20,6 +21,7 @@ import Base.Types.LevelMetaData
 
 import LevelServer.Types
 import LevelServer.Configuration
+import LevelServer.SendMail
 
 
 spec = serverSpec{address = IP "0.0.0.0" levelServerPort}
@@ -28,7 +30,10 @@ main = do
     hSetBuffering stdout NoBuffering
     options <- cmdArgs defaultOptions
     putStrLn ("listening on port " ++ show levelServerPort)
-    runServer spec $ serve options
+    runServer spec $ \ fromClient -> do
+        response <- serve options fromClient
+        emailLogging options fromClient response
+        return response
 
 serve :: ServerOptions -> ClientToServer -> IO ServerToClient
 serve options GetLevelList = do
@@ -48,11 +53,25 @@ serve options (UploadLevel meta level) = do
         return UploadSucceeded
 serve _ x = error ("NYI: " ++ show x)
 
+-- * email logging
+
+emailLogging :: ServerOptions -> ClientToServer -> ServerToClient -> IO ()
+emailLogging options request@(UploadLevel meta _) response =
+    sendMail (logEmailAddress options) subject (unlines body)
+  where
+    subject = "[NEW LEVEL] " ++ meta_levelName meta
+    body =
+        ("REQUEST: " ++ show request) :
+        ("RESPONSE: " ++ show response) :
+        []
+emailLogging _ _ _ = return ()
+
 -- * server arguments
 
 data ServerOptions = ServerOptions {
     levelDir :: FilePath,
-    baseURL :: String -- url under which the given level directory is accessible from the net.
+    baseURL :: String, -- url under which the given level directory is accessible from the net.
+    logEmailAddress :: String
   }
     deriving (Typeable, Data)
 
@@ -63,6 +82,9 @@ defaultOptions = ServerOptions {
         &= typ "LEVELDIR",
     baseURL = ""
         &= argPos 1
-        &= typ "URL"
+        &= typ "URL",
+    logEmailAddress = def
+        &= argPos 2
+        &= typ "EMAIL"
   }
     &= helpArg [explicit, name "h", name "help"]
