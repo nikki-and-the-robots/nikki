@@ -32,6 +32,8 @@ import Utils
 
 import Base hiding (backgrounds)
 
+import qualified Sorts.StoryMode
+
 
 backgrounds =
     "blue" :
@@ -39,28 +41,44 @@ backgrounds =
 
 
 sorts :: RM [Sort_]
-sorts = map Sort_ <$> mapM mkSort backgrounds
+sorts = do
+    public <- map Sort_ <$> mapM mkSort backgrounds
+    storyMode <- map (fmap Sort_) <$> mapM mkStoryModeSort Sorts.StoryMode.backgrounds
+    return (public ++ catMaybes storyMode)
 
 mkSort :: String -> RM BSort
 mkSort name = do
                                 -- zeropadding :)
     pixmaps <- mapM (loadSymmetricPixmap zero) =<< getPngPaths name
-    return $ BSort name (sort pixmaps)
+    let sortId = SortId ("background/" ++ name)
+    return $ BSort sortId (sortByResolution pixmaps)
   where
-    sort = sortBy (compare `on` (width . pixmapSize))
+    getPngPaths :: String -> RM [FilePath]
+    getPngPaths n =
+        getDataFiles (pngDir </> "backgrounds" </> n) (Just ".png")
 
-getPngPaths :: String -> RM [FilePath]
-getPngPaths n =
-    getDataFiles (pngDir </> "backgrounds" </> n) (Just ".png")
+mkStoryModeSort :: String -> RM (Maybe BSort)
+mkStoryModeSort name = do
+    mPngs <- io $ getStoryModeDataFiles (pngDir </> "backgrounds" </> name) (Just ".png")
+    case mPngs of
+        Nothing -> return Nothing
+        Just pngs -> do
+            pixmaps <- mapM (loadSymmetricPixmap zero) pngs
+            let sortId = SortId ("story-mode/background/" ++ name)
+            return $ Just $ BSort sortId (sortByResolution pixmaps)
+
+sortByResolution :: [Pixmap] -> [Pixmap]
+sortByResolution = sortBy (compare `on` (width . pixmapSize))
+
 
 data BSort = BSort {
-    name :: String,
+    bSortId :: SortId,
     pixmaps :: [Pixmap]
   }
     deriving (Show, Typeable)
 
 instance Sort BSort () where
-    sortId s = SortId $ ("background/" ++ name s)
+    sortId = bSortId
     freeSort = fmapM_ freePixmap . pixmaps
     size s = pixmapSize $ head $ pixmaps s -- does not make much sense
                                            -- (except for the cursor and iconified rendering)

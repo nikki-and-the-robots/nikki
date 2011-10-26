@@ -62,3 +62,9 @@ tiles =
     ("tiles/dummy/cpt-beaugard", Position 1 1, Size 64 96, 1, Nothing) :
     ("tiles/dummy/data-terminal", Position 5 5, Size 128 192, 1, Nothing) :
     []
+
+backgrounds :: [String]
+backgrounds =
+    "green-night" :
+    "warm-dusk" :
+    []
