@@ -84,6 +84,14 @@ mkMainLayer :: Indexable a -> Layer a
 mkMainLayer c = content ^= c $ initial
 
 
+-- * discriminators
+
+isGroundsIndexOf :: GroundsIndex -> Grounds a -> Bool
+isGroundsIndexOf MainLayer _ = True
+isGroundsIndexOf (Backgrounds i) gs = isIndexOf i (gs ^. backgrounds)
+isGroundsIndexOf (Foregrounds i) gs = isIndexOf i (gs ^. foregrounds)
+
+
 -- * getter
 
 mainLayerIndexable :: Grounds a -> Indexable a

@@ -244,6 +244,7 @@ editLayers app mvar scene ps parent =
         (p "change layer distance", changeLayerDistance app mvar scene . this) :
         (p "add on top of current layer", edit (addDefaultLayerOnTop scene)) :
         (p "add behind current layer", edit (addDefaultLayerBehind scene)) :
+        (p "delete current layer", edit (updateSelected $ deleteCurrentLayer scene)) :
         []) ps
   where
     edit s = const $ editorLoop app mvar s

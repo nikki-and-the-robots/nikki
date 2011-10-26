@@ -78,6 +78,25 @@ addDefaultLayerBehind s = case s ^. selectedLayer of
     Backgrounds i -> editorObjects .> backgrounds ^: (insertBefore i initial) $ s
     Foregrounds i -> editorObjects .> foregrounds ^: (insertBefore i initial) $ s
 
+-- | Deletes the current layer. Does nothing if that's the MainLayer.
+-- Sets the current layer to the layer on top of the deleted one.
+deleteCurrentLayer :: EditorScene Sort_ -> EditorScene Sort_
+deleteCurrentLayer s = case s ^. selectedLayer of
+    MainLayer -> s
+    Backgrounds i ->
+        setNewSelectedLayer $
+        editorObjects .> backgrounds ^: deleteByIndex i $
+        s
+    Foregrounds i ->
+        setNewSelectedLayer $
+        editorObjects .> foregrounds ^: deleteByIndex i $
+        s
+  where
+    newSelectedLayer = nextGroundsIndex (s ^. editorObjects) (s ^. selectedLayer)
+    setNewSelectedLayer = assertion . (selectedLayer ^= newSelectedLayer)
+    assertion s = if (isGroundsIndexOf (s ^. selectedLayer) (s ^. editorObjects))
+        then s
+        else error "deleteCurrentLayer.newSelectedLayer"
 
 -- * modification
 
