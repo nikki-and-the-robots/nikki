@@ -36,7 +36,7 @@ module Data.Indexable (
     optimizeMerge,
   ) where
 
-import Prelude hiding (map, mapM, (++), filter, reverse, elem, maximum, zip, zipWith, null, length, head, tail)
+import Prelude hiding ((++), filter, reverse, elem, maximum, zip, zipWith, null, length, head, tail)
 
 import qualified Data.List as List
 import Data.Accessor
@@ -80,7 +80,7 @@ instance Read a => Read (Indexable a) where
         consString = "Indexable "
 
 keysVector :: Indexable a -> Vector Index
-keysVector = map fst . values
+keysVector = fmap fst . values
 
 keys :: Indexable a -> [Index]
 keys = Vector.toList . keysVector
@@ -105,7 +105,7 @@ instance Traversable Indexable where
 fmapMWithIndex :: (Monad m, Functor m) => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)
 fmapMWithIndex cmd (Indexable values) = 
-    Indexable <$> mapM (\ (i, v) -> tuple i <$> cmd i v) values
+    Indexable <$> fmapM (\ (i, v) -> tuple i <$> cmd i v) values
 
 instance Initial (Indexable a) where
     initial = Indexable empty
@@ -131,7 +131,7 @@ isIndexOf i indexable = i `elem` keysVector indexable
 -- Honours the order of values.
 findIndices :: (a -> Bool) -> Indexable a -> [Index]
 findIndices p (Indexable values) =
-    Vector.toList $ map fst $ Vector.filter (p . snd) values
+    Vector.toList $ fmap fst $ Vector.filter (p . snd) values
 
 filter :: (a -> Bool) -> Indexable a -> Indexable a
 filter p (Indexable values) =
@@ -156,20 +156,20 @@ newIndex l = if null l then 0 else maximum l + 1
 a <: (Indexable values) =
     Indexable ((i, a) `cons` values)
   where
-    i = newIndex $ map fst values
+    i = newIndex $ fmap fst values
 
 (>:) :: Indexable a -> a -> Indexable a
 (Indexable values) >: a =
     Indexable (values `snoc` (i, a))
   where
-    i = newIndex $ map fst values
+    i = newIndex $ fmap fst values
 
 -- | inserts an element (at the end) and returns the new Index
 insert :: a -> Indexable a -> (Index, Indexable a)
 insert a (Indexable values) =
     (i, Indexable ((i, a) `cons` values))
   where
-    i = newIndex $ map fst values
+    i = newIndex $ fmap fst values
 
 fromList :: [a] -> Indexable a
 fromList list = Indexable $ Vector.fromList (List.zip [0 ..] list)
@@ -241,7 +241,7 @@ optimizeMerge p =
 
 
     convertToVector :: Indexable a -> MergeVector a -- left unmerged, right merged
-    convertToVector ix = map Left $ values ix
+    convertToVector ix = fmap Left $ values ix
     convertToIndexable :: MergeVector a -> Indexable a
     convertToIndexable list =
         Indexable $ zipWith inner list newIndices
@@ -249,7 +249,7 @@ optimizeMerge p =
         newIndices :: Vector Index
         newIndices = Vector.fromList $
             if null allIndices then [0 ..] else [maximum allIndices + 1 ..]
-        allIndices = map fst $ lefts list
+        allIndices = fmap fst $ lefts list
         inner (Left x) _ = x
         inner (Right x) i = (i, x)
 
@@ -278,7 +278,7 @@ mergeVectorSome p vector = case uncons vector of
 -- * vector utils
 
 lefts :: Vector (Either a b) -> Vector a
-lefts = Vector.filter isLeft >>> map fromLeft
+lefts = Vector.filter isLeft >>> fmap fromLeft
   where
     isLeft (Left _) = True
     isLeft _ = False
