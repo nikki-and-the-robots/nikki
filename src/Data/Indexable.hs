@@ -196,7 +196,7 @@ toHead i (Indexable values) =
     Indexable $ inner empty values
   where
     inner :: Vector (Index, a) -> Vector (Index, a) -> Vector (Index, a)
-    inner akk vector = case decons vector of
+    inner akk vector = case uncons vector of
         Just (a, r) ->
             if fst a == i then
                 a `cons` reverse akk ++ r
@@ -210,7 +210,7 @@ toLast i (Indexable values) =
     Indexable $ inner empty values
   where
     inner :: Vector (Index, a) -> Vector (Index, a) -> Vector (Index, a)
-    inner akk vector = case decons vector of
+    inner akk vector = case uncons vector of
         Just (a, r) ->
             if fst a == i then
                 reverse akk ++ r `snoc` a
@@ -255,7 +255,7 @@ optimizeMerge p =
 
 -- OPT: This is probably not very Vector-like code.
 mergeVectorSome :: (a -> a -> Maybe a) -> MergeVector a -> MergeVector a
-mergeVectorSome p vector = case decons vector of
+mergeVectorSome p vector = case uncons vector of
     Just (a, r) ->
         case mergeSome p a (empty, r) of
             Just (merged, r') -> Right merged `cons` mergeVectorSome p r'
@@ -264,7 +264,7 @@ mergeVectorSome p vector = case decons vector of
   where
     mergeSome :: (a -> a -> Maybe a) -> Either (Index, a) a -> (MergeVector a, MergeVector a)
         -> Maybe (a, MergeVector a)
-    mergeSome p outerA (before, after) = case decons after of
+    mergeSome p outerA (before, after) = case uncons after of
         Just (outerB, r) ->
             case p (getInner outerA) (getInner outerB) of
                 Just x -> Just (x, reverse before ++ r)
@@ -285,6 +285,6 @@ lefts = Vector.filter isLeft >>> map fromLeft
     fromLeft (Left a) = a
 
 -- | (head a, tail a) for mimicking (a : r) pattern matching
-decons :: Vector a -> Maybe (a, Vector a)
-decons v =
+uncons :: Vector a -> Maybe (a, Vector a)
+uncons v =
     if null v then Nothing else Just (head v, tail v)
