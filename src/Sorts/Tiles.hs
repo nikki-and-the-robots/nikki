@@ -186,7 +186,7 @@ data Tile
 instance Sort TSort Tile where
     sortId TSort{name} = SortId name
 
-    freeSort = fmapM_ freePixmap . tilePixmaps
+    freeSort = fmapM_ freePixmap . nub . tilePixmaps
 
     size (TSort _ _ pixmaps) = pixmapSize $ head pixmaps
 
