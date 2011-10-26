@@ -33,12 +33,16 @@ module Data.Indexable (
     indexA,
     toHead,
     toLast,
+    beforeIndex,
     isIndexOf,
+    nextIndex,
+    previousIndex,
 
     optimizeMerge,
   ) where
 
 import Prelude hiding ((++), filter, reverse, elem, maximum, zip, zipWith, null, length, head, tail, concatMap)
+import Safe
 
 import qualified Data.List as List
 import Data.Accessor
@@ -121,6 +125,31 @@ length = Vector.length . values
 -- -- | returns, if the Index points to something
 isIndexOf :: Index -> Indexable a -> Bool
 isIndexOf i indexable = i `elem` keysVector indexable
+
+-- | Returns all elements before the given index
+-- (excluding the one referred to by the index).
+beforeIndex :: Index -> Indexable a -> [a]
+beforeIndex i =
+    values >>>
+    Vector.takeWhile ((/= i) . fst) >>>
+    Vector.toList >>>
+    fmap snd
+
+-- | Returns the Index of the element after the one referred to by the given Index.
+nextIndex :: Indexable a -> Index -> Maybe Index
+nextIndex ix i =
+    inner $ keys ix
+  where
+    inner (a : r) = if a == i then headMay r else inner r
+    inner [] = Nothing
+
+previousIndex :: Indexable a -> Index -> Maybe Index
+previousIndex ix i =
+    inner $ keys ix
+  where
+    inner (a : _) | a == i = Nothing
+    inner (a : b : r) = if b == i then Just a else inner (b : r)
+    inner _ = Nothing
 
 (!!!) :: Indexable a -> Index -> a
 (Indexable values) !!! i =
