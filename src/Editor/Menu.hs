@@ -242,8 +242,8 @@ editLayers :: Application -> MVar (EditorScene Sort_)
 editLayers app mvar scene ps parent =
     menuAppState app (NormalMenu (p "edit layers") Nothing) (Just parent) (
         (p "change layer distance", changeLayerDistance app mvar scene . this) :
-        (p "add background layer", edit (addDefaultBackground scene)) :
-        (p "add foreground layer", edit (addDefaultForeground scene)) :
+        (p "add on top of current layer", edit (addDefaultLayerOnTop scene)) :
+        (p "add behind current layer", edit (addDefaultLayerBehind scene)) :
         []) ps
   where
     edit s = const $ editorLoop app mvar s

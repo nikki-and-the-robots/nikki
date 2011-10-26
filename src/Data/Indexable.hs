@@ -24,6 +24,8 @@ module Data.Indexable (
     (<:),
     (>:),
     insert,
+    insertBefore,
+    insertAfter,
 
     fmapMWithIndex,
 
@@ -36,7 +38,7 @@ module Data.Indexable (
     optimizeMerge,
   ) where
 
-import Prelude hiding ((++), filter, reverse, elem, maximum, zip, zipWith, null, length, head, tail)
+import Prelude hiding ((++), filter, reverse, elem, maximum, zip, zipWith, null, length, head, tail, concatMap)
 
 import qualified Data.List as List
 import Data.Accessor
@@ -49,7 +51,7 @@ import Data.Maybe
 
 import Control.Arrow
 
-import Utils
+import Utils hiding (singleton)
 
 
 newtype Index = Index {index :: Int}
@@ -170,6 +172,36 @@ insert a (Indexable values) =
     (i, Indexable ((i, a) `cons` values))
   where
     i = newIndex $ fmap fst values
+
+-- | O(n)
+-- Inserts a given element before the one with the given index.
+insertBefore :: Index -> a -> Indexable a -> Indexable a
+insertBefore searched new ix =
+    inner ix
+  where
+    inner =
+        values >>>
+        concatMap (\ (i, a) ->
+            if i == searched
+            then (newI, new) `cons` singleton (i, a)
+            else singleton (i, a)) >>>
+        Indexable
+    newI = newIndex $ fmap fst $ values ix
+
+-- | O(n)
+-- Inserts a given element after the one with the given index.
+insertAfter :: Index -> a -> Indexable a -> Indexable a
+insertAfter searched new ix =
+    inner ix
+  where
+    inner =
+        values >>>
+        concatMap (\ (i, a) ->
+            if i == searched
+            then (i, a) `cons` singleton (newI, new)
+            else singleton (i, a)) >>>
+        Indexable
+    newI = newIndex $ fmap fst $ values ix
 
 fromList :: [a] -> Indexable a
 fromList list = Indexable $ Vector.fromList (List.zip [0 ..] list)

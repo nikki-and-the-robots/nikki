@@ -65,14 +65,18 @@ setCursorStep :: EditorScene s -> Maybe EditorPosition -> EditorScene s
 setCursorStep scene x = scene{cursorStep = x}
 
 -- | adds a new default Layer to the EditorScene
-addDefaultBackground :: EditorScene Sort_ -> EditorScene Sort_
-addDefaultBackground =
-    editorObjects .> backgrounds ^: (>: initial)
+addDefaultLayerOnTop :: EditorScene Sort_ -> EditorScene Sort_
+addDefaultLayerOnTop s = case selectedLayer s of
+    MainLayer -> editorObjects .> foregrounds ^: (initial <:) $ s
+    Backgrounds i -> editorObjects .> backgrounds ^: (insertAfter i initial) $ s
+    Foregrounds i -> editorObjects .> foregrounds ^: (insertAfter i initial) $ s
 
 -- | adds a new default Layer to the EditorScene
-addDefaultForeground :: EditorScene Sort_ -> EditorScene Sort_
-addDefaultForeground =
-    editorObjects .> foregrounds ^: (initial <:)
+addDefaultLayerBehind :: EditorScene Sort_ -> EditorScene Sort_
+addDefaultLayerBehind s = case selectedLayer s of
+    MainLayer -> editorObjects .> backgrounds ^: (>: initial) $ s
+    Backgrounds i -> editorObjects .> backgrounds ^: (insertBefore i initial) $ s
+    Foregrounds i -> editorObjects .> foregrounds ^: (insertBefore i initial) $ s
 
 
 -- * modification
