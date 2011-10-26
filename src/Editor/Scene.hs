@@ -44,14 +44,14 @@ import qualified Editor.Scene.RenderOrdering as RenderOrdering
 -- | looks, if there is an object under the cursor (and therefore selected)
 -- in the selected layer
 searchSelectedObject :: EditorScene Sort_ -> Maybe (GroundsIndex, Index)
-searchSelectedObject s@EditorScene{selectedLayer} =
+searchSelectedObject s@EditorScene{selectedLayer_} =
     let indices = I.findIndices isSelected $
-            s ^. editorObjects ^. layerA selectedLayer ^. content
+            s ^. editorObjects ^. layerA selectedLayer_ ^. content
         isSelected o = lowerCorner o == cursor s
         lowerCorner o = o ^. editorPosition
     in case indices of
         [] -> Nothing
-        ll -> Just $ (selectedLayer, last ll)
+        ll -> Just $ (selectedLayer_, last ll)
 
 -- * normalizers
 
@@ -72,7 +72,7 @@ initEditorScene sorts editorLevelFile (DiskLevel objects cachedTiles) =
         cursorStep = Just $ EditorPosition 64 64,
         availableSorts_ = removeTutorialSorts sorts,
         editorObjects_ = objects,
-        selectedLayer = MainLayer,
+        selectedLayer_ = MainLayer,
         selected = Nothing,
         editorMode = NormalMode,
         clipBoard = [],
@@ -155,8 +155,8 @@ normalMode DownArrow scene@EditorScene{cursor = (EditorPosition x y)} =
     in Just scene{cursor = (EditorPosition x (y + sy))}
 
 -- add object
-normalMode key scene@EditorScene{cursor, selectedLayer} | isEditorA key =
-    Just $ editorObjects .> layerA selectedLayer ^: mod $
+normalMode key scene@EditorScene{cursor, selectedLayer_} | isEditorA key =
+    Just $ editorObjects .> layerA selectedLayer_ ^: mod $
         scene
   where
     mod = modifyContent (RenderOrdering.sortMainLayer . (>: new))
@@ -191,10 +191,14 @@ normalMode key scene | key `elem` [W, S] =
 
 -- * Layers
 
-normalMode Plus s@EditorScene{selectedLayer} =
-    Just s{selectedLayer = nextGroundsIndex (s ^. editorObjects) selectedLayer}
-normalMode Minus s@EditorScene{selectedLayer} =
-    Just s{selectedLayer = previousGroundsIndex (s ^. editorObjects) selectedLayer}
+normalMode Plus s =
+    Just $
+        selectedLayer ^: nextGroundsIndex (s ^. editorObjects) $
+        s
+normalMode Minus s =
+    Just $
+        selectedLayer ^: previousGroundsIndex (s ^. editorObjects) $
+        s
 
 -- * paste from clipBoard
 

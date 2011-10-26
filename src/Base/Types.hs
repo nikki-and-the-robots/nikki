@@ -372,7 +372,7 @@ data EditorScene sort
         availableSorts_ :: SelectTree sort,
 
         editorObjects_ :: Grounds (EditorObject sort),
-        selectedLayer :: GroundsIndex,
+        selectedLayer_ :: GroundsIndex,
         selected :: Maybe (GroundsIndex, Index),
             -- index of the object that is in the scene and currently under the cursor
         editorMode :: EditorMode,
@@ -385,6 +385,9 @@ data EditorScene sort
 
 editorObjects :: Accessor (EditorScene sort) (Grounds (EditorObject sort))
 editorObjects = accessor editorObjects_ (\ a r -> r{editorObjects_ = a})
+
+selectedLayer :: Accessor (EditorScene sort) GroundsIndex
+selectedLayer = accessor selectedLayer_ (\ a r -> r{selectedLayer_ = a})
 
 availableSorts :: Accessor (EditorScene sort) (SelectTree sort)
 availableSorts = accessor availableSorts_ (\ a r -> r{availableSorts_ = a})

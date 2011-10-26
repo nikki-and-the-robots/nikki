@@ -255,7 +255,7 @@ changeLayerDistance app mvar scene parent =
     askStringParse app parent (p "x distance") readEither $ \ x ->
     askStringParse app parent (p "y distance") readEither $ \ y ->
         editorLoop app mvar
-            (editorObjects .> layerA (selectedLayer scene) ^:
+            (editorObjects .> layerA (scene ^. selectedLayer) ^:
                 (setYDistance y . setXDistance x) $ scene)
   where
     readEither :: String -> Either [Prose] Double

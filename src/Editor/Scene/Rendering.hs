@@ -40,8 +40,8 @@ renderObjectScene ptr offset s = do
     size <- sizeQPainter ptr
     clearScreen ptr black
     let -- the layers behind the currently selected Layer
-        currentBackgrounds = belowSelected (selectedLayer s) (s ^. editorObjects)
-        currentLayer = s ^. editorObjects ^. layerA (selectedLayer s)
+        currentBackgrounds = belowSelected (s ^. selectedLayer) (s ^. editorObjects)
+        currentLayer = s ^. editorObjects ^. layerA (s ^. selectedLayer)
     mapM_ (renderLayer ptr size offset . correctDistances currentLayer)
         (currentBackgrounds +: currentLayer)
 
@@ -51,7 +51,7 @@ renderGUI ptr offset s = do
     renderSelectedIcon ptr (getSelected $ s ^. availableSorts)
     renderCursorPositionOSD ptr $ cursor s
     renderCursorStepSize ptr $ getCursorStep s
-    renderLayerOSD ptr $ selectedLayer s
+    renderLayerOSD ptr (s ^. selectedLayer)
     whenMaybe (getSelectedObject s) $ \ o ->
         renderSelectedObject ptr $ editorSort o
 
@@ -155,7 +155,7 @@ renderSelectionBox ptr offset scene (EditorPosition x2 y2) = do
 renderSelectedBoxes ptr offset scene =
     mapM_ (drawCopySelectedBox ptr offset) $ 
         filter (inCopySelection scene) $ I.toList $
-            scene ^. editorObjects ^. layerA (selectedLayer scene) ^. content
+            scene ^. editorObjects ^. layerA (scene ^. selectedLayer) ^. content
 
 drawCopySelectedBox ptr offset object = do
     let sort = editorSort object

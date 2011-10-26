@@ -25,7 +25,7 @@ import Sorts.Robots
 
 getSelectedLayerContent :: EditorScene Sort_ -> Indexable (EditorObject Sort_)
 getSelectedLayerContent scene =
-    scene ^. editorObjects ^. layerA (selectedLayer scene) ^. content
+    scene ^. editorObjects ^. layerA (scene ^. selectedLayer) ^. content
 
 -- | get the object that is actually selected by the cursor
 getSelectedObject :: EditorScene Sort_ -> Maybe (EditorObject Sort_)
@@ -66,14 +66,14 @@ setCursorStep scene x = scene{cursorStep = x}
 
 -- | adds a new default Layer to the EditorScene
 addDefaultLayerOnTop :: EditorScene Sort_ -> EditorScene Sort_
-addDefaultLayerOnTop s = case selectedLayer s of
+addDefaultLayerOnTop s = case s ^. selectedLayer of
     MainLayer -> editorObjects .> foregrounds ^: (initial <:) $ s
     Backgrounds i -> editorObjects .> backgrounds ^: (insertAfter i initial) $ s
     Foregrounds i -> editorObjects .> foregrounds ^: (insertAfter i initial) $ s
 
 -- | adds a new default Layer to the EditorScene
 addDefaultLayerBehind :: EditorScene Sort_ -> EditorScene Sort_
-addDefaultLayerBehind s = case selectedLayer s of
+addDefaultLayerBehind s = case s ^. selectedLayer of
     MainLayer -> editorObjects .> backgrounds ^: (>: initial) $ s
     Backgrounds i -> editorObjects .> backgrounds ^: (insertBefore i initial) $ s
     Foregrounds i -> editorObjects .> foregrounds ^: (insertBefore i initial) $ s
@@ -99,7 +99,7 @@ inCopySelection EditorScene{editorMode = SelectionMode endPosition, cursor} obje
 
 cutSelection :: EditorScene Sort_ -> EditorScene Sort_
 cutSelection scene =
-    editorObjects .> layerA (selectedLayer scene) ^:
+    editorObjects .> layerA (scene ^. selectedLayer) ^:
         (modifyContent deleteCutObjects) $
     scene{editorMode = NormalMode, clipBoard = clipBoard}
   where
@@ -139,7 +139,7 @@ moveSelectionToZero scene@EditorScene{editorMode = SelectionMode (EditorPosition
 
 pasteClipboard :: EditorScene Sort_ -> EditorScene Sort_
 pasteClipboard scene =
-    editorObjects .> layerA (selectedLayer scene) ^: (modifyContent addClipboard) $
+    editorObjects .> layerA (scene ^. selectedLayer) ^: (modifyContent addClipboard) $
     scene
   where
     addClipboard :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
