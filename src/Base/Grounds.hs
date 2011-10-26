@@ -3,7 +3,7 @@
 module Base.Grounds where
 
 
-import Utils
+import Safe
 
 import Data.Indexable as I
 import Data.Generics
@@ -12,8 +12,11 @@ import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, traverse)
 import Data.Initial
 import Data.Accessor
+import Data.Maybe
 
 import Graphics.Qt
+
+import Utils
 
 
 -- | Multiple backgrounds, one main Layer, multiple foregrounds
@@ -101,13 +104,13 @@ numberOfLayers (Grounds backgrounds _ foregrounds) =
 -- | returns all Layers below the selected (excluding the selected)
 belowSelected :: GroundsIndex -> Grounds a -> [Layer a]
 belowSelected index grounds =
-    let bgs = I.toList (grounds ^. backgrounds)
+    let bgs = grounds ^. backgrounds
         ml = grounds ^. mainLayer
-        fgs = I.toList (grounds ^. foregrounds)
+        fgs = grounds ^. foregrounds
     in case index of
-        Backgrounds i -> genericTake i bgs
-        MainLayer -> bgs
-        Foregrounds i -> bgs ++ [ml] ++ genericTake i fgs
+        Backgrounds i -> beforeIndex i bgs
+        MainLayer -> I.toList bgs
+        Foregrounds i -> I.toList bgs ++ [ml] ++ I.toList (beforeIndex i fgs)
 
 
 -- * setter
