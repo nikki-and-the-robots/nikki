@@ -122,42 +122,30 @@ setYDistance :: Double -> Layer a -> Layer a
 setYDistance y l = l{yDistance = y}
 
 
--- * conversions
-
--- | converts the GroundsIndex to an Int
--- PRE: isNormalized
-toInt :: Grounds a -> GroundsIndex -> Int
-toInt gs (Backgrounds i) =
-    fromIntegral i
-toInt gs MainLayer =
-    fromIntegral $ I.length (gs ^. backgrounds)
-toInt gs (Foregrounds i) =
-    fromIntegral (Index (I.length (gs ^. backgrounds)) + 1 + i)
-
--- | reverse of toInt
--- PRE: isNormalized
-fromInt :: Grounds a -> Int -> GroundsIndex
-fromInt gs@(Grounds backgrounds _ foregrounds) i
-    | i < 0
-        = fromInt gs (fromIntegral i + numberOfLayers gs)
-    | i < bgsLen
-        = Backgrounds $ Index i
-    | i == bgsLen
-        = MainLayer
-    | i < (I.length backgrounds + 1 + I.length foregrounds)
-        = Foregrounds $ Index (i - bgsLen - 1)
-    | i >= (I.length backgrounds + 1 + I.length foregrounds)
-        = fromInt gs (fromIntegral i - numberOfLayers gs)
-    | otherwise = e "fromInt"
-  where bgsLen = I.length backgrounds
-
-
 -- * modifications
 
--- | modifies the GroundIndex according to the given function
-modifyGroundsIndex :: Grounds a -> (Int -> Int) -> GroundsIndex -> GroundsIndex
-modifyGroundsIndex gs f i =
-    fromInt gs (f (toInt gs i))
+-- | returns an index referring to the next element
+nextGroundsIndex :: Grounds a -> GroundsIndex -> GroundsIndex
+nextGroundsIndex gs i = case i of
+    Backgrounds i -> maybe MainLayer Backgrounds (nextIndex (gs ^. backgrounds) i)
+    MainLayer -> firstForegroundsIndex
+    Foregrounds i -> maybe firstBackgroundsIndex Foregrounds (nextIndex (gs ^. foregrounds) i)
+  where
+    firstForegroundsIndex = case keys (gs ^. foregrounds) of
+        (a : _) -> Foregrounds a
+        [] -> firstBackgroundsIndex
+    firstBackgroundsIndex = case keys (gs ^. backgrounds) of
+        (a : _) -> Backgrounds a
+        [] -> MainLayer
+
+previousGroundsIndex :: Grounds a -> GroundsIndex -> GroundsIndex
+previousGroundsIndex gs i = case i of
+    Backgrounds i -> maybe lastForegroundsIndex Backgrounds (previousIndex (gs ^. backgrounds) i)
+    MainLayer -> lastBackgroundsIndex
+    Foregrounds i -> maybe MainLayer Foregrounds (previousIndex (gs ^. foregrounds) i)
+  where
+    lastForegroundsIndex = maybe MainLayer Foregrounds (lastMay $ keys (gs ^. foregrounds))
+    lastBackgroundsIndex = maybe lastForegroundsIndex Backgrounds (lastMay $ keys (gs ^. backgrounds))
 
 -- | modifies the content of one Layer
 modifyContent :: (Indexable a -> Indexable b) -> Layer a -> Layer b

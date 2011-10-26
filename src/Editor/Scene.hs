@@ -192,9 +192,9 @@ normalMode key scene | key `elem` [W, S] =
 -- * Layers
 
 normalMode Plus s@EditorScene{selectedLayer} =
-    Just s{selectedLayer = modifyGroundsIndex (s ^. editorObjects) (+ 1) selectedLayer}
+    Just s{selectedLayer = nextGroundsIndex (s ^. editorObjects) selectedLayer}
 normalMode Minus s@EditorScene{selectedLayer} =
-    Just s{selectedLayer = modifyGroundsIndex (s ^. editorObjects) (subtract 1) selectedLayer}
+    Just s{selectedLayer = previousGroundsIndex (s ^. editorObjects) selectedLayer}
 
 -- * paste from clipBoard
 
