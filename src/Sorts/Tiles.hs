@@ -92,7 +92,7 @@ mkSort storyMode name offset size frameDuration frameOrder = do
                 fail ("no png files found for tile: " ++ name)
             let sortID = if storyMode then ("story-mode/" ++ name) else name
             frames <- reorderFrames <$> mapM mkTilePixmap pngFiles
-            return $ Just $ Sort_ $ TSort sortID frameDuration frames
+            return $ Just $ Sort_ $ TSort sortID (mkAnimation frames [frameDuration])
   where
     mkTilePixmap file = loadPixmap (fmap fromIntegral offset) size file
 
@@ -166,8 +166,7 @@ getPngFileName True file = io $ getStoryModeDataFileName file
 data TSort
     = TSort {
         name :: String,
-        frameDuration :: Seconds,
-        tilePixmaps :: [Pixmap]
+        animation :: Animation Pixmap
       }
     deriving (Show, Typeable)
 
@@ -186,12 +185,12 @@ data Tile
 instance Sort TSort Tile where
     sortId TSort{name} = SortId name
 
-    freeSort = fmapM_ freePixmap . nub . tilePixmaps
+    freeSort = fmapM_ freePixmap . nub . ftoList . animation
 
-    size (TSort _ _ pixmaps) = pixmapSize $ head pixmaps
+    size (TSort _ animation) = pixmapSize $ head $ ftoList animation
 
     renderIconified sort ptr =
-        renderPixmapSimple ptr $ head $ tilePixmaps sort
+        renderPixmapSimple ptr $ head $ ftoList $ animation sort
 
     initialize app _ Nothing sort@TSort{} editorPosition Nothing _ = do
         let pos = epToPosition (size sort) editorPosition
@@ -213,7 +212,7 @@ instance Sort TSort Tile where
     renderObject _ _ (Tile (ImmutableChipmunk position _ _ _)) sort _ offset now = return $
         return $ RenderPixmap pix position Nothing
       where
-        pix = pickAnimationFrame (tilePixmaps sort) [frameDuration sort] now
+        pix = pickAnimationFrame (animation sort) now
 
 -- before initializing the scene, all tiles in the physics scene are being merged 
 -- (in Top.Initialisation), resulting in an AllTiles object. 
@@ -263,7 +262,7 @@ instance Sort AllTilesSort AllTiles where
         fmap inner renderables
       where
         inner (sort, pos) = RenderPixmap
-            (pickAnimationFrame (tilePixmaps sort) [frameDuration sort] now)
+            (pickAnimationFrame (animation sort) now)
             pos
             Nothing
 

@@ -32,8 +32,9 @@ sort = do
     off <- load "standard-off"
     red <- load "standard-on_00"
     blue <- load "standard-on_01"
+    let animation = mkAnimation [red, blue] (singleton patrolFrameTime)
     robotEyes <- loadRobotEyesPixmaps
-    return $ Sort_ $ PSort off red blue robotEyes
+    return $ Sort_ $ PSort off red blue animation robotEyes
   where
     load :: String -> RM Pixmap
     load name = do
@@ -45,6 +46,7 @@ data PSort = PSort {
     offPix :: Pixmap,
     redPix :: Pixmap,
     bluePix :: Pixmap,
+    blinkAnimation :: Animation Pixmap,
     robotEyes :: RobotEyesPixmaps
   }
     deriving (Show, Typeable, Data)
@@ -64,7 +66,8 @@ deadly = accessor deadly_ (\ a r -> r{deadly_ = a})
 
 instance Sort PSort Patrol where
     sortId _ = SortId "robots/platform/patrol"
-    freeSort (PSort off red blue eyes) =
+    freeSort (PSort off red blue _animation eyes) =
+        -- the animation contains the red and the blue pixmap
         fmapM_ freePixmap [off, red, blue] >>
         freeRobotEyesPixmaps eyes
                              -- one bigger than actual (to prevent getting stuck on edges)
@@ -196,7 +199,7 @@ pickRobotPixmap :: Seconds -> PSort -> Patrol -> Pixmap
 pickRobotPixmap now sort patrol =
     if patrol ^. deadly then activePix else offPix sort
   where
-    activePix = pickAnimationFrame [redPix sort, bluePix sort] (singleton patrolFrameTime) now
+    activePix = pickAnimationFrame (blinkAnimation sort) now
 
 -- | Returns the state of the robots eyes dependent on the current Path
 robotEyesState :: Patrol -> RobotEyesState

@@ -38,6 +38,7 @@ import Safe
 import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault, toList)
 import Data.Foldable (Foldable, mapM_, forM_, any)
+import qualified Data.Foldable as Foldable
 import Data.Traversable (Traversable, mapM)
 import Data.IORef
 import qualified Data.Set as Set
@@ -156,6 +157,9 @@ fmapM_ = Data.Foldable.mapM_
 
 fany :: Foldable t => (a -> Bool) -> t a -> Bool
 fany = Data.Foldable.any
+
+ftoList :: Foldable f => f a -> [a]
+ftoList = Foldable.toList
 
 (+>) :: Monoid m => m -> m -> m
 (+>) = mappend

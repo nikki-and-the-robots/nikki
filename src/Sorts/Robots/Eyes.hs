@@ -43,7 +43,7 @@ animationFrameTimes = fromList (
 
 -- * loading
 
-type RobotEyesPixmaps = Map RobotEyesState [Pixmap]
+type RobotEyesPixmaps = Map RobotEyesState (Animation Pixmap)
 
 -- | will be called by every robot sort, but sharing takes place on Qt's side.
 loadRobotEyesPixmaps :: RM RobotEyesPixmaps
@@ -52,7 +52,7 @@ loadRobotEyesPixmaps = do
     idles <- loadImages "idle" 4
     let open = actives !! 0
         closed = actives !! 1
-    return $ fromList (
+    return $ fromList $ fmap mkAnim (
         (Active, actives) :
         (Idle, idles) :
         (Open, [open]) :
@@ -69,12 +69,14 @@ loadRobotEyesPixmaps = do
             loadSymmetricPixmap (Position 9 9) path
     underscore a b = a ++ "_" ++ b
 
+    mkAnim (state, pixmaps) = (state, mkAnimation pixmaps (animationFrameTimes ! state))
+
 freeRobotEyesPixmaps :: RobotEyesPixmaps -> IO ()
 freeRobotEyesPixmaps eyes = fmapM_ freePixmap allPixmaps
   where
     -- some pixmaps are used more than once in the data structure!!!
     allPixmaps :: [Pixmap]
-    allPixmaps = nub $ universeBi eyes
+    allPixmaps = nub $ universeBi $ fmap ftoList eyes
 
 -- * rendering
 
@@ -97,4 +99,4 @@ renderRobotEyes pixmaps pos angle eyesOffset state stateTime =
 
 pickPixmap :: RobotEyesPixmaps -> RobotEyesState -> Seconds -> Pixmap
 pickPixmap pixmaps state stateTime =
-    pickAnimationFrame (pixmaps ! state) (animationFrameTimes ! state) stateTime
+    pickAnimationFrame (pixmaps ! state) stateTime

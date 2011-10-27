@@ -57,11 +57,13 @@ sorts =
         (loadPix "base-standard_00") <*>
         (loadPix "cannon-standard_00") <*>
         loadRobotEyesPixmaps <*>
-        (mapM loadPix ("cannonball-standard_00" :
-                       "cannonball-standard_01" :
-                       "cannonball-standard_02" :
-                       "cannonball-standard_03" :
-                       [])) <*>
+        (mkAnimation <$>
+            mapM loadPix ("cannonball-standard_00" :
+                          "cannonball-standard_01" :
+                          "cannonball-standard_02" :
+                          "cannonball-standard_03" :
+                          []) <*>
+            pure cannonballFrameTimes) <*>
         (loadSound ("game" </> "cannon_shot") 8) <*>
         (loadSound ("game" </> "cannonball_disappear") 8)
       )
@@ -75,7 +77,7 @@ data CannonSort = CannonSort {
     basePix :: Pixmap,
     barrelPix :: Pixmap,
     robotEyes :: RobotEyesPixmaps,
-    ballPixmaps :: [Pixmap],
+    ballPixmaps :: Animation Pixmap,
 
     shootSound :: PolySound,
     disappearSound :: PolySound
@@ -152,7 +154,7 @@ instance Sort CannonSort Cannon where
     freeSort (CannonSort a b c d e f) =
         fmapM_ freePixmap [a, b] >>
         freeRobotEyesPixmaps c >>
-        fmapM_ freePixmap d >>
+        fmapM_ freePixmap (ftoList d) >>
         fmapM_ freePolySound [e, f]
     size _ = robotSize
     renderIconified sort ptr =
@@ -391,7 +393,7 @@ mkCannonballRenderPixmap :: CannonSort -> Cannonball -> IO RenderPixmap
 mkCannonballRenderPixmap sort (_, chip) = do
     (chipPos, angle) <- getChipmunkPosition chip
     let renderPos = vector2position chipPos -~ baryCenterOffset
-        pixmap = pickAnimationFrame (ballPixmaps sort) [specAngleRange] angle
+        pixmap = pickAnimationFrame (ballPixmaps sort) angle
     return $ RenderPixmap pixmap renderPos Nothing
   where
     baryCenterOffset = fmap fromUber $ Position 3.5 3.5
@@ -401,6 +403,8 @@ mkCannonballRenderPixmap sort (_, chip) = do
 specAngleRange = tau / (specAnimationFrameNumber * 2) -- doubled animation speed
 
 specAnimationFrameNumber = 4
+
+cannonballFrameTimes = [specAngleRange]
 
 
 -- * Sounds

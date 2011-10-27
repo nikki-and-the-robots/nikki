@@ -51,6 +51,7 @@ sorts =
             loadPix 0 "switch-transient-top" <*>
             loadPix 2 "switch-light-white" <*>
             loadPix 2 "switch-light-green" <*>
+            pure (mkAnimation [True, False] [greenLightBlinkTime]) <*>
 
             loadSound "game/switch_on" 2 <*>
             loadSound "game/switch_off" 2 <*>
@@ -72,6 +73,7 @@ data SwitchSort
         transientStamp :: Pixmap,
         whiteLight :: Pixmap,
         greenLight :: Pixmap,
+        blinkAnimation :: Animation Bool,
 
         onSound :: PolySound,
         offSound :: PolySound,
@@ -122,7 +124,7 @@ instance Sort SwitchSort Switch where
             SortId "switch/levelExit"
           else
             SortId "switch/levelExitTransient"
-    freeSort (SwitchSort a b c d e f g h _) =
+    freeSort (SwitchSort a b c d e f _ g h _) =
         fmapM_ freePixmap (a : b : c : d : e : f : []) >>
         fmapM_ freePolySound (g : h : [])
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
@@ -215,10 +217,9 @@ renderGreenLight :: Seconds -> SwitchSort -> Switch -> Qt.Position Double
 renderGreenLight now sort switch lightPosition =
     case lastSwitch switch of
         Nothing -> []
-        Just since -> pickAnimationFrame
-            [[RenderPixmap (greenLight sort) lightPosition Nothing], []]
-            [greenLightBlinkTime]
-            (now - since)
+        Just since -> if pickAnimationFrame (blinkAnimation sort) (now - since)
+            then [RenderPixmap (greenLight sort) lightPosition Nothing]
+            else []
 
 
 boxAttributes :: Vector -> BodyAttributes

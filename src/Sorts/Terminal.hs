@@ -100,11 +100,12 @@ terminalSort = do
         "display_02" :
         "display_03" :
       [])
+    let blinkenLightsAnimation = mkAnimation displayBlinkenLights [blinkenLightSpeed]
     littleColors <- readColorLights (\ color -> toPngPath ("terminal-" ++ color))
     littleDefunctColors <- readColorLights (\ color -> toPngPath ("terminal-defunct-" ++ color))
     osdPixmaps <- loadOsdPixmaps
     return $ TSort
-        (Pixmaps backgroundPixmap displayBlinkenLights colorBar littleColors littleDefunctColors)
+        (Pixmaps backgroundPixmap blinkenLightsAnimation colorBar littleColors littleDefunctColors)
         osdPixmaps
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
@@ -145,7 +146,7 @@ batteryTerminalSort pngDir tsort = do
         loadPix 9 "beam-green" <*>
         loadPix 9 "light-green" <*>
         loadPix 9 "display_standby_00" <*>
-        fmapM (loadPix 9) bootingPix
+        (mkAnimation <$> fmapM (loadPix 9) bootingPix <*> pure [bootingFrameTime])
   where
     loadPix n name =
         loadSymmetricPixmap (Position n n) (mkPath name)
@@ -191,7 +192,7 @@ selectedColorLights i = ColorLights (i == 0) (i == 1) (i == 2) (i == 3)
 
 data Pixmaps = Pixmaps {
     background :: Pixmap,
-    blinkenLights :: [Pixmap],
+    blinkenLights :: Animation Pixmap,
     colorBar :: Pixmap,
     littleColorLights :: ColorLights Pixmap,
     littleDefunctColorLights :: ColorLights Pixmap
@@ -236,7 +237,7 @@ data TSort
     greenBeam :: Pixmap,
     greenTop :: Pixmap,
     bootingStandBy :: Pixmap,
-    bootingPixmaps :: [Pixmap]
+    bootingPixmaps :: Animation Pixmap
   }
     deriving (Show, Typeable)
 
@@ -401,7 +402,8 @@ instance Sort TSort Terminal where
         freeTerminalPixmaps terminalPixmaps >>
         freeOsdPixmaps osdPixmaps
     freeSort (BatteryTSort _ a b c d e fs) =
-        fmapM_ freePixmap (a : b : c : d : e : fs)
+        fmapM_ freePixmap (a : b : c : d : e : []) >>
+        fmapM_ freePixmap fs
     size TSort{} = fmap fromUber $ Size 48 48
     size BatteryTSort{} = batteryTerminalSize
     renderIconified sort@TSort{..} ptr =
@@ -636,8 +638,7 @@ renderTerminalBackground sort pos =
 
 -- | renders the main terminal pixmap (with blinkenlights)
 renderDisplayBlinkenLights sort now pos =
-    let pixmap = pickAnimationFrame (blinkenLights $ pixmaps sort)
-                 [blinkenLightSpeed] now
+    let pixmap = pickAnimationFrame (blinkenLights $ pixmaps sort) now
     in RenderPixmap pixmap (pos +~ blinkenLightOffset) Nothing
 
 blinkenLightOffset = fmap fromUber $ Position 13 18
@@ -697,9 +698,11 @@ beamIncrement = Position 0 (- fromUber 2)
 -- | number of beams including the top
 numberOfBeams = 9
 
+beamBlinkingAnimation = mkAnimation [True, False] [beamBlinkingTime]
+
 renderBatteryBar sort@BatteryTSort{..} now t@StandbyBatteryTerminal{batteryNumber_} p =
     case roundToBars numberOfBeams batteryNumberNeeded batteryNumber_ of
-        0 -> if pickAnimationFrame [True, False] [beamBlinkingTime] now
+        0 -> if pickAnimationFrame beamBlinkingAnimation now
              then singleton $ RenderPixmap whiteBeam (p +~ firstBeamOffset) Nothing
              else []
         n -> renderGreenBeams sort n p
@@ -733,11 +736,11 @@ renderGreenBeams BatteryTSort{..} (n :: Integer) p =
             error "renderGreenBeams"
 
 renderBootingAnimation BatteryTSort{..} StandbyBatteryTerminal{onTime} now p = case onTime of
-    Nothing -> if pickAnimationFrame [True, False] [beamBlinkingTime] now
+    Nothing -> if pickAnimationFrame beamBlinkingAnimation now
         then singleton $ RenderPixmap bootingStandBy (p +~ colorBarOffset) Nothing
         else []
     Just onTime ->
-        let pix = pickAnimationFrame bootingPixmaps [bootingFrameTime] (now - onTime)
+        let pix = pickAnimationFrame bootingPixmaps (now - onTime)
         in singleton $ RenderPixmap pix (p +~ colorBarOffset) Nothing
 renderBootingAnimation BatteryTSort{..} BatteryTerminal{} now p =
     singleton $ RenderPixmap (colorBar $ pixmaps tsort) (p +~ colorBarOffset) Nothing

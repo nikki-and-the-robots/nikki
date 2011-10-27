@@ -46,14 +46,15 @@ sorts = forM stones loadStone
 loadStone :: StoneDescription -> RM Sort_
 loadStone (sortId, imageNames, offset) = do
     images <- mapM (loadSymmetricPixmap offset) =<< mapM mkPngFile imageNames
-    return $ Sort_ $ SSort sortId images
+    return $ Sort_ $ SSort sortId images (mkAnimation images animationFrameTimes)
   where
     mkPngFile :: String -> RM FilePath
     mkPngFile imageName = getDataFileName (pngDir </> imageName <.> "png")
 
 data SSort = SSort {
     sortId :: SortId,
-    pixmaps :: [Pixmap]
+    pixmaps :: [Pixmap],
+    animation :: Animation Pixmap
   }
     deriving (Show, Typeable)
 
@@ -64,12 +65,12 @@ data Stone = Stone {
 
 
 instance Sort SSort Stone where
-    sortId (SSort s _) = s
+    sortId (SSort s _ _) = s
 
-    freeSort (SSort _ pixmaps) =
+    freeSort (SSort _ pixmaps _) =
         mapM_ freePixmap pixmaps
 
-    size (SSort _ pixmaps) = pixmapSize $ head pixmaps
+    size (SSort _ pixmaps _) = pixmapSize $ head pixmaps
 
     renderIconified sort ptr =
         renderPixmapSimple ptr $ head $ pixmaps sort
@@ -93,7 +94,7 @@ instance Sort SSort Stone where
 
     renderObject _ _ o sort ptr offset now = do
         (pos, _) <- getRenderPositionAndAngle (chipmunk o)
-        let pixmap = pickAnimationFrame (pixmaps sort) animationFrameTimes now
+        let pixmap = pickAnimationFrame (animation sort) now
         return $ singleton $ RenderPixmap pixmap pos Nothing
 
 

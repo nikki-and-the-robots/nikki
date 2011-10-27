@@ -59,7 +59,7 @@ sorts = do
     standardPixmap <- loadJetpackPng "standard_00"
     boostPixmaps <- mapM loadJetpackPng ["boost_00", "boost_01"]
     robotEyes <- Eyes.loadRobotEyesPixmaps
-    return [Sort_ $ JSort standardPixmap boostPixmaps robotEyes]
+    return [Sort_ $ JSort standardPixmap (mkAnimation boostPixmaps boostFrameTimes) robotEyes]
   where
     loadJetpackPng :: String -> RM Pixmap
     loadJetpackPng =
@@ -85,7 +85,7 @@ isBoost _ = False
 
 data JSort = JSort {
     standardPixmap :: Pixmap,
-    boostPixmaps :: [Pixmap],
+    boostPixmaps :: Animation Pixmap,
     robotEyes :: Eyes.RobotEyesPixmaps
   }
     deriving (Show, Typeable)
@@ -102,7 +102,7 @@ data Jetpack = Jetpack {
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
     freeSort (JSort p ps eyes) =
-        fmapM_ freePixmap (p : ps) >>
+        fmapM_ freePixmap (p : ftoList ps) >>
         Eyes.freeRobotEyesPixmaps eyes
     size = const jetpackSize
     renderIconified sort ptr =
@@ -226,7 +226,7 @@ eyesOffset = fmap fromUber $ Position 8 3
 pickPixmap :: Seconds -> Jetpack -> JSort -> Pixmap
 pickPixmap now j sort =
     if isBoost (renderState j) then
-        pickAnimationFrame (boostPixmaps sort) boostFrameTimes (now - startTime j)
+        pickAnimationFrame (boostPixmaps sort) (now - startTime j)
       else
         standardPixmap sort
 
