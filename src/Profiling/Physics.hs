@@ -1,5 +1,5 @@
 
-module Profiling.Physics (Profiling.Physics.render) where
+module Profiling.Physics (Profiling.Physics.render, terminate) where
 
 
 import Data.IORef
@@ -8,6 +8,7 @@ import Data.Abelian
 
 import Text.Printf
 
+import System.IO
 import System.IO.Unsafe
 
 import Physics.Chipmunk
@@ -39,24 +40,34 @@ render _ _ _ _ = return ()
 tick :: Seconds -> IO Prose
 tick spaceTime = do
     realTime <- getTime
-    (State oldMeasureTime oldDiff oldText) <- readIORef ref
+    (State oldMeasureTime oldDiff oldText log) <- readIORef ref
+    hPrint log realTime
     if realTime - oldMeasureTime >= profilingWindow then do
         let newDiff = realTime - spaceTime
             diffChange = (newDiff - oldDiff) / profilingWindow
             newText = pVerbatim (printf "Slowdown: %3.1f%%" (diffChange * 100))
-        writeIORef ref (State realTime newDiff newText)
+        writeIORef ref (State realTime newDiff newText log)
         return newText
       else
         return oldText
+
+terminate :: Configuration -> IO ()
+terminate config | physics_profiling config = do
+    h <- logFile <$> readIORef ref
+    hFlush h
+    hClose h
+terminate _ = return ()
 
 {-# NOINLINE ref #-}
 ref :: IORef State
 ref = unsafePerformIO $ do
     now <- getTime
-    newIORef (State now (now - 0) (pVerbatim ""))
+    log <- openFile "physicsTimes.log" WriteMode
+    newIORef (State now (now - 0) (pVerbatim "") log)
 
 data State = State {
     oldMeasureTime :: CpFloat, -- (POSIX) time of last measurement
     oldDiff :: CpFloat, -- old difference between POSIX time and space time of the physics engine
-    oldText :: Prose
+    oldText :: Prose,
+    logFile :: Handle
   }

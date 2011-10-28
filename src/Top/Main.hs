@@ -37,6 +37,8 @@ import Utils
 
 import Base
 
+import Profiling.Physics
+
 import Distribution.AutoUpdate.MenuItem
 
 import Top.Initialisation
@@ -134,7 +136,11 @@ showLoadingScreen qApp window applicationPixmaps config = do
 -- Runs the logic and the physics engine. Sets renderingCallbacks.
 -- Writes the possibly modified Configuration to disk at the end.
 logicThread :: Configuration -> Application -> IO ()
-logicThread configuration app = flip finally quitQApplication $ do
+logicThread configuration app = flip finally (quit configuration) $ do
     -- dynamic changes of the configuration take place in this thread!
     withDynamicConfiguration configuration $
         runAppState app (startAppState app)
+  where
+    quit config = do
+        Profiling.Physics.terminate config
+        quitQApplication
