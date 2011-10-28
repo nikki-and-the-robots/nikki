@@ -41,11 +41,11 @@ tick :: Seconds -> IO Prose
 tick spaceTime = do
     realTime <- getTime
     (State oldMeasureTime oldDiff oldText log) <- readIORef ref
-    hPrint log realTime
     if realTime - oldMeasureTime >= profilingWindow then do
         let newDiff = realTime - spaceTime
             diffChange = (newDiff - oldDiff) / profilingWindow
             newText = pVerbatim (printf "Slowdown: %3.1f%%" (diffChange * 100))
+        hPrint log (diffChange * 100)
         writeIORef ref (State realTime newDiff newText log)
         return newText
       else
