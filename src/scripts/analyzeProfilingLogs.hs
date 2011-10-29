@@ -7,28 +7,30 @@ import Text.Printf
 
 import Control.Arrow
 
-import System.Environment
-
 
 main = do
-    [file] <- getArgs
-    c <- readFile file
-    putStrLn $ showReport $ mkReport c
+    a <- readFile "physicsSlowDown.log"
+    b <- readFile "fps.log"
+    putStrLn $ showReport $ mkReport a b
 
 data Report = Report {
-    slowDownAverage :: Double
+    slowDownAverage :: Double,
+    fpsAverage :: Double
   }
 
 showReport :: Report -> String
 showReport Report{..} = unlines (
     ("slowdown average: " ++ printf "%.2f%%" slowDownAverage) :
+    ("FPS average: " ++ printf "%.2f" fpsAverage) :
     [])
 
-mkReport =
-    lines >>>
-    map read >>>
-    avg >>>
-    Report
+mkReport physics fps =
+    Report (inner physics) (inner fps)
+  where
+    inner =
+        lines >>>
+        map read >>>
+        avg
 
 deltas :: [Double] -> [Double]
 deltas (a : b : r) = b - a : deltas (b : r)

@@ -38,6 +38,7 @@ import Utils
 import Base
 
 import Profiling.Physics
+import Profiling.FPS
 
 import Distribution.AutoUpdate.MenuItem
 
@@ -143,4 +144,5 @@ logicThread configuration app = flip finally (quit configuration) $ do
   where
     quit config = do
         Profiling.Physics.terminate config
+        Profiling.FPS.terminate config
         quitQApplication

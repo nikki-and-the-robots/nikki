@@ -8,6 +8,7 @@ module Profiling.FPS (
     tickFPS,
     initialFPSRef,
     tickFPSRef,
+    terminate,
   ) where
 
 
@@ -19,6 +20,9 @@ import Data.Time.Clock.POSIX
 import Text.Printf
 
 import Control.Category
+
+import System.IO
+import System.IO.Unsafe
 
 import Graphics.Qt
 
@@ -50,8 +54,8 @@ data FpsState
 initialFPSState :: M FpsState
 initialFPSState = do
     graphicsProfiling_ <- gets graphics_profiling
-    if graphicsProfiling_ then do
-        displayValue <- io $ newIORef (pVerbatim "")
+    if graphicsProfiling_ then io $ do
+        displayValue <- newIORef (pVerbatim "")
         return $ FpsState 0 Nothing Nothing displayValue
       else
         return NotActivated
@@ -72,6 +76,7 @@ tickFPS app config ptr (FpsState counter avg (Just oldTime) displayValue) = do
   where
     handle x@(FpsState 10 (Just avg) qtime dv) = do
         writeIORef dv (pVerbatim $ printf "FPS: %3.1f" (1 / avg))
+        hPrint logHandle (1 / avg)
         return $ FpsState 0 Nothing qtime dv
     handle x = return x
 
@@ -106,6 +111,18 @@ calculateDistribution :: [Int] -> [(Int, Int)]
 calculateDistribution list =
     map (\ n -> (n, length (filter (== n) list))) [minimum list .. maximum list]
 
+
+-- * logHandle
+
+{-# NOINLINE logHandle #-}
+logHandle :: Handle
+logHandle = unsafePerformIO $ openFile "fps.log" WriteMode
+
+terminate :: Configuration -> IO ()
+terminate config | graphics_profiling config =
+    hFlush logHandle >>
+    hClose logHandle
+terminate _ = return ()
 
 -- * FPSRef
 

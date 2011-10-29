@@ -62,7 +62,7 @@ terminate _ = return ()
 ref :: IORef State
 ref = unsafePerformIO $ do
     now <- getTime
-    log <- openFile "physicsTimes.log" WriteMode
+    log <- openFile "physicsSlowDown.log" WriteMode
     newIORef (State now (now - 0) (pVerbatim "") log)
 
 data State = State {
