@@ -1,4 +1,4 @@
-{-# language DeriveDataTypeable, DeriveFoldable #-}
+{-# language DeriveDataTypeable, DeriveFunctor, DeriveFoldable #-}
 
 module Base.Animation (
     Animation,
@@ -11,7 +11,6 @@ module Base.Animation (
   ) where
 
 
-import Data.List
 import Data.Data
 import Data.Foldable (Foldable)
 

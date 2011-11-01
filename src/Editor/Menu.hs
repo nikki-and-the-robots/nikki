@@ -7,7 +7,6 @@ import Safe
 
 import Data.SelectTree
 import Data.Indexable (indexA)
-import Data.Maybe
 
 import Control.Concurrent
 import Control.Monad.State
