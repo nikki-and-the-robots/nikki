@@ -169,7 +169,7 @@ doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
         center = position
             +~ rotatePosition angle (fmap (/ 2) $ size2position (pixmapImageSize pix))
             +~ rotatePosition angle (pix ^. pixmapOffset)
-    drawPixmapFragment ptr (pixmap pix) center (rad2deg angle)
+    drawPixmapFragment ptr center (rad2deg angle) (pixmap pix)
     return Nothing
 -- old implementation
 doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
