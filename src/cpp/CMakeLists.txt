@@ -19,11 +19,6 @@ qt4_wrap_cpp(MOCFILES ${CLASS_HEADERS})
 set(SRCS utils.cpp MainWindow.cpp GLContext.cpp FallbackContext.cpp qtwrapper.cpp ${MOCFILES})
 add_library(qtwrapper ${SRCS})
 
-# added for ghci debugging
-IF("${CMAKE_SYSTEM}" MATCHES "Linux")
-    add_library(qtwrapper_so SHARED ${SRCS})
-ENDIF("${CMAKE_SYSTEM}" MATCHES "Linux")
-
 add_custom_command(TARGET qtwrapper POST_BUILD
                    COMMAND touch
                    ../../Main.hs) # to force re-linking
