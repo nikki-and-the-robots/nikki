@@ -164,12 +164,11 @@ doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO (Maybe RenderPixmap)
 
 -- new implementation using drawPixmapFragments
 doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
-    resetMatrix ptr
     let angle = fromMaybe 0 mAngle
         center = position
             +~ rotatePosition angle (fmap (/ 2) $ size2position (pixmapImageSize pix))
             +~ rotatePosition angle (pix ^. pixmapOffset)
-    drawPixmapFragment ptr center (rad2deg angle) (pixmap pix)
+    drawPixmapFragments ptr [(center, rad2deg angle)] (pixmap pix)
     return Nothing
 -- old implementation (not used)
 doRenderPixmap ptr (RenderPixmap pix position mAngle) = do

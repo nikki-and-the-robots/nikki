@@ -43,7 +43,7 @@ module Graphics.Qt.CPPWrapper (
     drawLine,
     drawText,
     drawPixmap,
-    drawPixmapFragment,
+    drawPixmapFragments,
     drawRect,
 
     -- * QTransform
@@ -90,8 +90,8 @@ import Data.Generics
 import Data.Abelian
 import Data.Set
 
-import Control.Monad
 import Control.Monad.CatchIO
+import Control.Monad.State (evalStateT, get, put)
 import Control.Concurrent.MVar
 
 import Foreign (Ptr, FunPtr, nullPtr)
@@ -347,15 +347,20 @@ foreign import ccall heightQPainter :: Ptr QPainter -> IO QtInt
 
 -- * drawPixmapFragment
 
-drawPixmapFragment :: Ptr QPainter -> Position QtReal -> QtReal
+drawPixmapFragments :: Ptr QPainter -> [(Position QtReal, QtReal)]
     -> Ptr QPixmap -> IO ()
-drawPixmapFragment ptr (Position x y) angle pix = do
-    writePixmapFragmentArray 0 x y angle pix
-    drawPixmapFragments ptr 1 pix
+drawPixmapFragments ptr fragments pixmap = flip evalStateT 0 $ do
+    forM_ fragments $ \ ((Position x y), angle) -> do
+        i <- get
+        io $ writePixmapFragmentArray i x y angle pixmap
+        put (succ i)
+    n <- get
+    io $ resetMatrix ptr
+    io $ cppDrawPixmapFragments ptr n pixmap
 
 foreign import ccall writePixmapFragmentArray :: Int -> QtReal -> QtReal -> QtReal
     -> Ptr QPixmap -> IO ()
-foreign import ccall drawPixmapFragments :: Ptr QPainter -> Int -> Ptr QPixmap -> IO ()
+foreign import ccall "drawPixmapFragments" cppDrawPixmapFragments :: Ptr QPainter -> Int -> Ptr QPixmap -> IO ()
 
 
 -- * QTransform
