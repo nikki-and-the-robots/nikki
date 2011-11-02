@@ -96,13 +96,6 @@ extern "C" void drawPixmap(QPainter* painter, qreal x, qreal y, QPixmap* pixmap)
     painter->drawPixmap(x, y, *pixmap);
 };
 
-extern "C" void drawPixmapFragment
-  (QPainter* ptr, qreal x, qreal y, qreal angle, QPixmap* pixmap) {
-    QPainter::PixmapFragment f = QPainter::PixmapFragment::create(QPointF(x, y), pixmap->rect());
-    f.rotation = angle;
-    ptr->drawPixmapFragments(&f, 1, *pixmap);
-};
-
 extern "C" void drawPoint(QPainter* painter, qreal x, qreal y) {
     painter->drawPoint(QPointF(x, y));
 };
@@ -157,6 +150,50 @@ extern "C" int widthQPainter(QPainter* painter) {
 
 extern "C" int heightQPainter(QPainter* painter) {
     return painter->window().height();
+};
+
+
+// * drawing pixmaps with drawPixmapFragments
+
+// drawPixmapFragments can be used when rendering the same pixmap multiple times.
+// There is a global array of PixmapFragments kept.
+// Rendering of one pixmap n times works like this:
+// 1. writePixmapFragmentArray n times with array indices [0 .. (n - 1)]
+// 2. drawPixmapFragments(painter, n, pixmap)
+// 
+// None of this is re-entrant
+
+const int maxNumberOfPixmapFragments = 10000;
+
+QPainter::PixmapFragment* initializePixmapFragmentArray() {
+    QPainter::PixmapFragment* array = new QPainter::PixmapFragment[maxNumberOfPixmapFragments];
+//     for (int i = 0; i < maxNumberOfPixmapFragments; i++) {
+//         array[i].height = 0;
+// qreal   opacity
+// qreal   rotation
+// qreal   scaleX
+// qreal   scaleY
+// qreal   sourceLeft
+// qreal   sourceTop
+// qreal   width
+// qreal   x
+// qreal   y
+//     };
+    return array;
+//     todo
+};
+
+QPainter::PixmapFragment* pixmapFragmentArray = initializePixmapFragmentArray();
+
+extern "C" void writePixmapFragmentArray
+    (int index, qreal x, qreal y, qreal angle, QPixmap* pixmap) {
+    pixmapFragmentArray[index] = QPainter::PixmapFragment::create(QPointF(x, y), pixmap->rect());
+    pixmapFragmentArray[index].rotation = angle;
+};
+
+extern "C" void drawPixmapFragments (QPainter* ptr, int length, QPixmap* pixmap) {
+    ptr->drawPixmapFragments(pixmapFragmentArray, length, *pixmap);
+    qDebug() << "drawPixmapFragments";
 };
 
 

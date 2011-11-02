@@ -171,7 +171,7 @@ doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
             +~ rotatePosition angle (pix ^. pixmapOffset)
     drawPixmapFragment ptr center (rad2deg angle) (pixmap pix)
     return Nothing
--- old implementation
+-- old implementation (not used)
 doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
     resetMatrix ptr
     translate ptr position

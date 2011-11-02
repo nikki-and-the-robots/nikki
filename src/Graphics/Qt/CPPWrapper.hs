@@ -292,13 +292,6 @@ drawPixmap ptr (Position x y) pix = do
     cppDrawPixmap ptr x y pix
 foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtReal -> QtReal -> Ptr QPixmap -> IO ()
 
-drawPixmapFragment :: Ptr QPainter -> Position QtReal -> QtReal
-    -> Ptr QPixmap -> IO ()
-drawPixmapFragment ptr (Position x y) angle pix =
-    cppDrawPixmapFragment ptr x y angle pix
-foreign import ccall "drawPixmapFragment" cppDrawPixmapFragment ::
-    Ptr QPainter -> QtReal -> QtReal -> QtReal -> Ptr QPixmap -> IO ()
-
 drawPoint :: Ptr QPainter -> Position QtReal -> IO ()
 drawPoint ptr (Position x y) =
     cppDrawPoint ptr x y
@@ -350,6 +343,19 @@ sizeQPainter ptr = do
 foreign import ccall widthQPainter :: Ptr QPainter -> IO QtInt
 
 foreign import ccall heightQPainter :: Ptr QPainter -> IO QtInt
+
+
+-- * drawPixmapFragment
+
+drawPixmapFragment :: Ptr QPainter -> Position QtReal -> QtReal
+    -> Ptr QPixmap -> IO ()
+drawPixmapFragment ptr (Position x y) angle pix = do
+    writePixmapFragmentArray 0 x y angle pix
+    drawPixmapFragments ptr 1 pix
+
+foreign import ccall writePixmapFragmentArray :: Int -> QtReal -> QtReal -> QtReal
+    -> Ptr QPixmap -> IO ()
+foreign import ccall drawPixmapFragments :: Ptr QPainter -> Int -> Ptr QPixmap -> IO ()
 
 
 -- * QTransform
