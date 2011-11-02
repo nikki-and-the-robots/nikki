@@ -27,6 +27,7 @@ import Data.Data
 import Data.Accessor
 import Data.Maybe
 
+import Control.Arrow
 import Control.Monad.IO.Class
 
 import Graphics.Qt
@@ -141,6 +142,16 @@ data RenderPixmap
 instance Show (Ptr QPainter -> IO ()) where
     show = const "<Ptr QPainter -> IO ()>"
 
+-- | Removes RenderOnTops and enqueues them at the end.
+removeOnTops :: [RenderPixmap] -> [RenderPixmap]
+removeOnTops =
+    inner []
+  where
+    inner onTops (RenderOnTop i : r) = inner (i : onTops) r
+    inner onTops (a : r) = a : inner onTops r
+    inner [] [] = []
+    inner onTops [] = inner [] (reverse onTops)
+
 renderPosition :: Accessor RenderPixmap (Position Double)
 renderPosition = accessor getter setter
   where
@@ -154,37 +165,67 @@ renderPosition = accessor getter setter
 -- | renders a list of RenderPixmaps. Renders the top layers after that.
 doRenderPixmaps :: Ptr QPainter -> [RenderPixmap] -> IO ()
 doRenderPixmaps ptr pixmaps = do
-    onTop <- catMaybes <$> fmapM (doRenderPixmap ptr) pixmaps
-    when (not $ null onTop) $
-        doRenderPixmaps ptr onTop
+    let groupedPixmaps = groupRenderPixmaps $ removeOnTops pixmaps
+--     putStrLn $ statistics groupedPixmaps
+    fmapM_ (renderGroupedPixmap ptr) groupedPixmaps
 
--- | renders a pixmap and returns the layer to be rendered on top of that
--- (not exported)
-doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO (Maybe RenderPixmap)
+-- | type for internally storing Pixmaps for optimizing rendering the same pixmaps
+-- multiple times
+data GroupedPixmap
+    = GroupedPixmaps (Ptr QPixmap) [(Position Double, Angle)]
+    | GroupedCommand (Position Double) (Ptr QPainter -> IO ())
 
--- new implementation using drawPixmapFragments
-doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
-    let angle = fromMaybe 0 mAngle
-        center = position
+groupRenderPixmaps :: [RenderPixmap] -> [GroupedPixmap]
+groupRenderPixmaps ((RenderPixmap pix pos mAngle) : r) =
+    GroupedPixmaps (pixmap pix) fragments : groupRenderPixmaps r'
+  where
+    fragments = toFragment pix pos mAngle : bs
+    (bs, r') = samePixmaps pix r
+
+    samePixmaps :: Pixmap -> [RenderPixmap]
+        -> ([(Position Double, Angle)], [RenderPixmap])
+    samePixmaps searched l@(RenderPixmap pix pos mAngle : r) =
+        if pixmap pix == pixmap searched
+        then first (toFragment pix pos mAngle :) $ samePixmaps searched r
+        else ([], l)
+    samePixmaps searched r = ([], r)
+
+groupRenderPixmaps (RenderCommand pos command : r) =
+    GroupedCommand pos command : groupRenderPixmaps r
+groupRenderPixmaps [] = []
+
+toFragment :: Pixmap -> Position Double -> Maybe Angle -> (Position Double, Angle)
+toFragment pix position mAngle =
+    (center, rad2deg angle)
+  where
+    angle = fromMaybe 0 mAngle
+    center = position
             +~ rotatePosition angle (fmap (/ 2) $ size2position (pixmapImageSize pix))
             +~ rotatePosition angle (pix ^. pixmapOffset)
-    drawPixmapFragments ptr [(center, rad2deg angle)] (pixmap pix)
-    return Nothing
--- old implementation (not used)
-doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
-    resetMatrix ptr
-    translate ptr position
-    whenMaybe mAngle $ \ angle ->
-        rotate ptr (rad2deg angle)
-    translate ptr (pix ^. pixmapOffset)
 
-    drawPixmap ptr zero (pixmap pix)
-    return Nothing
+statistics :: [GroupedPixmap] -> String
+statistics l =
+    "grouped pixmaps: " ++ show (inner l)
+  where
+    inner (GroupedPixmaps _ l : r) = length l : inner r
+    inner (GroupedCommand{} : r) = inner r
+    inner [] = []
 
-doRenderPixmap ptr (RenderCommand position command) = do
+renderGroupedPixmap :: Ptr QPainter -> GroupedPixmap -> IO ()
+renderGroupedPixmap ptr (GroupedPixmaps pix fragments) =
+    drawPixmapFragments ptr fragments pix
+renderGroupedPixmap ptr (GroupedCommand pos command) = do
     resetMatrix ptr
-    translate ptr position
+    translate ptr pos
     command ptr
-    return Nothing
-doRenderPixmap ptr r@(RenderOnTop x) = do
-    return $ Just x
+
+-- old implementation (not used)
+-- doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
+--     resetMatrix ptr
+--     translate ptr position
+--     whenMaybe mAngle $ \ angle ->
+--         rotate ptr (rad2deg angle)
+--     translate ptr (pix ^. pixmapOffset)
+-- 
+--     drawPixmap ptr zero (pixmap pix)
+--     return Nothing
