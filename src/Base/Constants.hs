@@ -68,6 +68,8 @@ templateLevelsDir = "templateLevels"
 defaultWindowSize :: Size Int
 defaultWindowSize = Size 1024 640
 
+swapInterval :: Int = 1
+
 windowTitle :: String
 windowTitle = "Nikki and the Robots"
 

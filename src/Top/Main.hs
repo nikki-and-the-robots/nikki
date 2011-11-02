@@ -84,7 +84,7 @@ forkThreads renderThread logicThread = do
 renderThread :: Configuration -> MVar Application -> IO ()
 renderThread configuration appRef =
   withQApplication $ \ qApp -> do
-    withMainWindow 0 (width defaultWindowSize) (height defaultWindowSize) $ \ window -> do
+    withMainWindow swapInterval (width defaultWindowSize) (height defaultWindowSize) $ \ window -> do
       paintEngine <- paintEngineTypeMainWindow window
       logg Debug ("paint engine: " ++ show paintEngine)
       flip runReaderT configuration $ withNikkiIcon window $ do
