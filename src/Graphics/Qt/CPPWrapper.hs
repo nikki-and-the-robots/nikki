@@ -43,6 +43,7 @@ module Graphics.Qt.CPPWrapper (
     drawLine,
     drawText,
     drawPixmap,
+    drawPixmapFragment,
     drawRect,
 
     -- * QTransform
@@ -290,6 +291,12 @@ drawPixmap :: Ptr QPainter -> Position QtReal -> Ptr QPixmap -> IO ()
 drawPixmap ptr (Position x y) pix = do
     cppDrawPixmap ptr x y pix
 foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtReal -> QtReal -> Ptr QPixmap -> IO ()
+
+drawPixmapFragment :: Ptr QPainter -> Ptr QPixmap -> Position QtReal -> QtReal -> IO ()
+drawPixmapFragment ptr pix (Position x y) angle =
+    cppDrawPixmapFragment ptr pix x y angle
+foreign import ccall "drawPixmapFragment" cppDrawPixmapFragment ::
+    Ptr QPainter -> Ptr QPixmap -> QtReal -> QtReal -> QtReal -> IO ()
 
 drawPoint :: Ptr QPainter -> Position QtReal -> IO ()
 drawPoint ptr (Position x y) =

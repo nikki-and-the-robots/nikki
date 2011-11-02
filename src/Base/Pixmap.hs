@@ -159,7 +159,19 @@ doRenderPixmaps ptr pixmaps = do
         doRenderPixmaps ptr onTop
 
 -- | renders a pixmap and returns the layer to be rendered on top of that
+-- (not exported)
 doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO (Maybe RenderPixmap)
+
+-- new implementation using drawPixmapFragments
+doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
+    resetMatrix ptr
+    let angle = fromMaybe 0 mAngle
+        center = position
+            +~ rotatePosition angle (fmap (/ 2) $ size2position (pixmapImageSize pix))
+            +~ rotatePosition angle (pix ^. pixmapOffset)
+    drawPixmapFragment ptr (pixmap pix) center (rad2deg angle)
+    return Nothing
+-- old implementation
 doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
     resetMatrix ptr
     translate ptr position
@@ -169,6 +181,7 @@ doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
 
     drawPixmap ptr zero (pixmap pix)
     return Nothing
+
 doRenderPixmap ptr (RenderCommand position command) = do
     resetMatrix ptr
     translate ptr position

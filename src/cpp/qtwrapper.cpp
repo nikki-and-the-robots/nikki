@@ -17,7 +17,6 @@
 
 #include <QtGui>
 
-
 // * globals
 
 extern "C" const char* qtVersion() {
@@ -95,6 +94,12 @@ extern "C" void scale(QPainter* painter, qreal x, qreal y) {
 
 extern "C" void drawPixmap(QPainter* painter, qreal x, qreal y, QPixmap* pixmap) {
     painter->drawPixmap(x, y, *pixmap);
+};
+
+extern "C" void drawPixmapFragment(QPainter* ptr, QPixmap* pixmap, qreal x, qreal y, qreal angle) {
+    QPainter::PixmapFragment f = QPainter::PixmapFragment::create(QPointF(x, y), pixmap->rect());
+    f.rotation = angle;
+    ptr->drawPixmapFragments(&f, 1, *pixmap);
 };
 
 extern "C" void drawPoint(QPainter* painter, qreal x, qreal y) {
