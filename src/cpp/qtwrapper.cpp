@@ -193,7 +193,6 @@ extern "C" void writePixmapFragmentArray
 
 extern "C" void drawPixmapFragments (QPainter* ptr, int length, QPixmap* pixmap) {
     ptr->drawPixmapFragments(pixmapFragmentArray, length, *pixmap);
-    qDebug() << "drawPixmapFragments";
 };
 
 
