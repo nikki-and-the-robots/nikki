@@ -58,7 +58,9 @@ instance Traversable SelectTree where
         Node l <$> traverse (traverse f) ixs <*> pure i
     traverse f (Leaf l a) =
         Leaf l <$> f a
-    traverse f (EmptyNode l) = pure (EmptyNode l)
+    traverse f (EmptyNode l) =
+        {-# SCC "Data.SelectTree.traverse" #-}
+        pure (EmptyNode l)
 
 mkNode :: String -> [SelectTree a] -> SelectTree a
 mkNode label [] = EmptyNode label

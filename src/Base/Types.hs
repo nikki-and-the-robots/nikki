@@ -127,6 +127,7 @@ data ColorVariant = ColorVariant {
         glyphs :: [(T.Text, Pixmap)],
         errorSymbol :: Pixmap
       }
+  deriving Show
 
 data HeaderCubePixmaps
     = HeaderCubePixmaps {

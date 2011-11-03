@@ -14,6 +14,8 @@ module Base.Font (
     glyphSize,
     proseToGlyphs,
     wordWrap,
+    -- for profiling
+    searchGlyphs,
   ) where
 
 
@@ -29,6 +31,7 @@ import qualified Data.Text as T
 import Text.Parsec
 
 import Control.Arrow (left)
+import Control.DeepSeq
 
 import System.FilePath
 

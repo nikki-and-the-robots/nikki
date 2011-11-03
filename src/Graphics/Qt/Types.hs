@@ -7,6 +7,8 @@ import Data.Binary
 import Data.Abelian
 import Data.Accessor
 
+import Control.DeepSeq
+
 import Utils
 
 
@@ -43,6 +45,9 @@ instance Binary a => Binary (Position a) where
 instance PP p => PP (Position p) where
     pp (Position x y) = unwords ["Position", pp x, pp y]
 
+instance NFData a => NFData (Position a) where
+    rnf (Position a b) = rnf a `seq` rnf b
+
 rotatePosition :: Floating a => a -> Position a -> Position a
 rotatePosition angle (Position x y) =
     Position x' y'
@@ -66,6 +71,9 @@ instance Abelian a => Abelian (Size a) where
 
 instance PP p => PP (Size p) where
     pp (Size x y) = unwords ["Size", pp x, pp y]
+
+instance NFData a => NFData (Size a) where
+    rnf (Size a b) = rnf a `seq` rnf b
 
 data Color = QtColor {
     _red :: QtInt,

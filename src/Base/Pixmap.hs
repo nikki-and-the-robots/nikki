@@ -29,6 +29,9 @@ import Data.Maybe
 
 import Control.Arrow
 import Control.Monad.IO.Class
+import Control.DeepSeq
+
+import Foreign.Ptr (nullPtr)
 
 import Graphics.Qt
 import Physics.Chipmunk (Angle, rad2deg)
@@ -45,6 +48,12 @@ data Pixmap = Pixmap {
     pixmapImageSize :: Size Double
   }
     deriving (Show, Eq, Typeable, Data)
+
+instance NFData (Ptr a) where
+    rnf ptr = ptr == nullPtr `seq` ()
+
+instance NFData Pixmap where
+    rnf (Pixmap a b c d) = rnf a `seq` rnf b `seq` rnf c `seq` rnf d
 
 pixmapOffset :: Accessor Pixmap (Position Double)
 pixmapOffset = accessor pixmapOffset_ (\ a r -> r{pixmapOffset_ = a})
