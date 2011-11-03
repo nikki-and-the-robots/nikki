@@ -38,7 +38,7 @@ import Safe
 
 import Data.List
 import Data.Map (Map, fromList, member, (!), findWithDefault, toList)
-import Data.Foldable (Foldable, mapM_, forM_, any)
+import Data.Foldable (Foldable, mapM_, forM_, any, sum)
 import qualified Data.Foldable as Foldable
 import Data.Traversable (Traversable, mapM)
 import Data.IORef
@@ -158,6 +158,17 @@ fmapM_ = Data.Foldable.mapM_
 
 fany :: Foldable t => (a -> Bool) -> t a -> Bool
 fany = Data.Foldable.any
+
+fsum :: (Foldable t, Num a) => t a -> a
+fsum = Data.Foldable.sum
+
+-- | Efficiency talk: Both flength and fnull assume that it is
+-- faster to access the first elements than the last.
+flength :: (Functor t, Foldable t) => t a -> Int
+flength = Foldable.foldl (+) 0 . fmap (const 1)
+
+fnull :: (Functor t, Foldable t) => t a -> Bool
+fnull = Foldable.foldr (&&) True . fmap (const False)
 
 ftoList :: Foldable f => f a -> [a]
 ftoList = Foldable.toList

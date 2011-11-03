@@ -29,6 +29,7 @@ import Data.Monoid
 import Data.Maybe
 import Data.Accessor
 import Data.Map (alter)
+import qualified Data.StrictList as SL
 
 import System.FilePath
 
@@ -751,7 +752,7 @@ renderTerminalSpeechBubble app config offset sort terminalPos
         let context = ("supplied", show (terminal ^. batteryNumber)) :
                       ("needed", show batteryNumberNeeded) :
                       []
-            glyphs = concat $
+            glyphs = SL.fromList $ map SL.fromList $ concat $
                 fmap (wordWrap (standardFont app) bubbleTextWidths .
                       capitalizeProse .
                       substitute context .

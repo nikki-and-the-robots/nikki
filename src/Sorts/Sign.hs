@@ -15,6 +15,7 @@ import Data.Abelian
 import Data.Data
 import Data.Accessor
 import Data.Maybe
+import Data.StrictList
 
 import Text.Logging
 
@@ -84,9 +85,9 @@ data SSort =
 
 data Sign
     = Sign {
-        chipmunk :: Chipmunk,
-        lastLanguage :: Language,
-        monologue_ :: WrappedMonologue
+        chipmunk :: !Chipmunk,
+        lastLanguage :: !Language,
+        monologue_ :: !WrappedMonologue
     }
   deriving (Show, Typeable)
 
@@ -96,20 +97,20 @@ monologue = accessor monologue_ (\ a r -> r{monologue_ = a})
 -- | word and bubble-wrapped contents of a monologue
 data WrappedMonologue
     = NoContact {
-        glyphs :: [[[Glyph]]]
+        glyphs :: !(SL (SL (SL Glyph)))
       }
     | Contact {
-        glyphs :: [[[Glyph]]]
+        glyphs :: !(SL (SL (SL Glyph)))
       }
     | ShowingText {
         index :: Int,
-        glyphs :: [[[Glyph]]]
+        glyphs :: !(SL (SL (SL Glyph)))
       }
   deriving (Show)
 
 mkWrappedMonologue :: Application -> [Prose] -> WrappedMonologue
 mkWrappedMonologue app text =
-    NoContact $ concat $ map bubbleWrap $
+    NoContact $ fromList $ map (fromList . map fromList) $ concat $ map bubbleWrap $
         map (wordWrap (standardFont app) bubbleTextWidths) text
   where
     bubbleWrap :: [[Glyph]] -> [[[Glyph]]]
@@ -158,8 +159,8 @@ instance Sort SSort Sign where
     updateNoSceneChange sort controls _ scene now contacts (_, cd) sign =
         return $ (monologue ^: (updateState controls cd contacts sign)) sign
 
-    renderObject app config sign sort ptr offset now = return $
-        renderSign app config offset sort sign
+    renderObject app config sign sort ptr offset now =
+        return $ renderSign app config offset sort sign
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
 mkPolys size =
@@ -194,7 +195,7 @@ updateState controls cd contacts sign state =
                 -- the player pressed the context button
                 case state of
                     ShowingText i glyphs ->
-                        if succ i < length glyphs then
+                        if succ i < flength glyphs then
                             ShowingText (succ i) glyphs
                         else
                             Contact glyphs
@@ -226,11 +227,11 @@ renderState app config offset sort signPos state = case state of
             signSize = size sort
             iconSize = pixmapSize $ speechIcon sort
     ShowingText i glyphs -> Just $
-        renderSpeechBubble app config offset signPos (size sort) (glyphs !! i)
+        renderSpeechBubble app config offset signPos (size sort) (glyphs ! i)
 
 -- | Renders a big beautiful bubble
 renderSpeechBubble :: Application -> Configuration -> Offset Double
-    -> Qt.Position Double -> Size Double -> [[Glyph]] -> RenderPixmap
+    -> Qt.Position Double -> Size Double -> SL (SL Glyph) -> RenderPixmap
 renderSpeechBubble app config offset signPos signSize glyphs =
     RenderOnTop $ RenderCommand zero $ \ ptr -> do
         windowSize <- sizeQPainter ptr
