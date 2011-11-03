@@ -76,4 +76,5 @@ instance Foldable GameLayer where
 
 instance Traversable GameLayer where
     traverse f (GameLayer l x y) =
+        {-# SCC "Base.GameGrounds.traverse" #-}
         GameLayer <$> traverse f l <*> pure x <*> pure y

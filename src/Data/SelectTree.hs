@@ -55,8 +55,10 @@ instance Foldable SelectTree where
 
 instance Traversable SelectTree where
     traverse f (Node l ixs i) =
+        {-# SCC "Data.SelectTree.traverse" #-}
         Node l <$> traverse (traverse f) ixs <*> pure i
     traverse f (Leaf l a) =
+        {-# SCC "Data.SelectTree.traverse" #-}
         Leaf l <$> f a
     traverse f (EmptyNode l) =
         {-# SCC "Data.SelectTree.traverse" #-}

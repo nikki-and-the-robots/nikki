@@ -83,6 +83,7 @@ forkThreads renderThread logicThread = do
 -- Displays a "loading..." message as soon as possible.
 renderThread :: Configuration -> MVar Application -> IO ()
 renderThread configuration appRef =
+  {-# scc "renderThread" #-}
   withQApplication $ \ qApp -> do
     withMainWindow swapInterval (width defaultWindowSize) (height defaultWindowSize) $ \ window -> do
       paintEngine <- paintEngineTypeMainWindow window

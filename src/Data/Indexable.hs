@@ -104,6 +104,7 @@ instance Foldable Indexable where
 
 instance Traversable Indexable where
     traverse cmd (Indexable values) =
+        {-# SCC "Data.Indexable.traverse" #-}
         Indexable <$> traverse inner values
       where
         inner (k, v) = tuple k <$> cmd v

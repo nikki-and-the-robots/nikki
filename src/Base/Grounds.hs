@@ -70,6 +70,7 @@ instance Foldable Layer where
 
 instance Traversable Layer where
     traverse cmd (Layer content x y) =
+        {-# SCC "Base.Grounds.traverse" #-}
         Layer <$> traverse cmd content <*> pure x <*> pure y
 
 instance Initial (Grounds a) where
