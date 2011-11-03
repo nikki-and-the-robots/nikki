@@ -163,32 +163,32 @@ extern "C" int heightQPainter(QPainter* painter) {
 // 
 // None of this is re-entrant
 
-const int maxNumberOfPixmapFragments = 10000;
+const int maxNumberOfPixmapFragments = 1000;
 
 QPainter::PixmapFragment* initializePixmapFragmentArray() {
     QPainter::PixmapFragment* array = new QPainter::PixmapFragment[maxNumberOfPixmapFragments];
-//     for (int i = 0; i < maxNumberOfPixmapFragments; i++) {
-//         array[i].height = 0;
-// qreal   opacity
-// qreal   rotation
-// qreal   scaleX
-// qreal   scaleY
-// qreal   sourceLeft
-// qreal   sourceTop
-// qreal   width
-// qreal   x
-// qreal   y
-//     };
+    for (int i = 0; i < maxNumberOfPixmapFragments; i++) {
+        QPainter::PixmapFragment* f = &array[i];
+        // sourceLeft and sourceTop are not used in nikki
+        f->sourceLeft = 0;
+        f->sourceTop = 0;
+        f->scaleX = 1;
+        f->scaleY = 1;
+        f->opacity = 1;
+    };
     return array;
-//     todo
 };
 
 QPainter::PixmapFragment* pixmapFragmentArray = initializePixmapFragmentArray();
 
 extern "C" void writePixmapFragmentArray
     (int index, qreal x, qreal y, qreal angle, QPixmap* pixmap) {
-    pixmapFragmentArray[index] = QPainter::PixmapFragment::create(QPointF(x, y), pixmap->rect());
-    pixmapFragmentArray[index].rotation = angle;
+    QPainter::PixmapFragment* f = &pixmapFragmentArray[index];
+    f->x = x;
+    f->y = y;
+    f->width = pixmap->rect().width();
+    f->height = pixmap->rect().height();
+    f->rotation = angle;
 };
 
 extern "C" void drawPixmapFragments (QPainter* ptr, int length, QPixmap* pixmap) {
