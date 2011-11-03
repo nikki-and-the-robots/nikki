@@ -110,7 +110,7 @@ data WrappedMonologue
 
 mkWrappedMonologue :: Application -> [Prose] -> WrappedMonologue
 mkWrappedMonologue app text =
-    NoContact $ fromList $ map (fromList . map fromList) $ concat $ map bubbleWrap $
+    NoContact $ convert $ concat $ map bubbleWrap $
         map (wordWrap (standardFont app) bubbleTextWidths) text
   where
     bubbleWrap :: [[Glyph]] -> [[[Glyph]]]
@@ -120,6 +120,8 @@ mkWrappedMonologue app text =
           else
             let (a, r) = splitAt numberOfBubbleLines chunk
             in a : bubbleWrap r
+    convert :: [[[a]]] -> SL (SL (SL a))
+    convert = fromList . map (fromList . map fromList)
 
 instance Sort SSort Sign where
     sortId sort = SortId (signSortID sort)
@@ -211,7 +213,7 @@ renderSign app config offset sort (Sign (ImmutableChipmunk position _ _ _) _ sta
         mState = renderState app config offset sort position state
     in 
         sign :
-        maybe [] singleton mState ++
+        maybe [] Utils.singleton mState ++
         []
 
 renderState :: Application -> Configuration -> Offset Double
