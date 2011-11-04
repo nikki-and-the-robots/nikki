@@ -98,7 +98,7 @@ autoUpdateRootInstall app follower = NoGUIAppState $ do
 autoUpdate :: Application -> AppState -> AppState
 #ifdef RootInstall
 autoUpdate app follower = autoUpdateRootInstall app follower
-#endif
+#else
 autoUpdate app follower = guiLog app $ \ logCommand -> do
     repoString <- gets update_repo
     mDeployed <- io $ isDeployed
@@ -119,6 +119,8 @@ autoUpdate app follower = guiLog app $ \ logCommand -> do
                             exitWith $ ExitFailure 143
                 (Right Nothing) ->
                     return $ message app [p "no updates available"] follower
+-- RootInstall
+#endif
 
 -- | Looks for updates on the server.
 -- If found, updates the program.

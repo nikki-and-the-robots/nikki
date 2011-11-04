@@ -36,16 +36,17 @@ suggestPurchase app storyModeMenu parent = \ ps -> NoGUIAppState $ do
     file <- rm2m $ getDataFileName ("manual" </> "storyModeIntroduction" <.> "txt")
     prose <- io $ pFile file
     return $ scrollingAppState app prose parent
-suggestPurchase app storyModeMenu parent =
-    menuAppState app
-        (NormalMenu (p "story mode") (Just $ p "the story mode is not installed"))
-        (Just parent)
-        ((p "buy the story mode", openUrl app purchasingUrl . this) :
-         (p "login and install the story mode", loginAsking app storyModeMenu . this) :
-         [])
-  where
-    this :: Int -> AppState
-    this = suggestPurchase app storyModeMenu parent
+-- use this, once the story-mode is available
+-- suggestPurchase app storyModeMenu parent =
+--     menuAppState app
+--         (NormalMenu (p "story mode") (Just $ p "the story mode is not installed"))
+--         (Just parent)
+--         ((p "buy the story mode", openUrl app purchasingUrl . this) :
+--          (p "login and install the story mode", loginAsking app storyModeMenu . this) :
+--          [])
+--   where
+--     this :: Int -> AppState
+--     this = suggestPurchase app storyModeMenu parent
 
 loginAsking :: Application -> AppState -> Parent -> AppState
 loginAsking app storyModeMenu parent =

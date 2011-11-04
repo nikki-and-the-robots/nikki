@@ -27,7 +27,7 @@ data Button
         keyString :: String,
         keyModifiers :: Set QKeyboardModifier
     }
---     | GamepadButton TODO
+    | GamepadButton -- TODO
   deriving (Show)
 
 -- Eq and Ord instances disregard the keyString

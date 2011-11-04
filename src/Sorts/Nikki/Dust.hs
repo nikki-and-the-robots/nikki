@@ -50,4 +50,3 @@ renderDustClouds ptr offset now sort clouds =
             Just pixmap ->
                 renderPixmap ptr offset (cloudPosition cloud) Nothing pixmap
             Nothing -> return ()
-renderDustClouds _ _ _ _ _ = return ()

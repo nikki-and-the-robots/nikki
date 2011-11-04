@@ -304,7 +304,7 @@ renderScene app config ptr scene debugging = do
         Profiling.Physics.render app config ptr now
 
 
-renderObjects app config windowSize ptr offset now gameGrounds =
+renderObjects app config windowSize ptr offset now gameGrounds | not develMode =
     when (not $ omit_pixmap_rendering config) $ do
         renderPixmaps <- gameGroundsToRenderPixmaps app config windowSize ptr offset now gameGrounds
         doRenderPixmaps ptr $ optimize windowSize renderPixmaps
@@ -319,6 +319,8 @@ renderObjects app config size ptr offset now gameGrounds =
         resetMatrix ptr
         setPenColor ptr (alpha ^= 0.5 $ red) 1
         drawRect ptr fakeOffset fakeSize
+
+develMode = False
 
 gameGroundsToRenderPixmaps :: Application -> Configuration
     -> Size Double -> Ptr QPainter -> Offset Double -> Seconds

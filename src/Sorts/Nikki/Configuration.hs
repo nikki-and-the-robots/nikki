@@ -136,7 +136,6 @@ frameTimes state = case (action state, direction state) of
     ((NikkiLevelFinished Passed), d) -> (addDirection d "happy", singleFrame)
     ((NikkiLevelFinished Failed), d) -> (addDirection d "sad", singleFrame)
 
-    x -> es "frameTimes" x
   where
     addDirection :: HorizontalDirection -> (String -> String)
     addDirection HLeft = (++ "_left")

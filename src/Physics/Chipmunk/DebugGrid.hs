@@ -42,7 +42,6 @@ renderShapeType ptr ShapeDescription{shapeType, shapeOffset} =
         (Circle radius, vec) -> do
             setPenColor ptr signalRed 1
             drawCircle ptr (vector2position vec) (realToFrac radius)
-        st -> nm "renderShapeType" st
 
 renderVectorLine :: Ptr QPainter -> Vector -> Vector -> IO ()
 renderVectorLine ptr a b = do
