@@ -80,7 +80,7 @@ Executable nikki
             -O0
     else
         ghc-options:
-            -O1
+            -O2
             -optl-s
 
     if impl(ghc >= 7)
