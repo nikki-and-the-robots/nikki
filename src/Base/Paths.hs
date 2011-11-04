@@ -27,7 +27,6 @@ import Data.Initial
 
 import Text.Logging
 
-import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Control.Monad.CatchState
 import Control.Monad.CatchIO

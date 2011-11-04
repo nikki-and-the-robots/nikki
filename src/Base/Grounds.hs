@@ -7,12 +7,10 @@ import Safe
 
 import Data.Indexable as I
 import Data.Generics
-import Data.List
 import Data.Foldable (Foldable, foldMap)
 import Data.Traversable (Traversable, traverse)
 import Data.Initial
 import Data.Accessor
-import Data.Maybe
 
 import Graphics.Qt
 

@@ -11,7 +11,6 @@ import Data.ByteString.Lazy as BSL
 import Text.Logging
 
 import System.Directory
-import System.FilePath
 
 import Utils
 

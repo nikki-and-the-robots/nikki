@@ -2,7 +2,6 @@
 module StoryMode.Menus where
 
 
-import Data.Maybe
 import Data.Map (Map, member)
 
 import Utils

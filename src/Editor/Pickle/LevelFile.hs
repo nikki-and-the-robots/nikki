@@ -21,9 +21,6 @@ module Editor.Pickle.LevelFile (
 
 import Data.SelectTree
 import qualified Data.Map as Map
-import Data.Maybe
-
-import Control.Monad
 
 import System.FilePath
 import System.Directory

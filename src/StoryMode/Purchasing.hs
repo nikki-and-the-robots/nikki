@@ -26,7 +26,6 @@ import Base
 
 import Distribution.AutoUpdate.Zip
 
-import StoryMode.Configuration
 import StoryMode.Client as Client
 
 

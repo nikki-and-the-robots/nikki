@@ -14,8 +14,6 @@ import Physics.Chipmunk
 
 import Graphics.Qt
 
-import Utils
-
 import Base
 
 import Sorts.Nikki.Types
