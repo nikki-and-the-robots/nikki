@@ -74,16 +74,11 @@ batteryNumberNeeded = 100
 
 -- * sort loading
 
-sorts :: RM [Sort_]
-sorts = do
-    a <- terminalSort
-    mPngDir <- io $ getStoryModeDataFileName "png"
-    sorts <- case mPngDir of
-        Nothing -> return [a]
-        Just pngDir -> do
-            b <- batteryTerminalSort pngDir a
-            return [a, b]
-    return $ map Sort_ $ sorts
+sorts :: [RM (Maybe Sort_)]
+sorts =
+    (Just <$> Sort_ <$> terminalSort) :
+    (fmap Sort_ <$> mkBatteryTerminalSort) :
+    []
 
 terminalSort :: RM TSort
 terminalSort = do
@@ -138,6 +133,17 @@ loadOsdPixmaps = do
     removeUberPixelShadow :: Pixmap -> Pixmap
     removeUberPixelShadow p@Pixmap{pixmapSize} =
         p{pixmapSize = pixmapSize -~ fmap fromUber (Size 1 1)}
+
+
+mkBatteryTerminalSort :: RM (Maybe TSort)
+mkBatteryTerminalSort = do
+    mPngDir <- io $ getStoryModeDataFileName "png"
+    tsort <- terminalSort
+    case mPngDir of
+        Nothing -> return Nothing
+        Just pngDir -> do
+            b <- batteryTerminalSort pngDir tsort
+            return $ Just b
 
 batteryTerminalSort :: FilePath -> TSort -> RM TSort
 batteryTerminalSort pngDir tsort = do
@@ -402,7 +408,8 @@ instance Sort TSort Terminal where
     freeSort (TSort terminalPixmaps osdPixmaps) =
         freeTerminalPixmaps terminalPixmaps >>
         freeOsdPixmaps osdPixmaps
-    freeSort (BatteryTSort _ a b c d e fs) =
+    freeSort (BatteryTSort tsort a b c d e fs) =
+        freeSort tsort >>
         fmapM_ freePixmap (a : b : c : d : e : []) >>
         fmapM_ freePixmap fs
     size TSort{} = fmap fromUber $ Size 48 48

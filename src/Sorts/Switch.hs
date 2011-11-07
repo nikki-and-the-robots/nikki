@@ -38,9 +38,9 @@ greenLightBlinkTime :: Seconds = 1
 
 -- * loading
 
-sorts :: RM [Sort_]
+sorts :: [RM (Maybe Sort_)]
 sorts =
-    mapM mkSort (False : True : [])
+    map ((Just <$>) . mkSort) (False : True : [])
   where
     mkSort :: Bool -> RM Sort_
     mkSort transient =

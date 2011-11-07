@@ -39,13 +39,13 @@ import Sorts.Nikki.State
 import Sorts.Nikki.Control
 
 
-sorts :: RM [Sort_]
-sorts = do
+sorts :: [RM (Maybe Sort_)]
+sorts = singleton $ do
     pixmaps <- loadPixmaps
     psize <- io $ fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
     jumpSound <- loadSound "game/jump" 4
     let r = NSort pixmaps jumpSound
-    return [Sort_ r]
+    return $ Just $ Sort_ r
 
 loadPixmaps :: RM (Map String [Pixmap])
 loadPixmaps = do

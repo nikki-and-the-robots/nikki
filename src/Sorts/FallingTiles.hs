@@ -44,10 +44,9 @@ fallingTilesMaterialMass = 0.5
 
 -- * loading
 
-sorts :: RM [Sort_]
-sorts = do
-    tiles <- mapM (\ (a, b, c) -> mkSort a b c) names
-    return tiles
+sorts :: [RM (Maybe Sort_)]
+sorts =
+    map ((Just <$>) . (\ (a, b, c) -> mkSort a b c)) names
 
 mkSort :: String -> Offset Int -> Size Double -> RM Sort_
 mkSort name offset size = do

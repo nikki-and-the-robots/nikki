@@ -58,11 +58,12 @@ zonePadding :: CpFloat = fromKachel 0.5
 
 signDir = pngDir </> "sign"
 
-sorts = catMaybes <$> storyModeSorts
+sorts :: [RM (Maybe Sort_)]
+sorts = storyModeSorts
 
-storyModeSorts :: RM [Maybe Sort_]
+storyModeSorts :: [RM (Maybe Sort_)]
 storyModeSorts = 
-    forM StoryMode.signs $ \ name -> do
+    (flip map) StoryMode.signs $ \ name -> do
         mFile <- io $ getStoryModeDataFileName (signDir </> name <.> "png")
         case mFile of
             Just file -> do

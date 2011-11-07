@@ -73,12 +73,14 @@ tileMergingEpsilon = 1
 
 -- * Tile loading
 
-sorts :: RM [Sort_]
-sorts = do
-    freeSorts <- mapM (\ (a, b, c) -> mkSort False a b c defaultFrameTime Nothing) names
-    storyModeSorts <- mapM (\ (a, b, c, frameTime, frameOrder) ->
+sorts :: [RM (Maybe Sort_)]
+sorts = mkFreeSorts ++ mkStoryModeSorts
+
+mkFreeSorts = map (\ (a, b, c) -> mkSort False a b c defaultFrameTime Nothing) names
+
+mkStoryModeSorts =
+    map (\ (a, b, c, frameTime, frameOrder) ->
         mkSort True a b c frameTime frameOrder) Sorts.StoryMode.tiles
-    return $ catMaybes (freeSorts ++ storyModeSorts)
 
 -- | returns Nothing if a story mode tile is not available
 mkSort :: Bool -> String -> Offset Int -> Size Double -> Seconds -> Maybe [Int]

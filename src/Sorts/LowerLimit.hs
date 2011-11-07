@@ -42,8 +42,8 @@ lowerLimitTolerance = realToFrac (height nikkiSize) / 2
 
 -- * Implementation
 
-sorts :: RM [Sort_]
-sorts = return [Sort_ LSort]
+sorts :: [RM (Maybe Sort_)]
+sorts = singleton $ return $ Just $ Sort_ LSort
 
 data LSort = LSort
   deriving (Show, Typeable)

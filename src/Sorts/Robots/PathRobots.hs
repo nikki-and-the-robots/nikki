@@ -6,6 +6,8 @@
 module Sorts.Robots.PathRobots where
 
 
+import Utils
+
 import Base
 
 import qualified Sorts.Robots.PathRobots.Platform as Platform
@@ -15,11 +17,8 @@ import qualified Sorts.Robots.PathRobots.PatrolRobot as PatrolRobot
 
 -- * loading
 
-sorts :: RM [Sort_]
-sorts = do
-    platformSort <- Platform.sort
-    patrolSort <- PatrolRobot.sort
-    return (
-        platformSort :
-        patrolSort :
-        [])
+sorts :: [RM (Maybe Sort_)]
+sorts =
+    (Just <$> Platform.sort) :
+    (Just <$> PatrolRobot.sort) :
+    []

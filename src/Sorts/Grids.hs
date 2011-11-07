@@ -30,11 +30,10 @@ storyModeGrids =
     []
 
 
-sorts :: RM [Sort_]
-sorts = do
-    gs <- mapM mkSort grids
-    storyModeGrids <- mapM mkStoryModeSort storyModeGrids
-    return (gs ++ catMaybes storyModeGrids)
+sorts :: [RM (Maybe Sort_)]
+sorts =
+    map ((Just <$>) . mkSort) grids ++
+    map mkStoryModeSort storyModeGrids
 
 mkSort :: (String, GridType) -> RM Sort_
 mkSort (name, typ) = do

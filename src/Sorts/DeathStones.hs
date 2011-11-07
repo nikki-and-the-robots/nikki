@@ -40,8 +40,8 @@ animationFrameTimes :: [Seconds] = [0.1]
 
 -- * loading
 
-sorts :: RM [Sort_]
-sorts = forM stones loadStone
+sorts :: [RM (Maybe Sort_)]
+sorts = map ((Just <$>) . loadStone) stones
 
 loadStone :: StoneDescription -> RM Sort_
 loadStone (sortId, imageNames, offset) = do

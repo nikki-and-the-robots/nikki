@@ -9,6 +9,7 @@ import qualified Data.Indexable as I
 import Data.Indexable (Index, Indexable, (>:))
 import Data.Initial
 import Data.SelectTree
+import Data.Maybe
 
 import Text.Logging
 
@@ -46,32 +47,34 @@ import qualified Sorts.Robots.Cannon
 
 -- import qualified Sorts.DebugObject
 
-
-sortLoaders :: [RM [Sort_]]
+-- sort loaders are given individually to be able
+-- to surround every single loader with an exception
+-- handler.
+sortLoaders :: [RM (Maybe Sort_)]
 sortLoaders =
 
-    Sorts.Tiles.sorts :
+    Sorts.Tiles.sorts ++
 
-    Sorts.Robots.Jetpack.sorts :
-    Sorts.Robots.PathRobots.sorts :
-    Sorts.Robots.Cannon.sorts :
+    Sorts.Robots.Jetpack.sorts ++
+    Sorts.Robots.PathRobots.sorts ++
+    Sorts.Robots.Cannon.sorts ++
 
-    Sorts.Terminal.sorts :
+    Sorts.Terminal.sorts ++
 
-    Sorts.Battery.sorts :
+    Sorts.Battery.sorts ++
 
-    Sorts.Switch.sorts :
+    Sorts.Switch.sorts ++
 
-    Sorts.Sign.sorts :
-    Sorts.Box.sorts :
-    Sorts.FallingTiles.sorts :
-    Sorts.DeathStones.sorts :
-    Sorts.LowerLimit.sorts :
+    Sorts.Sign.sorts ++
+    Sorts.Box.sorts ++
+    Sorts.FallingTiles.sorts ++
+    Sorts.DeathStones.sorts ++
+    Sorts.LowerLimit.sorts ++
 
-    Sorts.Background.sorts :
-    Sorts.Grids.sorts :
+    Sorts.Background.sorts ++
+    Sorts.Grids.sorts ++
 
-    Sorts.Nikki.sorts :
+    Sorts.Nikki.sorts ++
 --     Sorts.DebugObject.sorts :
     []
 
@@ -83,15 +86,15 @@ withAllSorts cmd = do
 -- | returns all sorts in a nicely sorted SelectTree
 getAllSorts :: RM (SelectTree Sort_)
 getAllSorts = do
-    sorts <- concat <$> mapM catchExceptions sortLoaders
+    sorts <- catMaybes <$> mapM catchExceptions sortLoaders
     io $ checkUniqueSortIds sorts
     return $ mkSortsSelectTree sorts
   where
-    catchExceptions :: RM [a] -> RM [a]
+    catchExceptions :: RM (Maybe a) -> RM (Maybe a)
     catchExceptions action =
         catch action $ \ (e :: IOException) -> io $ do
             logg Error ("cannot load all sorts: " ++ show e)
-            return []
+            return Nothing
 
 checkUniqueSortIds :: [Sort_] -> IO ()
 checkUniqueSortIds sorts =

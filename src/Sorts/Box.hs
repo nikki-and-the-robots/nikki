@@ -26,9 +26,9 @@ names =
 
 -- loading
 
-sorts :: RM [Sort_]
+sorts :: [RM (Maybe Sort_)]
 sorts =
-    mapM (uncurry mkSort_) names
+    map ((Just <$>) . uncurry mkSort_) names
   where
     mkSortId name = SortId ("objects/" ++ name)
     mkSort_ name mass = do

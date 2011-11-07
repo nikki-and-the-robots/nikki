@@ -40,11 +40,13 @@ backgrounds =
     []
 
 
-sorts :: RM [Sort_]
-sorts = do
-    public <- map Sort_ <$> mapM mkSort backgrounds
-    storyMode <- map (fmap Sort_) <$> mapM mkStoryModeSort Sorts.StoryMode.backgrounds
-    return (public ++ catMaybes storyMode)
+sorts :: [RM (Maybe Sort_)]
+sorts =
+    public ++ storyMode
+  where
+    public :: [RM (Maybe Sort_)]
+    public = map ((Just <$>) . (Sort_ <$>) . mkSort) backgrounds
+    storyMode = map ((fmap Sort_ <$>) . mkStoryModeSort) Sorts.StoryMode.backgrounds
 
 mkSort :: String -> RM BSort
 mkSort name = do
