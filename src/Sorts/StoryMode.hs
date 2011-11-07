@@ -47,8 +47,10 @@ tiles =
     ("tiles/black-brown/chain-standard", Position 1 1, Size 40 512, 1, Nothing) :
     ("tiles/frame/black-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/frame/black-extra", Position 1 1, Size 76 64, 1, Nothing) :
+    ("tiles/frame/black-support-left", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/frame/black-support-right", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/neon/single-heart", Position 1 1, Size 588 520, 0.35, Just [0, 1, 2, 3, 4, 5, 6, 0, 6, 0, 6, 0, 6, 0]) :
-    ("tiles/neon/controller", Position 1 1, Size 844 456, 0.35, Just [0, 1]) :
+    ("tiles/neon/controller", Position 1 1, Size 844 456, 0.35, Just [0, 1, 2, 3, 4, 5, 6]) :
     ("tiles/neon/pong", Position 1 1, Size 716 520, 0.25, Just [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) :
     ("tiles/neon/rocket", Position 1 1, Size 972 584, 1, Nothing) :
     ("tiles/neon/pac", Position 1 1, Size 716 468, 0.3, Just [0, 1, 2, 3]) :
