@@ -58,9 +58,11 @@ sorts :: [RM (Maybe Sort_)]
 sorts = singleton $ do
     standardPixmap <- loadJetpackPng "standard_00"
     boostPixmaps <- mapM loadJetpackPng ["boost_00", "boost_01"]
+    boostSound <- loadLoopedSound ("game" </> "boost")
     robotEyes <- Eyes.loadRobotEyesPixmaps
     return $ Just $ Sort_ $
-        JSort standardPixmap (mkAnimation boostPixmaps boostFrameTimes) robotEyes
+        JSort standardPixmap (mkAnimation boostPixmaps boostFrameTimes)
+            boostSound robotEyes
   where
     loadJetpackPng :: String -> RM Pixmap
     loadJetpackPng =
@@ -87,23 +89,25 @@ isBoost _ = False
 data JSort = JSort {
     standardPixmap :: Pixmap,
     boostPixmaps :: Animation Pixmap,
+    boostSound :: LoopedSound,
     robotEyes :: Eyes.RobotEyesPixmaps
   }
     deriving (Show, Typeable)
 
 data Jetpack = Jetpack {
-    chipmunk :: Chipmunk,
-    boost :: Bool,
-    direction :: Maybe HorizontalDirection,
-    renderState :: RenderState,
-    startTime :: Seconds
+    chipmunk :: !Chipmunk,
+    boost :: !Bool,
+    direction :: !(Maybe HorizontalDirection),
+    renderState :: !RenderState,
+    startTime :: !Seconds
   }
     deriving (Show, Typeable)
 
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
-    freeSort (JSort p ps eyes) =
+    freeSort (JSort p ps boostSound eyes) =
         fmapM_ freePixmap (p : ftoList ps) >>
+        freeLoopedSound boostSound >>
         Eyes.freeRobotEyesPixmaps eyes
     size = const jetpackSize
     renderIconified sort ptr =
@@ -132,10 +136,14 @@ instance Sort JSort Jetpack where
 
     getControlledChipmunk _ = chipmunk
 
-    updateNoSceneChange sort config _ mode now contacts (isControlled, cd) =
-        return . jupdate config (isControlled, cd) >=>
+    updateNoSceneChange sort config _ mode now contacts (isControlled, cd) jetpack =
+        (return . jupdate config (isControlled, cd) >=>
         return . updateRenderState now isControlled >=>
-        passThrough controlToChipmunk
+        passThrough controlToChipmunk >=>
+        passThrough (handleSounds sort oldBoost))
+        jetpack
+      where
+        oldBoost = boost jetpack
 
     renderObject _ _ = renderJetpack
 
@@ -285,3 +293,13 @@ frictionTorque angleVel =
     if abs angleVel > ε then
         jetpackRotationalFriction * jetpackInertia * negate angleVel / tau
       else 0
+
+
+-- * sounds
+
+handleSounds :: JSort -> Bool -> Jetpack -> IO ()
+handleSounds sort oldBoost jetpack =
+    case (oldBoost, boost jetpack) of
+        (False, True) -> startLoopedSound $ boostSound sort
+        (True, False) -> stopLoopedSound $ boostSound sort
+        _ -> return ()

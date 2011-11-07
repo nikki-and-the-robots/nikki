@@ -5,10 +5,15 @@ module Base.Sound (
     loadSound,
     withApplicationSounds,
     triggerSound,
+    loadLoopedSound,
 
     -- * re-exports
     Sound.SFML.PolySound,
     Sound.SFML.freePolySound,
+    Sound.SFML.LoopedSound,
+    freeLoopedSound,
+    startLoopedSound,
+    stopLoopedSound,
   ) where
 
 
@@ -47,3 +52,8 @@ loadSound name n = do
 
 triggerSound :: MonadIO m => PolySound -> m ()
 triggerSound = io . triggerPolySound
+
+loadLoopedSound :: String -> RM LoopedSound
+loadLoopedSound name = do
+    file <- getDataFileName (soundDir </> name <.> "wav")
+    io $ newLoopedSound file
