@@ -67,6 +67,11 @@ tiles =
     ("tiles/dummy/high-school-girl-4", Position 1 1, Size 76 104, 1, Nothing) :
     ("tiles/dummy/cpt-beaugard", Position 1 1, Size 64 96, 1, Nothing) :
     ("tiles/dummy/data-terminal", Position 5 5, Size 128 192, 1, Nothing) :
+
+    -- test tiles for baking
+    ("devel-tests/baked-4x4", Position 1 1, Size 256 256, 1, Nothing) :
+    ("devel-tests/baked-8x8", Position 1 1, Size 512 512, 1, Nothing) :
+    ("devel-tests/baked-16x16", Position 1 1, Size 1024 1024, 1, Nothing) :
     []
 
 backgrounds :: [String]
