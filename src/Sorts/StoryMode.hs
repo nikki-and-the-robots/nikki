@@ -31,8 +31,20 @@ tiles =
     ("tiles/black-blue/pilotlamp-standard-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1, 0, 1, 1]) :
     ("tiles/black-blue/pilotlamp-small-left", Position 9 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
     ("tiles/black-blue/pilotlamp-small-right", Position 1 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-blue/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/black-blue/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/black-blue/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
     ("tiles/black-green/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-green/panel-small", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/black-green/panel-large", Position 1 1, Size 128 128, 1, Nothing) :
+    ("tiles/black-green/pilotlamp-standard-left", Position 9 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1, 0, 1, 1]) :
+    ("tiles/black-green/pilotlamp-standard-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1, 0, 1, 1]) :
+    ("tiles/black-green/pilotlamp-small-left", Position 9 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-green/pilotlamp-small-right", Position 1 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-green/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/black-green/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/black-green/wallpaper-large-vent", Position 1 1, Size 128 128, 1, Nothing) :
+    ("tiles/black-green/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
     ("tiles/black-brown/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-brown/panel-small", Position 1 1, Size 32 32, 1, Nothing) :
     ("tiles/black-brown/rounded-corner-upper-left", Position 1 1, Size 64 64, 1, Nothing) :
