@@ -39,7 +39,8 @@ solidCollisionTypes =
     TileCT,
     RobotCT,
     FallingTileCT,
-    BatteryCT
+    BatteryCT,
+    DeadlySolidCT
   ]
 
 
