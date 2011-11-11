@@ -22,7 +22,8 @@ import Base.GlobalShortcuts
 type JJ_Event = ()
 
 {-# NOINLINE keyStateRef #-}
-keyStateRef :: IORef ([AppEvent], SL Button)
+keyStateRef :: IORef ([AppEvent], SL Button) -- SL Button will be sorted and have
+-- unique entries (regarding the Eq-instance).
 keyStateRef = unsafePerformIO $ newIORef ([], Empty)
 
 -- | non-blocking polling of AppEvents
@@ -71,8 +72,9 @@ nextAppEvent app = do
             return $ Just a
         [] -> return Nothing
 
+-- | PRE: SL Button is sorted.
 updateKeyState :: AppEvent -> SL Button -> SL Button
-updateKeyState (Press   k) = insert k
+updateKeyState (Press   k) = insertUnique k
 updateKeyState (Release k) = delete k
 updateKeyState Base.Types.FocusOut = const Empty
 updateKeyState Base.Types.CloseWindow = id

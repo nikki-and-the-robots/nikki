@@ -57,12 +57,18 @@ filterM pred (a :$ r) = do
 filterM pred Empty = return Empty
 
 
-insert :: Ord a => a -> SL a -> SL a
-insert a (b :$ r) =
-    if a > b
-    then b :$ insert a r
-    else a :$ b :$ r
-insert a Empty = singleton a
+-- | PRE: SL a is sorted.
+-- Inserts an element to a list. The returned list will be sorted.
+-- If the input list contained only unique elements, the output list will
+-- do also. (This means, the element will not be inserted,
+-- if it's already in the list.)
+insertUnique :: Ord a => a -> SL a -> SL a
+insertUnique a (b :$ r) =
+    case compare a b of
+        GT -> b :$ insertUnique a r
+        EQ -> b :$ r -- not inserted
+        LT -> a :$ b :$ r
+insertUnique a Empty = singleton a
 
 delete :: Eq a => a -> SL a -> SL a
 delete x (a :$ r) =
