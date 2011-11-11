@@ -39,6 +39,23 @@ singleton = (:$ Empty)
 (_ :$ r) ! i = r ! pred i
 Empty ! _ = error "(!): index out of bounds"
 
+slFilter :: (a -> Bool) -> StrictList a -> StrictList a
+slFilter p (a :$ r) =
+    (if p a then (a :$) else id) (slFilter p r)
+slFilter _ Empty = Empty
+
+filterM :: Monad m => (a -> m Bool) -> StrictList a -> m (StrictList a)
+filterM pred (a :$ r) = do
+    c <- pred a
+    r' <- filterM pred r
+    if c then do
+        r' <- filterM pred r
+        return (a :$ r')
+      else do
+        r' <- filterM pred r
+        return r'
+filterM pred Empty = return Empty
+
 
 insert :: Ord a => a -> SL a -> SL a
 insert a (b :$ r) =
