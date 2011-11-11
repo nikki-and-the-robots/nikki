@@ -26,10 +26,14 @@ import Data.Abelian
 import Data.Data
 import Data.Accessor
 import Data.Maybe
+import Data.IORef
+import Data.Map (lookup, insert, empty, Map)
 
 import Control.Arrow
 import Control.Monad.IO.Class
 import Control.DeepSeq
+
+import System.IO.Unsafe
 
 import Foreign.Ptr (nullPtr)
 
@@ -221,8 +225,9 @@ statistics l =
     inner [] = []
 
 renderGroupedPixmap :: Ptr QPainter -> GroupedPixmap -> IO ()
-renderGroupedPixmap ptr (GroupedPixmaps pix fragments) =
+renderGroupedPixmap ptr (GroupedPixmaps pix fragments) = do
     drawPixmapFragments ptr fragments pix
+    when debugMode $ debugPixmaps ptr pix fragments
 renderGroupedPixmap ptr (GroupedCommand pos command) = do
     resetMatrix ptr
     translate ptr pos
@@ -238,3 +243,37 @@ renderGroupedPixmap ptr (GroupedCommand pos command) = do
 -- 
 --     drawPixmap ptr zero (pixmap pix)
 --     return Nothing
+
+
+-- * debugging
+
+debugMode = False
+
+debugPixmaps :: Ptr QPainter -> Ptr QPixmap -> [(Position Double, Angle)] -> IO ()
+debugPixmaps ptr pixmap fragments = do
+    size <- fmap fromIntegral <$> sizeQPixmap pixmap
+    key <- uniqueKey pixmap
+    mapM_ (debugPixmap ptr size key) fragments
+
+debugPixmap :: Ptr QPainter -> Size Double -> String
+    -> (Position Double, Angle) -> IO ()
+debugPixmap ptr size key (position, 0) = do
+    let upperLeft = position -~ size2position (fmap (/ 2) size)
+    fillRect ptr upperLeft size (alpha ^= 0.2 $ red)
+    drawText ptr position True key
+debugPixmap _ _ _ _ = return () -- rotated Pixmaps aren't displayed
+
+-- | Returns a unique, preferrebly short key for the given argument.
+-- (Unique per run of the program.)
+uniqueKey :: Ptr QPixmap -> IO String
+uniqueKey x = do
+    (map, newKey : restKeys) <- readIORef _uniqueKeys
+    case Data.Map.lookup x map of
+        Just x -> return x
+        Nothing -> do
+            writeIORef _uniqueKeys (insert x (show newKey) map, restKeys)
+            return (show newKey)
+
+{-# noinline _uniqueKeys #-}
+_uniqueKeys :: IORef (Map (Ptr QPixmap) String, [Int])
+_uniqueKeys = unsafePerformIO $ newIORef (empty, [0 ..])
