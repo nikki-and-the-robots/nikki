@@ -27,6 +27,7 @@ storyModeGrids :: [(FilePath, GridType)]
 storyModeGrids =
     ("multilayers/skyline-blue-far", WrappedHorizon) :
     ("multilayers/skyline-blue-near", WrappedHorizon) :
+    ("multilayers/stars-top", WrappedHorizon) :
     []
 
 
