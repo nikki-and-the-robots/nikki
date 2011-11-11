@@ -2,8 +2,8 @@
 module Base.Polling where
 
 
-import Data.Set (Set, insert, empty, delete)
 import Data.IORef
+import Data.StrictList
 
 import Control.Concurrent
 import Control.Arrow
@@ -22,8 +22,8 @@ import Base.GlobalShortcuts
 type JJ_Event = ()
 
 {-# NOINLINE keyStateRef #-}
-keyStateRef :: IORef ([AppEvent], Set Button)
-keyStateRef = unsafePerformIO $ newIORef ([], empty)
+keyStateRef :: IORef ([AppEvent], SL Button)
+keyStateRef = unsafePerformIO $ newIORef ([], Empty)
 
 -- | non-blocking polling of AppEvents
 -- Also handles global shortcuts.
@@ -45,7 +45,7 @@ unpollAppEvents events = do
 
 resetHeldKeys :: IO ()
 resetHeldKeys = do
-    modifyIORef keyStateRef (second (const empty))
+    modifyIORef keyStateRef (second (const Empty))
 
 
 -- | Blocking wait for the next event.
@@ -71,14 +71,14 @@ nextAppEvent app = do
             return $ Just a
         [] -> return Nothing
 
-updateKeyState :: AppEvent -> Set Button -> Set Button
+updateKeyState :: AppEvent -> SL Button -> SL Button
 updateKeyState (Press   k) = insert k
 updateKeyState (Release k) = delete k
-updateKeyState Base.Types.FocusOut = const empty
+updateKeyState Base.Types.FocusOut = const Empty
 updateKeyState Base.Types.CloseWindow = id
 
 
-toAppEvent :: Set Button -> Either QtEvent JJ_Event -> AppEvent
+toAppEvent :: SL Button -> Either QtEvent JJ_Event -> AppEvent
 -- keyboard
 toAppEvent _ (Left (KeyPress CloseWindowKey _ _)) = Base.Types.CloseWindow
 toAppEvent _ (Left (KeyPress key string mods)) = Press $ KeyboardButton key string mods

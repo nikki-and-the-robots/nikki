@@ -6,6 +6,7 @@ import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.Maybe
 import Data.Initial
+import Data.StrictList
 
 import Graphics.Qt
 
@@ -30,7 +31,7 @@ data Button
     | GamepadButton -- TODO
   deriving (Show)
 
--- Eq and Ord instances disregard the keyString
+-- Eq and Ord instances disregard the keyString and the modifiers.
 
 instance Eq Button where
     a == b = key a == key b
@@ -57,12 +58,12 @@ allArrowKeys = Set.fromList (
 
 data ControlData = ControlData {
     events :: [AppEvent],
-    held :: Set Button
+    held :: !(SL Button)
   }
     deriving Show
 
 instance Initial ControlData where
-    initial = ControlData [] Set.empty
+    initial = ControlData [] Empty
 
 -- | return all Pressed Buttons from the ControlData.
 pressed :: ControlData -> [Button]
