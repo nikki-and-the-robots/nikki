@@ -194,7 +194,7 @@ doRenderPixmap ptr r@(RenderOnTop x) = do
 
 -- * debugging
 
-debugMode = True
+debugMode = False
 
 debugPixmaps :: Ptr QPainter -> Pixmap -> Position Double -> Maybe Angle -> IO ()
 -- rotated Pixmaps aren't displayed
