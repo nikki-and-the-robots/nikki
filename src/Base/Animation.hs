@@ -11,8 +11,11 @@ module Base.Animation (
   ) where
 
 
+import Safe
+
 import Data.Data
 import Data.Foldable (Foldable)
+import Data.List
 
 import Utils
 
@@ -34,10 +37,15 @@ pickAnimationFrameNaive list frameTimes now =
     inner (a : _) _ _ = a
 
 
-data Animation a = Animation [a] Int [Seconds] Seconds Int
+data Animation a
+    = Animation [a] Int [Seconds] Seconds Int
+    | Static a
   deriving (Show, Typeable, Data, Foldable)
 
-mkAnimation :: [a] -> [Seconds] -> Animation a
+mkAnimation :: Eq a => [a] -> [Seconds] -> Animation a
+mkAnimation l _ | length (nub l) == 1 =
+    let (Just x) = headMay l
+    in Static x
 mkAnimation l frameTimes =
     Animation l (length l) (mkAbsoluteTimes frameTimes) (sum frameTimes) (length frameTimes)
 
@@ -51,9 +59,9 @@ mkAbsoluteTimes = inner 0
     inner _ [] = []
 
 -- | should be real-time capable for big nows
--- todo: mkTimes precalculated
 -- todo: frameTimes als binärbaum?
 pickAnimationFrame :: Animation a -> Seconds -> a
+pickAnimationFrame (Static x) _ = x
 pickAnimationFrame (Animation list listLen absoluteTimes sum timesLen) now =
     inner (drop toDrop $ cycle list) absoluteTimes timeInList
   where
