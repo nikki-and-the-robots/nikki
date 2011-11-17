@@ -163,7 +163,7 @@ extern "C" int heightQPainter(QPainter* painter) {
 // 
 // None of this is re-entrant
 
-const int maxNumberOfPixmapFragments = 1000;
+const int maxNumberOfPixmapFragments = 10;
 
 QPainter::PixmapFragment* initializePixmapFragmentArray() {
     QPainter::PixmapFragment* array = new QPainter::PixmapFragment[maxNumberOfPixmapFragments];
@@ -192,6 +192,8 @@ extern "C" void writePixmapFragmentArray
 };
 
 extern "C" void drawPixmapFragments (QPainter* ptr, int length, QPixmap* pixmap) {
+    qDebug() <<
+        "Warning: drawPixmapFragments (c++-land): only 10 fragments can be rendered.";
     ptr->drawPixmapFragments(pixmapFragmentArray, length, *pixmap);
 };
 
