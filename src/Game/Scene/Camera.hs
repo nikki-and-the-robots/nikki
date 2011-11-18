@@ -23,6 +23,7 @@ import Utils
 import Base
 
 import Sorts.Nikki
+import Sorts.LowerLimit
 
 
 -- * camera configuration
@@ -40,7 +41,8 @@ maximumLimit = 200
 initialCameraState :: Index -> CameraState
 initialCameraState nikki = CS nikki zero
 
-getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_ -> StateT CameraState IO Position
+getCameraPosition :: Qt.Ptr Qt.QPainter -> Scene Object_
+    -> StateT CameraState IO Position
 getCameraPosition ptr scene =
     aboveLowerLimit ptr (scene ^. lowerLimit) =<<
     case scene ^. mode of
@@ -54,9 +56,15 @@ getCameraPosition ptr scene =
             -- level is finished, not in game mode anymore
             CS index oldPosition <- get
             let controlledObject = scene ^. mainLayerObjectA index
-            if isNikki $ sort_ controlledObject then
-                -- camera follows Nikki
-                getPositionForIndex ptr scene oldPosition index
+            if isNikki $ sort_ controlledObject then do
+                -- Nikki
+                nikkiPos <- io $ getPosition $
+                    getControlledChipmunk scene controlledObject
+                if isBelowLowerLimit scene nikkiPos
+                    -- below lower limit
+                    then return oldPosition
+                    -- above lower limit
+                    else getPositionForIndex ptr scene oldPosition index
               else
                 -- camera followed robot
                 return oldPosition
