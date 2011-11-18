@@ -27,12 +27,13 @@ renderEditorScene ptr app config scene = do
         NormalMode -> do
             offset <- calculateRenderTransformation ptr scene
             renderObjectScene ptr offset scene
-            renderGUI ptr offset scene
+            renderGUI app config ptr offset scene
         ObjectEditMode index -> do
             let Just oemState = getMainLayerEditorObject scene index ^. editorOEMState
             oemRender ptr app config scene oemState
-        SelectionMode endPosition -> renderCopySelection ptr scene endPosition
-    renderHelpButtonOSD ptr
+        SelectionMode endPosition ->
+            renderCopySelection app config ptr scene endPosition
+    renderHelpButtonOSD app config ptr
 
 
 renderObjectScene :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sort -> IO ()
@@ -45,13 +46,13 @@ renderObjectScene ptr offset s = do
     mapM_ (renderLayer ptr size offset . correctDistances currentLayer)
         (currentBackgrounds +: currentLayer)
 
-renderGUI ptr offset s = do
+renderGUI app config ptr offset s = do
     renderCursor' ptr offset s
 
     renderSelectedIcon ptr (getSelected $ s ^. availableSorts)
-    renderCursorPositionOSD ptr $ cursor s
-    renderCursorStepSize ptr $ getCursorStep s
-    renderLayerOSD ptr (s ^. editorObjects) (s ^. selectedLayer)
+    renderCursorPositionOSD app config ptr $ cursor s
+    renderCursorStepSize app config ptr $ getCursorStep s
+    renderLayerOSD app config ptr (s ^. editorObjects) (s ^. selectedLayer)
     whenMaybe (getSelectedObject s) $ \ o ->
         renderSelectedObject ptr $ editorSort o
 
@@ -113,30 +114,38 @@ renderSelectedObject ptr sort = do
     sortRenderIconified ptr zero fakeObject boxSize
 
 -- | renders the currently selected Layer in the right lower corner
-renderLayerOSD :: Ptr QPainter -> Grounds a -> GroundsIndex -> IO ()
-renderLayerOSD ptr gs i = do
+renderLayerOSD :: Application -> Configuration -> Ptr QPainter
+    -> Grounds a -> GroundsIndex -> IO ()
+renderLayerOSD app config ptr gs i = do
     resetMatrix ptr
     (Size w h) <- sizeQPainter ptr
-    drawText ptr (Position 80 (h - 20)) False
-        ("Layer: " ++ describeLayer gs i)
+    translate ptr (Position (fromUber 3) (fromUber 1))
+    snd =<< render ptr app config zero
+        (pv ("Layer: " ++ describeLayer gs i))
 
 -- | renders the cursor Position
-renderCursorPositionOSD :: Ptr QPainter -> EditorPosition -> IO ()
-renderCursorPositionOSD ptr (EditorPosition x y) = do
+renderCursorPositionOSD :: Application -> Configuration -> Ptr QPainter
+    -> EditorPosition -> IO ()
+renderCursorPositionOSD app config ptr (EditorPosition x y) = do
     resetMatrix ptr
     (Size w h) <- sizeQPainter ptr
-    drawText ptr (Position 300 (h - 20)) False ("Cursor: " ++ show (fmap truncate (x, y)))
+    translate ptr (Position 80 (h - fromUber 1 - fontHeight))
+    snd =<< render ptr app config zero
+        (pv ("Cursor: " ++ show (fmap truncate (x, y))))
 
-renderCursorStepSize :: Ptr QPainter -> EditorPosition -> IO ()
-renderCursorStepSize ptr (EditorPosition x y) = do
+renderCursorStepSize :: Application -> Configuration -> Ptr QPainter
+    -> EditorPosition -> IO ()
+renderCursorStepSize app config ptr (EditorPosition x y) = do
     resetMatrix ptr
     (Size w h) <- sizeQPainter ptr
-    drawText ptr (Position 500 (h - 20)) False ("Step: " ++ show (x, y))
+    translate ptr (Position 550 (h - fromUber 1 - fontHeight))
+    snd =<< render ptr app config zero
+        (pv ("Step: " ++ show (x, y)))
 
 
 -- * copy selection
 
-renderCopySelection ptr scene endPosition@(EditorPosition x2 y2) = do
+renderCopySelection app config ptr scene endPosition@(EditorPosition x2 y2) = do
     Size w h <- sizeQPainter ptr
     let EditorPosition x1 y1 = cursor scene
         x = max x1 x2
@@ -145,7 +154,7 @@ renderCopySelection ptr scene endPosition@(EditorPosition x2 y2) = do
     renderObjectScene ptr offset scene
     renderSelectionBox ptr offset scene endPosition
     renderSelectedBoxes ptr offset scene
-    renderCursorStepSize ptr $ getCursorStep scene
+    renderCursorStepSize app config ptr $ getCursorStep scene
 
 renderSelectionBox ptr offset scene (EditorPosition x2 y2) = do
     let EditorPosition x1 y1 = cursor scene
@@ -164,8 +173,9 @@ drawCopySelectedBox ptr offset object = do
     drawColoredBox ptr p (size sort) 3 green
 
 
-renderHelpButtonOSD :: Ptr QPainter -> IO ()
-renderHelpButtonOSD ptr = do
+renderHelpButtonOSD :: Application -> Configuration -> Ptr QPainter -> IO ()
+renderHelpButtonOSD app config ptr = do
     resetMatrix ptr
     size <- sizeQPainter ptr
-    drawText ptr (Position (width size - 200) (height size - 20)) False ("Help: F1")
+    translate ptr (Position (width size - 150) (fromUber 1))
+    snd =<< render ptr app config zero (pv ("Help: F1"))

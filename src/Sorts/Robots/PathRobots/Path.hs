@@ -224,7 +224,7 @@ instance IsOEMState OEMPath where
     oemEnterMode _ = id
     oemUpdate _ = updateOEMPath
     oemNormalize _ = id
-    oemRender ptr _ _ = renderOEMState ptr
+    oemRender ptr app config = renderOEMState app config ptr
     oemPickle (OEMPath _ _ cursor path active) =
         show ((cursor, getPathList path, active) :: PickleType)
     oemHelp = const oemHelpText
@@ -290,13 +290,15 @@ updateOEMPath (KeyboardButton key _ _) oem@(OEMPath size cursorStep cursor path 
 updateOEMPath _ _ = oemNothing
 
 
-renderOEMState :: Sort sort a => Ptr QPainter -> EditorScene sort -> OEMPath -> IO ()
-renderOEMState ptr scene (OEMPath robotSize stepSize cursor pathPositions oemActive) = do
+renderOEMState :: Sort sort a => Application -> Configuration -> Ptr QPainter
+    -> EditorScene sort -> OEMPath -> IO ()
+renderOEMState app config ptr scene
+  (OEMPath robotSize stepSize cursor pathPositions oemActive) = do
     offset <- transformation ptr cursor robotSize
     renderScene offset
     renderCursor offset
     let stepSizeF = fromIntegral stepSize
-    renderCursorStepSize ptr $ EditorPosition stepSizeF stepSizeF
+    renderCursorStepSize app config ptr $ EditorPosition stepSizeF stepSizeF
   where
     renderScene offset =
         renderObjectScene ptr offset scene
