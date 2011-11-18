@@ -33,7 +33,8 @@ import Sorts.Nikki (nikkiMass)
 
 stampMaterialMass = 1.7677053824362605
 
-greenLightBlinkTime :: Seconds = 1
+-- | frame time for the blinking light for the last switch
+lastLightBlinkTime :: Seconds = 1
 
 
 -- * loading
@@ -50,8 +51,7 @@ sorts =
             loadPix 0 "switch-standard-top" <*>
             loadPix 0 "switch-transient-top" <*>
             loadPix 2 "switch-light-white" <*>
-            loadPix 2 "switch-light-green" <*>
-            pure (mkAnimation [True, False] [greenLightBlinkTime]) <*>
+            pure (mkAnimation [True, False] [lastLightBlinkTime]) <*>
 
             loadSound "game/switch_on" 2 <*>
             loadSound "game/switch_off" 2 <*>
@@ -72,7 +72,6 @@ data SwitchSort
         standardStamp :: Pixmap,
         transientStamp :: Pixmap,
         whiteLight :: Pixmap,
-        greenLight :: Pixmap,
         blinkAnimation :: Animation Bool,
 
         onSound :: PolySound,
@@ -124,9 +123,9 @@ instance Sort SwitchSort Switch where
             SortId "switch/levelExit"
           else
             SortId "switch/levelExitTransient"
-    freeSort (SwitchSort a b c d e f _ g h _) =
-        fmapM_ freePixmap (a : b : c : d : e : f : []) >>
-        fmapM_ freePolySound (g : h : [])
+    freeSort (SwitchSort a b c d e _ f g _) =
+        fmapM_ freePixmap (a : b : c : d : e : []) >>
+        fmapM_ freePolySound (f : g : [])
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
                 +~ fmap ((* 2) . abs) (vector2size editorPadding)
 
@@ -206,19 +205,19 @@ instance Sort SwitchSort Switch where
             box = RenderPixmap (getBoxPix sort) boxPos Nothing
             light = if triggered switch
                 then [RenderPixmap (whiteLight sort) (boxPos +~ lightOffset) Nothing]
-                else renderGreenLight now sort switch (boxPos +~ lightOffset)
+                else renderLastLight now sort switch (boxPos +~ lightOffset)
         return (stamp : box : light ++ [])
 
 lightOffset :: Qt.Position Double
 lightOffset = fmap fromUber $ Position 19 5
 
-renderGreenLight :: Seconds -> SwitchSort -> Switch -> Qt.Position Double
+renderLastLight :: Seconds -> SwitchSort -> Switch -> Qt.Position Double
     -> [RenderPixmap]
-renderGreenLight now sort switch lightPosition =
+renderLastLight now sort switch lightPosition =
     case lastSwitch switch of
         Nothing -> []
         Just since -> if pickAnimationFrame (blinkAnimation sort) (now - since)
-            then [RenderPixmap (greenLight sort) lightPosition Nothing]
+            then [RenderPixmap (whiteLight sort) lightPosition Nothing]
             else []
 
 
