@@ -119,6 +119,17 @@ belowSelected index grounds =
         MainLayer -> I.toList bgs
         Foregrounds i -> I.toList bgs ++ [ml] ++ I.toList (beforeIndex i fgs)
 
+-- | Returns a textual representation of the indexed layer and its
+-- place in the Grounds-value, including the render number (which is not the
+-- same as the index).
+describeLayer :: Grounds a -> GroundsIndex -> String
+describeLayer (Grounds bgs ml fgs) gi = case gi of
+    Backgrounds i -> "background " ++
+        show (succ $ indexableNumber bgs i)
+    MainLayer -> "mainlayer"
+    Foregrounds i -> "foreground " ++
+        show (succ $ indexableNumber fgs i)
+
 
 -- * setter
 

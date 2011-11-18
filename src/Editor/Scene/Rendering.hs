@@ -51,7 +51,7 @@ renderGUI ptr offset s = do
     renderSelectedIcon ptr (getSelected $ s ^. availableSorts)
     renderCursorPositionOSD ptr $ cursor s
     renderCursorStepSize ptr $ getCursorStep s
-    renderLayerOSD ptr (s ^. selectedLayer)
+    renderLayerOSD ptr (s ^. editorObjects) (s ^. selectedLayer)
     whenMaybe (getSelectedObject s) $ \ o ->
         renderSelectedObject ptr $ editorSort o
 
@@ -113,11 +113,12 @@ renderSelectedObject ptr sort = do
     sortRenderIconified ptr zero fakeObject boxSize
 
 -- | renders the currently selected Layer in the right lower corner
-renderLayerOSD :: Ptr QPainter -> GroundsIndex -> IO ()
-renderLayerOSD ptr i = do
+renderLayerOSD :: Ptr QPainter -> Grounds a -> GroundsIndex -> IO ()
+renderLayerOSD ptr gs i = do
     resetMatrix ptr
     (Size w h) <- sizeQPainter ptr
-    drawText ptr (Position 80 (h - 20)) False ("Layer: " ++ show i)
+    drawText ptr (Position 80 (h - 20)) False
+        ("Layer: " ++ describeLayer gs i)
 
 -- | renders the cursor Position
 renderCursorPositionOSD :: Ptr QPainter -> EditorPosition -> IO ()

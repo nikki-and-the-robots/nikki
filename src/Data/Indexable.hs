@@ -14,6 +14,7 @@ module Data.Indexable (
 
     Data.Indexable.length,
     Data.Foldable.toList,
+    indexableNumber,
     (!!!),
     Data.Indexable.findIndices,
     Data.Indexable.filter,
@@ -123,9 +124,16 @@ instance Initial (Indexable a) where
 length :: Indexable a -> Int
 length = Vector.length . values
 
--- -- | returns, if the Index points to something
+-- | returns, if the Index points to something
 isIndexOf :: Index -> Indexable a -> Bool
 isIndexOf i indexable = i `elem` keysVector indexable
+
+-- | returns the number (according to the ordering) of the element of the given index.
+indexableNumber :: Indexable a -> Index -> Int
+indexableNumber (Indexable vector) i =
+    case findIndex ((== i) . fst) vector of
+        Just n -> n
+        Nothing -> error "indexableNumber: Index not found"
 
 -- | Returns all elements before the given index
 -- (excluding the one referred to by the index).
