@@ -34,7 +34,7 @@ import Sorts.Nikki (nikkiMass)
 stampMaterialMass = 1.7677053824362605
 
 -- | frame time for the blinking light for the last switch
-lastLightBlinkTime :: Seconds = 1
+lastLightBlinkTime :: Seconds = 0.425
 
 
 -- * loading
@@ -51,7 +51,7 @@ sorts =
             loadPix 0 "switch-standard-top" <*>
             loadPix 0 "switch-transient-top" <*>
             loadPix 2 "switch-light-white" <*>
-            pure (mkAnimation [True, False] [lastLightBlinkTime]) <*>
+            pure (mkAnimation [False, True] [lastLightBlinkTime]) <*>
 
             loadSound "game/switch_on" 2 <*>
             loadSound "game/switch_off" 2 <*>
