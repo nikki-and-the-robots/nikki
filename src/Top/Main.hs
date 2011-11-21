@@ -105,9 +105,8 @@ renderThread configuration appRef =
             processEventsQApplication qApp
 
           -- sort loading (pixmaps and sounds)
-          withApplicationPixmaps $ \ appPixmaps ->
-            withAllSorts $ \ sorts ->
-              withApplicationSounds $ \ appSounds -> io $ do
+          withAllSorts $ \ sorts ->
+             withApplicationSounds $ \ appSounds -> io $ do
                 autoUpdateVersionRef <- mkUpdateVersionRef window configuration
                 -- put the initialised Application in the MVar
                 let app :: Application
