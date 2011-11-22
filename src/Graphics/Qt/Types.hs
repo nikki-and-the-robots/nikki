@@ -9,6 +9,8 @@ import Data.Accessor
 
 import Control.DeepSeq
 
+import System.Random
+
 import Utils
 
 
@@ -86,6 +88,9 @@ data Color = QtColor {
 alpha :: Accessor Color Double
 alpha = accessor (byteIntToDouble . _alpha) (\ a r -> r{_alpha = doubleToByteInt a})
 
+instance PP Color where
+    pp (QtColor r g b a) = "Color: " ++ pp (r, g, b, a)
+
 opaqueColor :: Double -> Double -> Double -> Color
 opaqueColor r g b =
     QtColor
@@ -101,6 +106,15 @@ doubleToByteInt d | d >= 0 && d <= 1 =
 byteIntToDouble :: QtInt -> Double
 byteIntToDouble x | x >= 0 && x <= 255 =
     fromIntegral x / 255
+
+-- | Returns a somewhat random, but bright and opaque color.
+semiRandomColor :: IO Color
+semiRandomColor = do
+    let rand = randomRIO (127, 255)
+    r <- rand
+    g <- rand
+    b <- rand
+    return $ QtColor r g b 255
 
 
 -- * utils

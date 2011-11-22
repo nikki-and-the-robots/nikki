@@ -71,6 +71,19 @@ extern "C" void setApplicationName(QApplication* app, char* name) {
 
 // * QPainter
 
+// for rendering into QPixmaps
+extern "C" QPainter* newQPainter(QPixmap* pixmap) {
+    QPainter* r = new QPainter(pixmap);
+    r->setRenderHints(QPainter::SmoothPixmapTransform, false);
+    r->setRenderHints(QPainter::Antialiasing, false);
+    r->setRenderHints(QPainter::TextAntialiasing, false);
+    return r;
+};
+
+extern "C" void destroyQPainter(QPainter* ptr) {
+    delete ptr;
+};
+
 extern "C" void fillRect(QPainter* painter, qreal x, qreal y, qreal w, qreal h, int r, int g, int b, int alpha) {
     painter->setBackground(QBrush(QColor(r, g, b, alpha)));
     painter->eraseRect(x, y, w, h);
@@ -78,6 +91,14 @@ extern "C" void fillRect(QPainter* painter, qreal x, qreal y, qreal w, qreal h, 
 
 extern "C" void resetMatrix(QPainter* painter) {
     painter->resetMatrix();
+};
+
+extern "C" void setCompositionModeDefault(QPainter* ptr) {
+    ptr->setCompositionMode(QPainter::CompositionMode_SourceOver);
+};
+
+extern "C" void setCompositionModeClear(QPainter* ptr) {
+    ptr->setCompositionMode(QPainter::CompositionMode_Clear);
 };
 
 extern "C" void rotate(QPainter* painter, qreal angle) {
@@ -96,8 +117,8 @@ extern "C" void drawPixmap(QPainter* painter, qreal x, qreal y, QPixmap* pixmap)
     painter->drawPixmap(x, y, *pixmap);
 };
 
-extern "C" void drawPoint(QPainter* painter, qreal x, qreal y) {
-    painter->drawPoint(QPointF(x, y));
+extern "C" void drawPoint(QPainter* painter, int x, int y) {
+    painter->drawPoint(x, y);
 };
 
 extern "C" void setPenColor(QPainter* painter, int r, int g, int b, int a, int width) {
@@ -222,8 +243,18 @@ extern "C" QPixmap* newQPixmap(char* file) {
     return result;
 };
 
+extern "C" QPixmap* newQPixmapEmpty(int width, int height) {
+    QPixmap* r = new QPixmap(width, height);
+    r->fill(QColor(0, 0, 0, 0));
+    return r;
+};
+
 extern "C" void destroyQPixmap(QPixmap* ptr) {
     delete ptr;
+};
+
+extern "C" void saveQPixmap(QPixmap* ptr, char* file, int quality) {
+    ptr->save(QString(file), 0, quality);
 };
 
 extern "C" QPixmap* copyQPixmap(QPixmap* self) {

@@ -1,4 +1,5 @@
-{-# LANGUAGE ForeignFunctionInterface,  EmptyDataDecls, NamedFieldPuns, DeriveDataTypeable, FlexibleInstances #-}
+{-# LANGUAGE ForeignFunctionInterface,  EmptyDataDecls, NamedFieldPuns,
+    DeriveDataTypeable, FlexibleInstances, ScopedTypeVariables #-}
 
 module Graphics.Qt.CPPWrapper (
 
@@ -30,9 +31,12 @@ module Graphics.Qt.CPPWrapper (
 
     -- * QPainter
     QPainter,
+    newQPainter,
+    destroyQPainter,
     sizeQPainter,
 
     resetMatrix,
+    withClearCompositionMode,
     translate,
     rotate,
     scale,
@@ -44,6 +48,7 @@ module Graphics.Qt.CPPWrapper (
     drawText,
     drawPixmap,
     drawPixmapFragments,
+    drawPoint,
     drawRect,
 
     -- * QTransform
@@ -57,12 +62,15 @@ module Graphics.Qt.CPPWrapper (
     -- * QPixmap
     QPixmap,
     newQPixmap,
+    newQPixmapEmpty,
     destroyQPixmap,
+    saveQPixmap,
     sizeQPixmap,
     toImageQPixmap,
     copyQPixmap,
 
     -- * QImage
+    QImage,
     destroyQImage,
     sizeQImage,
     colorCountQImage,
@@ -74,6 +82,7 @@ module Graphics.Qt.CPPWrapper (
 
     -- * QRgb
     QRgb,
+    qRgbToColor,
     colorToQRgb,
 
     -- * QClipboard
@@ -90,6 +99,9 @@ import Data.Generics
 import Data.Abelian
 import Data.Set
 import Data.IORef
+
+import Text.Logging
+import Text.Printf
 
 import Control.Monad.CatchIO
 import Control.Monad.State (evalStateT, get, put)
@@ -285,6 +297,11 @@ setKeyCallbackMainWindow ptr cmd =
 data QPainter
   deriving Typeable
 
+-- | for rendering into pixmaps.
+foreign import ccall newQPainter :: Ptr QPixmap -> IO (Ptr QPainter)
+
+foreign import ccall destroyQPainter :: Ptr QPainter -> IO ()
+
 foreign import ccall "fillRect" cppEraseRect ::
     Ptr QPainter -> QtReal -> QtReal -> QtReal -> QtReal -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 
@@ -294,6 +311,15 @@ fillRect ptr (Position x y) (Size w h) (QtColor r g b a) =
         ptr x y w h r g b a
 
 foreign import ccall resetMatrix :: Ptr QPainter -> IO ()
+
+withClearCompositionMode :: Ptr QPainter -> IO a -> IO a
+withClearCompositionMode ptr cmd = do
+    bracket start (const stop) (const $ cmd)
+  where
+    start = setCompositionModeClear ptr
+    stop = setCompositionModeDefault ptr
+foreign import ccall setCompositionModeDefault :: Ptr QPainter -> IO ()
+foreign import ccall setCompositionModeClear :: Ptr QPainter -> IO ()
 
 foreign import ccall rotate :: Ptr QPainter -> QtReal -> IO ()
 
@@ -309,10 +335,10 @@ drawPixmap ptr (Position x y) pix = do
     cppDrawPixmap ptr x y pix
 foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtReal -> QtReal -> Ptr QPixmap -> IO ()
 
-drawPoint :: Ptr QPainter -> Position QtReal -> IO ()
+drawPoint :: Ptr QPainter -> Position QtInt -> IO ()
 drawPoint ptr (Position x y) =
     cppDrawPoint ptr x y
-foreign import ccall "drawPoint" cppDrawPoint :: Ptr QPainter -> QtReal -> QtReal -> IO ()
+foreign import ccall "drawPoint" cppDrawPoint :: Ptr QPainter -> QtInt -> QtInt -> IO ()
 
 -- | sets the pen color and thickness
 setPenColor :: Ptr QPainter -> Color -> QtInt -> IO ()
@@ -372,8 +398,9 @@ drawPixmapFragments ptr fragments pixmap = flip evalStateT 0 $ do
         io $ writePixmapFragmentArray i x y angle pixmap
         put (succ i)
     n <- get
-    io $ resetMatrix ptr
-    io $ cppDrawPixmapFragments ptr n pixmap
+    io $ do
+        resetMatrix ptr
+        cppDrawPixmapFragments ptr n pixmap
 
 foreign import ccall writePixmapFragmentArray :: Int -> QtReal -> QtReal -> QtReal
     -> Ptr QPixmap -> IO ()
@@ -414,9 +441,30 @@ newQPixmap file_ = do
         error ("could not load image file: " ++ file)
     return ptr
 
+newQPixmapEmpty :: Size QtInt -> IO (Ptr QPixmap)
+newQPixmapEmpty (Size x y) = do
+    when veryBig $
+        logg Warning (printf
+            "creating very large QPixmap: %.0fKB" kb)
+    cppNewQPixmapEmpty x y
+  where
+    veryBig = bytes > 8 * 1024 ^ 2
+    bytes :: QtInt
+    bytes = x * y * 4
+    kb :: Double = fromIntegral bytes / 1024
+
+foreign import ccall "newQPixmapEmpty" cppNewQPixmapEmpty ::
+    QtInt -> QtInt -> IO (Ptr QPixmap)
+
 foreign import ccall "newQPixmap" cppNewQPixmap :: CString -> IO (Ptr QPixmap)
 
 foreign import ccall destroyQPixmap :: Ptr QPixmap -> IO ()
+
+saveQPixmap :: Ptr QPixmap -> String -> QtInt -> IO ()
+saveQPixmap pix file quality =
+    withCString file $ \ cfile -> cppSaveQPixmap pix cfile quality
+foreign import ccall "saveQPixmap" cppSaveQPixmap ::
+    Ptr QPixmap -> CString -> QtInt -> IO ()
 
 foreign import ccall copyQPixmap :: Ptr QPixmap -> IO (Ptr QPixmap)
 
