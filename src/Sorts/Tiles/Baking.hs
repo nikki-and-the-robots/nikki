@@ -122,11 +122,11 @@ mkBakePixmap animatedRects (animation, position) =
         leftSize = Size (x aPos - x pos) centerHeight
 
         center = BakePixmap centerPos centerSize pix centerOffset True
-        centerPos = Position (max (x pos) (x aPos)) (max (y pos) (y aPos))
+        centerPos = componentWise max pos aPos
         centerSize = position2size (centerLowerLeft -~ centerPos)
-        centerLowerLeft = Position
-            (min (x pos + width  size) (x aPos + width  aSize))
-            (min (y pos + height size) (y aPos + height aSize))
+        centerLowerLeft = componentWise min
+            (pos +~ size2position size)
+            (aPos +~ size2position aSize)
         centerOffset = offset -~ fmap (max 0) (aPos -~ pos)
 
         right = BakePixmap rightPos rightSize pix (offset -~ (rightPos -~ pos)) False
@@ -144,10 +144,6 @@ mkBakePixmap animatedRects (animation, position) =
                 cSize' = componentWise min cSize (size -~ position2size (cPos' -~ pos))
                 offset' = offset -~ (cPos' -~ cPos)
             in BakePixmap cPos' cSize' pix offset' animationRelated
-
--- todo
--- center without clipping?
--- use componentWise more often
 
     y = positionY
     x = positionX
