@@ -3,6 +3,8 @@
 module Base.Animation (
     Animation,
     mkAnimation,
+    isStatic,
+    animationHead,
     pickAnimationFrame,
     pickAnimationFrameNaive,
     pickAnimationFrameOld,
@@ -43,11 +45,23 @@ data Animation a
   deriving (Show, Typeable, Data, Foldable)
 
 mkAnimation :: Eq a => [a] -> [Seconds] -> Animation a
+mkAnimation l fs | null l || null fs =
+    error "mkAnimation: given frames and frameTimes have to be non-empty."
 mkAnimation l _ | length (nub l) == 1 =
     let (Just x) = headMay l
     in Static x
 mkAnimation l frameTimes =
     Animation l (length l) (mkAbsoluteTimes frameTimes) (sum frameTimes) (length frameTimes)
+
+-- | Returns if the Animation will only ever return one element.
+isStatic :: Animation a -> Bool
+isStatic Static{} = True
+isStatic _ = False
+
+-- | Returns the first element of the Animation.
+animationHead :: Animation a -> a
+animationHead (Animation (a : r) _ _ _ _) = a
+animationHead (Static x) = x
 
 -- | converts a list if timespans to a list of absolute times, starting with (head l).
 mkAbsoluteTimes :: [Seconds] -> [Seconds]
