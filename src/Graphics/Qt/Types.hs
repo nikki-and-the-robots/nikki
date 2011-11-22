@@ -50,6 +50,10 @@ instance PP p => PP (Position p) where
 instance NFData a => NFData (Position a) where
     rnf (Position a b) = rnf a `seq` rnf b
 
+instance VectorLike Position where
+    componentWise op (Position a b) (Position x y) =
+        Position (op a x) (op b y)
+
 rotatePosition :: Floating a => a -> Position a -> Position a
 rotatePosition angle (Position x y) =
     Position x' y'
@@ -76,6 +80,10 @@ instance PP p => PP (Size p) where
 
 instance NFData a => NFData (Size a) where
     rnf (Size a b) = rnf a `seq` rnf b
+
+instance VectorLike Size where
+    componentWise op (Size a b) (Size x y) =
+        Size (op a x) (op b y)
 
 data Color = QtColor {
     _red :: QtInt,

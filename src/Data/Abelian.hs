@@ -26,3 +26,7 @@ instance Abelian Float where
     zero = 0
     (+~) = (+)
     (-~) = (-)
+
+
+class VectorLike t where
+    componentWise :: (a -> b -> c) -> t a -> t b -> t c
