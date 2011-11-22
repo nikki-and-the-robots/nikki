@@ -8,6 +8,7 @@ import Physics.Chipmunk.Types.Tests
 import Physics.Chipmunk.StickyEdges.Tests
 
 import Sorts.Terminal.Tests
+import Sorts.Tiles.Baking.Tests
 
 import Top.Main.Tests
 
@@ -20,6 +21,7 @@ main = do
     Utils.Tests.tests
     Physics.Chipmunk.Types.Tests.tests
     Physics.Chipmunk.StickyEdges.Tests.tests
+    Sorts.Tiles.Baking.Tests.tests
 
 i :: Monad m => a -> m ()
 i = const $ return ()

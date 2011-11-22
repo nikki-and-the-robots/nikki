@@ -9,6 +9,8 @@ module Utils.Tests where
 import Data.List
 import Data.Maybe
 
+import Graphics.Qt
+
 import Utils
 
 import Test.QuickCheck
@@ -81,3 +83,14 @@ testEquals a b =
 a ?~= b =
     printTestCase (show a ++ " /~= " ++ show b) $
     a ~= b
+
+unFixed :: Fixed a -> a
+unFixed (Fixed a) = a
+
+-- * some Arbitrary instances
+
+instance Arbitrary a => Arbitrary (Position a) where
+    arbitrary = Position <$> arbitrary <*> arbitrary
+    shrink (Position x y) =
+        [Position x' y | x' <- shrink x] ++
+        [Position x y' | y' <- shrink y]
