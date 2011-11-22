@@ -32,6 +32,7 @@ import Utils
 
 import Base
 
+import Sorts.Tiles.Baking
 import qualified Sorts.StoryMode
 
 
@@ -236,12 +237,15 @@ data AllTilesSort
   deriving (Show, Typeable)
 
 data AllTiles
-    = AllTiles Chipmunk [(TSort, Qt.Position Double)]
+    = AllTiles Chipmunk [(Animation Pixmap, Qt.Position Double)]
   deriving (Show, Typeable)
 
 mkAllTiles :: [EditorObject Sort_] -> EditorObject Sort_
 mkAllTiles tiles =
-    EditorObject (Sort_ (AllTilesSort (catMaybes (fmap unwrapTSortEditorObject tiles)))) zero Nothing
+    EditorObject
+        (Sort_ (AllTilesSort (catMaybes (fmap unwrapTSortEditorObject tiles))))
+        zero
+        Nothing
 
 instance Sort AllTilesSort AllTiles where
     sortId _ = SortId "allTiles"
@@ -250,7 +254,7 @@ instance Sort AllTilesSort AllTiles where
     renderIconified = error "renderIconified: not in use for AllTiles"
     initialize app _ (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
       cachedTiles = io $ do
-        let renderables = map mkRenderable editorObjects
+        renderables <- bakeTiles app $ map mkRenderable editorObjects
         chipmunks <- initChipmunks space cachedTiles editorObjects
         return $ AllTiles chipmunks renderables
 
@@ -263,13 +267,14 @@ instance Sort AllTilesSort AllTiles where
     renderObject _ _ (AllTiles _ renderables) sort _ _ now = return $
         fmap inner renderables
       where
-        inner (sort, pos) = RenderPixmap
-            (pickAnimationFrame (animation sort) now)
+        inner (animation, pos) = RenderPixmap
+            (pickAnimationFrame animation now)
             pos
             Nothing
 
-mkRenderable :: EditorObject TSort -> (TSort, Qt.Position Double)
-mkRenderable (EditorObject sort ep Nothing) = (sort, epToPosition (size sort) ep)
+mkRenderable :: EditorObject TSort -> (Animation Pixmap, Qt.Position Double)
+mkRenderable (EditorObject sort ep Nothing) =
+    (animation sort, epToPosition (size sort) ep)
 
 initChipmunks :: Space -> CachedTiles -> [EditorObject TSort] -> IO Chipmunk
 initChipmunks space cachedTiles objects =
