@@ -34,7 +34,7 @@ tests =
         let app = Application qApp window err err err err err err
             err = error "uninitialised field in Application: Sorts.Tiles.Baking.Tests"
 
-        quickCheckStoreWith stdArgs{maxSize = 13} "bakingEquality" $
+        quickCheckStoreWith stdArgs{maxSize = 13, maxSuccess = 500} "bakingEquality" $
             bakingEquality app pixmaps
 
 -- | checks, if baking doesn't affect the rendered image.
@@ -114,7 +114,6 @@ renderToPixmap debugMode now animations = do
         when debugMode $ do
             c <- (alpha ^= 0.4) <$> semiRandomColor
             fillRect painter areaPos areaSize c
-            drawText painter (areaPos +~ Position 0 15) False (show i)
     destroyQPainter painter
     return result
 
