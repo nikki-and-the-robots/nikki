@@ -107,6 +107,11 @@ mkBakePixmap animatedRects (animation, position) =
         map clipToBaked
         [top, left, center, right, base]
       where
+
+        centerHeight =
+            min (y aPos + height aSize) (y pos + height size) -
+            max (y aPos) (y pos)
+
         top, left, center, right, base :: BakePixmap
 
         top = BakePixmap pos topSize pix offset False
@@ -114,7 +119,7 @@ mkBakePixmap animatedRects (animation, position) =
 
         left = BakePixmap leftPos leftSize pix (offset -~ (leftPos -~ pos)) False
         leftPos = Position (x pos) (y pos + height topSize)
-        leftSize = Size (x aPos - x pos) (height aSize)
+        leftSize = Size (x aPos - x pos) centerHeight
 
         center = BakePixmap centerPos centerSize pix centerOffset True
         centerPos = Position (max (x pos) (x aPos)) (max (y pos) (y aPos))
@@ -126,7 +131,7 @@ mkBakePixmap animatedRects (animation, position) =
 
         right = BakePixmap rightPos rightSize pix (offset -~ (rightPos -~ pos)) False
         rightPos = aPos +~ Position (width aSize) 0
-        rightSize = Size (x pos + width size - (x aPos + width aSize)) (height aSize)
+        rightSize = Size (x pos + width size - (x aPos + width aSize)) centerHeight
 
         base = BakePixmap basePos baseSize pix (offset -~ (basePos -~ pos)) False
         basePos = Position (x pos) (y aPos + height aSize)
