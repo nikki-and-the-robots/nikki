@@ -27,6 +27,10 @@ data QKeyEvent
 data Position a = Position {positionX :: a, positionY :: a}
   deriving (Show, Read, Eq, Data, Typeable)
 
+x_, y_ :: Accessor (Position a) a
+x_ = accessor positionX (\ a r -> r{positionX = a})
+y_ = accessor positionY (\ a r -> r{positionY = a})
+
 instance Abelian a => Abelian (Position a) where
     zero = Position zero zero
     (Position a b) +~ (Position x y) = Position (a +~ x) (b +~ y)
@@ -66,6 +70,10 @@ rotatePosition angle (Position x y) =
 
 data Size a = Size {width :: a, height :: a}
   deriving (Eq, Show, Data, Typeable)
+
+width_, height_ :: Accessor (Size a) a
+width_ = accessor width (\ a r -> r{width = a})
+height_ = accessor height (\ a r -> r{height = a})
 
 instance Functor Size where
     fmap f (Size a b) = Size (f a) (f b)

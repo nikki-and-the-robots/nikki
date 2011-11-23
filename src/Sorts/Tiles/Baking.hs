@@ -1,3 +1,4 @@
+{-# language ViewPatterns #-}
 
 module Sorts.Tiles.Baking (
     bakeTiles,
@@ -7,6 +8,7 @@ module Sorts.Tiles.Baking (
 
 import Data.Abelian
 import Data.List
+import Data.Maybe
 
 import Control.Arrow
 
@@ -17,12 +19,14 @@ import Utils
 import Base
 
 
+-- | entry function
 bakeTiles :: Application -> [(Animation Pixmap, Qt.Position Double)]
     -> IO [(Animation Pixmap, Qt.Position Double)]
 bakeTiles app =
     return . groupTiles >=>
     mapM (bake app) >=>
     return . concat
+
 
 data Grouped
     = Grouped [BakePixmap]
@@ -34,6 +38,13 @@ data BakePixmap
                                                                -- offset         -- overlaps fully with an animated area
     | AnimationBakePixmap (Animation Pixmap) (Position Double)
   deriving Show
+
+bpSize :: BakePixmap -> Size Double
+bpSize (BakePixmap _ s _ _ _) = s
+
+setOverlappingAnimation :: Bool -> BakePixmap -> BakePixmap
+setOverlappingAnimation x (BakePixmap p s pix o _) =
+    BakePixmap p s pix o x
 
 normalBakePixmap :: (Pixmap, Position Double) -> BakePixmap
 normalBakePixmap a@(pix, pos) =
@@ -83,78 +94,90 @@ mkBakePixmap animatedRects (animation, position) =
     inner :: [Rect] -> BakePixmap -> [BakePixmap]
     inner (a : r) pixmap =
         concatMap (inner r) $
+        convertCutOffs pixmap $
         cutOff pixmap a
     inner [] pixmap = singleton pixmap
 
-    -- | Cuts the BakePixmap in four pieces, to exclude the given Rect.
-    -- Follows this pattern:
-    -- -------------------
-    -- |       top       |
-    -- -------------------
-    -- |   |         |   |
-    -- | l |    c    | r |
-    -- |   |         |   |
-    -- -------------------
-    -- |      base       |
-    -- -------------------
-    cutOff :: BakePixmap -> Rect -> [BakePixmap]
+    convertCutOffs :: BakePixmap -> Maybe (BakePixmap, [BakePixmap]) -> [BakePixmap]
+    convertCutOffs input cutoffs = case cutoffs of
+        Nothing -> [input]
+        Just (center, neighbors) ->
+            setOverlappingAnimation True center :
+            neighbors
 
-    cutOff pixmap rect | not (overlap (bakePixmapToRect pixmap) rect) = [pixmap]
-    cutOff p@(BakePixmap _ _ _ _ True) rect = [p]
+-- | Cuts the BakePixmap in four pieces, to exclude the given Rect.
+-- Follows this pattern:
+-- -------------------
+-- |       top       |
+-- -------------------
+-- |   |         |   |
+-- | l |    c    | r |
+-- |   |         |   |
+-- -------------------
+-- |      base       |
+-- -------------------
+--
+-- Returns Nothing in case of no overlap and Just (c, neighbors) otherwise
+cutOff :: BakePixmap -> Rect -> Maybe (BakePixmap, [BakePixmap])
 
-    cutOff (BakePixmap pos size pix offset False) (Rect aPos aSize) =
-        filter positiveSize $
-        map clipToBaked
-        [top, left, center, right, base]
-      where
+cutOff pixmap rect | not (overlap (bakePixmapToRect pixmap) rect) = Nothing
+cutOff p@(BakePixmap _ _ _ _ True) rect = Nothing
 
-        centerHeight =
-            min (y aPos + height aSize) (y pos + height size) -
-            max (y aPos) (y pos)
+cutOff (BakePixmap pos size pix offset False) (Rect aPos aSize) =
+    Just (center, filter positiveSize $ map clipToBaked [top, left, right, base])
+  where
 
-        top, left, center, right, base :: BakePixmap
+    centerHeight =
+        min (aPos ^. y_ + height aSize) (pos ^. y_ + height size) -
+        max (aPos ^. y_) (pos ^. y_)
 
-        top = BakePixmap pos topSize pix offset False
-        topSize = Size (width size) (y aPos - y pos)
+    top, left, center, right, base :: BakePixmap
 
-        left = BakePixmap leftPos leftSize pix (offset -~ (leftPos -~ pos)) False
-        leftPos = Position (x pos) (y pos + height topSize)
-        leftSize = Size (x aPos - x pos) centerHeight
+    top = BakePixmap pos topSize pix offset False
+    topSize = Size (width size) (aPos ^. y_ - pos ^. y_)
 
-        center = BakePixmap centerPos centerSize pix centerOffset True
-        centerPos = componentWise max pos aPos
-        centerSize = position2size (centerLowerLeft -~ centerPos)
-        centerLowerLeft = componentWise min
-            (pos +~ size2position size)
-            (aPos +~ size2position aSize)
-        centerOffset = offset -~ fmap (max 0) (aPos -~ pos)
+    left = BakePixmap leftPos leftSize pix (offset -~ (leftPos -~ pos)) False
+    leftPos = Position (pos ^. x_) (pos ^. y_ + height topSize)
+    leftSize = Size (aPos ^. x_ - pos ^. x_) centerHeight
 
-        right = BakePixmap rightPos rightSize pix (offset -~ (rightPos -~ pos)) False
-        rightPos = aPos +~ Position (width aSize) 0
-        rightSize = Size (x pos + width size - (x aPos + width aSize)) centerHeight
+    center = BakePixmap centerPos centerSize pix centerOffset False
+    centerPos = componentWise max pos aPos
+    centerSize = position2size (centerLowerLeft -~ centerPos)
+    centerLowerLeft = componentWise min
+        (pos +~ size2position size)
+        (aPos +~ size2position aSize)
+    centerOffset = offset -~ fmap (max 0) (aPos -~ pos)
 
-        base = BakePixmap basePos baseSize pix (offset -~ (basePos -~ pos)) False
-        basePos = Position (x pos) (y aPos + height aSize)
-        baseSize = Size (width size) (y pos + height size - (y aPos + height aSize))
+    right = BakePixmap rightPos rightSize pix (offset -~ (rightPos -~ pos)) False
+    rightPos = aPos +~ Position (width aSize) 0
+    rightSize = Size (pos ^. x_ + width size - (aPos ^. x_ + width aSize)) centerHeight
 
-        -- | reduces the size of the created baked pixmap
-        -- so that it does not exceed the size of the given baked pixmap.
-        clipToBaked (BakePixmap cPos cSize pix offset animationRelated) =
-            let cPos' = componentWise max cPos pos
-                cSize' = componentWise min cSize (size -~ position2size (cPos' -~ pos))
-                offset' = offset -~ (cPos' -~ cPos)
-            in BakePixmap cPos' cSize' pix offset' animationRelated
+    base = BakePixmap basePos baseSize pix (offset -~ (basePos -~ pos)) False
+    basePos = Position (pos ^. x_) (aPos ^. y_ + height aSize)
+    baseSize = Size (width size) (pos ^. y_ + height size - (aPos ^. y_ + height aSize))
 
-    y = positionY
-    x = positionX
+    -- | reduces the size of the created baked pixmap
+    -- so that it does not exceed the size of the given baked pixmap.
+    clipToBaked (BakePixmap cPos cSize pix offset animationRelated) =
+        let cPos' = componentWise max cPos pos
+            cSize' = componentWise min cSize (size -~ position2size (cPos' -~ pos))
+            offset' = offset -~ (cPos' -~ cPos)
+        in BakePixmap cPos' cSize' pix offset' animationRelated
+
     positiveSize :: BakePixmap -> Bool
     positiveSize (BakePixmap _ (Size w h) _ _ _) =
         w > 0 && h > 0
 
 
 -- | type for representing rectangle areas (disregarding padding pixels).
-data Rect = Rect (Position Double) (Size Double)
-  deriving Show
+data Rect = Rect {
+    rectPos :: Position Double,
+    rectSize :: Size Double
+  }
+    deriving Show
+
+lowerRight :: Rect -> Position Double
+lowerRight (Rect pos size) = pos +~ size2position size
 
 -- | Returns if two Rects overlap.
 overlap :: Rect -> Rect -> Bool
@@ -182,14 +205,104 @@ pixmapToRect (pix, pos) =
 bakePixmapToRect :: BakePixmap -> Rect
 bakePixmapToRect (BakePixmap pos size _ _ _) = Rect pos size
 
-groupStatic :: [BakePixmap] -> [Grouped]
-groupStatic = map (Grouped . singleton)
 
-toQPixmap :: (Pixmap, Position Double) -> (Ptr QPixmap, Position Double, Size Double)
-toQPixmap (pix, position) =
-    (pixmap pix,
-     position +~ (pix ^. pixmapOffset),
-     pixmapImageSize pix)
+-- * grouping of static tiles
+-- (The actual baking algorithm)
+groupStatic :: [BakePixmap] -> [Grouped]
+groupStatic = groupStaticH Nothing
+
+groupStaticH :: Maybe Grouped -> [BakePixmap] -> [Grouped]
+groupStaticH Nothing (a : r) = groupStaticH (Just (Grouped [a])) r
+groupStaticH (Just (Grouped grouped)) r =
+    -- TODO | height (bpSize a) <= width (bpSize a) =
+    -- extend the area to the right
+    let (position, size) = second (fmap fromIntegral) $
+                                boundingBox $ map toPosSize grouped
+        upperRight = position +~ Position (width size) 0
+        lowerLimit = position ^. y_ + height size
+    in case searchExtenders upperRight lowerLimit r of
+        Nothing -> Grouped grouped : groupStaticH Nothing r
+        Just marked ->
+            let extenders = map snd $ filter fst marked
+                newRight = minimum $
+                    map ((^. x_) . lowerRight . bakePixmapToRect) extenders
+                extendedRect = Rect position
+                    ((width_ ^= newRight - position ^. x_) $ size)
+                (extendedAreas, otherAreas) = cutMarked extendedRect marked
+--                 cutOffs = map (cutExtender extendedRect) extenders
+--                 extendedAreas = map fst cutOffs
+--                 cutOffsRest = concatMap snd cutOffs
+            in groupStaticH
+                (Just (Grouped (grouped ++ extendedAreas)))
+                otherAreas
+  where
+    toPosSize :: BakePixmap -> (Position Double, Size Double)
+    toPosSize (BakePixmap p s _ _ _) = (p, s)
+
+    cutMarked :: Rect -> [(Bool, BakePixmap)] -> ([BakePixmap], [BakePixmap])
+    cutMarked = cutMarkedH ([], [])
+    cutMarkedH (extendedsAkk, othersAkk) extendedRect [] =
+        (reverse extendedsAkk, reverse othersAkk)
+    cutMarkedH (extendedsAkk, othersAkk) extendedRect ((False, other) : r) =
+        cutMarkedH (extendedsAkk, other : othersAkk) extendedRect r
+    cutMarkedH (extendedsAkk, othersAkk) extendedRect ((True, extender) : r) =
+        -- extender
+        let (extenderCenter, neighbors) = cutExtender extendedRect extender
+        in cutMarkedH (extenderCenter : extendedsAkk, neighbors ++ othersAkk)
+                extendedRect r
+
+    cutExtender :: Rect -> BakePixmap -> (BakePixmap, [BakePixmap])
+    cutExtender extendedRect extender = case cutOff extender extendedRect of
+        Just x -> x
+        Nothing -> error $ show (extendedRect, extender)
+groupStaticH Nothing [] = []
+
+-- | Searches the BPs to extend the currently handled BP.
+-- Does not cut them into pieces.
+-- Returns the list of all BakePixmaps with the extenders marked by True.
+searchExtenders :: Position Double -> Double -> [BakePixmap]
+    -> Maybe [(Bool, BakePixmap)]
+searchExtenders p s =
+    inner p s . map (tuple False)
+  where
+    inner :: Position Double -> Double -> [(Bool, BakePixmap)]
+        -> Maybe [(Bool, BakePixmap)]
+    inner searched lowerLimit l | searched ^. y_ >= lowerLimit =
+        Just l
+    inner searched lowerLimit l =
+        case firstAndMarked (isExtender searched) l of
+            -- cannot be extended
+            Nothing -> Nothing
+            Just (extender, marked) ->
+                let newSearched = Position
+                        (searched ^. x_)
+                        ((lowerRight $ bakePixmapToRect extender) ^. y_)
+                in inner newSearched lowerLimit marked
+
+    isExtender searched (bakePixmapToRect -> bp) =
+        contains bp searched &&
+        (componentWise (>) (lowerRight bp) searched == Position True True)
+
+    -- | @firstAndMarked p l@ returns the first element that satisfies p
+    -- and the input list with an updated mark in th found element.
+    firstAndMarked :: (a -> Bool) -> [(Bool, a)] -> Maybe (a, [(Bool, a)])
+    firstAndMarked p =
+        inner []
+      where
+        inner akk (a : r) =
+            if p (snd a) then
+                Just (snd a, reverse akk ++ [first (const True) a] ++ r)
+              else inner (a : akk) r
+        inner _ [] = Nothing
+
+-- | Returns if a point is on a given Rect (including edges).
+contains :: Rect -> Position Double -> Bool
+contains rect point =
+    (componentWise (>=) point (rectPos rect) == Position True True) &&
+    (componentWise (<=) point (lowerRight rect) == Position True True)
+
+
+-- * creating of baked pixmaps
 
 bake :: Application -> Grouped -> IO [(Animation Pixmap, Qt.Position Double)]
 
