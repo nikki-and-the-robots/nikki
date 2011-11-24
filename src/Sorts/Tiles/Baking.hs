@@ -6,6 +6,8 @@ module Sorts.Tiles.Baking (
   ) where
 
 
+import Safe
+
 import Data.Abelian
 import Data.List
 import Data.Maybe
@@ -212,88 +214,104 @@ groupStatic :: [BakePixmap] -> [Grouped]
 groupStatic = groupStaticH Nothing
 
 groupStaticH :: Maybe Grouped -> [BakePixmap] -> [Grouped]
-groupStaticH Nothing (a : r) = groupStaticH (Just (Grouped [a])) r
-groupStaticH (Just (Grouped grouped)) r =
+groupStaticH Nothing (a : r) =
+    groupStaticH (Just (Grouped [a])) r
+groupStaticH (Just grouped) r =
     -- TODO | height (bpSize a) <= width (bpSize a) =
-    -- extend the area to the right
+    groupStaticWithDimension horizontalDimension grouped r
+groupStaticH Nothing [] = []
+
+groupStaticWithDimension :: Dimension -> Grouped -> [BakePixmap] -> [Grouped]
+groupStaticWithDimension d (Grouped grouped) r =
+    -- extend the area in the given dimension
     let (position, size) = second (fmap fromIntegral) $
                                 boundingBox $ map toPosSize grouped
-        upperRight = position +~ Position (width size) 0
+        upperRight = position +~ (y_ ^= 0) (size2position size)
         lowerLimit = position ^. y_ + height size
-    in case searchExtenders upperRight lowerLimit r of
+    in case searchExtenders d upperRight lowerLimit r of
         Nothing -> Grouped grouped : groupStaticH Nothing r
-        Just marked ->
-            let extenders = map snd $ filter fst marked
-                newRight = minimum $
+        Just extenders ->
+            let newRight = minimum $
                     map ((^. x_) . lowerRight . bakePixmapToRect) extenders
                 extendedRect = Rect position
                     ((width_ ^= newRight - position ^. x_) $ size)
-                (extendedAreas, otherAreas) = cutMarked extendedRect marked
---                 cutOffs = map (cutExtender extendedRect) extenders
---                 extendedAreas = map fst cutOffs
---                 cutOffsRest = concatMap snd cutOffs
-            in groupStaticH
-                (Just (Grouped (grouped ++ extendedAreas)))
+                (extendedAreas, otherAreas) =
+                    trace (show (map (lowerRight . bakePixmapToRect) extenders)) $
+                    cutMarked extendedRect r
+            in groupStaticWithDimension d
+                (Grouped (grouped ++ extendedAreas))
                 otherAreas
   where
     toPosSize :: BakePixmap -> (Position Double, Size Double)
     toPosSize (BakePixmap p s _ _ _) = (p, s)
 
-    cutMarked :: Rect -> [(Bool, BakePixmap)] -> ([BakePixmap], [BakePixmap])
+    -- Cuts the marked (overlapping) Pixmaps, but keep the rendering order.
+    -- Returns the BakePixmaps inside animated areas and all remaining
+    -- (possibly cut) BakePixmaps in correct rendering order.
+    cutMarked :: Rect -> [BakePixmap] -> ([BakePixmap], [BakePixmap])
     cutMarked = cutMarkedH ([], [])
     cutMarkedH (extendedsAkk, othersAkk) extendedRect [] =
         (reverse extendedsAkk, reverse othersAkk)
-    cutMarkedH (extendedsAkk, othersAkk) extendedRect ((False, other) : r) =
-        cutMarkedH (extendedsAkk, other : othersAkk) extendedRect r
-    cutMarkedH (extendedsAkk, othersAkk) extendedRect ((True, extender) : r) =
-        -- extender
-        let (extenderCenter, neighbors) = cutExtender extendedRect extender
-        in cutMarkedH (extenderCenter : extendedsAkk, neighbors ++ othersAkk)
-                extendedRect r
+    cutMarkedH (extendedsAkk, othersAkk) extendedRect (other : r) =
+        case cutOff other extendedRect of
+            -- doesn't overlap
+            Nothing -> cutMarkedH (extendedsAkk, other : othersAkk) extendedRect r
+            Just (center, neighbors) ->
+                cutMarkedH (center : extendedsAkk, neighbors ++ othersAkk)
+                    extendedRect r
 
     cutExtender :: Rect -> BakePixmap -> (BakePixmap, [BakePixmap])
     cutExtender extendedRect extender = case cutOff extender extendedRect of
         Just x -> x
-        Nothing -> error $ show (extendedRect, extender)
-groupStaticH Nothing [] = []
+        Nothing -> error $ unlines (
+            "cutExtender: " :
+            show extendedRect :
+            show extender :
+            [])
+
+    -- overwriting the dimensional accessors
+--     x_ = posThis d
+--     y_ = posOther d
+--     width = (^. sizeThis d)
+--     height = (^. sizeOther d)
+--     width_ = sizeThis d
+--     height_ = sizeOther d
+
 
 -- | Searches the BPs to extend the currently handled BP.
 -- Does not cut them into pieces.
 -- Returns the list of all BakePixmaps with the extenders marked by True.
-searchExtenders :: Position Double -> Double -> [BakePixmap]
-    -> Maybe [(Bool, BakePixmap)]
-searchExtenders p s =
-    inner p s . map (tuple False)
+searchExtenders :: Dimension -> Position Double -> Double -> [BakePixmap]
+    -> Maybe [BakePixmap]
+searchExtenders d p l list =
+    inner [] p l list
   where
-    inner :: Position Double -> Double -> [(Bool, BakePixmap)]
-        -> Maybe [(Bool, BakePixmap)]
-    inner searched lowerLimit l | searched ^. y_ >= lowerLimit =
-        Just l
-    inner searched lowerLimit l =
-        case firstAndMarked (isExtender searched) l of
+    inner :: [BakePixmap] -> Position Double -> Double -> [BakePixmap]
+        -> Maybe [BakePixmap]
+    inner akk searched lowerLimit l | searched ^. y_ >= lowerLimit =
+        Just (reverse akk)
+    inner akk searched lowerLimit l =
+        case headMay $ filter (isExtender searched) l of
             -- cannot be extended
             Nothing -> Nothing
-            Just (extender, marked) ->
+            Just extender ->
                 let newSearched = Position
                         (searched ^. x_)
                         ((lowerRight $ bakePixmapToRect extender) ^. y_)
-                in inner newSearched lowerLimit marked
+                in inner (extender : akk) newSearched lowerLimit l
 
     isExtender searched (bakePixmapToRect -> bp) =
         contains bp searched &&
         (componentWise (>) (lowerRight bp) searched == Position True True)
 
-    -- | @firstAndMarked p l@ returns the first element that satisfies p
-    -- and the input list with an updated mark in th found element.
-    firstAndMarked :: (a -> Bool) -> [(Bool, a)] -> Maybe (a, [(Bool, a)])
-    firstAndMarked p =
-        inner []
-      where
-        inner akk (a : r) =
-            if p (snd a) then
-                Just (snd a, reverse akk ++ [first (const True) a] ++ r)
-              else inner (a : akk) r
-        inner _ [] = Nothing
+    -- overwriting the dimensional accessors
+--     x_ = posThis d
+--     y_ = posOther d
+--     width = (^. sizeThis d)
+--     height = (^. sizeOther d)
+--     width_ = sizeThis d
+--     height_ = sizeOther d
+
 
 -- | Returns if a point is on a given Rect (including edges).
 contains :: Rect -> Position Double -> Bool

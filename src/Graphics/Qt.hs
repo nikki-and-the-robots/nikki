@@ -3,6 +3,7 @@
 module Graphics.Qt (
     module Graphics.Qt,
     module Graphics.Qt.Types,
+    module Graphics.Qt.Dimension,
     module Graphics.Qt.CPPWrapper,
     QtEvent(..),
     modifyTextField,
@@ -20,6 +21,7 @@ import Control.Monad.CatchIO
 import Control.Concurrent
 
 import Graphics.Qt.Types
+import Graphics.Qt.Dimension
 import Graphics.Qt.CPPWrapper
 import Graphics.Qt.Events
 
