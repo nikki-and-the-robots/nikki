@@ -381,6 +381,7 @@ bakeH app pixmaps =
             drawPixmap painter (p -~ split 1 +~ offset) pix
 --             fillRect painter (split (- 100)) (split 1000) (alpha ^= 0.3 $ yellow)
     setPaddingPixelsTransparent painter size
+    destroyQPainter painter
     let dsize = fmap fromIntegral size
         resultPixmap = Pixmap bakedPixmap zero dsize dsize
     return $ (mkAnimation [resultPixmap] [42], upperLeft)
