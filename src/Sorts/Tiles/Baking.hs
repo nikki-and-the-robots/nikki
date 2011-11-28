@@ -218,20 +218,33 @@ groupStatic = groupStaticH Nothing
 groupStaticH :: Maybe Grouped -> [BakePixmap] -> [Grouped]
 groupStaticH Nothing (a : r) =
     groupStaticH (Just (Grouped [a])) r
-groupStaticH (Just grouped) r =
-    -- TODO | height (bpSize a) <= width (bpSize a) =
-    groupStaticWithDimension horizontalDimension grouped r
+groupStaticH (Just grouped@(Grouped groupedPixmaps)) r =
+    let (_, size) = boundingBox $ map
+                        ((\ (Rect p s) -> (p, s)) . bakePixmapToRect)
+                        groupedPixmaps
+        dimensions = if width size > height size then
+               (verticalDimension, horizontalDimension)
+             else
+               (horizontalDimension, verticalDimension)
+        -- try fst first, then snd
+    in case (extend (fst dimensions) grouped r, extend (snd dimensions) grouped r) of
+        (Just (grouped, rest), _) ->
+            groupStaticH (Just grouped) rest
+        (Nothing, Just (grouped, rest)) ->
+            groupStaticH (Just grouped) rest
+        (Nothing, Nothing) -> grouped : groupStaticH Nothing r
 groupStaticH Nothing [] = []
 
-groupStaticWithDimension :: Dimension -> Grouped -> [BakePixmap] -> [Grouped]
-groupStaticWithDimension d (Grouped grouped) r =
+-- | Extends the given Grouped if possible. Also returns the rest of the pixmaps.
+extend :: Dimension -> Grouped -> [BakePixmap] -> Maybe (Grouped, [BakePixmap])
+extend d (Grouped grouped) r =
     -- extend the area in the given dimension
     let (position, size) = second (fmap fromIntegral) $
                                 boundingBox $ map toPosSize grouped
         upperRight = position +~ (y_ ^= 0) (size2position size)
         lowerLimit = position ^. y_ + height size
     in case searchExtenders d upperRight lowerLimit r of
-        Nothing -> Grouped grouped : groupStaticH Nothing r
+        Nothing -> Nothing
         Just extenders ->
             let newRight = minimum $
                     map ((^. x_) . lowerRight . bakePixmapToRect) extenders
@@ -240,9 +253,7 @@ groupStaticWithDimension d (Grouped grouped) r =
                 (extendedAreas, otherAreas) =
 --                     trace (show (map (lowerRight . bakePixmapToRect) extenders)) $
                     cutMarked extendedRect r
-            in groupStaticWithDimension d
-                (Grouped (grouped ++ extendedAreas))
-                otherAreas
+            in Just ((Grouped (grouped ++ extendedAreas)), otherAreas)
   where
     toPosSize :: BakePixmap -> (Position Double, Size Double)
     toPosSize (BakePixmap p s _ _ _) = (p, s)
