@@ -69,8 +69,8 @@ saveFailed app now paired = do
     save False "B.png" =<< bakeTiles app paired
 --     save True "debugA.png" paired
 --     save True "debugB.png" =<< bakeTiles app paired
-    saveIter True "debugA-%i.png" paired
-    saveIter True "debugB-%i.png" =<< bakeTiles app paired
+    saveIter True "debugA-%03i.png" paired
+    saveIter True "debugB-%03i.png" =<< bakeTiles app paired
 
 
 -- | load some random animated pixmaps (with padding pixels)
@@ -122,7 +122,7 @@ renderToPixmap debugMode now animations = do
 pixelEquality :: Ptr QPixmap -> Ptr QPixmap -> IO Bool
 pixelEquality a b = do
     bracket
-        ((,) <$> toImageQPixmap a <*> toImageQPixmap b)
+        ((,) <$> toImageQPixmap a False <*> toImageQPixmap b False)
         (\ (a, b) -> destroyQImage a >> destroyQImage b)
         (uncurry pixelEqualityQImage)
 
@@ -139,7 +139,6 @@ pixelEqualityQImage a b = do
   where
     check :: Ptr QImage -> Ptr QImage -> [(Int, Int)] -> IO Bool
     check a b (pos : r) = do
---         putStrLn ("checking " ++ show pos)
         ap <- qRgbToColor =<< pixelQImage a pos
         bp <- qRgbToColor =<< pixelQImage b pos
         if ap /= bp

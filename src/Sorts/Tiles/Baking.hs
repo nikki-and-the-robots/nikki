@@ -44,6 +44,8 @@ data BakePixmap
 bpSize :: BakePixmap -> Size Double
 bpSize (BakePixmap _ s _ _ _) = s
 
+bpPixmap (BakePixmap _ _ p _ _) = p
+
 setOverlappingAnimation :: Bool -> BakePixmap -> BakePixmap
 setOverlappingAnimation x (BakePixmap p s pix o _) =
     BakePixmap p s pix o x
@@ -77,7 +79,7 @@ groupAnimated all =
     animatedRects :: [Rect]
     animatedRects = map pixmapAnimationToRect $ filter (not . isStatic . fst) all
 
-isAnimationRelated (BakePixmap _ _ _ _ animationRelated) = animationRelated
+isAnimationRelated (BakePixmap _ _ _ _ overlappingAnimation) = overlappingAnimation
 isAnimationRelated AnimationBakePixmap{} = True
 
 -- | transforms BakePixmap to Groupeds.
@@ -201,8 +203,8 @@ pixmapAnimationToRect (anim, pos) =
 pixmapToRect :: (Pixmap, Position Double) -> Rect
 pixmapToRect (pix, pos) =
     Rect
-        (pos +~ pix ^. pixmapOffset +~ Position 1 1)
-        (pixmapImageSize pix -~ Size 2 2)
+        (pos +~ pix ^. pixmapOffset +~ split 1)
+        (pixmapImageSize pix -~ split 2)
 
 bakePixmapToRect :: BakePixmap -> Rect
 bakePixmapToRect (BakePixmap pos size _ _ _) = Rect pos size
@@ -236,7 +238,7 @@ groupStaticWithDimension d (Grouped grouped) r =
                 extendedRect = Rect position
                     ((width_ ^= newRight - position ^. x_) $ size)
                 (extendedAreas, otherAreas) =
-                    trace (show (map (lowerRight . bakePixmapToRect) extenders)) $
+--                     trace (show (map (lowerRight . bakePixmapToRect) extenders)) $
                     cutMarked extendedRect r
             in groupStaticWithDimension d
                 (Grouped (grouped ++ extendedAreas))
@@ -260,22 +262,13 @@ groupStaticWithDimension d (Grouped grouped) r =
                 cutMarkedH (center : extendedsAkk, neighbors ++ othersAkk)
                     extendedRect r
 
-    cutExtender :: Rect -> BakePixmap -> (BakePixmap, [BakePixmap])
-    cutExtender extendedRect extender = case cutOff extender extendedRect of
-        Just x -> x
-        Nothing -> error $ unlines (
-            "cutExtender: " :
-            show extendedRect :
-            show extender :
-            [])
-
     -- overwriting the dimensional accessors
---     x_ = posThis d
---     y_ = posOther d
---     width = (^. sizeThis d)
---     height = (^. sizeOther d)
---     width_ = sizeThis d
---     height_ = sizeOther d
+    x_ = posThis d
+    y_ = posOther d
+    width = (^. sizeThis d)
+    height = (^. sizeOther d)
+    width_ = sizeThis d
+    height_ = sizeOther d
 
 
 -- | Searches the BPs to extend the currently handled BP.
@@ -295,29 +288,30 @@ searchExtenders d p l list =
             -- cannot be extended
             Nothing -> Nothing
             Just extender ->
-                let newSearched = Position
-                        (searched ^. x_)
-                        ((lowerRight $ bakePixmapToRect extender) ^. y_)
+                let newSearched =
+                        y_ ^= ((lowerRight $ bakePixmapToRect extender) ^. y_) $
+                        searched
+
                 in inner (extender : akk) newSearched lowerLimit l
 
     isExtender searched (bakePixmapToRect -> bp) =
         contains bp searched &&
-        (componentWise (>) (lowerRight bp) searched == Position True True)
+        (componentWise (>) (lowerRight bp) searched == split True)
 
     -- overwriting the dimensional accessors
---     x_ = posThis d
---     y_ = posOther d
---     width = (^. sizeThis d)
---     height = (^. sizeOther d)
---     width_ = sizeThis d
---     height_ = sizeOther d
+    x_ = posThis d
+    y_ = posOther d
+    width = (^. sizeThis d)
+    height = (^. sizeOther d)
+    width_ = sizeThis d
+    height_ = sizeOther d
 
 
 -- | Returns if a point is on a given Rect (including edges).
 contains :: Rect -> Position Double -> Bool
 contains rect point =
-    (componentWise (>=) point (rectPos rect) == Position True True) &&
-    (componentWise (<=) point (lowerRight rect) == Position True True)
+    (componentWise (>=) point (rectPos rect) == split True) &&
+    (componentWise (<=) point (lowerRight rect) == split True)
 
 
 -- * creating of baked pixmaps
@@ -334,8 +328,10 @@ bake app (Grouped pixmaps) =
     painter <- newQPainter bakedPixmap
     resetMatrix painter
     translate painter (negateAbelian upperLeft)
-    forM_ pixmaps $ \ (BakePixmap position _ pix offset _) -> do
-        drawPixmap painter (position -~ Position 1 1 +~ offset) pix
+    forM_ pixmaps $ \ (BakePixmap p s pix offset _) ->
+        withClipRect painter p s $ do
+            drawPixmap painter (p -~ split 1 +~ offset) pix
+--             fillRect painter (split (- 100)) (split 1000) (alpha ^= 0.3 $ yellow)
     setPaddingPixelsTransparent painter size
     let dsize = fmap fromIntegral size
         resultPixmap = Pixmap bakedPixmap zero dsize dsize
@@ -344,7 +340,7 @@ bake app (Grouped pixmaps) =
   where
     extractRect (BakePixmap pos size _ _ _) = (pos, size)
     addPadding (pos, size) =
-        (pos -~ Position 1 1, size +~ Size 2 2)
+        (pos -~ split 1, size +~ split 2)
 
 
 setPaddingPixelsTransparent :: Ptr QPainter -> Size Int -> IO ()
