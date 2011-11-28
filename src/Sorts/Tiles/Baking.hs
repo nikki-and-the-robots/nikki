@@ -9,10 +9,12 @@ module Sorts.Tiles.Baking (
 import Safe
 
 import Data.Abelian
-import Data.List
+import Data.List (partition)
 import Data.Maybe
+import Data.Map (Map, empty, lookup, insert)
 
 import Control.Arrow
+import Control.Monad.State (evalStateT, get, modify)
 
 import Graphics.Qt as Qt
 
@@ -26,34 +28,46 @@ bakeTiles :: Application -> [(Animation Pixmap, Qt.Position Double)]
     -> IO [(Animation Pixmap, Qt.Position Double)]
 bakeTiles app =
     return . groupTiles >=>
-    mapM (bake app) >=>
-    return . concat
-
+    bake app
 
 data Grouped
-    = Grouped [BakePixmap]
+    = Grouped [StaticPixmap]
     | Single (Animation Pixmap) (Position Double)
   deriving Show
 
+-- | static and animated pixmaps
 data BakePixmap
-    = BakePixmap (Position Double) (Size Double) (Ptr QPixmap) (Position Double) Bool
+    = AnimationBakePixmap (Animation Pixmap) (Position Double)
+    | NotOverlapping StaticPixmap
+
+isAnimationRelated (NotOverlapping (StaticPixmap _ _ _ _ overlappingAnimation)) =
+    overlappingAnimation
+isAnimationRelated AnimationBakePixmap{} = True
+
+-- | transforms StaticPixmap to Groupeds.
+mkGrouped :: BakePixmap -> Grouped
+mkGrouped (AnimationBakePixmap a p) = Single a p
+mkGrouped (NotOverlapping x) = Grouped [x]
+
+
+data StaticPixmap
+    = StaticPixmap (Position Double) (Size Double) (Ptr QPixmap) (Position Double) Bool
                                                                -- offset         -- overlaps fully with an animated area
-    | AnimationBakePixmap (Animation Pixmap) (Position Double)
-  deriving Show
+  deriving (Show, Eq, Ord)
 
-bpSize :: BakePixmap -> Size Double
-bpSize (BakePixmap _ s _ _ _) = s
+bpSize :: StaticPixmap -> Size Double
+bpSize (StaticPixmap _ s _ _ _) = s
 
-bpPixmap (BakePixmap _ _ p _ _) = p
+bpPixmap (StaticPixmap _ _ p _ _) = p
 
-setOverlappingAnimation :: Bool -> BakePixmap -> BakePixmap
-setOverlappingAnimation x (BakePixmap p s pix o _) =
-    BakePixmap p s pix o x
+setOverlappingAnimation :: Bool -> StaticPixmap -> StaticPixmap
+setOverlappingAnimation x (StaticPixmap p s pix o _) =
+    StaticPixmap p s pix o x
 
-normalBakePixmap :: (Pixmap, Position Double) -> BakePixmap
-normalBakePixmap a@(pix, pos) =
+normalStaticPixmap :: (Pixmap, Position Double) -> StaticPixmap
+normalStaticPixmap a@(pix, pos) =
     let (Rect pos size) = pixmapToRect a
-    in BakePixmap pos size (pixmap pix) zero False
+    in StaticPixmap pos size (pixmap pix) zero False
 
 groupTiles :: [(Animation Pixmap, Qt.Position Double)] -> [Grouped]
 groupTiles all =
@@ -66,26 +80,21 @@ groupTiles all =
 -- They will be rendered beneath the baked tiles.
 -- Returns all static tiles (that still have to baked).
 groupAnimated :: [(Animation Pixmap, Qt.Position Double)]
-    -> ([Grouped], [BakePixmap])
+    -> ([Grouped], [StaticPixmap])
 groupAnimated all =
     (animationRelated, rest)
   where
     baked = concatMap (mkBakePixmap animatedRects) all
 
-    (animationRelated, rest) = first (map mkGrouped) $
+    (animationRelated, rest) =
+        first (map mkGrouped) $
+        second (map (\ (NotOverlapping x) -> x)) $
         partition isAnimationRelated baked
 
     -- all Rects that are animated
     animatedRects :: [Rect]
     animatedRects = map pixmapAnimationToRect $ filter (not . isStatic . fst) all
 
-isAnimationRelated (BakePixmap _ _ _ _ overlappingAnimation) = overlappingAnimation
-isAnimationRelated AnimationBakePixmap{} = True
-
--- | transforms BakePixmap to Groupeds.
-mkGrouped :: BakePixmap -> Grouped
-mkGrouped (AnimationBakePixmap a p) = Single a p
-mkGrouped x@BakePixmap{} = Grouped [x]
 
 
 mkBakePixmap :: [Rect] -> (Animation Pixmap, Qt.Position Double) -> [BakePixmap]
@@ -93,23 +102,25 @@ mkBakePixmap animatedRects (animation, position) =
     if not (isStatic animation) then
         [AnimationBakePixmap animation position]
       else
-        inner animatedRects $ normalBakePixmap (animationHead animation, position)
+        map NotOverlapping $
+        inner animatedRects $
+        normalStaticPixmap (animationHead animation, position)
   where
-    inner :: [Rect] -> BakePixmap -> [BakePixmap]
+    inner :: [Rect] -> StaticPixmap -> [StaticPixmap]
     inner (a : r) pixmap =
         concatMap (inner r) $
         convertCutOffs pixmap $
         cutOff pixmap a
     inner [] pixmap = singleton pixmap
 
-    convertCutOffs :: BakePixmap -> Maybe (BakePixmap, [BakePixmap]) -> [BakePixmap]
+    convertCutOffs :: StaticPixmap -> Maybe (StaticPixmap, [StaticPixmap]) -> [StaticPixmap]
     convertCutOffs input cutoffs = case cutoffs of
         Nothing -> [input]
         Just (center, neighbors) ->
             setOverlappingAnimation True center :
             neighbors
 
--- | Cuts the BakePixmap in four pieces, to exclude the given Rect.
+-- | Cuts the StaticPixmap in four pieces, to exclude the given Rect.
 -- Follows this pattern:
 -- -------------------
 -- |       top       |
@@ -122,12 +133,12 @@ mkBakePixmap animatedRects (animation, position) =
 -- -------------------
 --
 -- Returns Nothing in case of no overlap and Just (c, neighbors) otherwise
-cutOff :: BakePixmap -> Rect -> Maybe (BakePixmap, [BakePixmap])
+cutOff :: StaticPixmap -> Rect -> Maybe (StaticPixmap, [StaticPixmap])
 
 cutOff pixmap rect | not (overlap (bakePixmapToRect pixmap) rect) = Nothing
-cutOff p@(BakePixmap _ _ _ _ True) rect = Nothing
+cutOff p@(StaticPixmap _ _ _ _ True) rect = Nothing
 
-cutOff (BakePixmap pos size pix offset False) (Rect aPos aSize) =
+cutOff (StaticPixmap pos size pix offset False) (Rect aPos aSize) =
     Just (center, filter positiveSize $ map clipToBaked [top, left, right, base])
   where
 
@@ -135,16 +146,16 @@ cutOff (BakePixmap pos size pix offset False) (Rect aPos aSize) =
         min (aPos ^. y_ + height aSize) (pos ^. y_ + height size) -
         max (aPos ^. y_) (pos ^. y_)
 
-    top, left, center, right, base :: BakePixmap
+    top, left, center, right, base :: StaticPixmap
 
-    top = BakePixmap pos topSize pix offset False
+    top = StaticPixmap pos topSize pix offset False
     topSize = Size (width size) (aPos ^. y_ - pos ^. y_)
 
-    left = BakePixmap leftPos leftSize pix (offset -~ (leftPos -~ pos)) False
+    left = StaticPixmap leftPos leftSize pix (offset -~ (leftPos -~ pos)) False
     leftPos = Position (pos ^. x_) (pos ^. y_ + height topSize)
     leftSize = Size (aPos ^. x_ - pos ^. x_) centerHeight
 
-    center = BakePixmap centerPos centerSize pix centerOffset False
+    center = StaticPixmap centerPos centerSize pix centerOffset False
     centerPos = componentWise max pos aPos
     centerSize = position2size (centerLowerLeft -~ centerPos)
     centerLowerLeft = componentWise min
@@ -152,24 +163,24 @@ cutOff (BakePixmap pos size pix offset False) (Rect aPos aSize) =
         (aPos +~ size2position aSize)
     centerOffset = offset -~ fmap (max 0) (aPos -~ pos)
 
-    right = BakePixmap rightPos rightSize pix (offset -~ (rightPos -~ pos)) False
+    right = StaticPixmap rightPos rightSize pix (offset -~ (rightPos -~ pos)) False
     rightPos = aPos +~ Position (width aSize) 0
     rightSize = Size (pos ^. x_ + width size - (aPos ^. x_ + width aSize)) centerHeight
 
-    base = BakePixmap basePos baseSize pix (offset -~ (basePos -~ pos)) False
+    base = StaticPixmap basePos baseSize pix (offset -~ (basePos -~ pos)) False
     basePos = Position (pos ^. x_) (aPos ^. y_ + height aSize)
     baseSize = Size (width size) (pos ^. y_ + height size - (aPos ^. y_ + height aSize))
 
     -- | reduces the size of the created baked pixmap
     -- so that it does not exceed the size of the given baked pixmap.
-    clipToBaked (BakePixmap cPos cSize pix offset animationRelated) =
+    clipToBaked (StaticPixmap cPos cSize pix offset animationRelated) =
         let cPos' = componentWise max cPos pos
             cSize' = componentWise min cSize (size -~ position2size (cPos' -~ pos))
             offset' = offset -~ (cPos' -~ cPos)
-        in BakePixmap cPos' cSize' pix offset' animationRelated
+        in StaticPixmap cPos' cSize' pix offset' animationRelated
 
-    positiveSize :: BakePixmap -> Bool
-    positiveSize (BakePixmap _ (Size w h) _ _ _) =
+    positiveSize :: StaticPixmap -> Bool
+    positiveSize (StaticPixmap _ (Size w h) _ _ _) =
         w > 0 && h > 0
 
 
@@ -206,16 +217,16 @@ pixmapToRect (pix, pos) =
         (pos +~ pix ^. pixmapOffset +~ split 1)
         (pixmapImageSize pix -~ split 2)
 
-bakePixmapToRect :: BakePixmap -> Rect
-bakePixmapToRect (BakePixmap pos size _ _ _) = Rect pos size
+bakePixmapToRect :: StaticPixmap -> Rect
+bakePixmapToRect (StaticPixmap pos size _ _ _) = Rect pos size
 
 
 -- * grouping of static tiles
 -- (The actual baking algorithm)
-groupStatic :: [BakePixmap] -> [Grouped]
+groupStatic :: [StaticPixmap] -> [Grouped]
 groupStatic = groupStaticH Nothing
 
-groupStaticH :: Maybe Grouped -> [BakePixmap] -> [Grouped]
+groupStaticH :: Maybe Grouped -> [StaticPixmap] -> [Grouped]
 groupStaticH Nothing (a : r) =
     groupStaticH (Just (Grouped [a])) r
 groupStaticH (Just grouped@(Grouped groupedPixmaps)) r =
@@ -236,7 +247,7 @@ groupStaticH (Just grouped@(Grouped groupedPixmaps)) r =
 groupStaticH Nothing [] = []
 
 -- | Extends the given Grouped if possible. Also returns the rest of the pixmaps.
-extend :: Dimension -> Grouped -> [BakePixmap] -> Maybe (Grouped, [BakePixmap])
+extend :: Dimension -> Grouped -> [StaticPixmap] -> Maybe (Grouped, [StaticPixmap])
 extend d (Grouped grouped) r =
     -- extend the area in the given dimension
     let (position, size) = second (fmap fromIntegral) $
@@ -255,13 +266,13 @@ extend d (Grouped grouped) r =
                     cutMarked extendedRect r
             in Just ((Grouped (grouped ++ extendedAreas)), otherAreas)
   where
-    toPosSize :: BakePixmap -> (Position Double, Size Double)
-    toPosSize (BakePixmap p s _ _ _) = (p, s)
+    toPosSize :: StaticPixmap -> (Position Double, Size Double)
+    toPosSize (StaticPixmap p s _ _ _) = (p, s)
 
     -- Cuts the marked (overlapping) Pixmaps, but keep the rendering order.
-    -- Returns the BakePixmaps inside animated areas and all remaining
-    -- (possibly cut) BakePixmaps in correct rendering order.
-    cutMarked :: Rect -> [BakePixmap] -> ([BakePixmap], [BakePixmap])
+    -- Returns the StaticPixmaps inside animated areas and all remaining
+    -- (possibly cut) StaticPixmaps in correct rendering order.
+    cutMarked :: Rect -> [StaticPixmap] -> ([StaticPixmap], [StaticPixmap])
     cutMarked = cutMarkedH ([], [])
     cutMarkedH (extendedsAkk, othersAkk) extendedRect [] =
         (reverse extendedsAkk, reverse othersAkk)
@@ -284,14 +295,14 @@ extend d (Grouped grouped) r =
 
 -- | Searches the BPs to extend the currently handled BP.
 -- Does not cut them into pieces.
--- Returns the list of all BakePixmaps with the extenders marked by True.
-searchExtenders :: Dimension -> Position Double -> Double -> [BakePixmap]
-    -> Maybe [BakePixmap]
+-- Returns the list of all StaticPixmaps with the extenders marked by True.
+searchExtenders :: Dimension -> Position Double -> Double -> [StaticPixmap]
+    -> Maybe [StaticPixmap]
 searchExtenders d p l list =
     inner [] p l list
   where
-    inner :: [BakePixmap] -> Position Double -> Double -> [BakePixmap]
-        -> Maybe [BakePixmap]
+    inner :: [StaticPixmap] -> Position Double -> Double -> [StaticPixmap]
+        -> Maybe [StaticPixmap]
     inner akk searched lowerLimit l | searched ^. y_ >= lowerLimit =
         Just (reverse akk)
     inner akk searched lowerLimit l =
@@ -327,11 +338,37 @@ contains rect point =
 
 -- * creating of baked pixmaps
 
-bake :: Application -> Grouped -> IO [(Animation Pixmap, Qt.Position Double)]
+-- | memoized version of bakeH (working over all Groupeds)
+bake :: Application -> [Grouped] -> IO [(Animation Pixmap, Qt.Position Double)]
+bake app l =
+    evalStateT (mapM (inner app) l) initialMap
+  where
+    initialMap :: Map [StaticPixmap] (Animation Pixmap, Qt.Position Double)
+    initialMap = empty
 
-bake _ (Single a p) = return [(a, p)]
+    inner app (Single a p) = return (a, p)
+    inner app (Grouped (normalizeStaticPixmaps -> (grouped, normalization))) = do
+        m <- get
+        (second (normalization +~)) <$>
+          case Data.Map.lookup grouped m of
+            Nothing -> do
+                result <- io $ bakeH app grouped
+                modify (insert grouped result)
+                return result
+            Just result -> return result
 
-bake app (Grouped pixmaps) =
+-- | Normalizes the StaticPixmap positions and offsets
+-- so that the first StaticPixmap is on (Position 0 0).
+-- For memoization.
+normalizeStaticPixmaps :: [StaticPixmap] -> ([StaticPixmap], Position Double)
+normalizeStaticPixmaps l@(StaticPixmap p _ _ _ _ : _) =
+    (map (addPosition (negateAbelian p)) l, p)
+  where
+    addPosition add (StaticPixmap p s pix offset oa) =
+        StaticPixmap (add +~ p) s pix offset oa
+
+bakeH :: Application -> [StaticPixmap] -> IO (Animation Pixmap, Qt.Position Double)
+bakeH app pixmaps =
   postGUIBlocking (window app) $ do
     let (upperLeft, size) = boundingBox $
             map (addPadding . extractRect) pixmaps
@@ -339,17 +376,17 @@ bake app (Grouped pixmaps) =
     painter <- newQPainter bakedPixmap
     resetMatrix painter
     translate painter (negateAbelian upperLeft)
-    forM_ pixmaps $ \ (BakePixmap p s pix offset _) ->
+    forM_ pixmaps $ \ (StaticPixmap p s pix offset _) ->
         withClipRect painter p s $ do
             drawPixmap painter (p -~ split 1 +~ offset) pix
 --             fillRect painter (split (- 100)) (split 1000) (alpha ^= 0.3 $ yellow)
     setPaddingPixelsTransparent painter size
     let dsize = fmap fromIntegral size
         resultPixmap = Pixmap bakedPixmap zero dsize dsize
-    return $ singleton (mkAnimation [resultPixmap] [42], upperLeft)
+    return $ (mkAnimation [resultPixmap] [42], upperLeft)
 
   where
-    extractRect (BakePixmap pos size _ _ _) = (pos, size)
+    extractRect (StaticPixmap pos size _ _ _) = (pos, size)
     addPadding (pos, size) =
         (pos -~ split 1, size +~ split 2)
 

@@ -25,7 +25,7 @@ data QKeyEvent
 -- * Position
 
 data Position a = Position {positionX :: a, positionY :: a}
-  deriving (Show, Read, Eq, Data, Typeable)
+  deriving (Show, Read, Eq, Ord, Data, Typeable)
 
 x_, y_ :: Accessor (Position a) a
 x_ = accessor positionX (\ a r -> r{positionX = a})
@@ -70,7 +70,7 @@ rotatePosition angle (Position x y) =
 -- * Size
 
 data Size a = Size {width :: a, height :: a}
-  deriving (Eq, Show, Data, Typeable)
+  deriving (Eq, Ord, Show, Data, Typeable)
 
 width_, height_ :: Accessor (Size a) a
 width_ = accessor width (\ a r -> r{width = a})
