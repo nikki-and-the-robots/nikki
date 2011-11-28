@@ -233,18 +233,25 @@ groupStaticH (Just grouped@(Grouped groupedPixmaps)) r =
     let (_, size) = boundingBox $ map
                         ((\ (Rect p s) -> (p, s)) . bakePixmapToRect)
                         groupedPixmaps
-        dimensions = if width size > height size then
-               (verticalDimension, horizontalDimension)
-             else
-               (horizontalDimension, verticalDimension)
+    in if tooBig size then
+        -- very big, baking won't be continued
+        grouped : groupStaticH Nothing r
+      else
+        -- bake to the right or down (to get closer to quadratic baked pixmaps)
+        let dimensions = if width size > height size then
+                    (verticalDimension, horizontalDimension)
+                  else
+                    (horizontalDimension, verticalDimension)
         -- try fst first, then snd
-    in case (extend (fst dimensions) grouped r, extend (snd dimensions) grouped r) of
-        (Just (grouped, rest), _) ->
-            groupStaticH (Just grouped) rest
-        (Nothing, Just (grouped, rest)) ->
-            groupStaticH (Just grouped) rest
-        (Nothing, Nothing) -> grouped : groupStaticH Nothing r
+        in case (extend (fst dimensions) grouped r, extend (snd dimensions) grouped r) of
+            (Just (grouped, rest), _) ->
+                groupStaticH (Just grouped) rest
+            (Nothing, Just (grouped, rest)) ->
+                groupStaticH (Just grouped) rest
+            (Nothing, Nothing) -> grouped : groupStaticH Nothing r
 groupStaticH Nothing [] = []
+
+tooBig size = height size > 512 || width size > 512
 
 -- | Extends the given Grouped if possible. Also returns the rest of the pixmaps.
 extend :: Dimension -> Grouped -> [StaticPixmap] -> Maybe (Grouped, [StaticPixmap])
