@@ -41,6 +41,7 @@ module Graphics.Qt.CPPWrapper (
     rotate,
     scale,
     setPenColor,
+    withClipRect,
 
     fillRect,
     drawCircle,
@@ -72,6 +73,7 @@ module Graphics.Qt.CPPWrapper (
     -- * QImage
     QImage,
     destroyQImage,
+    saveQImage,
     sizeQImage,
     colorCountQImage,
     colorQImage,
@@ -346,6 +348,22 @@ setPenColor ptr (QtColor r g b a) thickness =
     cppSetPenColor ptr r g b a thickness
 foreign import ccall "setPenColor" cppSetPenColor :: Ptr QPainter -> QtInt -> QtInt -> QtInt -> QtInt -> QtInt -> IO ()
 
+setClipRect :: Ptr QPainter -> Position Double -> Size Double -> IO ()
+setClipRect ptr (Position x y) (Size w h) =
+    cppSetClipRect ptr x y w h
+
+foreign import ccall "setClipRect" cppSetClipRect :: Ptr QPainter ->
+    QtReal -> QtReal -> QtReal -> QtReal -> IO ()
+
+foreign import ccall setClipping :: Ptr QPainter -> Bool -> IO ()
+
+withClipRect :: Ptr QPainter -> Position Double -> Size Double -> IO a -> IO a
+withClipRect ptr pos size cmd =
+    bracket start (const stop) (const cmd)
+  where
+    start = setClipRect ptr pos size
+    stop = setClipping ptr False
+
 foreign import ccall setFontSize :: Ptr QPainter -> QtInt -> IO ()
 
 drawRect :: Ptr QPainter -> Position QtReal -> Size QtReal -> IO ()
@@ -475,7 +493,8 @@ foreign import ccall heightQPixmap :: Ptr QPixmap -> IO QtInt
 sizeQPixmap :: Ptr QPixmap -> IO (Size QtInt)
 sizeQPixmap ptr = Size <$> widthQPixmap ptr <*> heightQPixmap ptr
 
-foreign import ccall toImageQPixmap :: Ptr QPixmap -> IO (Ptr QImage)
+-- | Bool parameter controls, if Indexed8 is forced as a format.
+foreign import ccall toImageQPixmap :: Ptr QPixmap -> Bool -> IO (Ptr QImage)
 
 foreign import ccall fromImageQPixmap :: Ptr QImage -> IO (Ptr QPixmap)
 
@@ -485,6 +504,13 @@ foreign import ccall fromImageQPixmap :: Ptr QImage -> IO (Ptr QPixmap)
 data QImage
 
 foreign import ccall destroyQImage :: Ptr QImage -> IO ()
+
+saveQImage :: Ptr QImage -> FilePath -> IO ()
+saveQImage image filename =
+    withCString filename $ \ cfile ->
+        cppSaveQImage image cfile
+
+foreign import ccall "saveQImage" cppSaveQImage :: Ptr QImage -> CString -> IO ()
 
 foreign import ccall widthQImage :: Ptr QImage -> IO QtInt
 

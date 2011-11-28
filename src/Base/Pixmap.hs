@@ -96,7 +96,7 @@ copyPixmap (Pixmap pix size offset imageSize) = do
 -- | Iterates over the colors in the color table of the image.
 mapColors :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
 mapColors f (Pixmap pix size offset realSize) = do
-    image <- toImageQPixmap pix
+    image <- toImageQPixmap pix True
     destroyQPixmap pix
     imageSize <- sizeQImage image
 

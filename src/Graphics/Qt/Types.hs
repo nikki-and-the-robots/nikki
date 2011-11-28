@@ -57,6 +57,7 @@ instance NFData a => NFData (Position a) where
 instance VectorLike Position where
     componentWise op (Position a b) (Position x y) =
         Position (op a x) (op b y)
+    split a = Position a a
 
 rotatePosition :: Floating a => a -> Position a -> Position a
 rotatePosition angle (Position x y) =
@@ -92,6 +93,7 @@ instance NFData a => NFData (Size a) where
 instance VectorLike Size where
     componentWise op (Size a b) (Size x y) =
         Size (op a x) (op b y)
+    split a = Size a a
 
 data Color = QtColor {
     _red :: QtInt,

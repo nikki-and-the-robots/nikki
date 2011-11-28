@@ -30,3 +30,4 @@ instance Abelian Float where
 
 class VectorLike t where
     componentWise :: (a -> b -> c) -> t a -> t b -> t c
+    split :: a -> t a

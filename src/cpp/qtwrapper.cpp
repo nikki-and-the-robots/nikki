@@ -127,6 +127,14 @@ extern "C" void setPenColor(QPainter* painter, int r, int g, int b, int a, int w
     painter->setPen(pen);
 };
 
+extern "C" void setClipRect(QPainter* self, qreal x, qreal y, qreal w, qreal h) {
+    self->setClipRect(QRectF(x, y, w, h));
+};
+
+extern "C" void setClipping(QPainter* self, bool clipping) {
+    self->setClipping(clipping);
+};
+
 extern "C" void setFontSize(QPainter* ptr, int size) {
     QFont font = QFont(ptr->font());
     font.setPixelSize(size);
@@ -269,9 +277,13 @@ extern "C" int heightQPixmap(QPixmap* ptr) {
     return ptr->height();
 };
 
-extern "C" QImage* toImageQPixmap(QPixmap* self) {
-    QImage::Format preferred_format = QImage::Format_Indexed8;
-    return new QImage(self->toImage().convertToFormat(preferred_format));
+extern "C" QImage* toImageQPixmap(QPixmap* self, bool useIndexed8) {
+    if (useIndexed8) {
+        QImage::Format preferred_format = QImage::Format_Indexed8;
+        return new QImage(self->toImage().convertToFormat(preferred_format));
+    } else {
+        return new QImage(self->toImage());
+    };
 };
 
 extern "C" QPixmap* fromImageQPixmap(QImage* image) {
@@ -282,6 +294,10 @@ extern "C" QPixmap* fromImageQPixmap(QImage* image) {
 // * QImage
 extern "C" void destroyQImage(QImage* self) {
     delete self;
+};
+
+extern "C" void saveQImage(QImage* self, char* file) {
+    self->save(QString(file), 0, 0);
 };
 
 extern "C" int widthQImage(QImage* ptr) {
