@@ -195,23 +195,9 @@ instance Sort TSort Tile where
     renderIconified sort ptr =
         renderPixmapSimple ptr $ head $ ftoList $ animation sort
 
-    initialize app _ Nothing sort@TSort{} editorPosition Nothing _ = do
-        let pos = epToPosition (size sort) editorPosition
-
---         let (shapes, baryCenterOffset) = mkShapes $ size sort
---             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
---             position = position2vector (epToPosition sort editorPosition)
---                             +~ baryCenterOffset
---             bodyAttributes = mkBodyAttributes shapes position (boxMass sort)
---         chip <- CM.initChipmunk space bodyAttributes
---                     shapesWithAttributes baryCenterOffset
---         return $ Box chip
-
-
-        return $ Tile $ (ImmutableChipmunk pos 0 0 [])
-
+    initialize _ _ _ = es "immutableCopy: use AllTiles"
     immutableCopy = es "immutableCopy: use AllTiles"
-    chipmunks = es "chipmunks: use AllTiles"
+    chipmunks     = es "chipmunks: use AllTiles"
     renderObject _ _ (Tile (ImmutableChipmunk position _ _ _)) sort _ offset now = return $
         return $ RenderPixmap pix position Nothing
       where
@@ -237,7 +223,13 @@ data AllTilesSort
   deriving (Show, Typeable)
 
 data AllTiles
-    = AllTiles Chipmunk [(Animation Pixmap, Qt.Position Double)]
+    = AllPhysicTiles {
+        chipmunks_ :: Chipmunk,
+        renderables :: [(Animation Pixmap, Qt.Position Double)]
+      }
+    | AllMultilayerTiles {
+        renderables :: [(Animation Pixmap, Qt.Position Double)]
+      }
   deriving (Show, Typeable)
 
 mkAllTiles :: [EditorObject Sort_] -> EditorObject Sort_
@@ -252,20 +244,29 @@ instance Sort AllTilesSort AllTiles where
     freeSort = error "freeSort: not in use for AllTiles"
     size = error "size: not in use for AllTiles"
     renderIconified = error "renderIconified: not in use for AllTiles"
+
+    initialize app _ Nothing (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing _ =
+        return $ AllMultilayerTiles $ map toAnimation editorObjects
+      where
+        toAnimation (EditorObject sort ep Nothing) =
+            (animation sort, epToPosition (size sort) ep)
+
     initialize app _ (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
       cachedTiles = io $ do
         renderables <- bakeTiles app $ map mkRenderable editorObjects
         chipmunks <- initChipmunks space cachedTiles editorObjects
-        return $ AllTiles chipmunks renderables
+        return $ AllPhysicTiles chipmunks renderables
 
-    immutableCopy (AllTiles c x) = do
+    immutableCopy (AllPhysicTiles c x) = do
         c' <- CM.immutableCopy c
-        return $ AllTiles c' x
+        return $ AllPhysicTiles c' x
+    immutableCopy x = return x
 
-    chipmunks (AllTiles c _) = [c]
+    chipmunks (AllPhysicTiles c _) = [c]
+    chipmunks AllMultilayerTiles{} = []
 
-    renderObject _ _ (AllTiles _ renderables) sort _ _ now = return $
-        fmap inner renderables
+    renderObject _ _ allTiles sort _ _ now = return $
+        fmap inner $ renderables allTiles
       where
         inner (animation, pos) = RenderPixmap
             (pickAnimationFrame animation now)

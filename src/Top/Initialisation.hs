@@ -143,7 +143,9 @@ mkScene levelFile space (nikki, objects) = do
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =
-    mainLayer .> content ^: mergeEditorObjects
+    (backgrounds ^: fmap (content ^: mergeEditorObjects)) .
+    (mainLayer .> content ^: mergeEditorObjects) .
+    (foregrounds ^: fmap (content ^: mergeEditorObjects))
 
 mergeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
 mergeEditorObjects ixs =
