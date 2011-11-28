@@ -246,7 +246,7 @@ instance Sort AllTilesSort AllTiles where
     renderIconified = error "renderIconified: not in use for AllTiles"
 
     initialize app _ Nothing (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing _ =
-        return $ AllMultilayerTiles $ map toAnimation editorObjects
+        io $ AllMultilayerTiles <$> bakeTiles app (map toAnimation editorObjects)
       where
         toAnimation (EditorObject sort ep Nothing) =
             (animation sort, epToPosition (size sort) ep)
