@@ -350,19 +350,24 @@ bake :: Application -> [Grouped] -> IO [(Animation Pixmap, Qt.Position Double)]
 bake app l =
     evalStateT (mapM (inner app) l) initialMap
   where
-    initialMap :: Map [StaticPixmap] (Animation Pixmap, Qt.Position Double)
+            -- [StaticPixmap] is normalized, therefore the positions doesn't have to
+            -- be memoized, it's always @split (- 1)@.
+    initialMap :: Map [StaticPixmap] Pixmap
     initialMap = empty
 
     inner app (Single a p) = return (a, p)
     inner app (Grouped (normalizeStaticPixmaps -> (grouped, normalization))) = do
         m <- get
-        (second (normalization +~)) <$>
+        convert normalization <$>
           case Data.Map.lookup grouped m of
             Nothing -> do
                 result <- io $ bakeH app grouped
                 modify (insert grouped result)
                 return result
             Just result -> return result
+
+    convert :: Position Double -> Pixmap -> (Animation Pixmap, Position Double)
+    convert normalization p = (mkAnimation [p] [42], split (- 1) +~ normalization)
 
 -- | Normalizes the StaticPixmap positions and offsets
 -- so that the first StaticPixmap is on (Position 0 0).
@@ -374,7 +379,7 @@ normalizeStaticPixmaps l@(StaticPixmap p _ _ _ _ : _) =
     addPosition add (StaticPixmap p s pix offset oa) =
         StaticPixmap (add +~ p) s pix offset oa
 
-bakeH :: Application -> [StaticPixmap] -> IO (Animation Pixmap, Qt.Position Double)
+bakeH :: Application -> [StaticPixmap] -> IO Pixmap
 bakeH app pixmaps =
   postGUIBlocking (window app) $ do
     let (upperLeft, size) = boundingBox $
@@ -384,14 +389,13 @@ bakeH app pixmaps =
     resetMatrix painter
     translate painter (negateAbelian upperLeft)
     forM_ pixmaps $ \ (StaticPixmap p s pix offset _) ->
-        withClipRect painter p s $ do
+        withClipRect painter p s $
             drawPixmap painter (p -~ split 1 +~ offset) pix
---             fillRect painter (split (- 100)) (split 1000) (alpha ^= 0.3 $ yellow)
     setPaddingPixelsTransparent painter size
     destroyQPainter painter
     let dsize = fmap fromIntegral size
         resultPixmap = Pixmap bakedPixmap zero dsize dsize
-    return $ (mkAnimation [resultPixmap] [42], upperLeft)
+    return resultPixmap
 
   where
     extractRect (StaticPixmap pos size _ _ _) = (pos, size)
