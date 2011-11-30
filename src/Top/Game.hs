@@ -7,6 +7,8 @@ import Data.IORef
 
 import Physics.Chipmunk
 
+import Graphics.Qt
+
 import Utils
 
 import Base
@@ -26,5 +28,7 @@ playLevel app parent editorTestMode editorScene = NoGUIAppState $ withSpace grav
     let (NikkiMode nikkiIndex) = scene ^. mode
     cameraStateRef <- io $ newIORef $ initialCameraState nikkiIndex
     runAppState app $ gameAppState app editorTestMode (GameState space cameraStateRef scene)
-    return parent
+    return $ NoGUIAppState $ io $ do
+        postGUI (window app) $ fmapM_ freeObject (scene ^. objects)
+        return parent
 

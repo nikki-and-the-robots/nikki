@@ -1,4 +1,4 @@
-{-# language DeriveDataTypeable #-}
+{-# language DeriveDataTypeable, DeriveFoldable #-}
 
 module Base.GameGrounds (
     GameGrounds(GameGrounds),
@@ -27,7 +27,7 @@ data GameGrounds a = GameGrounds {
     gameMainLayer_ :: Indexable a,
     gameForegrounds_ :: [GameLayer a]
   }
-    deriving (Show, Read, Data, Typeable)
+    deriving (Show, Read, Foldable, Data, Typeable)
 
 gameBackgrounds :: Accessor (GameGrounds a) [GameLayer a]
 gameBackgrounds = accessor gameBackgrounds_ (\ a r -> r{gameBackgrounds_ = a})

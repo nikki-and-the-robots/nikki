@@ -225,10 +225,12 @@ data AllTilesSort
 data AllTiles
     = AllPhysicTiles {
         chipmunks_ :: Chipmunk,
-        renderables :: [(Animation Pixmap, Qt.Position Double)]
+        renderables :: [(Animation Pixmap, Qt.Position Double)],
+        newQPixmaps :: [Ptr QPixmap]
       }
     | AllMultilayerTiles {
-        renderables :: [(Animation Pixmap, Qt.Position Double)]
+        renderables :: [(Animation Pixmap, Qt.Position Double)],
+        newQPixmaps :: [Ptr QPixmap]
       }
   deriving (Show, Typeable)
 
@@ -246,23 +248,27 @@ instance Sort AllTilesSort AllTiles where
     renderIconified = error "renderIconified: not in use for AllTiles"
 
     initialize app _ Nothing (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing _ =
-        io $ AllMultilayerTiles <$> bakeTiles app (map toAnimation editorObjects)
+        io $ (uncurry AllMultilayerTiles) <$>
+            bakeTiles app (map toAnimation editorObjects)
       where
         toAnimation (EditorObject sort ep Nothing) =
             (animation sort, epToPosition (size sort) ep)
 
     initialize app _ (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
       cachedTiles = io $ do
-        renderables <- bakeTiles app $ map mkRenderable editorObjects
+        (renderables, newQPixmaps) <- bakeTiles app $ map mkRenderable editorObjects
         chipmunks <- initChipmunks space cachedTiles editorObjects
-        return $ AllPhysicTiles chipmunks renderables
+        return $ AllPhysicTiles chipmunks renderables newQPixmaps
 
-    immutableCopy (AllPhysicTiles c x) = do
+    freeObject allTiles =
+        fmapM_ destroyQPixmap $ newQPixmaps allTiles
+
+    immutableCopy (AllPhysicTiles c x y) = do
         c' <- CM.immutableCopy c
-        return $ AllPhysicTiles c' x
+        return $ AllPhysicTiles c' x y
     immutableCopy x = return x
 
-    chipmunks (AllPhysicTiles c _) = [c]
+    chipmunks (AllPhysicTiles c _ _) = [c]
     chipmunks AllMultilayerTiles{} = []
 
     renderObject _ _ allTiles sort _ _ now = return $

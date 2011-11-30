@@ -24,8 +24,10 @@ import Base
 
 
 -- | entry function
+-- Returns the list of baked pixmaps along a list of newly created
+-- pixmaps, that have to be garbage collected at some point.
 bakeTiles :: Application -> [(Animation Pixmap, Qt.Position Double)]
-    -> IO [(Animation Pixmap, Qt.Position Double)]
+    -> IO ([(Animation Pixmap, Qt.Position Double)], [Ptr QPixmap])
 bakeTiles app =
     return . groupTiles >=>
     bake app
@@ -346,25 +348,27 @@ contains rect point =
 -- * creating of baked pixmaps
 
 -- | memoized version of bakeH (working over all Groupeds)
-bake :: Application -> [Grouped] -> IO [(Animation Pixmap, Qt.Position Double)]
-bake app l =
-    evalStateT (mapM (inner app) l) initialMap
+bake :: Application -> [Grouped]
+    -> IO ([(Animation Pixmap, Qt.Position Double)], [Ptr QPixmap])
+bake app l = do
+    r <- evalStateT (mapM (inner app) l) initialMap
+    return (map fst r, catMaybes $ map snd r)
   where
             -- [StaticPixmap] is normalized, therefore the positions doesn't have to
             -- be memoized, it's always @split (- 1)@.
     initialMap :: Map [StaticPixmap] Pixmap
     initialMap = empty
 
-    inner app (Single a p) = return (a, p)
+    inner app (Single a p) = return ((a, p), Nothing)
     inner app (Grouped (normalizeStaticPixmaps -> (grouped, normalization))) = do
         m <- get
-        convert normalization <$>
+        first (convert normalization) <$>
           case Data.Map.lookup grouped m of
             Nothing -> do
-                result <- io $ bakeH app grouped
+                (result, newQPixmap) <- io $ bakeH app grouped
                 modify (insert grouped result)
-                return result
-            Just result -> return result
+                return (result, Just newQPixmap)
+            Just result -> return (result, Nothing) -- already memoized
 
     convert :: Position Double -> Pixmap -> (Animation Pixmap, Position Double)
     convert normalization p = (mkAnimation [p] [42], split (- 1) +~ normalization)
@@ -379,7 +383,7 @@ normalizeStaticPixmaps l@(StaticPixmap p _ _ _ _ : _) =
     addPosition add (StaticPixmap p s pix offset oa) =
         StaticPixmap (add +~ p) s pix offset oa
 
-bakeH :: Application -> [StaticPixmap] -> IO Pixmap
+bakeH :: Application -> [StaticPixmap] -> IO (Pixmap, Ptr QPixmap)
 bakeH app pixmaps =
   postGUIBlocking (window app) $ do
     let (upperLeft, size) = boundingBox $
@@ -395,7 +399,7 @@ bakeH app pixmaps =
     destroyQPainter painter
     let dsize = fmap fromIntegral size
         resultPixmap = Pixmap bakedPixmap zero dsize dsize
-    return resultPixmap
+    return (resultPixmap, bakedPixmap)
 
   where
     extractRect (StaticPixmap pos size _ _ _) = (pos, size)

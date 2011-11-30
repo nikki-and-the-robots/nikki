@@ -559,6 +559,9 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
     initialize :: Application -> LevelFile -> Maybe Space
         -> sort -> EditorPosition -> Maybe OEMState -> CachedTiles -> RM object
 
+    freeObject :: object -> IO ()
+    freeObject = const $ return ()
+
     immutableCopy :: object -> IO object
 
     chipmunks :: object -> [Chipmunk]
@@ -637,6 +640,7 @@ instance Sort Sort_ Object_ where
                 renderEditorObject ptr offset editorObject{editorSort = innerSort}
     initialize app file space (Sort_ sort) editorPosition state cachedTiles =
         Object_ sort <$> initialize app file space sort editorPosition state cachedTiles
+    freeObject (Object_ _ o) = freeObject o
     immutableCopy (Object_ s o) = Object_ s <$> Base.Types.immutableCopy o
     chipmunks (Object_ _ o) = chipmunks o
     getControlledChipmunk scene (Object_ _ o) = getControlledChipmunk scene o
