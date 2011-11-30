@@ -142,10 +142,9 @@ loadingEditorScene app file abortion follower =
     appState (busyMessage $ p "loading...") $ io $ do
         eGrounds <- runErrorT $ loadByFilePath (leafs $ allSorts app) (getAbsoluteFilePath file)
         case eGrounds of
-            Right diskLevel -> do
+            Right diskLevel ->
                 -- level successfully loaded
-                editorScene <- initEditorScene (allSorts app) file diskLevel
-                return $ follower editorScene
+                return $ follower $ initEditorScene (allSorts app) file diskLevel
             Left errMsg -> do
                 fmapM_ (logg Error) $ fmap getString errMsg
                 return $ message app errMsg abortion
