@@ -36,6 +36,7 @@ runAppState app (AppStateLooped renderable cmd) = do
     cmd >>= runAppState app
 runAppState app (NoGUIAppState cmd) = do
     io $ postGUI (window app) $ setRenderingLooped (window app) False
+    io $ setDrawingCallbackMainWindow (window app) Nothing
     cmd >>= runAppState app
 runAppState app (GameAppState renderable cmd initialGameState) = do
     io $ postGUI (window app) $ setRenderingLooped (window app) True
