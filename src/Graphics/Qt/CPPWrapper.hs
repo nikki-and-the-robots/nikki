@@ -89,6 +89,7 @@ module Graphics.Qt.CPPWrapper (
 import Data.Generics
 import Data.Abelian
 import Data.Set
+import Data.IORef
 
 import Control.Monad.CatchIO
 import Control.Monad.State (evalStateT, get, put)
@@ -101,6 +102,7 @@ import Foreign.ForeignPtr
 
 import System.Directory
 import System.Environment
+import System.IO.Unsafe
 
 import Graphics.Qt.Types
 import Graphics.Qt.Events
@@ -154,7 +156,13 @@ foreign import ccall "setApplicationName" cppSetApplicationName :: Ptr QApplicat
 
 data MainWindow
 
-foreign import ccall newMainWindow :: Int -> Int -> Int -> IO (Ptr MainWindow)
+newMainWindow :: Int -> Int -> Int -> IO (Ptr MainWindow)
+newMainWindow swapInterval width height = do
+    r <- cppNewMainWindow swapInterval width height
+    cppSetDrawingCallbackMainWindow r =<< wrapDrawingCallback stdDrawer
+    return r
+foreign import ccall "newMainWindow" cppNewMainWindow ::
+    Int -> Int -> Int -> IO (Ptr MainWindow)
 
 foreign import ccall destroyMainWindow :: Ptr MainWindow -> IO ()
 
@@ -223,11 +231,20 @@ foreign import ccall "wrapper" wrapDrawingCallback ::
 
 setDrawingCallbackMainWindow ::
     Ptr MainWindow -> Maybe (Ptr QPainter -> IO ()) -> IO ()
-setDrawingCallbackMainWindow ptr (Just cb) =
-    wrapDrawingCallback cb >>=
-        cppSetDrawingCallbackMainWindow ptr
-setDrawingCallbackMainWindow ptr Nothing =
-    cppSetDrawingCallbackMainWindow ptr =<< wrapDrawingCallback (const $ return ())
+setDrawingCallbackMainWindow ptr cb = do
+    writeIORef _drawingCallback cb
+    updateMainWindow ptr
+
+stdDrawer :: Ptr QPainter -> IO ()
+stdDrawer ptr = do
+    cb <- readIORef _drawingCallback
+    case cb of
+        Nothing -> return ()
+        Just cb -> cb ptr
+
+{-# noinline _drawingCallback #-}
+_drawingCallback :: IORef (Maybe (Ptr QPainter -> IO ()))
+_drawingCallback = unsafePerformIO $ newIORef Nothing
 
 
 -- event callbacks
