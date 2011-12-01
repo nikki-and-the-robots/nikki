@@ -72,7 +72,7 @@ errorCall :: ErrorCall -> [Prose]
 errorCall e =
     p "SERVER ERROR:" :
     p "The level server seems to be malfunctioning." :
-    p "(Oh, my god!)" :
+    p "(Blimey!)" :
     p "Sorry." :
     p "Please, try updating your game." :
     pv ("(" ++ show e ++ ")") :
