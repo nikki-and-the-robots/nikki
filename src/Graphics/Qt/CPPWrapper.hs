@@ -95,7 +95,7 @@ import Control.Monad.CatchIO
 import Control.Monad.State (evalStateT, get, put)
 import Control.Concurrent.MVar
 
-import Foreign (Ptr, FunPtr, nullPtr)
+import Foreign (Ptr, nullPtr, FunPtr, freeHaskellFunPtr)
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.ForeignPtr
@@ -543,8 +543,10 @@ foreign import ccall "textQClipboard" cppTextQClipboard :: IO (Ptr QByteArray)
 -- * Execute IO-operations in the GUI-thread
 
 -- | Non-blocking operation, that gets the gui thread to perform the given action.
+-- (cpp has to call 'freePostGUIFunPtr' after performing the action.)
 postGUI :: Ptr MainWindow -> IO () -> IO ()
-postGUI widget action = cppPostGUI widget =<< wrapGuiAction action
+postGUI widget action =
+    cppPostGUI widget =<< wrapGuiAction action
 
 foreign import ccall "postGUI" cppPostGUI :: Ptr MainWindow -> FunPtr (IO ()) -> IO ()
 
@@ -558,3 +560,7 @@ postGUIBlocking window a = do
     ref <- newEmptyMVar
     postGUI window (a >>= putMVar ref)
     takeMVar ref
+
+foreign export ccall freePostGUIFunPtr :: FunPtr (IO ()) -> IO ()
+freePostGUIFunPtr :: FunPtr (IO ()) -> IO ()
+freePostGUIFunPtr = freeHaskellFunPtr
