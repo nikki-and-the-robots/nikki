@@ -101,6 +101,7 @@ import Data.Generics
 import Data.Abelian
 import Data.Set
 import Data.IORef
+import Data.Maybe
 
 import Text.Logging
 import Text.Printf
@@ -171,10 +172,8 @@ foreign import ccall "setApplicationName" cppSetApplicationName :: Ptr QApplicat
 data MainWindow
 
 newMainWindow :: Int -> Int -> Int -> IO (Ptr MainWindow)
-newMainWindow swapInterval width height = do
-    r <- cppNewMainWindow swapInterval width height
-    cppSetDrawingCallbackMainWindow r =<< wrapDrawingCallback stdDrawer
-    return r
+newMainWindow swapInterval width height =
+    cppNewMainWindow swapInterval width height
 foreign import ccall "newMainWindow" cppNewMainWindow ::
     Int -> Int -> Int -> IO (Ptr MainWindow)
 
@@ -246,19 +245,23 @@ foreign import ccall "wrapper" wrapDrawingCallback ::
 setDrawingCallbackMainWindow ::
     Ptr MainWindow -> Maybe (Ptr QPainter -> IO ()) -> IO ()
 setDrawingCallbackMainWindow ptr cb = do
-    writeIORef _drawingCallback cb
-    updateMainWindow ptr
+    funPtr <- wrapDrawingCallback $ toCB cb
+    cppSetDrawingCallbackMainWindow ptr funPtr
+    freeOldDrawingCallback funPtr
+  where
+    toCB :: Maybe (Ptr QPainter -> IO ()) -> (Ptr QPainter -> IO ())
+    toCB = fromMaybe (const $ return ())
 
-stdDrawer :: Ptr QPainter -> IO ()
-stdDrawer ptr = do
-    cb <- readIORef _drawingCallback
-    case cb of
-        Nothing -> return ()
-        Just cb -> cb ptr
+freeOldDrawingCallback new = do
+    freeHaskellFunPtr =<< readIORef _drawingCallback
+    writeIORef _drawingCallback new
 
+-- redundantly storing the drawing callback to allow freeing.
 {-# noinline _drawingCallback #-}
-_drawingCallback :: IORef (Maybe (Ptr QPainter -> IO ()))
-_drawingCallback = unsafePerformIO $ newIORef Nothing
+_drawingCallback :: IORef (FunPtr (Ptr QPainter -> IO ()))
+_drawingCallback = unsafePerformIO $ do
+    funPtr <- wrapDrawingCallback (const $ return ())
+    newIORef funPtr
 
 
 -- event callbacks
