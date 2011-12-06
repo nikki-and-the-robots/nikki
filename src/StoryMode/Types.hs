@@ -1,3 +1,4 @@
+{-# language DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 module StoryMode.Types where
 
@@ -51,16 +52,4 @@ data Episode a = Episode {
     body :: [a],
     outro :: a
   }
-    deriving Show
-
-instance Functor Episode where
-    fmap f (Episode uid i b o) =
-        Episode uid (f i) (fmap f b) (f o)
-
-instance Foldable Episode where
-    foldMap f (Episode _ i b o) =
-        f i +> foldMap f b +> f o
-
-instance Traversable Episode where
-    traverse f (Episode uid intro body outro) =
-        Episode uid <$> f intro <*> traverse f body <*> f outro
+    deriving (Show, Functor, Foldable, Traversable)

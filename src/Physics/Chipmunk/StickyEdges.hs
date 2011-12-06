@@ -1,3 +1,4 @@
+{-# language DeriveFunctor #-}
 
 -- | There is a problem with multiple shapes forming bigger geometrical structures in chipmunk:
 -- shapes, that are moving while touching these shapes, might get stuck on
@@ -158,11 +159,7 @@ withModified f =
     map Polygon
 
 data Modified a = Same {unwrap :: a} | Modified {unwrap :: a}
-  deriving Eq
-
-instance Functor Modified where
-    fmap f (Same a) = Same $ f a
-    fmap f (Modified a) = Modified $ f a
+  deriving (Eq, Functor)
 
 
 -- | rotates rectangles by 90 degrees

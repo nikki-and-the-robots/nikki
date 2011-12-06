@@ -1,5 +1,5 @@
 {-# language GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleInstances,
-    DeriveDataTypeable, TypeSynonymInstances #-}
+    DeriveDataTypeable, DeriveFoldable, TypeSynonymInstances #-}
 
 -- | version of the save type from 2011-03-25
 
@@ -36,11 +36,7 @@ data Indexable a = Indexable {
     values :: Data.IntMap.IntMap a,
     keys :: [Index]
   }
-    deriving (Show, Read, Data, Typeable)
-
-instance Foldable Indexable where
-    foldMap f (Indexable values keys) =
-        foldMap (\ k -> f (values Data.IntMap.! index k)) keys
+    deriving (Show, Read, Data, Typeable, Foldable)
 
 instance Convertable (Indexable PickleObject) [(Int, Newer.PObject)] where
     convert (Indexable values keys) =

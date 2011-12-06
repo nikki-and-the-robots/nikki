@@ -1,6 +1,6 @@
 {-# language ViewPatterns, Rank2Types, ImpredicativeTypes, RecordWildCards,
     ScopedTypeVariables, NamedFieldPuns, MultiParamTypeClasses,
-    DeriveDataTypeable #-}
+    DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 {-# OPTIONS_GHC -fno-warn-deprecated-flags #-}
 
@@ -24,8 +24,7 @@ import Data.Abelian
 import Data.Indexable (Index)
 import Data.Generics
 import Data.Traversable
-import Data.Foldable (Foldable, foldMap)
-import Data.Monoid
+import Data.Foldable (Foldable)
 import Data.Maybe
 import Data.Accessor
 import Data.Map (alter)
@@ -168,20 +167,10 @@ batteryTerminalSort pngDir tsort = do
 data ColorLights a = ColorLights {
     red_, blue_, green_, yellow_ :: a
   }
-    deriving Show
+    deriving (Show, Functor, Foldable, Traversable)
 
 allSelectors :: [forall a . (ColorLights a -> a)]
 allSelectors = [red_, blue_, green_, yellow_]
-
-instance Functor ColorLights where
-    fmap f (ColorLights a b c d) = ColorLights (f a) (f b) (f c) (f d)
-
-instance Foldable ColorLights where
-    foldMap f (ColorLights a b c d) = mconcat $ map f [a, b, c, d]
-
-instance Traversable ColorLights where
-    traverse cmd (ColorLights a b c d) =
-        ColorLights <$> cmd a <*> cmd b <*> cmd c <*> cmd d
 
 toList :: ColorLights a -> [a]
 toList (ColorLights a b c d) = [a, b, c, d]

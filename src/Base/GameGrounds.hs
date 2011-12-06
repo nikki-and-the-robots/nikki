@@ -1,4 +1,4 @@
-{-# language DeriveDataTypeable, DeriveFoldable #-}
+{-# language DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 module Base.GameGrounds (
     GameGrounds(GameGrounds),
@@ -14,12 +14,9 @@ module Base.GameGrounds (
 import Data.Indexable
 import Data.Data
 import Data.Accessor
-import Data.Foldable (Foldable, foldMap)
-import Data.Traversable
+import Data.Foldable (Foldable)
 
 import Base.Grounds
-
-import Utils
 
 
 data GameGrounds a = GameGrounds {
@@ -44,7 +41,7 @@ data GameLayer a = GameLayer {
     gameXDistance :: Double,
     gameYDistance :: Double
   }
-    deriving (Show, Read, Data, Typeable)
+    deriving (Show, Read, Data, Typeable, Foldable)
 
 gameContent :: Accessor (GameLayer a) [a]
 gameContent = accessor gameContent_ (\ a r -> r{gameContent_ = a})
@@ -65,16 +62,3 @@ mkGameGrounds (Grounds backgrounds mainLayer foregrounds) =
 mkGameLayer :: Layer a -> GameLayer a
 mkGameLayer (Layer content xd yd) =
     GameLayer (toList content) xd yd
-
--- * instances
-
-instance Functor GameLayer where
-    fmap f (GameLayer l x y) = GameLayer (fmap f l) x y
-
-instance Foldable GameLayer where
-    foldMap f (GameLayer l x y) = foldMap f l
-
-instance Traversable GameLayer where
-    traverse f (GameLayer l x y) =
-        {-# SCC "Base.GameGrounds.traverse" #-}
-        GameLayer <$> traverse f l <*> pure x <*> pure y

@@ -1,4 +1,4 @@
-{-# language ViewPatterns #-}
+{-# language ViewPatterns, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 -- Module for trees with one selected item, that can be stepped through
 
@@ -25,7 +25,7 @@ import Data.Maybe
 import qualified Data.Indexable as I
 import Data.Indexable hiding (length, toList, findIndices, fromList, catMaybes)
 import qualified Data.Tree as T
-import Data.Foldable (Foldable, foldMap)
+import Data.Foldable (Foldable)
 import Data.Traversable (Traversable(..))
 import Data.Accessor
 
@@ -38,31 +38,11 @@ data SelectTree a
     = Node String (Indexable (SelectTree a)) Index
     | Leaf String a
     | EmptyNode String
-  deriving Show
+  deriving (Show, Functor, Foldable, Traversable)
 
-
-instance Functor SelectTree where
-    fmap f (Node label children index) = Node label (fmap (fmap f) children) index
-    fmap f (Leaf l a) = Leaf l $ f a
-    fmap f (EmptyNode l) = EmptyNode l
 
 instance Show a => PP (SelectTree a) where
     pp = T.drawTree . toTree
-
-instance Foldable SelectTree where
-    foldMap f (Leaf _ a) = f a
-    foldMap f (Node _ cs _) = foldMap (foldMap f) cs
-
-instance Traversable SelectTree where
-    traverse f (Node l ixs i) =
-        {-# SCC "Data.SelectTree.traverse" #-}
-        Node l <$> traverse (traverse f) ixs <*> pure i
-    traverse f (Leaf l a) =
-        {-# SCC "Data.SelectTree.traverse" #-}
-        Leaf l <$> f a
-    traverse f (EmptyNode l) =
-        {-# SCC "Data.SelectTree.traverse" #-}
-        pure (EmptyNode l)
 
 mkNode :: String -> [SelectTree a] -> SelectTree a
 mkNode label [] = EmptyNode label

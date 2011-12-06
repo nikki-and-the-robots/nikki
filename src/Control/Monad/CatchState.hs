@@ -1,4 +1,4 @@
-{-# language FlexibleInstances, MultiParamTypeClasses #-}
+{-# language FlexibleInstances, MultiParamTypeClasses, DeriveFunctor #-}
 
 -- | state monad that can be caught
 
@@ -22,6 +22,7 @@ import Utils
 -- (nor when an exception can be thrown.)
 data CatchState state m a =
     CatchState {innerAction :: (MVar state -> m a)}
+  deriving (Functor)
 
 instance Monad m => Monad (CatchState state m) where
     (CatchState a) >>= b =
@@ -36,9 +37,6 @@ instance MonadCatchIO m => MonadState state (CatchState state m) where
         block $ io $ ignore $ swapMVar mvar state
 instance MonadIO m => MonadIO (CatchState state m) where
     liftIO = CatchState . const . liftIO
-instance Functor m => Functor (CatchState state m) where
-    fmap f (CatchState action) = CatchState $ \ mvar ->
-        fmap f (action mvar)
 instance MonadCatchIO m => MonadCatchIO (CatchState state m) where
     catch (CatchState action) handler = CatchState $ \ mvar ->
         CatchIO.catch (action mvar) (\ e -> innerAction (handler e) mvar)

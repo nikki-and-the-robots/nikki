@@ -1,4 +1,5 @@
-{-# language GeneralizedNewtypeDeriving, ViewPatterns, DeriveDataTypeable #-}
+{-# language GeneralizedNewtypeDeriving, ViewPatterns,
+    DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 -- | module for a Bag of indexed things. 
 -- They have an order (can be converted to a list.)
@@ -48,9 +49,9 @@ import Safe
 
 import qualified Data.List as List
 import Data.Accessor
-import Data.Foldable (Foldable(..), foldMap, toList)
+import Data.Foldable (Foldable(..), toList)
 import Data.Initial
-import Data.Traversable (Traversable, traverse)
+import Data.Traversable (Traversable)
 import Data.Vector as Vector
 import Data.Generics (Typeable, Data)
 import Data.Maybe
@@ -72,7 +73,7 @@ data Indexable a =
     Indexable {
         values :: (Vector (Index, a))
       }
-  deriving (Eq, Typeable, Data)
+  deriving (Eq, Typeable, Data, Functor, Foldable, Traversable)
 
 instance Show a => Show (Indexable a) where
     show (Indexable v) = "Indexable " List.++ show (Vector.toList v)
@@ -96,20 +97,6 @@ keys = Vector.toList . keysVector
 
 
 -- * instances
-
-instance Functor Indexable where
-    fmap f (Indexable values) = Indexable (fmap (second f) values)
-
-instance Foldable Indexable where
-    foldMap f (Indexable values) =
-        foldMap (f . snd) values
-
-instance Traversable Indexable where
-    traverse cmd (Indexable values) =
-        {-# SCC "Data.Indexable.traverse" #-}
-        Indexable <$> traverse inner values
-      where
-        inner (k, v) = tuple k <$> cmd v
 
 fmapMWithIndex :: (Monad m, Functor m) => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)

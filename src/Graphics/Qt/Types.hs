@@ -1,4 +1,4 @@
-{-# language EmptyDataDecls, DeriveDataTypeable #-}
+{-# language EmptyDataDecls, DeriveDataTypeable, DeriveFunctor #-}
 
 module Graphics.Qt.Types where
 
@@ -25,7 +25,7 @@ data QKeyEvent
 -- * Position
 
 data Position a = Position {positionX :: a, positionY :: a}
-  deriving (Show, Read, Eq, Ord, Data, Typeable)
+  deriving (Show, Read, Eq, Ord, Data, Typeable, Functor)
 
 x_, y_ :: Accessor (Position a) a
 x_ = accessor positionX (\ a r -> r{positionX = a})
@@ -35,9 +35,6 @@ instance Abelian a => Abelian (Position a) where
     zero = Position zero zero
     (Position a b) +~ (Position x y) = Position (a +~ x) (b +~ y)
     (Position a b) -~ (Position x y) = Position (a -~ x) (b -~ y)
-
-instance Functor Position where
-    fmap f (Position a b) = Position (f a) (f b)
 
 instance Binary a => Binary (Position a) where
     put (Position a b) = do
@@ -70,14 +67,11 @@ rotatePosition angle (Position x y) =
 -- * Size
 
 data Size a = Size {width :: a, height :: a}
-  deriving (Eq, Ord, Show, Data, Typeable)
+  deriving (Eq, Ord, Show, Data, Typeable, Functor)
 
 width_, height_ :: Accessor (Size a) a
 width_ = accessor width (\ a r -> r{width = a})
 height_ = accessor height (\ a r -> r{height = a})
-
-instance Functor Size where
-    fmap f (Size a b) = Size (f a) (f b)
 
 instance Abelian a => Abelian (Size a) where
     zero = Size zero zero

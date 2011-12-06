@@ -1,5 +1,6 @@
 {-# language ExistentialQuantification, FunctionalDependencies, RecordWildCards,
-    NamedFieldPuns, FlexibleInstances, DeriveDataTypeable, MultiParamTypeClasses #-}
+    NamedFieldPuns, FlexibleInstances, MultiParamTypeClasses,
+    DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 
 -- module for often used types (in one Base module, to avoid module import cycles.)
@@ -441,16 +442,13 @@ data EditorObject sort
         editorPosition_ :: EditorPosition,
         editorOEMState_ :: Maybe OEMState
       }
-  deriving Show
+  deriving (Show, Functor)
 
 editorPosition :: Accessor (EditorObject sort) EditorPosition
 editorPosition = accessor editorPosition_ (\ a r -> r{editorPosition_ = a})
 
 editorOEMState :: Accessor (EditorObject s) (Maybe OEMState)
 editorOEMState = accessor editorOEMState_ (\ a r -> r{editorOEMState_ = a})
-
-instance Functor EditorObject where
-    fmap f (EditorObject sort pos Nothing) = EditorObject (f sort) pos Nothing
 
 -- | modifies all EditorPositions of the OEMState of EditorObjects
 modifyOEMEditorPositions :: (EditorPosition -> EditorPosition)

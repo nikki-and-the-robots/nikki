@@ -1,4 +1,5 @@
-{-# language NamedFieldPuns, DeriveDataTypeable #-}
+{-# language NamedFieldPuns, DeriveDataTypeable, DeriveFunctor,
+    DeriveFoldable, DeriveTraversable #-}
 
 module Base.Grounds where
 
@@ -7,8 +8,8 @@ import Safe
 
 import Data.Indexable as I
 import Data.Generics
-import Data.Foldable (Foldable, foldMap)
-import Data.Traversable (Traversable, traverse)
+import Data.Foldable (Foldable)
+import Data.Traversable (Traversable)
 import Data.Initial
 import Data.Accessor
 
@@ -26,7 +27,7 @@ data Grounds a = Grounds {
     mainLayer_ :: Layer a,
     foregrounds_ :: Indexable (Layer a)
   }
-    deriving (Show, Read, Data, Typeable)
+    deriving (Show, Read, Data, Typeable, Functor, Foldable, Traversable)
 
 backgrounds, foregrounds :: Accessor (Grounds a) (Indexable (Layer a))
 backgrounds = accessor backgrounds_ (\ a r -> r{backgrounds_ = a})
@@ -42,7 +43,7 @@ data Layer a = Layer {
     xDistance :: Double,
     yDistance :: Double
   }
-  deriving (Show, Read, Data, Typeable)
+  deriving (Show, Read, Data, Typeable, Functor, Foldable, Traversable)
 
 content :: Accessor (Layer a) (Indexable a)
 content = accessor content_ (\ a r -> r{content_ = a})
@@ -56,20 +57,6 @@ data GroundsIndex
 
 
 -- useful instances
-
-instance Functor Grounds where
-    fmap f (Grounds a b c) = Grounds (fmap (fmap f) a) (fmap f b) (fmap (fmap f) c)
-
-instance Functor Layer where
-    fmap f l@Layer{content_} = l{content_ = fmap f content_}
-
-instance Foldable Layer where
-    foldMap f l = foldMap f (l ^. content)
-
-instance Traversable Layer where
-    traverse cmd (Layer content x y) =
-        {-# SCC "Base.Grounds.traverse" #-}
-        Layer <$> traverse cmd content <*> pure x <*> pure y
 
 instance Initial (Grounds a) where
     initial = Grounds initial initial initial
