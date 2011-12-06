@@ -24,6 +24,7 @@ module Data.Indexable (
     Data.Indexable.fromList,
     (<:),
     (>:),
+    append,
     insert,
     insertBefore,
     insertAfter,
@@ -203,6 +204,9 @@ a <: (Indexable values) =
     Indexable (values `snoc` (i, a))
   where
     i = newIndex $ fmap fst values
+
+append :: Indexable a -> [a] -> Indexable a
+append ix = List.foldl (>:) ix
 
 -- | inserts an element (at the end) and returns the new Index
 insert :: a -> Indexable a -> (Index, Indexable a)

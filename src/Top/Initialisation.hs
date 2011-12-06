@@ -4,6 +4,7 @@ module Top.Initialisation where
 
 
 import Prelude hiding (catch)
+import Safe
 
 import qualified Data.Indexable as I
 import Data.Indexable (Index, Indexable, (>:))
@@ -115,6 +116,7 @@ initScene app file space cachedTiles =
     return . Sorts.Nikki.uniqueNikki app >=>
     secondKleisli (
         return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
+        return . groundsMergeLayers >=>
         return . groundsMergeTiles >=>
         initializeObjects app file space cachedTiles) >=>
     io . mkScene file space >=>
@@ -152,3 +154,44 @@ mergeEditorObjects ixs =
     otherObjects >: Sorts.Tiles.mkAllTiles (I.toList ixs)
   where
     otherObjects = I.filter (not . isTileSort . editorSort) ixs
+
+
+-- | Merge consecutive foreground and background layers
+-- when it wouldn't change the rendering. Allows for more baking.
+-- Conditions:
+--      Both layers must have the same layer distance.
+--      The lower layer mustn't have non-tile objects above tile objects.
+--      The upper layer mustn't have non-tile objects below tile objects.
+-- Indexes of the multilayers will be lost.
+groundsMergeLayers :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
+groundsMergeLayers =
+    (backgrounds ^: mergeLayers) >>>
+    (foregrounds ^: mergeLayers)
+  where
+    mergeLayers :: Indexable (Layer (EditorObject Sort_))
+        -> Indexable (Layer (EditorObject Sort_))
+    mergeLayers = ftoList >>> it >>> I.fromList
+    it :: [Layer (EditorObject Sort_)] -> [Layer (EditorObject Sort_)]
+    it (a : b : r) = case merge a b of
+        Just n -> it (n : r)
+        Nothing -> a : it (b : r)
+    it x = x
+    merge :: Layer (EditorObject Sort_) -> Layer (EditorObject Sort_)
+        -> Maybe (Layer (EditorObject Sort_))
+    merge a b =
+      trace (show (sameDistance a b, tilesOnTop a, tilesOnBottom b)) $
+      if sameDistance a b && tilesOnTop a && tilesOnBottom b
+        then Just $ concatLayers a b
+        else Nothing
+
+    concatLayers a b = Layer {
+        content_ = I.append (a ^. content) (ftoList (b ^. content)),
+        xDistance = xDistance a,
+        yDistance = yDistance a
+      }
+
+    sameDistance a b = xDistance a == xDistance b && yDistance a == yDistance b
+
+    tilesOnTop, tilesOnBottom :: Layer (EditorObject Sort_) -> Bool
+    tilesOnTop l = maybe False (isTileSort . editorSort) (lastMay $ ftoList (l ^. content))
+    tilesOnBottom l = maybe False (isTileSort . editorSort) (headMay $ ftoList (l ^. content))
