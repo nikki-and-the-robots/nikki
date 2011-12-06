@@ -148,7 +148,7 @@ Executable core
         , filepath
         , mtl == 2.*
         , process
-        , Hipmunk >= 5.2.0.3
+        , Hipmunk >= 5.2.0.6
         , sfml-audio == 0.3.1816.*
         , safe
         , random
