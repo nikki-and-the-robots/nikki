@@ -48,8 +48,11 @@ runAppState app (GameAppState renderable cmd initialGameState) = do
 runAppState app (UnManagedAppState cmd) = do
     io $ postGUI (window app) $ setRenderingLooped (window app) False
     io $ postGUI (window app) $ setArrowAutoRepeat (window app) True
+    io $ setDrawingCallbackMainWindow (window app) Nothing
     cmd >>= runAppState app
-runAppState _ FinalAppState = return ()
+runAppState app FinalAppState = do
+    io $ setDrawingCallbackMainWindow (window app) Nothing
+    return ()
 
 setRenderable app config renderable = do
     setDrawingCallbackMainWindow (window app) (Just renderCallback)
