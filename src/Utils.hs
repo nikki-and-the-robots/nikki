@@ -61,6 +61,7 @@ import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), pure, Alternative(.
 import "mtl" Control.Monad.State hiding (forM_)
 import "transformers" Control.Monad.Trans.Error (ErrorList(listMsg)) -- Monad (Either e)
 import Control.Arrow ((>>>))
+import Control.Concurrent
 
 import System.IO.Unsafe
 import System.FilePath
@@ -146,6 +147,10 @@ every n cmd = do
 {-# NOINLINE everyRef #-}
 everyRef :: IORef Int
 everyRef = unsafePerformIO $ newIORef 0
+
+-- | @wait n@ waits for n seconds
+wait :: MonadIO m => Double -> m ()
+wait n = io $ threadDelay $ round (n * 10 ^ 6)
 
 
 -- * re-named re-exports
