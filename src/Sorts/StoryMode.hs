@@ -38,9 +38,9 @@ tiles =
     ("tiles/black-blue/panel-light-aqua", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
     ("tiles/black-blue/panel-light-red", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
     ("tiles/black-blue/panel-light-blue", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
-    ("tiles/black-blue/panel-numbers-04", Position 1 1, Size 320 256, 1, Nothing) :
-    ("tiles/black-blue/panel-numbers-06", Position 1 1, Size 320 256, 1, Nothing) :
-    ("tiles/black-blue/panel-numbers-09", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-blue/panel-number-04", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-blue/panel-number-06", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-blue/panel-number-09", Position 1 1, Size 320 256, 1, Nothing) :
     ("tiles/black-blue/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-blue/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
     ("tiles/black-blue/wallpaper-large-vent", Position 1 1, Size 128 128, 1, Nothing) :
