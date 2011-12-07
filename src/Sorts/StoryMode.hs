@@ -38,6 +38,9 @@ tiles =
     ("tiles/black-blue/panel-light-aqua", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
     ("tiles/black-blue/panel-light-red", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
     ("tiles/black-blue/panel-light-blue", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
+    ("tiles/black-blue/panel-numbers-04", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-blue/panel-numbers-06", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-blue/panel-numbers-09", Position 1 1, Size 320 256, 1, Nothing) :
     ("tiles/black-blue/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-blue/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
     ("tiles/black-blue/wallpaper-large-vent", Position 1 1, Size 128 128, 1, Nothing) :
@@ -77,6 +80,7 @@ tiles =
     ("tiles/frame/black-bottom-extra", Position 1 1, Size 76 68, 1, Nothing) :
     ("tiles/frame/black-support-left", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/frame/black-support-right", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/special/switch-transient-active", Position 1 1, Size 120 80, 1, Nothing) :
     ("tiles/neon/single-heart", Position 1 1, Size 588 520, 0.35, Just [0, 1, 2, 3, 4, 5, 6, 0, 6, 0, 6, 0, 6, 0]) :
     ("tiles/neon/controller", Position 1 1, Size 844 456, 0.35, Just [0, 1, 2, 3, 4, 5, 6]) :
     ("tiles/neon/pong", Position 1 1, Size 716 520, 0.25, Just [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) :
