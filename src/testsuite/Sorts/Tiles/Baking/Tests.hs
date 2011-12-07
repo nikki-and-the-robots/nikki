@@ -51,10 +51,12 @@ bakingEquality app somePixmaps (positions, Positive now) =
             fmap (fmap (fmap unFixed)) $
             positions
     expected <- renderToPixmap False now paired
-    baked <- renderToPixmap False now =<< bakeTiles app paired
+    (baked_, toBeGCed) <- bakeTiles app paired
+    baked <- renderToPixmap False now baked_
     r <- pixelEquality expected baked
     destroyQPixmap expected
     destroyQPixmap baked
+    fmapM_ destroyQPixmap toBeGCed
     return $ whenFail (saveFailed app now paired) r
 
 saveFailed app now paired = do
@@ -66,11 +68,15 @@ saveFailed app now paired = do
             forM_ (zip (tail $ inits paired) [1 :: Int ..]) $ \ (iterPaired, i) ->
                 save debugMode (printf filenamePattern i) iterPaired
     save False "A.png" paired
-    save False "B.png" =<< bakeTiles app paired
+    (baked, toBeGCed) <- bakeTiles app paired
+    save False "B.png" baked
+    fmapM_ destroyQPixmap toBeGCed
 --     save True "debugA.png" paired
 --     save True "debugB.png" =<< bakeTiles app paired
     saveIter True "debugA-%03i.png" paired
-    saveIter True "debugB-%03i.png" =<< bakeTiles app paired
+    (baked, toBeGCed) <- bakeTiles app paired
+    saveIter True "debugB-%03i.png" baked
+    fmapM_ destroyQPixmap toBeGCed
 
 
 -- | load some random animated pixmaps (with padding pixels)
