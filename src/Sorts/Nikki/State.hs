@@ -28,7 +28,8 @@ import Sorts.Nikki.Initialisation
 import Sorts.Nikki.Dust
 
 
-updateState :: Controls -> Mode -> Seconds -> Contacts -> (Bool, ControlData) -> Nikki -> IO Nikki
+updateState :: Controls -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
+    -> Nikki -> IO Nikki
 updateState config mode now _ (False, _) nikki = do
     let action = case mode of
             TerminalMode{} -> UsingTerminal
@@ -210,12 +211,13 @@ nextJumpInformation oldState config controlData buttonDirection now velocity act
     jumpButtonHeld = isGameJumpHeld config controlData
 
 
-nextDirection oldState buttonDirection action grips = case grips of
-    Just d -> d
-    Nothing -> case action of
-        JumpImpulse impulse -> jumpImpulseDirection $ nikkiCollisionAngle impulse
-        WallSlide_ _ c -> wallSlideDirection $ nikkiCollisionAngle c
-        _ -> newDirection
+nextDirection oldState buttonDirection action grips =
+    case (grips, action) of
+        (_, Walk{}) -> newDirection
+        (Just d, _) -> d
+        (Nothing, JumpImpulse impulse) -> jumpImpulseDirection $ nikkiCollisionAngle impulse
+        (Nothing, WallSlide_ _ c) -> wallSlideDirection $ nikkiCollisionAngle c
+        (Nothing, _) -> newDirection
   where
 
     -- | direction when starting a jump
