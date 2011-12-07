@@ -41,7 +41,12 @@ tiles =
     ("tiles/black-blue/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-blue/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
     ("tiles/black-blue/wallpaper-large-vent", Position 1 1, Size 128 128, 1, Nothing) :
-    ("tiles/black-blue/wallpaper-number-01", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-blue/wallpaper-number-01", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-blue/wallpaper-number-02", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-blue/wallpaper-number-03", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-blue/wallpaper-number-05", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-blue/wallpaper-number-07", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-blue/wallpaper-number-10", Position 1 1, Size 328 264, 1, Nothing) :
     ("tiles/black-blue/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
     ("tiles/black-green/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-green/panel-small", Position 1 1, Size 32 32, 1, Nothing) :
