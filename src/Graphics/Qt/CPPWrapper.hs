@@ -100,7 +100,6 @@ module Graphics.Qt.CPPWrapper (
 import Data.Generics
 import Data.Abelian
 import Data.Set
-import Data.IORef
 import Data.Maybe
 
 import Text.Logging
@@ -117,7 +116,6 @@ import Foreign.ForeignPtr
 
 import System.Directory
 import System.Environment
-import System.IO.Unsafe
 
 import Graphics.Qt.Types
 import Graphics.Qt.Events
@@ -242,26 +240,19 @@ foreign import ccall "setDrawingCallbackMainWindow" cppSetDrawingCallbackMainWin
 foreign import ccall "wrapper" wrapDrawingCallback ::
     (Ptr QPainter -> IO ()) -> IO (FunPtr (Ptr QPainter -> IO ()))
 
+-- | Sets the drawing callback.
+-- Has to be freed from cpp via freeDrawingCallback
 setDrawingCallbackMainWindow ::
     Ptr MainWindow -> Maybe (Ptr QPainter -> IO ()) -> IO ()
 setDrawingCallbackMainWindow ptr cb = do
     funPtr <- wrapDrawingCallback $ toCB cb
     cppSetDrawingCallbackMainWindow ptr funPtr
-    freeOldDrawingCallback funPtr
   where
     toCB :: Maybe (Ptr QPainter -> IO ()) -> (Ptr QPainter -> IO ())
     toCB = fromMaybe (const $ return ())
 
-freeOldDrawingCallback new = do
-    freeHaskellFunPtr =<< readIORef _drawingCallback
-    writeIORef _drawingCallback new
-
--- redundantly storing the drawing callback to allow freeing.
-{-# noinline _drawingCallback #-}
-_drawingCallback :: IORef (FunPtr (Ptr QPainter -> IO ()))
-_drawingCallback = unsafePerformIO $ do
-    funPtr <- wrapDrawingCallback (const $ return ())
-    newIORef funPtr
+foreign export ccall freeDrawingCallback :: FunPtr (Ptr QPainter -> IO ()) -> IO ()
+freeDrawingCallback = freeHaskellFunPtr
 
 
 -- event callbacks

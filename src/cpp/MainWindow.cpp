@@ -2,9 +2,6 @@
 #include "utils.h"
 #include "MainWindow.h"
 
-void emptyDrawingCallback(QPainter* ptr) {
-};
-
 MainWindow::MainWindow(int swapInterval, int width, int height) {
     arrowAutoRepeat = true;
     keyCallback = NULL;
@@ -26,13 +23,13 @@ MainWindow::MainWindow(int swapInterval, int width, int height) {
         fallbackContext = 0;
         generalContext = glContext;
 
-        glContext->drawingCallback = emptyDrawingCallback;
+        glContext->setDrawingCallback(emptyDrawingCallback);
     } else {
         glContext = 0;
         fallbackContext = new FallbackContext();
         generalContext = fallbackContext;
 
-        fallbackContext->drawingCallback = emptyDrawingCallback;
+        fallbackContext->setDrawingCallback(emptyDrawingCallback);
     };
 
     generalContext->setAutoFillBackground(false);
@@ -159,11 +156,11 @@ extern "C" int paintEngineTypeMainWindow(MainWindow* self) {
     return self->generalContext->paintEngine()->type();
 };
 
-extern "C" void setDrawingCallbackMainWindow(MainWindow* ptr, drawingCallbackFunction cb) {
+extern "C" void setDrawingCallbackMainWindow(MainWindow* ptr, drawingCallbackFunction* cb) {
     if (ptr->glContext != 0)
-        ptr->glContext->drawingCallback = cb;
+        ptr->glContext->setDrawingCallback(cb);
     else
-        ptr->fallbackContext->drawingCallback = cb;
+        ptr->fallbackContext->setDrawingCallback(cb);
     // since we have a new drawing callback, we might want to use it ;)
     ptr->generalContext->update();
 };

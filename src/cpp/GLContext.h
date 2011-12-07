@@ -8,11 +8,16 @@ class GLContext : public QGLWidget {
 
 Q_OBJECT
 
+private:
+
+    drawingCallbackFunction* drawingCallback;
+    drawingCallbackFunction* oldDrawingCallback;
+
 public:
 
     GLContext(const QGLFormat& format);
 
-    drawingCallbackFunction* drawingCallback;
+    void setDrawingCallback(drawingCallbackFunction* dcb);
 
     void paintEvent(QPaintEvent* event);
 

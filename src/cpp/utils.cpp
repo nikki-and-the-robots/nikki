@@ -15,3 +15,6 @@ bool isArrowKey(QKeyEvent* e) {
         k == Qt::Key_Down ||
         k == Qt::Key_Backspace);
 };
+
+void emptyDrawingCallback(QPainter* ptr) {
+};
