@@ -16,7 +16,6 @@ module Editor.Scene (
     renderEditorScene,
   ) where
 
-import Data.Map hiding (map, filter, mapMaybe, size, member)
 import Data.Set (member)
 import Data.SelectTree
 import qualified Data.Indexable as I
