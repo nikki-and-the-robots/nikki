@@ -5,7 +5,6 @@ module Base.Font (
     loadDigitFont,
     standardFont,
     digitFont,
-    freeFont,
     fontHeight,
     osdHeight,
     fontHeightOffset,
@@ -225,7 +224,6 @@ toColorVariants fontColors loadedVariant = do
         qForeground <- colorToQRgb foreground
         variant <- newColorVariant (colorMapping qForeground) loadedVariant
         return (foreground, variant)
-    freeColorVariant loadedVariant
     return $ Font $ fromList colorVariants
 
 data ErrorSymbol = ErrorSymbol
@@ -253,10 +251,3 @@ parseFileName name = do
     numbers = do
         numberStrings :: [String] <- sepBy1 (many1 digit) (char '_')
         return $ Left $ fmap read numberStrings
-
-
--- * unloading
-
--- | frees the memory taken by a font
-freeFont :: Font -> IO ()
-freeFont (Font variants) = forM_ variants freeColorVariant

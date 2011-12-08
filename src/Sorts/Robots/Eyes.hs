@@ -5,14 +5,12 @@
 module Sorts.Robots.Eyes (
     RobotEyesPixmaps,
     loadRobotEyesPixmaps,
-    freeRobotEyesPixmaps,
     RobotEyesState(..),
     renderRobotEyes,
   ) where
 
 
 import Data.Generics
-import Data.Generics.Uniplate.Data
 import Data.Map
 import Data.Abelian
 import Data.List
@@ -71,12 +69,6 @@ loadRobotEyesPixmaps = do
 
     mkAnim (state, pixmaps) = (state, mkAnimation pixmaps (animationFrameTimes ! state))
 
-freeRobotEyesPixmaps :: RobotEyesPixmaps -> IO ()
-freeRobotEyesPixmaps eyes = fmapM_ freePixmap allPixmaps
-  where
-    -- some pixmaps are used more than once in the data structure!!!
-    allPixmaps :: [Pixmap]
-    allPixmaps = nub $ universeBi $ fmap ftoList eyes
 
 -- * rendering
 

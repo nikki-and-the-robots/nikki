@@ -124,7 +124,6 @@ instance Sort SwitchSort Switch where
           else
             SortId "switch/levelExitTransient"
     freeSort (SwitchSort a b c d e _ f g _) =
-        fmapM_ freePixmap (a : b : c : d : e : []) >>
         fmapM_ freePolySound (f : g : [])
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
                 +~ fmap ((* 2) . abs) (vector2size editorPadding)

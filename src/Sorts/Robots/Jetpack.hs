@@ -106,9 +106,7 @@ data Jetpack = Jetpack {
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
     freeSort (JSort p ps boostSound eyes) =
-        fmapM_ freePixmap (p : ftoList ps) >>
-        freeLoopedSound boostSound >>
-        Eyes.freeRobotEyesPixmaps eyes
+        freeLoopedSound boostSound
     size = const jetpackSize
     renderIconified sort ptr =
         renderPixmapSimple ptr (standardPixmap sort)

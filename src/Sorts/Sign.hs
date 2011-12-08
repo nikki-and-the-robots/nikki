@@ -126,7 +126,6 @@ mkWrappedMonologue app text =
 
 instance Sort SSort Sign where
     sortId sort = SortId (signSortID sort)
-    freeSort = freePixmap . pixmap
     size = pixmapSize . pixmap
     renderIconified sort ptr =
         renderPixmapSimple ptr (pixmap sort)

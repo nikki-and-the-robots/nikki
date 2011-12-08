@@ -81,7 +81,6 @@ data BSort = BSort {
 
 instance Sort BSort () where
     sortId = bSortId
-    freeSort = fmapM_ freePixmap . pixmaps
     size s = pixmapSize $ head $ pixmaps s -- does not make much sense
                                            -- (except for the cursor and iconified rendering)
     renderIconified sort ptr =

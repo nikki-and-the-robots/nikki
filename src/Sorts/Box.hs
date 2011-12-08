@@ -52,7 +52,6 @@ data Box = Box {chipmunk :: Chipmunk}
 
 instance Sort BSort Box where
     sortId = sortId_
-    freeSort = freePixmap . boxPixmap
     size = pixmapSize . boxPixmap
     renderIconified sort ptr =
         renderPixmapSimple ptr (boxPixmap sort)

@@ -151,9 +151,6 @@ cannonballOffset =
 instance Sort CannonSort Cannon where
     sortId _ = SortId "robots/cannon"
     freeSort (CannonSort a b c d e f) =
-        fmapM_ freePixmap [a, b] >>
-        freeRobotEyesPixmaps c >>
-        fmapM_ freePixmap (ftoList d) >>
         fmapM_ freePolySound [e, f]
     size _ = robotSize
     renderIconified sort ptr =

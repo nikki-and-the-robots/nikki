@@ -1,7 +1,6 @@
 
 module Base.Font.ColorVariant (
     newColorVariant,
-    freeColorVariant,
   ) where
 
 
@@ -25,8 +24,3 @@ copyAndMapColors :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
 copyAndMapColors colorMapping pix = do
     new <- copyPixmap pix
     mapColors colorMapping new
-
-freeColorVariant :: ColorVariant -> IO ()
-freeColorVariant (ColorVariant glyphs errorSymbol) = do
-    mapM_ (freePixmap . snd) glyphs
-    freePixmap errorSymbol

@@ -11,7 +11,6 @@ module Base.Pixmap (
     pixmapOffset,
     loadPixmap,
     loadSymmetricPixmap,
-    freePixmap,
     copyPixmap,
     mapColors,
     renderPixmapSimple,
@@ -84,10 +83,6 @@ loadPixmap offset size file = io $ do
     imageSize <- fmap fromIntegral <$> sizeQPixmap pixmap
     return $ Pixmap pixmap (fmap negate offset) size imageSize
 
--- | release the resource
-freePixmap :: MonadIO m => Pixmap -> m ()
-freePixmap = pixmap >>> io . destroyQPixmap
-
 -- | copy a pixmap
 copyPixmap :: Pixmap -> IO Pixmap
 copyPixmap (Pixmap pix size offset imageSize) = do
@@ -98,7 +93,6 @@ copyPixmap (Pixmap pix size offset imageSize) = do
 mapColors :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
 mapColors f (Pixmap pix size offset realSize) = do
     image <- toImageQPixmap pix True
-    destroyQPixmap pix
     imageSize <- sizeQImage image
 
     colorN <- colorCountQImage image

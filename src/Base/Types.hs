@@ -535,6 +535,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 
     -- free memory for allocated resources
     freeSort :: sort -> IO ()
+    freeSort = const $ return ()
 
     size :: sort -> Size Double
     -- Sorts that support an object edit mode have to return Just (initial, unpickle) here.

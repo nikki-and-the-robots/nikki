@@ -88,8 +88,7 @@ instance Sort NSort Nikki where
 
     sortId _ = SortId "nikki"
 
-    freeSort (NSort pixmaps sound) = do
-        fmapM_ (fmapM_ freePixmap) pixmaps
+    freeSort (NSort pixmaps sound) =
         freePolySound sound
 
     size sort = nikkiSize

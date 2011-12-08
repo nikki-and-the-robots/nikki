@@ -70,7 +70,6 @@ data GridType = Tiled | WrappedHorizon
 
 instance Sort GSort Grid where
     sortId = sortId_
-    freeSort = freePixmap . gridPixmap
     size s = pixmapSize $ gridPixmap s
 
     -- if rendered without scaling, the grid will be multiplied

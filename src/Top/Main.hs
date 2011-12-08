@@ -92,32 +92,32 @@ renderThread configuration appRef =
         keyPoller <- io $ newKeyPoller window
             (initial_events configuration ++ initialDebuggingSignals)
         -- loading the gui pixmaps
-        withApplicationPixmaps $ \ appPixmaps -> do
-          -- showing main window
-          io $ do
-            let windowMode = if fullscreen configuration
-                  then FullScreen
-                  else Windowed defaultWindowSize
-            setWindowTitle window "Nikki and the Robots"
-            setWindowSize window windowMode
-            showLoadingScreen qApp window appPixmaps configuration
-            showMainWindow window
-            processEventsQApplication qApp
+        appPixmaps <- loadApplicationPixmaps
+        -- showing main window
+        io $ do
+          let windowMode = if fullscreen configuration
+                then FullScreen
+                else Windowed defaultWindowSize
+          setWindowTitle window "Nikki and the Robots"
+          setWindowSize window windowMode
+          showLoadingScreen qApp window appPixmaps configuration
+          showMainWindow window
+          processEventsQApplication qApp
 
-          -- sort loading (pixmaps and sounds)
-          withAllSorts $ \ sorts ->
-             withApplicationSounds $ \ appSounds -> io $ do
-                autoUpdateVersionRef <- mkUpdateVersionRef window configuration
-                -- put the initialised Application in the MVar
-                let app :: Application
-                    app = Application qApp window keyPoller
-                            autoUpdateVersionRef startAppState appPixmaps
-                            appSounds sorts
-                putMVar appRef app
-                -- will be quit by the logick thread
-                exitCode <- execQApplication qApp
-                when (exitCode /= 0) $
-                    logg Error ("error exit code from execQApplication: " ++ show exitCode)
+        -- sort loading (pixmaps and sounds)
+        withAllSorts $ \ sorts ->
+           withApplicationSounds $ \ appSounds -> io $ do
+              autoUpdateVersionRef <- mkUpdateVersionRef window configuration
+              -- put the initialised Application in the MVar
+              let app :: Application
+                  app = Application qApp window keyPoller
+                          autoUpdateVersionRef startAppState appPixmaps
+                          appSounds sorts
+              putMVar appRef app
+              -- will be quit by the logick thread
+              exitCode <- execQApplication qApp
+              when (exitCode /= 0) $
+                  logg Error ("error exit code from execQApplication: " ++ show exitCode)
 
 withNikkiIcon :: Ptr MainWindow -> RM a -> RM a
 withNikkiIcon qWidget action = do

@@ -66,10 +66,6 @@ deadly = accessor deadly_ (\ a r -> r{deadly_ = a})
 
 instance Sort PSort Patrol where
     sortId _ = SortId "robots/platform/patrol"
-    freeSort (PSort off red blue _animation eyes) =
-        -- the animation contains the red and the blue pixmap
-        fmapM_ freePixmap [off, red, blue] >>
-        freeRobotEyesPixmaps eyes
                              -- one bigger than actual (to prevent getting stuck on edges)
     size _ = fmap fromUber $ Size 28 28
 

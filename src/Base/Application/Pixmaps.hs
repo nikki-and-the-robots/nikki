@@ -3,13 +3,11 @@
 -- like menus, general OSDs, etc.
 
 module Base.Application.Pixmaps (
-    withApplicationPixmaps,
+    loadApplicationPixmaps,
   ) where
 
 
 import Data.Abelian
-
-import Control.Monad.CatchIO
 
 import System.FilePath
 
@@ -24,12 +22,8 @@ import Base.Pixmap
 import Base.Font
 
 
-withApplicationPixmaps :: (ApplicationPixmaps -> RM a) -> RM a
-withApplicationPixmaps cmd =
-    bracket load (io . free) cmd
-
-load :: RM ApplicationPixmaps
-load =
+loadApplicationPixmaps :: RM ApplicationPixmaps
+loadApplicationPixmaps =
     ApplicationPixmaps <$>
         (loadBackground "background") <*>
         (loadBackground "backgroundOverlay") <*>
@@ -57,20 +51,3 @@ loadOsd :: Position Double -> Size Double -> String -> RM Pixmap
 loadOsd offset size name = io . loadPixmap offset size =<< getDataFileName (osdDir </> name <.> "png")
 
 osdDir = pngDir </> "osd"
-
-free :: ApplicationPixmaps -> IO ()
-free (ApplicationPixmaps menuBackground menuBackgroundTransparent
-  alphaFont digitFont cubePixmaps
-  menuTitle pause success failure) = do
-    fmapM_ freePixmap menuBackground
-    fmapM_ freePixmap menuBackgroundTransparent
-    freeFont alphaFont
-    freeFont digitFont
-    freeHeaderCubePixmaps cubePixmaps
-    freePixmap menuTitle
-    freePixmap pause
-    freePixmap success
-    freePixmap failure
-
-freeHeaderCubePixmaps (HeaderCubePixmaps a b c d) =
-    fmapM_ freePixmap [a, b, c, d]

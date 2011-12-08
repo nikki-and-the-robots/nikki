@@ -76,8 +76,6 @@ data Status = Static | GettingLoose Seconds | Loose
 instance Sort TSort FallingTile where
     sortId TSort{name} = SortId ("fallingTile/" ++ name)
 
-    freeSort = freePixmap . tilePixmap
-
     size (TSort _ pix) = pixmapSize pix
 
     renderIconified sort ptr = do

@@ -195,13 +195,6 @@ data Pixmaps = Pixmaps {
   }
     deriving Show
 
-freeTerminalPixmaps (Pixmaps a bs c ds es) =
-    freePixmap a >>
-    fmapM_ freePixmap bs >>
-    freePixmap c >>
-    fmapM_ freePixmap ds >>
-    fmapM_ freePixmap es
-
 data OsdPixmaps = OsdPixmaps {
     osdBackground :: Pixmap,
     osdCenters :: ColorLights Pixmap,
@@ -211,14 +204,6 @@ data OsdPixmaps = OsdPixmaps {
     osdExitFrame :: Pixmap
   }
     deriving (Show, Typeable)
-
-freeOsdPixmaps (OsdPixmaps a bs cs ds e f) = do
-    freePixmap a
-    fmapM_ freePixmap bs
-    fmapM_ freePixmap cs
-    fmapM_ freePixmap ds
-    freePixmap e
-    freePixmap f
 
 
 data TSort
@@ -394,13 +379,6 @@ data ExitMode
 instance Sort TSort Terminal where
     sortId TSort{} = SortId "terminal"
     sortId BatteryTSort{} = SortId "story-mode/batteryTerminal"
-    freeSort (TSort terminalPixmaps osdPixmaps) =
-        freeTerminalPixmaps terminalPixmaps >>
-        freeOsdPixmaps osdPixmaps
-    freeSort (BatteryTSort tsort a b c d e fs) =
-        freeSort tsort >>
-        fmapM_ freePixmap (a : b : c : d : e : []) >>
-        fmapM_ freePixmap fs
     size TSort{} = fmap fromUber $ Size 48 48
     size BatteryTSort{} = batteryTerminalSize
     renderIconified sort@TSort{..} ptr =

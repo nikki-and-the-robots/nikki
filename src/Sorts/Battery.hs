@@ -59,8 +59,7 @@ data Battery
 instance Sort BSort Battery where
     sortId _ = SortId "battery"
 
-    freeSort (BSort pix sound) = do
-        freePixmap pix
+    freeSort (BSort pix sound) =
         freePolySound sound
 
     size (BSort p _) = pixmapSize p

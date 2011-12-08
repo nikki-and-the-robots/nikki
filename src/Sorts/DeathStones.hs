@@ -67,9 +67,6 @@ data Stone = Stone {
 instance Sort SSort Stone where
     sortId (SSort s _ _) = s
 
-    freeSort (SSort _ pixmaps _) =
-        mapM_ freePixmap pixmaps
-
     size (SSort _ pixmaps _) = pixmapSize $ head pixmaps
 
     renderIconified sort ptr =

@@ -188,8 +188,6 @@ data Tile
 instance Sort TSort Tile where
     sortId TSort{name} = SortId name
 
-    freeSort = fmapM_ freePixmap . nub . ftoList . animation
-
     size (TSort _ animation) = pixmapSize $ head $ ftoList animation
 
     renderIconified sort ptr =
