@@ -33,7 +33,7 @@ instance Renderable GameOSD where
     label = const "GameOSD"
     render ptr app config parentSize (GameOSD text) = do
         (textSize, textRender) <- render ptr app config parentSize $
-            proseToGlyphs (digitFont app) $ colorizeProse white text
+            proseToGlyphs (digitFont app) $ colorizeProse standardFontColor text
         let osdSize = Size (width textSize + (osdFontPadding * 2)) (fromUber 9)
         return (osdSize, action osdSize textRender)
       where
