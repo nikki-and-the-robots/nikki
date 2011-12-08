@@ -222,7 +222,7 @@ renderState app config offset sort signPos state = case state of
     NoContact _ -> Nothing
     Contact _ ->
         -- render the speech icon
-        Just $ RenderPixmap (speechIcon sort) iconPos Nothing
+        Just $ RenderOnTop $ RenderPixmap (speechIcon sort) iconPos Nothing
           where
             iconPos = signPos +~ Position (width signSize / 2 - width iconSize / 2)
                                           (- (height iconSize + speechIconPadding))
