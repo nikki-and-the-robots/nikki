@@ -99,7 +99,7 @@ module Graphics.Qt.CPPWrapper (
 
 import Data.Generics
 import Data.Abelian
-import Data.Set
+import Data.Set (Set)
 import Data.Maybe
 
 import Text.Logging
