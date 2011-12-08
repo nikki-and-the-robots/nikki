@@ -36,7 +36,6 @@ runAppState app (AppStateLooped renderable cmd) = do
     cmd >>= runAppState app
 runAppState app (NoGUIAppState cmd) = do
     io $ postGUI (window app) $ setRenderingLooped (window app) False
-    io $ setDrawingCallbackMainWindow (window app) Nothing
     cmd >>= runAppState app
 runAppState app (GameAppState renderable cmd initialGameState) = do
     io $ postGUI (window app) $ setRenderingLooped (window app) True
@@ -48,11 +47,8 @@ runAppState app (GameAppState renderable cmd initialGameState) = do
 runAppState app (UnManagedAppState cmd) = do
     io $ postGUI (window app) $ setRenderingLooped (window app) False
     io $ postGUI (window app) $ setArrowAutoRepeat (window app) True
-    io $ setDrawingCallbackMainWindow (window app) Nothing
     cmd >>= runAppState app
-runAppState app FinalAppState = do
-    io $ setDrawingCallbackMainWindow (window app) Nothing
-    return ()
+runAppState app FinalAppState = return ()
 
 setRenderable app config renderable = do
     setDrawingCallbackMainWindow (window app) (Just renderCallback)
