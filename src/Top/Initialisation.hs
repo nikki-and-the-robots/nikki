@@ -179,7 +179,6 @@ groundsMergeLayers =
     merge :: Layer (EditorObject Sort_) -> Layer (EditorObject Sort_)
         -> Maybe (Layer (EditorObject Sort_))
     merge a b =
-      trace (show (sameDistance a b, tilesOnTop a, tilesOnBottom b)) $
       if sameDistance a b && tilesOnTop a && tilesOnBottom b
         then Just $ concatLayers a b
         else Nothing
