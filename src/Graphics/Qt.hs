@@ -12,6 +12,7 @@ module Graphics.Qt (
     keyDescription,
     QKeyboardModifier(..),
     Ptr,
+    ForeignPtr,
   ) where
 
 
@@ -28,6 +29,7 @@ import Graphics.Qt.CPPWrapper
 import Graphics.Qt.Events
 
 import Foreign.Ptr
+import Foreign.ForeignPtr
 
 import System.Exit
 

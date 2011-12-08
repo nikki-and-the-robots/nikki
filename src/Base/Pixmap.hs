@@ -35,6 +35,7 @@ import Control.DeepSeq
 import System.IO.Unsafe
 
 import Foreign.Ptr (nullPtr)
+import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 
 import Graphics.Qt
 import Physics.Chipmunk (Angle, rad2deg)
@@ -45,15 +46,15 @@ import Utils
 type Offset a = Position a
 
 data Pixmap = Pixmap {
-    pixmap :: Ptr QPixmap,
+    pixmap :: ForeignPtr QPixmap,
     pixmapOffset_ :: Position Double,
     pixmapSize :: Size Double,
     pixmapImageSize :: Size Double
   }
     deriving (Show, Eq, Typeable, Data)
 
-instance NFData (Ptr a) where
-    rnf ptr = ptr == nullPtr `seq` ()
+instance NFData (ForeignPtr a) where
+    rnf ptr = unsafeForeignPtrToPtr ptr == nullPtr `seq` ()
 
 instance NFData Pixmap where
     rnf (Pixmap a b c d) = rnf a `seq` rnf b `seq` rnf c `seq` rnf d
@@ -208,7 +209,7 @@ debugPixmaps ptr pix position Nothing = do
 
 -- | Returns a unique, preferrebly short key for the given argument.
 -- (Unique per run of the program.)
-uniqueKey :: Ptr QPixmap -> IO String
+uniqueKey :: ForeignPtr QPixmap -> IO String
 uniqueKey x = do
     (map, newKey : restKeys) <- readIORef _uniqueKeys
     case Data.Map.lookup x map of
@@ -218,6 +219,6 @@ uniqueKey x = do
             return (show newKey)
 
 {-# noinline _uniqueKeys #-}
-_uniqueKeys :: IORef (Map (Ptr QPixmap) String, [Int])
+_uniqueKeys :: IORef (Map (ForeignPtr QPixmap) String, [Int])
 _uniqueKeys = unsafePerformIO $ newIORef (empty, [0 ..])
 

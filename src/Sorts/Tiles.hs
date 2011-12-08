@@ -225,12 +225,10 @@ data AllTilesSort
 data AllTiles
     = AllPhysicTiles {
         chipmunks_ :: Chipmunk,
-        renderables :: [(Animation Pixmap, Qt.Position Double)],
-        newQPixmaps :: [Ptr QPixmap]
+        renderables :: [(Animation Pixmap, Qt.Position Double)]
       }
     | AllMultilayerTiles {
-        renderables :: [(Animation Pixmap, Qt.Position Double)],
-        newQPixmaps :: [Ptr QPixmap]
+        renderables :: [(Animation Pixmap, Qt.Position Double)]
       }
   deriving (Show, Typeable)
 
@@ -248,7 +246,7 @@ instance Sort AllTilesSort AllTiles where
     renderIconified = error "renderIconified: not in use for AllTiles"
 
     initialize app _ Nothing (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing _ =
-        io $ (uncurry AllMultilayerTiles) <$>
+        io $ AllMultilayerTiles <$>
             bakeTiles app (map toAnimation editorObjects)
       where
         toAnimation (EditorObject sort ep Nothing) =
@@ -256,19 +254,16 @@ instance Sort AllTilesSort AllTiles where
 
     initialize app _ (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
       cachedTiles = io $ do
-        (renderables, newQPixmaps) <- bakeTiles app $ map mkRenderable editorObjects
+        renderables <- bakeTiles app $ map mkRenderable editorObjects
         chipmunks <- initChipmunks space cachedTiles editorObjects
-        return $ AllPhysicTiles chipmunks renderables newQPixmaps
+        return $ AllPhysicTiles chipmunks renderables
 
-    freeObject allTiles =
-        fmapM_ destroyQPixmap $ newQPixmaps allTiles
-
-    immutableCopy (AllPhysicTiles c x y) = do
+    immutableCopy (AllPhysicTiles c x) = do
         c' <- CM.immutableCopy c
-        return $ AllPhysicTiles c' x y
+        return $ AllPhysicTiles c' x
     immutableCopy x = return x
 
-    chipmunks (AllPhysicTiles c _ _) = [c]
+    chipmunks (AllPhysicTiles c _) = [c]
     chipmunks AllMultilayerTiles{} = []
 
     renderObject _ _ allTiles sort _ _ now = return $

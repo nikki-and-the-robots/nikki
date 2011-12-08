@@ -294,7 +294,9 @@ data QPainter
   deriving Typeable
 
 -- | for rendering into pixmaps.
-foreign import ccall newQPainter :: Ptr QPixmap -> IO (Ptr QPainter)
+newQPainter :: ForeignPtr QPixmap -> IO (Ptr QPainter)
+newQPainter fp = withForeignPtr fp cppNewQPainter
+foreign import ccall "newQPainter" cppNewQPainter :: Ptr QPixmap -> IO (Ptr QPainter)
 
 foreign import ccall destroyQPainter :: Ptr QPainter -> IO ()
 
@@ -326,9 +328,9 @@ foreign import ccall "translate" cppTranslate :: Ptr QPainter -> QtReal -> QtRea
 
 foreign import ccall scale :: Ptr QPainter -> QtReal -> QtReal -> IO ()
 
-drawPixmap :: Ptr QPainter -> Position QtReal -> Ptr QPixmap -> IO ()
-drawPixmap ptr (Position x y) pix = do
-    cppDrawPixmap ptr x y pix
+drawPixmap :: Ptr QPainter -> Position QtReal -> ForeignPtr QPixmap -> IO ()
+drawPixmap ptr (Position x y) fp =
+    withForeignPtr fp $ cppDrawPixmap ptr x y
 foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtReal -> QtReal -> Ptr QPixmap -> IO ()
 
 drawPoint :: Ptr QPainter -> Position QtInt -> IO ()
@@ -442,7 +444,7 @@ data QPixmap
   deriving (Typeable)
 
 -- | loads a new pixmap. Canonicalizes the path first.
-newQPixmap :: FilePath -> IO (Ptr QPixmap)
+newQPixmap :: FilePath -> IO (ForeignPtr QPixmap)
 newQPixmap file_ = do
     file <- canonicalizePath file_
     exists <- doesFileExist file
@@ -451,14 +453,15 @@ newQPixmap file_ = do
     ptr <- withCString file cppNewQPixmap
     when (ptr == nullPtr) $
         error ("could not load image file: " ++ file)
-    return ptr
+    newForeignPtr internalDestroyQPixmap ptr
 
-newQPixmapEmpty :: Size QtInt -> IO (Ptr QPixmap)
+newQPixmapEmpty :: Size QtInt -> IO (ForeignPtr QPixmap)
 newQPixmapEmpty (Size x y) = do
     when veryBig $
         logg Warning (printf
             "creating very large QPixmap: %.0fKB" kb)
-    cppNewQPixmapEmpty x y
+    ptr <- cppNewQPixmapEmpty x y
+    newForeignPtr internalDestroyQPixmap ptr
   where
     veryBig = bytes > 8 * 1024 ^ 2
     bytes :: QtInt
@@ -470,27 +473,47 @@ foreign import ccall "newQPixmapEmpty" cppNewQPixmapEmpty ::
 
 foreign import ccall "newQPixmap" cppNewQPixmap :: CString -> IO (Ptr QPixmap)
 
-foreign import ccall destroyQPixmap :: Ptr QPixmap -> IO ()
+foreign import ccall "&destroyQPixmap" internalDestroyQPixmap :: FunPtr (Ptr QPixmap -> IO ())
 
-saveQPixmap :: Ptr QPixmap -> String -> QtInt -> IO ()
-saveQPixmap pix file quality =
-    withCString file $ \ cfile -> cppSaveQPixmap pix cfile quality
+destroyQPixmap :: ForeignPtr QPixmap -> IO ()
+destroyQPixmap _ = return ()
+
+saveQPixmap :: ForeignPtr QPixmap -> String -> QtInt -> IO ()
+saveQPixmap fp file quality =
+    withForeignPtr fp $ \ ptr ->
+    withCString file $ \ cfile ->
+    cppSaveQPixmap ptr cfile quality
 foreign import ccall "saveQPixmap" cppSaveQPixmap ::
     Ptr QPixmap -> CString -> QtInt -> IO ()
 
-foreign import ccall copyQPixmap :: Ptr QPixmap -> IO (Ptr QPixmap)
+copyQPixmap :: ForeignPtr QPixmap -> IO (ForeignPtr QPixmap)
+copyQPixmap originalFp =
+    withForeignPtr originalFp $ \ original -> do
+        copy <- cppCopyQPixmap original
+        newForeignPtr internalDestroyQPixmap copy
+foreign import ccall "copyQPixmap" cppCopyQPixmap :: Ptr QPixmap -> IO (Ptr QPixmap)
 
 foreign import ccall widthQPixmap :: Ptr QPixmap -> IO QtInt
 
 foreign import ccall heightQPixmap :: Ptr QPixmap -> IO QtInt
 
-sizeQPixmap :: Ptr QPixmap -> IO (Size QtInt)
-sizeQPixmap ptr = Size <$> widthQPixmap ptr <*> heightQPixmap ptr
+sizeQPixmap :: ForeignPtr QPixmap -> IO (Size QtInt)
+sizeQPixmap fp =
+    withForeignPtr fp $ \ ptr ->
+    (Size <$> widthQPixmap ptr <*> heightQPixmap ptr)
 
 -- | Bool parameter controls, if Indexed8 is forced as a format.
-foreign import ccall toImageQPixmap :: Ptr QPixmap -> Bool -> IO (Ptr QImage)
+toImageQPixmap :: ForeignPtr QPixmap -> Bool -> IO (Ptr QImage)
+toImageQPixmap fp indexed8 =
+    withForeignPtr fp $ \ ptr ->
+        cppToImageQPixmap ptr indexed8
+foreign import ccall "toImageQPixmap" cppToImageQPixmap
+    :: Ptr QPixmap -> Bool -> IO (Ptr QImage)
 
-foreign import ccall fromImageQPixmap :: Ptr QImage -> IO (Ptr QPixmap)
+fromImageQPixmap :: Ptr QImage -> IO (ForeignPtr QPixmap)
+fromImageQPixmap image =
+    newForeignPtr internalDestroyQPixmap =<< cppFromImageQPixmap image
+foreign import ccall "fromImageQPixmap" cppFromImageQPixmap :: Ptr QImage -> IO (Ptr QPixmap)
 
 
 -- * QImage
