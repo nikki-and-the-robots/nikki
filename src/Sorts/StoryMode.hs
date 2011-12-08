@@ -58,6 +58,9 @@ tiles =
     ("tiles/black-green/pilotlamp-standard-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1, 0, 1, 1]) :
     ("tiles/black-green/pilotlamp-small-left", Position 9 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
     ("tiles/black-green/pilotlamp-small-right", Position 1 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-green/aircon-left", Position 1 1, Size 64 128, 1, Nothing) :
+    ("tiles/black-green/aircon-right", Position 1 1, Size 64 128, 1, Nothing) :
+    ("tiles/black-green/tank-horizontal", Position 1 1, Size 160 64, 1, Nothing) :
     ("tiles/black-green/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-green/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
     ("tiles/black-green/wallpaper-large-vent", Position 1 1, Size 128 128, 1, Nothing) :
