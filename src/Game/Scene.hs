@@ -373,7 +373,11 @@ renderOSDs app configuration ptr now scene = do
     renderTerminalOSD ptr now scene
 
 renderBatteryOSD ptr app configuration windowSize scene = do
-    let text = pv $ printf (batteryChar : zeroSpaceChar : "%03i") $ scene ^. batteryPower
+    let (collected :!: total) = scene ^. batteryPower
+        text = pv $ printf
+            (batteryChar : zeroSpaceChar : "%03i/%03i")
+            collected
+            total
     renderOSD ptr app configuration windowSize text $ \ osdSize ->
         Position (width windowSize - osdPadding - width osdSize) osdPadding
 

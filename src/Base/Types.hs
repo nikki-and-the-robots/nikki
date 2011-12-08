@@ -26,6 +26,7 @@ import Data.IORef
 import qualified Data.Binary as Binary
 import qualified Data.Text as T
 import Data.Version
+import qualified Data.Strict as St
 
 import Control.Monad.Reader
 import Control.Monad.State.Strict
@@ -177,7 +178,7 @@ data Scene object
         spaceTime_ :: Seconds,
         objects_ :: GameGrounds object,
         lowerLimit_ :: Maybe CpFloat,
-        batteryPower_ :: !Integer, -- makes it possible to have REALLY BIG amounts of power :)
+        batteryPower_ :: !(Pair Integer Integer),  -- makes it possible to have REALLY BIG amounts of power :)
         switches_ :: !(Pair Int Int),
         contactRef :: !(ContactRef Contacts),
         contacts_ :: !Contacts,
@@ -195,7 +196,7 @@ objects = accessor objects_ (\ a r -> r{objects_ = a})
 lowerLimit :: Accessor (Scene o) (Maybe CpFloat)
 lowerLimit = accessor lowerLimit_ (\ a r -> r{lowerLimit_ = a})
 
-batteryPower :: Accessor (Scene o) Integer
+batteryPower :: Accessor (Scene o) (Pair Integer Integer)
 batteryPower = accessor batteryPower_ (\ a r -> r{batteryPower_ = a})
 
 switches :: Accessor (Scene o) (Pair Int Int)
@@ -301,7 +302,9 @@ data Mode
   deriving Show
 
 mkLevelFinished :: Scene o -> LevelResult -> Mode
-mkLevelFinished scene = LevelFinished (mkScore (scene ^. spaceTime) (scene ^. batteryPower))
+mkLevelFinished scene = LevelFinished $ mkScore
+    (scene ^. spaceTime)
+    (St.fst (scene ^. batteryPower))
 
 -- | returns, if Nikki is controlled currently
 isNikkiMode :: Mode -> Bool

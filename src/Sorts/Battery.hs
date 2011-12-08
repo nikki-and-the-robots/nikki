@@ -1,6 +1,9 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable #-}
+{-# language MultiParamTypeClasses, DeriveDataTypeable, ViewPatterns, ScopedTypeVariables #-}
 
-module Sorts.Battery where
+module Sorts.Battery (
+    sorts,
+    countBatteries,
+  ) where
 
 
 import Data.Data
@@ -56,6 +59,15 @@ data Battery
   deriving (Show, Typeable)
 
 
+countBatteries :: I.Indexable Object_ -> Int
+countBatteries = I.length . I.filter (isBattery . sort_)
+
+isBattery :: Sort sort o => sort -> Bool
+isBattery (cast -> Just _ :: Maybe BSort) = True
+isBattery (cast -> Just (Sort_ inner) :: Maybe Sort_) = isBattery inner
+isBattery _ = False
+
+
 instance Sort BSort Battery where
     sortId _ = SortId "battery"
 
@@ -92,7 +104,7 @@ instance Sort BSort Battery where
             triggerSound $ collectSound sort
             removeChipmunk $ chipmunk o
             let sceneChange :: Scene o -> Scene o
-                sceneChange = (batteryPower ^: succ) . removeBattery
+                sceneChange = (batteryPower .> firstAStrict ^: succ) . removeBattery
                 removeBattery = objects .> gameMainLayer ^: deleteByIndex i
             return (sceneChange, Consumed $ chipmunk o)
     update sort config _ mode now contacts cd i o = return (id, o) -- no change

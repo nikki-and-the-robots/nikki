@@ -43,7 +43,7 @@ import qualified Data.Foldable as Foldable
 import Data.Traversable (Traversable, mapM)
 import Data.IORef
 import qualified Data.Set as Set
-import Data.Accessor (Accessor, (^.), (^=), (^:), (.>))
+import Data.Accessor (Accessor, accessor, (^.), (^=), (^:), (.>))
 import Data.Accessor.Monad.MTL.State ((%=), (%:))
 import Data.Monoid
 import Data.Function
@@ -643,3 +643,6 @@ instance Alternative Strict.Maybe where
 
 firstStrict :: (a -> b) -> (Pair a c) -> (Pair b c)
 firstStrict f (a :!: c) = f a :!: c
+
+firstAStrict :: Accessor (Pair a b) a
+firstAStrict = accessor (\ (a :!: _) -> a) (\ a (_ :!: b) -> (a :!: b))
