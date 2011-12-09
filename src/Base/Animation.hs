@@ -3,6 +3,7 @@
 module Base.Animation (
     Animation,
     mkAnimation,
+    mkStaticAnimation,
     isStatic,
     animationHead,
     pickAnimationFrame,
@@ -52,6 +53,9 @@ mkAnimation l _ | length l == 1 =
     in Static x
 mkAnimation l frameTimes =
     Animation l (length l) (mkAbsoluteTimes frameTimes) (sum frameTimes) (length frameTimes)
+
+mkStaticAnimation :: a -> Animation a
+mkStaticAnimation = Static
 
 -- | Returns if the Animation will only ever return one element.
 isStatic :: Animation a -> Bool

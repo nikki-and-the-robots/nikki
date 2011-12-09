@@ -371,7 +371,7 @@ bake app l =
             Just result -> return result -- already memoized
 
     convert :: Position Double -> Pixmap -> (Animation Pixmap, Position Double)
-    convert normalization p = (mkAnimation [p] [42], split (- 1) +~ normalization)
+    convert normalization p = (mkStaticAnimation p, split (- 1) +~ normalization)
 
 -- | Normalizes the StaticPixmap positions and offsets
 -- so that the first StaticPixmap is on (Position 0 0).
