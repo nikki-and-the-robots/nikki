@@ -128,14 +128,17 @@ instance Sort LSort Laser where
     initialize app _ (Just space) sort ep (Just (OEMState arm_)) _ = io $ do
         let Just arm :: Maybe LaserOEMState = cast arm_
             position = epToPosition baseSize ep
-            vector = position2vector position
-            solidShapes = map (mkShapeDescription solidShapeAttributes) $
+            baryCenterOffset = position2vector $ size2position (fmap (/ 2) baseSize)
+            vector = position2vector position +~ baryCenterOffset
+            mbc = mapVectors (-~ baryCenterOffset)
+            solidShapes = map (mkShapeDescription solidShapeAttributes . mbc) $
                           mkSolidShapes sort arm
-            laserShape = mkShapeDescription laserShapeAttributes $ mkLaserShape arm
+            laserShape = mkShapeDescription laserShapeAttributes $ mbc $ mkLaserShape arm
             (staticRPs, laserRPs) = mkLaserRenderPixmaps sort position arm
             robotShapes = solidShapes +: laserShape
 
-        chip <- initChipmunk space (StaticBodyAttributes vector) robotShapes zero
+        chip <- initChipmunk space (StaticBodyAttributes vector) robotShapes
+                        baryCenterOffset
         let laserShape = last (shapes chip)
 
         return $ Laser staticRPs (oemActive arm) laserRPs chip laserShape
