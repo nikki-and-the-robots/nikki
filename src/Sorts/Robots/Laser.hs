@@ -1,308 +1,397 @@
-{-# language Ã¶ NamedFieldPuns, ViewPatterns #-}
-
-module Object.Robots.Laser where
+{-# language ScopedTypeVariables, MultiParamTypeClasses, DeriveDataTypeable #-}
 
 
--- import Utils
--- import Base.Constants
--- 
--- import Data.Map (Map, (!))
--- import Data.List
--- import qualified Data.Indexable as I
--- import Data.Abelian
--- import Data.Directions
--- 
--- import Control.Applicative ((<$>))
--- import Control.Monad hiding ((>=>))
--- import Control.Monad.Compose
--- 
--- import Physics.Chipmunk as CM
--- 
--- import Graphics.Qt as Qt
--- 
--- import Base.Sprited
--- import Base.Grounds
--- import Base.Events
--- 
--- import Game.Scene.Types
--- 
--- import Object.ContactRef
--- import Object.Animation
--- import Object as Object
--- import Object.Robots.Types
+-- | Robots that have L-A-S-E-R-S.
+-- Can be switched on and off by terminals.
+
+module Sorts.Robots.Laser (sorts) where
 
 
--- laserRobotHandler :: RobotHandler
--- laserRobotHandler = RobotHandler
---     initialisation
---     initAnimation
---     updating
---     rendering
--- 
--- 
--- initialisation :: UninitializedScene -> Space -> UninitializedObject -> IO Object
--- initialisation scene space robot@(Robot s p state) = do
---         let size = defaultPixmapSize s
---             bodyAttributes = StaticBodyAttributes p
---             (polys, baryCenterOffset) = mkStandardPolys size
---             shapesAndAttributes = map (tuple robotShapeAttributes) polys
--- 
---         chip <- CM.initStaticChipmunk space bodyAttributes shapesAndAttributes baryCenterOffset
---         -- adding lasers
---         chipMunkAddLasers scene space shapeAttributes p (Robot s chip state)
--- 
--- chipMunkAddLasers :: UninitializedScene -> Space -> ShapeAttributes -> Vector
---     -> Object -> IO Object
--- chipMunkAddLasers scene space attrs pngPos (Robot s chip (LaserRobot lasers a b)) = do
---     let directions = map laserDirection lasers
---         lowerLeft = calcLocalLowerLeft directions
---         innerRobotPosition = calcInnerRobotPosition directions pngPos
---     (chip', lasers') <- myTupleMap (addLaser scene space innerRobotPosition lowerLeft) chip lasers
---     return $ Robot s chip' (LaserRobot lasers' a b)
--- 
--- -- | calculates the offset of the lower left corner of the robot from the barycenter
--- -- (which is the middle of the png), such that
--- -- lowerLeftCorner == offset +~ laserBotPos
--- calcLocalLowerLeft :: [Direction] -> Qt.Position Double
--- calcLocalLowerLeft [DUp] = Position 0 (endBotLength / 2) +~ toLowerLeft
--- calcLocalLowerLeft [DUp, DRight] = Position (- endBotLength / 2)  (endBotLength / 2) +~ toLowerLeft
--- calcLocalLowerLeft x = es "calcMiddleLowerLeft" x
--- 
--- -- | distance from middle to lower left corner of the robot
--- toLowerLeft :: Qt.Position Double
--- toLowerLeft = Position (- fromUber 7.5) (fromUber 7.5)
--- 
--- -- | calculates the global position of the inner robot
--- calcInnerRobotPosition :: [Direction] -> Vector -> Qt.Position Double
--- calcInnerRobotPosition [DUp] p =
---     vectorToPosition p +~ Position 0 (endBotLength + height robotSize)
--- calcInnerRobotPosition [DUp, DRight] p =
---     vectorToPosition p +~ Position 0 (endBotLength + height robotSize)
--- calcInnerRobotPosition x _ = es "calcInnerRobotPosition" x
--- 
--- -- | what i need here. Like mapM in (StateM a m)
--- myTupleMap :: Monad m => (a -> b -> m (a, b)) -> a -> [b] -> m (a, [b])
--- myTupleMap cmd a [] = return (a, [])
--- myTupleMap cmd a (b : r) = do
---     (a', b') <- cmd a b
---     (a'', r') <- myTupleMap cmd a' r
---     return (a'', b' : r')
--- 
--- addLaser :: UninitializedScene -> Space -> Qt.Position Double -> Qt.Position Double
---     -> Chipmunk -> Laser -> IO (Chipmunk, Laser)
--- addLaser scene space laserBotPos lowerLeft chip
---     (Laser direction Nothing switch 0) = do
---         let (len, position, size) = calculateLaser scene laserBotPos lowerLeft direction
---             shapeTypes = [mkRect position size]
---         (chip', shapes) <- CM.addInitShape chip (map (tuple laserAttributes) shapeTypes)
---         let laser = Laser direction (Just shapes) switch len
---         when (not switch) $
---             mapM_ (spaceRemove space . Static) shapes
---         return (chip', laser)
--- 
--- laserAttributes :: ShapeAttributes
--- laserAttributes = ShapeAttributes 0.5 0.5 LaserCT
--- 
--- endBotLength, endBotBreite, laserBreite :: Double
--- endBotLength = fromUber 6
--- endBotBreite = fromUber 13
--- laserBreite = fromUber 5
--- 
--- -- | inner robot size
--- robotSize :: Size Double
--- robotSize = Size (fromUber 15) (fromUber 15)
--- 
--- -- | calculates the data for a laser
--- calculateLaser :: UninitializedScene -> Qt.Position Double -> Qt.Position Double -> Direction
---     -> (Int, Qt.Position Double, Size Double)
--- calculateLaser scene laserBotPos lowerLeft DUp =
---     (truncate len, laserPosition, Size laserBreite len)
---   where
---     laserPosition :: Qt.Position Double
---     laserPosition = lowerLeft +~ Position (fromUber 5) (- height robotSize - endBotLength - len)
--- 
---     len = withView positionY distance laserBotPos endBotPos - height robotSize - endBotLength - endBotLength
--- 
---     endBotPos = findEndBot scene
---         (\ p -> positionX p == positionX laserBotPos + fromUber 1
---             && positionY p < positionY laserBotPos)
---         (\ a b -> swapOrdering (compare a b), positionY) -- << (tuple laserBotPos)
--- 
--- calculateLaser scene laserBotPos lowerLeft DRight =
---     (truncate len, laserPosition, Size len laserBreite)
---   where
---     len :: Double
---     len = withView positionX distance laserBotPos endBotPos - width robotSize - endBotLength
---     laserPosition = lowerLeft +~
---         Position (width robotSize + endBotLength) (- height robotSize + fromUber 5)
---     endBotPos = findEndBot scene
---         (\ p -> positionY p == positionY laserBotPos - endBotBreite - fromUber 1
---             && positionX p > positionX laserBotPos)
---         (compare, positionX)
--- calculateLaser _ _ _ dir = es "calculateLaser" dir
--- 
--- 
--- findEndBot :: UninitializedScene
---     -> (Qt.Position Double -> Bool)
---     -> (a -> a -> Ordering, Qt.Position Double -> a)
---     -> Qt.Position Double
--- findEndBot scene predicate (compare, getter) =
---     endBotPos
---   where
---     os = objects scene
---     mainLayerObjects = I.toList $ mainLayerIndexable os
---     filtered = filter innerPredicate $
---         filter isLaserEndRobot mainLayerObjects
---     endBot = case filtered of
---         (_ : _) -> minimumBy innerCompare filtered
---         _ -> error "no laser end bot found"
---     endBotPos = innerGetPos endBot
--- 
---     -- versions with objects not positions as argument
---     innerPredicate :: UninitializedObject -> Bool
---     innerPredicate = predicate . innerGetPos
---     innerCompare a b = withView innerGetter compare a b
---     innerGetter = getter . innerGetPos
--- 
---     innerGetPos :: UninitializedObject -> Qt.Position Double
---     innerGetPos = vectorToPosition . Object.position
--- 
--- 
--- initAnimation :: Object -> Object
--- initAnimation = modifyRobotState inner
---   where
---     inner (LaserRobot laser UninitializedAnimation UninitializedAnimation) =
---         LaserRobot laser robotAnimation laserAnimation
---     robotAnimation = mkAnimation (UndirectedFrameSetType Idle) robotFun 0
---     laserAnimation = mkAnimation (UndirectedFrameSetType RedLaser) laserFun 0
--- 
---     robotFun (frameSetAction -> Idle) = AnimationPhases $ zip
---         (cycle [0 .. 3])
---         (repeat robotIdleEyeTime)
---     robotFun (frameSetAction -> Wait) = robotWaitAnimation
--- 
---     laserFun (frameSetAction -> RedLaser) = AnimationPhases $ zip
---         (cycle [0, 1])
---         (repeat 0.02)
--- 
--- updating :: Scene -> Seconds -> Collisions -> (Bool, ControlData) -> Object -> IO Object
--- updating _ now collisions control object =
---     modifyRobotStateM (
---         updateLogick (space $ Object.position object) control >=>
---         pure (updateAnimations now control))
---       object
--- 
--- updateLogick :: Space -> (Bool, ControlData)
---     -> RobotState -> IO RobotState
--- updateLogick space (isControlled, cd) state =
---     if isControlled && aPushed then
---         switch state
---       else
---         return state
---   where
---     switch (LaserRobot lasers a b) = do
---         new <- swapSwitches space lasers
---         return $ LaserRobot new a b
--- 
---     aPushed = Press AButton `elem` pushed cd
--- 
--- -- | swaps the switch state of one laser
--- swapSwitches :: Space
---     -> [Laser] -> IO [Laser]
--- swapSwitches space lasers = do
---     let swaps = case map laserDirection lasers of
---             -- which shall be switched
---             [DUp] -> [True]
---             [DUp, DRight] -> [True, True]
---             x -> es "swapSwitches" x
---     mapM (uncurry inner) $ zip lasers swaps
---   where
---     inner :: Laser -> Bool -> IO Laser
---     inner laser False = return laser
---     inner (Laser direction (Just shapes) on len) True = do
---         if on then
---             mapM_ (spaceRemove space . Static) shapes
---           else
---             mapM_ (spaceAdd space . Static) shapes
---         return $ Laser direction (Just shapes) (not on) len
--- 
--- 
--- updateAnimations :: Seconds -> (Bool, ControlData) -> RobotState -> RobotState
--- updateAnimations now (isControlled, _) (LaserRobot lasers robotAnimation laserAnimation) = 
---     LaserRobot lasers robotAnimation' laserAnimation'
---   where
---     robotAnimation' = updateAnimation now robotAnimationType robotAnimation
---     robotAnimationType = UndirectedFrameSetType $
---          if isControlled then Wait else Idle
--- 
---     laserAnimation' = updateAnimation now (UndirectedFrameSetType RedLaser) laserAnimation
--- 
--- 
--- rendering :: Ptr QPainter -> Scene -> Qt.Position Double -> Object -> IO ()
--- rendering ptr scene offset (Robot sprited chipmunk (LaserRobot lasers robotAnimation laserAnimation)) = do
--- 
---     laserBotPos <- vectorToPosition <$> fst <$> getRenderPosition chipmunk
---     mapM_ (renderLaser ptr offset laserBotPos laserAnimation (osdSpriteds scene)) lasers
--- 
---     let pixmap = animationPixmap robotAnimation sprited
---     renderChipmunk ptr offset pixmap chipmunk
--- 
--- 
--- 
--- -- | would need the position of the inner robot.
--- -- works for snowwhite like this
--- renderLaser :: Ptr QPainter -> Qt.Position Double -> Qt.Position Double -> Animation
---     -> Map [Char] (Object_ Sprited t) -> Laser
---     -> IO ()
--- renderLaser _ _ _ _ _ (Laser _ _ False _) = return ()
--- renderLaser ptr offset laserBotPos laserAnimation osdSpriteds laser = do
---     resetMatrix ptr
---     translate ptr offset
---     translate ptr laserBotPos
---     renderDirectedLaser laser
---   where
---     renderDirectedLaser (Laser DUp _ True len) = do
---         translate ptr (Position (fromUber 1) (fromUber 1))
---         forM_ [0 .. (len `div` 4) + 1] $ \ i -> do
---             translate ptr (Position 0 (- 4))
---             drawPixmap ptr zero (laserPix "laser-vertical")
---     renderDirectedLaser (Laser DRight _ True len) = do
---         translate ptr (Position (fromUber 19) (fromUber 7))
---         forM_ [0 .. (len `div` 4) + 1] $ \ i -> do
---             translate ptr (Position (fromUber 1) 0)
---             drawPixmap ptr zero (laserPix "laser-horizontal")
--- 
---     laserPix name =
---         animationPixmap laserAnimation laserSprited
---       where
---         (OSDObject laserSprited) = osdSpriteds ! name
--- 
--- 
--- -- * laser end robot
--- 
--- laserEndRobotHandler :: RobotHandler
--- laserEndRobotHandler = RobotHandler
---     endInitialisation
---     id
---     endUpdating
---     endRendering
--- 
--- endInitialisation :: UninitializedScene -> Space -> UninitializedObject -> IO Object
--- endInitialisation _ space robot@(Robot s p state) = do
---         let size = defaultPixmapSize s
---             bodyAttributes = StaticBodyAttributes p
---             (polys, baryCenterOffset) = mkStandardPolys size
---             shapesAndAttributes = map (tuple shapeAttributes) polys
--- 
---         chip <- CM.initStaticChipmunk space bodyAttributes shapesAndAttributes baryCenterOffset
---         return $ Robot s chip state
--- 
--- endUpdating :: Scene -> Seconds -> Collisions -> (Bool, ControlData) -> Object -> IO Object
--- endUpdating _ _ _ _ = return
--- 
--- endRendering :: Ptr QPainter -> Scene -> Qt.Position Double -> Object -> IO ()
--- endRendering ptr _ offset (Robot sprited chipmunk state) = do
---     let pixmap = defaultPixmap sprited
---     renderChipmunk ptr offset pixmap chipmunk
--- 
--- 
+import Safe
+
+import Data.Abelian
+import Data.Directions
+import Data.Map (Map, fromList, (!))
+import Data.Data
+import Data.Accessor
+
+import System.FilePath
+
+import Physics.Chipmunk as CM hiding (Position, start, end, renderPosition)
+
+import Graphics.Qt
+
+import Utils
+
+import Base
+
+import Editor.Scene.Rendering
+
+import Sorts.Robots.Configuration
+import Sorts.Robots.Eyes
+import Sorts.DeathStones (animationFrameTimes)
+
+
+-- * configuration
+
+baseSize :: Size Double = Size 60 60
+
+
+-- * loading
+
+sorts :: [RM (Maybe Sort_)]
+sorts =
+    singleton ((Just . Sort_) <$>
+    (LSort <$>
+        loadPix "base" <*>
+        loadRobotEyesPixmaps <*>
+        loadArms))
+
+loadArms = do
+    horizontal <- loadHorizontal
+    vertical <- loadVertical
+    let directions :: [Direction] = allValues
+    (fromList . zip directions) <$> fmapM (loadArm horizontal vertical) directions
+
+loadHorizontal = loadLaserPixmaps "horizontal"
+loadVertical = loadLaserPixmaps "vertical"
+
+loadLaserPixmaps name = do
+    a <- loadPix ("laser-" ++ name ++ "-standard_00")
+    b <- loadPix ("laser-" ++ name ++ "-standard_01")
+    return $ [a, b]
+
+loadArm horizontal vertical dir = case dir of
+    DUp    -> load "up"    vertical
+    DDown  -> load "down"  vertical
+    DLeft  -> load "left"  horizontal
+    DRight -> load "right" horizontal
+  where
+    load name lasers =
+        ArmPixmaps <$>
+            loadPix ("startpiece-" ++ name) <*>
+            return lasers <*>
+            loadPix ("endpiece-" ++ name ++ "-standard")
+
+-- | load a pixmap by name from the laser directory with 1 padding pixel
+loadPix :: String -> RM Pixmap
+loadPix name =
+    getDataFileName (pngDir </> "robots" </> "laser" </> name <.> "png") >>=
+    loadSymmetricPixmap (split 1)
+
+
+data LSort = LSort {
+    base :: Pixmap,
+    eyes :: RobotEyesPixmaps,
+    lasers :: Map Direction ArmPixmaps
+  }
+    deriving (Show, Typeable)
+
+data ArmPixmaps = ArmPixmaps {
+    start :: Pixmap,
+    laser :: [Pixmap],
+    end :: Pixmap
+  }
+    deriving (Show)
+
+data Laser = Laser {
+    staticRenderPixmaps :: [RenderPixmap],
+    active_ :: Bool,
+    laserRenderPixmaps :: Animation [RenderPixmap],
+    chipmunk :: Chipmunk,
+    laserShape :: Shape
+  }
+    deriving (Show, Typeable)
+
+active :: Accessor Laser Bool
+active = accessor active_ (\ a r -> r{active_ = a})
+
+
+instance Sort LSort Laser where
+    sortId _ = SortId "robots/laser"
+
+    size = const baseSize
+
+    objectEditMode _ = Just oemMethods
+
+    renderIconified sort ptr = renderPixmapSimple ptr $ base sort
+
+    renderEditorObject ptr offset (EditorObject sort ep (Just (OEMState arm_))) = do
+        let Just arm :: Maybe LaserOEMState = cast arm_
+            pos = epToPosition baseSize ep
+            laserPixmap = head (laser (lasers sort ! oemDirection arm))
+            (statics, laserRPs) = mkLaserRenderPixmaps sort pos arm
+            rps = map (renderPosition ^: (+~ offset))
+                  (statics ++ pickAnimationFrame laserRPs 0)
+        doRenderPixmaps ptr rps
+
+    initialize app _ (Just space) sort ep (Just (OEMState arm_)) _ = io $ do
+        let Just arm :: Maybe LaserOEMState = cast arm_
+            position = epToPosition baseSize ep
+            vector = position2vector position
+            solidShapes = map (mkShapeDescription solidShapeAttributes) $
+                          mkSolidShapes sort arm
+            laserShape = mkShapeDescription laserShapeAttributes $ mkLaserShape arm
+            (staticRPs, laserRPs) = mkLaserRenderPixmaps sort position arm
+            robotShapes = solidShapes +: laserShape
+
+        chip <- initChipmunk space (StaticBodyAttributes vector) robotShapes zero
+        let laserShape = last (shapes chip)
+
+        return $ Laser staticRPs (oemActive arm) laserRPs chip laserShape
+
+    immutableCopy (Laser a b c chip ls) =
+        Laser a b c <$> CM.immutableCopy chip <*> return ls
+
+    chipmunks = singleton . chipmunk
+
+    getControlledChipmunk _ o = chipmunk o
+
+    updateNoSceneChange _ config space _ _ _ (True, cd) laser =
+        if isRobotActionPressed config cd
+        then (passThrough (updateLaserActivation space))
+             (active ^: not $ laser)
+        else return laser
+    updateNoSceneChange _ _ _ _ _ _ _ l = return l
+
+    renderObject app config object sort ptr offset now =
+        return $ renderLasers object now
+
+
+-- * shapes
+
+mkSolidShapes :: LSort -> LaserOEMState -> [ShapeType]
+mkSolidShapes sort arm =
+    baseS :
+    endS :
+    []
+  where
+    offsets = laserOffsets ! oemDirection arm
+    armPixmaps = lasers sort ! oemDirection arm
+
+    baseS = mkRect (baseStartOffset offsets) (baseStartSize offsets)
+    endS = mkRect endPosition endSize
+    endPosition = fmap (fromIntegral (oemLength arm) *) (laserIncrement offsets) +~
+                  nullLaserEndOffset offsets +~
+                  endChipOffset offsets
+    endSize = endChipSize offsets
+
+solidShapeAttributes :: ShapeAttributes
+solidShapeAttributes = robotShapeAttributes
+
+mkLaserShape :: LaserOEMState -> ShapeType
+mkLaserShape arm =
+    mkRect p s
+  where
+    offsets = laserOffsets ! oemDirection arm
+    p = laserChipPosition offsets
+    s = position2size (fmap (fromIntegral (oemLength arm) *) (laserIncrement offsets)) +~
+        chipBand offsets
+
+laserShapeAttributes :: ShapeAttributes
+laserShapeAttributes = ShapeAttributes {
+    elasticity = 0,
+    friction = 0,
+    collisionType = DeadlyPermeableCT
+  }
+
+
+-- * updating
+
+updateLaserActivation :: Space -> Laser -> IO ()
+updateLaserActivation space laser = do
+    let ct = if laser ^. active then DeadlyPermeableCT else PermeableCT
+    setMyCollisionType ct (laserShape laser)
+
+
+-- * rendering
+
+renderLasers :: Laser -> Seconds -> [RenderPixmap]
+renderLasers laser now =
+    staticRenderPixmaps laser ++
+    if laser ^. active then pickAnimationFrame (laserRenderPixmaps laser) now else []
+
+mkLaserRenderPixmaps :: LSort -> Position Double -> LaserOEMState
+    -> ([RenderPixmap], Animation [RenderPixmap])
+mkLaserRenderPixmaps sort pos arm =
+    (static, animation)
+  where
+    static =
+        baseP :
+        startP :
+        endP :
+        []
+    animation =
+        mkAnimation (map laserPs (laser armPixmaps)) animationFrameTimes
+
+    baseP = RenderPixmap (base sort) pos Nothing
+    dir = oemDirection arm
+    armPixmaps = lasers sort ! dir
+    offsets = laserOffsets ! dir
+    startP = RenderPixmap (start armPixmaps) (pos +~ startOffset offsets) Nothing
+    laserPs laserPixmap = map (\ i -> RenderPixmap laserPixmap
+                            (pos +~ laserOffset offsets +~
+                             fmap (* fromIntegral i) (laserIncrement offsets))
+                            Nothing)
+                  [0 .. oemLength arm - 1]
+    endP = RenderPixmap (end armPixmaps)
+                (pos +~ fmap (* fromIntegral (oemLength arm)) (laserIncrement offsets) +~
+                 nullLaserEndOffset offsets)
+                Nothing
+
+data LaserOffsets = LaserOffsets {
+    startOffset :: Position Double,
+    laserOffset :: Position Double,
+    laserIncrement :: Position Double,
+    nullLaserEndOffset :: Position Double,
+    laserChipPosition :: Position Double,
+    chipBand :: Size Double, -- height of horizontal and width of vertical lasers
+    baseStartOffset :: Position Double, -- offset of the shape creating the base and the start piece
+    baseStartSize :: Size Double, -- size of said shape
+    endChipOffset :: Position Double, -- offset from the end image to the end shape
+    endChipSize :: Size Double -- size of the end piece
+  }
+
+-- | offsets of the start positions
+laserOffsets :: Map Direction LaserOffsets
+laserOffsets = fromList (
+    (DUp, up) :
+    (DDown, down) :
+    (DLeft, left) :
+    (DRight, right) :
+    [])
+  where
+    verticalLaserChipBand   = Size (fromUber 5) 0
+    horizontalLaserChipBand = Size 0 (fromUber 5)
+    verticalBaseStartSize   = Size (fromUber 15) (fromUber 20)
+    horizontalBaseStartSize = Size (fromUber 20) (fromUber 15)
+    -- up should be correct
+    up = LaserOffsets {
+        startOffset = Position 0 (- fromUber 6),
+        laserOffset = Position 4 (- fromUber 14),
+        laserIncrement = Position 0 (- fromUber 8),
+        nullLaserEndOffset = Position 0 (- fromUber 11),
+        laserChipPosition = Position 20 (- fromUber 6),
+        chipBand = verticalLaserChipBand,
+        baseStartOffset = Position 0 (- fromUber 5),
+        baseStartSize = verticalBaseStartSize,
+        endChipOffset = zero,
+        endChipSize = Size (fromUber 15) (fromUber 4)
+      }
+    down = LaserOffsets {
+        startOffset = Position 0 (height baseSize),
+        laserOffset = Position 4 (height baseSize + fromUber 6),
+        laserIncrement = Position 0 (fromUber 8),
+        nullLaserEndOffset = Position 0 (height baseSize + fromUber 6),
+        laserChipPosition = Position 20 (height baseSize + fromUber 6),
+        chipBand = verticalLaserChipBand,
+        baseStartOffset = zero,
+        baseStartSize = verticalBaseStartSize,
+        endChipOffset = Position 0 (fromUber 1),
+        endChipSize = Size (fromUber 15) (fromUber 4)
+      }
+    left = LaserOffsets {
+        startOffset = Position (- fromUber 6) 0,
+        laserOffset = Position (- fromUber 14) 4,
+        laserIncrement = Position (- fromUber 8) 0,
+        nullLaserEndOffset = Position (- fromUber 11) 0,
+        laserChipPosition = Position (- fromUber 6) 20,
+        chipBand = horizontalLaserChipBand,
+        baseStartOffset = Position (- fromUber 5) 0,
+        baseStartSize = horizontalBaseStartSize,
+        endChipOffset = zero,
+        endChipSize = Size (fromUber 4) (fromUber 15)
+      }
+    right = LaserOffsets {
+        startOffset = Position (width baseSize) 0,
+        laserOffset = Position (width baseSize + fromUber 6) 4,
+        laserIncrement = Position (fromUber 8) 0,
+        nullLaserEndOffset = Position (width baseSize + fromUber 6) 0,
+        laserChipPosition = Position (width baseSize + fromUber 6) 20,
+        chipBand = horizontalLaserChipBand,
+        baseStartOffset = zero,
+        baseStartSize = horizontalBaseStartSize,
+        endChipOffset = Position (fromUber 1) 0,
+        endChipSize = Size (fromUber 4) (fromUber 15)
+      }
+
+
+-- * oem
+
+oemMethods = OEMMethods {
+    oemInitialize = \ ep -> OEMState $ LaserOEMState ep DUp 6 True,
+    oemUnpickle = unpickle
+  }
+
+type PickleType = (EditorPosition, Direction, Int, Bool)
+
+unpickle s = case readMay s of
+    Just ((ep, d, l, a) :: PickleType) -> OEMState $ LaserOEMState ep d l a
+
+
+data LaserOEMState = LaserOEMState {
+    oemPosition :: EditorPosition,
+    oemDirection :: Direction,
+    oemLength :: Int, -- length in 32 ÜP
+    oemActive :: Bool
+  }
+    deriving (Show, Typeable, Data)
+
+instance IsOEMState LaserOEMState where
+    oemEnterMode _ = id
+    oemUpdate _ = laserOEMUpdate
+    oemNormalize _ = id
+    oemRender = laserOEMRender
+    oemPickle (LaserOEMState ep d l a) = show (x :: PickleType)
+        where
+            x = (ep, d, l, a)
+    oemHelp = const oemHelpText
+
+laserOEMUpdate (KeyboardButton key _ _) (LaserOEMState ep dir len active) =
+    case (dir, len, key) of
+        -- switch on and of
+        (_, _, Space)           -> return $ LaserOEMState ep dir len (not active)
+        -- switch 180 degrees
+        (DUp, 1, DownArrow)     -> return $ LaserOEMState ep DDown 1 active
+        (DDown, 1, UpArrow)     -> return $ LaserOEMState ep DUp 1 active
+        (DLeft, 1, RightArrow)  -> return $ LaserOEMState ep DRight 1 active
+        (DRight, 1, LeftArrow)  -> return $ LaserOEMState ep DLeft 1 active
+        -- switch 90 degrees
+        (DUp, l, LeftArrow)     -> return $ LaserOEMState ep DLeft l active
+        (DUp, l, RightArrow)    -> return $ LaserOEMState ep DRight l active
+        (DDown, l, LeftArrow)   -> return $ LaserOEMState ep DLeft l active
+        (DDown, l, RightArrow)  -> return $ LaserOEMState ep DRight l active
+        (DLeft, l, UpArrow)     -> return $ LaserOEMState ep DUp l active
+        (DLeft, l, DownArrow)   -> return $ LaserOEMState ep DDown l active
+        (DRight, l, UpArrow)    -> return $ LaserOEMState ep DUp l active
+        (DRight, l, DownArrow)  -> return $ LaserOEMState ep DDown l active
+        -- length change
+        (DUp, l, UpArrow)       -> return $ LaserOEMState ep DUp (succ l) active
+        (DUp, l, DownArrow)     -> return $ LaserOEMState ep DUp (pred l) active
+        (DDown, l, UpArrow)     -> return $ LaserOEMState ep DDown (pred l) active
+        (DDown, l, DownArrow)   -> return $ LaserOEMState ep DDown (succ l) active
+        (DLeft, l, LeftArrow)   -> return $ LaserOEMState ep DLeft (succ l) active
+        (DLeft, l, RightArrow)  -> return $ LaserOEMState ep DLeft (pred l) active
+        (DRight, l, LeftArrow)  -> return $ LaserOEMState ep DRight (pred l) active
+        (DRight, l, RightArrow) -> return $ LaserOEMState ep DRight (succ l) active
+
+        _ -> oemNothing
+
+laserOEMRender ptr app config scene oemState = do
+    windowSize <- sizeQPainter ptr
+    let ep = oemPosition oemState
+        pos = epToPosition baseSize ep
+        offset = negateAbelian (pos +~ size2position (fmap (/ 2) baseSize)) +~
+                 size2position (fmap (/ 2) windowSize)
+    renderObjectScene ptr offset scene
+    resetMatrix ptr
+    fillRect ptr pos baseSize (alpha ^= 0.5 $ yellow)
+
+
+-- * help text
+
+oemHelpText :: String
+oemHelpText =
+    "Right, Left, Up, Down: Change laser length and direction\n" ++
+    "Space: change initial state of laser (on / off)"
+
