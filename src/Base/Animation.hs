@@ -43,7 +43,7 @@ pickAnimationFrameNaive list frameTimes now =
 data Animation a
     = Animation [a] Int [Seconds] Seconds Int
     | Static a
-  deriving (Show, Typeable, Data, Foldable)
+  deriving (Show, Typeable, Data, Functor, Foldable)
 
 mkAnimation :: [a] -> [Seconds] -> Animation a
 mkAnimation l fs | null l || null fs =
