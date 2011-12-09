@@ -259,12 +259,13 @@ data MyCollisionType
     | TerminalCT
     | DeadlySolidCT
     | DeadlyPermeableCT
+    | PermeableCT
     | RobotCT
     | TriggerCT
     | BatteryCT
     | SignCT
     | FallingTileCT
-  deriving (Eq, Ord, Enum, Show)
+  deriving (Eq, Ord, Enum, Bounded, Show)
 
 instance PP MyCollisionType where
     pp = show

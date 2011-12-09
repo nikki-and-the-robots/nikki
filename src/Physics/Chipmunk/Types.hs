@@ -8,6 +8,8 @@ import Data.Typeable
 import Data.Maybe
 import Data.Accessor
 
+import Control.Exception (assert)
+
 import Graphics.Qt (Ptr, QPainter, translate)
 import qualified Graphics.Qt as Qt
 
@@ -342,17 +344,21 @@ vmap f (Vector a b) = Vector (f a) (f b)
 -- with @p@ as upper left corner and @s@ as size.
 mkRect :: Qt.Position CpFloat -> Qt.Size CpFloat  -> ShapeType
 mkRect (fmap realToFrac -> Qt.Position x y) (fmap realToFrac -> Qt.Size width height) =
-    Polygon [
-        Vector left top,
-        Vector left bottom,
-        Vector right bottom,
-        Vector right top
-      ]
+    assert (isClockwise points && isConvex points) $
+    Polygon points
   where
+    points =
+        mkClockWise
+        (Vector left top :
+        Vector left bottom :
+        Vector right bottom :
+        Vector right top :
+        [])
     left = x
     right = x + width
     top = y
     bottom = y + height
+    mkClockWise ps = if isClockwise ps then ps else reverse ps
 
 mkRectFromPositions :: Vector -> Vector -> ShapeType
 mkRectFromPositions (Vector x1 y1) (Vector x2 y2) =

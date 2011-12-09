@@ -72,6 +72,8 @@ module Physics.Chipmunk (
     toAngle,
     fromAngle,
     rotate,
+    isClockwise,
+    isConvex,
 
     Body,
     Shape,

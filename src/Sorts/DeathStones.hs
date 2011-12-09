@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables, MultiParamTypeClasses, DeriveDataTypeable #-}
 
-module Sorts.DeathStones (sorts) where
+module Sorts.DeathStones (sorts, animationFrameTimes) where
 
 
 import Data.Abelian

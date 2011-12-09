@@ -44,10 +44,10 @@ data Animation a
     | Static a
   deriving (Show, Typeable, Data, Foldable)
 
-mkAnimation :: Eq a => [a] -> [Seconds] -> Animation a
+mkAnimation :: [a] -> [Seconds] -> Animation a
 mkAnimation l fs | null l || null fs =
     error "mkAnimation: given frames and frameTimes have to be non-empty."
-mkAnimation l _ | length (nub l) == 1 =
+mkAnimation l _ | length l == 1 =
     let (Just x) = headMay l
     in Static x
 mkAnimation l frameTimes =

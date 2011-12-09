@@ -1,6 +1,9 @@
+{-# language DeriveDataTypeable #-}
 
 module Data.Directions where
 
+
+import Data.Data
 
 import Utils
 
@@ -20,4 +23,4 @@ data VerticalDirection = VUp | VDown
   deriving (Show, Eq, Ord)
 
 data Direction = DLeft | DRight | DUp | DDown
-  deriving (Eq, Show, Ord, Enum)
+  deriving (Eq, Ord, Enum, Bounded, Show, Read, Typeable, Data)

@@ -115,6 +115,7 @@ watchedContacts =
     map deadlyPermeableSolid (
         filter (not . isSolidNikkiCollisionType) nikkiCollisionTypes ++
         solidCollisionTypes) ++
+    map permeableAll allValues ++
 
     switchCallback :
     []
@@ -184,3 +185,7 @@ deadlyPermeableNikki nct =
 deadlyPermeableSolid solidCT =
     Callback (DontWatch DeadlyPermeableCT solidCT) Permeable
 
+
+-- * things permeable by everything
+permeableAll ct =
+    Callback (DontWatch PermeableCT ct) Permeable
