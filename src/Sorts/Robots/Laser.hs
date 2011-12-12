@@ -355,32 +355,32 @@ instance IsOEMState LaserOEMState where
             x = (ep, d, l, a, ss)
     oemHelp = const oemHelpText
 
-laserOEMUpdate (KeyboardButton key _ _) (LaserOEMState ep dir len active stepSize) =
-    normalizeLength <$> case (dir, len, key) of
+laserOEMUpdate (KeyboardButton key _ _) (LaserOEMState ep dir l active stepSize) =
+    normalizeLength <$> case (dir, key) of
         -- switch on and of
-        (_, _, Space)           -> return $ LaserOEMState ep dir len (not active) stepSize
+        (_, Space)           -> return $ LaserOEMState ep dir l (not active) stepSize
         -- switch 90 degrees
-        (DUp, l, LeftArrow)     -> return $ LaserOEMState ep DLeft l active stepSize
-        (DUp, l, RightArrow)    -> return $ LaserOEMState ep DRight l active stepSize
-        (DDown, l, LeftArrow)   -> return $ LaserOEMState ep DLeft l active stepSize
-        (DDown, l, RightArrow)  -> return $ LaserOEMState ep DRight l active stepSize
-        (DLeft, l, UpArrow)     -> return $ LaserOEMState ep DUp l active stepSize
-        (DLeft, l, DownArrow)   -> return $ LaserOEMState ep DDown l active stepSize
-        (DRight, l, UpArrow)    -> return $ LaserOEMState ep DUp l active stepSize
-        (DRight, l, DownArrow)  -> return $ LaserOEMState ep DDown l active stepSize
+        (DUp, LeftArrow)     -> return $ LaserOEMState ep DLeft l active stepSize
+        (DUp, RightArrow)    -> return $ LaserOEMState ep DRight l active stepSize
+        (DDown, LeftArrow)   -> return $ LaserOEMState ep DLeft l active stepSize
+        (DDown, RightArrow)  -> return $ LaserOEMState ep DRight l active stepSize
+        (DLeft, UpArrow)     -> return $ LaserOEMState ep DUp l active stepSize
+        (DLeft, DownArrow)   -> return $ LaserOEMState ep DDown l active stepSize
+        (DRight, UpArrow)    -> return $ LaserOEMState ep DUp l active stepSize
+        (DRight, DownArrow)  -> return $ LaserOEMState ep DDown l active stepSize
         -- length change
-        (DUp, l, UpArrow)       -> return $ LaserOEMState ep DUp (succ l) active stepSize
-        (DUp, l, DownArrow)     -> return $ LaserOEMState ep DUp (pred l) active stepSize
-        (DDown, l, UpArrow)     -> return $ LaserOEMState ep DDown (pred l) active stepSize
-        (DDown, l, DownArrow)   -> return $ LaserOEMState ep DDown (succ l) active stepSize
-        (DLeft, l, LeftArrow)   -> return $ LaserOEMState ep DLeft (succ l) active stepSize
-        (DLeft, l, RightArrow)  -> return $ LaserOEMState ep DLeft (pred l) active stepSize
-        (DRight, l, LeftArrow)  -> return $ LaserOEMState ep DRight (pred l) active stepSize
-        (DRight, l, RightArrow) -> return $ LaserOEMState ep DRight (succ l) active stepSize
+        (DUp, UpArrow)       -> return $ LaserOEMState ep DUp (succ l) active stepSize
+        (DUp, DownArrow)     -> return $ LaserOEMState ep DUp (pred l) active stepSize
+        (DDown, UpArrow)     -> return $ LaserOEMState ep DDown (pred l) active stepSize
+        (DDown, DownArrow)   -> return $ LaserOEMState ep DDown (succ l) active stepSize
+        (DLeft, LeftArrow)   -> return $ LaserOEMState ep DLeft (succ l) active stepSize
+        (DLeft, RightArrow)  -> return $ LaserOEMState ep DLeft (pred l) active stepSize
+        (DRight, LeftArrow)  -> return $ LaserOEMState ep DRight (pred l) active stepSize
+        (DRight, RightArrow) -> return $ LaserOEMState ep DRight (succ l) active stepSize
 
         -- change stepSize
-        (_, _, W) -> return $ LaserOEMState ep dir len active (stepSize * 2)
-        (_, _, S) -> return $ LaserOEMState ep dir len active (max 1 (stepSize `div` 2))
+        (_, W) -> return $ LaserOEMState ep dir l active (stepSize * 2)
+        (_, S) -> return $ LaserOEMState ep dir l active (max 1 (stepSize `div` 2))
 
         _ -> oemNothing
   where
