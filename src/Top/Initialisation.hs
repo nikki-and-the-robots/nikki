@@ -115,12 +115,10 @@ freeAllSorts sorts = do
 initScene :: Application -> LevelFile -> Space -> CachedTiles
     -> Grounds (EditorObject Sort_) -> RM (Scene Object_)
 initScene app file space cachedTiles =
-    return . Sorts.Nikki.uniqueNikki app >=>
-    secondKleisli (
-        return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
-        return . groundsMergeLayers >=>
-        return . groundsMergeTiles >=>
-        initializeObjects app file space cachedTiles) >=>
+    return . (mainLayer .> content ^: RenderOrdering.sortMainLayer) >=>
+    return . groundsMergeLayers >=>
+    return . groundsMergeTiles >=>
+    initializeObjects app file space cachedTiles >=>
     io . mkScene file space >=>
     return . Sorts.LowerLimit.promoteLowerLimit
 
@@ -137,10 +135,11 @@ editorObject2Object :: Application -> LevelFile -> Maybe Space -> CachedTiles
 editorObject2Object app file mspace cachedTiles (EditorObject sort pos state) =
     initialize app file mspace sort pos state cachedTiles
 
-mkScene :: LevelFile -> Space -> (Index, Grounds Object_) -> IO (Scene Object_)
-mkScene levelFile space (nikki, objects) = do
+mkScene :: LevelFile -> Space -> Grounds Object_ -> IO (Scene Object_)
+mkScene levelFile space objects = do
     contactRef <- initContactRef space initial watchedContacts
-    let optObjects = mkGameGrounds objects
+    let nikki = Sorts.Nikki.searchNikki objects
+        optObjects = mkGameGrounds objects
         totalSwitches = Sorts.Switch.countSwitches (objects ^. mainLayer ^. content)
         totalBatteries =
             fromIntegral $

@@ -5,6 +5,7 @@ module Sorts.Nikki.Initialisation (
     bodyAttributes,
     footToHeadAngle,
     uniqueNikki,
+    searchNikki,
   ) where
 
 
@@ -128,19 +129,19 @@ footToHeadAngle = abs $ foldAngle $ toUpAngle $
 
 -- | Makes sure there is exactly one Nikki in a scene.
 -- Returns the new scene and Nikki's index.
-uniqueNikki :: Application -> Grounds (EditorObject Sort_) -> (I.Index, Grounds (EditorObject Sort_))
+uniqueNikki :: Application -> Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 uniqueNikki app objects =
     let nikkiIndices = I.findIndices (isNikki . editorSort) $ mainLayerIndexable objects
     in case nikkiIndices of
-        [a] -> (a, objects)
+        [a] -> objects
         [] -> addNikki objects
-        (a : r) -> (a, ((mainLayer .> content) ^: deleteDuplicateNikkis r) objects)
+        (a : r) -> ((mainLayer .> content) ^: deleteDuplicateNikkis r) objects
   where
 
     -- adds Nikki at (0, 0)
-    addNikki :: Grounds (EditorObject Sort_) -> (I.Index, Grounds (EditorObject Sort_))
+    addNikki :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
     addNikki objects =
-        (newIndex, newObjects)
+        newObjects
       where
         (newIndex, newScene) = I.insert nikki (objects ^. mainLayer .> content)
         newObjects = mainLayer .> content ^= newScene $ objects
@@ -154,6 +155,15 @@ uniqueNikki app objects =
         -> I.Indexable (EditorObject Sort_) -> I.Indexable (EditorObject Sort_)
     deleteDuplicateNikkis indices layer =
         foldr I.deleteByIndex layer indices
+
+-- | PRE: exactly one nikki is in the scene.
+-- Use uniqueNikki previously, please.
+searchNikki :: Grounds Object_ -> I.Index
+searchNikki objects =
+    let nikkiIndices = I.findIndices (isNikki . sort_) $ mainLayerIndexable objects
+    in case nikkiIndices of
+        [a] -> a
+        _ -> error "not exactly one Nikki is in this scene. Please, use uniqueNikki!"
 
 getNikkiSort :: Application -> Sort_
 getNikkiSort app = case filter isNikki $ leafs $ allSorts app of

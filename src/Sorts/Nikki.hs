@@ -4,6 +4,7 @@ module Sorts.Nikki (
     sorts,
     isNikki,
     uniqueNikki,
+    searchNikki,
     modifyNikki,
     nikkiMass,
     maximumWalkingVelocity,

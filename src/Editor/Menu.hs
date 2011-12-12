@@ -19,6 +19,8 @@ import Utils
 
 import Base
 
+import Sorts.Nikki (uniqueNikki)
+
 import Editor.Scene
 import Editor.Scene.Types
 import Editor.Pickle
@@ -64,13 +66,17 @@ editorLoop app mvar scene = UnManagedAppState $ do
             (_, Press (KeyboardButton Escape _ _)) -> return $ editorMenu app mvar s 0
             (NormalMode, Press (KeyboardButton T _ _)) ->
                 -- test the level
-                return $ playLevel app (editorLoop app mvar s) True
-                    (cachedTiles ^= Nothing $ s)
+                return $ playLevel app (editorLoop app mvar s) True $
+                    cachedTiles ^= Nothing $
+                    editorObjects ^: uniqueNikki app $
+                    s
             (NormalMode, Press (KeyboardButton H _ _)) ->
                 -- test the level with Nikki at cursor position
                 return $ playLevel app (editorLoop app mvar s) True $
                     cachedTiles ^= Nothing $
-                    (setNikkiPosition (cursor s) s)
+                    setNikkiPosition (cursor s) $
+                    editorObjects ^: uniqueNikki app $
+                    s
             _ -> do
                 -- other events are handled below (in Editor.Scene)
                 eventHandled <- updateEditorScene app event
