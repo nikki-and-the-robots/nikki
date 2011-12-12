@@ -826,7 +826,7 @@ renderOsdExit ptr offset now pixmaps state exitState = do
 oemMethods :: OEMMethods
 oemMethods = OEMMethods
     (const $ OEMState NoRobots)
-    (\ s -> OEMState (readNote "terminal OEM" s :: TerminalOEMState))
+    (\ s -> fmap OEMState (readMay s :: Maybe TerminalOEMState))
 
 
 data TerminalOEMState

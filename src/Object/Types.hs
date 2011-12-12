@@ -71,5 +71,5 @@ renderChipmunk painter worldOffset p chipmunk = do
 
 -- * Object edit mode
 
-unpickleOEM :: Sort_ -> String -> OEMState
+unpickleOEM :: Sort_ -> String -> Maybe OEMState
 unpickleOEM (objectEditMode -> Just methods) = oemUnpickle methods

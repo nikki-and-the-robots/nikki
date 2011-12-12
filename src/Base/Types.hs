@@ -517,7 +517,7 @@ instance IsOEMState OEMState where
 
 data OEMMethods = OEMMethods {
     oemInitialize :: EditorPosition -> OEMState,
-    oemUnpickle :: String -> OEMState
+    oemUnpickle :: String -> Maybe OEMState
   }
 
 

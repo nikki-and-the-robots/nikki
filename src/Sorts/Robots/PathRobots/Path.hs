@@ -206,7 +206,7 @@ springForce conf mass position velocity aim =
 oemMethods :: Size Double -> OEMMethods
 oemMethods size = OEMMethods
     (OEMState . initialState size)
-    (OEMState . unpickle size)
+    (fmap OEMState . unpickle size)
 
 data OEMPath = OEMPath {
     oemRobotSize :: Size Double,
@@ -233,9 +233,10 @@ type PickleType = (EditorPosition, [EditorPosition], Bool)
     -- last component saves, if the path robot is activated or not.
     -- This means different things in different robots, though.
 
-unpickle :: Size Double -> String -> OEMPath
+unpickle :: Size Double -> String -> Maybe OEMPath
 unpickle size (readMay -> Just ((cursor, (start : path), active) :: PickleType)) =
-    OEMPath size (fromKachel 1) cursor (OEMPathPositions start path) active
+    Just $ OEMPath size (fromKachel 1) cursor (OEMPathPositions start path) active
+unpickle _ _ = Nothing
 
 -- | use the position of the object as first node in Path
 initialState :: Size Double -> EditorPosition -> OEMPath

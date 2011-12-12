@@ -331,8 +331,9 @@ oemMethods = OEMMethods {
 
 type PickleType = (EditorPosition, Direction, Int, Bool)
 
-unpickle s = case readMay s of
-    Just ((ep, d, l, a) :: PickleType) -> OEMState $ LaserOEMState ep d l a
+unpickle s = do
+    (ep, d, l, a) :: PickleType <- readMay s
+    return $ OEMState $ LaserOEMState ep d l a
 
 
 data LaserOEMState = LaserOEMState {

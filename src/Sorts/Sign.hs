@@ -295,7 +295,7 @@ renderContinueButton app config ptr position = do
 oemMethods :: OEMMethods
 oemMethods = OEMMethods
     (const $ OEMState $ SignOEMState "specify a monologue")
-    (OEMState . (readNote "oem unpickle in Sorts.Sign" :: (String -> SignOEMState)))
+    (fmap OEMState . (readMay :: (String -> Maybe SignOEMState)))
 
 newtype SignOEMState = SignOEMState {oemFile :: String}
   deriving (Show, Read, Typeable, Data)

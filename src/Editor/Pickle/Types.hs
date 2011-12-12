@@ -15,6 +15,8 @@ import Data.Indexable
 import qualified Data.Vector
 import Data.ByteString.Lazy (ByteString)
 
+import Text.Logging
+
 import Control.Arrow
 
 import Physics.Chipmunk
@@ -137,6 +139,19 @@ unpicklePhysicsLayer allSorts list = do
 unpickleObject :: [Sort_] -> PObject -> Either [Prose] (EditorObject Sort_)
 unpickleObject allSorts (PObject_1 id position oemState) =
     case Prelude.filter ((== id) . sortId) allSorts of
-        [sort] -> return $ EditorObject sort position (fmap (unpickleOEM sort) oemState)
+        [sort] -> case oemState of
+            Nothing ->
+                -- no oem state
+                return $ EditorObject sort position Nothing
+            Just pickledOEM -> case unpickleOEM sort pickledOEM of
+                Just oemState ->
+                    -- successfully unpickled oem state
+                    return $ EditorObject sort position (Just oemState)
+                Nothing -> do
+                    -- error while unpickling oem state
+                    let log = loggUnsafe Error ("error while unpickling oem state, creating new default oem state.")
+                        Just oemMethods = objectEditMode sort
+                        newOEMState = (oemInitialize oemMethods) position
+                    log $ return $ EditorObject sort position $ Just $ newOEMState
         [] -> Left (p "sort not found: " : pv (getSortId id) : [])
         _ -> Left (p "multiple sorts with the same id found: " : pv (getSortId id) : [])
