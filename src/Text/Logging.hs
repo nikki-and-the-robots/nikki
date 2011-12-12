@@ -1,7 +1,7 @@
 
 -- | Module for logging.
 
-module Text.Logging (LogLevel(..), logg) where
+module Text.Logging (LogLevel(..), logg, loggUnsafe) where
 
 
 import Control.Monad
@@ -11,6 +11,7 @@ import System.Info
 import System.FilePath
 import System.Environment
 import System.Environment.FindBin
+import System.IO.Unsafe
 
 
 data LogLevel
@@ -39,3 +40,9 @@ windowsLogging msg = do
     progPath <- getProgPath
     progName <- getProgName
     appendFile (progPath </> progName <.> "log") (msg ++ "\n")
+
+
+loggUnsafe :: LogLevel -> String -> a -> a
+loggUnsafe ll msg a = unsafePerformIO $ do
+    logg ll msg
+    return a
