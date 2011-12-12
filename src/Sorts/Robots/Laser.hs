@@ -416,5 +416,5 @@ laserOEMRender ptr app config scene oemState = do
 oemHelpText :: String
 oemHelpText =
     "Right, Left, Up, Down: Change laser length and direction\n" ++
-    "Space: change initial state of laser (on / off)"
-
+    "Space: change initial state of laser (on / off)\n" ++
+    "W, S: change cursor step size"
