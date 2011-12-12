@@ -325,22 +325,23 @@ laserOffsets = fromList (
 -- * oem
 
 oemMethods = OEMMethods {
-    oemInitialize = \ ep -> OEMState $ LaserOEMState ep DUp 6 True,
+    oemInitialize = \ ep -> OEMState $ LaserOEMState ep DUp (8 * 3) True 8,
     oemUnpickle = unpickle
   }
 
-type PickleType = (EditorPosition, Direction, Int, Bool)
+type PickleType = (EditorPosition, Direction, Int, Bool, Int)
 
 unpickle s = do
-    (ep, d, l, a) :: PickleType <- readMay s
-    return $ OEMState $ LaserOEMState ep d l a
+    (ep, d, l, a, ss) :: PickleType <- readMay s
+    return $ OEMState $ LaserOEMState ep d l a ss
 
 
 data LaserOEMState = LaserOEMState {
     oemPosition :: EditorPosition,
     oemDirection :: Direction,
     oemLength :: Int, -- length in ÜPs
-    oemActive :: Bool
+    oemActive :: Bool,
+    oemStepSize :: Int
   }
     deriving (Show, Typeable, Data)
 
@@ -349,40 +350,52 @@ instance IsOEMState LaserOEMState where
     oemUpdate _ = laserOEMUpdate
     oemNormalize _ = id
     oemRender = laserOEMRender
-    oemPickle (LaserOEMState ep d l a) = show (x :: PickleType)
+    oemPickle (LaserOEMState ep d l a ss) = show (x :: PickleType)
         where
-            x = (ep, d, l, a)
+            x = (ep, d, l, a, ss)
     oemHelp = const oemHelpText
 
-laserOEMUpdate (KeyboardButton key _ _) (LaserOEMState ep dir len active) =
-    case (dir, len, key) of
+laserOEMUpdate (KeyboardButton key _ _) (LaserOEMState ep dir len active stepSize) =
+    normalizeLength <$> case (dir, len, key) of
         -- switch on and of
-        (_, _, Space)           -> return $ LaserOEMState ep dir len (not active)
-        -- switch 180 degrees
-        (DUp, 1, DownArrow)     -> return $ LaserOEMState ep DDown 1 active
-        (DDown, 1, UpArrow)     -> return $ LaserOEMState ep DUp 1 active
-        (DLeft, 1, RightArrow)  -> return $ LaserOEMState ep DRight 1 active
-        (DRight, 1, LeftArrow)  -> return $ LaserOEMState ep DLeft 1 active
+        (_, _, Space)           -> return $ LaserOEMState ep dir len (not active) stepSize
         -- switch 90 degrees
-        (DUp, l, LeftArrow)     -> return $ LaserOEMState ep DLeft l active
-        (DUp, l, RightArrow)    -> return $ LaserOEMState ep DRight l active
-        (DDown, l, LeftArrow)   -> return $ LaserOEMState ep DLeft l active
-        (DDown, l, RightArrow)  -> return $ LaserOEMState ep DRight l active
-        (DLeft, l, UpArrow)     -> return $ LaserOEMState ep DUp l active
-        (DLeft, l, DownArrow)   -> return $ LaserOEMState ep DDown l active
-        (DRight, l, UpArrow)    -> return $ LaserOEMState ep DUp l active
-        (DRight, l, DownArrow)  -> return $ LaserOEMState ep DDown l active
+        (DUp, l, LeftArrow)     -> return $ LaserOEMState ep DLeft l active stepSize
+        (DUp, l, RightArrow)    -> return $ LaserOEMState ep DRight l active stepSize
+        (DDown, l, LeftArrow)   -> return $ LaserOEMState ep DLeft l active stepSize
+        (DDown, l, RightArrow)  -> return $ LaserOEMState ep DRight l active stepSize
+        (DLeft, l, UpArrow)     -> return $ LaserOEMState ep DUp l active stepSize
+        (DLeft, l, DownArrow)   -> return $ LaserOEMState ep DDown l active stepSize
+        (DRight, l, UpArrow)    -> return $ LaserOEMState ep DUp l active stepSize
+        (DRight, l, DownArrow)  -> return $ LaserOEMState ep DDown l active stepSize
         -- length change
-        (DUp, l, UpArrow)       -> return $ LaserOEMState ep DUp (succ l) active
-        (DUp, l, DownArrow)     -> return $ LaserOEMState ep DUp (pred l) active
-        (DDown, l, UpArrow)     -> return $ LaserOEMState ep DDown (pred l) active
-        (DDown, l, DownArrow)   -> return $ LaserOEMState ep DDown (succ l) active
-        (DLeft, l, LeftArrow)   -> return $ LaserOEMState ep DLeft (succ l) active
-        (DLeft, l, RightArrow)  -> return $ LaserOEMState ep DLeft (pred l) active
-        (DRight, l, LeftArrow)  -> return $ LaserOEMState ep DRight (pred l) active
-        (DRight, l, RightArrow) -> return $ LaserOEMState ep DRight (succ l) active
+        (DUp, l, UpArrow)       -> return $ LaserOEMState ep DUp (succ l) active stepSize
+        (DUp, l, DownArrow)     -> return $ LaserOEMState ep DUp (pred l) active stepSize
+        (DDown, l, UpArrow)     -> return $ LaserOEMState ep DDown (pred l) active stepSize
+        (DDown, l, DownArrow)   -> return $ LaserOEMState ep DDown (succ l) active stepSize
+        (DLeft, l, LeftArrow)   -> return $ LaserOEMState ep DLeft (succ l) active stepSize
+        (DLeft, l, RightArrow)  -> return $ LaserOEMState ep DLeft (pred l) active stepSize
+        (DRight, l, LeftArrow)  -> return $ LaserOEMState ep DRight (pred l) active stepSize
+        (DRight, l, RightArrow) -> return $ LaserOEMState ep DRight (succ l) active stepSize
+
+        -- change stepSize
+        (_, _, W) -> return $ LaserOEMState ep dir len active (stepSize * 2)
+        (_, _, S) -> return $ LaserOEMState ep dir len active (max 1 (stepSize `div` 2))
 
         _ -> oemNothing
+  where
+    -- | Make length positive. Switch directions by 180 degrees if negative.
+    normalizeLength x@(LaserOEMState ep dir len active stepSize) =
+        if len >= 0 then x else
+        LaserOEMState ep (swap dir) (negate len) active stepSize
+    swap d = case d of
+        DDown -> DUp
+        DUp -> DDown
+        DRight -> DLeft
+        DLeft -> DRight
+
+    succ = (+ stepSize)
+    pred = subtract stepSize
 
 laserOEMRender ptr app config scene oemState = do
     windowSize <- sizeQPainter ptr
