@@ -188,7 +188,8 @@ mkLaserShape arm =
   where
     offsets = laserOffsets ! oemDirection arm
     p = laserChipPosition offsets
-    s = position2size (fmap (fromIntegral (oemLength arm) *) (laserIncrement offsets)) +~
+    len = fromIntegral (oemLength arm)
+    s = position2size (fmap (len *) (laserIncrement offsets)) +~
         chipBand offsets
 
 laserShapeAttributes :: ShapeAttributes
@@ -237,7 +238,8 @@ mkLaserRenderPixmaps sort pos arm =
                             (pos +~ laserOffset offsets +~
                              fmap (* fromIntegral i) (laserIncrement offsets))
                             Nothing)
-                  [0 .. oemLength arm - 1]
+                  [0 .. oemLength arm - 1 + 2]
+                                            -- behind the start and end pieces
     endP = RenderPixmap (end armPixmaps)
                 (pos +~ fmap (* fromIntegral (oemLength arm)) (laserIncrement offsets) +~
                  nullLaserEndOffset offsets)
@@ -272,9 +274,9 @@ laserOffsets = fromList (
     -- up should be correct
     up = LaserOffsets {
         startOffset = Position 0 (- fromUber 6),
-        laserOffset = Position 4 (- fromUber 13),
-        laserIncrement = Position 0 (- fromUber 8),
-        nullLaserEndOffset = Position 0 (- fromUber 9),
+        laserOffset = Position 4 (- fromUber 6),
+        laserIncrement = Position 0 (- fromUber 1),
+        nullLaserEndOffset = Position 0 (- fromUber 11),
         laserChipPosition = Position 20 (- fromUber 6),
         chipBand = verticalLaserChipBand,
         baseStartOffset = zero, -- Position 0 (- fromUber 5),
@@ -285,8 +287,8 @@ laserOffsets = fromList (
     down = LaserOffsets {
         startOffset = Position 0 (height baseSize),
         laserOffset = Position 4 (height baseSize + fromUber 5),
-        laserIncrement = Position 0 (fromUber 8),
-        nullLaserEndOffset = Position 0 (height baseSize + fromUber 4),
+        laserIncrement = Position 0 (fromUber 1),
+        nullLaserEndOffset = Position 0 (height baseSize + fromUber 6),
         laserChipPosition = Position 20 (height baseSize + fromUber 6),
         chipBand = verticalLaserChipBand,
         baseStartOffset = zero,
@@ -296,9 +298,9 @@ laserOffsets = fromList (
       }
     left = LaserOffsets {
         startOffset = Position (- fromUber 6) 0,
-        laserOffset = Position (- fromUber 13) 4,
-        laserIncrement = Position (- fromUber 8) 0,
-        nullLaserEndOffset = Position (- fromUber 9) 0,
+        laserOffset = Position (- fromUber 6) 4,
+        laserIncrement = Position (- fromUber 1) 0,
+        nullLaserEndOffset = Position (- fromUber 11) 0,
         laserChipPosition = Position (- fromUber 6) 20,
         chipBand = horizontalLaserChipBand,
         baseStartOffset = zero, -- Position (- fromUber 5) 0,
@@ -309,8 +311,8 @@ laserOffsets = fromList (
     right = LaserOffsets {
         startOffset = Position (width baseSize) 0,
         laserOffset = Position (width baseSize + fromUber 5) 4,
-        laserIncrement = Position (fromUber 8) 0,
-        nullLaserEndOffset = Position (width baseSize + fromUber 4) 0,
+        laserIncrement = Position (fromUber 1) 0,
+        nullLaserEndOffset = Position (width baseSize + fromUber 6) 0,
         laserChipPosition = Position (width baseSize + fromUber 6) 20,
         chipBand = horizontalLaserChipBand,
         baseStartOffset = zero,
@@ -336,7 +338,7 @@ unpickle s = case readMay s of
 data LaserOEMState = LaserOEMState {
     oemPosition :: EditorPosition,
     oemDirection :: Direction,
-    oemLength :: Int, -- length in 32 ÜP
+    oemLength :: Int, -- length in ÜPs
     oemActive :: Bool
   }
     deriving (Show, Typeable, Data)
