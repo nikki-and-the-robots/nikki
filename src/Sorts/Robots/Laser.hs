@@ -406,6 +406,8 @@ laserOEMRender ptr app config scene oemState = do
     renderObjectScene ptr offset scene
     resetMatrix ptr
     fillRect ptr pos baseSize (alpha ^= 0.5 $ yellow)
+    let stepSizeF = fromUber $ fromIntegral $ oemStepSize oemState
+    renderCursorStepSize app config ptr $ EditorPosition stepSizeF stepSizeF
 
 
 -- * help text
