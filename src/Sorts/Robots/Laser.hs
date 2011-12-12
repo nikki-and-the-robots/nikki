@@ -157,8 +157,9 @@ instance Sort LSort Laser where
         else return laser
     updateNoSceneChange _ _ _ _ _ _ _ l = return l
 
-    renderObject app config object sort ptr offset now =
-        return $ renderLasers object now
+    renderObject app config object sort ptr offset now = do
+        renderPosition <- fst <$> getRenderPositionAndAngle (chipmunk object)
+        return $ renderLasers sort object renderPosition now
 
 
 -- * shapes
@@ -210,10 +211,18 @@ updateLaserActivation space laser = do
 
 -- * rendering
 
-renderLasers :: Laser -> Seconds -> [RenderPixmap]
-renderLasers laser now =
+renderLasers :: LSort -> Laser -> Position Double -> Seconds -> [RenderPixmap]
+renderLasers sort laser renderPosition now =
     staticRenderPixmaps laser ++
+    eyes_ :
     if laser ^. active then pickAnimationFrame (laserRenderPixmaps laser) now else []
+  where
+    eyes_ = renderRobotEyes (eyes sort) renderPosition 0 eyesOffset eyesState now
+    eyesState = case laser ^. active of
+        True -> Active
+        False -> Idle
+
+eyesOffset :: Position Double = fmap fromUber $ Position 2 3
 
 mkLaserRenderPixmaps :: LSort -> Position Double -> LaserOEMState
     -> ([RenderPixmap], Animation [RenderPixmap])
