@@ -7,7 +7,7 @@ import Prelude hiding (catch)
 import Safe
 
 import qualified Data.Indexable as I
-import Data.Indexable (Index, Indexable, (>:))
+import Data.Indexable (Indexable, (>:))
 import Data.Initial
 import Data.SelectTree
 import Data.Maybe
