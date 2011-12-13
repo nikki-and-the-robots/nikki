@@ -395,7 +395,6 @@ bakeH app pixmaps =
     forM_ pixmaps $ \ (StaticPixmap p s pix offset _) ->
         withClipRect painter p s $
             drawPixmap painter (p -~ split 1 +~ offset) pix
-    setPaddingPixelsTransparent painter size
     destroyQPainter painter
     let dsize = fmap fromIntegral size
         resultPixmap = Pixmap bakedPixmap zero dsize dsize
@@ -405,22 +404,6 @@ bakeH app pixmaps =
     extractRect (StaticPixmap pos size _ _ _) = (pos, size)
     addPadding (pos, size) =
         (pos -~ split 1, size +~ split 2)
-
-
-setPaddingPixelsTransparent :: Ptr QPainter -> Size Int -> IO ()
-setPaddingPixelsTransparent ptr size = do
-    resetMatrix ptr
-    withClearCompositionMode ptr $
-        forM_ paddingPixels $ \ pixel ->
-            drawPoint ptr pixel
-  where
-    xs = [0 .. pred (width size)]
-    ys = [0 .. pred (height size)]
-    top  = map (\ x -> Position x 0) xs
-    base = map (\ x -> Position x (pred (height size))) xs
-    left = map (Position 0) ys
-    right = map (Position (pred (width size))) ys
-    paddingPixels = top ++ base ++ left ++ right
 
 
 boundingBox :: [(Position Double, Size Double)]

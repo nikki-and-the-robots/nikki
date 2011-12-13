@@ -309,6 +309,7 @@ fillRect ptr (Position x y) (Size w h) (QtColor r g b a) =
 
 foreign import ccall resetMatrix :: Ptr QPainter -> IO ()
 
+-- | seems to be buggy on some systems...
 withClearCompositionMode :: Ptr QPainter -> IO a -> IO a
 withClearCompositionMode ptr cmd = do
     bracket start (const stop) (const $ cmd)
