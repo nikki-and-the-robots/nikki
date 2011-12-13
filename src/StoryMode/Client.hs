@@ -27,7 +27,7 @@ import Network.Client
 storyModeServerHost = "joyridelabs.de"
 
 storyModeServerPort :: Num n => n
-storyModeServerPort = 8144
+storyModeServerPort = 8243
 
 
 -- * protocol types
