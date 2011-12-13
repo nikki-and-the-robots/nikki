@@ -20,8 +20,10 @@ import System.Timeout
 import Network
 
 
-class (Show p, Binary p, NFData p) => Protocol p where
+class (Binary p, NFData p) => Protocol p where
     protocolVersion :: p -> Version -- phantom values
+    -- | useful for anonymized logging
+    showAnonymized :: p -> String
 
 instance Binary Version where
     put (Version a b) = putWord8 143 >> put a >> put b

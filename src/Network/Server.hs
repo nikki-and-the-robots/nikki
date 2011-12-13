@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables #-}
+{-# language ScopedTypeVariables, EmptyDataDecls #-}
 
 -- | Server side of network communication using the 'Protocol' type class.
 module Network.Server where
@@ -41,7 +41,7 @@ runServer spec serve = do
                 logAndSendError bc $ "Client version too old,\nplease update your game."
               else do
                 input :: clientToServer <- receiveTO bc
-                serverLog $ take maxLogLength $ show input
+                serverLog $ take maxLogLength $ showAnonymized input
                 logAndSendSuccess bc =<< serve input
 
 catchProtocolErrorsOnServer :: BinaryCom -> IO () -> IO ()
@@ -65,14 +65,24 @@ catchProtocolErrorsOnServer bc a =
 maxLogLength = 120
 
 logAndSendError :: BinaryCom -> String -> IO ()
-logAndSendError bc err = logAndSend bc (Left err :: Either String ())
+logAndSendError bc err = logAndSend bc (Left err :: Either String Dummy)
 
-logAndSendSuccess :: (Show a, Binary a) => BinaryCom -> a -> IO ()
+data Dummy
+instance NFData Dummy where
+    rnf = error "Dummy"
+instance Binary Dummy where
+    put = error "Dummy"
+    get = error "Dummy"
+instance Protocol Dummy where
+    protocolVersion = error "Dummy"
+    showAnonymized = error "Dummy"
+
+logAndSendSuccess :: (Protocol a) => BinaryCom -> a -> IO ()
 logAndSendSuccess bc a = logAndSend bc (Right a)
 
-logAndSend :: (Show a, Binary a) => BinaryCom -> Either String a -> IO ()
+logAndSend :: (Protocol a) => BinaryCom -> Either String a -> IO ()
 logAndSend bc x = do
-    serverLog $ take maxLogLength $ show x
+    serverLog $ take maxLogLength $ either id showAnonymized x
     send bc x
 
 serverLog :: String -> IO ()
