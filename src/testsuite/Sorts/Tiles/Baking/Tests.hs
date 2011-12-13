@@ -30,7 +30,7 @@ import Test.QuickCheck.Store
 tests =
     withQApplication $ \ qApp ->
     withMainWindow 1 500 500 $ \ window -> do
-    withSomePixmaps $ \ pixmaps -> do
+        pixmaps <- loadSomePixmaps
         let app = Application qApp window err err err err err err
             err = error "uninitialised field in Application: Sorts.Tiles.Baking.Tests"
 
@@ -51,39 +51,31 @@ bakingEquality app somePixmaps (positions, Positive now) =
             fmap (fmap (fmap unFixed)) $
             positions
     expected <- renderToPixmap False now paired
-    (baked_, toBeGCed) <- bakeTiles app paired
-    baked <- renderToPixmap False now baked_
+    baked <- renderToPixmap False now =<< bakeTiles app paired
     r <- pixelEquality expected baked
-    destroyQPixmap expected
-    destroyQPixmap baked
-    fmapM_ destroyQPixmap toBeGCed
     return $ whenFail (saveFailed app now paired) r
 
 saveFailed app now paired = do
     let save debugMode filename paired = do
             pix <- renderToPixmap debugMode now paired
             saveQPixmap pix filename 100
-            destroyQPixmap pix
         saveIter debugMode filenamePattern paired =
             forM_ (zip (tail $ inits paired) [1 :: Int ..]) $ \ (iterPaired, i) ->
                 save debugMode (printf filenamePattern i) iterPaired
     save False "A.png" paired
-    (baked, toBeGCed) <- bakeTiles app paired
-    save False "B.png" baked
-    fmapM_ destroyQPixmap toBeGCed
+    save False "B.png" =<< bakeTiles app paired
 --     save True "debugA.png" paired
 --     save True "debugB.png" =<< bakeTiles app paired
     saveIter True "debugA-%03i.png" paired
-    (baked, toBeGCed) <- bakeTiles app paired
+    baked <- bakeTiles app paired
     saveIter True "debugB-%03i.png" baked
-    fmapM_ destroyQPixmap toBeGCed
 
 
 -- | load some random animated pixmaps (with padding pixels)
-withSomePixmaps :: ([Animation Pixmap] -> IO a) -> IO a
-withSomePixmaps cmd = do
+loadSomePixmaps :: IO [Animation Pixmap]
+loadSomePixmaps = do
     pngs <- fmap (pngDir </>) <$> getFiles pngDir (Just ".png")
-    bracket (load pngs) free cmd
+    load pngs
   where
     pngDir = (".." </> ".." </> "data" </> "png" </> "objects")
 
@@ -95,13 +87,10 @@ withSomePixmaps cmd = do
     mkAnim :: Eq f => [f] -> Animation f
     mkAnim l = mkAnimation l [1]
 
-    free :: [Animation Pixmap] -> IO ()
-    free = fmapM_ (fmapM_ freePixmap)
-
 
 -- | renders the given pixmaps to a new QPixmap.
 renderToPixmap :: Bool -> Seconds -> [(Animation Pixmap, Position Double)]
-    -> IO (Ptr QPixmap)
+    -> IO (ForeignPtr QPixmap)
 renderToPixmap _ now [] =
     newQPixmapEmpty $ Size 0 0
 renderToPixmap debugMode now animations = do
@@ -125,7 +114,7 @@ renderToPixmap debugMode now animations = do
 
 
 -- | Returns if the given QPixmaps have the same content (pixel by pixel)
-pixelEquality :: Ptr QPixmap -> Ptr QPixmap -> IO Bool
+pixelEquality :: ForeignPtr QPixmap -> ForeignPtr QPixmap -> IO Bool
 pixelEquality a b = do
     bracket
         ((,) <$> toImageQPixmap a False <*> toImageQPixmap b False)
