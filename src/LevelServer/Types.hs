@@ -60,6 +60,8 @@ instance NFData ServerToClient where
 
 instance Protocol ClientToServer where
     protocolVersion _ = Version [0, 2] []
+    showAnonymized = show -- all transmitted data will be public
 
 instance Protocol ServerToClient where
     protocolVersion _ = Version [0, 2] []
+    showAnonymized = show
