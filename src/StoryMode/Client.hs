@@ -7,6 +7,7 @@ module StoryMode.Client (
     storyModeServerPort,
     ClientToServer(..),
     ServerToClient(..),
+    LoginData(..),
     askForStoryModeZip,
   ) where
 
@@ -92,8 +93,14 @@ instance Protocol ServerToClient where
 
 -- * client side
 
-askForStoryModeZip :: EmailAddress -> String -> IO (Either String ServerToClient)
-askForStoryModeZip email key =
+-- | type for login data
+data LoginData = LoginData {
+    emailAddress :: EmailAddress,
+    key :: String
+  }
+
+askForStoryModeZip :: LoginData -> IO (Either String ServerToClient)
+askForStoryModeZip (LoginData email key) =
     askStoryModeServer (StoryModeDownload email key)
 
 askStoryModeServer = askServer storyModeServerHost storyModeServerPort 

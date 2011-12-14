@@ -56,7 +56,7 @@ loginAsking :: Application -> AppState -> Parent -> AppState
 loginAsking app storyModeMenu parent =
     askStringParse app parent (p "email-address") parseEmail $ \ email ->
     askString app this (p "story-mode-key") $ \ key ->
-    loginAndInstall app storyModeMenu email key
+    loginAndInstall app storyModeMenu (LoginData email key)
   where
     this :: AppState
     this = loginAsking app storyModeMenu parent
@@ -64,12 +64,12 @@ loginAsking app storyModeMenu parent =
     parseEmail :: String -> Either [Prose] EmailAddress
     parseEmail s = first (const [p "invalid email-address"]) $ validate s
 
-loginAndInstall :: Application -> AppState -> EmailAddress -> String -> AppState
-loginAndInstall app storyModeMenu email key =
+loginAndInstall :: Application -> AppState -> LoginData -> AppState
+loginAndInstall app storyModeMenu loginData =
     guiLog app $ \ logCommand -> io $
     networkTry app storyModeMenu $ do
         logCommand (p "asking server for authorization")
-        answer <- Client.askForStoryModeZip email key
+        answer <- Client.askForStoryModeZip loginData
         case answer of
             Left err ->
                 return $ message app text storyModeMenu
