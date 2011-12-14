@@ -81,6 +81,7 @@ sortPreds = map isPrefixOf (
     "fallingTile/" :
     "tiles/" :
     "battery" :
+    "deathstones/lasers" :
     [])
 
 -- | turns a list of predicates into an ordering function.
