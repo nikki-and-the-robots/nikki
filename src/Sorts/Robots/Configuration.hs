@@ -21,7 +21,7 @@ robotMaterialMass :: CpFloat = 2 -- tweakValue "robotMaterialMass" -- 78
 -- (Obviously, don't change the collisionType.)
 robotShapeAttributes = ShapeAttributes{
     elasticity = 0.8,
-    friction = 0.4,
+    friction = 0.35,-- tweakValue "RobotFriction",-- 0.4,
     CM.collisionType = RobotCT
   }
 
