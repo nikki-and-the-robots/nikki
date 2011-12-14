@@ -49,10 +49,6 @@ import Data.Monoid
 import Data.Function
 import qualified Data.Strict as Strict
 import Data.Strict (Pair(..))
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.Aeson
-import qualified Data.Aeson.Types
-import qualified Data.Attoparsec.Lazy
 
 import Text.Printf
 import Text.Logging
@@ -422,15 +418,6 @@ path <..> ext =
     if dotExt `isSuffixOf` path then path else path <.> ext
   where
     dotExt = if Just '.' == headMay ext then ext else '.' : ext
-
-
--- * bytestring stuff
-
--- | decode Aeson JSON data
-decodeJSON :: forall a . Data.Aeson.FromJSON a => BSL.ByteString -> Either String a
-decodeJSON string =
-    Data.Attoparsec.Lazy.eitherResult (Data.Attoparsec.Lazy.parse Data.Aeson.json string) >>=
-    Data.Aeson.Types.parseEither (Data.Aeson.Types.parseJSON :: Data.Aeson.Types.Value -> Data.Aeson.Types.Parser a)
 
 
 -- * Map stuff

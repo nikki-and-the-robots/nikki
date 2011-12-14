@@ -7,6 +7,7 @@ module Editor.Pickle.MetaData (
 
 
 import Data.ByteString.Lazy as BSL
+import Data.Aeson
 
 import Text.Logging
 
@@ -25,11 +26,9 @@ loadMetaData levelFile = do
         return $ LevelMetaData (guessName levelFile) Nothing Nothing
       else do
         metaDataJSON :: BSL.ByteString <- io $ BSL.readFile (metaFile levelFile)
-        let result :: Either [Prose] LevelMetaData =
-                mapLeft (\ msg -> [p "error while parsing level meta data:", pv msg]) $
-                decodeJSON metaDataJSON
+        let result :: Maybe LevelMetaData = decode metaDataJSON
         case result of
-            Left msg -> do
+            Nothing -> do
                 logg Warning ("meta data not parseable: " ++ levelFile)
                 return $ LevelMetaData (guessName levelFile) Nothing Nothing
-            Right x -> return x
+            Just x -> return x
