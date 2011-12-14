@@ -23,13 +23,13 @@ MainWindow::MainWindow(int swapInterval, int width, int height) {
         fallbackContext = 0;
         generalContext = glContext;
 
-        glContext->setDrawingCallback(emptyDrawingCallback);
+        glContext->drawingCallback = emptyDrawingCallback;
     } else {
         glContext = 0;
         fallbackContext = new FallbackContext();
         generalContext = fallbackContext;
 
-        fallbackContext->setDrawingCallback(emptyDrawingCallback);
+        fallbackContext->drawingCallback = emptyDrawingCallback;
     };
 
     generalContext->setAutoFillBackground(false);
@@ -158,9 +158,9 @@ extern "C" int paintEngineTypeMainWindow(MainWindow* self) {
 
 extern "C" void setDrawingCallbackMainWindow(MainWindow* ptr, drawingCallbackFunction* cb) {
     if (ptr->glContext != 0)
-        ptr->glContext->setDrawingCallback(cb);
+        ptr->glContext->drawingCallback = cb;
     else
-        ptr->fallbackContext->setDrawingCallback(cb);
+        ptr->fallbackContext->drawingCallback = cb;
     // since we have a new drawing callback, we might want to use it ;)
     ptr->generalContext->update();
 };

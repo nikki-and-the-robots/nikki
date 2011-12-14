@@ -9,16 +9,11 @@ class FallbackContext : public QWidget {
 
 Q_OBJECT
 
-private:
-
-    drawingCallbackFunction* drawingCallback;
-    drawingCallbackFunction* oldDrawingCallback;
-
 public:
 
     FallbackContext();
 
-    void setDrawingCallback(drawingCallbackFunction* dcb);
+    drawingCallbackFunction* drawingCallback;
 
     void paintEvent(QPaintEvent* event);
 

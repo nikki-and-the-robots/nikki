@@ -10,6 +10,3 @@ bool isArrowKey(QKeyEvent* e);
 typedef void (drawingCallbackFunction) (QPainter*);
 
 void emptyDrawingCallback(QPainter* ptr);
-
-// From haskell. Has to be called to free the drawing callback.
-extern "C" void freeDrawingCallback(drawingCallbackFunction* action);

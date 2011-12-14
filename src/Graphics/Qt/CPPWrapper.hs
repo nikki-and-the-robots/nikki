@@ -115,6 +115,7 @@ import Foreign.ForeignPtr
 
 import System.Directory
 import System.Environment
+import System.IO.Unsafe
 
 import Graphics.Qt.Types
 import Graphics.Qt.Events
@@ -169,8 +170,11 @@ foreign import ccall "setApplicationName" cppSetApplicationName :: Ptr QApplicat
 data MainWindow
 
 newMainWindow :: Int -> Int -> Int -> IO (Ptr MainWindow)
-newMainWindow swapInterval width height =
-    cppNewMainWindow swapInterval width height
+newMainWindow swapInterval width height = do
+    r <- cppNewMainWindow swapInterval width height
+    cCallback <- wrapDrawingCallback _stdDrawingCallback
+    cppSetDrawingCallbackMainWindow r cCallback
+    return r
 foreign import ccall "newMainWindow" cppNewMainWindow ::
     Int -> Int -> Int -> IO (Ptr MainWindow)
 
@@ -240,18 +244,22 @@ foreign import ccall "wrapper" wrapDrawingCallback ::
     (Ptr QPainter -> IO ()) -> IO (FunPtr (Ptr QPainter -> IO ()))
 
 -- | Sets the drawing callback.
--- Has to be freed from cpp via freeDrawingCallback
 setDrawingCallbackMainWindow ::
     Ptr MainWindow -> Maybe (Ptr QPainter -> IO ()) -> IO ()
 setDrawingCallbackMainWindow ptr cb = do
-    funPtr <- wrapDrawingCallback $ toCB cb
-    cppSetDrawingCallbackMainWindow ptr funPtr
+    ignore $ swapMVar _drawingCallback $ toCB cb
+    updateMainWindow ptr
   where
     toCB :: Maybe (Ptr QPainter -> IO ()) -> (Ptr QPainter -> IO ())
     toCB = fromMaybe (const $ return ())
 
-foreign export ccall freeDrawingCallback :: FunPtr (Ptr QPainter -> IO ()) -> IO ()
-freeDrawingCallback = freeHaskellFunPtr
+_drawingCallback :: MVar (Ptr QPainter -> IO ())
+_drawingCallback = unsafePerformIO $ newMVar (const $ return ())
+
+_stdDrawingCallback :: Ptr QPainter -> IO ()
+_stdDrawingCallback ptr = do
+    callback <- readMVar _drawingCallback
+    callback ptr
 
 
 -- event callbacks
