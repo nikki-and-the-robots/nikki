@@ -6,6 +6,7 @@ module LevelServer.Client where
 import Prelude hiding (catch)
 
 import qualified Data.ByteString.Lazy as BSL
+import Data.Aeson
 
 import Text.Logging
 
@@ -103,7 +104,7 @@ openLicense app follower =
 -- | updaload the level without asking for licensing
 justUploadLevel app follower file =
     appState (busyMessage $ p "uploading...") $ io $ networkTry app follower $ do
-        let metadata = levelMetaData file
+        let metadata = encode $ levelMetaData file
         levelData <- readFile $ getAbsoluteFilePath file
         response <- askLevelServer $ UploadLevel metadata levelData
         let msgs = case response of

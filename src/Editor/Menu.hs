@@ -151,7 +151,7 @@ saveLevel app follower EditorScene{editorLevelFile, editorObjects_} parent
 saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
   | isTemplateLevel editorLevelFile =
     completeMetaData app parent Nothing $
-    \ metaData@(LevelMetaData name _) ->
+    \ metaData@(LevelMetaData name _ _) ->
       NoGUIAppState $ io $ do
         levelDirectory <- getSaveLevelDirectory
         let levelFile = UserLevel levelDirectory "" (name <..> "nl") metaData
@@ -170,11 +170,11 @@ completeMetaData :: Application -> Parent -> Maybe LevelMetaData
     -> (LevelMetaData -> AppState) -> AppState
 completeMetaData a pa Nothing f =
     askString a pa (p "level name") $ \ name ->
-    completeMetaData a pa (Just (LevelMetaData name Nothing)) f
-completeMetaData a pa (Just (LevelMetaData name Nothing)) f =
+    completeMetaData a pa (Just (LevelMetaData name Nothing Nothing)) f
+completeMetaData a pa (Just (LevelMetaData name Nothing basedOn)) f =
     askString a pa (p "author name") $ \ author ->
-    f (LevelMetaData name (Just author))
-completeMetaData a pa (Just m@(LevelMetaData _ (Just _))) f =
+    f (LevelMetaData name (Just author) basedOn)
+completeMetaData a pa (Just m@(LevelMetaData _ (Just _) _)) f =
     f m
 
 

@@ -22,7 +22,7 @@ loadMetaData levelFile = do
     exists <- doesFileExist (metaFile levelFile)
     if not exists then do
         logg Warning ("level meta data file does not exist: " ++ metaFile levelFile)
-        return $ LevelMetaData (guessName levelFile) Nothing
+        return $ LevelMetaData (guessName levelFile) Nothing Nothing
       else do
         metaDataJSON :: BSL.ByteString <- io $ BSL.readFile (metaFile levelFile)
         let result :: Either [Prose] LevelMetaData =
@@ -31,5 +31,5 @@ loadMetaData levelFile = do
         case result of
             Left msg -> do
                 logg Warning ("meta data not parseable: " ++ levelFile)
-                return $ LevelMetaData (guessName levelFile) Nothing
+                return $ LevelMetaData (guessName levelFile) Nothing Nothing
             Right x -> return x

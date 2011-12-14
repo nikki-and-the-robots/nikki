@@ -87,7 +87,7 @@ levelMetaData :: LevelFile -> LevelMetaData
 levelMetaData StandardLevel{..} = levelMetaData_
 levelMetaData UserLevel{..} = levelMetaData_
 levelMetaData EpisodeLevel{..} = levelMetaData_
-levelMetaData file = LevelMetaData (guessName $ getAbsoluteFilePath file) Nothing
+levelMetaData file = LevelMetaData (guessName $ getAbsoluteFilePath file) Nothing Nothing
 
 showLevelTreeForMenu :: SelectTree LevelFile -> IO Prose
 showLevelTreeForMenu (Leaf label level) = showLevelForMenu level

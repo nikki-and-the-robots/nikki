@@ -5,19 +5,19 @@ module LevelServer.Types where
 
 import Data.Binary
 import Data.Version
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString as BSS
 
 import Control.Applicative
 import Control.DeepSeq
 
 import Network.Client
 
-import Base.Types.LevelMetaData
-
 
 data ClientToServer
     = GetLevelList
     | UploadLevel {
-        metaData :: LevelMetaData,
+        metaData :: BSL.ByteString,
         levelData :: String
       }
   deriving (Show)
@@ -35,6 +35,10 @@ instance NFData ClientToServer where
     rnf GetLevelList = ()
     rnf (UploadLevel a b) = rnf a `seq` rnf b
 
+instance NFData BSL.ByteString where
+    rnf = rnf . BSL.toChunks
+
+instance NFData BSS.ByteString
 
 data ServerToClient
     = LevelList [String]
@@ -59,9 +63,9 @@ instance NFData ServerToClient where
     rnf UploadNameClash = ()
 
 instance Protocol ClientToServer where
-    protocolVersion _ = Version [0, 2] []
+    protocolVersion _ = Version [0, 3] []
     showAnonymized = show -- all transmitted data will be public
 
 instance Protocol ServerToClient where
-    protocolVersion _ = Version [0, 2] []
+    protocolVersion _ = Version [0, 3] []
     showAnonymized = show

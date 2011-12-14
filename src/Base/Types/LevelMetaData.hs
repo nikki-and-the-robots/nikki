@@ -21,31 +21,28 @@ import System.FilePath
 data LevelMetaData
     = LevelMetaData {
         meta_levelName :: String,
-        meta_author :: Maybe String
+        meta_author :: Maybe String,
+        meta_basedOn :: Maybe String
       }
   deriving (Eq, Show)
 
-instance Binary LevelMetaData where
-    put (LevelMetaData a b) = putWord8 0 >> put a >> put b
-    get = do
-        0 <- getWord8
-        LevelMetaData <$> get <*> get
-
 instance NFData LevelMetaData where
-    rnf (LevelMetaData a b) = rnf a `seq` rnf b
+    rnf (LevelMetaData a b c) = rnf a `seq` rnf b `seq` rnf c
 
 instance ToJSON LevelMetaData where
-    toJSON (LevelMetaData meta_levelName meta_author) =
+    toJSON (LevelMetaData meta_levelName meta_author basedOn) =
       object (
         "levelName" .= meta_levelName :
         "author" .= meta_author :
+        "basedOn" .= basedOn :
         [])
 
 instance FromJSON LevelMetaData where
     parseJSON (Object meta) =
         LevelMetaData <$>
-        meta .: "levelName" <*>
-        meta .:? "author"
+            meta .: "levelName" <*>
+            meta .:? "author" <*>
+            meta .:? "basedOn"
     parseJSON _ = mzero
 
 saveMetaData :: FilePath -> LevelMetaData -> IO ()
