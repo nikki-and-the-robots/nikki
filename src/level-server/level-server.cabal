@@ -27,7 +27,7 @@ Executable level-server
         time,
         old-locale,
         deepseq,
-        aeson,
+        aeson == 0.4.*,
         attoparsec,
         bytestring,
         strict,

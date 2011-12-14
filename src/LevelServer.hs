@@ -1,5 +1,8 @@
-{-# language DeriveDataTypeable #-}
+{-# language DeriveDataTypeable, ScopedTypeVariables #-}
 
+
+import Data.Aeson
+import qualified Data.ByteString.Lazy.Char8 as BSL
 
 import Control.Applicative
 
@@ -41,16 +44,18 @@ serve options GetLevelList = do
     return $ LevelList $
         map (escapeURIString isUnescapedInURI) $
         map (baseURL options <//>) levelFiles
-serve options (UploadLevel meta level) = do
-    let path = levelDir options </> meta_levelName meta <..> ".nl"
-    exists <- doesFileExist path
-    if exists then
-        -- name clash
-        return UploadNameClash
-      else do
-        writeFile path level
-        saveMetaData path meta
-        return UploadSucceeded
+serve options (UploadLevel metaString level) = case decode metaString of
+    Nothing -> error "cannot decode JSON of levelmetadata"
+    Just (meta :: LevelMetaData) -> do
+        let path = levelDir options </> meta_levelName meta <..> ".nl"
+        exists <- doesFileExist path
+        if exists then
+            -- name clash
+            return UploadNameClash
+          else do
+            writeFile path level
+            saveMetaData path meta
+            return UploadSucceeded
 serve _ x = error ("NYI: " ++ show x)
 
 -- * email logging
@@ -59,10 +64,11 @@ emailLogging :: ServerOptions -> ClientToServer -> ServerToClient -> IO ()
 emailLogging options request@(UploadLevel meta _) response =
     sendMail (logEmailAddress options) subject (unlines body)
   where
-    subject = "[NEW LEVEL] " ++ meta_levelName meta
+    subject = "[NEW LEVEL] " ++ maybe ("JSON ERROR") meta_levelName (decode meta)
     body =
         ("REQUEST: " ++ show request) :
         ("RESPONSE: " ++ show response) :
+        ("METADATA: " ++ BSL.unpack meta) :
         []
 emailLogging _ _ _ = return ()
 
