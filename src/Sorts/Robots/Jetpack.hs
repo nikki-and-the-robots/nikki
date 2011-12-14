@@ -43,7 +43,7 @@ acceleration = 1.6 --1.6 -- tweakValue "jetpackHoverAcceleration"
     * jetpackGravity
 
 -- | Acceleration for the rotation from arrow keys
-controlTorqueAcceleration :: CpFloat = tau * 5 -- tweakValue "controlTorqueAcceleration" -- 3.5 -- 4
+controlTorqueAcceleration :: CpFloat = tau * 3.5 -- tweakValue "controlTorqueAcceleration" -- 3.5 -- 4
 
 -- | maximal degree of rotation when in boost mode
 maximalAngle = deg2rad $ 40 -- tweakValue "jetpackMaximalAngle"
