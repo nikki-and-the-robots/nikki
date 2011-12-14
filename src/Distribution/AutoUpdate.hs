@@ -14,6 +14,7 @@ import Prelude hiding (catch)
 import Data.List
 import Data.Monoid
 import Data.Version (Version, showVersion)
+import Data.Maybe
 
 import Control.Monad.Trans.Error
 import Control.Monad.CatchIO
@@ -42,6 +43,8 @@ import Distribution.AutoUpdate.Paths
 import Distribution.AutoUpdate.Download
 import Distribution.AutoUpdate.Zip
 import Distribution.AutoUpdate.VerifySignatures
+
+import qualified StoryMode.Client as StoryMode
 
 
 -- * introduced for more type safety
@@ -78,21 +81,33 @@ autoUpdateRootInstall :: Application -> AppState -> AppState
 autoUpdateRootInstall app follower = NoGUIAppState $ do
     repo <- Repo <$> gets update_repo
     v <- io $ runErrorT $ getUpdateVersion repo
-    return $ case v of
-        Left errors -> message app (map pv errors) follower
-        Right Nothing ->
+    case v of
+        Left errors -> return $ message app (map pv errors) follower
+        Right (UpdateVersions Nothing Nothing) ->
             -- no new version available
-            message app [p "no updates available"] follower
-        Right (Just newVersion) ->
-            menuAppState app (typ newVersion) (Just follower) (
+            return $ message app [p "no updates available"] follower
+        Right (UpdateVersions (Just gameNewVersion) _) -> do
+            let typ newVersion = NormalMenu (pv "new version") (Just $
+                        substitute [("newVersion", showVersion newVersion)] $ p
+                                ("A new version of Nikki and the Robots is available: $newVersion! " ++
+                                "Try using the software manager to get it or download it manually!"))
+            return $ menuAppState app (typ gameNewVersion) (Just follower) (
                 (p "Download manually (opens browser)",
                     const $ openUrl app downloadWebsite follower) :
                 []) 0
-  where
-    typ newVersion = NormalMenu (pv "new version") (Just $
-       substitute [("newVersion", showVersion newVersion)] $ p
-        ("A new version of Nikki and the Robots is available: $newVersion! " ++
-         "Try using the software manager to get it or download it manually!"))
+        Right uvs@(UpdateVersions Nothing (Just storyModeNewVersion)) -> io $ do
+            -- update the story mode (although installed as root)
+            result :: Either [String] () <- runErrorT $ StoryMode.update app
+            case result of
+                Left errorMessages ->
+                    return $ message app (map pv errorMessages) follower
+                Right () -> do
+                    return $ message app
+                        (p "update complete" :
+                         updateSuccessMessage uvs ++
+                         p "restarting..." :
+                         []) $ NoGUIAppState $ io $ do
+                            exitWith $ ExitFailure 143
 
 -- | doing the auto update
 autoUpdate :: Application -> AppState -> AppState
@@ -110,41 +125,53 @@ autoUpdate app follower = guiLog app $ \ logCommand -> do
             case result of
                 (Left errorMessages) ->
                     return $ message app (map pv errorMessages) follower
-                (Right (Just version)) -> do
+                (Right (UpdateVersions Nothing Nothing)) ->
+                    return $ message app [p "no updates available"] follower
+                (Right uvs) -> do
                     return $ message app
                         (p "update complete" :
-                            p "new version: " +> pVerbatim (showVersion version) :
-                            p "restarting..." :
-                            []) $ NoGUIAppState $ io $ do
+                         updateSuccessMessage uvs ++
+                         p "restarting..." :
+                         []) $ NoGUIAppState $ io $ do
                             exitWith $ ExitFailure 143
-                (Right Nothing) ->
-                    return $ message app [p "no updates available"] follower
 -- RootInstall
 #endif
 
+updateSuccessMessage :: UpdateVersions -> [Prose]
+updateSuccessMessage (UpdateVersions mGame mStoryMode) =
+    catMaybes
+    (fmap g mGame :
+    fmap sm mStoryMode :
+    [])
+  where
+    g v = p "new game version: " +> pVerbatim (showVersion v)
+    sm v = p "new storymode version: " +> pVerbatim (showVersion v)
+
+
 -- | Looks for updates on the server.
 -- If found, updates the program.
--- Returns (Right (Just newVersion)) if an update was successfully installed,
--- (Right Nothing) if there is no newer version and
+-- Returns (Right newVersions) if an update was successfully installed,
+-- (Right (UpdateVersion Nothing Nothing)) if there is no newer version and
 -- (Left message) if an error occurs.
 attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
-    -> IO (Either [String] (Maybe Version))
+    -> IO (Either [String] UpdateVersions)
 attemptUpdate app logCommand repo deployPath = runErrorT $ do
-    mVersion <- getUpdateVersion repo
-    case mVersion of
-        Just serverVersion -> do
-            update app logCommand repo serverVersion deployPath
-            return $ Just serverVersion
-        Nothing -> return Nothing
+    UpdateVersions mGameVersion mStoryModeVersion <- getUpdateVersion repo
+    whenMaybe mGameVersion $ \ serverVersion -> do
+        update app logCommand repo serverVersion deployPath
+    whenMaybe mStoryModeVersion $ \ storyModeVersion -> do
+        StoryMode.update app
+    return $ UpdateVersions mGameVersion mStoryModeVersion
 
 -- | Returns (Just newVersion), if a newer version is available from the update server.
-getUpdateVersion :: Repo -> ErrorT [String] IO (Maybe Version)
+getUpdateVersion :: Repo -> ErrorT [String] IO UpdateVersions
 getUpdateVersion repo = do
     serverVersion <- (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
-    return $ if serverVersion > Version.nikkiVersion then
-        Just serverVersion
-      else
-        Nothing
+    let gameNewVersion = if serverVersion > Version.nikkiVersion
+            then Just serverVersion
+            else Nothing
+    storyModeNewVersion <- StoryMode.askForNewVersion
+    return $ UpdateVersions gameNewVersion storyModeNewVersion
 
 -- | the actual updating procedure
 update :: Application -> (Prose -> IO ()) -> Repo -> Version -> DeployPath

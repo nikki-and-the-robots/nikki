@@ -9,6 +9,10 @@ module StoryMode.Client (
     ServerToClient(..),
     LoginData(..),
     askForStoryModeZip,
+    askForNewVersion,
+
+    -- re-exports from sibling modules
+    update,
   ) where
 
 
@@ -21,8 +25,13 @@ import Text.Email.Validate
 
 import Control.Applicative
 import Control.DeepSeq
+import Control.Monad.Trans.Error
 
 import Network.Client
+
+import Utils
+
+import StoryMode.AutoUpdate
 
 
 -- * configuration
@@ -113,5 +122,9 @@ instance ToJSON EmailAddress where
 askForStoryModeZip :: LoginData -> IO (Either String ServerToClient)
 askForStoryModeZip (LoginData email key) =
     askStoryModeServer (StoryModeDownload email key)
+
+-- | Returns the new version, if there is one.
+askForNewVersion :: ErrorT [String] IO (Maybe Version)
+askForNewVersion = throwError ["NYI: askForNewVersion"]
 
 askStoryModeServer = askServer storyModeServerHost storyModeServerPort 

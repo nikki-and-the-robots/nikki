@@ -85,7 +85,7 @@ data Application
         application :: Ptr QApplication,
         window :: Ptr MainWindow,
         keyPoller :: KeyPoller,
-        autoUpdateVersion :: MVar (Maybe Version),
+        autoUpdateVersion :: MVar UpdateVersions,
         getMainMenu_ :: Application -> AppState,
         applicationPixmaps :: ApplicationPixmaps,
         applicationSounds :: ApplicationSounds,
@@ -94,6 +94,14 @@ data Application
 
 getMainMenu :: Application -> AppState
 getMainMenu app = getMainMenu_ app app
+
+data UpdateVersions = UpdateVersions {
+    gameNewVersion :: Maybe Version,
+    storyModeNewVersion :: Maybe Version
+  }
+
+hasUpdates (UpdateVersions Nothing Nothing) = False
+hasUpdates _ = True
 
 data AppState
     = AppState RenderableInstance (M AppState)

@@ -26,7 +26,7 @@ import Distribution.AutoUpdate
 -- | Creates the MVar containing the UpdateVersion,
 -- but also forks the thread that queries the UpdateVersion from
 -- the update server.
-mkUpdateVersionRef :: Ptr MainWindow -> Configuration -> IO (MVar (Maybe Version))
+mkUpdateVersionRef :: Ptr MainWindow -> Configuration -> IO (MVar UpdateVersions)
 mkUpdateVersionRef window config = do
     mvar <- newEmptyMVar
     ignore $ forkIO $ do
@@ -37,7 +37,7 @@ mkUpdateVersionRef window config = do
 -- | Tries to lookup, if a newer version of the game is available.
 -- Runs in the background of the main menu. In case of errors, this
 -- operation does not terminate.
-lookupUpdateVersion :: Configuration -> IO (Maybe Version)
+lookupUpdateVersion :: Configuration -> IO UpdateVersions
 lookupUpdateVersion config = do
     let repo = Repo $ update_repo config
     v <- io $ runErrorT $ getUpdateVersion repo
@@ -58,16 +58,25 @@ instance Renderable AutoUpdateMenuItem where
         v <- tryReadMVar $ autoUpdateVersion app
         let r = render ptr app config size . proseMod v
             selectionMod = if selected then select else deselect
-            proseMod (Just (Just _)) = colorizeProse yellow . selectionMod
+            proseMod (Just updateVersions) | hasUpdates updateVersions =
+                colorizeProse yellow . selectionMod
             proseMod _ = selectionMod
         case v of
             -- no information yet
             Nothing -> r $ p "online update"
             -- no update available
-            Just Nothing -> r $ p "no update available"
+            Just uvs | not (hasUpdates uvs) -> r $ p "no update available"
             -- update available
-            Just (Just newVersion) -> r $ substitute [("version", showVersion newVersion)] $
-                p "new version available: $version"
+            Just (UpdateVersions (Just newVersion) Nothing) ->
+                r $ substitute [("version", showVersion newVersion)] $
+                    p "new game version available: $version"
+            Just (UpdateVersions Nothing (Just newVersion)) ->
+                r $ substitute [("version", showVersion newVersion)] $
+                    p "new storymode version available: $version"
+            Just (UpdateVersions (Just g) (Just sm)) ->
+                r $ substitute [("gameVersion", showVersion g),
+                                ("storyModeVersion", showVersion sm)] $
+                    p "new version available: $gameVersion (Nikki) and $storyModeVersion (storymode)"
     label = const "AutoUpdateMenuItem"
     select = const $ AutoUpdateMenuItem True
     deselect = const $ AutoUpdateMenuItem False
