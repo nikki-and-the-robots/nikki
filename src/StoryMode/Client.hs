@@ -1,4 +1,4 @@
-{-# language ScopedTypeVariables, MultiParamTypeClasses #-}
+{-# language ScopedTypeVariables, MultiParamTypeClasses, OverloadedStrings #-}
 
 -- | Module for configuration, types and the client-side of the
 -- client-server-communication for the story-mode.
@@ -14,6 +14,8 @@ module StoryMode.Client (
 
 import Data.Version
 import Data.Binary
+import Data.Aeson
+import Data.Text (pack)
 
 import Text.Email.Validate
 
@@ -98,6 +100,15 @@ data LoginData = LoginData {
     emailAddress :: EmailAddress,
     key :: String
   }
+
+instance ToJSON LoginData where
+    toJSON (LoginData address key) = object (
+        ("email" .= address) :
+        ("key"   .= key) :
+        [])
+
+instance ToJSON EmailAddress where
+    toJSON = String . pack . show
 
 askForStoryModeZip :: LoginData -> IO (Either String ServerToClient)
 askForStoryModeZip (LoginData email key) =

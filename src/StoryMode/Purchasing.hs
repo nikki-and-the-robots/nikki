@@ -7,8 +7,10 @@ import Data.Version
 import Data.ByteString.Lazy as BSL
 import Data.Typeable
 import Data.Bifunctor
+import Data.Aeson
 
 import Text.Email.Validate
+import Text.Logging
 
 import Control.Exception
 
@@ -88,6 +90,7 @@ loginAndInstall app storyModeMenu loginData =
                     downloadFile zipUrl tempZipFile
                     logCommand $ p "uncompressing..."
                     storyModeDir <- createStoryModePath
+                    writeEmailAndKey loginData
                     unzipArchive tempZipFile storyModeDir
                 return $ message app
                         (p "installation complete" :
@@ -101,6 +104,14 @@ downloadFile :: String -> FilePath -> IO ()
 downloadFile url destFile = do
     eResult <- openLazyURI url
     either (\ e -> throw $ DownloadError url e) (BSL.writeFile destFile) eResult
+
+writeEmailAndKey :: LoginData -> IO ()
+writeEmailAndKey loginData = do
+    mFile <- getStoryModeLoginDataFile
+    case mFile of
+        Nothing -> logg Text.Logging.Error "cannot write login data"
+        Just file -> BSL.writeFile file (encode loginData)
+
 
 data StoryModeInstallException =
     DownloadError String String

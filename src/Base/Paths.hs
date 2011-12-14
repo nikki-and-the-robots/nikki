@@ -13,10 +13,11 @@ module Base.Paths (
     withDynamicConfiguration,
 
     -- * story mode data
-    getStoryModeDataFileName,
-    getStoryModeDataFiles,
     getStoryModeLevelsPath,
     createStoryModePath,
+    getStoryModeDataFileName,
+    getStoryModeDataFiles,
+    getStoryModeLoginDataFile,
   ) where
 
 
@@ -130,6 +131,18 @@ withDynamicConfiguration configuration action =
 
 -- * Story mode data
 
+getStoryModePath :: IO (Maybe FilePath)
+getStoryModePath = do
+    dir <- getAppUserDataDirectory "nikki-story-mode"
+    exists <- doesDirectoryExist dir
+    return $ if exists then Just dir else Nothing
+
+createStoryModePath :: IO FilePath
+createStoryModePath = do
+    dir <- getAppUserDataDirectory "nikki-story-mode"
+    createDirectory dir
+    return dir
+
 getStoryModeDataFileName :: FilePath -> IO (Maybe FilePath)
 getStoryModeDataFileName path =
     fmap (</> ("data" </> path)) <$> getStoryModePath
@@ -145,14 +158,6 @@ getStoryModeLevelsPath :: IO (Maybe FilePath)
 getStoryModeLevelsPath =
     fmap (</> "levels") <$> getStoryModePath
 
-getStoryModePath :: IO (Maybe FilePath)
-getStoryModePath = do
-    dir <- getAppUserDataDirectory "nikki-story-mode"
-    exists <- doesDirectoryExist dir
-    return $ if exists then Just dir else Nothing
-
-createStoryModePath :: IO FilePath
-createStoryModePath = do
-    dir <- getAppUserDataDirectory "nikki-story-mode"
-    createDirectory dir
-    return dir
+getStoryModeLoginDataFile :: IO (Maybe FilePath)
+getStoryModeLoginDataFile =
+    fmap (</> "loginData") <$> getStoryModePath
