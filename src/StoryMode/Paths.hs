@@ -39,3 +39,6 @@ getStoryModeLoginDataFile :: IO (Maybe FilePath)
 getStoryModeLoginDataFile =
     fmap (</> "loginData") <$> getStoryModePath
 
+getStoryModeVersionFile :: IO (Maybe FilePath)
+getStoryModeVersionFile =
+    fmap (</> "version") <$> getStoryModePath

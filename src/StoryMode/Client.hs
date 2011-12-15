@@ -162,7 +162,7 @@ askForNewVersion = do
 
 getInstalledVersion :: ErrorT [String] IO (Maybe Version)
 getInstalledVersion = do
-    mFile <- io $ getStoryModeDataFileName "version"
+    mFile <- io $ getStoryModeVersionFile
     case mFile of
         Nothing -> return Nothing
         Just file -> do
