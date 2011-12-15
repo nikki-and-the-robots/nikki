@@ -44,7 +44,8 @@ import Distribution.AutoUpdate.Download
 import Distribution.AutoUpdate.Zip
 import Distribution.AutoUpdate.VerifySignatures
 
-import qualified StoryMode.Client as StoryMode
+import qualified StoryMode.Client
+import qualified StoryMode.AutoUpdate
 
 
 -- * introduced for more type safety
@@ -97,7 +98,7 @@ autoUpdateRootInstall app follower = NoGUIAppState $ do
                 []) 0
         Right uvs@(UpdateVersions Nothing (Just storyModeNewVersion)) -> io $ do
             -- update the story mode (although installed as root)
-            result :: Either [String] () <- runErrorT $ StoryMode.update app
+            result :: Either [String] () <- runErrorT $ StoryMode.AutoUpdate.update app
             case result of
                 Left errorMessages ->
                     return $ message app (map pv errorMessages) follower
@@ -160,7 +161,7 @@ attemptUpdate app logCommand repo deployPath = runErrorT $ do
     whenMaybe mGameVersion $ \ serverVersion -> do
         update app logCommand repo serverVersion deployPath
     whenMaybe mStoryModeVersion $ \ storyModeVersion -> do
-        StoryMode.update app
+        StoryMode.AutoUpdate.update app
     return $ UpdateVersions mGameVersion mStoryModeVersion
 
 -- | Returns (Just newVersion), if a newer version is available from the update server.
@@ -170,7 +171,7 @@ getUpdateVersion repo = catchSomeExceptionsErrorT (singleton . show) $ do
     let gameNewVersion = if serverVersion > Version.nikkiVersion
             then Just serverVersion
             else Nothing
-    storyModeNewVersion <- StoryMode.askForNewVersion
+    storyModeNewVersion <- StoryMode.Client.askForNewVersion
     return $ UpdateVersions gameNewVersion storyModeNewVersion
 
 -- | the actual updating procedure

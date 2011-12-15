@@ -3,6 +3,8 @@
 -- | Module for configuration, types and the client-side of the
 -- client-server-communication for the story-mode.
 
+-- Gets imported by the server-code, so mustn't depend on Base, etc..
+
 module StoryMode.Client (
     storyModeServerPort,
     ClientToServer(..),
@@ -10,9 +12,6 @@ module StoryMode.Client (
     LoginData(..),
     askForStoryModeZip,
     askForNewVersion,
-
-    -- re-exports from sibling modules
-    update,
   ) where
 
 
@@ -34,7 +33,6 @@ import Network.Client
 import Utils
 
 import StoryMode.Paths
-import StoryMode.AutoUpdate
 
 
 -- * configuration
