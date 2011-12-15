@@ -4,7 +4,7 @@ module StoryMode.Purchasing where
 
 
 import Data.Version
-import Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy as BSL
 import Data.Typeable
 import Data.Bifunctor
 import Data.Aeson
@@ -13,6 +13,7 @@ import Text.Email.Validate
 import Text.Logging
 
 import Control.Exception
+import Control.Monad.Trans.Error
 
 import System.IO
 import System.IO.Temp
@@ -82,22 +83,31 @@ loginAndInstall app storyModeMenu loginData =
               where
                 text = p "UNAUTHORIZED REQUEST:" : fmap pv (lines err)
             Right (AuthorizedDownload zipUrl version) -> do
-                logCommand $
-                    substitute [("version", showVersion version)] $
-                    p "downloading story mode ($version)"
-                withSystemTempFile "storyModeDownload" $ \ tempZipFile handle -> do
-                    hClose handle
-                    downloadFile zipUrl tempZipFile
-                    logCommand $ p "uncompressing..."
-                    storyModeDir <- createStoryModePath
-                    writeEmailAndKey loginData
-                    unzipArchive tempZipFile storyModeDir
-                return $ message app
+                r <- runErrorT $ installStoryMode app logCommand loginData version zipUrl
+                return $ case r of
+                    Left errors -> message app (fmap pv errors) storyModeMenu
+                    Right () -> message app
                         (p "installation complete" :
-                            p "story-mode version: " +> pVerbatim (showVersion version) :
-                            p "restarting..." :
-                            []) $ NoGUIAppState $ io $
+                         p "story-mode version: " +> pVerbatim (showVersion version) :
+                         p "restarting..." :
+                         []) $ NoGUIAppState $ io $
                                 exitWith $ ExitFailure 143
+
+installStoryMode :: Application -> (Prose -> IO ()) -> LoginData -> Version -> String
+    -> ErrorT [String] IO ()
+installStoryMode app logCommand loginData version zipUrl =
+  catchSomeExceptionsErrorT (singleton . show) $ io $ do
+    logCommand $
+        substitute [("version", showVersion version)] $
+        p "downloading story mode ($version)"
+    withSystemTempFile "storyModeDownload" $ \ tempZipFile handle -> do
+        hClose handle
+        downloadFile zipUrl tempZipFile
+        logCommand $ p "uncompressing..."
+        storyModeDir <- createStoryModePath
+        writeEmailAndKey loginData
+        unzipArchive tempZipFile storyModeDir
+    return ()
 
 
 downloadFile :: String -> FilePath -> IO ()

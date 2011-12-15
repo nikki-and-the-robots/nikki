@@ -8,5 +8,5 @@ import Base
 
 
 -- | auto updating of the storymode
-update :: Application -> ErrorT [String] IO ()
-update _ = throwError ["NYI: update"]
+update :: Application -> (Prose -> IO ()) -> ErrorT [String] IO ()
+update app logCommand = throwError ["NYI: update"]

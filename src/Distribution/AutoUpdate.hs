@@ -96,9 +96,11 @@ autoUpdateRootInstall app follower = NoGUIAppState $ do
                 (p "Download manually (opens browser)",
                     const $ openUrl app downloadWebsite follower) :
                 []) 0
-        Right uvs@(UpdateVersions Nothing (Just storyModeNewVersion)) -> io $ do
+        Right uvs@(UpdateVersions Nothing (Just storyModeNewVersion)) ->
+          return $ guiLog app $ \ logCommand -> io $ do
             -- update the story mode (although installed as root)
-            result :: Either [String] () <- runErrorT $ StoryMode.AutoUpdate.update app
+            result :: Either [String] () <- runErrorT $
+                                            StoryMode.AutoUpdate.update app logCommand
             case result of
                 Left errorMessages ->
                     return $ message app (map pv errorMessages) follower
@@ -161,7 +163,7 @@ attemptUpdate app logCommand repo deployPath = runErrorT $ do
     whenMaybe mGameVersion $ \ serverVersion -> do
         update app logCommand repo serverVersion deployPath
     whenMaybe mStoryModeVersion $ \ storyModeVersion -> do
-        StoryMode.AutoUpdate.update app
+        StoryMode.AutoUpdate.update app logCommand
     return $ UpdateVersions mGameVersion mStoryModeVersion
 
 -- | Returns (Just newVersion), if a newer version is available from the update server.
