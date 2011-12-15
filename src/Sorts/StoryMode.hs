@@ -92,6 +92,7 @@ tiles =
     ("tiles/neon/tetris-01", Position 1 1, Size 332 340, 0.4, Just [0, 1, 2, 3, 4, 5]) :
     ("tiles/neon/snake", Position 1 1, Size 844 584, 0.25, Just [0, 1, 2, 0, 1, 2, 3, 4, 5]) :
     ("tiles/neon/skull", Position 1 1, Size 588 584, 1, Nothing) :
+    ("tiles/neon/beam-standard", Position 13 13, Size 52 52, 0.3, Just [0, 1]) :
 -- temporary tiles (dummy)
     ("tiles/dummy/night-dusk", Position 0 0, Size 1920 1080, 1, Nothing) :
     ("tiles/dummy/submarine-blue", Position 0 0, Size 1920 1080, 1, Nothing) :
