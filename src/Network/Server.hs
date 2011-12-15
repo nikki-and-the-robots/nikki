@@ -62,7 +62,7 @@ catchProtocolErrorsOnServer bc a =
 -- * logging
 
 -- | maximal number of characters in one log message
-maxLogLength = 120
+maxLogLength = 500
 
 logAndSendError :: BinaryCom -> String -> IO ()
 logAndSendError bc err = logAndSend bc (Left err :: Either String Dummy)
