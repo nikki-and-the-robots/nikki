@@ -100,7 +100,7 @@ autoUpdateRootInstall app follower = NoGUIAppState $ do
           return $ guiLog app $ \ logCommand -> io $ do
             -- update the story mode (although installed as root)
             result :: Either [String] () <- runErrorT $
-                                            StoryMode.AutoUpdate.update app logCommand
+                    StoryMode.AutoUpdate.update app logCommand
             case result of
                 Left errorMessages ->
                     return $ message app (map pv errorMessages) follower

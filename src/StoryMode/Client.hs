@@ -10,6 +10,7 @@ module StoryMode.Client (
     ClientToServer(..),
     ServerToClient(..),
     LoginData(..),
+    readLoginData,
     askForStoryModeZip,
     askForNewVersion,
   ) where
@@ -118,6 +119,8 @@ instance Protocol ServerToClient where
 
 -- * client side
 
+-- ** login data
+
 -- | type for login data
 data LoginData = LoginData {
     emailAddress :: EmailAddress,
@@ -142,6 +145,20 @@ instance FromJSON EmailAddress where
     parseJSON (String t) = case validate (unpack t) of
         Left _ -> mzero
         Right x -> return x
+
+-- | Reads the login data.
+-- PRE: The story mode is installed.
+readLoginData :: ErrorT [String] IO LoginData
+readLoginData = do
+    mLoginDataFile <- io $ getStoryModeLoginDataFile
+    loginDataFile <- maybe (throwError ["readLoginData: story mode is not installed"])
+                        return mLoginDataFile
+    mLoginData :: Maybe LoginData <- decode <$> (io $ BSL.readFile loginDataFile)
+    maybe (throwError ["error while decoding login data JSON"])
+        return mLoginData
+
+
+-- ** communication with the server
 
 askForStoryModeZip :: LoginData -> IO (Either String ServerToClient)
 askForStoryModeZip (LoginData email key) =
@@ -172,22 +189,15 @@ getInstalledVersion = do
                 Right v -> return $ Just v
 
 -- | Gets the story mode version from the server.
--- PRE: The story mode is installed
+-- PRE: The story mode is installed.
 getServerVersion :: ErrorT [String] IO Version
 getServerVersion = do
-    mLoginDataFile <- io $ getStoryModeLoginDataFile
-    case mLoginDataFile of
-      Nothing -> throwError ["getServerVersion: story mode is not installed"]
-      Just loginDataFile -> do
-        mLoginData :: Maybe LoginData <- decode <$> (io $ BSL.readFile loginDataFile)
-        case mLoginData of
-          Nothing -> throwError ["error while decoding login data JSON"]
-          Just (LoginData email key) -> do
-            answer <- io $ askStoryModeServer (StoryModeVersion email key)
-            case answer of
-              Left errMsg -> throwError [errMsg]
-              Right (AuthorizedVersionInfo v) -> return v
-              x -> throwError ["wrong server response: " ++ show x]
+    (LoginData email key) <- readLoginData
+    answer <- io $ askStoryModeServer (StoryModeVersion email key)
+    case answer of
+        Left errMsg -> throwError [errMsg]
+        Right (AuthorizedVersionInfo v) -> return v
+        x -> throwError ["wrong server response: " ++ show x]
 
 askStoryModeServer :: ClientToServer -> IO (Either String ServerToClient)
 askStoryModeServer = askServer storyModeServerHost storyModeServerPort

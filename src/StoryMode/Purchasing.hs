@@ -19,6 +19,7 @@ import System.IO
 import System.IO.Temp
 import System.Exit
 import System.FilePath
+import System.Directory
 
 import Network.Curl.Download.Lazy
 import Network.Client.Exceptions
@@ -103,12 +104,20 @@ installStoryMode app logCommand loginData version zipUrl =
     withSystemTempFile "storyModeDownload" $ \ tempZipFile handle -> do
         hClose handle
         downloadFile zipUrl tempZipFile
+        maybeDeleteStoryMode logCommand
         logCommand $ p "uncompressing..."
         storyModeDir <- createStoryModePath
         writeEmailAndKey loginData
         unzipArchive tempZipFile storyModeDir
     return ()
 
+-- | deletes the story mode directory, if it exists. If not, does nothing.
+maybeDeleteStoryMode :: (Prose -> IO ()) -> IO ()
+maybeDeleteStoryMode logCommand = do
+    mPath <- getStoryModePath
+    flip (maybe (return ())) mPath $ \ path -> do
+        logCommand $ p "deleting old story mode"
+        removeDirectoryRecursive path
 
 downloadFile :: String -> FilePath -> IO ()
 downloadFile url destFile = do
