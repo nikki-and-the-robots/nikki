@@ -12,6 +12,7 @@ import Data.Typeable
 import Data.Binary
 
 import Control.Applicative
+import Control.Monad.Trans.Error
 import Control.DeepSeq
 import Control.Exception
 
@@ -37,8 +38,8 @@ instance NFData Version where
 
 -- | Can throw IOException and ErrorCall
 askServer :: forall a b . (Protocol a, Protocol b) =>
-    String -> PortNumber -> a -> IO (Either String b)
-askServer host port msg = do
+    String -> PortNumber -> a -> ErrorT String IO b
+askServer host port msg = ErrorT $ do
     h <- connectTo host (PortNumber port)
     bc <- binaryCom h
     flushAfter bc $ \ bc -> do

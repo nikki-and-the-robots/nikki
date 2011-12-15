@@ -272,6 +272,10 @@ catchSomeExceptionsErrorT :: MonadCatchIO m =>
 catchSomeExceptionsErrorT convert (ErrorT cmd) =
     ErrorT $ Control.Monad.CatchIO.catch cmd (return . Left . convert)
 
+convertErrorT :: Functor m => (a -> b) -> ErrorT a m o -> ErrorT b m o
+convertErrorT f (ErrorT action) = ErrorT $
+    (either (Left . f) Right <$> action)
+
 
 -- * either stuff
 

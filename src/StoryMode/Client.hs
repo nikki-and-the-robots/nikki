@@ -160,7 +160,7 @@ readLoginData = do
 
 -- ** communication with the server
 
-askForStoryModeZip :: LoginData -> IO (Either String ServerToClient)
+askForStoryModeZip :: LoginData -> ErrorT String IO ServerToClient
 askForStoryModeZip (LoginData email key) =
     askStoryModeServer (StoryModeDownload email key)
 
@@ -184,20 +184,17 @@ getInstalledVersion = do
         Nothing -> return Nothing
         Just file -> do
             c <- io $ readFile file
-            case parseVersion c of
-                Left errors -> throwError errors
-                Right v -> return $ Just v
+            Just <$> (ErrorT $ return $ parseVersion c)
 
 -- | Gets the story mode version from the server.
 -- PRE: The story mode is installed.
 getServerVersion :: ErrorT String IO Version
 getServerVersion = do
     (LoginData email key) <- readLoginData
-    answer <- io $ askStoryModeServer (StoryModeVersion email key)
+    answer <- askStoryModeServer (StoryModeVersion email key)
     case answer of
-        Left errMsg -> throwError errMsg
-        Right (AuthorizedVersionInfo v) -> return v
+        (AuthorizedVersionInfo v) -> return v
         x -> throwError ("wrong server response: " ++ show x)
 
-askStoryModeServer :: ClientToServer -> IO (Either String ServerToClient)
+askStoryModeServer :: ClientToServer -> ErrorT String IO ServerToClient
 askStoryModeServer = askServer storyModeServerHost storyModeServerPort

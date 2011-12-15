@@ -11,6 +11,7 @@ import Data.Aeson
 import Text.Logging
 
 import Control.Exception
+import Control.Monad.Trans.Error
 
 import System.FilePath
 import System.Directory
@@ -59,7 +60,7 @@ downloadNewLevels app follower =
     appState (busyMessage $ p "downloading levels...") $ io $ networkTry app follower $ do
         dir <- getDownloadedLevelsPath
         -- todo: what in case of an error
-        Right (LevelList levelList) <- askLevelServer GetLevelList
+        Right (LevelList levelList) <- runErrorT $ askLevelServer GetLevelList
         mapM_ (down dir) levelList
         return follower
   where
@@ -106,7 +107,7 @@ justUploadLevel app follower file =
     appState (busyMessage $ p "uploading...") $ io $ networkTry app follower $ do
         let metadata = encode $ levelMetaData file
         levelData <- readFile $ getAbsoluteFilePath file
-        response <- askLevelServer $ UploadLevel metadata levelData
+        response <- runErrorT $ askLevelServer $ UploadLevel metadata levelData
         let msgs = case response of
                 Right UploadSucceeded -> [p "Level uploaded!"]
                 Right UploadNameClash ->

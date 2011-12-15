@@ -73,7 +73,7 @@ loginAndInstall app storyModeMenu loginData =
     guiLog app $ \ logCommand -> io $
     networkTry app storyModeMenu $ do
         logCommand (p "asking server for authorization")
-        answer <- Client.askForStoryModeZip loginData
+        answer <- runErrorT $ Client.askForStoryModeZip loginData
         case answer of
             Left err ->
                 return $ message app text storyModeMenu

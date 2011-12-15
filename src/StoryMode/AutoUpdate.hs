@@ -16,8 +16,8 @@ import StoryMode.Purchasing
 update :: Application -> (Prose -> IO ()) -> ErrorT String IO ()
 update app logCommand = catchSomeExceptionsErrorT show $ do
     loginData <- readLoginData
-    answer <- ErrorT $ (mapLeft (\ err -> "SERVER-ERROR:\n" ++ err) <$>
-                        askForStoryModeZip loginData)
+    answer <- (convertErrorT (\ err -> "SERVER-ERROR:\n" ++ err) $
+                askForStoryModeZip loginData)
     case answer of
         (Unauthorized err) ->
             throwError ("UNAUTHORIZED REQUEST:\n" ++ err)

@@ -124,7 +124,7 @@ autoUpdate app follower = guiLog app $ \ logCommand -> do
         Nothing -> return $ message app [p "not deployed: updating disabled"] follower
         Just path@(DeployPath dp) -> do
             io $ logCommand (p "updating...")
-            result <- io $ attemptUpdate app logCommand (Repo repoString) path
+            result <- io $ runErrorT $ attemptUpdate app logCommand (Repo repoString) path
             case result of
                 (Left errorMessage) ->
                     return $ message app (map pv $ lines errorMessage) follower
@@ -157,8 +157,8 @@ updateSuccessMessage (UpdateVersions mGame mStoryMode) =
 -- (Right (UpdateVersion Nothing Nothing)) if there is no newer version and
 -- (Left message) if an error occurs.
 attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
-    -> IO (Either String UpdateVersions)
-attemptUpdate app logCommand repo deployPath = runErrorT $ do
+    -> ErrorT String IO UpdateVersions
+attemptUpdate app logCommand repo deployPath = do
     UpdateVersions mGameVersion mStoryModeVersion <- getUpdateVersion repo
     whenMaybe mGameVersion $ \ serverVersion -> do
         update app logCommand repo serverVersion deployPath
