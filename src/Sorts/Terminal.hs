@@ -62,6 +62,7 @@ blinkenLightSpeed = 0.5
 blinkLength :: Seconds
 blinkLength = 0.4
 
+standardTerminalSize = fmap fromUber $ Size 48 48
 batteryTerminalSize = fmap fromUber $ Size 72 48
 
 beamBlinkingTime :: Seconds = blinkLength
@@ -379,7 +380,7 @@ data ExitMode
 instance Sort TSort Terminal where
     sortId TSort{} = SortId "terminal"
     sortId BatteryTSort{} = SortId "story-mode/batteryTerminal"
-    size TSort{} = fmap fromUber $ Size 48 48
+    size TSort{} = standardTerminalSize
     size BatteryTSort{} = batteryTerminalSize
     renderIconified sort@TSort{..} ptr =
         renderPixmapSimple ptr $ background pixmaps
@@ -450,8 +451,10 @@ mkPolys size =
             Vector (wh - padding) hh,
             Vector (wh - padding) (- hh)
           ]
-    (Size wh hh) :: Size CpFloat = fmap realToFrac $ fmap (/ 2) size
-    baryCenterOffset = Vector wh hh
+    (Size wh hh_) :: Size CpFloat = fmap realToFrac $ fmap (/ 2) size
+    hh = hh_ - topCutoff / 2
+    baryCenterOffset = Vector wh (hh + topCutoff)
+    topCutoff = fromUber 8
     -- the physics object is much narrower to simulate,
     -- nikki being able to use the terminal if nikki is completely
     -- inside the terminal frame. (With height, there is no such padding,
