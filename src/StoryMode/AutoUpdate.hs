@@ -13,13 +13,13 @@ import StoryMode.Purchasing
 
 
 -- | auto updating of the storymode
-update :: Application -> (Prose -> IO ()) -> ErrorT [String] IO ()
-update app logCommand = catchSomeExceptionsErrorT (singleton . show) $ do
+update :: Application -> (Prose -> IO ()) -> ErrorT String IO ()
+update app logCommand = catchSomeExceptionsErrorT show $ do
     loginData <- readLoginData
-    answer <- ErrorT $ (mapLeft (\ err -> "SERVER-ERROR:" : lines err) <$>
+    answer <- ErrorT $ (mapLeft (\ err -> "SERVER-ERROR:\n" ++ err) <$>
                         askForStoryModeZip loginData)
     case answer of
         (Unauthorized err) ->
-            throwError ("UNAUTHORIZED REQUEST:" : lines err)
+            throwError ("UNAUTHORIZED REQUEST:\n" ++ err)
         (AuthorizedDownload zipUrl version) ->
             installStoryMode app logCommand loginData version zipUrl

@@ -86,7 +86,7 @@ loginAndInstall app storyModeMenu loginData =
             Right (AuthorizedDownload zipUrl version) -> do
                 r <- runErrorT $ installStoryMode app logCommand loginData version zipUrl
                 return $ case r of
-                    Left errors -> message app (fmap pv errors) storyModeMenu
+                    Left err -> message app (fmap pv $ lines err) storyModeMenu
                     Right () -> message app
                         (p "installation complete" :
                          p "story-mode version: " +> pVerbatim (showVersion version) :
@@ -95,9 +95,9 @@ loginAndInstall app storyModeMenu loginData =
                                 exitWith $ ExitFailure 143
 
 installStoryMode :: Application -> (Prose -> IO ()) -> LoginData -> Version -> String
-    -> ErrorT [String] IO ()
+    -> ErrorT String IO ()
 installStoryMode app logCommand loginData version zipUrl =
-  catchSomeExceptionsErrorT (singleton . show) $ io $ do
+  catchSomeExceptionsErrorT show $ io $ do
     logCommand $
         substitute [("version", showVersion version)] $
         p "downloading story mode ($version)"

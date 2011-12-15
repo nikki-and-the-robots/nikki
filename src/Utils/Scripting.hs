@@ -163,11 +163,11 @@ fileSort = sortBy (\ a b -> compare (map toUpper $ a) (map toUpper b))
 
 -- * version stuff
 
-parseVersion :: String -> Either [String] Version
+parseVersion :: String -> Either String Version
 parseVersion (stripWhiteSpaces -> s) =
     case readP_to_S Data.Version.parseVersion s of
         (last -> (v, "")) -> Right v
-        x -> Left ["version parse error: " ++ show (s, x)]
+        x -> Left ("version parse error: " ++ show (s, x))
 
 
 -- | reads the nikki version from a given executable
@@ -177,14 +177,14 @@ readNikkiVersion nikkiExecutable = do
     _ <- readProcess nikkiExecutable ["--version"] ""
     versionString <- readProcess nikkiExecutable ["--version"] ""
     return $ case parse versionString of
-        Left errMsg -> error (unlines errMsg)
+        Left errMsg -> error errMsg
         Right version -> version
   where
-    parse :: String -> Either [String] Version
+    parse :: String -> Either String Version
     parse s | prefix `isPrefixOf` s && suffix `isSuffixOf` s =
         Utils.Scripting.parseVersion versionString
       where
         prefix = "Nikki and the Robots ("
         suffix = ")\n"
         versionString = drop (length prefix) $ reverse $ drop (length suffix) $ reverse s
-    parse s = Left ["unparseable progamm summary: " ++ show s]
+    parse s = Left ("unparseable progamm summary: " ++ show s)

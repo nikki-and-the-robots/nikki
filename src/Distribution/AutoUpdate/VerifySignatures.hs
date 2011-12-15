@@ -13,13 +13,13 @@ import Utils
 
 -- | Verifies the contents of a given file to a signature (given by file).
 -- Raises an error (in the error monad), if the signature is not correct.
-verifyUpdate :: FilePath -> FilePath -> ErrorT [String] IO ()
+verifyUpdate :: FilePath -> FilePath -> ErrorT String IO ()
 verifyUpdate updateFile signatureFile = do
     update <- io $ BS.readFile updateFile
     signature <- io $ BS.readFile signatureFile
     case verify joyridelabsPublicKey update signature of
         True -> return ()
-        False -> throwError (
+        False -> throwError $ unlines (
             "Cannot verify the authenticity" :
             "of the downloaded package." :
             [])
@@ -29,7 +29,7 @@ verifyUpdateIO :: FilePath -> FilePath -> IO ()
 verifyUpdateIO updateFile signatureFile = do
     result <- runErrorT $ verifyUpdate updateFile signatureFile
     case result of
-        Left errors -> error $ unlines ("signature is incorrect:" : errors)
+        Left errors -> error ("signature is incorrect:\n" ++ errors)
         Right () -> return ()
 
 joyridelabsPublicKey :: PublicKey

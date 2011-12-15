@@ -148,13 +148,13 @@ instance FromJSON EmailAddress where
 
 -- | Reads the login data.
 -- PRE: The story mode is installed.
-readLoginData :: ErrorT [String] IO LoginData
+readLoginData :: ErrorT String IO LoginData
 readLoginData = do
     mLoginDataFile <- io $ getStoryModeLoginDataFile
-    loginDataFile <- maybe (throwError ["readLoginData: story mode is not installed"])
+    loginDataFile <- maybe (throwError "readLoginData: story mode is not installed")
                         return mLoginDataFile
     mLoginData :: Maybe LoginData <- decode <$> (io $ BSL.readFile loginDataFile)
-    maybe (throwError ["error while decoding login data JSON"])
+    maybe (throwError "error while decoding login data JSON")
         return mLoginData
 
 
@@ -167,7 +167,7 @@ askForStoryModeZip (LoginData email key) =
 -- | If the story-mode is already purchased, this function checks for a
 -- new version with the saved login data. If there is a new version available,
 -- this version is returned.
-askForNewVersion :: ErrorT [String] IO (Maybe Version)
+askForNewVersion :: ErrorT String IO (Maybe Version)
 askForNewVersion = do
     mInstalledVersion <- getInstalledVersion
     case mInstalledVersion of
@@ -177,7 +177,7 @@ askForNewVersion = do
         return $ if serverVersion > installedVersion
             then Just serverVersion else Nothing
 
-getInstalledVersion :: ErrorT [String] IO (Maybe Version)
+getInstalledVersion :: ErrorT String IO (Maybe Version)
 getInstalledVersion = do
     mFile <- io $ getStoryModeVersionFile
     case mFile of
@@ -190,14 +190,14 @@ getInstalledVersion = do
 
 -- | Gets the story mode version from the server.
 -- PRE: The story mode is installed.
-getServerVersion :: ErrorT [String] IO Version
+getServerVersion :: ErrorT String IO Version
 getServerVersion = do
     (LoginData email key) <- readLoginData
     answer <- io $ askStoryModeServer (StoryModeVersion email key)
     case answer of
-        Left errMsg -> throwError [errMsg]
+        Left errMsg -> throwError errMsg
         Right (AuthorizedVersionInfo v) -> return v
-        x -> throwError ["wrong server response: " ++ show x]
+        x -> throwError ("wrong server response: " ++ show x)
 
 askStoryModeServer :: ClientToServer -> IO (Either String ServerToClient)
 askStoryModeServer = askServer storyModeServerHost storyModeServerPort

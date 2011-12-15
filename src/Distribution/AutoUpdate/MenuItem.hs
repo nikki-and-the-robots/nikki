@@ -42,8 +42,8 @@ lookupUpdateVersion config = do
     let repo = Repo $ update_repo config
     v <- io $ runErrorT $ getUpdateVersion repo
     case v of
-        Left errors -> do
-            mapM_ (logg Warning) errors
+        Left error -> do
+            mapM_ (logg Warning) $ lines error
             io $ forever (threadDelay (1 * 10 ^ 6))
         Right x -> return x
 

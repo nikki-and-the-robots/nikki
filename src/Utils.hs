@@ -55,7 +55,7 @@ import Text.Logging
 
 import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), pure, Alternative(..), Applicative)
 import "mtl" Control.Monad.State hiding (forM_)
-import "transformers" Control.Monad.Trans.Error (ErrorList(listMsg), ErrorT(..))
+import "transformers" Control.Monad.Trans.Error (ErrorT(..))
                                                 -- and Monad (Either e)
 import Control.Monad.CatchIO
 import Control.Arrow ((>>>))
@@ -240,10 +240,6 @@ modifyIORefM ref cmd =
 
 
 -- * Monad stuff
-
--- | to allow ErrorT [String] IO a
-instance ErrorList String where
-    listMsg = singleton
 
 chainAppM :: Monad m => (b -> a -> m a) -> [b] -> a -> m a
 chainAppM cmd (b : r) a = do
