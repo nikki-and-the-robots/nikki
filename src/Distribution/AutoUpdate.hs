@@ -165,7 +165,7 @@ attemptUpdate app logCommand repo deployPath = runErrorT $ do
 
 -- | Returns (Just newVersion), if a newer version is available from the update server.
 getUpdateVersion :: Repo -> ErrorT [String] IO UpdateVersions
-getUpdateVersion repo = do
+getUpdateVersion repo = catchSomeExceptionsErrorT (singleton . show) $ do
     serverVersion <- (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
     let gameNewVersion = if serverVersion > Version.nikkiVersion
             then Just serverVersion
@@ -176,7 +176,9 @@ getUpdateVersion repo = do
 -- | the actual updating procedure
 update :: Application -> (Prose -> IO ()) -> Repo -> Version -> DeployPath
     -> ErrorT [String] IO ()
-update app logCommand repo newVersion deployPath = withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
+update app logCommand repo newVersion deployPath =
+  catchSomeExceptionsErrorT (singleton . show) $
+  withSystemTempDirectory "nikki-update" $ \ downloadDir -> do
     zipFile <- downloadUpdate app logCommand repo newVersion downloadDir
     newVersionDir <- unzipFile app logCommand zipFile
     -- (withBackup creates its own temporary directory.)

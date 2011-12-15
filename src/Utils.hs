@@ -55,9 +55,12 @@ import Text.Logging
 
 import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), pure, Alternative(..), Applicative)
 import "mtl" Control.Monad.State hiding (forM_)
-import "transformers" Control.Monad.Trans.Error (ErrorList(listMsg)) -- Monad (Either e)
+import "transformers" Control.Monad.Trans.Error (ErrorList(listMsg), ErrorT(..))
+                                                -- and Monad (Either e)
+import Control.Monad.CatchIO
 import Control.Arrow ((>>>))
 import Control.Concurrent
+import Control.Exception
 
 import System.IO.Unsafe
 import System.FilePath
@@ -267,6 +270,11 @@ acc ^^: f = \ r ->
 
 (>$>) :: Functor m => m a -> (a -> b) -> m b
 (>$>) = flip fmap
+
+catchSomeExceptionsErrorT :: MonadCatchIO m =>
+    (SomeException -> e) -> ErrorT e m a -> ErrorT e m a
+catchSomeExceptionsErrorT convert (ErrorT cmd) =
+    ErrorT $ Control.Monad.CatchIO.catch cmd (return . Left . convert)
 
 
 -- * either stuff
