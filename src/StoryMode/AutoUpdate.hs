@@ -4,8 +4,6 @@ module StoryMode.AutoUpdate where
 
 import Control.Monad.Trans.Error
 
-import Utils
-
 import Base
 
 

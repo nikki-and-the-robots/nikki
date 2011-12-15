@@ -33,8 +33,7 @@ import Network.Client
 
 import Utils
 
-import Base hiding (update)
-
+import StoryMode.Paths
 import StoryMode.AutoUpdate
 
 

@@ -12,12 +12,7 @@ module Base.Paths (
     loadConfiguration,
     withDynamicConfiguration,
 
-    -- * story mode data
-    getStoryModeLevelsPath,
-    createStoryModePath,
-    getStoryModeDataFileName,
-    getStoryModeDataFiles,
-    getStoryModeLoginDataFile,
+    module StoryMode.Paths
   ) where
 
 
@@ -43,6 +38,8 @@ import Utils
 import Base.Types
 import Base.Configuration
 import Base.Paths.GetDataFileName
+
+import StoryMode.Paths
 
 
 -- | returns unhidden files with a given extension in a given data directory.
@@ -127,37 +124,3 @@ withDynamicConfiguration configuration action =
   where
     save =
         (io . saveConfigurationToFile . configurationToSavedConfiguration) =<< get
-
-
--- * Story mode data
-
-getStoryModePath :: IO (Maybe FilePath)
-getStoryModePath = do
-    dir <- getAppUserDataDirectory "nikki-story-mode"
-    exists <- doesDirectoryExist dir
-    return $ if exists then Just dir else Nothing
-
-createStoryModePath :: IO FilePath
-createStoryModePath = do
-    dir <- getAppUserDataDirectory "nikki-story-mode"
-    createDirectory dir
-    return dir
-
-getStoryModeDataFileName :: FilePath -> IO (Maybe FilePath)
-getStoryModeDataFileName path =
-    fmap (</> ("data" </> path)) <$> getStoryModePath
-
-getStoryModeDataFiles :: FilePath -> (Maybe String) -> IO (Maybe [FilePath])
-getStoryModeDataFiles path_ extension = do
-    mPath <- getStoryModeDataFileName path_
-    case mPath of
-        Nothing -> return Nothing
-        Just path -> Just <$> map (path </>) <$> io (getFiles path extension)
-
-getStoryModeLevelsPath :: IO (Maybe FilePath)
-getStoryModeLevelsPath =
-    fmap (</> "levels") <$> getStoryModePath
-
-getStoryModeLoginDataFile :: IO (Maybe FilePath)
-getStoryModeLoginDataFile =
-    fmap (</> "loginData") <$> getStoryModePath
