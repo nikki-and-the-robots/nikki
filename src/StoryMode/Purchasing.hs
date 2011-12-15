@@ -81,7 +81,7 @@ loginAndInstall app storyModeMenu loginData =
                 return $ message app text storyModeMenu
               where
                 text = p "UNAUTHORIZED REQUEST:" : fmap pv (lines err)
-            Right (Authorized zipUrl version) -> do
+            Right (AuthorizedDownload zipUrl version) -> do
                 logCommand $
                     substitute [("version", showVersion version)] $
                     p "downloading story mode ($version)"
