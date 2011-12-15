@@ -26,7 +26,7 @@ import Base
 
 -- * battery config
 
-batteryMaterialMass = 3.588785046728972
+batteryMaterialMass = 2.5-- tweakValue "battmass"-- 3.588785046728972
 
 batterySize :: Fractional f => Size f
 batterySize = Size 28 52
