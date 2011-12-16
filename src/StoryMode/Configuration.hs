@@ -17,7 +17,6 @@ episode_1 = Episode
     Episode_1
     "00-intro"
        (
-        "00-intro" :
         "01-grotto" :
         "02-platform-training" :
         "03-powergrid" :
