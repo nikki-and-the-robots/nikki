@@ -18,6 +18,8 @@ signs =
     "data-terminal" :
     []
 
+-- padding refers to upper left corner
+    
 tiles :: [(String, Position Int, Size Double, Seconds, Maybe [Int])]
 tiles =
     ("tiles/black-blue/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
@@ -50,6 +52,10 @@ tiles =
     ("tiles/black-blue/wallpaper-number-05", Position 1 1, Size 328 264, 1, Nothing) :
     ("tiles/black-blue/wallpaper-number-07", Position 1 1, Size 328 264, 1, Nothing) :
     ("tiles/black-blue/wallpaper-number-10", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-blue/terminal-standard-indoor", Position 5 5, Size 192 192, 1, Nothing) :
+    ("tiles/black-blue/terminal-standard-outoor", Position 5 5, Size 192 192, 1, Nothing) :
+    ("tiles/black-blue/terminal-data-indoor", Position 5 5, Size 128 192, 1, Nothing) :
+    ("tiles/black-blue/terminal-data-outdoor", Position 1 1, Size 128 192, 1, Nothing) :
     ("tiles/black-blue/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
     ("tiles/black-green/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-green/panel-small", Position 1 1, Size 32 32, 1, Nothing) :
@@ -64,6 +70,11 @@ tiles =
     ("tiles/black-green/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-green/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
     ("tiles/black-green/wallpaper-large-vent", Position 1 1, Size 128 128, 1, Nothing) :
+    ("tiles/black-green/terminal-standard-indoor", Position 5 5, Size 192 192, 1, Nothing) :
+    ("tiles/black-green/terminal-standard-outoor", Position 5 5, Size 192 192, 1, Nothing) :
+    ("tiles/black-green/terminal-data-indoor", Position 5 5, Size 128 192, 1, Nothing) :
+    ("tiles/black-green/terminal-data-outdoor", Position 1 1, Size 128 192, 1, Nothing) :
+    ("tiles/black-green/terminal-battery-outdoor", Position 1 1, Size 288 192, 1, Nothing) :
     ("tiles/black-green/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
     ("tiles/black-brown/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-brown/panel-small", Position 1 1, Size 32 32, 1, Nothing) :
@@ -87,11 +98,11 @@ tiles =
     ("tiles/neon/single-heart", Position 1 1, Size 588 520, 0.35, Just [0, 1, 2, 3, 4, 5, 6, 0, 6, 0, 6, 0, 6, 0]) :
     ("tiles/neon/controller", Position 1 1, Size 844 456, 0.35, Just [0, 1, 2, 3, 4, 5, 6]) :
     ("tiles/neon/pong", Position 1 1, Size 716 520, 0.25, Just [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) :
-    ("tiles/neon/rocket", Position 1 1, Size 972 584, 1, Nothing) :
+    ("tiles/neon/rocket", Position 1 1, Size 972 584, 0.3, Just [0, 1, 2]) :
     ("tiles/neon/pac", Position 1 1, Size 716 468, 0.3, Just [0, 1, 2, 3]) :
     ("tiles/neon/tetris-01", Position 1 1, Size 332 340, 0.4, Just [0, 1, 2, 3, 4, 5]) :
     ("tiles/neon/snake", Position 1 1, Size 844 584, 0.25, Just [0, 1, 2, 0, 1, 2, 3, 4, 5]) :
-    ("tiles/neon/skull", Position 1 1, Size 588 584, 1, Nothing) :
+    ("tiles/neon/skull", Position 1 1, Size 588 584, 0.35, Just [0, 1, 2, 0, 1, 2, 3, 4, 5, 6, 7, 0, 7, 0, 7, 0, 7, 0]) :
     ("tiles/neon/beam-standard", Position 13 13, Size 52 52, 0.3, Just [0, 1]) :
 -- temporary tiles (dummy)
     ("tiles/dummy/night-dusk", Position 0 0, Size 1920 1080, 1, Nothing) :
