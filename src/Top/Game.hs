@@ -16,6 +16,8 @@ import Base
 import Game.Scene.Camera
 import Game.MainLoop
 
+import Sorts.Nikki (uniqueNikki)
+
 import Top.Initialisation
 
 
@@ -24,7 +26,7 @@ playLevel app parent editorTestMode editorScene = NoGUIAppState $ withSpace grav
     scene :: Scene Object_ <- rm2m $
         initScene app (editorLevelFile editorScene) space
             (editorScene ^. cachedTiles)
-            (editorScene ^. editorObjects)
+            (uniqueNikki app (editorScene ^. editorObjects))
     let (NikkiMode nikkiIndex) = scene ^. mode
     cameraStateRef <- io $ newIORef $ initialCameraState nikkiIndex
     runAppState app $ gameAppState app editorTestMode (GameState space cameraStateRef scene)
