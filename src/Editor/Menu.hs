@@ -68,7 +68,6 @@ editorLoop app mvar scene = UnManagedAppState $ do
                 -- test the level
                 return $ playLevel app (editorLoop app mvar s) True $
                     cachedTiles ^= Nothing $
-                    editorObjects ^: uniqueNikki app $
                     s
             (NormalMode, Press (KeyboardButton H _ _)) ->
                 -- test the level with Nikki at cursor position
