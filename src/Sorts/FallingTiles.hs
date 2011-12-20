@@ -1,4 +1,5 @@
-{-# language ScopedTypeVariables, DeriveDataTypeable, NamedFieldPuns, MultiParamTypeClasses #-}
+{-# language ScopedTypeVariables, DeriveDataTypeable, NamedFieldPuns, MultiParamTypeClasses,
+    FlexibleInstances #-}
 
 -- | objects that seem like tiles, but move when Nikki touches them
 
@@ -8,6 +9,7 @@ module Sorts.FallingTiles (sorts) where
 import Data.Generics
 import Data.Abelian
 import Data.Set (member)
+import Data.IORef
 
 import System.FilePath
 import System.Random
@@ -51,15 +53,27 @@ sorts =
 mkSort :: String -> Offset Int -> Size Double -> RM Sort_
 mkSort name offset size = do
     pngFile <- getDataFileName (pngDir </> name <.> "png")
-    Sort_ <$> TSort name <$> loadPixmap (fmap fromIntegral offset) size pngFile
+    Sort_ <$> (TSort name <$> loadPixmap (fmap fromIntegral offset) size pngFile
+        <*> io (newIORef (mkStdGen 42)))
 
 
 data TSort
     = TSort {
         name :: String,
-        tilePixmap :: Pixmap
+        tilePixmap :: Pixmap,
+        randomGenRef :: IORef StdGen
       }
     deriving (Show, Typeable)
+
+instance Show (IORef StdGen) where
+    show = const "<IORef StdGen>"
+
+randomAngVel :: TSort -> IO Angle
+randomAngVel sort = do
+    randomGen <- readIORef $ randomGenRef sort
+    let (angVel, randomGen') = randomR (-2, 2) randomGen
+    writeIORef (randomGenRef sort) randomGen'
+    return angVel
 
 data FallingTile
     = FallingTile {
@@ -76,7 +90,7 @@ data Status = Static | GettingLoose Seconds | Loose
 instance Sort TSort FallingTile where
     sortId TSort{name} = SortId ("fallingTile/" ++ name)
 
-    size (TSort _ pix) = pixmapSize pix
+    size (TSort _ pix _) = pixmapSize pix
 
     renderIconified sort ptr = do
         renderPixmapSimple ptr (tilePixmap sort)
@@ -115,7 +129,7 @@ instance Sort TSort FallingTile where
                     let b = body $ chipmunk fallingTile
                     H.mass b $= (mass $ tileAttributes fallingTile)
                     moment b $= (inertia_ $ tileAttributes fallingTile)
-                    angVel <- randomRIO (-2, 2)
+                    angVel <- randomAngVel sort
                     modifyAngVel (chipmunk fallingTile) (const angVel)
                     return $ fallingTile{status = Loose}
                   else
