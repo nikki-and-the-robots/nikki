@@ -108,7 +108,8 @@ editorMenu app mvar scene ps =
                 (p "edit layers", editLayers app mvar scene 0 . this) :
                 (p "activate selection mode (for copy, cut and paste)",
                     const $ edit (toSelectionMode scene)) :
-                (p "try playing the level", const $ playLevel app (edit scene) True scene) :
+                (p "try playing the level", const $ playLevel app (edit scene) True $
+                        cachedTiles ^= Nothing $ scene) :
                 (p "save level", saveLevel app editWithFilePath scene . this) :
                 (p "save & upload", \ ps -> saveAndUpload app scene (this ps) editWithFilePath) :
                 (p "save level & exit editor",
