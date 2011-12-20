@@ -40,7 +40,7 @@ names = [
 
 -- | time in seconds, before the tiles start to fall after touching Nikki
 timeBeforeGettingLoose :: Seconds
-timeBeforeGettingLoose = 0.2
+timeBeforeGettingLoose = 0.4
 
 fallingTilesMaterialMass = 0.5
 
