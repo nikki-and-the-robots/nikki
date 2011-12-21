@@ -271,7 +271,11 @@ foreign import ccall "setKeyCallbackMainWindow" cppSetKeyCallbackMainWindow ::
 
 foreign import ccall "wrapper" wrapKeyCallback ::
     (Int -> Ptr QKeyEvent -> IO ()) -> IO (FunPtr (Int -> Ptr QKeyEvent -> IO ()))
--- True means Press, False means Release
+-- int being an event code:
+--  0 - press key event (with the QKeyEvent)
+--  1 - release key event (with the QKeyEvent)
+--  2 - focus out of window event
+--  3 - window close event (from the window manager)
 
 setKeyCallbackMainWindow :: Ptr MainWindow -> (QtEvent -> IO ()) -> IO ()
 setKeyCallbackMainWindow ptr cmd =
