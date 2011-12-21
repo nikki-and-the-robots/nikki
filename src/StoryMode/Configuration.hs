@@ -24,6 +24,7 @@ episode_1 = Episode
         "05-lasertower" :
         "06-suivez-moi" :
         "07-lootninja" :
+        "08-superfly" :
         "09-tree-climbing" :
         "10-greed" :
         [])
