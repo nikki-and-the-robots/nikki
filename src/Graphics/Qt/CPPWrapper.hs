@@ -112,6 +112,7 @@ import Foreign (Ptr, nullPtr, FunPtr, freeHaskellFunPtr)
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.ForeignPtr
+import qualified Foreign.Concurrent (newForeignPtr)
 
 import System.Directory
 import System.Environment
@@ -462,7 +463,7 @@ newQPixmap file_ = do
     ptr <- withCString file cppNewQPixmap
     when (ptr == nullPtr) $
         error ("could not load image file: " ++ file)
-    newForeignPtr destroyQPixmap ptr
+    newForeignQPixmap ptr
 
 newQPixmapEmpty :: Size QtInt -> IO (ForeignPtr QPixmap)
 newQPixmapEmpty (Size x y) = do
@@ -470,7 +471,7 @@ newQPixmapEmpty (Size x y) = do
         logg Warning (printf
             "creating very large QPixmap: %.0fKB" kb)
     ptr <- cppNewQPixmapEmpty x y
-    newForeignPtr destroyQPixmap ptr
+    newForeignQPixmap ptr
   where
     veryBig = bytes > 8 * 1024 ^ 2
     bytes :: QtInt
@@ -482,7 +483,11 @@ foreign import ccall "newQPixmapEmpty" cppNewQPixmapEmpty ::
 
 foreign import ccall "newQPixmap" cppNewQPixmap :: CString -> IO (Ptr QPixmap)
 
-foreign import ccall "&destroyQPixmap" destroyQPixmap :: FunPtr (Ptr QPixmap -> IO ())
+foreign import ccall "destroyQPixmap" destroyQPixmap :: Ptr QPixmap -> IO ()
+
+newForeignQPixmap :: Ptr QPixmap -> IO (ForeignPtr QPixmap)
+newForeignQPixmap ptr =
+    Foreign.Concurrent.newForeignPtr ptr (ignore $ postGUIBlocking $ destroyQPixmap ptr)
 
 saveQPixmap :: ForeignPtr QPixmap -> String -> QtInt -> IO ()
 saveQPixmap fp file quality =
@@ -496,7 +501,7 @@ copyQPixmap :: ForeignPtr QPixmap -> IO (ForeignPtr QPixmap)
 copyQPixmap originalFp =
     withForeignPtr originalFp $ \ original -> do
         copy <- cppCopyQPixmap original
-        newForeignPtr destroyQPixmap copy
+        newForeignQPixmap copy
 foreign import ccall "copyQPixmap" cppCopyQPixmap :: Ptr QPixmap -> IO (Ptr QPixmap)
 
 foreign import ccall widthQPixmap :: Ptr QPixmap -> IO QtInt
@@ -518,7 +523,7 @@ foreign import ccall "toImageQPixmap" cppToImageQPixmap
 
 fromImageQPixmap :: Ptr QImage -> IO (ForeignPtr QPixmap)
 fromImageQPixmap image =
-    newForeignPtr destroyQPixmap =<< cppFromImageQPixmap image
+    newForeignQPixmap =<< cppFromImageQPixmap image
 foreign import ccall "fromImageQPixmap" cppFromImageQPixmap :: Ptr QImage -> IO (Ptr QPixmap)
 
 
