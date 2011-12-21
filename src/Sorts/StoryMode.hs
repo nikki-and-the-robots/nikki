@@ -53,7 +53,7 @@ tiles =
     ("tiles/black-blue/wallpaper-number-07", Position 1 1, Size 328 264, 1, Nothing) :
     ("tiles/black-blue/wallpaper-number-10", Position 1 1, Size 328 264, 1, Nothing) :
     ("tiles/black-blue/terminal-standard-indoor", Position 5 5, Size 192 192, 1, Nothing) :
-    ("tiles/black-blue/terminal-standard-outoor", Position 5 5, Size 192 192, 1, Nothing) :
+    ("tiles/black-blue/terminal-standard-outdoor", Position 5 5, Size 192 192, 1, Nothing) :
     ("tiles/black-blue/terminal-data-indoor", Position 5 5, Size 128 192, 1, Nothing) :
     ("tiles/black-blue/terminal-data-outdoor", Position 1 1, Size 128 192, 1, Nothing) :
     ("tiles/black-blue/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
@@ -71,7 +71,7 @@ tiles =
     ("tiles/black-green/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
     ("tiles/black-green/wallpaper-large-vent", Position 1 1, Size 128 128, 1, Nothing) :
     ("tiles/black-green/terminal-standard-indoor", Position 5 5, Size 192 192, 1, Nothing) :
-    ("tiles/black-green/terminal-standard-outoor", Position 5 5, Size 192 192, 1, Nothing) :
+    ("tiles/black-green/terminal-standard-outdoor", Position 5 5, Size 192 192, 1, Nothing) :
     ("tiles/black-green/terminal-data-indoor", Position 5 5, Size 128 192, 1, Nothing) :
     ("tiles/black-green/terminal-data-outdoor", Position 1 1, Size 128 192, 1, Nothing) :
     ("tiles/black-green/terminal-battery-outdoor", Position 1 1, Size 288 192, 1, Nothing) :
