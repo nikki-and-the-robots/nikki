@@ -44,7 +44,7 @@ askString app parent question follower =
                 return $ follower answer
             Press (KeyboardButton V _ mods) | ControlModifier `member` mods -> do
                 -- paste shortcut
-                clipped <- io $ textQClipboard $ window app
+                clipped <- io textQClipboard
                 let processClipped x = headDef "" $ dropWhile null $ lines x
                 return $ loop $ (answer ++ processClipped clipped)
             Press (KeyboardButton k text _) ->

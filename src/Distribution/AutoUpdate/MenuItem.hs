@@ -80,9 +80,3 @@ instance Renderable AutoUpdateMenuItem where
     label = const "AutoUpdateMenuItem"
     select = const $ AutoUpdateMenuItem True
     deselect = const $ AutoUpdateMenuItem False
-
-tryReadMVar :: MVar a -> IO (Maybe a)
-tryReadMVar mvar = do
-    r <- tryTakeMVar mvar
-    whenMaybe r $ putMVar mvar
-    return r

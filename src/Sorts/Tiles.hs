@@ -245,14 +245,14 @@ instance Sort AllTilesSort AllTiles where
 
     initialize app _ Nothing (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing _ =
         io $ AllMultilayerTiles <$>
-            bakeTiles app (map toAnimation editorObjects)
+            bakeTiles (map toAnimation editorObjects)
       where
         toAnimation (EditorObject sort ep Nothing) =
             (animation sort, epToPosition (size sort) ep)
 
     initialize app _ (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
       cachedTiles = io $ do
-        renderables <- bakeTiles app $ map mkRenderable editorObjects
+        renderables <- bakeTiles $ map mkRenderable editorObjects
         chipmunks <- initChipmunks space cachedTiles editorObjects
         return $ AllPhysicTiles chipmunks renderables
 

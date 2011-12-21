@@ -31,6 +31,6 @@ playLevel app parent editorTestMode editorScene = NoGUIAppState $ withSpace grav
     cameraStateRef <- io $ newIORef $ initialCameraState nikkiIndex
     runAppState app $ gameAppState app editorTestMode (GameState space cameraStateRef scene)
     return $ NoGUIAppState $ io $ do
-        postGUI (window app) $ fmapM_ freeObject (scene ^. objects)
+        postGUI $ fmapM_ freeObject (scene ^. objects)
         return parent
 

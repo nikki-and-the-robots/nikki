@@ -26,11 +26,11 @@ import Base
 -- | entry function
 -- Returns the list of baked pixmaps along a list of newly created
 -- pixmaps, that have to be garbage collected at some point.
-bakeTiles :: Application -> [(Animation Pixmap, Qt.Position Double)]
+bakeTiles :: [(Animation Pixmap, Qt.Position Double)]
     -> IO [(Animation Pixmap, Qt.Position Double)]
-bakeTiles app =
+bakeTiles =
     return . groupTiles >=>
-    bake app
+    bake
 
 data Grouped
     = Grouped [StaticPixmap]
@@ -349,23 +349,23 @@ contains rect point =
 -- * creating of baked pixmaps
 
 -- | memoized version of bakeH (working over all Groupeds)
-bake :: Application -> [Grouped]
+bake :: [Grouped]
     -> IO [(Animation Pixmap, Qt.Position Double)]
-bake app l =
-    evalStateT (mapM (inner app) l) initialMap
+bake l =
+    evalStateT (mapM inner l) initialMap
   where
             -- [StaticPixmap] is normalized, therefore the positions doesn't have to
             -- be memoized, it's always @split (- 1)@.
     initialMap :: Map [StaticPixmap] Pixmap
     initialMap = empty
 
-    inner app (Single a p) = return (a, p)
-    inner app (Grouped (normalizeStaticPixmaps -> (grouped, normalization))) = do
+    inner (Single a p) = return (a, p)
+    inner (Grouped (normalizeStaticPixmaps -> (grouped, normalization))) = do
         m <- get
         convert normalization <$>
           case Data.Map.lookup grouped m of
             Nothing -> do
-                result <- io $ bakeH app grouped
+                result <- io $ bakeH grouped
                 modify (insert grouped result)
                 return result
             Just result -> return result -- already memoized
@@ -383,9 +383,9 @@ normalizeStaticPixmaps l@(StaticPixmap p _ _ _ _ : _) =
     addPosition add (StaticPixmap p s pix offset oa) =
         StaticPixmap (add +~ p) s pix offset oa
 
-bakeH :: Application -> [StaticPixmap] -> IO Pixmap
-bakeH app pixmaps =
-  postGUIBlocking (window app) $ do
+bakeH :: [StaticPixmap] -> IO Pixmap
+bakeH pixmaps =
+  postGUIBlocking $ do
     let (upperLeft, size) = boundingBox $
             map (addPadding . extractRect) pixmaps
     bakedPixmap <- newQPixmapEmpty size

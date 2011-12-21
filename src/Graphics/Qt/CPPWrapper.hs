@@ -172,6 +172,7 @@ data MainWindow
 newMainWindow :: Int -> Int -> Int -> IO (Ptr MainWindow)
 newMainWindow swapInterval width height = do
     r <- cppNewMainWindow swapInterval width height
+    putMVar _mainWindowRef r
     cCallback <- wrapDrawingCallback _stdDrawingCallback
     cppSetDrawingCallbackMainWindow r cCallback
     return r
@@ -626,8 +627,8 @@ stringQByteArray ptr =
 
 -- * QClipboard
 
-textQClipboard :: Ptr MainWindow -> IO String
-textQClipboard win = postGUIBlocking win $ do
+textQClipboard :: IO String
+textQClipboard = postGUIBlocking $ do
     byteArray <- cppTextQClipboard
     r <- stringQByteArray byteArray
     destroyQByteArray byteArray
@@ -640,9 +641,17 @@ foreign import ccall "textQClipboard" cppTextQClipboard :: IO (Ptr QByteArray)
 
 -- | Non-blocking operation, that gets the gui thread to perform the given action.
 -- (cpp has to call 'freePostGUIFunPtr' after performing the action.)
-postGUI :: Ptr MainWindow -> IO () -> IO ()
-postGUI widget action =
-    cppPostGUI widget =<< wrapGuiAction action
+postGUI :: IO () -> IO ()
+postGUI action = do
+    mm <- tryReadMVar _mainWindowRef
+    case mm of
+        Nothing -> error "initialize _mainWindowRef before calling postGUI or postGUIBlocking!"
+        Just window ->
+            cppPostGUI window =<< wrapGuiAction action
+
+{-# noinline _mainWindowRef #-}
+_mainWindowRef :: MVar (Ptr MainWindow)
+_mainWindowRef = unsafePerformIO newEmptyMVar
 
 foreign import ccall "postGUI" cppPostGUI :: Ptr MainWindow -> FunPtr (IO ()) -> IO ()
 
@@ -651,10 +660,10 @@ foreign import ccall "wrapper" wrapGuiAction ::
 
 -- | Blocking operation, that gets the gui thread to perform a given action and
 -- returns its result.
-postGUIBlocking :: Ptr MainWindow -> IO a -> IO a
-postGUIBlocking window a = do
+postGUIBlocking :: IO a -> IO a
+postGUIBlocking a = do
     ref <- newEmptyMVar
-    postGUI window (a >>= putMVar ref)
+    postGUI (a >>= putMVar ref)
     takeMVar ref
 
 foreign export ccall freePostGUIFunPtr :: FunPtr (IO ()) -> IO ()

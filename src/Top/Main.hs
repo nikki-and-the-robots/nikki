@@ -129,7 +129,7 @@ withNikkiIcon qWidget action = do
 showLoadingScreen qApp window applicationPixmaps config = do
     let app = Application qApp window err err err applicationPixmaps err err
         err = error "uninitialised field in Application: showLoadingScreen"
-    postGUI window $ setRenderingLooped window False
+    postGUI $ setRenderingLooped window False
     io $ setRenderable app config (busyMessage (p "loading..."))
 
 

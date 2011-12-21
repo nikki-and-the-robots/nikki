@@ -237,6 +237,15 @@ modifyIORefM ref cmd =
     readIORef ref >>=
     cmd >>=
     writeIORef ref
+    
+
+-- * mvar stuff
+
+tryReadMVar :: MVar a -> IO (Maybe a)
+tryReadMVar mvar = do
+    r <- tryTakeMVar mvar
+    whenMaybe r $ putMVar mvar
+    return r
 
 
 -- * Monad stuff
