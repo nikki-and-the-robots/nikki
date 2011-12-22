@@ -87,3 +87,8 @@ initialDebuggingSignals =
              replicate n DownArrow ++ Ctrl : []
     play n = DownArrow : Ctrl : Ctrl :
              replicate (n - 1) DownArrow ++ Ctrl : []
+
+
+-- * development
+
+useNonPublicSorts :: Bool = False

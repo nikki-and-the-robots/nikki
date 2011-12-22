@@ -67,7 +67,7 @@ initEditorScene sorts editorLevelFile (DiskLevel objects cachedTiles) =
         editorLevelFile,
         cursor = zero,
         cursorStep = Just $ EditorPosition 64 64,
-        availableSorts_ = removeTutorialSorts sorts,
+        availableSorts_ = (if useNonPublicSorts then id else removeNonPublicSorts) sorts,
         editorObjects_ = objects,
         selectedLayer_ = MainLayer,
         selected = Nothing,
@@ -76,13 +76,18 @@ initEditorScene sorts editorLevelFile (DiskLevel objects cachedTiles) =
         cachedTiles_ = cachedTiles
       }
 
-removeTutorialSorts :: SelectTree Sort_ -> SelectTree Sort_
-removeTutorialSorts = mkSortsSelectTree . filter (not . isTutorialSort) . leafs
+-- | Used to provisionally remove all non-public (tutorial and story-mode)
+-- objects from the editor.
+-- (without rendering the respective levels unplayable)
+removeNonPublicSorts :: SelectTree Sort_ -> SelectTree Sort_
+removeNonPublicSorts = mkSortsSelectTree . filter isPublicSort . leafs
 
--- | used to provisionally remove all tutorial objects from the editor
--- (without rendering the tutorial levels unplayable)
-isTutorialSort :: Sort_ -> Bool
-isTutorialSort = ("tutorial/" `isPrefixOf`) . getSortId . sortId
+isPublicSort :: Sort_ -> Bool
+isPublicSort sort =
+    not ("tutorial/" `isPrefixOf` id) &&
+    not ("story-mode/" `isPrefixOf` id)
+  where
+    id = getSortId $ sortId sort
 
 -- | sets the position of Nikki (more precisely all Nikkis in the EditorScene) to the given value.
 setNikkiPosition :: EditorPosition -> EditorScene Sort_ -> EditorScene Sort_
