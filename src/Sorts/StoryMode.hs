@@ -94,11 +94,12 @@ tiles =
     ("tiles/frame/black-bottom-extra", Position 1 1, Size 76 68, 1, Nothing) :
     ("tiles/frame/black-support-left", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/frame/black-support-right", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/frame/black-dot", Position 1 1, Size 4 4, 1, Nothing) :
     ("tiles/special/switch-transient-active", Position 1 1, Size 120 80, 1, Nothing) :
     ("tiles/neon/single-heart", Position 1 1, Size 588 520, 0.35, Just [0, 1, 2, 3, 4, 5, 6, 0, 6, 0, 6, 0, 6, 0]) :
     ("tiles/neon/controller", Position 1 1, Size 844 456, 0.35, Just [0, 1, 2, 3, 4, 5, 6]) :
     ("tiles/neon/pong", Position 1 1, Size 716 520, 0.25, Just [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) :
-    ("tiles/neon/rocket", Position 1 1, Size 972 584, 0.3, Just [0, 1, 2]) :
+    ("tiles/neon/rocket", Position 1 1, Size 972 584, 0.25, Just [0, 1, 2]) :
     ("tiles/neon/pac", Position 1 1, Size 716 468, 0.3, Just [0, 1, 2, 3]) :
     ("tiles/neon/tetris-01", Position 1 1, Size 332 340, 0.4, Just [0, 1, 2, 3, 4, 5]) :
     ("tiles/neon/snake", Position 1 1, Size 844 584, 0.25, Just [0, 1, 2, 0, 1, 2, 3, 4, 5]) :
