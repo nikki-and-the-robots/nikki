@@ -31,7 +31,7 @@ import Sorts.Nikki (nikkiMass)
 
 -- * configuration
 
-stampMaterialMass = 1.7677053824362605
+stampMaterialMass = 4
 
 -- | frame time for the blinking light for the last switch
 lastLightBlinkTime :: Seconds = 0.425
@@ -275,7 +275,7 @@ yPlatformDistance :: CpFloat = fromUber 2
 innerPadding = 4
 shaftPadding = 0.2
 openingWidth = width shaftSize + 2 * shaftPadding
-triggerHeight = 0.2
+triggerHeight = 5
 
 -- calculated
 boxBaryCenterOffset = Vector (width boxSize / 2) (height boxSize / 2)
@@ -343,9 +343,11 @@ innerStampThingie = mkRect
         (height boxSize - outerWallThickness - yPlatformDistance))
 trigger =
     mkRect (Position
-                (- (outerWallThickness / 2))
+                (- (triggerWidth / 2))
                 (boxLower - outerWallThickness - triggerHeight))
-            (Size outerWallThickness triggerHeight)
+            (Size triggerWidth triggerHeight)
+  where
+    triggerWidth = width platformSize - 2 * outerWallThickness
 
 outerToOpening = ((width boxSize - openingWidth) / 2)
 
