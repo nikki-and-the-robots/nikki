@@ -1,3 +1,4 @@
+#!/usr/bin/env runghc
 
 
 import Data.List
