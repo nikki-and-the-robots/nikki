@@ -90,8 +90,12 @@ main = do
         cppMakefile = "cpp" </> "dist" </> "Makefile"
         ghcFlags =
             "-O0" :
+            []
+        ghcLinkFlags =
             "-threaded" :
-            map ("-package=" ++) pkgs
+            "-rtsopts" :
+            map ("-package=" ++) pkgs ++
+            []
 
     want ["core"]
 
@@ -99,7 +103,7 @@ main = do
         os <- map (flip replaceExtension "o") <$> getHaskellDeps "Main.hs"
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
-        system' "ghc" $ ["-o",core] ++ libFlags ++ os ++ ghcFlags
+        system' "ghc" $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
 
     "//*.o" *> \ o -> do
         let hsFile = replaceExtension o "hs"
