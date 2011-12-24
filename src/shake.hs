@@ -1,4 +1,4 @@
-#!/usr/bin/env runghc
+
 
 import Data.List
 import Data.Char
