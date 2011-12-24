@@ -107,7 +107,7 @@ Executable nikki
         , filepath
         , mtl == 2.*
         , process
-        , Hipmunk >= 5.2.0.3
+        , Hipmunk >= 5.2.0.6
         , sfml-audio == 0.3.1816.*
         , safe
         , random
@@ -129,7 +129,7 @@ Executable nikki
         , strict >= 0.3.2
         , vector >= 0.9
         , RSA == 1.*
-        , aeson == 0.3.*
+        , aeson == 0.4.*
         , attoparsec == 0.9.*
         , network == 2.*
         , binary-communicator >= 1.0.2
