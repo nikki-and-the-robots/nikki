@@ -458,12 +458,6 @@ mapPairs f = fromList . map (uncurry f) . toList
 
 -- * Maybe stuff
 
-maybeId :: (a -> Maybe a) -> (a -> a)
-maybeId fun a =
-    case fun a of
-        Nothing -> a
-        Just x -> x
-
 justWhen :: Bool -> a -> Maybe a
 justWhen True = Just
 justWhen False = const Nothing
