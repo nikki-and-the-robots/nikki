@@ -244,7 +244,7 @@ modifyIORefM ref cmd =
 tryReadMVar :: MVar a -> IO (Maybe a)
 tryReadMVar mvar = do
     r <- tryTakeMVar mvar
-    whenMaybe r $ putMVar mvar
+    forM_ r $ putMVar mvar
     return r
 
 
@@ -457,12 +457,6 @@ mapPairs f = fromList . map (uncurry f) . toList
 
 
 -- * Maybe stuff
-
-whenMaybe :: Monad m => Maybe a -> (a -> m ()) -> m ()
-whenMaybe mx cmd =
-    case mx of
-        Just x -> cmd x
-        Nothing -> return ()
 
 maybeId :: (a -> Maybe a) -> (a -> a)
 maybeId fun a =

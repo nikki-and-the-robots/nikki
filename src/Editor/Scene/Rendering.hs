@@ -53,7 +53,7 @@ renderGUI app config ptr offset s = do
     renderCursorPositionOSD app config ptr $ cursor s
     renderCursorStepSize app config ptr $ getCursorStep s
     renderLayerOSD app config ptr (s ^. editorObjects) (s ^. selectedLayer)
-    whenMaybe (getSelectedObject s) $ \ o ->
+    forM_ (getSelectedObject s) $ \ o ->
         renderSelectedObject ptr $ editorSort o
 
 

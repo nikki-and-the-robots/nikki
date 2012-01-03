@@ -105,7 +105,7 @@ mkPreSolve ref (FullWatch _ _ f) permeability = do
     (shapeA, shapeB) <- shapes
     normal_ <- normal
     points_ <- points
-    whenMaybe (headMay points_) $ \ point -> do -- this is a bit inaccurate, but should be ok
+    forM_ (headMay points_) $ \ point -> do -- this is a bit inaccurate, but should be ok
         liftIO $ modifyIORef ref (f shapeA shapeB (normal_, point))
     return $ isSolidInPresolve permeability
 

@@ -160,9 +160,9 @@ attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
     -> ErrorT String IO UpdateVersions
 attemptUpdate app logCommand repo deployPath = do
     UpdateVersions mGameVersion mStoryModeVersion <- getUpdateVersion repo
-    whenMaybe mGameVersion $ \ serverVersion -> do
+    forM_ mGameVersion $ \ serverVersion -> do
         update app logCommand repo serverVersion deployPath
-    whenMaybe mStoryModeVersion $ \ storyModeVersion -> do
+    forM_ mStoryModeVersion $ \ storyModeVersion -> do
         StoryMode.AutoUpdate.update app logCommand
     return $ UpdateVersions mGameVersion mStoryModeVersion
 

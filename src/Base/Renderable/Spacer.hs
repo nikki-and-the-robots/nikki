@@ -31,4 +31,4 @@ instance Renderable Spacer where
     render ptr app config size (Spacer sizeFun mChild) = do
         let spacerSize = sizeFun size
         return $ tuple spacerSize $
-            whenMaybe mChild $ (\ child -> snd =<< render ptr app config spacerSize child)
+            forM_ mChild $ (\ child -> snd =<< render ptr app config spacerSize child)

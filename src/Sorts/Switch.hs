@@ -183,7 +183,7 @@ instance Sort SwitchSort Switch where
                 (False, True) -> (switches ^: firstStrict succ, Just onSound)
                 (True, False) -> (switches ^: firstStrict pred, Just offSound)
                 _ -> (id, Nothing)
-        whenMaybe mSound $ \ sound ->
+        forM_ mSound $ \ sound ->
             triggerSound $ sound sort
         return (sceneMod, updateIfLast (sceneMod scene) now new)
     update sort controls _ scene now contacts cd index switch@Switch{triggered_ = False} =

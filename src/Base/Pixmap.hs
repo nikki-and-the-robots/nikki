@@ -119,7 +119,7 @@ renderPixmap ptr offset position mAngle pix = io $ do
     translate ptr offset
 
     translate ptr position
-    whenMaybe mAngle $ \ angle ->
+    forM_ mAngle $ \ angle ->
         rotate ptr (rad2deg angle)
     translate ptr (pix ^. pixmapOffset)
 
@@ -171,7 +171,7 @@ doRenderPixmap :: Ptr QPainter -> RenderPixmap -> IO (Maybe RenderPixmap)
 doRenderPixmap ptr (RenderPixmap pix position mAngle) = do
     resetMatrix ptr
     translate ptr position
-    whenMaybe mAngle $ \ angle ->
+    forM_ mAngle $ \ angle ->
         rotate ptr (rad2deg angle)
     translate ptr (pix ^. pixmapOffset)
 
