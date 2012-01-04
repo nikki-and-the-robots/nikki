@@ -32,10 +32,10 @@ tiles =
     ("tiles/black-blue/panel-arrows-up", Position 1 1, Size 128 64, 1, Nothing) :
     ("tiles/black-blue/aircon-left", Position 1 1, Size 64 128, 1, Nothing) :
     ("tiles/black-blue/aircon-right", Position 1 1, Size 64 128, 1, Nothing) :
-    ("tiles/black-blue/pilotlamp-standard-left", Position 9 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1, 0, 1, 1]) :
-    ("tiles/black-blue/pilotlamp-standard-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1, 0, 1, 1]) :
-    ("tiles/black-blue/pilotlamp-small-left", Position 9 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
-    ("tiles/black-blue/pilotlamp-small-right", Position 1 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-blue/pilotlamp-standard-left", Position 9 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-blue/pilotlamp-standard-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-blue/pilotlamp-small-left", Position 9 1, Size 32 32, 0.25, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-blue/pilotlamp-small-right", Position 1 1, Size 32 32, 0.25, Just [0, 0, 0, 1, 1]) :
     ("tiles/black-blue/panel-light-pink", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
     ("tiles/black-blue/panel-light-yellow", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
     ("tiles/black-blue/panel-light-aqua", Position 1 1, Size 64 64, 0.4, Just [0, 1]) :
@@ -62,10 +62,10 @@ tiles =
     ("tiles/black-green/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-green/panel-small", Position 1 1, Size 32 32, 1, Nothing) :
     ("tiles/black-green/panel-large", Position 1 1, Size 128 128, 1, Nothing) :
-    ("tiles/black-green/pilotlamp-standard-left", Position 9 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1, 0, 1, 1]) :
-    ("tiles/black-green/pilotlamp-standard-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1, 0, 1, 1]) :
-    ("tiles/black-green/pilotlamp-small-left", Position 9 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
-    ("tiles/black-green/pilotlamp-small-right", Position 1 1, Size 32 32, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-green/pilotlamp-standard-left", Position 9 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-green/pilotlamp-standard-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-green/pilotlamp-small-left", Position 9 1, Size 32 32, 0.25, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-green/pilotlamp-small-right", Position 1 1, Size 32 32, 0.25, Just [0, 0, 0, 1, 1]) :
     ("tiles/black-green/aircon-left", Position 1 1, Size 64 128, 1, Nothing) :
     ("tiles/black-green/aircon-right", Position 1 1, Size 64 128, 1, Nothing) :
     ("tiles/black-green/tank-horizontal", Position 1 1, Size 160 64, 1, Nothing) :
