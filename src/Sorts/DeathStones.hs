@@ -29,6 +29,12 @@ stones =
         [],
      Position 1 17,
      fmap fromUber $ Size 8 5) :
+    (SortId "deathstones/lasers/horizontal-small",
+     ("objects" </> "laser-horizontal-small_00") :
+        ("objects" </> "laser-horizontal-small_01") :
+        [],
+     Position 1 17,
+     fmap fromUber $ Size 1 5) :
     (SortId "deathstones/lasers/horizontal-up",
      ("objects" </> "laser-up_00") :
         ("objects" </> "laser-up_01") :
@@ -49,6 +55,12 @@ stones =
         [],
      Position 17 1,
      fmap fromUber $ Size 5 8) :
+    (SortId "deathstones/lasers/vertical-small",
+     ("objects" </> "laser-vertical-small_00") :
+        ("objects" </> "laser-vertical-small_01") :
+        [],
+     Position 17 1,
+     fmap fromUber $ Size 5 1) :
     (SortId "deathstones/lasers/vertical-left",
      ("objects" </> "laser-left_00") :
         ("objects" </> "laser-left_01") :
