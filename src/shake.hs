@@ -85,7 +85,7 @@ pkgs =
 
 main = do
   hSetBuffering stdout NoBuffering
-  shake shakeOptions{shakeParallel = 2, shakeVerbosity = 2} $ do
+  shake shakeOptions{shakeParallel = 2, shakeVerbosity = Loud} $ do
     let qtWrapper = "cpp" </> "dist" </> "libqtwrapper.a"
         cppMakefile = "cpp" </> "dist" </> "Makefile"
         ghcFlags =
