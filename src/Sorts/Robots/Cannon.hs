@@ -175,12 +175,12 @@ instance Sort CannonSort Cannon where
 
     getControlledChipmunk _ c = base c -- fromMaybe (base c) (c ^. followedBall)
 
-    updateNoSceneChange sort _ space _ now _ (False, _) =
+    updateNoSceneChange sort _ _ space _ now _ (False, _) =
         return . (controlled ^= False) >=>
         destroyCannonballs space now sort >=>
 --         passThrough debug >=>
         return
-    updateNoSceneChange sort config space scene now contacts (True, cd) =
+    updateNoSceneChange sort _ config space scene now contacts (True, cd) =
         return . (controlled ^= True) >=>
         return . updateAngleState config cd >=>
         passThrough setAngle >=>

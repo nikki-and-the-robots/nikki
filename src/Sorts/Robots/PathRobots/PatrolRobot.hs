@@ -115,7 +115,7 @@ instance Sort PSort Patrol where
     immutableCopy p@Patrol{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
-    updateNoSceneChange sort config _ mode now contacts cd =
+    updateNoSceneChange sort _ config _ mode now contacts cd =
         control config cd >=>
         return . updateLogic >=>
         passThrough applyPatrolForce

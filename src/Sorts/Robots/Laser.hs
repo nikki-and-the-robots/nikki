@@ -150,12 +150,12 @@ instance Sort LSort Laser where
 
     getControlledChipmunk _ o = chipmunk o
 
-    updateNoSceneChange _ config space _ _ _ (True, cd) laser =
+    updateNoSceneChange _ _ config space _ _ _ (True, cd) laser =
         if isRobotActionPressed config cd
         then (passThrough (updateLaserActivation space))
              (active ^: not $ laser)
         else return laser
-    updateNoSceneChange _ _ _ _ _ _ _ l = return l
+    updateNoSceneChange _ _ _ _ _ _ _ _ l = return l
 
     renderObject app config object sort ptr offset now = do
         renderPosition <- fst <$> getRenderPositionAndAngle (chipmunk object)

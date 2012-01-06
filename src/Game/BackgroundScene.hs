@@ -52,7 +52,7 @@ waitForPressedButtonBackgroundScene app gameStateRef sceneMVar = do
         space <- gets cmSpace
         sc <- gets scene
         configuration <- lift get
-        sc' <- io $ stepScene configuration space initial sc
+        sc' <- io $ stepScene app configuration space initial sc
         puts setScene sc'
 
         swapSceneMVar =<< io getDebugging

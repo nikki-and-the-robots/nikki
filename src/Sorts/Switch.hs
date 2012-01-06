@@ -176,8 +176,8 @@ instance Sort SwitchSort Switch where
 
     chipmunks (Switch a b c _ _ _) = [a, b, c]
 
-    update _ _ _ _ _ _ _ _ switch@StaticSwitch{} = return (id, switch)
-    update sort@SwitchSort{transient = True} controls _ scene now contacts cd index switch = do
+    update _ _ _ _ _ _ _ _ _ switch@StaticSwitch{} = return (id, switch)
+    update sort@SwitchSort{transient = True} _ controls _ scene now contacts cd index switch = do
         let new = switch{triggered_ = triggerShape switch `member` triggers contacts}
             (sceneMod, mSound) = case (triggered_ switch, triggered_ new) of
                 (False, True) -> (switches ^: firstStrict succ, Just onSound)
@@ -186,7 +186,7 @@ instance Sort SwitchSort Switch where
         forM_ mSound $ \ sound ->
             triggerSound $ sound sort
         return (sceneMod, updateIfLast (sceneMod scene) now new)
-    update sort controls _ scene now contacts cd index switch@Switch{triggered_ = False} =
+    update sort _ controls _ scene now contacts cd index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
             -- triggered
             triggerSound $ onSound sort
@@ -195,7 +195,7 @@ instance Sort SwitchSort Switch where
             return (switches ^: firstStrict succ, new)
           else
             return (id, updateIfLast scene now switch)
-    update s _ _ _ _ _ _ _ o = return (id, o)
+    update s _ _ _ _ _ _ _ _ o = return (id, o)
 
     renderObject _ _ switch sort _ _ now = do
         (stampPos, stampAngle) <- getRenderPositionAndAngle (stampChipmunk switch)

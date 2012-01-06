@@ -73,7 +73,7 @@ gameLoop app editorTestMode rsr@RenderStateRefs{sceneMVar} =
         space <- gets cmSpace
         sc <- gets scene
         configuration <- lift get
-        sc' <- io $ stepScene configuration space controlData sc
+        sc' <- io $ stepScene app configuration space controlData sc
         puts setScene sc'
 
         swapSceneMVar =<< io getDebugging

@@ -464,18 +464,18 @@ mkPolys size =
 
 -- * controlling
 
-update sort config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} = return $
+update sort _ config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} = return $
     updateShowingBubble contacts $
     updateUncontrolledStandby now $
     terminal
-update sort config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} =
+update sort _ config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} =
     updateOnTime now <$>
     showingBubble ^= True <$>
     putBatteriesInTerminal scene now terminal
-update sort config _ scene now contacts (False, cd) terminal =
+update sort _ config _ scene now contacts (False, cd) terminal =
     (state ^: updateGameMode contacts terminal) <$>
     (robots ^^: updateControllableStates scene) terminal
-update sort config _ scene now contacts (True, cd) terminal =
+update sort _ config _ scene now contacts (True, cd) terminal =
     (robots ^^: updateControllableStates scene) $
     state ^= updateState config now cd (terminal ^. robots) (terminal ^. state) $
     terminal

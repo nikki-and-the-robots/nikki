@@ -170,7 +170,7 @@ instance Sort SSort Sign where
 
     chipmunks = return . chipmunk
 
-    updateNoSceneChange sort controls _ scene now contacts (_, cd) sign =
+    updateNoSceneChange sort _ controls _ scene now contacts (_, cd) sign =
         return $ (monologue ^: (updateState controls cd contacts sign)) sign
 
     renderObject app config sign sort ptr offset now =
