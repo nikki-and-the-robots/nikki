@@ -41,7 +41,7 @@ hsImports xs = [ takeWhile (\x -> isAlphaNum x || x `elem` "._") $ dropWhile (no
 
 extractHaskellDeps :: FilePath -> Action [FilePath]
 extractHaskellDeps file = do
-    code <- liftIO $ readFile file
+    code <- readFile' file
     let imports = hsImports code
     filterM doesFileExist $ map moduleToFile imports
 
@@ -82,6 +82,13 @@ pkgs =
     "template" :
     []
 
+addShakeDir = ("shake/" ++)
+removeShakeDir f =
+    if "shake/" `isPrefixOf` f then
+        drop 6 f
+      else
+        error ("removeShakeDir: path does not start with " ++ show "shake/")
+
 
 main = do
   hSetBuffering stdout NoBuffering
@@ -90,6 +97,8 @@ main = do
         cppMakefile = "cpp" </> "dist" </> "Makefile"
         ghcFlags =
             "-O0" :
+            "-outputdir shake" :
+            "-ishake" :
             []
         ghcLinkFlags =
             "-threaded" :
@@ -97,19 +106,19 @@ main = do
             map ("-package=" ++) pkgs ++
             []
 
-    want ["core"]
+    want ["shake/core"]
 
-    "core" *> \ core -> do
-        os <- map (flip replaceExtension "o") <$> getHaskellDeps "Main.hs"
+    "shake/core" *> \ core -> do
+        os <- map (addShakeDir . flip replaceExtension "o") <$> getHaskellDeps "Main.hs"
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
         system' "ghc" $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
 
     "//*.o" *> \ o -> do
-        let hsFile = replaceExtension o "hs"
-        need [hsFile]
+--     objectOrInterfaceFile ?> \ o -> do
+        let hsFile = removeShakeDir $ replaceExtension o "hs"
         deps <- extractHaskellDeps hsFile
-        need (map (flip replaceExtension "hi") deps)
+        need (hsFile : (map (addShakeDir . flip replaceExtension "hi") deps))
         system' "ghc" $ ["-c", hsFile] ++ ghcFlags
 
     "//*.hi" *> \ hi -> do
@@ -121,7 +130,7 @@ main = do
         need (cppMakefile : cs ++ hs)
         system' "bash" ("-c" : "cd cpp/dist; make" : [])
 
-    cppMakefile *> \ _ -> do
+    cppMakefile *> \ x -> do
         need ["cpp" </> "CMakeLists.txt"]
         liftIO $ createDirectoryIfMissing False ("cpp" </> "dist")
         system' "bash" ("-c" : "cd cpp/dist; cmake .." : [])
