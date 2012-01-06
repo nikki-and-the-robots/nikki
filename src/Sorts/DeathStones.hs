@@ -21,32 +21,34 @@ import Base
 
 type StoneDescription = (SortId, [String], Offset Double, Size Double)
 
+laserDir = "deathstones" </> "lasers"
+
 stones :: [StoneDescription]
 stones =
     -- horizontal
     (SortId "deathstones/lasers/horizontal",
-     ("objects" </> "laser-horizontal_00") :
-        ("objects" </> "laser-horizontal_01") :
+     (laserDir </> "laser-horizontal_00") :
+        (laserDir </> "laser-horizontal_01") :
         [],
      Position 1 17,
      fmap fromUber $ Size 8 5) :
     (SortId "deathstones/lasers/horizontal-small",
-     ("objects" </> "laser-horizontal-small_00") :
-        ("objects" </> "laser-horizontal-small_01") :
+     (laserDir </> "laser-horizontal-small_00") :
+        (laserDir </> "laser-horizontal-small_01") :
         [],
      Position 1 17,
      fmap fromUber $ Size 1 5) :
 
     -- vertical
     (SortId "deathstones/lasers/vertical",
-     ("objects" </> "laser-vertical_00") :
-        ("objects" </> "laser-vertical_01") :
+     (laserDir </> "laser-vertical_00") :
+        (laserDir </> "laser-vertical_01") :
         [],
      Position 17 1,
      fmap fromUber $ Size 5 8) :
     (SortId "deathstones/lasers/vertical-small",
-     ("objects" </> "laser-vertical-small_00") :
-        ("objects" </> "laser-vertical-small_01") :
+     (laserDir </> "laser-vertical-small_00") :
+        (laserDir </> "laser-vertical-small_01") :
         [],
      Position 17 1,
      fmap fromUber $ Size 5 1) :
