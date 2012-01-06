@@ -17,6 +17,8 @@ import Data.Accessor
 import Data.Maybe
 import Data.StrictList
 
+import Control.Monad (join)
+
 import Text.Logging
 
 import System.FilePath
@@ -59,22 +61,32 @@ zonePadding :: CpFloat = fromKachel 0.5
 signDir = pngDir </> "sign"
 
 sorts :: [RM (Maybe Sort_)]
-sorts = storyModeSorts
+sorts =
+    signSortsSorts "tutorial" ["data-terminal"] ++
+    signSortsSorts "story-mode" StoryMode.signs
 
-storyModeSorts :: [RM (Maybe Sort_)]
-storyModeSorts = 
-    (flip map) StoryMode.signs $ \ name -> do
-        mFile <- io $ getStoryModeDataFileName (signDir </> name <.> "png")
+signSortsSorts :: String -> [String] -> [RM (Maybe Sort_)]
+signSortsSorts sortIdSnippet names =
+    (flip map) names $ \ name -> do
+        let dataPath = signDir </> name <.> "png"
+        mFile <- getSignDataFile dataPath
         case mFile of
             Just file -> do
                 pix <- loadSymmetricPixmap (Position 1 1) file
                 speechIcon <- loadSymmetricPixmap (Position 1 1) =<<
                     getDataFileName (signDir </> "speech-icon" <.> "png")
-                let sortid = "story-mode/sign/" ++ name
+                let sortid = sortIdSnippet ++ "/sign/" ++ name
                 return $ Just $ Sort_ $ SSort sortid pix speechIcon
             Nothing -> do
-                io $ logg Debug ("sm-file not found: " ++ (signDir </> name <.> "png"))
+                io $ logg Debug ("sign-file not found: " ++ (signDir </> name <.> "png"))
                 return Nothing
+
+-- | Looks for the given data file in the public and in the story-mode data directory.
+getSignDataFile :: FilePath -> RM (Maybe FilePath)
+getSignDataFile dataPath = do
+    publicPath <- io . maybeExists =<< getDataFileName dataPath
+    storyModePath <- join <$> io (fmapM maybeExists =<< getStoryModeDataFileName dataPath)
+    return (publicPath <|> storyModePath)
 
 data SSort =
     SSort {
@@ -134,7 +146,7 @@ instance Sort SSort Sign where
 
     initialize app _ (Just space) sort editorPosition (Just (OEMState oemState_)) _ = do
         let Just oemState :: Maybe SignOEMState = cast oemState_
-        monologue <- io $ readStoryModeMonologue $ oemFile oemState
+        monologue <- readSignMonologue $ oemFile oemState
         let pos = position2vector
                 (epToPosition (size sort) editorPosition)
                 +~ baryCenterOffset

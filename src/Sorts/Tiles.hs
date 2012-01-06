@@ -64,12 +64,6 @@ names =
     ("tiles/pink-small", Position 1 1, Size 32 32) :
     ("tiles/red-small", Position 1 1, Size 32 32) :
     ("terminals/terminal-standard-bottom-end", Position 1 1, Size 192 32) :
-    ("tutorial/robots-01", Position 1 1, Size 416 268) :
-    ("tutorial/robots-02", Position 1 1, Size 920 180) :
-    ("tutorial/nikki-01", Position 1 1, Size 768 160) :
-    ("tutorial/nikki-02", Position 1 1, Size 768 160) :
-    ("tutorial/nikki-03", Position 1 1, Size 768 160) :
-    ("tutorial/nikki-04", Position 1 1, Size 768 160) :
 
     ("deathstones/lasers/laser-up", split 1, fmap fromUber $ Size 15 4) :
     ("deathstones/lasers/laser-down", Position 1 5, fmap fromUber $ Size 15 4) :

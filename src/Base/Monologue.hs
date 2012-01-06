@@ -1,10 +1,10 @@
 
-module Base.Monologue (Monologue, readStoryModeMonologue) where
+module Base.Monologue (Monologue, readSignMonologue) where
 
 
 import Prelude hiding (catch)
 
-import Control.Exception
+import Control.Monad
 
 import System.FilePath
 
@@ -12,27 +12,22 @@ import Utils
 
 import Base.Prose
 import Base.Paths
+import Base.Types
 
 
 monologueDir = "monologues"
 
 type Monologue = [Prose]
 
-readStoryModeMonologue :: String -> IO Monologue
-readStoryModeMonologue name = do
-    mFile <- getStoryModeMonologueFile name
-    case mFile of
-        Just file -> catch (parseMonologue <$> io (readFile file)) errorHandler
-        Nothing -> return [pv ("monologue file not found: " ++ monologueDir </> name)]
-  where
-    errorHandler :: IOException -> IO Monologue
-    errorHandler e = return [pv ("Monologue" <~> show name <~> "not found!")]
+readSignMonologue :: FilePath -> RM Monologue
+readSignMonologue name = do
+    let dataPath = monologueDir </> name
+    mPublicFile <- io . maybeExists =<< getDataFileName dataPath
+    mStoryModeFile <- join <$> io (fmapM maybeExists =<< getStoryModeDataFileName dataPath)
 
-getStoryModeMonologueFile :: String -> IO (Maybe FilePath)
-getStoryModeMonologueFile name = do
-    -- TODO: load monologues in different languages
-    let file = monologueDir </> name
-    io $ getStoryModeDataFileName file
+    io $ case mPublicFile <|> mStoryModeFile of
+        Just file -> parseMonologue <$> io (readFile file)
+        Nothing -> return [pv ("monologue file not found: " ++ dataPath)]
 
 parseMonologue :: String -> Monologue
 parseMonologue =

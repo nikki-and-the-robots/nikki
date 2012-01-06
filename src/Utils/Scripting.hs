@@ -160,6 +160,15 @@ getFiles dir mExtension =
 fileSort :: [String] -> [String]
 fileSort = sortBy (\ a b -> compare (map toUpper $ a) (map toUpper b))
 
+-- | Checks if a directory or file exists and returns (Just file) in that case.
+maybeExists :: FilePath -> IO (Maybe FilePath)
+maybeExists file = do
+    fileExists <- doesFileExist file
+    dirExists <- doesDirectoryExist file
+    return $ if fileExists || dirExists
+        then Just file
+        else Nothing
+
 
 -- * version stuff
 
