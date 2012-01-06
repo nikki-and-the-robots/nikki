@@ -35,10 +35,14 @@ import Base
 import Sorts.Tiles.Baking
 import qualified Sorts.StoryMode
 
+import qualified Sorts.DeathStones (animationFrameTime)
+
 
 -- * Tile configuration
 
-defaultFrameTime :: Seconds = 1.0
+-- set to laser end pieces, is not individually configurable right now.
+-- (the only animated public tiles are laser end pieces)
+defaultFrameTime :: Seconds = Sorts.DeathStones.animationFrameTime
 
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]
@@ -66,6 +70,12 @@ names =
     ("tutorial/nikki-02", Position 1 1, Size 768 160) :
     ("tutorial/nikki-03", Position 1 1, Size 768 160) :
     ("tutorial/nikki-04", Position 1 1, Size 768 160) :
+
+    ("deathstones/lasers/laser-up", split 1, fmap fromUber $ Size 15 4) :
+    ("deathstones/lasers/laser-down", Position 1 5, fmap fromUber $ Size 15 4) :
+    ("deathstones/lasers/laser-left", split 1, fmap fromUber $ Size 4 15) :
+    ("deathstones/lasers/laser-right", Position 5 1, fmap fromUber $ Size 4 15) :
+
     []
 
 -- | points are moved by this distance to avoid sticky edges

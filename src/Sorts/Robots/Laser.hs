@@ -29,7 +29,7 @@ import Editor.Scene.Rendering
 
 import Sorts.Robots.Configuration
 import Sorts.Robots.Eyes
-import Sorts.DeathStones (animationFrameTimes)
+import Sorts.DeathStones (animationFrameTime)
 
 
 -- * configuration
@@ -236,7 +236,7 @@ mkLaserRenderPixmaps sort pos arm =
         []
     animation =
         fmap (map RenderOnTop) $
-        mkAnimation (map laserPs (laser armPixmaps)) animationFrameTimes
+        mkAnimation (map laserPs (laser armPixmaps)) [animationFrameTime]
 
     baseP = RenderPixmap (base sort) pos Nothing
     dir = oemDirection arm

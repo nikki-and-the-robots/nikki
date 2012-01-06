@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables, MultiParamTypeClasses, DeriveDataTypeable #-}
 
-module Sorts.DeathStones (sorts, animationFrameTimes) where
+module Sorts.DeathStones (sorts, animationFrameTime) where
 
 
 import Data.Abelian
@@ -23,6 +23,7 @@ type StoneDescription = (SortId, [String], Offset Double, Size Double)
 
 stones :: [StoneDescription]
 stones =
+    -- horizontal
     (SortId "deathstones/lasers/horizontal",
      ("objects" </> "laser-horizontal_00") :
         ("objects" </> "laser-horizontal_01") :
@@ -35,18 +36,6 @@ stones =
         [],
      Position 1 17,
      fmap fromUber $ Size 1 5) :
-    (SortId "deathstones/lasers/horizontal-up",
-     ("objects" </> "laser-up_00") :
-        ("objects" </> "laser-up_01") :
-        [],
-     Position 21 21,
-     fmap fromUber $ Size 5 3) :
-    (SortId "deathstones/lasers/horizontal-down",
-     ("objects" </> "laser-down_00") :
-        ("objects" </> "laser-down_01") :
-        [],
-     Position 21 1,
-     fmap fromUber $ Size 5 3) :
 
     -- vertical
     (SortId "deathstones/lasers/vertical",
@@ -61,21 +50,10 @@ stones =
         [],
      Position 17 1,
      fmap fromUber $ Size 5 1) :
-    (SortId "deathstones/lasers/vertical-left",
-     ("objects" </> "laser-left_00") :
-        ("objects" </> "laser-left_01") :
-        [],
-     Position 21 21,
-     fmap fromUber $ Size 3 5) :
-    (SortId "deathstones/lasers/vertical-right",
-     ("objects" </> "laser-right_00") :
-        ("objects" </> "laser-right_01") :
-        [],
-     Position 1 21,
-     fmap fromUber $ Size 3 5) :
+
     []
 
-animationFrameTimes :: [Seconds] = [0.1]
+animationFrameTime :: Seconds = 0.1
 
 
 -- * loading
@@ -86,7 +64,7 @@ sorts = map ((Just <$>) . loadStone) stones
 loadStone :: StoneDescription -> RM Sort_
 loadStone (sortId, imageNames, offset, size) = do
     images <- mapM (loadPixmap offset size) =<< mapM mkPngFile imageNames
-    return $ Sort_ $ SSort sortId images (mkAnimation images animationFrameTimes)
+    return $ Sort_ $ SSort sortId images (mkAnimation images [animationFrameTime])
   where
     mkPngFile :: String -> RM FilePath
     mkPngFile imageName = getDataFileName (pngDir </> imageName <.> "png")
