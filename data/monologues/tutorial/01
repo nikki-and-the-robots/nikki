@@ -1,4 +1,4 @@
 Hey there!!
-Use the ARROW KEYS to move left and right.
-Use CTRL to jump.
+Use $leftKey and $rightKey to move left and right.
+Use $jumpKey to jump.
 ESC will let you quit the level at anytime.

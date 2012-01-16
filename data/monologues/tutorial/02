@@ -1,2 +1,2 @@
-When jumping against a wall, press CTRL again to execute a walljump!
-You don't have to switch directions with the ARROW KEYS when walljumping.
+When jumping against a wall, press $jumpKey again to execute a walljump!
+You don't have to switch directions with $leftKey or $rightKey when walljumping.
