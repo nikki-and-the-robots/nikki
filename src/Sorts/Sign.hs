@@ -109,22 +109,22 @@ monologue = accessor monologue_ (\ a r -> r{monologue_ = a})
 
 -- | word and bubble-wrapped contents of a monologue
 data WrappedMonologue
-    = NoContact {
-        glyphs :: !(SL (SL (SL Glyph)))
-      }
-    | Contact {
-        glyphs :: !(SL (SL (SL Glyph)))
-      }
+    = NoContact {proses :: !(SL Prose)}
+    | Contact {proses :: !(SL Prose)}
     | ShowingText {
-        index :: Int,
+        proses :: !(SL Prose),
+        index :: !Int,
         glyphs :: !(SL (SL (SL Glyph)))
       }
   deriving (Show)
 
-mkWrappedMonologue :: Application -> [Prose] -> WrappedMonologue
-mkWrappedMonologue app text =
-    NoContact $ convert $ concat $ map bubbleWrap $
-        map (wordWrap (standardFont app) bubbleTextWidths) text
+mkWrappedMonologue :: Application -> Controls -> SL Prose -> SL (SL (SL Glyph))
+mkWrappedMonologue app controls text =
+    convert $ concat $ map bubbleWrap $
+        map (wordWrap (standardFont app) bubbleTextWidths) $
+        ftoList $
+        fmap (substitute (keysContext controls)) $
+        text
   where
     bubbleWrap :: [[Glyph]] -> [[[Glyph]]]
     bubbleWrap chunk =
@@ -162,16 +162,15 @@ instance Sort SSort Sign where
             polysAndAttributes = map (mkShapeDescription shapeAttributes) polys
         chip <- io $ initChipmunk space bodyAttributes polysAndAttributes baryCenterOffset
         config <- ask
-        let content = mkWrappedMonologue app monologue
-        return $ Sign chip (config ^. language) content
+        return $ Sign chip (config ^. language) (NoContact $ fromList monologue)
 
     immutableCopy s =
         CM.immutableCopy (chipmunk s) >>= \ c -> return s{chipmunk = c}
 
     chipmunks = return . chipmunk
 
-    updateNoSceneChange sort _ controls _ scene now contacts (_, cd) sign =
-        return $ (monologue ^: (updateState controls cd contacts sign)) sign
+    updateNoSceneChange sort app controls _ scene now contacts (_, cd) sign =
+        return $ (monologue ^: (updateState app controls cd contacts sign)) sign
 
     renderObject app config sign sort ptr offset now =
         return $ renderSign app config offset sort sign
@@ -195,8 +194,9 @@ mkPolys size =
 
 -- * updating
 
-updateState :: Controls -> ControlData -> Contacts -> Sign -> WrappedMonologue -> WrappedMonologue
-updateState controls cd contacts sign state =
+updateState :: Application -> Controls -> ControlData -> Contacts
+    -> Sign -> WrappedMonologue -> WrappedMonologue
+updateState app controls cd contacts sign state =
     case fmap ((`elem` shapes (chipmunk sign)) . fst) $ nearestSign contacts of
         Just True ->
             -- nikki stands in front of the sign
@@ -208,13 +208,13 @@ updateState controls cd contacts sign state =
             else
                 -- the player pressed the context button
                 case state of
-                    ShowingText i glyphs ->
+                    ShowingText proses i glyphs ->
                         if succ i < flength glyphs then
-                            ShowingText (succ i) glyphs
+                            ShowingText proses (succ i) glyphs
                         else
-                            Contact glyphs
-                    x -> ShowingText 0 $ glyphs x
-        _ -> NoContact $ glyphs state
+                            Contact proses
+                    x -> ShowingText (proses x) 0 (mkWrappedMonologue app controls (proses x))
+        _ -> NoContact (proses state)
 
 
 -- * rendering
@@ -240,7 +240,7 @@ renderState app config offset sort signPos state = case state of
                                           (- (height iconSize + speechIconPadding))
             signSize = size sort
             iconSize = pixmapSize $ speechIcon sort
-    ShowingText i glyphs -> Just $
+    ShowingText _ i glyphs -> Just $
         renderSpeechBubble app config offset signPos (size sort) (glyphs ! i)
 
 -- | Renders a big beautiful bubble

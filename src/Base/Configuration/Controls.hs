@@ -56,8 +56,6 @@ import Data.Initial
 import Data.Accessor
 import Data.Char (toUpper)
 
-import Control.Arrow
-
 import Graphics.Qt
 
 import Utils
@@ -109,17 +107,19 @@ data KeysHint
 -- * context for templates
 
 keysContext :: Controls -> [(String, String)]
-keysContext controls = map (second (map toUpper) . mk) $
-    ("leftKey", leftKey) :
-    ("rightKey", rightKey) :
-    ("upKey", upKey) :
-    ("downKey", downKey) :
-    ("jumpKey", jumpKey) :
-    ("contextKey", contextKey) :
+keysContext controls =
+    ("leftKey", mk leftKey) :
+    ("rightKey", mk rightKey) :
+    ("upKey", mk upKey) :
+    ("downKey", mk downKey) :
+    ("jumpKey", mk jumpKey) :
+    ("contextKey", mk contextKey) :
     []
   where
-    mk :: (String, Accessor Controls (Key, String)) -> (String, String)
-    mk (label, acc) = (label, snd (controls ^. acc))
+    mk :: Accessor Controls (Key, String) -> String
+    mk acc =
+        map toUpper $
+        snd (controls ^. acc)
 
 -- * internals
 
