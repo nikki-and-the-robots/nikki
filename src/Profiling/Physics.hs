@@ -3,7 +3,6 @@ module Profiling.Physics (Profiling.Physics.render, terminate) where
 
 
 import Data.IORef
-import Data.Time.Clock.POSIX
 import Data.Abelian
 
 import Text.Printf
@@ -23,10 +22,6 @@ import Base
 -- | time window which will be measured
 profilingWindow :: Seconds
 profilingWindow = 1
-
--- | returns the current time
-getTime :: IO CpFloat
-getTime = realToFrac <$> getPOSIXTime
 
 render :: Application -> Configuration -> Ptr QPainter -> Seconds -> IO ()
 render app config ptr spaceTime | physics_profiling config = do

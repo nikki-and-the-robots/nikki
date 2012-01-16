@@ -64,6 +64,7 @@ failureMenu app parent sceneRenderState gameState = NoGUIAppState $ do
   where
     poller gameStateRef =
         waitForPressedButtonBackgroundScene app gameStateRef (sceneMVar sceneRenderState)
+            (const True) Nothing
     backGround =
         sceneRenderState |:>
         MenuBackgroundTransparent
@@ -76,6 +77,7 @@ successMessage app parent sceneRenderState gameState score
      AppStateLooped (renderable renderableInstance) $ do
         ref <- io $ newIORef gameState
         ignore $ waitForPressedButtonBackgroundScene app ref (sceneMVar sceneRenderState)
+            (const True) Nothing
         return $ freeGameState gameState parent
   where
     renderableInstance =

@@ -103,7 +103,7 @@ menuAppState :: Renderable renderable => Application -> MenuHeader -> Maybe AppS
     -> [(renderable, Int -> AppState)] -> Int -> AppState
 menuAppState app =
     menuAppStateSpecialized app
-    (waitForPressedButton app)
+    (Just <$> waitForPressedButton app)
     (renderable MenuBackground)
     AppState
 
@@ -112,7 +112,7 @@ menuAppState app =
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
 menuAppStateSpecialized :: Renderable renderable => Application
-    -> M Button -> RenderableInstance -> (RenderableInstance -> M AppState -> AppState)
+    -> M (Maybe Button) -> RenderableInstance -> (RenderableInstance -> M AppState -> AppState)
     -> MenuHeader -> Maybe AppState -> [(renderable, Int -> AppState)] -> Int -> AppState
 menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParent children preSelection =
     NoGUIAppState $ io $
@@ -120,23 +120,27 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
   where
     inner :: Menu -> AppState
     inner menu = appStateCons (renderable menu) $ do
-        e <- yourPoller
-        controls__ <- gets controls_
-        if isMenuUp controls__ e then do
-            triggerSound $ menuSelectSound $ applicationSounds app
-            return $ inner $ selectPrevious menu
-         else if isMenuDown controls__ e then do
-            triggerSound $ menuSelectSound $ applicationSounds app
-            return $ inner $ selectNext menu
-         else if isMenuConfirmation controls__ e then do
-            triggerSound $ menuConfirmSound $ applicationSounds app
-            return $ snd $ selected menu
-         else if isMenuBack controls__ e then do
-            triggerSound $ menuCancelSound $ applicationSounds app
-            case mParent of
-               Just parent -> return parent
-               Nothing -> return $ inner menu
-         else return $ inner menu
+        mEvent <- yourPoller
+        case mEvent of
+            Nothing -> return $ inner menu
+            Just e -> do
+                controls__ <- gets controls_
+                if isMenuUp controls__ e then do
+                    triggerSound $ menuSelectSound $ applicationSounds app
+                    return $ inner $ selectPrevious menu
+                  else if isMenuDown controls__ e then do
+                    triggerSound $ menuSelectSound $ applicationSounds app
+                    return $ inner $ selectNext menu
+                  else if isMenuConfirmation controls__ e then do
+                    triggerSound $ menuConfirmSound $ applicationSounds app
+                    return $ snd $ selected menu
+                  else if isMenuBack controls__ e then do
+                    triggerSound $ menuCancelSound $ applicationSounds app
+                    case mParent of
+                        Just parent -> return parent
+                        Nothing -> return $ inner menu
+                  else
+                    return $ inner menu
 
 -- * automatic creation
 

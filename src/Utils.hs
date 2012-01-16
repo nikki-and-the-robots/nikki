@@ -49,6 +49,7 @@ import Data.Monoid
 import Data.Function
 import qualified Data.Strict as Strict
 import Data.Strict (Pair(..))
+import Data.Time.Clock.POSIX
 
 import Text.Printf
 import Text.Logging
@@ -638,3 +639,7 @@ firstStrict f (a :!: c) = f a :!: c
 
 firstAStrict :: Accessor (Pair a b) a
 firstAStrict = accessor (\ (a :!: _) -> a) (\ a (_ :!: b) -> (a :!: b))
+
+-- | Returns the current time in seconds.
+getTime :: IO Double
+getTime = realToFrac <$> getPOSIXTime
