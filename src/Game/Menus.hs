@@ -52,22 +52,34 @@ playHelp app parent = NoGUIAppState $ do
 
 failureMenu :: Application -> Parent -> RenderStateRefs -> GameState
     -> AppState
-failureMenu app parent sceneRenderState gameState = NoGUIAppState $ do
+failureMenu app parent sceneRenderState gameState =
+  AppStateLooped (renderable waitFailureScreen) $ do
     gameStateRef <- io $ newIORef gameState
+    ignore $ waitForPressedButtonBackgroundScene app gameStateRef
+                 (sceneMVar sceneRenderState) (const False) (Just afterLevelWaitTime)
     return $ menuAppStateSpecialized app (poller gameStateRef)
         (renderable backGround) AppStateLooped
-        FailureMenu Nothing (
+        FailureMenu Nothing menuItems 0
+  where
+    menuItems =
 --     (p "rewind to last savepoint", todo) :
 --     (p "retry from beginning", todo) :
-            (p "quit level", const $ freeGameState gameState parent) :
-            []) 0
-  where
+        (p "quit level", const $ freeGameState gameState parent) :
+        []
+
     poller gameStateRef =
         waitForPressedButtonBackgroundScene app gameStateRef (sceneMVar sceneRenderState)
             (const True) Nothing
     backGround =
         sceneRenderState |:>
         MenuBackgroundTransparent
+    waitFailureScreen =
+        backGround |:>
+        (addBottomLineSpacer $ centered $ vBox (length lines) $ lines)
+    lines =
+        renderable (failurePixmap (applicationPixmaps app)) :
+        replicate (length menuItems + 1) lineSpacer ++
+        []
 
 -- | show a textual message and wait for a keypress
 successMessage :: Application -> Parent -> RenderStateRefs -> GameState
