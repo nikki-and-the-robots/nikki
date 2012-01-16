@@ -1,6 +1,7 @@
 
 module Base.Renderable.StickToBottom (
     stickToBottom,
+    addBottomLineSpacer,
     addKeysHint,
     KeysHint(..),
   ) where
@@ -21,6 +22,7 @@ import Base.Configuration.Controls
 import Base.Renderable.Common ()
 import Base.Renderable.CenterHorizontally
 import Base.Renderable.Prose ()
+import Base.Renderable.Spacer
 
 
 -- | Implements a Renderable that has one child that gets rendered as
@@ -28,6 +30,9 @@ import Base.Renderable.Prose ()
 stickToBottom :: (Renderable head, Renderable bottom) =>
     head -> bottom -> RenderableInstance
 stickToBottom head bottom = renderable $ StickToBottom (renderable head) (renderable bottom)
+
+addBottomLineSpacer :: Renderable r => r -> RenderableInstance
+addBottomLineSpacer child = stickToBottom child lineSpacer
 
 
 -- * keys hints

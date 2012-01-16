@@ -10,6 +10,7 @@ module Base.Types (
     module Base.Types.Events,
     module Base.Types.LevelMetaData,
     Offset,
+    Seconds,
   ) where
 
 
@@ -57,8 +58,6 @@ import StoryMode.Types
 
 
 -- * type aliases
-
-type Seconds = CpFloat
 
 type ConfigurationReader = ReaderT Configuration IO
 type RM = ConfigurationReader

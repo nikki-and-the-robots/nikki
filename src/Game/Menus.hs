@@ -74,17 +74,22 @@ successMessage :: Application -> Parent -> RenderStateRefs -> GameState
     -> Score -> (Maybe Score, Record, Record) -> AppState
 successMessage app parent sceneRenderState gameState score
   (mHighScore, timeRecord, batteryRecord) =
-     AppStateLooped (renderable renderableInstance) $ do
+     AppStateLooped (renderable $ renderableInstance False) $ do
         ref <- io $ newIORef gameState
-        ignore $ waitForPressedButtonBackgroundScene app ref (sceneMVar sceneRenderState)
-            (const True) Nothing
-        return $ freeGameState gameState parent
+        waitForEvent ref (const False) (Just afterLevelWaitTime)
+        return $ AppStateLooped (renderable $ renderableInstance True) $ do
+            waitForEvent ref (const True) Nothing
+            return $ freeGameState gameState parent
   where
-    renderableInstance =
+    waitForEvent ref p to = ignore $ waitForPressedButtonBackgroundScene app ref
+                                     (sceneMVar sceneRenderState) p to
+    renderableInstance showKeyHint =
         sceneRenderState |:>
         MenuBackgroundTransparent |:>
-        addKeysHint (menuConfirmationKeysHint (Base.p "ok"))
-            (centered $ vBox (length lines) $ fmap centerHorizontally lines)
+        (if showKeyHint
+            then addKeysHint (menuConfirmationKeysHint (Base.p "ok"))
+            else addBottomLineSpacer)
+                (centered $ vBox (length lines) $ fmap centerHorizontally lines)
     lines :: [RenderableInstance]
     lines =
         renderable (successPixmap (applicationPixmaps app)) :

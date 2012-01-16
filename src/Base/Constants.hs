@@ -7,6 +7,14 @@ import Physics.Hipmunk
 
 import Graphics.Qt
 
+
+type Seconds = CpFloat
+
+-- * menu
+
+afterLevelWaitTime :: Seconds = 1.5
+
+
 -- * Graphics
 
 -- | converts uberpixels to pixels
