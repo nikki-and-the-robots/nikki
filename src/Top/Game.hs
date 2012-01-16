@@ -7,8 +7,6 @@ import Data.IORef
 
 import Physics.Chipmunk
 
-import Graphics.Qt
-
 import Utils
 
 import Base
@@ -22,15 +20,16 @@ import Top.Initialisation
 
 
 playLevel :: Application -> AppState -> Bool -> EditorScene Sort_ -> AppState
-playLevel app parent editorTestMode editorScene = NoGUIAppState $ withSpace gravity $ \ space -> do
+playLevel app parent editorTestMode editorScene = NoGUIAppState $ do
+    space <- io $ initSpace gravity
     scene :: Scene Object_ <- rm2m $
         initScene app (editorLevelFile editorScene) space
             (editorScene ^. cachedTiles)
             (uniqueNikki app (editorScene ^. editorObjects))
     let (NikkiMode nikkiIndex) = scene ^. mode
     cameraStateRef <- io $ newIORef $ initialCameraState nikkiIndex
-    runAppState app $ gameAppState app editorTestMode (GameState space cameraStateRef scene)
-    return $ NoGUIAppState $ io $ do
-        postGUI $ fmapM_ freeObject (scene ^. objects)
-        return parent
-
+    let retryLevel = this
+    return $ gameAppState app parent editorTestMode
+        (GameState space cameraStateRef scene retryLevel)
+  where
+    this = playLevel app parent editorTestMode editorScene

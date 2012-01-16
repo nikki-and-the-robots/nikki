@@ -4,6 +4,8 @@ module Game.Menus where
 
 import Data.IORef
 
+import Physics.Chipmunk (freeSpace)
+
 import Graphics.Qt
 
 import Utils
@@ -21,17 +23,25 @@ import Game.Scene
 import Game.BackgroundScene as BackgroundScene
 
 
-pauseMenu :: Application -> AppState -> Int -> AppState
-pauseMenu app follower = menuAppState app PauseMenu (Just follower) (
-    (p "continue", const follower) :
+freeGameState :: GameState -> AppState -> AppState
+freeGameState gameState follower = NoGUIAppState $ io $ do
+    postGUI $ fmapM_ freeObject (scene gameState ^. objects)
+    freeSpace $ cmSpace gameState
+    return follower
+
+
+pauseMenu :: Application -> Parent -> AppState -> GameState -> Int -> AppState
+pauseMenu app parent continueLevel gameState =
+  menuAppState app PauseMenu (Just continueLevel) (
+    (p "continue", const continueLevel) :
 --     (p "rewind to last save point", todo) :
---     (p "retry from beginning", todo) :
+    (p "retry from beginning", const $ freeGameState gameState (retryLevel gameState)) :
     (p "options", generalOptions app 0 . this) :
     (p "help", playHelp app . this) :
-    (p "quit level", const FinalAppState) :
+    (p "quit level", const $ freeGameState gameState parent) :
     [])
   where
-    this = pauseMenu app follower
+    this = pauseMenu app parent continueLevel gameState
 
 
 playHelp :: Application -> Parent -> AppState
@@ -40,16 +50,16 @@ playHelp app parent = NoGUIAppState $ do
     text <- io $ pFile file
     return $ scrollingAppState app text parent
 
-failureMenu :: Application -> RenderStateRefs -> GameState
+failureMenu :: Application -> Parent -> RenderStateRefs -> GameState
     -> AppState
-failureMenu app sceneRenderState gameState = NoGUIAppState $ do
+failureMenu app parent sceneRenderState gameState = NoGUIAppState $ do
     gameStateRef <- io $ newIORef gameState
     return $ menuAppStateSpecialized app (poller gameStateRef)
         (renderable backGround) AppStateLooped
         FailureMenu Nothing (
 --     (p "rewind to last savepoint", todo) :
 --     (p "retry from beginning", todo) :
-            (p "quit level", const FinalAppState) :
+            (p "quit level", const $ freeGameState gameState parent) :
             []) 0
   where
     poller gameStateRef =
@@ -59,14 +69,14 @@ failureMenu app sceneRenderState gameState = NoGUIAppState $ do
         MenuBackgroundTransparent
 
 -- | show a textual message and wait for a keypress
-successMessage :: Application -> RenderStateRefs -> GameState
+successMessage :: Application -> Parent -> RenderStateRefs -> GameState
     -> Score -> (Maybe Score, Record, Record) -> AppState
-successMessage app sceneRenderState gameState score
+successMessage app parent sceneRenderState gameState score
   (mHighScore, timeRecord, batteryRecord) =
      AppStateLooped (renderable renderableInstance) $ do
         ref <- io $ newIORef gameState
         ignore $ waitForPressedButtonBackgroundScene app ref (sceneMVar sceneRenderState)
-        return FinalAppState
+        return $ freeGameState gameState parent
   where
     renderableInstance =
         sceneRenderState |:>

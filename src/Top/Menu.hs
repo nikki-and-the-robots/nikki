@@ -74,14 +74,6 @@ community app ps parent =
   where
     this ps = community app ps parent
 
--- | asks, if the user really wants to quit
-quit :: Application -> AppState -> Int -> AppState
-quit app parent =
-    menuAppState app (NormalMenu (p "quitting") (Just $ p "are you sure?")) (Just parent) (
-        (p "no", const $ parent) :
-        (p "yes", const $ FinalAppState) :
-        [])
-
 -- | select a saved level.
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do

@@ -33,20 +33,19 @@ debugQtVersion = do
     logg Info ("Qt-Version: " ++ v)
 
 -- | create AppState for game mode
-gameAppState :: Application -> Bool -> GameState -> AppState
-gameAppState app editorTestMode initialState = NoGUIAppState $ do
+gameAppState :: Application -> Parent -> Bool -> GameState -> AppState
+gameAppState app parent editorTestMode initialState = NoGUIAppState $ do
     renderState <- mkRenderState (Base.cameraStateRef initialState) (scene initialState)
     return $ GameAppState
         (renderable renderState)
-        (gameLoop app editorTestMode renderState)
+        (gameLoop app parent editorTestMode renderState)
         initialState
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
 -- The returned AppState is somehow independent from the other AppState.
--- Returns FinalState to return to the level selection.
-gameLoop :: Application -> Bool -> RenderStateRefs -> GameMonad AppState
-gameLoop app editorTestMode rsr@RenderStateRefs{sceneMVar} =
+gameLoop :: Application -> Parent -> Bool -> RenderStateRefs -> GameMonad AppState
+gameLoop app parent editorTestMode rsr@RenderStateRefs{sceneMVar} =
     withTimer loopSuperStep
   where
     -- | loops to perform supersteps
@@ -82,20 +81,22 @@ gameLoop app editorTestMode rsr@RenderStateRefs{sceneMVar} =
 
         case sc' ^. mode of
             LevelFinished _ Failed ->
-                return $ Just $ failureMenu app rsr state
+                return $ Just $ failureMenu app parent rsr state
             LevelFinished score Passed ->
                 if editorTestMode then
-                    return $ Just $ successMessage app rsr state score
+                    return $ Just $ successMessage app parent rsr state score
                                         (Nothing, NoNewRecord, NoNewRecord)
                   else do
                     records <- io $ saveScore (levelFile sc') score
-                    return $ Just $ successMessage app rsr state score records
+                    return $ Just $ successMessage app parent rsr state score records
             _ -> if isGameBackPressed (configuration ^. controls) controlData then 
-                if editorTestMode then
-                    return $ Just FinalAppState
+                if editorTestMode then do
+                    gameState <- get
+                    return $ Just $ freeGameState gameState parent
                   else do
-                    follower <- gameAppState app editorTestMode <$> get
-                    return $ Just $ pauseMenu app follower 0
+                    continueLevel <- gameAppState app parent editorTestMode <$> get
+                    gameState <- get
+                    return $ Just $ pauseMenu app parent continueLevel gameState 0
               else
                 -- continuing performing substeps
                 performSubSteps timer (pred n)

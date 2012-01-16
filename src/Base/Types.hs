@@ -68,14 +68,18 @@ type M = ConfigurationState
 
 type GameMonad o = StateT GameState M o
 
+type RetryLevel = AppState
+
 data GameState = GameState {
     cmSpace :: Space,
     cameraStateRef :: IORef CameraState,
-    scene :: Scene Object_
+    scene :: Scene Object_,
+    retryLevel :: RetryLevel
   }
 
 setScene :: Scene Object_ -> GameState -> GameState
-setScene scene (GameState space camRef _) = GameState space camRef scene
+setScene scene (GameState space camRef _ retryLevel) =
+    GameState space camRef scene retryLevel
 
 
 -- * from Base.Application

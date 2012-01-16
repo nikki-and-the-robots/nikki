@@ -12,7 +12,8 @@ module Physics.Chipmunk (
     getRenderPositionAndAngle,
     getChipmunkPosition,
 
-    withSpace,
+    initSpace,
+    freeSpace,
     mkMaterialBodyAttributes,
     mkBodyAttributes,
     Physics.Chipmunk.Types.initChipmunk,
@@ -118,8 +119,6 @@ module Physics.Chipmunk (
 import Data.Abelian
 import Data.StateVar
 
-import Control.Monad.CatchIO
-
 import Physics.Hipmunk hiding (body)
 import qualified Physics.Hipmunk as H
 
@@ -133,40 +132,36 @@ import Utils
 
 -- * Initial values
 
-withSpace :: MonadCatchIO m => CpFloat -> (Space -> m a) -> m a
-withSpace gravity cmd =
-    bracket (io mkSpace) (io . freeSpace) cmd
-  where
-    mkSpace :: IO Space
-    mkSpace = do
-        H.initChipmunk
-        space <- newSpace
+initSpace :: CpFloat -> IO Space
+initSpace gravity = do
+    H.initChipmunk
+    space <- newSpace
 
-        -- space constants
+    -- space constants
 
-        -- Number of iterations to use in the impulse solver to solve contacts.
-        iterations space $= 10 -- default: 10
+    -- Number of iterations to use in the impulse solver to solve contacts.
+    iterations space $= 10 -- default: 10
 
-        -- Default gravity to supply when integrating rigid body motions.
-        H.gravity space $= (Vector 0 gravity)
+    -- Default gravity to supply when integrating rigid body motions.
+    H.gravity space $= (Vector 0 gravity)
 
-        -- Default damping to supply when integrating rigid body motions.
-        damping space $= 1 -- default: 1
+    -- Default damping to supply when integrating rigid body motions.
+    damping space $= 1 -- default: 1
 
-        -- global constants
+    -- global constants
 
-        -- Number of frames that contact information should persist.
-        contactPersistence $= 3 -- default: 3 (number of steps)
+    -- Number of frames that contact information should persist.
+    contactPersistence $= 3 -- default: 3 (number of steps)
 
-        -- Amount of allowed penetration. Used to reduce vibrating contacts.
-        collisionSlop $= 0.1 -- default: 0.1
+    -- Amount of allowed penetration. Used to reduce vibrating contacts.
+    collisionSlop $= 0.1 -- default: 0.1
 
-        -- Determines how fast penetrations resolve themselves.
-        let bc = 0.1
-        biasCoef $= bc -- default: 0.1
-        constraintBiasCoef $= bc -- default: 0.1
+    -- Determines how fast penetrations resolve themselves.
+    let bc = 0.1
+    biasCoef $= bc -- default: 0.1
+    constraintBiasCoef $= bc -- default: 0.1
 
-        return space
+    return space
 
 -- * Controls
 
