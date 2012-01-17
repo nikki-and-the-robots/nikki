@@ -194,6 +194,7 @@ getServerVersion = do
     answer <- askStoryModeServer (StoryModeVersion email key)
     case answer of
         (AuthorizedVersionInfo v) -> return v
+        (Unauthorized errorMsg) -> throwError errorMsg
         x -> throwError ("wrong server response: " ++ show x)
 
 askStoryModeServer :: ClientToServer -> ErrorT String IO ServerToClient
