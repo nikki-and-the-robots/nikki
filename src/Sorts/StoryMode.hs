@@ -15,6 +15,7 @@ signs =
     "npcs/high-school-girl-4" :
     "npcs/monkey" :
     "npcs/bunny" :
+    "data-terminal" :
     []
 
 -- padding refers to upper left corner
