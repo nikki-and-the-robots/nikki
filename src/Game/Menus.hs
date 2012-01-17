@@ -63,7 +63,7 @@ failureMenu app parent sceneRenderState gameState =
   where
     menuItems =
 --     (p "rewind to last savepoint", todo) :
---     (p "retry from beginning", todo) :
+        (p "retry from beginning", const $ freeGameState gameState (retryLevel gameState)) :
         (p "quit level", const $ freeGameState gameState parent) :
         []
 
