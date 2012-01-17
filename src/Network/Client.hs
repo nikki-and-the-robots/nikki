@@ -1,15 +1,19 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable, ScopedTypeVariables #-}
 
--- this module is used by the level server and
--- shouldn't import Utils or Base or anything similar.
-
 module Network.Client where
 
+
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!11!!!
+-- this module is used by the level server and
+-- shouldn't import Utils or Base or anything similar.
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!11!!!
 
 import Data.Version
 import Data.BinaryCom
 import Data.Typeable
 import Data.Binary
+
+import Text.Logging
 
 import Control.Applicative
 import Control.Monad.Trans.Error
@@ -19,6 +23,11 @@ import Control.Exception
 import System.Timeout
 
 import Network
+
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!11!!!
+-- this module is used by the level server and
+-- shouldn't import Utils or Base or anything similar.
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!11!!!
 
 
 class (Binary p, NFData p) => Protocol p where
@@ -37,7 +46,7 @@ instance NFData Version where
 
 
 -- | Can throw IOException and ErrorCall
-askServer :: forall a b . (Protocol a, Protocol b) =>
+askServer :: forall a b . (Protocol a, Protocol b, Show a, Show b) =>
     String -> PortNumber -> a -> ErrorT String IO b
 askServer host port msg = ErrorT $ do
     h <- connectTo host (PortNumber port)
@@ -45,7 +54,10 @@ askServer host port msg = ErrorT $ do
     flushAfter bc $ \ bc -> do
         send bc $ protocolVersion msg
         send bc msg
-    deepseqIOId =<< receiveTO bc
+    logg Debug ("sent: " ++ show msg ++ " on port " ++ show port)
+    answer <- deepseqIOId =<< receiveTO bc
+    logg Debug ("received: " ++ show answer)
+    return answer
 
 deepseqIOId :: NFData a => a -> IO a
 deepseqIOId r = deepseq r () `seq` return r
