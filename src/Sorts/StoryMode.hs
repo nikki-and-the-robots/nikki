@@ -81,16 +81,50 @@ tiles =
     ("tiles/black-green/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
     ("tiles/black-brown/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-brown/panel-small", Position 1 1, Size 32 32, 1, Nothing) :
-    ("tiles/black-brown/rounded-corner-upper-left", Position 1 1, Size 64 64, 1, Nothing) :
-    ("tiles/black-brown/rounded-corner-upper-right", Position 1 1, Size 64 64, 1, Nothing) :
-    ("tiles/black-brown/rounded-corner-lower-left", Position 1 1, Size 64 64, 1, Nothing) :
-    ("tiles/black-brown/rounded-corner-lower-right", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/black-brown/panel-chamfer-lower-left", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/black-brown/panel-chamfer-lower-right", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/black-brown/panel-chamfer-upper-left", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/black-brown/panel-chamfer-upper-right", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/black-brown/panel-number-01", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-02", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-03", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-04", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-05", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-06", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-07", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-08", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-09", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-number-10", Position 1 1, Size 320 256, 1, Nothing) :
+    ("tiles/black-brown/panel-arrows-up", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/black-brown/panel-arrows-down", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/black-brown/panel-arrows-left", Position 1 1, Size 64 128, 1, Nothing) :
+    ("tiles/black-brown/panel-arrows-right", Position 1 1, Size 64 128, 1, Nothing) :
+    ("tiles/black-brown/vent-large", Position 1 1, Size 128 128, 1, Nothing) :
+    ("tiles/black-brown/vent-background-large", Position 1 1, Size 128 128, 1, Nothing) :
     ("tiles/black-brown/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-brown/wallpaper-large", Position 1 1, Size 128 128, 1, Nothing) :
     ("tiles/black-brown/wallpaper-horizontal", Position 1 1, Size 128 64, 1, Nothing) :
     ("tiles/black-brown/wallpaper-vertical", Position 1 1, Size 64 128, 1, Nothing) :
-    ("tiles/black-brown/shadow-standard", Position 1 1, Size 64 64, 1, Nothing) :
-    ("tiles/black-brown/chain-standard", Position 1 1, Size 40 512, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-large-vent", Position 1 1, Size 128 128, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-01", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-02", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-03", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-04", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-05", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-06", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-07", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-08", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-09", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/wallpaper-number-10", Position 1 1, Size 328 264, 1, Nothing) :
+    ("tiles/black-brown/terminal-standard-indoor", Position 1 1, Size 200 196, 1, Nothing) :
+    ("tiles/black-brown/terminal-standard-outdoor", Position 1 1, Size 192 192, 1, Nothing) :
+    ("tiles/black-brown/terminal-data-indoor", Position 1 1, Size 136 196, 1, Nothing) :
+    ("tiles/black-brown/terminal-data-outdoor", Position 1 1, Size 128 192, 1, Nothing) :
+    ("tiles/black-brown/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
+    ("tiles/black-brown/chain-standard", Position 1 1, Size 28 32, 1, Nothing) :
+    ("tiles/black-brown/chain-connector-bottom", Position 1 1, Size 28 32, 1, Nothing) :
+    ("tiles/black-brown/chain-connector-top", Position 1 1, Size 28 32, 1, Nothing) :
+    ("tiles/black-brown/chain-connector-fadeout", Position 1 1, Size 28 384, 1, Nothing) :
     ("tiles/frame/black-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/frame/black-bottom-standard", Position 1 1, Size 64 68, 1, Nothing) :
     ("tiles/frame/black-extra", Position 1 1, Size 76 64, 1, Nothing) :
