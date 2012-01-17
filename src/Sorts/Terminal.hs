@@ -76,12 +76,15 @@ batteryNumberNeeded = 100
 
 sorts :: [RM (Maybe Sort_)]
 sorts =
-    (Just <$> Sort_ <$> terminalSort) :
+    -- normal
+    (Just <$> Sort_ <$> terminalSort False) :
+    -- transparent
+    (Just <$> Sort_ <$> terminalSort True) :
     (fmap Sort_ <$> mkBatteryTerminalSort) :
     []
 
-terminalSort :: RM TSort
-terminalSort = do
+terminalSort :: Bool -> RM TSort
+terminalSort transparent = do
     let nameToPixmap =
             return . toPngPath >=>
             getDataFileName
@@ -101,8 +104,9 @@ terminalSort = do
     littleDefunctColors <- readColorLights (\ color -> toPngPath ("terminal-defunct-" ++ color))
     osdPixmaps <- loadOsdPixmaps
     return $ TSort
-        (Pixmaps backgroundPixmap blinkenLightsAnimation colorBar littleColors littleDefunctColors)
-        osdPixmaps
+            (Pixmaps backgroundPixmap blinkenLightsAnimation
+                     colorBar littleColors littleDefunctColors)
+            osdPixmaps transparent
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
@@ -138,7 +142,7 @@ loadOsdPixmaps = do
 mkBatteryTerminalSort :: RM (Maybe TSort)
 mkBatteryTerminalSort = do
     mPngDir <- io $ getStoryModeDataFileName "png"
-    tsort <- terminalSort
+    tsort <- terminalSort False
     case mPngDir of
         Nothing -> return Nothing
         Just pngDir -> do
@@ -210,7 +214,8 @@ data OsdPixmaps = OsdPixmaps {
 data TSort
   = TSort {
     pixmaps :: Pixmaps,
-    osdPixmaps :: OsdPixmaps
+    osdPixmaps :: OsdPixmaps,
+    transparent :: Bool -- transparent terminals for the story mode
   }
   | BatteryTSort {
     tsort :: TSort,
@@ -378,7 +383,9 @@ data ExitMode
 -- * Sort implementation
 
 instance Sort TSort Terminal where
-    sortId TSort{} = SortId "terminal"
+    sortId TSort{transparent} = SortId $ if transparent
+        then "story-mode/transparentTerminal"
+        else "terminal"
     sortId BatteryTSort{} = SortId "story-mode/batteryTerminal"
     size TSort{} = standardTerminalSize
     size BatteryTSort{} = batteryTerminalSize
@@ -596,8 +603,8 @@ updateShowingBubble contacts terminal =
 
 -- * game rendering
 
-renderTerminal _ _ sort@TSort{} _ now t pos =
-    renderTerminalBackground sort pos :
+renderTerminal _ _ sort@TSort{transparent} _ now t pos =
+    renderTerminalBackground transparent sort pos ++
     renderDisplayBlinkenLights sort now pos :
     RenderPixmap (colorBar $ pixmaps sort) (pos +~ colorBarOffset) Nothing :
     catMaybes (renderLittleColorLights sort now t pos)
@@ -611,8 +618,10 @@ renderTerminal app config sort@BatteryTSort{..} offset now t pos =
 
 colorBarOffset = fmap fromUber $ Position 30 20
 
-renderTerminalBackground sort pos =
-    RenderPixmap (background $ pixmaps sort) pos Nothing
+renderTerminalBackground transparent sort pos =
+    if transparent
+    then []
+    else singleton $ RenderPixmap (background $ pixmaps sort) pos Nothing
 
 -- | renders the main terminal pixmap (with blinkenlights)
 renderDisplayBlinkenLights sort now pos =

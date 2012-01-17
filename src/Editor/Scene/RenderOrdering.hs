@@ -71,6 +71,7 @@ sortPreds = map isPrefixOf (
     "background/" :
     "grid/" :
     "terminal" :
+    "story-mode/transparentTerminal" :
     "story-mode/batteryTerminal" :
     "door" :
     "story-mode/sign" :
