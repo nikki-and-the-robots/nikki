@@ -18,6 +18,7 @@ import Safe
 
 import Data.IORef
 import Data.StateVar
+import Data.Abelian
 
 import Control.Monad.IO.Class
 
@@ -25,6 +26,14 @@ import Physics.Hipmunk as H hiding (Callback)
 import Physics.Hipmunk.Callbacks ()
 
 import Utils
+
+
+-- * instances
+
+instance Abelian Vector where
+    zero = Vector 0 0
+    (Vector a b) +~ (Vector x y) = Vector (a + x) (b + y)
+    (Vector a b) -~ (Vector x y) = Vector (a - x) (b - y)
 
 
 -- * collisionTypes
@@ -63,6 +72,23 @@ collisionShapes (DontWatch a b) = (a, b)
 collisionShapes (Watch a b _) = (a, b)
 collisionShapes (FullWatch a b _) = (a, b)
 
+-- | Converts a Callback to satisfy (a <= b).
+-- Flips the collisionTypes if necessary.
+-- Should work transparently to users of initContactRef.
+orderCollisionTypes :: (Ord ct) => Callback ct x -> Callback ct x
+orderCollisionTypes (Callback watcher p) =
+    Callback (inner watcher) p
+  where
+    inner watcher =
+        let (a, b) = collisionShapes watcher
+        in if a > b
+            then flip watcher
+            else watcher
+    flip (DontWatch a b) = DontWatch b a
+    flip (Watch a b f) = Watch b a (\ b a -> f a b)
+    flip (FullWatch a b f) = FullWatch b a
+        (\ b a (normal, point) -> f a b (negateAbelian normal, point))
+
 data Permeability
     = Permeable
 --     | Semipermeable
@@ -74,15 +100,17 @@ isSolidInPresolve Solid = True
 isSolidInPresolve Permeable = False
 
 -- | needs an empty contacts value
-initContactRef :: Enum collisionType =>
+initContactRef :: (Enum collisionType, Ord collisionType, Show collisionType) =>
      Space -> x -> [Callback collisionType x] -> IO (ContactRef x)
 initContactRef space empty callbacks = do
     ref <- newIORef empty
-    mapM_ (installCallback ref) callbacks
+    mapM_ (installCallback ref) $ fmap orderCollisionTypes callbacks
     return $ ContactRef empty ref
   where
     installCallback ref (Callback watching permeability) = do
         let (a, b) = collisionShapes watching
+        when (a > b) $
+            error ("Physics.Chipmunk.ContactRef.initContactRef: " ++ show a ++ " > " ++ show b)
         addCollisionHandler space (toNumber a) (toNumber b) $ mkHandler ref watching permeability
 
 mkHandler :: IORef x -> Watcher collisionType x -> Permeability -> CollisionHandler

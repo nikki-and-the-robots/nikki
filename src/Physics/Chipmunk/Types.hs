@@ -33,11 +33,6 @@ deriving instance Read ShapeType
 
 deriving instance Read Vector
 
-instance Abelian Vector where
-    zero = Vector 0 0
-    (Vector a b) +~ (Vector x y) = Vector (a + x) (b + y)
-    (Vector a b) -~ (Vector x y) = Vector (a - x) (b - y)
-
 instance PP Vector where
     pp (Vector a b) = "(Vector " ++ pp a ++ " " ++ pp b ++ ")"
 
