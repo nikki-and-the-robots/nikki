@@ -30,6 +30,8 @@ storyModeGrids =
     ("multilayers/skyline-green-far", WrappedHorizon) :
     ("multilayers/skyline-green-near", WrappedHorizon) :
     ("multilayers/stars-top", WrappedHorizon) :
+    ("multilayers/plankton-far", Tiled) :
+    ("multilayers/plankton-near", Tiled) :
     []
 
 
