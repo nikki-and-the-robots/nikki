@@ -50,8 +50,8 @@ loadSound name n = do
     file <- getDataFileName (soundDir </> name <.> "wav")
     io $ newPolySound file n
 
-triggerSound :: MonadIO m => PolySound -> m ()
-triggerSound = io . triggerPolySound
+triggerSound :: MonadIO m => Maybe Float -> PolySound -> m ()
+triggerSound v s = io $ triggerPolySound s v
 
 loadLoopedSound :: String -> RM LoopedSound
 loadLoopedSound name = do

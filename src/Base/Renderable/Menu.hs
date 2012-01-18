@@ -126,16 +126,16 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
             Just e -> do
                 controls__ <- gets controls_
                 if isMenuUp controls__ e then do
-                    triggerSound $ menuSelectSound $ applicationSounds app
+                    triggerSound Nothing $ menuSelectSound $ applicationSounds app
                     return $ inner $ selectPrevious menu
                   else if isMenuDown controls__ e then do
-                    triggerSound $ menuSelectSound $ applicationSounds app
+                    triggerSound Nothing $ menuSelectSound $ applicationSounds app
                     return $ inner $ selectNext menu
                   else if isMenuConfirmation controls__ e then do
-                    triggerSound $ menuConfirmSound $ applicationSounds app
+                    triggerSound Nothing $ menuConfirmSound $ applicationSounds app
                     return $ snd $ selected menu
                   else if isMenuBack controls__ e then do
-                    triggerSound $ menuCancelSound $ applicationSounds app
+                    triggerSound Nothing $ menuCancelSound $ applicationSounds app
                     case mParent of
                         Just parent -> return parent
                         Nothing -> return $ inner menu

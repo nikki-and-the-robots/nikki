@@ -184,12 +184,12 @@ instance Sort SwitchSort Switch where
                 (True, False) -> (switches ^: firstStrict pred, Just offSound)
                 _ -> (id, Nothing)
         forM_ mSound $ \ sound ->
-            triggerSound $ sound sort
+            triggerSound Nothing $ sound sort
         return (sceneMod, updateIfLast (sceneMod scene) now new)
     update sort _ controls _ scene now contacts cd index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
             -- triggered
-            triggerSound $ onSound sort
+            triggerSound Nothing $ onSound sort
             let new = switch{triggered_ = True}
             updateAntiGravity sort new
             return (switches ^: firstStrict succ, new)

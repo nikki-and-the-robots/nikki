@@ -406,7 +406,7 @@ cannonballFrameTimes = [specAngleRange]
 -- * Sounds
 
 playShootSound :: CannonSort -> IO ()
-playShootSound = triggerSound . shootSound
+playShootSound = triggerSound Nothing . shootSound
 
 playDisappearSound :: CannonSort -> IO ()
-playDisappearSound = triggerSound . disappearSound
+playDisappearSound = triggerSound Nothing . disappearSound

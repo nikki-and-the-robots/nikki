@@ -50,7 +50,7 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
             io (send (subtract 1)) >>
             loop send
           else do
-            triggerSound $ menuConfirmSound $ applicationSounds app
+            triggerSound Nothing $ menuConfirmSound $ applicationSounds app
             return follower
 
 scrollable :: Application -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
@@ -104,7 +104,7 @@ updateScrollDown sounds maximalScrollDown chan ref = do
     old <- readIORef ref
     let new = min maximalScrollDown $ max 0 $ foldr (.) id events $ old
     when (not $ null events) $
-        triggerSound $ (if old == new then errorSound else menuSelectSound) sounds
+        triggerSound Nothing $ (if old == new then errorSound else menuSelectSound) sounds
     writeIORef ref new
     readIORef ref
 
