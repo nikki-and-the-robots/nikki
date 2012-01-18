@@ -636,6 +636,8 @@ renderDisplayBlinkenLights sort now pos =
 blinkenLightOffset = fmap fromUber $ Position 13 18
 
 -- | renders the little colored lights (for the associated robots) on the terminal in the scene
+renderLittleColorLights _ _ StandbyBatteryTerminal{} _ =
+    [] -- don't render anything in standby mode
 renderLittleColorLights sort now t pos =
     let colorStates = fst $ blinkenLightsState now (t ^. robots) (t ^. state)
     in map
