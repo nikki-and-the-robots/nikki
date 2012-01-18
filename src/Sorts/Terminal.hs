@@ -393,10 +393,19 @@ instance Sort TSort Terminal where
     sortId BatteryTSort{} = SortId "story-mode/batteryTerminal"
     size TSort{} = standardTerminalSize
     size BatteryTSort{} = batteryTerminalSize
-    renderIconified sort@TSort{..} ptr =
-        renderPixmapSimple ptr $ background pixmaps_
-    renderIconified sort@BatteryTSort{btBackground} ptr =
-        renderPixmapSimple ptr btBackground
+    renderIconified sort ptr =
+        case sort of
+            TSort{..} -> if not transparent then
+                renderPixmapSimple ptr $ background pixmaps_
+              else
+                renderIconifiedTransparent "transparentTerminal"
+            BatteryTSort{btBackground} ->
+                renderIconifiedTransparent "batteryTerminal"
+      where
+        renderIconifiedTransparent name = do
+            fillRect ptr zero (size sort) (alpha ^= 0.3 $ black)
+            setPenColor ptr white 1
+            drawText ptr (Position 5 15) False name
 
     objectEditMode _ = Just oemMethods
 
