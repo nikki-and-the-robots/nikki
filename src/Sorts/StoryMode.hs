@@ -124,7 +124,7 @@ tiles =
     ("tiles/black-brown/chain-standard", Position 1 1, Size 28 32, 1, Nothing) :
     ("tiles/black-brown/chain-connector-bottom", Position 1 1, Size 28 32, 1, Nothing) :
     ("tiles/black-brown/chain-connector-top", Position 1 1, Size 28 32, 1, Nothing) :
-    ("tiles/black-brown/chain-connector-fadeout", Position 1 1, Size 28 384, 1, Nothing) :
+    ("tiles/black-brown/chain-fadeout", Position 1 1, Size 28 384, 1, Nothing) :
     ("tiles/frame/black-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/frame/black-bottom-standard", Position 1 1, Size 64 68, 1, Nothing) :
     ("tiles/frame/black-extra", Position 1 1, Size 76 64, 1, Nothing) :
