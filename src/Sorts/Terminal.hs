@@ -609,12 +609,12 @@ updateShowingBubble contacts terminal =
 
 renderTerminal _ _ sort@TSort{transparent} _ now t pos =
     renderTerminalBackground transparent sort pos ++
-    renderDisplayBlinkenLights sort now pos :
+    renderDisplayBlinkenLights sort now t pos ++
     RenderPixmap (colorBar $ pixmaps sort) (pos +~ colorBarOffset) Nothing :
     catMaybes (renderLittleColorLights sort now t pos)
 renderTerminal app config sort@BatteryTSort{btBackground} offset now t pos =
     RenderPixmap btBackground pos Nothing :
-    renderDisplayBlinkenLights sort now pos :
+    renderDisplayBlinkenLights sort now t pos ++
     renderBatteryBar sort now t pos ++
     renderBootingAnimation sort t now pos ++
     catMaybes (renderLittleColorLights sort now t pos) ++
@@ -629,9 +629,11 @@ renderTerminalBackground transparent sort pos =
     else singleton $ RenderPixmap (background $ pixmaps sort) pos Nothing
 
 -- | renders the main terminal pixmap (with blinkenlights)
-renderDisplayBlinkenLights sort now pos =
+renderDisplayBlinkenLights _ _ StandbyBatteryTerminal{} _ =
+    [] -- don't render anything in standby mode
+renderDisplayBlinkenLights sort now _ pos =
     let pixmap = pickAnimationFrame (blinkenLights $ pixmaps sort) now
-    in RenderPixmap pixmap (pos +~ blinkenLightOffset) Nothing
+    in singleton $ RenderPixmap pixmap (pos +~ blinkenLightOffset) Nothing
 
 blinkenLightOffset = fmap fromUber $ Position 13 18
 
