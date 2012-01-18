@@ -482,14 +482,21 @@ mkPolys size =
 
 -- * controlling
 
-update sort _ config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} = return $
-    updateShowingBubble contacts $
+update sort _ config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} =
+    return $
+    updateShowingBubble config contacts cd $
     updateUncontrolledStandby now $
     terminal
 update sort _ config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} =
-    updateOnTime now <$>
-    showingBubble ^= True <$>
-    putBatteriesInTerminal scene now terminal
+    if terminal ^. showingBubble then
+        -- already showing the bubble
+        return $
+        showingBubble ^= False $
+        terminal
+      else
+        updateOnTime now <$>
+        showingBubble ^= True <$>
+        putBatteriesInTerminal scene now terminal
 update sort _ config _ scene now contacts (False, cd) terminal =
     (state ^: updateGameMode contacts terminal) <$>
     (robots ^^: updateControllableStates scene) terminal
@@ -602,14 +609,16 @@ updateUncontrolledStandby now t@StandbyBatteryTerminal{..} = case onTime of
         then BatteryTerminal chipmunk robots_ (initialMenuState now)
         else t
 
-updateShowingBubble :: Contacts -> Terminal -> Terminal
-updateShowingBubble contacts terminal =
-    if fany (hasTerminalShape terminal) (terminals contacts) then
+updateShowingBubble :: Controls -> Contacts -> ControlData -> Terminal -> Terminal
+updateShowingBubble config contacts cd terminal =
+    if stillTouching then
         -- touching -> do nothing
         terminal
       else
         showingBubble ^= False $
         terminal
+  where
+    stillTouching = fany (hasTerminalShape terminal) (terminals contacts)
 
 
 -- * game rendering
