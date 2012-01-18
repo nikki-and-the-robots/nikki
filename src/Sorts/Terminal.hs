@@ -213,7 +213,7 @@ data OsdPixmaps = OsdPixmaps {
 
 data TSort
   = TSort {
-    pixmaps :: Pixmaps,
+    pixmaps_ :: Pixmaps,
     osdPixmaps :: OsdPixmaps,
     transparent :: Bool -- transparent terminals for the story mode
   }
@@ -227,6 +227,10 @@ data TSort
     bootingPixmaps :: Animation Pixmap
   }
     deriving (Show, Typeable)
+
+pixmaps :: TSort -> Pixmaps
+pixmaps TSort{pixmaps_} = pixmaps_
+pixmaps BatteryTSort{tsort} = pixmaps tsort
 
 getOsdPixmaps :: TSort -> OsdPixmaps
 getOsdPixmaps TSort{..} = osdPixmaps
@@ -390,7 +394,7 @@ instance Sort TSort Terminal where
     size TSort{} = standardTerminalSize
     size BatteryTSort{} = batteryTerminalSize
     renderIconified sort@TSort{..} ptr =
-        renderPixmapSimple ptr $ background pixmaps
+        renderPixmapSimple ptr $ background pixmaps_
     renderIconified sort@BatteryTSort{btBackground} ptr =
         renderPixmapSimple ptr btBackground
 
@@ -608,11 +612,12 @@ renderTerminal _ _ sort@TSort{transparent} _ now t pos =
     renderDisplayBlinkenLights sort now pos :
     RenderPixmap (colorBar $ pixmaps sort) (pos +~ colorBarOffset) Nothing :
     catMaybes (renderLittleColorLights sort now t pos)
-renderTerminal app config sort@BatteryTSort{..} offset now t pos =
+renderTerminal app config sort@BatteryTSort{btBackground} offset now t pos =
     RenderPixmap btBackground pos Nothing :
-    renderDisplayBlinkenLights tsort now pos :
+    renderDisplayBlinkenLights sort now pos :
     renderBatteryBar sort now t pos ++
     renderBootingAnimation sort t now pos ++
+    catMaybes (renderLittleColorLights sort now t pos) ++
     renderTerminalSpeechBubble app config offset sort pos t ++
     []
 
