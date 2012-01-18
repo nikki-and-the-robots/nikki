@@ -165,4 +165,5 @@ backgrounds :: [String]
 backgrounds =
     "green-night" :
     "warm-dusk" :
+    "submarine-blue" :
     []
