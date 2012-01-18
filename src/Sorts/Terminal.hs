@@ -67,7 +67,7 @@ batteryTerminalSize = fmap fromUber $ Size 72 48
 
 beamBlinkingTime :: Seconds = blinkLength
 
-bootingFrameTime :: Seconds = 0.2
+bootingFrameTime :: Seconds = 0.3
 bootingAnimationSteps :: Int = 3
 
 batteryNumberNeeded = 100
