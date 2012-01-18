@@ -613,7 +613,6 @@ renderTerminal _ _ sort@TSort{transparent} _ now t pos =
     RenderPixmap (colorBar $ pixmaps sort) (pos +~ colorBarOffset) Nothing :
     catMaybes (renderLittleColorLights sort now t pos)
 renderTerminal app config sort@BatteryTSort{btBackground} offset now t pos =
-    RenderPixmap btBackground pos Nothing :
     renderDisplayBlinkenLights sort now t pos ++
     renderBatteryBar sort now t pos ++
     renderBootingAnimation sort t now pos ++
