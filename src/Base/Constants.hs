@@ -12,7 +12,7 @@ type Seconds = CpFloat
 
 -- * menu
 
-afterLevelWaitTime :: Seconds = 1.5
+afterLevelWaitTime :: Seconds = 0.5 --1.5
 
 
 -- * Graphics
