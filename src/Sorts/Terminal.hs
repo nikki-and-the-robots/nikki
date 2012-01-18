@@ -152,7 +152,6 @@ mkBatteryTerminalSort = do
 batteryTerminalSort :: FilePath -> TSort -> RM TSort
 batteryTerminalSort pngDir tsort = do
     BatteryTSort tsort <$>
-        loadPixmap (Position 5 5) batteryTerminalSize (mkPath "battery-terminal") <*>
         loadPix 9 "beam-white" <*>
         loadPix 9 "beam-green" <*>
         loadPix 9 "light-green" <*>
@@ -219,7 +218,6 @@ data TSort
   }
   | BatteryTSort {
     tsort :: TSort,
-    btBackground :: Pixmap,
     whiteBeam :: Pixmap,
     greenBeam :: Pixmap,
     greenTop :: Pixmap,
@@ -395,11 +393,11 @@ instance Sort TSort Terminal where
     size BatteryTSort{} = batteryTerminalSize
     renderIconified sort ptr =
         case sort of
-            TSort{..} -> if not transparent then
-                renderPixmapSimple ptr $ background pixmaps_
+            TSort{transparent} -> if not transparent then
+                renderPixmapSimple ptr $ background $ pixmaps sort
               else
                 renderIconifiedTransparent "transparentTerminal"
-            BatteryTSort{btBackground} ->
+            BatteryTSort{} ->
                 renderIconifiedTransparent "batteryTerminal"
       where
         renderIconifiedTransparent name = do
@@ -621,7 +619,7 @@ renderTerminal _ _ sort@TSort{transparent} _ now t pos =
     renderDisplayBlinkenLights sort now t pos ++
     RenderPixmap (colorBar $ pixmaps sort) (pos +~ colorBarOffset) Nothing :
     catMaybes (renderLittleColorLights sort now t pos)
-renderTerminal app config sort@BatteryTSort{btBackground} offset now t pos =
+renderTerminal app config sort@BatteryTSort{} offset now t pos =
     renderDisplayBlinkenLights sort now t pos ++
     renderBatteryBar sort now t pos ++
     renderBootingAnimation sort t now pos ++
