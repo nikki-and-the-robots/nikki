@@ -125,6 +125,35 @@ tiles =
     ("tiles/black-brown/chain-connector-bottom", Position 1 1, Size 28 32, 1, Nothing) :
     ("tiles/black-brown/chain-connector-top", Position 1 1, Size 28 32, 1, Nothing) :
     ("tiles/black-brown/chain-fadeout", Position 1 1, Size 28 384, 1, Nothing) :
+    ("tiles/stones-day/stone-standard-medium", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/stones-day/stone-standard-light", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/stones-day/stone-standard-dark", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/stones-day/stone-small-medium", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/stones-day/stone-small-light", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/stones-day/stone-small-dark", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/stones-day/wallpaper-standard", Position 1 1, Size 64 64, 1, Nothing) :
+    ("tiles/stones-day/wallpaper-small", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/stones-day/wallpaper-horizontal", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/wallpaper-vertical", Position 1 1, Size 64 128, 1, Nothing) :
+    ("tiles/stones-day/terminal-standard-outdoor", Position 1 1, Size 192 192, 1, Nothing) :
+    ("tiles/stones-day/terminal-standard-indoor", Position 1 1, Size 200 196, 1, Nothing) :
+    ("tiles/stones-day/terminal-data-outdoor", Position 1 1, Size 128 192, 1, Nothing) :
+    ("tiles/stones-day/terminal-data-indoor", Position 1 1, Size 136 196, 1, Nothing) :
+    ("tiles/stones-day/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
+    ("tiles/stones-day/grass", Position 1 1, Size 64 32, 1, Nothing) :
+    ("tiles/stones-day/daisies", Position 1 1, Size 64 32, 1, Nothing) :
+    ("tiles/stones-day/coil-downwards-standard", Position 1 1, Size 40 64, 1, Nothing) :
+    ("tiles/stones-day/pilotlamp", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/stones-day/engine-01", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-02", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-03", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-04", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-05", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-06", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-07", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-08", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-09", Position 1 1, Size 128 64, 1, Nothing) :
+    ("tiles/stones-day/engine-10", Position 1 1, Size 128 64, 1, Nothing) :
     ("tiles/frame/black-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/frame/black-bottom-standard", Position 1 1, Size 64 68, 1, Nothing) :
     ("tiles/frame/black-extra", Position 1 1, Size 76 64, 1, Nothing) :
@@ -166,4 +195,5 @@ backgrounds =
     "green-night" :
     "warm-dusk" :
     "submarine-blue" :
+    "submarine-green" :
     []
