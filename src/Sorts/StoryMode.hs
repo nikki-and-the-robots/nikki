@@ -81,6 +81,10 @@ tiles =
     ("tiles/black-green/shadow-standard", Position 1 1, Size 32 64, 1, Nothing) :
     ("tiles/black-brown/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-brown/panel-small", Position 1 1, Size 32 32, 1, Nothing) :
+    ("tiles/black-brown/position-lamp-lower-left", Position 17 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-brown/position-lamp-upper-left", Position 17 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-brown/position-lamp-lower-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1]) :
+    ("tiles/black-brown/position-lamp-upper-right", Position 1 1, Size 64 64, 0.3, Just [0, 0, 0, 1, 1]) :
     ("tiles/black-brown/panel-chamfer-lower-left", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-brown/panel-chamfer-lower-right", Position 1 1, Size 64 64, 1, Nothing) :
     ("tiles/black-brown/panel-chamfer-upper-left", Position 1 1, Size 64 64, 1, Nothing) :
@@ -171,18 +175,6 @@ tiles =
     ("tiles/neon/snake", Position 1 1, Size 844 584, 0.25, Just [0, 1, 2, 0, 1, 2, 3, 4, 5]) :
     ("tiles/neon/skull", Position 1 1, Size 588 584, 0.35, Just [0, 1, 2, 3, 4, 5, 6, 7, 0, 7, 0, 7, 0, 7, 0]) :
     ("tiles/neon/beam-standard", Position 13 13, Size 52 52, 0.25, Just [0, 1]) :
--- temporary tiles (dummy)
-    ("tiles/dummy/night-dusk", Position 0 0, Size 1920 1080, 1, Nothing) :
-    ("tiles/dummy/submarine-blue", Position 0 0, Size 1920 1080, 1, Nothing) :
-    ("tiles/dummy/skyline-blue-light", Position 0 0, Size 1024 512, 1, Nothing) :
-    ("tiles/dummy/skyline-blue-dark", Position 0 0, Size 1024 512, 1, Nothing) :
-    ("tiles/dummy/plankton", Position 1 1, Size 512 512, 1, Nothing) :
-    ("tiles/dummy/high-school-girl-1", Position 1 1, Size 56 88, 1, Nothing) :
-    ("tiles/dummy/high-school-girl-2", Position 1 1, Size 56 104, 1, Nothing) :
-    ("tiles/dummy/high-school-girl-3", Position 1 1, Size 56 88, 1, Nothing) :
-    ("tiles/dummy/high-school-girl-4", Position 1 1, Size 76 104, 1, Nothing) :
-    ("tiles/dummy/cpt-beaugard", Position 1 1, Size 64 96, 1, Nothing) :
-    ("tiles/dummy/data-terminal", Position 5 5, Size 128 192, 1, Nothing) :
 
     -- test tiles for baking
     ("devel-tests/baked-4x4", Position 1 1, Size 256 256, 1, Nothing) :
@@ -196,4 +188,5 @@ backgrounds =
     "warm-dusk" :
     "submarine-blue" :
     "submarine-green" :
+    "blue-sky" :
     []
