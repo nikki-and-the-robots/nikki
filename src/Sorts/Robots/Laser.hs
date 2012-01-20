@@ -167,7 +167,7 @@ instance Sort LSort Laser where
 mkSolidShapes :: LSort -> LaserOEMState -> [ShapeType]
 mkSolidShapes sort arm =
     baseS :
---     endS :
+    endS :
     []
   where
     offsets = laserOffsets ! oemDirection arm
@@ -278,9 +278,8 @@ laserOffsets = fromList (
   where
     verticalLaserChipBand   = Size (fromUber 5) 0
     horizontalLaserChipBand = Size 0 (fromUber 5)
---     verticalBaseStartSize   = Size (fromUber 15) (fromUber 20)
---     horizontalBaseStartSize = Size (fromUber 20) (fromUber 15)
-    -- up should be correct
+    verticalBaseStartSize   = Size (fromUber 15) (fromUber 20)
+    horizontalBaseStartSize = Size (fromUber 20) (fromUber 15)
     up = LaserOffsets {
         startOffset = Position 0 (- fromUber 6),
         laserOffset = Position 4 (- fromUber 6),
@@ -288,8 +287,8 @@ laserOffsets = fromList (
         nullLaserEndOffset = Position 0 (- fromUber 11),
         laserChipPosition = Position 20 (- fromUber 6),
         chipBand = verticalLaserChipBand,
-        baseStartOffset = zero, -- Position 0 (- fromUber 5),
-        baseStartSize = baseSize,
+        baseStartOffset = Position 0 (- fromUber 5),
+        baseStartSize = verticalBaseStartSize,
         endChipOffset = zero,
         endChipSize = Size (fromUber 15) (fromUber 4)
       }
@@ -301,7 +300,7 @@ laserOffsets = fromList (
         laserChipPosition = Position 20 (height baseSize + fromUber 6),
         chipBand = verticalLaserChipBand,
         baseStartOffset = zero,
-        baseStartSize = baseSize,
+        baseStartSize = verticalBaseStartSize,
         endChipOffset = Position 0 (fromUber 1),
         endChipSize = Size (fromUber 15) (fromUber 4)
       }
@@ -312,8 +311,8 @@ laserOffsets = fromList (
         nullLaserEndOffset = Position (- fromUber 11) 0,
         laserChipPosition = Position (- fromUber 6) 20,
         chipBand = horizontalLaserChipBand,
-        baseStartOffset = zero, -- Position (- fromUber 5) 0,
-        baseStartSize = baseSize,
+        baseStartOffset = Position (- fromUber 5) 0,
+        baseStartSize = horizontalBaseStartSize,
         endChipOffset = zero,
         endChipSize = Size (fromUber 4) (fromUber 15)
       }
@@ -325,7 +324,7 @@ laserOffsets = fromList (
         laserChipPosition = Position (width baseSize + fromUber 6) 20,
         chipBand = horizontalLaserChipBand,
         baseStartOffset = zero,
-        baseStartSize = baseSize,
+        baseStartSize = horizontalBaseStartSize,
         endChipOffset = Position (fromUber 1) 0,
         endChipSize = Size (fromUber 4) (fromUber 15)
       }
