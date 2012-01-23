@@ -144,8 +144,30 @@ isFullscreenSwapShortcut k =
 isMenuUp, isMenuDown, isMenuConfirmation, isMenuBack :: Controls -> Button -> Bool
 isMenuUp _ = isKey UpArrow
 isMenuDown _ = isKey DownArrow
-isMenuConfirmation _ k = isKey Return k || isKey Enter k
-isMenuBack _ k = isKey Escape k
+isMenuConfirmation controls k =
+    isKey Return k ||
+    isKey Enter k ||
+    isConfiguredMenuKey controls jumpKey k
+isMenuBack controls k =
+    isKey Escape k ||
+    isConfiguredMenuKey controls contextKey k
+
+-- | Returns, if a given key is the key specified by the given Controls-selector
+-- AND if it does not shadow any other menu keys.
+isConfiguredMenuKey :: Controls -> (Accessor Controls (Key, String)) -> Button -> Bool
+isConfiguredMenuKey controls selector b =
+    not (shadowsMenuButton b) &&
+    isKeyWS (controls ^. selector) b
+
+shadowsMenuButton :: Button -> Bool
+shadowsMenuButton (KeyboardButton k _ _) = k `elem` (
+    UpArrow :
+    DownArrow :
+    Return :
+    Enter :
+    Escape :
+    [])
+
 
 -- | user readable hints which keys to use
 menuKeysHint :: Bool -> KeysHint
