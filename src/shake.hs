@@ -92,7 +92,7 @@ removeShakeDir f =
 
 main = do
   hSetBuffering stdout NoBuffering
-  shake shakeOptions{shakeParallel = 2, shakeVerbosity = Loud} $ do
+  shake shakeOptions{shakeParallel = 2, shakeVerbosity = Diagnostic} $ do
     let qtWrapper = "cpp" </> "dist" </> "libqtwrapper.a"
         cppMakefile = "cpp" </> "dist" </> "Makefile"
         ghcFlags =
@@ -114,15 +114,12 @@ main = do
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
         system' "ghc" $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
 
-    "//*.o" *> \ o -> do
+    ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
 --     objectOrInterfaceFile ?> \ o -> do
         let hsFile = removeShakeDir $ replaceExtension o "hs"
         deps <- extractHaskellDeps hsFile
         need (hsFile : (map (addShakeDir . flip replaceExtension "hi") deps))
         system' "ghc" $ ["-c", hsFile] ++ ghcFlags
-
-    "//*.hi" *> \ hi -> do
-        need [replaceExtension hi "o"]
 
     qtWrapper *> \ _ -> do
         cs <- map ("cpp" </>) <$> getDirectoryFiles "cpp" "*.cpp"
