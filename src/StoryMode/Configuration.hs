@@ -28,7 +28,7 @@ episode_1 = Episode
         "09-tree-climbing" :
         "10-greed" :
         [])
-    "x"
+    "level-x"
 
 epPathSnippet Episode_1 = "ep1"
 
