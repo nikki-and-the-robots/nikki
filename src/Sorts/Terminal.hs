@@ -70,7 +70,7 @@ beamBlinkingTime :: Seconds = blinkLength
 bootingFrameTime :: Seconds = 0.3
 bootingAnimationSteps :: Int = 3
 
-batteryNumberNeeded = 100
+batteryNumberNeeded = 250
 
 -- * sort loading
 
