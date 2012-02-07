@@ -46,6 +46,7 @@ macPostBuild args buildFlags packageDescription localBuildInfo =
 
         -- stripping of binaries
         mapM_ (strip . (bundleExecutableDir </>)) ("nikki" : "core" : [])
+        copyLicenses bundle
         writeFile (bundle </> "yes_nikki_is_deployed") ""
         copyDirectory bundle "./nikki.app"
 
@@ -131,3 +132,25 @@ searchInPaths (a : r) file = do
 strip :: FilePath -> IO ()
 strip exe =
     trySystem ("strip " ++ exe)
+
+-- | copies the licenses of the dependency libs into the bundle
+copyLicenses :: FilePath -> IO ()
+copyLicenses bundle = do
+    let licenseDir = ".." </> "deploymentLicenses"
+        bundleLicenseDir = bundle </> "Contents" </> "Frameworks"
+    files <- getFiles licenseDir Nothing
+    fmapM_ (\ file -> copy (licenseDir </> file) (bundleLicenseDir </> file)) files
+
+-- | Needs full paths to both items.
+copy :: FilePath -> FilePath -> IO ()
+copy src dst = do
+    putStrLn ("copying " ++ src)
+    isFile <- doesFileExist src
+    isDir <- doesDirectoryExist src
+    if isFile then
+        copyFile src dst
+      else if isDir then
+        copyDirectory src dst
+      else
+        error ("not found: " ++ src)
+
