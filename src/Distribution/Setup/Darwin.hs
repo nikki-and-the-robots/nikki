@@ -84,6 +84,7 @@ deployedLibs =
     "libvorbisenc" :
     "libvorbis" :
     "libogg" :
+    "libpng14" :
     []
 
 -- | searches the qt_menu.nib in both standard locations for
