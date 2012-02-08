@@ -21,6 +21,9 @@ module Base.Configuration.Controls (
     menuKeysHint,
     menuConfirmationKeysHint,
     scrollableKeysHint,
+    gameNikkiKeysHint,
+    gameTerminalKeysHint,
+    gameRobotKeysHint,
 
     -- * text fields
     isTextFieldConfirmation,
@@ -56,6 +59,8 @@ import Data.Initial
 import Data.Accessor
 import Data.Char (toUpper)
 
+import Control.Arrow
+
 import System.Info
 
 import Graphics.Qt
@@ -64,6 +69,7 @@ import Utils
 
 import Base.Types.Events
 import Base.Prose
+import Base.Prose.Template
 
 
 -- | Configuration of controls
@@ -112,19 +118,19 @@ data KeysHint
 -- * context for templates
 
 keysContext :: Controls -> [(String, String)]
-keysContext controls =
-    ("leftKey", mk leftKey) :
-    ("rightKey", mk rightKey) :
-    ("upKey", mk upKey) :
-    ("downKey", mk downKey) :
-    ("jumpKey", mk jumpKey) :
-    ("contextKey", mk contextKey) :
-    []
-  where
-    mk :: Accessor Controls (Key, String) -> String
-    mk acc =
-        map toUpper $
-        snd (controls ^. acc)
+keysContext controls = map (second (mkKeyString controls)) $ (
+    ("leftKey", leftKey) :
+    ("rightKey", rightKey) :
+    ("upKey", upKey) :
+    ("downKey", downKey) :
+    ("jumpKey", jumpKey) :
+    ("contextKey", contextKey) :
+    [])
+
+mkKeyString :: Controls -> Accessor Controls (Key, String) -> String
+mkKeyString controls acc =
+    map toUpper $
+    snd (controls ^. acc)
 
 -- * internals
 
@@ -190,8 +196,27 @@ menuConfirmationKeysHint text = KeysHint (
 -- | keys hint for Base.Renderable.Scrollable
 scrollableKeysHint :: KeysHint
 scrollableKeysHint = KeysHint (
-    (p "scroll", p "↑↓") :
+    (p "scroll", pv "↑↓") :
     (p "back", p "any key") :
+    [])
+
+gameNikkiKeysHint :: Controls -> KeysHint
+gameNikkiKeysHint controls = KeysHint $ map (second (substitute (keysContext controls))) $ (
+    (p "walk", p "$leftKey$rightKey") :
+    (p "jump", p "$jumpKey") :
+    (p "context key", p "$contextKey") :
+    [])
+
+gameTerminalKeysHint :: Controls -> KeysHint
+gameTerminalKeysHint controls = KeysHint $ map (second (substitute (keysContext controls))) $ (
+    (p "select", p "$leftKey$rightKey") :
+    (p "confirm", p "$jumpKey") :
+    [])
+
+gameRobotKeysHint :: Controls -> KeysHint
+gameRobotKeysHint controls = KeysHint $ map (second (substitute (keysContext controls))) $ (
+    (p "controls", p "$leftKey$rightKey$upKey$downKey and $jumpKey") :
+    (p "back", p "$contextKey") :
     [])
 
 

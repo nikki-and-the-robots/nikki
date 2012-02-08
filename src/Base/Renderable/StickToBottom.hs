@@ -3,6 +3,7 @@ module Base.Renderable.StickToBottom (
     stickToBottom,
     addBottomLineSpacer,
     addKeysHint,
+    keysHintRenderable,
     KeysHint(..),
   ) where
 
@@ -39,8 +40,10 @@ addBottomLineSpacer child = stickToBottom child lineSpacer
 
 -- | adds a hint which keys are in use at the bottom.
 addKeysHint :: Renderable r => KeysHint -> r -> RenderableInstance
-addKeysHint keys mainChild = stickToBottom mainChild
-    (centerHorizontally $ (False, formatKeys keys))
+addKeysHint keys mainChild = stickToBottom mainChild (keysHintRenderable keys)
+
+keysHintRenderable :: KeysHint -> RenderableInstance
+keysHintRenderable keys = centerHorizontally (False, formatKeys keys)
 
 -- | Converts a list of key hints to a user readable string.
 formatKeys :: KeysHint -> Prose

@@ -63,6 +63,11 @@ fiddleInDebugging ptr renderable (widgetSize, action) =
         fillRect ptr zero widgetSize (alpha ^= 0.1 $ color)
         drawText ptr (Position 10 25) False (head $ words $ label renderable)
 
+-- | renders nothing
+instance Renderable () where
+    label () = "()"
+    render _ _ _ s () = return (s, return ())
+
 instance Renderable Pixmap where
     render ptr app _ size pix = return $ tuple (pixmapSize pix) $ do
         translate ptr (pix ^. pixmapOffset)

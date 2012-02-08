@@ -32,8 +32,9 @@ import Physics.Chipmunk as CM hiding (renderPosition)
 import Utils
 
 import Base
+import Base.Renderable.StickToBottom
 
-import Profiling.Physics
+import qualified Profiling.Physics
 import Profiling.FPS (FPSRef, tickFPSRef, initialFPSRef)
 
 import Object
@@ -241,6 +242,7 @@ updateScene app space controlsConfig cd scene = do
 -- | type for rendering the scene
 data RenderStateRefs
     = RenderStateRefs {
+        controlsStateRefs :: Controls,
         sceneMVar :: SceneMVar,
         cameraStateRef :: IORef CameraState,
         fpsRef :: FPSRef
@@ -252,12 +254,13 @@ type SceneMVar = MVar (Scene Object_, DebuggingCommand)
 -- Gets created in the logic thread
 mkRenderState :: IORef CameraState -> Scene Object_ -> M RenderStateRefs
 mkRenderState cameraStateRef scene = do
+    controls_ <- (^. controls) <$> getConfiguration
     let noop :: DebuggingCommand = const $ const $ return ()
     newScene <- io $ sceneImmutableCopy scene
     sceneMVar <- io $ newMVar (newScene, noop)
     fpsRef <- initialFPSRef
 
-    return $ RenderStateRefs sceneMVar cameraStateRef fpsRef
+    return $ RenderStateRefs controls_ sceneMVar cameraStateRef fpsRef
 
 sceneImmutableCopy :: Scene Object_ -> IO (Scene Object_)
 sceneImmutableCopy scene = do
@@ -270,13 +273,24 @@ sceneImmutableCopy scene = do
 -- let renderable_ = renderable (fpsRef, cameraStateRef :: IORef CameraState, sceneMVar :: MVar (RenderScene, DebuggingCommand))
 instance Renderable RenderStateRefs where
     label = const "RenderScene"
-    render ptr app config size (RenderStateRefs sceneMVar cameraStateRef fpsRef) = do
+    render ptr app config size (RenderStateRefs controls sceneMVar cameraStateRef fpsRef) = do
         return $ tuple size $ do
             (scene, debugging) <- readMVar sceneMVar
             runStateTFromIORef cameraStateRef $
                 Game.Scene.renderScene app config ptr scene debugging
+            renderKeysHint (scene ^. mode)
 
             tickFPSRef app config ptr fpsRef
+      where
+        renderKeysHint :: Mode -> IO ()
+        renderKeysHint mode = do
+            let r = stickToBottom () $ keysHintRenderable $ case mode of
+                        NikkiMode{} -> gameNikkiKeysHint controls
+                        TerminalMode{} -> gameTerminalKeysHint controls
+                        RobotMode{} -> gameRobotKeysHint controls
+            resetMatrix ptr
+            join (snd <$> render ptr app config size r)
+
 
 -- | Well, renders the scene to the screen (to the max :)
 -- Happens in the rendering thread.
