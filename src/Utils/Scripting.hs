@@ -169,6 +169,14 @@ maybeExists file = do
         then Just file
         else Nothing
 
+-- | asserts that a file or directory does not exist.
+assertNonExistance :: FilePath -> IO ()
+assertNonExistance file = do
+    isFile <- doesFileExist file
+    isDir <- doesDirectoryExist file
+    when (isFile || isDir) $
+        error ("file already exists: " ++ file)
+
 
 -- * version stuff
 

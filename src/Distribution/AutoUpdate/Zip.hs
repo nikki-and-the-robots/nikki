@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables #-}
 
-module Distribution.AutoUpdate.Zip (unzipArchive, zipArchive) where
+module Distribution.AutoUpdate.Zip (unzipArchive) where
 
 
 import qualified Data.ByteString as BS
@@ -61,37 +61,3 @@ extractFile destination = do
 withFileMIO :: MonadCatchIO m => FilePath -> IOMode -> (Handle -> m a) -> m a
 withFileMIO name mode =
     bracket (io $ openFile name mode) (io . hClose)
-
--- | zips a given folder recursively into the given zipFile
-zipArchive :: FilePath -> FilePath -> IO ()
-zipArchive zipFile directory = do
-    assertNonExistance zipFile
-    withArchive [CreateFlag] zipFile $ putInZip directory
-
--- | asserts that a file or directory does not exist.
-assertNonExistance :: FilePath -> IO ()
-assertNonExistance file = do
-    isFile <- doesFileExist file
-    isDir <- doesDirectoryExist file
-    when (isFile || isDir) $
-        error ("file already exists: " ++ file)
-
--- | puts the given file or directory (recursively) into the current archive
-putInZip :: FilePath -> Archive ()
-putInZip file =
-    inner (takeDirectory file) (takeFileName file)
-  where
-    inner root file = do
-        let fullPath = root </> file
-        isDir <- io $ doesDirectoryExist fullPath
-        isFile <- io $ doesFileExist fullPath
-        if isDir then do
-            ignore $ addDirectory file
-            subDirFiles <- io $ getFiles fullPath Nothing
-            mapM_ (inner root) $ map (file </>) subDirFiles
-          else if isFile then do
-            content <- sourceFile fullPath 0 0
-            ignore $ addFile file content
-            return ()
-          else
-            error ("file not found: " ++ file)
