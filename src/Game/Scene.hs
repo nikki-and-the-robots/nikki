@@ -20,7 +20,7 @@ import Data.IORef
 
 import Text.Printf
 
-import Control.Monad
+import Control.Monad (join)
 import Control.Monad.State (StateT(..))
 
 import Control.Concurrent.MVar
@@ -284,12 +284,14 @@ instance Renderable RenderStateRefs where
       where
         renderKeysHint :: Mode -> IO ()
         renderKeysHint mode = do
-            let r = stickToBottom () $ keysHintRenderable $ case mode of
-                        NikkiMode{} -> gameNikkiKeysHint controls
-                        TerminalMode{} -> gameTerminalKeysHint controls
-                        RobotMode{} -> gameRobotKeysHint controls
-            resetMatrix ptr
-            join (snd <$> render ptr app config size r)
+            let mr = fmap (stickToBottom () . keysHintRenderable) $ case mode of
+                        NikkiMode{} -> Just $ gameNikkiKeysHint controls
+                        TerminalMode{} -> Just $ gameTerminalKeysHint controls
+                        RobotMode{} -> Just $ gameRobotKeysHint controls
+                        _ -> Nothing
+            forM_ mr $ \ r -> do
+                resetMatrix ptr
+                join (snd <$> render ptr app config size r)
 
 
 -- | Well, renders the scene to the screen (to the max :)
