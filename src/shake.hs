@@ -1,5 +1,7 @@
 
 
+import Safe
+
 import Data.List
 import Data.Char
 
@@ -10,6 +12,7 @@ import Control.Arrow
 
 import System.Directory hiding (doesFileExist)
 import System.IO
+import System.Environment
 
 import Development.Shake
 import Development.Shake.FilePath
@@ -82,47 +85,59 @@ pkgs =
     "template" :
     []
 
-addShakeDir = ("shake/" ++)
-removeShakeDir f =
-    if "shake/" `isPrefixOf` f then
-        drop 6 f
+
+data Mode = Release | Devel
+  deriving (Show, Read)
+
+optFlag :: Mode -> String
+optFlag Release = "-O2"
+optFlag Devel   = "-O0"
+
+shakeDir m = "shake/" ++ show m
+
+addShakeDir mode = ((shakeDir mode ++ "/") ++)
+removeShakeDir mode f =
+    if prefix `isPrefixOf` f then
+        drop (length prefix) f
       else
-        error ("removeShakeDir: path does not start with " ++ show "shake/")
+        error ("removeShakeDir: path does not start with " ++ show prefix)
+  where
+    prefix = shakeDir mode ++ "/"
 
 
 main = do
   hSetBuffering stdout NoBuffering
   putStrLn "building..."
+  [Just mode] <- fmap readMay <$> getArgs
   shake shakeOptions{shakeThreads = 2, shakeVerbosity = Quiet} $ do
     let qtWrapper = "cpp" </> "dist" </> "libqtwrapper.a"
         cppMakefile = "cpp" </> "dist" </> "Makefile"
         ghcFlags =
-            "-O0" :
-            "-outputdir shake" :
-            "-ishake" :
+            optFlag mode :
+            ("-outputdir " ++ shakeDir mode) :
+            ("-i" ++ shakeDir mode) :
             "-hide-package MonadCatchIO-mtl" :
             []
         ghcLinkFlags =
-            "-O0" :
+            optFlag mode :
             "-threaded" :
             "-rtsopts" :
             map ("-package=" ++) pkgs ++
             []
 
-    want ["shake/core"]
+    want [shakeDir mode ++ "/core"]
 
-    "shake/core" *> \ core -> do
-        os <- map (addShakeDir . flip replaceExtension "o") <$> getHaskellDeps "Main.hs"
+    (shakeDir mode ++ "/core") *> \ core -> do
+        os <- map (addShakeDir mode . flip replaceExtension "o") <$> getHaskellDeps "Main.hs"
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
         putQuiet ("linking: " ++ core)
         system' "ghc" $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
 
     ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
---     objectOrInterfaceFile ?> \ o -> do
-        let hsFile = removeShakeDir $ replaceExtension o "hs"
+        let hsFile = removeShakeDir mode $ replaceExtension o "hs"
         deps <- extractHaskellDeps hsFile
-        need (hsFile : (map (addShakeDir . flip replaceExtension "hi") deps))
+        need (hsFile : (map (addShakeDir mode . flip replaceExtension "hi") deps))
         putQuiet ("compiling: " ++ hsFile)
         system' "ghc" $ ["-c", hsFile] ++ ghcFlags
 
@@ -136,20 +151,3 @@ main = do
         need ["cpp" </> "CMakeLists.txt"]
         liftIO $ createDirectoryIfMissing False ("cpp" </> "dist")
         system' "bash" ("-c" : "cd cpp/dist; cmake .." : [])
-
-
--- * utils
-
-_withDirectory :: MonadIO m => FilePath -> m a -> m a
-_withDirectory dir action = do
-    outer <- liftIO getCurrentDirectory
-    liftIO $ setCurrentDirectory dir
-    r <- action
-    liftIO $ setCurrentDirectory outer
-    return r
-
-objectOrInterfaceFile :: FilePath -> Bool
-objectOrInterfaceFile f =
-    ext == ".hi" || ext == ".o"
-  where
-    ext = takeExtension f
