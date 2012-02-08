@@ -1,5 +1,14 @@
 # Boring file regexps:
 
+^src/shake($|/)
+^src/rootInstall/dist($|/)
+^src/nikki($|/)
+^src/dist($|/)
+^src/cpp/dist($|/)
+(^|/).compiled($|/)
+(^|/).shake
+_stub.h$
+
 ### compiler and interpreter intermediate files
 # haskell (ghc) interfaces
 \.hi$
@@ -39,7 +48,7 @@
 \.installed-pkg-config
 \.setup-config
 # standard cabal build dir, might not be boring for everybody
-/dist(/|$)
+# ^dist(/|$)
 # autotools
 (^|/)autom4te\.cache($|/)
 (^|/)config\.(log|status)$
