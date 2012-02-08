@@ -56,6 +56,8 @@ import Data.Initial
 import Data.Accessor
 import Data.Char (toUpper)
 
+import System.Info
+
 import Graphics.Qt
 
 import Utils
@@ -91,12 +93,15 @@ instance Initial Controls where
         rightKey_ = mkKey RightArrow,
         upKey_ = mkKey UpArrow,
         downKey_ = mkKey DownArrow,
-        jumpKey_ = mkKey Ctrl,
+        jumpKey_ = initialJumpKey,
         contextKey_ = mkKey Shift
       }
         where
             mkKey k =
                 (k, keyDescription k (error "please don't use the given key text"))
+            initialJumpKey = case System.Info.os of
+                "darwin" -> mkKey Space -- Ctrl+Arrows clashes with default shortcuts for virtual desktops on osx.
+                _ -> mkKey Ctrl
 
 -- | represents hints for keys for user readable output
 data KeysHint
