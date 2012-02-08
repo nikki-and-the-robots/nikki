@@ -92,13 +92,15 @@ removeShakeDir f =
 
 main = do
   hSetBuffering stdout NoBuffering
-  shake shakeOptions{shakeParallel = 2, shakeVerbosity = Diagnostic} $ do
+  putStrLn "building..."
+  shake shakeOptions{shakeThreads = 2, shakeVerbosity = Loud} $ do
     let qtWrapper = "cpp" </> "dist" </> "libqtwrapper.a"
         cppMakefile = "cpp" </> "dist" </> "Makefile"
         ghcFlags =
             "-O0" :
             "-outputdir shake" :
             "-ishake" :
+            "-hide-package MonadCatchIO-mtl" :
             []
         ghcLinkFlags =
             "-threaded" :
