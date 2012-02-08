@@ -93,7 +93,7 @@ removeShakeDir f =
 main = do
   hSetBuffering stdout NoBuffering
   putStrLn "building..."
-  shake shakeOptions{shakeThreads = 2, shakeVerbosity = Loud} $ do
+  shake shakeOptions{shakeThreads = 2, shakeVerbosity = Quiet} $ do
     let qtWrapper = "cpp" </> "dist" </> "libqtwrapper.a"
         cppMakefile = "cpp" </> "dist" </> "Makefile"
         ghcFlags =
@@ -103,6 +103,7 @@ main = do
             "-hide-package MonadCatchIO-mtl" :
             []
         ghcLinkFlags =
+            "-O0" :
             "-threaded" :
             "-rtsopts" :
             map ("-package=" ++) pkgs ++
@@ -114,6 +115,7 @@ main = do
         os <- map (addShakeDir . flip replaceExtension "o") <$> getHaskellDeps "Main.hs"
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
+        putQuiet ("linking: " ++ core)
         system' "ghc" $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
 
     ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
@@ -121,6 +123,7 @@ main = do
         let hsFile = removeShakeDir $ replaceExtension o "hs"
         deps <- extractHaskellDeps hsFile
         need (hsFile : (map (addShakeDir . flip replaceExtension "hi") deps))
+        putQuiet ("compiling: " ++ hsFile)
         system' "ghc" $ ["-c", hsFile] ++ ghcFlags
 
     qtWrapper *> \ _ -> do
