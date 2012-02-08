@@ -8,6 +8,7 @@
 (^|/).compiled($|/)
 (^|/).shake
 _stub.h$
+^src/nikki.app($|/)
 
 ### compiler and interpreter intermediate files
 # haskell (ghc) interfaces
