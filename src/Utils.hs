@@ -58,7 +58,7 @@ import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), pure, Alternative(.
 import "mtl" Control.Monad.State hiding (forM_)
 import "transformers" Control.Monad.Trans.Error (ErrorT(..))
                                                 -- and Monad (Either e)
-import Control.Monad.CatchIO
+import "MonadCatchIO-transformers" Control.Monad.CatchIO
 import Control.Arrow ((>>>))
 import Control.Concurrent
 import Control.Exception

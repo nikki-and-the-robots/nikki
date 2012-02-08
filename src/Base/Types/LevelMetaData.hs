@@ -4,7 +4,6 @@ module Base.Types.LevelMetaData where
 
 
 import Data.ByteString.Lazy as BSL
-import Data.Binary (Binary(..), putWord8, getWord8)
 import Data.Aeson
 
 import Control.Monad
