@@ -97,7 +97,10 @@ deploymentFiles = (
 
     -- curl
     "libcurl-4.dll" :
-  --  "libzip.dll" : is sometimes statically linked
+
+    -- are sometimes statically linked
+    "libzip.dll" :
+    "libzlib1.dll" :
     
     -- sfml deps
     "libsndfile-1.dll" :
