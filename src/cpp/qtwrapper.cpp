@@ -113,7 +113,9 @@ extern "C" void scale(QPainter* painter, qreal x, qreal y) {
     painter->scale(x, y);
 };
 
-extern "C" void drawPixmap(QPainter* painter, qreal x, qreal y, QPixmap* pixmap) {
+// without force_align_arg_pointer this function can cause a segfault on windows when the painter paints on an
+// in memory QPixmap
+extern "C" void __attribute__((force_align_arg_pointer)) drawPixmap(QPainter* painter, qreal x, qreal y, QPixmap* pixmap) {
     painter->drawPixmap(x, y, *pixmap);
 };
 
