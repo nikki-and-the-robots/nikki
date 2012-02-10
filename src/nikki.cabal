@@ -180,6 +180,7 @@ Executable core
         , template == 0.2.*
         , email-validate
         , bifunctors
+        , utf8-string == 0.3.*
 
     if os(linux)
         extra-libraries:

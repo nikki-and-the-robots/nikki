@@ -4,6 +4,9 @@ module Base.Monologue (Monologue, readSignMonologue) where
 
 import Prelude hiding (catch)
 
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
+
 import Control.Monad
 
 import System.FilePath
@@ -26,7 +29,7 @@ readSignMonologue name = do
     mStoryModeFile <- join <$> io (fmapM maybeExists =<< getStoryModeDataFileName dataPath)
 
     io $ case mPublicFile <|> mStoryModeFile of
-        Just file -> parseMonologue <$> io (readFile file)
+        Just file -> parseMonologue <$> BS.toString <$> BS.readFile file
         Nothing -> return [pv ("monologue file not found: " ++ dataPath)]
 
 parseMonologue :: String -> Monologue
