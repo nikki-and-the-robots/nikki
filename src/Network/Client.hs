@@ -41,9 +41,6 @@ instance Binary Version where
         143 <- getWord8
         Version <$> get <*> get
 
-instance NFData Version where
-    rnf (Version a b) = rnf a `seq` rnf b
-
 
 -- | Can throw IOException and ErrorCall
 askServer :: forall a b . (Protocol a, Protocol b, Show a, Show b) =>
