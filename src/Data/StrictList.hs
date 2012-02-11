@@ -35,9 +35,10 @@ singleton :: a -> StrictList a
 singleton = (:! Empty)
 
 (!) :: StrictList a -> Int -> a
-(a :! r) ! 0 = a
-(_ :! r) ! i = r ! pred i
-Empty ! _ = error "(!): index out of bounds"
+l ! n = case (l, n) of
+    ((a :! r), 0) -> a
+    ((_ :! r), i) -> r ! pred i
+    (Empty, _) -> error "(!): index out of bounds"
 
 slFilter :: (a -> Bool) -> StrictList a -> StrictList a
 slFilter p (a :! r) =
