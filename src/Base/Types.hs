@@ -89,6 +89,7 @@ data Application
         window :: Ptr MainWindow,
         keyPoller :: KeyPoller,
         autoUpdateVersion :: MVar UpdateVersions,
+        storyModeAvailability :: MVar StoryModeAvailability,
         getMainMenu_ :: Application -> AppState,
         applicationPixmaps :: ApplicationPixmaps,
         applicationSounds :: ApplicationSounds,
@@ -102,6 +103,12 @@ data UpdateVersions = UpdateVersions {
     gameNewVersion :: Maybe Version,
     storyModeNewVersion :: Maybe Version
   }
+
+data StoryModeAvailability
+    = NotAvailable
+    | Buyable
+    | Installed
+
 
 hasUpdates (UpdateVersions Nothing Nothing) = False
 hasUpdates _ = True

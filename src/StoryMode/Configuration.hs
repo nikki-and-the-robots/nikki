@@ -6,7 +6,7 @@ import StoryMode.Types
 
 
 purchasingUrl :: String
-purchasingUrl = "http://joyridelabs.de/game/download"
+purchasingUrl = "http://buy.joyridelabs.de/"
 
 episodes :: [Episode FilePath]
 episodes =

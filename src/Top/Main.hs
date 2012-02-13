@@ -42,6 +42,8 @@ import Profiling.FPS
 
 import Distribution.AutoUpdate.MenuItem
 
+import StoryMode.Menus
+
 import Top.Initialisation
 import Top.Menu
 
@@ -108,10 +110,12 @@ renderThread configuration appRef =
         withAllSorts $ \ sorts ->
            withApplicationSounds $ \ appSounds -> io $ do
               autoUpdateVersionRef <- mkUpdateVersionRef window configuration
+              storyModeAvailability <- newStoryModeAvailability window
               -- put the initialised Application in the MVar
               let app :: Application
                   app = Application qApp window keyPoller
-                          autoUpdateVersionRef startAppState appPixmaps
+                          autoUpdateVersionRef storyModeAvailability
+                            startAppState appPixmaps
                           appSounds sorts
               putMVar appRef app
               -- will be quit by the logick thread
@@ -127,7 +131,7 @@ withNikkiIcon qWidget action = do
 
 -- showLoadingScreen :: Application -> Configuration -> IO ()
 showLoadingScreen qApp window applicationPixmaps config = do
-    let app = Application qApp window err err err applicationPixmaps err err
+    let app = Application qApp window err err err err applicationPixmaps err err
         err = error "uninitialised field in Application: showLoadingScreen"
     postGUI $ setRenderingLooped window False
     io $ setRenderable app config (busyMessage (p "loading..."))

@@ -1,8 +1,20 @@
 
-module StoryMode.Menus where
+module StoryMode.Menus (
+    newStoryModeAvailability,
+    storyModeMenuItem,
+    storyMode,
+  ) where
 
 
 import Data.Map (Map, member)
+import Data.Maybe
+
+import Control.Concurrent
+import Control.Concurrent.MVar
+
+import Network.Curl.Download.Lazy
+
+import Graphics.Qt
 
 import Utils
 
@@ -16,7 +28,50 @@ import StoryMode.Episode
 import StoryMode.Purchasing
 
 
--- | shows a text describing our plans with the story mode
+-- * item in main menu
+
+newStoryModeAvailability :: Ptr MainWindow -> IO (MVar StoryModeAvailability)
+newStoryModeAvailability window = do
+    ref <- newEmptyMVar
+    forkIO $ do
+        lookForStoryModeSite >>= putMVar ref
+        updateMainWindow window
+    return ref
+
+lookForStoryModeSite :: IO StoryModeAvailability
+lookForStoryModeSite = do
+    isInstalled <- isJust <$> loadEpisodes
+    if isInstalled then
+        return Installed
+      else
+        either (const NotAvailable) (const Buyable) <$>
+        openLazyURI purchasingUrl
+
+storyModeMenuItem :: StoryModeMenuItem
+storyModeMenuItem = StoryModeMenuItem False
+
+data StoryModeMenuItem = StoryModeMenuItem {selected :: Bool}
+
+instance Renderable StoryModeMenuItem where
+    render ptr app config size (StoryModeMenuItem selected) = do
+        available <- tryReadMVar $ storyModeAvailability app
+        let prose = case available of
+                Nothing -> selMod $ p "story mode"
+                Just Installed -> selMod $ p "story mode"
+                Just NotAvailable -> selMod $ p "story mode (coming soon!)"
+                Just Buyable -> colorizeProse yellow $ selMod $
+                    p "story mode (buy now!)"
+            selMod = if selected then select else deselect
+        render ptr app config size prose
+
+    label = const "StoryModeMenuItem"
+    select = const $ StoryModeMenuItem True
+    deselect = const $ StoryModeMenuItem False
+
+
+-- * story mode menu itself
+
+-- | Menu for the story mode
 storyMode :: Application -> Play -> Parent -> AppState
 storyMode app play parent = NoGUIAppState $ do
     mEpisodes <- io $ loadEpisodes

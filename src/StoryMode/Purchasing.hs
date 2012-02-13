@@ -34,14 +34,17 @@ import StoryMode.Client as Client
 import StoryMode.Configuration
 
 
-
-storyModeDebug = False
-
-
 -- | PRE: the story-mode is not installed.
 suggestPurchase :: Application -> AppState -> Parent -> Int -> AppState
 -- use this, once the story-mode is available
-suggestPurchase app storyModeMenu parent | storyModeDebug =
+suggestPurchase app storyModeMenu parent ps = NoGUIAppState $ io $ do
+    website <- openLazyURI purchasingUrl
+    return $ either
+        (const $ comingSoon app parent)
+        (const $ buyOrInstall app storyModeMenu parent ps)
+        website
+
+buyOrInstall app storyModeMenu parent =
     menuAppState app
         (NormalMenu (p "story mode") (Just $ p "the story mode is not installed"))
         (Just parent)
@@ -51,7 +54,8 @@ suggestPurchase app storyModeMenu parent | storyModeDebug =
   where
     this :: Int -> AppState
     this = suggestPurchase app storyModeMenu parent
-suggestPurchase app storyModeMenu parent = \ ps -> NoGUIAppState $ do
+
+comingSoon app parent = NoGUIAppState $ do
     file <- rm2m $ getDataFileName ("manual" </> "storyModeIntroduction" <.> "txt")
     prose <- io $ pFile file
     return $ scrollingAppState app prose parent
