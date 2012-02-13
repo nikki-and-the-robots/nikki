@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Nikki and the Robots
+GenericName=Arcade game
+Comment=Stop an army of robots taking over the world
+Exec=nikki
+Icon=nikki
+Terminal=false
+Type=Application
+Categories=Game;AdventureGame;
+StartupNotify=false
