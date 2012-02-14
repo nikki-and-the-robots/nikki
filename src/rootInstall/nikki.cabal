@@ -1,5 +1,5 @@
 Name:           nikki
-version:        0.4.1.2
+version:        0.4.99
 Category:       Game
 Author:         Florian Hofer, Sönke Hahn
 Maintainer:     shahn@joyridelabs.de
@@ -108,7 +108,7 @@ Executable nikki
         , mtl == 2.*
         , process
         , Hipmunk >= 5.2.0.6
-        , sfml-audio == 0.3.1816.*
+        , sfml-audio == 0.4.*
         , safe
         , random
         , StateVar
@@ -116,13 +116,13 @@ Executable nikki
         , time
         , parsec == 3.*
         , FindBin >= 0.0.5
-        , clocked == 0.4.1
+        , clocked == 0.4.1.*
         , cmdargs >= 0.6.6
         , MonadCatchIO-transformers >= 0.2.2.2
         , download-curl >= 0.1.3
         , temporary >= 1.1.1
         , bytestring >= 0.9.1.7
-        , LibZip >= 0.2.0.1
+        , LibZip == 0.2.*
         , uniplate >= 1.6
         , data-accessor >= 0.2.1.7
         , data-accessor-mtl >= 0.2.0.2
@@ -130,15 +130,16 @@ Executable nikki
         , vector >= 0.9
         , RSA == 1.*
         , aeson == 0.4.*
-        , attoparsec == 0.9.*
+        , attoparsec == 0.9.* || == 0.10.*
         , network == 2.*
         , binary-communicator >= 1.0.2
-        , deepseq
+        , deepseq == 1.3.*
         , old-locale
         , text
         , template == 0.2.*
         , email-validate
         , bifunctors
+        , utf8-string == 0.3.*
 
     if os(linux)
         extra-libraries:
