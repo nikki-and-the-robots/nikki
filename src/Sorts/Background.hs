@@ -37,6 +37,7 @@ import qualified Sorts.StoryMode
 
 backgrounds =
     "blue" :
+    "greynoise" :
     []
 
 
