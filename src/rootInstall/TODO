@@ -1,0 +1,4 @@
+make cabal copy:
+  nikki.desktop -> PREFIX/share/applications/
+  icon-SIZE.png -> PREFIX/share/icons/hicolor/SIZExSIZE/apps/nikki.png
+  (should this be done by a cabal hook?)
