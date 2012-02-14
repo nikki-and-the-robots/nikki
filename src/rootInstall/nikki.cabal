@@ -20,28 +20,35 @@ data-files:
 
     manual/*.txt
 
+    monologues/tutorial/01
+    monologues/tutorial/02
+    monologues/tutorial/03
+    monologues/tutorial/04
+    monologues/tutorial/05
+    monologues/tutorial/06
+
+    png/backgrounds/blue/*.png
+    png/battery/*.png
+    png/deathstones/lasers/*.png
     png/font/*.png
     png/font/digits/*.png
-    png/sign/*.png
-    png/nikki/*.png
-    png/battery/*.png
-    png/terminals/*.png
-    png/terminals/osd/*.png
     png/multilayers/*.png
-    png/tutorial/*.png
-    png/osd/*.png
-    png/osd/backgroundOverlay/*.png
-    png/osd/background/*.png
-    png/backgrounds/blue/*.png
+    png/nikki/*.png
     png/objects/*.png
-    png/robots/train/*.png
-    png/robots/patrol/*.png
+    png/osd/*.png
+    png/osd/background/*.png
+    png/osd/backgroundOverlay/*.png
+    png/robots/cannon/*.png
     png/robots/conveyor/*.png
     png/robots/eyes/*.png
-    png/robots/platform/*.png
-    png/robots/cannon/*.png
     png/robots/jetpack/*.png
     png/robots/laser/*.png
+    png/robots/patrol/*.png
+    png/robots/platform/*.png
+    png/robots/train/*.png
+    png/sign/*.png
+    png/terminals/*.png
+    png/terminals/osd/*.png
     png/tiles/*.png
 
     sounds/game/*.wav
