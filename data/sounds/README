@@ -1,4 +1,4 @@
 SFML has problems with some wave file format.
-Converting with soy like this seems to work:
+Converting with sox like this seems to work:
 
 sox $INPUTFILE -b 16 -e signed-integer $OUTPUTFILE
