@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Nikki and the Robots
-GenericName=Arcade game
-Comment=Stop an army of robots taking over the world
+GenericName=cute platformer and level editor
+Comment=Control robots, collect batteries and find all the switches!!!
 Exec=nikki
 Icon=nikki
 Terminal=false
