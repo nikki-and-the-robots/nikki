@@ -394,7 +394,7 @@ bakeH pixmaps =
     translate painter (negateAbelian upperLeft)
     forM_ pixmaps $ \ (StaticPixmap p s pix offset _) ->
         withClipRect painter p s $
-            drawPixmap painter (p -~ split 1 +~ offset) pix
+            drawPixmapInMemory painter (p -~ split 1 +~ offset) pix
     destroyQPainter painter
     let dsize = fmap fromIntegral size
         resultPixmap = Pixmap bakedPixmap zero dsize dsize

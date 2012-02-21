@@ -48,6 +48,7 @@ module Graphics.Qt.CPPWrapper (
     drawLine,
     drawText,
     drawPixmap,
+    drawPixmapInMemory,
     drawPixmapFragments,
     drawPoint,
     drawRect,
@@ -346,6 +347,11 @@ drawPixmap :: Ptr QPainter -> Position QtReal -> ForeignPtr QPixmap -> IO ()
 drawPixmap ptr (Position x y) fp =
     withForeignPtr fp $ cppDrawPixmap ptr x y
 foreign import ccall "drawPixmap" cppDrawPixmap :: Ptr QPainter -> QtReal -> QtReal -> Ptr QPixmap -> IO ()
+
+drawPixmapInMemory :: Ptr QPainter -> Position QtReal -> ForeignPtr QPixmap -> IO ()
+drawPixmapInMemory ptr (Position x y) fp =
+    withForeignPtr fp $ cppDrawPixmapInMemory ptr x y
+foreign import ccall "drawPixmapInMemory" cppDrawPixmapInMemory :: Ptr QPainter -> QtReal -> QtReal -> Ptr QPixmap -> IO ()
 
 drawPoint :: Ptr QPainter -> Position QtInt -> IO ()
 drawPoint ptr (Position x y) =
