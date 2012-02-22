@@ -9,6 +9,7 @@ module Base.Configuration (
     show_battery_OSD,
     show_time_OSD,
     show_switch_OSD,
+    show_keyhint_OSD,
 
     defaultConfiguration,
     savedConfigurationToConfiguration,
@@ -52,6 +53,15 @@ data SavedConfiguration
     saved_show_time_OSD :: Bool,
     saved_show_switch_OSD :: Bool
   }
+  | SavedConfiguration_2 {
+    saved_language :: Language,
+    saved_fullscreen :: Bool,
+    saved_controls :: Controls,
+    saved_show_battery_OSD :: Bool,
+    saved_show_time_OSD :: Bool,
+    saved_show_switch_OSD :: Bool,
+    saved_show_keyhints_OSD :: Bool
+  }
     deriving (Show, Read)
 
 toLatestSavedConfiguration :: SavedConfiguration -> SavedConfiguration
@@ -62,13 +72,14 @@ toLatestSavedConfiguration
         saved_show_battery_OSD
         saved_show_time_OSD
         saved_show_switch_OSD) =
-    SavedConfiguration_1
+    SavedConfiguration_2
         (saved_language initial)
         saved_fullscreen
         saved_controls
         saved_show_battery_OSD
         saved_show_time_OSD
         saved_show_switch_OSD
+        (saved_show_keyhints_OSD initial)
 toLatestSavedConfiguration
     (SavedConfiguration_1
         saved_language
@@ -77,23 +88,26 @@ toLatestSavedConfiguration
         saved_show_battery_OSD
         saved_show_time_OSD
         saved_show_switch_OSD) =
-    SavedConfiguration_1
+    SavedConfiguration_2
         saved_language
         saved_fullscreen
         saved_controls
         saved_show_battery_OSD
         saved_show_time_OSD
         saved_show_switch_OSD
+        (saved_show_keyhints_OSD initial)
+toLatestSavedConfiguration x@SavedConfiguration_2{} = x
 
 -- | default configuration
 instance Initial SavedConfiguration where
-    initial = SavedConfiguration_1 {
+    initial = SavedConfiguration_2 {
         saved_language = English,
         saved_fullscreen = False,
         saved_controls = initial,
         saved_show_battery_OSD = True,
         saved_show_time_OSD = False,
-        saved_show_switch_OSD = True
+        saved_show_switch_OSD = True,
+        saved_show_keyhints_OSD = True
       }
 
 
@@ -122,7 +136,8 @@ data Configuration = Configuration {
     controls_ :: Controls,
     show_battery_OSD_ :: Bool,
     show_time_OSD_ :: Bool,
-    show_switch_OSD_ :: Bool
+    show_switch_OSD_ :: Bool,
+    show_keyhint_OSD_ :: Bool
   }
     deriving (Data, Typeable)
 
@@ -141,6 +156,8 @@ show_time_OSD :: Accessor Configuration Bool
 show_time_OSD = accessor show_time_OSD_ (\ a r -> r{show_time_OSD_ = a})
 show_switch_OSD :: Accessor Configuration Bool
 show_switch_OSD = accessor show_switch_OSD_ (\ a r -> r{show_switch_OSD_ = a})
+show_keyhint_OSD :: Accessor Configuration Bool
+show_keyhint_OSD = accessor show_keyhint_OSD_ (\ a r -> r{show_keyhint_OSD_ = a})
 
 -- | Converts the configuration loaded from disk to a Configuration.
 -- Adds impure annotations needed for CmdArgs.
@@ -155,7 +172,7 @@ savedConfigurationToConfiguration
 --         show_switch_OSD_ = saved_show_switch_OSD}
 
 defaultConfiguration :: SavedConfiguration -> Configuration
-defaultConfiguration (SavedConfiguration_1 saved_language saved_fullscreen saved_controls saved_show_battery_OSD saved_show_time_OSD saved_show_switch_OSD) =
+defaultConfiguration (SavedConfiguration_2 saved_language saved_fullscreen saved_controls saved_show_battery_OSD saved_show_time_OSD saved_show_switch_OSD saved_show_keyhints_OSD) =
     Configuration {
         play_level = Nothing
             &= help "play the specified level file"
@@ -204,6 +221,8 @@ defaultConfiguration (SavedConfiguration_1 saved_language saved_fullscreen saved
         show_time_OSD_ = saved_show_time_OSD
             &= CmdArgs.ignore,
         show_switch_OSD_ = saved_show_switch_OSD
+            &= CmdArgs.ignore,
+        show_keyhint_OSD_ = saved_show_keyhints_OSD
             &= CmdArgs.ignore
       }
     &= program "nikki"
@@ -217,11 +236,12 @@ defaultConfiguration (SavedConfiguration_1 saved_language saved_fullscreen saved
         [])
 
 configurationToSavedConfiguration c =
-    SavedConfiguration_1 {
+    SavedConfiguration_2 {
         saved_language = c ^. language,
         saved_fullscreen = fullscreen c,
         saved_controls = c ^. controls,
         saved_show_battery_OSD = c ^. show_battery_OSD,
         saved_show_time_OSD = c ^. show_time_OSD,
-        saved_show_switch_OSD = c ^. show_switch_OSD
+        saved_show_switch_OSD = c ^. show_switch_OSD,
+        saved_show_keyhints_OSD = c ^. show_keyhint_OSD
       }
