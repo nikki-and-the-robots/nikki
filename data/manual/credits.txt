@@ -3,6 +3,7 @@ CREDITS
 Joyride Labs:
 * Sönke Hahn
 * Florian Hofer
+* Nikolaus Muxfeldt
 * Iwan Gabovitch
 
 Level Contest 1 Designers:
