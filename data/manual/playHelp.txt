@@ -1,1 +1,22 @@
-not yet written...
+CONTROLS
+
+The main keys for playing the game are: $leftKey$rightKey$upKey$downKey, $jumpKey and $contextKey.
+
+You can exit the level anytime by hitting ESC.
+
+You can switch from and to fullscreen mode with either F11 or Alt+Enter.
+
+
+Nikki's Controls:
+$leftKey$rightKey - move left and right
+$jumpKey - jump
+$contextKey - use a terminal
+
+Terminal Menu Controls:
+$leftKey$rightKey - select a robot (or eject)
+$jumpKey - confirm your choice
+
+Robot Controls:
+$leftKey$rightKey$upKey$downKey - depends on the robot
+$jumpKey - depends on the robot
+$contextKey - go back to the terminal menu
