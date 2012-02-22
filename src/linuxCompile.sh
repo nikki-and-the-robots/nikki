@@ -15,6 +15,6 @@ cmake ..
 make
 cd ../..
 
-cabal install --only-dependencies
+cabal install --only-dependencies $@
 cabal configure $@
 cabal build
