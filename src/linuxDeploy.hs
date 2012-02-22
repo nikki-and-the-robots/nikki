@@ -9,11 +9,12 @@ import Data.Char
 import Data.Maybe
 import Data.Set
 import Data.List (isInfixOf, isPrefixOf)
-import Data.Foldable as Foldable (any, mapM_)
+import Data.Foldable as Foldable (any, mapM_, forM_)
 
 import Text.Parsec
+import Text.Printf
 
-import Control.Monad
+import Control.Monad (when)
 import Control.Applicative ((<$>))
 import Control.Exception
 
@@ -96,6 +97,13 @@ nonStandardLibraries = fromList (
     "libcurl" :
     [])
 
+-- | list of unwanted dependencies
+unwantedDependencies :: [String]
+unwantedDependencies =
+    "libssl" :
+    "libcrypto" :
+    "librtmp" :
+    []
 
 -- | copy the licenses to the deploymentDir
 copyDeploymentLicenses :: IO ()
@@ -126,16 +134,31 @@ data LDDDep = LDDDep {dep :: FilePath, location :: Maybe FilePath}
 getDeps :: FilePath -> IO (Set FilePath)
 getDeps exe = do
     lddOutput <- readProcess "ldd" [exe] ""
-    return $ case parse lddParser ("ldd-output: " ++ lddOutput) lddOutput of
-        Left x -> error $ show x
-        Right x -> filterWantedDeps x
+    let deps = case parse lddParser ("ldd-output: " ++ lddOutput) lddOutput of
+            Left x -> error $ show x
+            Right x -> filterWantedDeps x
+    assertWantedDeps deps
+    return deps
   where
     -- filter for all the dependency we really want to deploy
-    filterWantedDeps :: [LDDDep] -> (Set FilePath)
+    filterWantedDeps :: [LDDDep] -> Set FilePath
     filterWantedDeps = fromList . catMaybes . fmap convert
     convert :: LDDDep -> Maybe FilePath
     convert (LDDDep dep (Just location)) = Just location
     convert (LDDDep dep Nothing) = Nothing
+
+    -- asserts that nikki doesn't depend on libssl, libcrypto or librtmp
+    assertWantedDeps :: Set FilePath -> IO ()
+    assertWantedDeps deps =
+        forM_ deps $ \ dep ->
+            when (isUnwantedDep dep) $
+                error (printf "executable %s depends on unwanted library %s"
+                    exe dep)
+    isUnwantedDep :: FilePath -> Bool
+    isUnwantedDep lib =
+        any
+        (\ unwanted -> unwanted `isPrefixOf`  takeBaseName lib)
+        unwantedDependencies
 
 lddParser :: Parsec String () [LDDDep]
 lddParser = do
