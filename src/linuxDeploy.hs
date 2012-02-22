@@ -21,6 +21,7 @@ import Control.Exception
 import System.FilePath
 import System.Directory
 import System.Process
+import System.Posix.Env
 
 import Utils.Scripting
 
@@ -34,6 +35,8 @@ coreExe = executables </> "core" </> "core"
 
 
 main = do
+    setLibraryPath
+
     prepareDeploymentDir
     copy nikkiExe
     copy coreExe
@@ -44,6 +47,12 @@ main = do
     fiddleInStartScript
     putStrLn ("touching " ++ deploymentIndicator)
     writeFile deploymentIndicator ""
+
+setLibraryPath :: IO ()
+setLibraryPath = do
+    v <- getEnv "LD_LIBRARY_PATH"
+    maybe (return ()) (const $ error "LD_LIBRARY_PATH already set") v
+    setEnv "LD_LIBRARY_PATH" "/usr/local/lib" False
 
 -- | ensure that an empty deploymentDir exists
 prepareDeploymentDir = do
