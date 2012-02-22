@@ -278,7 +278,8 @@ instance Renderable RenderStateRefs where
             (scene, debugging) <- readMVar sceneMVar
             runStateTFromIORef cameraStateRef $
                 Game.Scene.renderScene app config ptr scene debugging
-            renderKeysHint (scene ^. mode)
+            when (config ^. show_keyhint_OSD) $
+                renderKeysHint (scene ^. mode)
 
             tickFPSRef app config ptr fpsRef
       where
