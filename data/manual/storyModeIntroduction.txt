@@ -1,30 +1,3 @@
-WELCOME TO NIKKI AND THE ROBOTS
+Nikki and the Robot's story mode features new graphics, levels and characters!
 
-"Nikki and the Robots" is a 2D platformer written in Haskell and developed by Joyride Laboratories. The current alpha version lets you play a few short demo levels, and you can build your own levels with the integrated level editor.
-
-
-PUBLISHING
-
-We are releasing the game and the level editor under an open source license (LGPL). The included graphics are published under a permissive Creative Commons license (cc-by-sa). We're also planning to create a server that will allow players to upload the levels they created and download levels from other players. We hope that a community of coders, level creators and players will emerge around the game.
-
-Simultaneously, we are working on a story mode that we plan to sell via the game. These episodes will include new graphics, more robots, a story line, other characters and many surprises.
-
-(Just to clarify: The licensing is very permissive. It allows others to create their own episodes and distribute them freely or sell them. This would be very welcome. If anybody is interested in this, we propose to join forces and sell all our episodes through one system.)
-
-
-USED TECHNOLOGIES
-
-- Qt for user input and rendering
-- OpenGL as an efficient rendering backend for Qt. Everything will remain 2D, though - we promise!
-- Hipmunk, the Haskell bindings to the chipmunk physics engine
-
-
-GETTING INVOLVED
-
-The project is still in alpha stage, so there are some features that aren't yet implemented. For some, we have a clear vision on how to implement them; for others, we don't. If you want to get involved, check out our darcs repo, our launchpad site and don't hesitate to contact us.
-
-
-FURTHER READING
-
-http://joyridelabs.de
-http://joyridelabs.de/game/code/
+You can buy it from www.joyridelabs.de as soon as it is released!
