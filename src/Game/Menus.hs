@@ -47,7 +47,8 @@ pauseMenu app parent continueLevel gameState =
 playHelp :: Application -> Parent -> AppState
 playHelp app parent = NoGUIAppState $ do
     file <- rm2m $ getDataFileName "manual/playHelp.txt"
-    text <- io $ pFile file
+    controls_ <- gets (^. controls)
+    text <- (fmap (substitute (keysContext controls_))) <$> io (pFile file)
     return $ scrollingAppState app text parent
 
 failureMenu :: Application -> Parent -> RenderStateRefs -> GameState
