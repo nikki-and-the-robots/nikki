@@ -46,7 +46,6 @@ mainMenu app ps =
         (r $ storyModeMenuItem, storyMode app (play app) . this) :
         (r $ p "community levels", community app 0 . this) :
         (r $ p "options", generalOptions app 0 . this) :
-        (r $ p "help", mainMenuHelp app . this) :
         (r autoUpdateMenuItem, autoUpdate app . this) :
         (r $ p "credits", credits app . this) :
         (r $ p "quit", const $ FinalAppState) :
@@ -140,9 +139,3 @@ loadingEditorScene app file abortion follower =
             Left errMsg -> do
                 fmapM_ (logg Error) $ fmap getString errMsg
                 return $ message app errMsg abortion
-
-mainMenuHelp :: Application -> Parent -> AppState
-mainMenuHelp app parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName "manual/mainMenuHelp.txt"
-    text <- io $ pFile file
-    return $ scrollingAppState app text parent
