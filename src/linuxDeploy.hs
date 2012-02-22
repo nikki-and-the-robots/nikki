@@ -94,8 +94,6 @@ nonStandardLibraries = fromList (
     "libQtOpenGL" :
     "libQtCore" :
     "libQtGui" :
-    "libQtDBus" :
-    "libQtXml" :
 
     -- other
     "libopenal" :
@@ -104,6 +102,7 @@ nonStandardLibraries = fromList (
     "libgmp" :
     "libpng" :
     "libcurl" :
+
     [])
 
 -- | list of unwanted dependencies
