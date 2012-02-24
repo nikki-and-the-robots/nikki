@@ -53,39 +53,6 @@ moduleToFile =
     map (\ c -> if c == '.' then '/' else c) >>>
     (++ ".hs")
 
-
-pkgs =
-    "transformers" :
-    "clocked" :
-    "mtl" :
-    "data-accessor" :
-    "Hipmunk" :
-    "safe" :
-    "text" :
-    "bytestring" :
-    "deepseq" :
-    "binary" :
-    "binary-communicator" :
-    "aeson" :
-    "directory" :
-    "temporary" :
-    "vector" :
-    "download-curl" :
-    "strict" :
-    "filepath" :
-    "email-validate" :
-    "bifunctors" :
-    "LibZip" :
-    "RSA" :
-    "sfml-audio" :
-    "cmdargs" :
-    "data-accessor-mtl" :
-    "FindBin" :
-    "uniplate" :
-    "template" :
-    []
-
-
 data Mode = Release | Devel
   deriving (Show, Read)
 
@@ -105,6 +72,14 @@ removeShakeDir mode f =
     prefix = shakeDir mode ++ "/"
 
 
+readPackages :: Action [String]
+readPackages =
+    nub <$> filter (not . null) <$> filter (not . isComment) <$> lines <$>
+        readFile' "shakePackages"
+  where
+    isComment x = headMay x == Just '#'
+
+
 main = do
   hSetBuffering stdout NoBuffering
   putStrLn "building..."
@@ -116,9 +91,8 @@ main = do
             optFlag mode :
             ("-outputdir " ++ shakeDir mode) :
             ("-i" ++ shakeDir mode) :
-            "-hide-package MonadCatchIO-mtl" :
             []
-        ghcLinkFlags =
+        ghcLinkFlags pkgs =
             optFlag mode :
             "-threaded" :
             "-rtsopts" :
@@ -132,14 +106,15 @@ main = do
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
         putQuiet ("linking: " ++ core)
-        system' "ghc" $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
+        pkgs <- readPackages
+        ghc $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags pkgs
 
     ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
         let hsFile = removeShakeDir mode $ replaceExtension o "hs"
         deps <- extractHaskellDeps hsFile
         need (hsFile : (map (addShakeDir mode . flip replaceExtension "hi") deps))
         putQuiet ("compiling: " ++ hsFile)
-        system' "ghc" $ ["-c", hsFile] ++ ghcFlags
+        ghc $ ["-c", hsFile] ++ ghcFlags
 
     qtWrapper *> \ _ -> do
         cs <- map ("cpp" </>) <$> getDirectoryFiles "cpp" "*.cpp"
@@ -151,3 +126,12 @@ main = do
         need ["cpp" </> "CMakeLists.txt"]
         liftIO $ createDirectoryIfMissing False ("cpp" </> "dist")
         system' "bash" ("-c" : "cd cpp/dist; cmake .." : [])
+
+    addOracle ["ghc-pkg"] $ do
+        (out,err) <- systemOutput "ghc-pkg" ["list","--simple-output"]
+        return (words out ++ words err)
+
+
+ghc args = do
+    _ <- askOracle ["ghc-pkg"]
+    system' "ghc" args
