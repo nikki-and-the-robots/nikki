@@ -71,15 +71,6 @@ removeShakeDir mode f =
   where
     prefix = shakeDir mode ++ "/"
 
-
-readPackages :: Action [String]
-readPackages =
-    nub <$> filter (not . null) <$> filter (not . isComment) <$> lines <$>
-        readFile' "shakePackages"
-  where
-    isComment x = headMay x == Just '#'
-
-
 main = do
   hSetBuffering stdout NoBuffering
   putStrLn "building..."
@@ -92,11 +83,10 @@ main = do
             ("-outputdir " ++ shakeDir mode) :
             ("-i" ++ shakeDir mode) :
             []
-        ghcLinkFlags pkgs =
+        ghcLinkFlags =
             optFlag mode :
             "-threaded" :
             "-rtsopts" :
-            map ("-package=" ++) pkgs ++
             []
 
     want [shakeDir mode ++ "/core"]
@@ -106,8 +96,7 @@ main = do
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
         putQuiet ("linking: " ++ core)
-        pkgs <- readPackages
-        ghc $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags pkgs
+        ghc $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
 
     ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
         let hsFile = removeShakeDir mode $ replaceExtension o "hs"
@@ -131,7 +120,20 @@ main = do
         (out,err) <- systemOutput "ghc-pkg" ["list","--simple-output"]
         return (words out ++ words err)
 
+    addOracle ["packages"] $ do
+        let isComment x = headMay x == Just '#'
+        sort <$> nub <$>
+            filter (not . null) <$>
+            filter (not . isComment) <$>
+            lines <$>
+            readFile' "shakePackages"
+
 
 ghc args = do
     _ <- askOracle ["ghc-pkg"]
-    system' "ghc" args
+    pkgs <- askOracle ["packages"]
+    let packageFlags = map ("-package=" ++) pkgs
+    system' "ghc" $
+        "-hide-all-packages" :
+        packageFlags ++
+        args
