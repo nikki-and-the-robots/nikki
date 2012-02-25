@@ -68,7 +68,7 @@ main = do
 
     (shakeDir mode ++ "/core") *> \ core -> do
         rdeps <- snd <$> apply1 (HaskellTDeps "Main.hs")
-        let os = map (addShakeDir mode . (<.> "o")) ("Main" : rdeps)
+        let os = map (addShakeDir mode . (flip replaceExtension "o")) ("Main.hs" : rdeps)
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
         putQuiet ("linking: " ++ core)
@@ -77,7 +77,7 @@ main = do
     ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
         let hsFile = removeShakeDir mode $ replaceExtension o "hs"
         deps <- snd <$> apply1 (HaskellDeps hsFile)
-        need (hsFile : (map (addShakeDir mode . (<.> "hi")) deps))
+        need (hsFile : (map (addShakeDir mode . (flip replaceExtension "hi")) deps))
         putQuiet ("compiling: " ++ hsFile)
         ghc $ ["-c", hsFile] ++ ghcFlags
 
@@ -124,13 +124,13 @@ ghc args = do
 newtype HaskellTDeps = HaskellTDeps FilePath
   deriving (Eq, Show, Binary, NFData, Typeable, Hashable)
 
-instance Rule HaskellTDeps (FileTime, [String]) where
+instance Rule HaskellTDeps (FileTime, [FilePath]) where
     validStored (HaskellTDeps file) (time, _) =
         (Just time ==) <$> getModTimeMaybe file
 
 defaultHaskellTDeps = defaultRule $ \ (HaskellTDeps haskellFile) -> Just $ do
     directDeps <- snd <$> apply1 (HaskellDeps haskellFile)
-    transitiveDeps <- concat <$> map snd <$> mapM apply1 (map (HaskellTDeps . (<.> "hs")) directDeps)
+    transitiveDeps <- concat <$> map snd <$> mapM apply1 (map (HaskellTDeps . (flip replaceExtension "hs")) directDeps)
     time <- liftIO $ getModTimeError "Error, file does not exist and no rule available:" haskellFile
     return (time, nub $ directDeps ++ transitiveDeps)
 
@@ -138,14 +138,14 @@ defaultHaskellTDeps = defaultRule $ \ (HaskellTDeps haskellFile) -> Just $ do
 newtype HaskellDeps = HaskellDeps FilePath
   deriving (Eq, Show, Binary, NFData, Typeable, Hashable)
 
-instance Rule HaskellDeps (FileTime, [String]) where
+instance Rule HaskellDeps (FileTime, [FilePath]) where
     validStored (HaskellDeps file) (time, _) =
         (Just time ==) <$> getModTimeMaybe file
 
 defaultHaskellDeps = defaultRule $ \ (HaskellDeps haskellFile) -> Just $ do
     code <- readFile' haskellFile
     let imports = hsImports code
-    deps <- filterM (doesFileExist . (<.> "hs")) $ map moduleToFileWithoutExtension imports
+    deps <- filterM doesFileExist $ map moduleToFile imports
     putQuiet (haskellFile ++ " imports " ++ unwords deps)
     time <- liftIO $ getModTimeError "Error, file does not exist and no rule available:" haskellFile
     return (time, deps)
@@ -154,6 +154,7 @@ hsImports :: String -> [String]
 hsImports xs = [ takeWhile (\x -> isAlphaNum x || x `elem` "._") $ dropWhile (not . isUpper) x
                | x <- lines xs, "import " `isPrefixOf` x]
 
-moduleToFileWithoutExtension :: String -> FilePath
-moduleToFileWithoutExtension =
-    map (\ c -> if c == '.' then '/' else c)
+moduleToFile :: String -> FilePath
+moduleToFile =
+    map (\ c -> if c == '.' then '/' else c) >>>
+   (<.> "hs")
