@@ -10,6 +10,8 @@ import Data.Binary
 import Data.Typeable
 import Data.Hashable
 
+import Text.Printf
+
 import Control.Applicative ((<$>))
 import Control.Monad
 import Control.Monad.IO.Class
@@ -67,7 +69,7 @@ main = do
     want [shakeDir mode ++ "/core"]
 
     (shakeDir mode ++ "/core") *> \ core -> do
-        rdeps <- snd <$> apply1 (HaskellTDeps "Main.hs")
+        rdeps <- filterM doesFileExist =<< (snd <$> apply1 (HaskellTDeps "Main.hs"))
         let os = map (addShakeDir mode . (flip replaceExtension "o")) ("Main.hs" : rdeps)
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
@@ -76,7 +78,7 @@ main = do
 
     ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
         let hsFile = removeShakeDir mode $ replaceExtension o "hs"
-        deps <- snd <$> apply1 (HaskellDeps hsFile)
+        deps <- filterM doesFileExist =<< (snd <$> apply1 (HaskellDeps hsFile))
         need (hsFile : (map (addShakeDir mode . (flip replaceExtension "hi")) deps))
         putQuiet ("compiling: " ++ hsFile)
         ghc $ ["-c", hsFile] ++ ghcFlags
@@ -105,7 +107,7 @@ main = do
             readFile' "shakePackages"
 
     defaultHaskellTDeps
-    defaultHaskellDeps
+    defaultHaskellDeps (\ f -> not <$> doesFileExist f)
 
 
 ghc args = do
@@ -142,13 +144,14 @@ instance Rule HaskellDeps (FileTime, [FilePath]) where
     validStored (HaskellDeps file) (time, _) =
         (Just time ==) <$> getModTimeMaybe file
 
-defaultHaskellDeps = defaultRule $ \ (HaskellDeps haskellFile) -> Just $ do
-    code <- readFile' haskellFile
-    let imports = hsImports code
-    deps <- filterM doesFileExist $ map moduleToFile imports
-    putQuiet (haskellFile ++ " imports " ++ unwords deps)
+defaultHaskellDeps :: (FilePath -> Action Bool) -> Rules ()
+defaultHaskellDeps isSystemDependency = defaultRule $ \ (HaskellDeps haskellFile) -> Just $ do
+    deps <- map moduleToFile <$> hsImports <$> readFile' haskellFile
+    (systemDeps, localDeps) <- partitionM isSystemDependency deps
+    putQuiet $ printf "%s imports %s (system dependencies: %s)"
+        haskellFile (unwords localDeps) (unwords systemDeps)
     time <- liftIO $ getModTimeError "Error, file does not exist and no rule available:" haskellFile
-    return (time, deps)
+    return (time, localDeps)
 
 hsImports :: String -> [String]
 hsImports xs = [ takeWhile (\x -> isAlphaNum x || x `elem` "._") $ dropWhile (not . isUpper) x
@@ -158,3 +161,14 @@ moduleToFile :: String -> FilePath
 moduleToFile =
     map (\ c -> if c == '.' then '/' else c) >>>
    (<.> "hs")
+
+partitionM :: Monad m => (a -> m Bool) -> [a] -> m ([a], [a])
+partitionM p (a : r) = do
+    cond <- p a
+    if cond then do
+        (ts, fs) <- partitionM p r
+        return (a : ts, fs)
+      else do
+        (ts, fs) <- partitionM p r
+        return (ts, a : fs)
+partitionM _ [] = return ([], [])
