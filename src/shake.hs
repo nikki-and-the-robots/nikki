@@ -1,14 +1,20 @@
+{-# language GeneralizedNewtypeDeriving, FlexibleInstances, MultiParamTypeClasses,
+    DeriveDataTypeable #-}
 
 
 import Safe
 
 import Data.List
 import Data.Char
+import Data.Binary
+import Data.Typeable
+import Data.Hashable
 
 import Control.Applicative ((<$>))
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Arrow
+import Control.DeepSeq
 
 import System.Directory hiding (doesFileExist)
 import System.IO
@@ -16,42 +22,8 @@ import System.Environment
 
 import Development.Shake
 import Development.Shake.FilePath
+import Development.Shake.FileTime
 
-
--- | Returns all recursive dependencies of the given haskell file.
--- (Recursive module imports will result in an infinite loop.)
-getHaskellDeps :: FilePath -> Action [FilePath]
-getHaskellDeps file = do
-    exists <- doesFileExist file
-    when (not exists) $
-        error ("file not found: " ++ file)
-    rec [] [file]
-  where
-    rec :: [FilePath] -> [FilePath] -> Action [FilePath]
-    rec done [] = return []
-    rec done (file : queue) = do
-        exists <- doesFileExist file
-        if not exists then rec (file : done) queue else do
-            files <- extractHaskellDeps file
-            let done' = file : done
-                queue' = nub (queue ++ filter (not . (`elem` done)) files)
-            indirectImports <- rec done' queue'
-            return (file : indirectImports)
-
-hsImports :: String -> [String]
-hsImports xs = [ takeWhile (\x -> isAlphaNum x || x `elem` "._") $ dropWhile (not . isUpper) x
-               | x <- lines xs, "import " `isPrefixOf` x]
-
-extractHaskellDeps :: FilePath -> Action [FilePath]
-extractHaskellDeps file = do
-    code <- readFile' file
-    let imports = hsImports code
-    filterM doesFileExist $ map moduleToFile imports
-
-moduleToFile :: String -> FilePath
-moduleToFile =
-    map (\ c -> if c == '.' then '/' else c) >>>
-    (++ ".hs")
 
 data Mode = Release | Devel
   deriving (Show, Read)
@@ -75,7 +47,10 @@ main = do
   hSetBuffering stdout NoBuffering
   putStrLn "building..."
   [Just mode] <- fmap readMay <$> getArgs
-  shake shakeOptions{shakeThreads = 2, shakeVerbosity = Quiet} $ do
+  shake shakeOptions {
+        shakeThreads = 2,
+        shakeVerbosity = Quiet
+   } $ do
     let qtWrapper = "cpp" </> "dist" </> "libqtwrapper.a"
         cppMakefile = "cpp" </> "dist" </> "Makefile"
         ghcFlags =
@@ -92,7 +67,8 @@ main = do
     want [shakeDir mode ++ "/core"]
 
     (shakeDir mode ++ "/core") *> \ core -> do
-        os <- map (addShakeDir mode . flip replaceExtension "o") <$> getHaskellDeps "Main.hs"
+        rdeps <- snd <$> apply1 (HaskellTDeps "Main.hs")
+        let os = map (addShakeDir mode . (<.> "o")) ("Main" : rdeps)
         need (qtWrapper : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
         putQuiet ("linking: " ++ core)
@@ -100,8 +76,8 @@ main = do
 
     ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
         let hsFile = removeShakeDir mode $ replaceExtension o "hs"
-        deps <- extractHaskellDeps hsFile
-        need (hsFile : (map (addShakeDir mode . flip replaceExtension "hi") deps))
+        deps <- snd <$> apply1 (HaskellDeps hsFile)
+        need (hsFile : (map (addShakeDir mode . (<.> "hi")) deps))
         putQuiet ("compiling: " ++ hsFile)
         ghc $ ["-c", hsFile] ++ ghcFlags
 
@@ -128,6 +104,9 @@ main = do
             lines <$>
             readFile' "shakePackages"
 
+    defaultHaskellTDeps
+    defaultHaskellDeps
+
 
 ghc args = do
     _ <- askOracle ["ghc-pkg"]
@@ -137,3 +116,44 @@ ghc args = do
         "-hide-all-packages" :
         packageFlags ++
         args
+
+
+
+-- * docks
+
+newtype HaskellTDeps = HaskellTDeps FilePath
+  deriving (Eq, Show, Binary, NFData, Typeable, Hashable)
+
+instance Rule HaskellTDeps (FileTime, [String]) where
+    validStored (HaskellTDeps file) (time, _) =
+        (Just time ==) <$> getModTimeMaybe file
+
+defaultHaskellTDeps = defaultRule $ \ (HaskellTDeps haskellFile) -> Just $ do
+    directDeps <- snd <$> apply1 (HaskellDeps haskellFile)
+    transitiveDeps <- concat <$> map snd <$> mapM apply1 (map (HaskellTDeps . (<.> "hs")) directDeps)
+    time <- liftIO $ getModTimeError "Error, file does not exist and no rule available:" haskellFile
+    return (time, nub $ directDeps ++ transitiveDeps)
+
+
+newtype HaskellDeps = HaskellDeps FilePath
+  deriving (Eq, Show, Binary, NFData, Typeable, Hashable)
+
+instance Rule HaskellDeps (FileTime, [String]) where
+    validStored (HaskellDeps file) (time, _) =
+        (Just time ==) <$> getModTimeMaybe file
+
+defaultHaskellDeps = defaultRule $ \ (HaskellDeps haskellFile) -> Just $ do
+    code <- readFile' haskellFile
+    let imports = hsImports code
+    deps <- filterM (doesFileExist . (<.> "hs")) $ map moduleToFileWithoutExtension imports
+    putQuiet (haskellFile ++ " imports " ++ unwords deps)
+    time <- liftIO $ getModTimeError "Error, file does not exist and no rule available:" haskellFile
+    return (time, deps)
+
+hsImports :: String -> [String]
+hsImports xs = [ takeWhile (\x -> isAlphaNum x || x `elem` "._") $ dropWhile (not . isUpper) x
+               | x <- lines xs, "import " `isPrefixOf` x]
+
+moduleToFileWithoutExtension :: String -> FilePath
+moduleToFileWithoutExtension =
+    map (\ c -> if c == '.' then '/' else c)
