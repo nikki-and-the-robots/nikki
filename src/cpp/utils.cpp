@@ -1,5 +1,5 @@
 
-#include "QtGui"
+#include <QtGui>
 
 void error(QString msg) {
     qDebug() << "ERROR (in cpp-land):" << msg;
