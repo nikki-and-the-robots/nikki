@@ -42,8 +42,8 @@ main = do
   [Just mode] <- fmap readMay <$> getArgs
   shake shakeOptions {
         shakeThreads = 1,
-        shakeVerbosity = Loud,
-        shakeReport = Just "shakeProf"
+        shakeVerbosity = Quiet
+--         shakeReport = Just "shakeProf"
    } $ do
 
     want [shakeDir mode ++ "/core"]
@@ -106,10 +106,11 @@ ghc args = do
 qtWrapper :: Mode -> FilePath
 qtWrapper mode = addShakeDir mode ("cpp" </> "libqtwrapper.a")
 
-cppCompileFlags =
+cppCompileFlags mode =
     "-I/usr/include/qt4" :
     "-I/usr/include/qt4/QtGui" :
     "-I/usr/include/qt4/QtOpenGL" :
+    optFlag mode :
     []
 
 cppBindings mode = do
@@ -123,7 +124,7 @@ cppBindings mode = do
                 map (addShakeDir mode)
                 (map (<.> ".o") cppFiles ++ map (<.> ".moc.cpp.o") headerFiles)
         need os
-        system' "ar" ("rcv" : lib : os)
+        system' "ar" ("rc" : lib : os)
 
     let isNonMocObjectFile f =
             (".cpp.o" `isSuffixOf` f) &&
@@ -135,7 +136,7 @@ cppBindings mode = do
         depends <- directImports cppFile
         need depends
         putQuiet ("compiling: " ++ cppFile)
-        system' "g++" ("-c" : cppFile : "-o" : objectFile : cppCompileFlags ++ [])
+        system' "g++" ("-c" : cppFile : "-o" : objectFile : cppCompileFlags mode)
 
     "//*.h.moc.cpp.o" *> \ objectFile -> do
         let cppFile = dropExtension objectFile
@@ -143,7 +144,7 @@ cppBindings mode = do
         depends <- directImports cppFile
         need depends
         putQuiet ("compiling: " ++ cppFile)
-        system' "g++" ("-c" : cppFile : "-o" : objectFile : cppCompileFlags ++ [])
+        system' "g++" ("-c" : cppFile : "-o" : objectFile : cppCompileFlags mode)
 
     "//*.h.moc.cpp" *> \ cppFile -> do
         let headerFile = removeShakeDir mode $ dropExtension $ dropExtension cppFile
