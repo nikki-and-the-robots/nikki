@@ -1,22 +1,13 @@
-{-# language GeneralizedNewtypeDeriving, FlexibleInstances, MultiParamTypeClasses,
-    DeriveDataTypeable #-}
+{- language #-}
 
 
 import Safe
 
 import Data.List
-import Data.Char
-import Data.Binary
-import Data.Typeable
-import Data.Hashable
-
-import Text.Printf
 
 import Control.Applicative ((<$>))
 import Control.Monad
 import Control.Monad.IO.Class
-import Control.Arrow
-import Control.DeepSeq
 
 import System.Directory hiding (doesFileExist)
 import System.IO
@@ -24,7 +15,7 @@ import System.Environment
 
 import Development.Shake
 import Development.Shake.FilePath
-import Development.Shake.FileTime
+import Development.Shake.Imports
 
 
 data Mode = Release | Devel
@@ -50,49 +41,40 @@ main = do
   putStrLn "building..."
   [Just mode] <- fmap readMay <$> getArgs
   shake shakeOptions {
-        shakeThreads = 2,
-        shakeVerbosity = Quiet
+        shakeThreads = 1,
+        shakeVerbosity = Loud,
+        shakeReport = Just "shakeProf"
    } $ do
-    let qtWrapper = "cpp" </> "dist" </> "libqtwrapper.a"
-        cppMakefile = "cpp" </> "dist" </> "Makefile"
-        ghcFlags =
+
+    want [shakeDir mode ++ "/core"]
+
+    importsDefaultHaskell ["."]
+
+    let ghcFlags =
             optFlag mode :
             ("-outputdir " ++ shakeDir mode) :
             ("-i" ++ shakeDir mode) :
             []
         ghcLinkFlags =
             optFlag mode :
+            ("-L" ++ addShakeDir mode "cpp") :
             "-threaded" :
             "-rtsopts" :
             []
-
-    want [shakeDir mode ++ "/core"]
-
     (shakeDir mode ++ "/core") *> \ core -> do
-        rdeps <- filterM doesFileExist =<< (snd <$> apply1 (HaskellTDeps "Main.hs"))
-        let os = map (addShakeDir mode . (flip replaceExtension "o")) ("Main.hs" : rdeps)
-        need (qtWrapper : os)
+        rdeps <- transitiveImports "Main.hs"
+        let os = map (addShakeDir mode . (<.> "o")) ("Main.hs" : rdeps)
+        need (qtWrapper mode : os)
         let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
         putQuiet ("linking: " ++ core)
         ghc $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
 
-    ["//*.o", "//*.hi"] *>> \ [o, hi] -> do
-        let hsFile = removeShakeDir mode $ replaceExtension o "hs"
-        deps <- filterM doesFileExist =<< (snd <$> apply1 (HaskellDeps hsFile))
+    ["//*.hs.o", "//*.hi"] *>> \ [o, hi] -> do
+        let hsFile = removeShakeDir mode $ dropExtension o
+        deps <- directImports hsFile
         need (hsFile : (map (addShakeDir mode . (flip replaceExtension "hi")) deps))
         putQuiet ("compiling: " ++ hsFile)
-        ghc $ ["-c", hsFile] ++ ghcFlags
-
-    qtWrapper *> \ _ -> do
-        cs <- map ("cpp" </>) <$> getDirectoryFiles "cpp" "*.cpp"
-        hs <- map ("cpp" </>) <$> getDirectoryFiles "cpp" "*.h"
-        need (cppMakefile : cs ++ hs)
-        system' "bash" ("-c" : "cd cpp/dist; make" : [])
-
-    cppMakefile *> \ x -> do
-        need ["cpp" </> "CMakeLists.txt"]
-        liftIO $ createDirectoryIfMissing False ("cpp" </> "dist")
-        system' "bash" ("-c" : "cd cpp/dist; cmake .." : [])
+        ghc $ ["-c", hsFile, "-o", o] ++ ghcFlags
 
     addOracle ["ghc-pkg"] $ do
         (out,err) <- systemOutput "ghc-pkg" ["list","--simple-output"]
@@ -106,8 +88,7 @@ main = do
             lines <$>
             readFile' "shakePackages"
 
-    defaultHaskellTDeps
-    defaultHaskellDeps (\ f -> not <$> doesFileExist f)
+    cppBindings mode
 
 
 ghc args = do
@@ -120,55 +101,51 @@ ghc args = do
         args
 
 
+-- * cpp stuff
 
--- * docks
+qtWrapper :: Mode -> FilePath
+qtWrapper mode = addShakeDir mode ("cpp" </> "libqtwrapper.a")
 
-newtype HaskellTDeps = HaskellTDeps FilePath
-  deriving (Eq, Show, Binary, NFData, Typeable, Hashable)
+cppCompileFlags =
+    "-I/usr/include/qt4" :
+    "-I/usr/include/qt4/QtGui" :
+    "-I/usr/include/qt4/QtOpenGL" :
+    []
 
-instance Rule HaskellTDeps (FileTime, [FilePath]) where
-    validStored (HaskellTDeps file) (time, _) =
-        (Just time ==) <$> getModTimeMaybe file
+cppBindings mode = do
 
-defaultHaskellTDeps = defaultRule $ \ (HaskellTDeps haskellFile) -> Just $ do
-    directDeps <- snd <$> apply1 (HaskellDeps haskellFile)
-    transitiveDeps <- concat <$> map snd <$> mapM apply1 (map (HaskellTDeps . (flip replaceExtension "hs")) directDeps)
-    time <- liftIO $ getModTimeError "Error, file does not exist and no rule available:" haskellFile
-    return (time, nub $ directDeps ++ transitiveDeps)
+    importsDefaultCpp ["cpp"]
 
+    qtWrapper mode *> \ lib -> do
+        cppFiles <- map ("cpp" </>) <$> getDirectoryFiles "cpp" "*.cpp"
+        headerFiles <- map ("cpp" </>) <$> getDirectoryFiles "cpp" "*.h"
+        let os =
+                map (addShakeDir mode)
+                (map (<.> ".o") cppFiles ++ map (<.> ".moc.cpp.o") headerFiles)
+        need os
+        system' "ar" ("rcv" : lib : os)
 
-newtype HaskellDeps = HaskellDeps FilePath
-  deriving (Eq, Show, Binary, NFData, Typeable, Hashable)
+    let isNonMocObjectFile f =
+            (".cpp.o" `isSuffixOf` f) &&
+            not (".h.moc.cpp.o" `isSuffixOf` f)
 
-instance Rule HaskellDeps (FileTime, [FilePath]) where
-    validStored (HaskellDeps file) (time, _) =
-        (Just time ==) <$> getModTimeMaybe file
+    isNonMocObjectFile ?> \ objectFile -> do
+        let cppFile = dropExtension $ removeShakeDir mode objectFile
+        need [cppFile]
+        depends <- directImports cppFile
+        need depends
+        putQuiet ("compiling: " ++ cppFile)
+        system' "g++" ("-c" : cppFile : "-o" : objectFile : cppCompileFlags ++ [])
 
-defaultHaskellDeps :: (FilePath -> Action Bool) -> Rules ()
-defaultHaskellDeps isSystemDependency = defaultRule $ \ (HaskellDeps haskellFile) -> Just $ do
-    deps <- map moduleToFile <$> hsImports <$> readFile' haskellFile
-    (systemDeps, localDeps) <- partitionM isSystemDependency deps
-    putQuiet $ printf "%s imports %s (system dependencies: %s)"
-        haskellFile (unwords localDeps) (unwords systemDeps)
-    time <- liftIO $ getModTimeError "Error, file does not exist and no rule available:" haskellFile
-    return (time, localDeps)
+    "//*.h.moc.cpp.o" *> \ objectFile -> do
+        let cppFile = dropExtension objectFile
+        need [cppFile]
+        depends <- directImports cppFile
+        need depends
+        putQuiet ("compiling: " ++ cppFile)
+        system' "g++" ("-c" : cppFile : "-o" : objectFile : cppCompileFlags ++ [])
 
-hsImports :: String -> [String]
-hsImports xs = [ takeWhile (\x -> isAlphaNum x || x `elem` "._") $ dropWhile (not . isUpper) x
-               | x <- lines xs, "import " `isPrefixOf` x]
-
-moduleToFile :: String -> FilePath
-moduleToFile =
-    map (\ c -> if c == '.' then '/' else c) >>>
-   (<.> "hs")
-
-partitionM :: Monad m => (a -> m Bool) -> [a] -> m ([a], [a])
-partitionM p (a : r) = do
-    cond <- p a
-    if cond then do
-        (ts, fs) <- partitionM p r
-        return (a : ts, fs)
-      else do
-        (ts, fs) <- partitionM p r
-        return (ts, a : fs)
-partitionM _ [] = return ([], [])
+    "//*.h.moc.cpp" *> \ cppFile -> do
+        let headerFile = removeShakeDir mode $ dropExtension $ dropExtension cppFile
+        need [headerFile]
+        system' "moc" [headerFile, "-o", cppFile]
