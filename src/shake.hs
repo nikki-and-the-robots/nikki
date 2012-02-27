@@ -15,7 +15,7 @@ import System.Environment
 
 import Development.Shake
 import Development.Shake.FilePath
-import Development.Shake.Imports
+import Development.Shake.Contrib.Imports
 
 
 data Mode = Release | Devel
@@ -41,7 +41,7 @@ main = do
   putStrLn "building..."
   [Just mode] <- fmap readMay <$> getArgs
   shake shakeOptions {
-        shakeThreads = 1,
+        shakeThreads = 2,
         shakeVerbosity = Quiet
 --         shakeReport = Just "shakeProf"
    } $ do
@@ -124,6 +124,7 @@ cppBindings mode = do
                 map (addShakeDir mode)
                 (map (<.> ".o") cppFiles ++ map (<.> ".moc.cpp.o") headerFiles)
         need os
+        putQuiet ("packing " ++ lib)
         system' "ar" ("rc" : lib : os)
 
     let isNonMocObjectFile f =
