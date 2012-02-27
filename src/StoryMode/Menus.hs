@@ -10,8 +10,8 @@ import Data.Map (Map, member)
 import Data.Maybe
 
 import Control.Concurrent
-import Control.Concurrent.MVar
 
+import Network.Curl
 import Network.Curl.Download.Lazy
 
 import Graphics.Qt
@@ -33,7 +33,7 @@ import StoryMode.Purchasing
 newStoryModeAvailability :: Ptr MainWindow -> IO (MVar StoryModeAvailability)
 newStoryModeAvailability window = do
     ref <- newEmptyMVar
-    forkIO $ do
+    ignore $ forkIO $ do
         lookForStoryModeSite >>= putMVar ref
         updateMainWindow window
     return ref
@@ -45,7 +45,7 @@ lookForStoryModeSite = do
         return Installed
       else
         either (const NotAvailable) (const Buyable) <$>
-        openLazyURI purchasingUrl
+        openLazyURIWithOpts [CurlNoSignal True] purchasingUrl
 
 storyModeMenuItem :: StoryModeMenuItem
 storyModeMenuItem = StoryModeMenuItem False
