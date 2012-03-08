@@ -15,7 +15,7 @@ import System.Environment
 
 import Development.Shake
 import Development.Shake.FilePath
-import Development.Shake.Contrib.Imports
+import Development.Shake.Imports
 
 
 data Mode = Release | Devel
