@@ -86,18 +86,6 @@ proseToGlyphs font (Prose list) =
     inner (color, string) =
         searchGlyphs (getColorVariant font color) string
 
-searchGlyphs :: ColorVariant -> T.Text -> [Glyph]
-searchGlyphs variant =
-    inner (glyphs variant)
-  where
-    inner _ string | T.null string = []
-    inner ((key, pixmap) : r) string =
-        if key `T.isPrefixOf` string then
-            Glyph key pixmap : searchGlyphs variant (T.drop (T.length key) string)
-        else
-            inner r string
-    inner [] string = ErrorGlyph (errorSymbol variant) : searchGlyphs variant (T.tail string)
-
 -- | Returns the width of the given sequence of pixmaps,
 -- including 1 üp for kerning
 pixmapsWidth :: [Pixmap] -> Double
@@ -123,15 +111,6 @@ data Word = Word {
     wordYOffsetDelta :: Double -- word width including white spaces and
                                -- one kerning pixel for each character.
   }
-
--- | a letter with its graphical representation
-data Glyph
-    = Glyph {
-        character :: T.Text,
-        glyphPixmap :: Pixmap
-      }
-    | ErrorGlyph {glyphPixmap :: Pixmap}
-  deriving (Show)
 
 glyphSize :: Glyph -> Size Double
 glyphSize = pixmapSize . glyphPixmap
@@ -196,14 +175,11 @@ loadDigitFont :: RM Font = loadFont digitFontColors digitFontDir
 -- Does only load the standard color variant at the moment.
 toFont :: [Color] -> [(Either T.Text ErrorSymbol, Pixmap)] -> IO Font
 toFont fontColors m =
-    toColorVariants fontColors $ ColorVariant sortedLetters errorSymbol
+    toColorVariants fontColors $ mkColorVariant letters errorSymbol
   where
+    letters :: [(T.Text, Pixmap)]
     letters = fmap (\ k -> (k, lookupJust (Left k) m)) $ lefts $ fmap fst m
-    sortedLetters = sortBy longestKeyFirst letters
     errorSymbol = lookupJustNote "error symbol not found" (Right ErrorSymbol) m
-
-    longestKeyFirst :: (T.Text, b) -> (T.Text, b) -> Ordering
-    longestKeyFirst = flip compare `on` (T.length . fst)
 
 -- | converts the loaded color variant (white/black) to
 -- the standardColorVariants

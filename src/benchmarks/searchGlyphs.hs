@@ -22,16 +22,16 @@ import Criterion.Main
 
 main =
     flip runReaderT (savedConfigurationToConfiguration initial) $
-    withQApplication $ \ qApp ->
-    withApplicationPixmaps $ \ pixmaps -> io $ do
-        let variant = colorVariants (alphaNumericFont pixmaps) ! standardFontColor
-        defaultMain (
-            bench "searchGlyphs" (b (searchGlyphs variant)) :
-            bench "searchGlyphsOld" (b (searchGlyphs variant)) :
-            [])
+    withQApplication $ \ qApp -> do
+    pixmaps <- loadApplicationPixmaps
+    let variant = colorVariants (alphaNumericFont pixmaps) ! standardFontColor
+    io $ defaultMain $
+        bench "searchGlyphsOld" (b (searchGlyphs variant)) :
+        bench "searchGlyphs"    (b (searchGlyphs variant)) :
+        []
 
 b :: (T.Text -> [Glyph]) -> Pure
-b f = nf f "This is an example text"
+b f = nf (fmap f) (replicate 1 "This is an example text")
 
 instance NFData Glyph where
     rnf (Glyph a b) = rnf a `seq` rnf b

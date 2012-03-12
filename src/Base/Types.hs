@@ -143,11 +143,20 @@ data Font = Font {
 
 -- | save pixmaps in one color on transparent background.
 data ColorVariant = ColorVariant {
-        -- ordered: longer keys first
-        glyphs :: [(T.Text, Pixmap)],
+        longest :: Int, -- length of the longest text for which a pixmap exists
+        glyphs :: Map T.Text Pixmap,
         errorSymbol :: Pixmap
       }
   deriving Show
+
+-- | a letter with its graphical representation
+data Glyph
+    = Glyph {
+        character :: T.Text,
+        glyphPixmap :: Pixmap
+      }
+    | ErrorGlyph {glyphPixmap :: Pixmap}
+  deriving (Show)
 
 data HeaderCubePixmaps
     = HeaderCubePixmaps {
