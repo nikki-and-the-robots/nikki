@@ -260,6 +260,7 @@ chainAppM _ [] a = return a
 ignore :: Monad m => m a -> m ()
 ignore = (>> return ())
 
+{-# inline io #-}
 io :: MonadIO m => IO a -> m a
 io = liftIO
 
