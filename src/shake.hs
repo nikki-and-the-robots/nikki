@@ -18,12 +18,18 @@ import Development.Shake.FilePath
 import Development.Shake.Imports
 
 
-data Mode = Release | Devel
+data Mode = Release | Devel | Prof
   deriving (Show, Read)
 
-optFlag :: Mode -> String
-optFlag Release = "-O2"
-optFlag Devel   = "-O0"
+ghcModeFlags :: Mode -> [String]
+ghcModeFlags Release = "-O2" : []
+ghcModeFlags Devel   = "-O0" : []
+ghcModeFlags Prof    = "-O2" : "-prof" : "-auto-all" : []
+
+gppModeFlags :: Mode -> [String]
+gppModeFlags Devel = "-O0" : []
+gppModeFlags _     = "-O2" : []
+
 
 shakeDir m = "shake/" ++ show m
 
@@ -51,12 +57,12 @@ main = do
     importsDefaultHaskell ["."]
 
     let ghcFlags =
-            optFlag mode :
+            ghcModeFlags mode ++
             ("-outputdir " ++ shakeDir mode) :
             ("-i" ++ shakeDir mode) :
             []
         ghcLinkFlags =
-            optFlag mode :
+            ghcModeFlags mode ++
             ("-L" ++ addShakeDir mode "cpp") :
             "-threaded" :
             "-rtsopts" :
@@ -110,7 +116,7 @@ cppCompileFlags mode =
     "-I/usr/include/qt4" :
     "-I/usr/include/qt4/QtGui" :
     "-I/usr/include/qt4/QtOpenGL" :
-    optFlag mode :
+    gppModeFlags mode ++
     []
 
 cppBindings mode = do
