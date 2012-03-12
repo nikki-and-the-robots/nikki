@@ -199,11 +199,11 @@ toFont fontColors m =
     toColorVariants fontColors $ ColorVariant sortedLetters errorSymbol
   where
     letters = fmap (\ k -> (k, lookupJust (Left k) m)) $ lefts $ fmap fst m
-    sortedLetters = List.reverse $ sortBy shortestKeyFirst letters
+    sortedLetters = sortBy longestKeyFirst letters
     errorSymbol = lookupJustNote "error symbol not found" (Right ErrorSymbol) m
 
-    shortestKeyFirst :: (T.Text, b) -> (T.Text, b) -> Ordering
-    shortestKeyFirst = compare `on` (T.length . fst)
+    longestKeyFirst :: (T.Text, b) -> (T.Text, b) -> Ordering
+    longestKeyFirst = flip compare `on` (T.length . fst)
 
 -- | converts the loaded color variant (white/black) to
 -- the standardColorVariants
