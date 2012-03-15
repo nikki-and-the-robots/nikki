@@ -1,3 +1,4 @@
+{-# language ScopedTypeVariables #-}
 
 module Data.Indexable.Tests where
 
@@ -5,12 +6,14 @@ module Data.Indexable.Tests where
 import Prelude hiding (foldr)
 
 import Data.Indexable hiding (length, filter)
+import qualified Data.Indexable as I
 import Data.List (sort, nub)
 import Data.Foldable (foldr)
 import qualified Data.Vector as Vector
 
 import Control.Monad.State
 import Control.Arrow
+import Control.DeepSeq
 
 import Utils hiding ((==>))
 
@@ -19,10 +22,13 @@ import Test.QuickCheck
 
 tests :: IO ()
 tests = do
+    quickCheck testLength
+    quickCheck testILength
     quickCheck listEquality
     quickCheck indexing
     quickCheck indexPreservingSort
     quickCheck fmapTest
+    quickCheck fmapM_Test
     quickCheck fmapMTest
     quickCheck foldTest
     quickCheck deleteTest
@@ -35,13 +41,22 @@ tests = do
     quickCheck toHeadTest
     quickCheck toLastTest
     quickCheck showTestEquality
+    return ()
 
 instance (Arbitrary a) => Arbitrary (Indexable a) where
     arbitrary = do
         values <- arbitrary
-        keys <- randomPermutation [0 .. length values - 1]
-        return $ Indexable $ Vector.fromList $ map (first Index) $ zip keys values
-    shrink = toList >>> shrink >>> map fromList
+        keys <-
+            take (length values) <$>
+            randomPermutation (map Index [0 .. (length values * 5)])
+        error $ show $ sort keys
+        return $ Indexable $ Vector.fromList $ zip keys values
+    shrink =
+        values >>> Vector.toList >>>
+        map (first (index >>> Fixed)) >>>
+        shrink >>>
+        map (map (first (fromIntegral >>> Index))) >>>
+        map (Indexable . Vector.fromList)
 
 randomPermutation :: [a] -> Gen [a]
 randomPermutation [] = return []
@@ -54,8 +69,17 @@ randomPermutation list = do
 
 -- * tests
 
+testLength :: [Double] -> Bool
+testLength l = length l == I.length (fromList l)
+
+testILength :: Indexable Double -> Bool
+testILength ix =
+    (I.length ix == length (toList ix)) &&
+    (I.length ix == Vector.length (values ix))
+
 listEquality :: [Double] -> Bool
 listEquality x = x == toList (fromList x)
+
 
 indexing :: [Double] -> Property
 indexing list =
@@ -80,6 +104,12 @@ fmapTest m c ix =
   where
     mapped = fmap fun ix
     fun x = x * m + c
+
+fmapM_Test :: Bool
+fmapM_Test =
+    let ix :: Indexable Int = Indexable $ Vector.fromList $ Prelude.zip [0, 2 ..] [0..300]
+        r :: Maybe () = fmapM_ (\ x -> deepseq x `seq` return ()) ix
+    in r `seq` True
 
 fmapMTest :: Double -> Double -> Indexable Double -> Bool
 fmapMTest m c ix = 
@@ -172,4 +202,3 @@ toEndTest toEnd listSelector ix =
 -- | tests if (show . read) == id
 showTestEquality :: Indexable Double -> Bool
 showTestEquality ix = ix == (read $ show ix)
-
