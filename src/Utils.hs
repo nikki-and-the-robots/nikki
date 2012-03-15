@@ -1,5 +1,7 @@
-{-# language ViewPatterns, ScopedTypeVariables, PackageImports, EmptyDataDecls, TypeSynonymInstances,
-    FlexibleInstances #-}
+{-# language ViewPatterns, ScopedTypeVariables, PackageImports, EmptyDataDecls,
+    TypeSynonymInstances, FlexibleInstances,
+    StandaloneDeriving, DeriveDataTypeable,
+    DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 module Utils (
     (<$>),
@@ -50,6 +52,8 @@ import Data.Function
 import qualified Data.Strict as Strict
 import Data.Strict (Pair(..))
 import Data.Time.Clock.POSIX
+import qualified Data.Vector
+import Data.Data
 
 import Text.Printf
 import Text.Logging
@@ -62,6 +66,7 @@ import "MonadCatchIO-transformers" Control.Monad.CatchIO
 import Control.Arrow ((>>>))
 import Control.Concurrent
 import Control.Exception
+import Control.DeepSeq
 
 import System.IO.Unsafe
 import System.FilePath
@@ -532,6 +537,10 @@ third (_, _, x) = x
 
 -- * misc
 
+-- | Returns the current time in seconds.
+getTime :: IO Double
+getTime = realToFrac <$> getPOSIXTime
+
 uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
 uncurry3 f (a, b, c) = f a b c
 
@@ -623,7 +632,7 @@ ppp :: PP p => p -> IO ()
 ppp = pp >>> logg Info
 
 
--- misc
+-- * strict utils
 
 instance Applicative Strict.Maybe where
     pure = Strict.Just
@@ -635,12 +644,27 @@ instance Alternative Strict.Maybe where
     Strict.Nothing <|> x = x
     (Strict.Just x) <|> _ = Strict.Just x
 
+deriving instance Typeable2 Pair
+deriving instance (Data a, Data b) => Data (Pair a b)
+deriving instance Functor (Pair a)
+deriving instance Foldable (Pair a)
+deriving instance Traversable (Pair a)
+
+instance (NFData a, NFData b) => NFData (Pair a b) where
+    rnf (a :!: b) = rnf a `seq` rnf b
+
 firstStrict :: (a -> b) -> (Pair a c) -> (Pair b c)
 firstStrict f (a :!: c) = f a :!: c
 
 firstAStrict :: Accessor (Pair a b) a
 firstAStrict = accessor (\ (a :!: _) -> a) (\ a (_ :!: b) -> (a :!: b))
 
--- | Returns the current time in seconds.
-getTime :: IO Double
-getTime = realToFrac <$> getPOSIXTime
+zipStrict :: [a] -> [b] -> [Pair a b]
+zipStrict (a : ra) (b : rb) = (a :!: b) : zipStrict ra rb
+zipStrict _ _ = []
+
+
+-- * vectors
+
+instance NFData a => NFData (Data.Vector.Vector a) where
+  rnf v = Data.Vector.foldl' (\x y -> y `deepseq` x) () v
