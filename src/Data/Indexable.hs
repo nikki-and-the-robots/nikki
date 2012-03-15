@@ -57,12 +57,13 @@ import Data.Generics (Typeable, Data)
 import Data.Maybe
 
 import Control.Arrow
+import Control.DeepSeq
 
 import Utils hiding (singleton)
 
 
 newtype Index = Index {index :: Int}
-  deriving (Show, Read, Enum, Num, Eq, Integral, Real, Ord, Data, Typeable)
+  deriving (Show, Read, Enum, Num, Eq, Integral, Real, Ord, Data, Typeable, NFData)
 
 
 -- | invariants:
@@ -73,20 +74,10 @@ data Indexable a =
     Indexable {
         values :: (Vector (Index, a))
       }
-  deriving (Eq, Typeable, Data, Functor, Foldable, Traversable)
+  deriving (Show, Read, Eq, Typeable, Data, Functor, Foldable, Traversable)
 
-instance Show a => Show (Indexable a) where
-    show (Indexable v) = "Indexable " List.++ show (Vector.toList v)
-
-instance Read a => Read (Indexable a) where
-    readsPrec n s =
-        if consString `List.isPrefixOf` s then
-            List.map (first (Indexable . Vector.fromList)) $
-                readsPrec n (List.drop (List.length consString) s)
-        else
-            error "Data.Indexable.readsPrec: not parseable"
-      where
-        consString = "Indexable "
+instance NFData a => NFData (Indexable a) where
+    rnf (Indexable a) = rnf a
 
 keysVector :: Indexable a -> Vector Index
 keysVector = fmap fst . values
