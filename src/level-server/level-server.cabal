@@ -34,4 +34,5 @@ Executable level-server
         data-accessor,
         containers,
         data-accessor-mtl,
-        mtl
+        mtl,
+        MonadCatchIO-transformers == 0.2.*
