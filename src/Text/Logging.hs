@@ -1,8 +1,15 @@
 
 -- | Module for logging.
 
-module Text.Logging (LogLevel(..), logg, loggUnsafe) where
+module Text.Logging (
+    LogLevel(..),
+    logg,
+    loggUnsafe,
+    setLogFile,
+  ) where
 
+
+import Data.IORef
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -11,6 +18,7 @@ import System.Info
 import System.FilePath
 import System.Environment
 import System.Environment.FindBin
+import System.IO
 import System.IO.Unsafe
 
 
@@ -27,9 +35,13 @@ logg ll msg =
     liftIO $ when (ll >= printLogLevel) $
     inner $ mkMsg ll msg
   where
-    inner = case System.Info.os of
-        "mingw32" -> windowsLogging
-        _ -> putStrLn
+    inner msg = do
+        mLogHandle <- readIORef _logHandle
+        case mLogHandle of
+            Just logHandle -> hPutStrLn logHandle msg >> hFlush logHandle
+            Nothing -> case System.Info.os of
+                "mingw32" -> windowsLogging msg
+                _ -> putStrLn msg >> hFlush stdout
 
 mkMsg :: LogLevel -> String -> String
 mkMsg ll msg =
@@ -46,3 +58,15 @@ loggUnsafe :: LogLevel -> String -> a -> a
 loggUnsafe ll msg a = unsafePerformIO $ do
     logg ll msg
     return a
+
+
+-- * log file
+
+{-# noinline _logHandle #-}
+_logHandle :: IORef (Maybe Handle)
+_logHandle = unsafePerformIO $ newIORef Nothing
+
+setLogFile :: FilePath -> IO ()
+setLogFile logFile =
+    openFile logFile AppendMode >>=
+    writeIORef _logHandle . Just
