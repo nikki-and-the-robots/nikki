@@ -4,6 +4,8 @@
 import Data.Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSL
 
+import Text.Logging
+
 import System.IO
 import System.Console.CmdArgs
 import System.Directory
@@ -25,9 +27,9 @@ import LevelServer.SendMail
 spec = serverSpec{address = IP "0.0.0.0" levelServerPort}
 
 main = do
-    hSetBuffering stdout NoBuffering
     options <- cmdArgs defaultOptions
-    putStrLn ("listening on port " ++ show levelServerPort)
+    flip fmapM_ (logFile options) setLogFile
+    logg Info ("listening on port " ++ show levelServerPort)
     runServer spec $ \ fromClient -> do
         response <- serve options fromClient
         emailLogging options fromClient response
@@ -72,9 +74,10 @@ emailLogging _ _ _ = return ()
 data ServerOptions = ServerOptions {
     levelDir :: FilePath,
     baseURL :: String, -- url under which the given level directory is accessible from the net.
-    logEmailAddress :: String
+    logEmailAddress :: String,
+    logFile :: Maybe FilePath
   }
-    deriving (Typeable, Data)
+    deriving (Show, Typeable, Data)
 
 defaultOptions = ServerOptions {
     levelDir = ""
@@ -86,6 +89,8 @@ defaultOptions = ServerOptions {
         &= typ "URL",
     logEmailAddress = def
         &= argPos 2
-        &= typ "EMAIL"
+        &= typ "EMAIL",
+    logFile = def
+        &= typ "LOGFILE"
   }
     &= helpArg [explicit, name "h", name "help"]

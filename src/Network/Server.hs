@@ -11,6 +11,8 @@ import Data.Binary
 import Data.BinaryCom
 import Data.Time
 
+import Text.Logging
+
 import Control.DeepSeq
 import Control.Exception
 import Control.Applicative
@@ -84,7 +86,7 @@ logAndSend bc x = do
 
 serverLog :: String -> IO ()
 serverLog msg =
-    putStrLn =<< mkLogMsg msg
+    logg Info =<< mkLogMsg msg
 
 mkLogMsg msg = do
     time <- formatTime defaultTimeLocale timeFormat <$> getCurrentTime
