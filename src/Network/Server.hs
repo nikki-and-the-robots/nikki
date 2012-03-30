@@ -10,17 +10,14 @@ import Data.Version
 import Data.Binary
 import Data.BinaryCom
 import Data.Time
-import Data.Typeable
 
 import Control.DeepSeq
 import Control.Exception
 import Control.Applicative
 
 import System.Locale
-import System.Timeout
 
-import Network
-import Network.Fancy (streamServer, sleepForever, serverSpec, ServerSpec(..), Address(..))
+import Network.Fancy (streamServer, sleepForever, ServerSpec(..))
 import Network.Client
 
 

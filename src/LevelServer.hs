@@ -4,21 +4,16 @@
 import Data.Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSL
 
-import Control.Applicative
-
 import System.IO
 import System.Console.CmdArgs
-import System.Locale
 import System.Directory
 import System.FilePath
 
 import Network.URI
 import Network.Fancy
-import Network.Client
 import Network.Server
 
 import Utils
-import Utils.Scripting
 
 import Base.Types.LevelMetaData
 
