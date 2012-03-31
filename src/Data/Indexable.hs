@@ -89,6 +89,7 @@ keys = Vector.toList . keysVector
 
 -- * instances
 
+{-# inline fmapMWithIndex #-}
 fmapMWithIndex :: (Monad m, Functor m) => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)
 fmapMWithIndex cmd (Indexable values) = 
