@@ -159,7 +159,7 @@ wait n = io $ threadDelay $ round (n * 10 ^ 6)
 
 
 -- * re-named re-exports
-
+{-# inline fmapM #-}
 fmapM :: (Data.Traversable.Traversable t, Monad m) => (a -> m b) -> t a -> m (t b)
 fmapM = Data.Traversable.mapM
 
