@@ -13,9 +13,11 @@ import Data.Time
 
 import Text.Logging
 
-import Control.DeepSeq
-import Control.Exception
 import Control.Applicative
+import Control.Monad
+import Control.Concurrent
+import Control.Exception
+import Control.DeepSeq
 
 import System.Locale
 
@@ -28,7 +30,7 @@ runServer :: forall clientToServer serverToClient .
     ServerSpec -> (clientToServer -> IO serverToClient) -> IO ()
 runServer spec serve = do
     _ <- streamServer spec inner
-    sleepForever
+    forever (threadDelay (1000 * 10 ^ 6))
   where
     inner handle address = do
         bc <- binaryCom handle
