@@ -30,7 +30,8 @@ runServer :: forall clientToServer serverToClient .
     ServerSpec -> (clientToServer -> IO serverToClient) -> IO ()
 runServer spec serve = do
     _ <- streamServer spec inner
-    forever (threadDelay (1000 * 10 ^ 6))
+    forever (threadDelay (1000 * 10 ^ 6)) `finally`
+        (logg Info "process killed")
   where
     inner handle address = do
         bc <- binaryCom handle
