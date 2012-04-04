@@ -63,7 +63,7 @@ curlException e@(CurlException url curlMsg) =
 ioException :: IOException -> [Prose]
 ioException e =
     p "SERVER ERROR:" :
-    p "The level server seems to be down." :
+    p "The server seems to be down." :
     p "Sorry." :
     pv ("(" ++ show e ++ ")") :
     []
