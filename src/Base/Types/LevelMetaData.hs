@@ -21,19 +21,21 @@ data LevelMetaData
     = LevelMetaData {
         meta_levelName :: String,
         meta_author :: Maybe String,
-        meta_basedOn :: Maybe String
+        meta_basedOn :: Maybe String,
+        meta_numberOfBatteries :: Maybe Int
       }
   deriving (Eq, Show)
 
 instance NFData LevelMetaData where
-    rnf (LevelMetaData a b c) = rnf a `seq` rnf b `seq` rnf c
+    rnf (LevelMetaData a b c d) = rnf a `seq` rnf b `seq` rnf c `seq` rnf d
 
 instance ToJSON LevelMetaData where
-    toJSON (LevelMetaData meta_levelName meta_author basedOn) =
+    toJSON (LevelMetaData meta_levelName meta_author basedOn numberOfBatteries) =
       object (
         "levelName" .= meta_levelName :
         "author" .= meta_author :
         "basedOn" .= basedOn :
+        "numberOfBatteries" .= numberOfBatteries :
         [])
 
 instance FromJSON LevelMetaData where
@@ -41,7 +43,8 @@ instance FromJSON LevelMetaData where
         LevelMetaData <$>
             meta .: "levelName" <*>
             meta .:? "author" <*>
-            meta .:? "basedOn"
+            meta .:? "basedOn" <*>
+            meta .:? "numberOfBatteries"
     parseJSON _ = mzero
 
 saveMetaData :: FilePath -> LevelMetaData -> IO ()

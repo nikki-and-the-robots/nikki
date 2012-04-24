@@ -155,8 +155,12 @@ setHighScore :: LevelUID -> Score -> IO ()
 setHighScore uid score = do
     setHighScores . insert uid score =<< getHighScores
 
-mkScoreString :: Score -> String
-mkScoreString (Score_0 t b) =
+mkScoreString :: Maybe Int -> Score -> String
+mkScoreString (Just numberOfBatteries) (Score_0 t b) =
+    printf ("[ %s | %s/%s ]")
+        (timeFormat t) (batteryFormat b)
+        (batteryFormat $ fromIntegral numberOfBatteries)
+mkScoreString Nothing (Score_0 t b) =
     printf ("[ %s | %s ]") (timeFormat t) (batteryFormat b)
 
 -- | formats the time (MM:SS:MM)

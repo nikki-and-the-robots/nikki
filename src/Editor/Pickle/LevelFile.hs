@@ -7,7 +7,6 @@ module Editor.Pickle.LevelFile (
     mkEpisodeLevel,
     mkUnknownLevel,
     getAbsoluteFilePath,
-    levelName,
     isUserLevel,
     isTemplateLevel,
     levelMetaData,
@@ -70,10 +69,6 @@ getAbsoluteFilePath (TemplateLevel p) = p
 getAbsoluteFilePath (UnknownLevelType p) = p
 getAbsoluteFilePath x = levelPath x </> levelPackage x </> levelFileName x
 
-levelName :: LevelFile -> String
-levelName StandardLevel{..} = meta_levelName levelMetaData_
-levelName UserLevel{..}     = meta_levelName levelMetaData_
-levelName EpisodeLevel{..}  = meta_levelName levelMetaData_
 
 isUserLevel :: LevelFile -> Bool
 isUserLevel UserLevel{} = True
@@ -87,7 +82,7 @@ levelMetaData :: LevelFile -> LevelMetaData
 levelMetaData StandardLevel{..} = levelMetaData_
 levelMetaData UserLevel{..} = levelMetaData_
 levelMetaData EpisodeLevel{..} = levelMetaData_
-levelMetaData file = LevelMetaData (guessName $ getAbsoluteFilePath file) Nothing Nothing
+levelMetaData file = LevelMetaData (guessName $ getAbsoluteFilePath file) Nothing Nothing Nothing
 
 showLevelTreeForMenu :: SelectTree LevelFile -> IO Prose
 showLevelTreeForMenu (Leaf label level) = showLevelForMenu level
@@ -95,8 +90,10 @@ showLevelTreeForMenu x = return $ pVerbatim (x ^. labelA)
 
 showLevelForMenu :: LevelFile -> IO Prose
 showLevelForMenu level = do
-    let name = levelName level
+    let metaData = levelMetaData level
+        name = meta_levelName metaData
     highScores <- getHighScores
     return $ case Map.lookup (levelUID level) highScores of
         Nothing -> pVerbatim name
-        Just highScore -> pVerbatim (name ++ " " ++ mkScoreString highScore)
+        Just highScore -> pVerbatim
+            (name ++ " " ++ mkScoreString (meta_numberOfBatteries metaData) highScore)
