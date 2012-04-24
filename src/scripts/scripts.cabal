@@ -75,6 +75,10 @@ Executable writeEmptyTemplateLevel
         , attoparsec
         , aeson
         , deepseq
+        , text
+        , template
+        , utf8-string
+        , bifunctors
 
   extra-libraries:
     qtwrapper, QtOpenGL
