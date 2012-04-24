@@ -143,7 +143,9 @@ mkScene levelFile space objects = do
         totalSwitches = Sorts.Switch.countSwitches (objects ^. mainLayer ^. content)
         totalBatteries =
             fromIntegral $
-            Sorts.Battery.countBatteries (objects ^. mainLayer ^. content)
+            Sorts.Battery.countBatteries $
+            fmap sort_ $
+            (objects ^. mainLayer ^. content)
     return $ Scene levelFile 0 optObjects Nothing
                 (0 :!: totalBatteries)
                 (0 :!: totalSwitches)

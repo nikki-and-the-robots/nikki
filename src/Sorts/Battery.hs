@@ -59,8 +59,8 @@ data Battery
   deriving (Show, Typeable)
 
 
-countBatteries :: I.Indexable Object_ -> Int
-countBatteries = I.length . I.filter (isBattery . sort_)
+countBatteries :: Sort sort o => I.Indexable sort -> Int
+countBatteries = I.length . I.filter isBattery
 
 isBattery :: Sort sort o => sort -> Bool
 isBattery (cast -> Just _ :: Maybe BSort) = True

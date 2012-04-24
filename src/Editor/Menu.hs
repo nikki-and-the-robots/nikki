@@ -20,6 +20,7 @@ import Utils
 import Base
 
 import Sorts.Nikki (uniqueNikki)
+import Sorts.Battery (countBatteries)
 
 import Editor.Scene
 import Editor.Scene.Types
@@ -148,7 +149,7 @@ saveLevel :: Application -> (LevelFile -> AppState) -> EditorScene Sort_
     -> Parent -> AppState
 saveLevel app follower EditorScene{editorLevelFile, editorObjects_} parent
   | isUserLevel editorLevelFile =
-    completeMetaData app parent (Just $ levelMetaData editorLevelFile) $
+    completeMetaData app parent editorObjects_ (Just $ levelMetaData editorLevelFile) $
       \ metaData ->
         let path = getAbsoluteFilePath editorLevelFile
         in appState (busyMessage $ p "saving level...") $ io $ do
@@ -156,7 +157,7 @@ saveLevel app follower EditorScene{editorLevelFile, editorObjects_} parent
             return $ follower editorLevelFile{levelMetaData_ = metaData}
 saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
   | isTemplateLevel editorLevelFile =
-    completeMetaData app parent Nothing $
+    completeMetaData app parent editorObjects_ Nothing $
     \ metaData@(LevelMetaData name _ _ _) ->
       NoGUIAppState $ io $ do
         levelDirectory <- getSaveLevelDirectory
@@ -172,17 +173,26 @@ saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
     this = saveLevel app follower scene parent
 
 -- | completes the needed metadata
-completeMetaData :: Application -> Parent -> Maybe LevelMetaData
+completeMetaData :: Sort s o => Application -> Parent
+    -> Grounds (EditorObject s) -> Maybe LevelMetaData
     -> (LevelMetaData -> AppState) -> AppState
-completeMetaData a pa Nothing f =
-    askString a pa (p "level name") $ \ name ->
-    completeMetaData a pa (Just (LevelMetaData name Nothing Nothing Nothing)) f
-completeMetaData a pa (Just (LevelMetaData name Nothing basedOn batteries)) f =
-    askString a pa (p "author name") $ \ author ->
-    f (LevelMetaData name (Just author) basedOn batteries)
--- TODO: count batteries
-completeMetaData a pa (Just m@(LevelMetaData _ (Just _) _ _)) f =
-    f m
+completeMetaData a pa objects mMetaData f = case mMetaData of
+    Nothing ->
+        askString a pa (p "level name") $ \ name ->
+        completeAgain $ Just $ LevelMetaData name Nothing Nothing Nothing
+    Just (LevelMetaData name Nothing basedOn batteries) ->
+        askString a pa (p "author name") $ \ author ->
+        completeAgain $ Just $ LevelMetaData name (Just author) basedOn batteries
+    Just (LevelMetaData name author basedOn Nothing) ->
+        let numberOfBatteries = countBatteries $
+                fmap editorSort $
+                (objects ^. mainLayer .> content)
+        in completeAgain $ Just $ LevelMetaData name author basedOn
+                (Just numberOfBatteries)
+    Just m@(LevelMetaData _ (Just _) _ (Just _)) ->
+        f m
+  where
+    completeAgain metaData = completeMetaData a pa objects metaData f
 
 
 fileExists app save path metaData objects =
