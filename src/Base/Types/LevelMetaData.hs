@@ -47,7 +47,8 @@ instance FromJSON LevelMetaData where
             meta .:? "numberOfBatteries"
     parseJSON _ = mzero
 
-saveMetaData :: FilePath -> LevelMetaData -> IO ()
+saveMetaData :: FilePath -- ^ level file (.nl)
+    -> LevelMetaData -> IO ()
 saveMetaData levelFile meta = BSL.writeFile (metaFile levelFile) (encode meta)
 
 metaFile :: FilePath -> FilePath

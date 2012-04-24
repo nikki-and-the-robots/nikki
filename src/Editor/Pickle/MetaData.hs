@@ -11,6 +11,8 @@ import Data.Aeson
 
 import Text.Logging
 
+import Control.DeepSeq
+
 import System.Directory
 
 import Utils
@@ -18,7 +20,8 @@ import Utils
 import Base
 
 
-loadMetaData :: FilePath -> IO LevelMetaData
+loadMetaData :: FilePath -- ^ level file (.nl)
+    -> IO LevelMetaData
 loadMetaData levelFile = do
     exists <- doesFileExist (metaFile levelFile)
     if not exists then do
@@ -26,7 +29,8 @@ loadMetaData levelFile = do
         return $ LevelMetaData (guessName levelFile) Nothing Nothing Nothing
       else do
         metaDataJSON :: BSL.ByteString <- io $ BSL.readFile (metaFile levelFile)
-        let result :: Maybe LevelMetaData = decode metaDataJSON
+        BSL.length metaDataJSON `deepseq` return ()
+        let result :: Maybe LevelMetaData = decode' metaDataJSON
         case result of
             Nothing -> do
                 logg Warning ("meta data not parseable: " ++ levelFile)
