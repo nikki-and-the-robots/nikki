@@ -80,20 +80,24 @@ gameLoop app parent editorTestMode rsr@RenderStateRefs{sceneMVar} =
         state <- get
 
         case sc' ^. mode of
-            LevelFinished _ Failed ->
-                return $ Just $ failureMenu app parent rsr state
-            LevelFinished score Passed ->
-                if editorTestMode then
-                    return $ Just $ successMessage app parent rsr state score
-                                        (Nothing, NoNewRecord, NoNewRecord)
-                  else do
-                    records <- io $ saveScore (levelFile sc') score
-                    return $ Just $ successMessage app parent rsr state score records
+
+            LevelFinished score result -> do
+                records <- if editorTestMode then
+                                return (Nothing, NoNewRecord, NoNewRecord)
+                             else
+                                io $ saveScore (levelFile sc') score
+                return $ Just $ case result of
+                    Failed ->
+                        failureMenu app parent rsr state
+                    Passed ->
+                        successMessage app parent rsr state score records
             _ -> if isGameBackPressed (configuration ^. controls) controlData then 
                 if editorTestMode then do
                     gameState <- get
                     return $ Just $ freeGameState gameState parent
                   else do
+                    -- saving a highscore of Score_1_Tried in case the level gets aborted
+                    io $ saveScore (levelFile sc') Score_1_Tried
                     continueLevel <- gameAppState app parent editorTestMode <$> get
                     gameState <- get
                     return $ Just $ pauseMenu app parent continueLevel gameState 0

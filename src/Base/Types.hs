@@ -330,9 +330,9 @@ data Mode
   deriving Show
 
 mkLevelFinished :: Scene o -> LevelResult -> Mode
-mkLevelFinished scene = LevelFinished $ mkScore
-    (scene ^. spaceTime)
-    (St.fst (scene ^. batteryPower))
+mkLevelFinished scene result = LevelFinished
+    (mkScore result (scene ^. spaceTime) (St.fst (scene ^. batteryPower)))
+    result
 
 -- | returns, if Nikki is controlled currently
 isNikkiMode :: Mode -> Bool
@@ -359,31 +359,48 @@ data LevelResult = Passed | Failed
   deriving (Eq, Ord, Show)
 
 -- | versioned type for scores
-data Score =
-    Score_0 {
+data Score
+    = Score_0 {
+        scoreTime_ :: Seconds,
+        scoreBatteryPower_ :: Integer
+      }
+    | Score_1_Tried -- played but not passed
+    | Score_1_Passed {
         scoreTime_ :: Seconds,
         scoreBatteryPower_ :: Integer
       }
   deriving (Eq, Show)
 
-scoreTime :: Accessor Score Seconds
-scoreTime = accessor scoreTime_ (\ a r -> r{scoreTime_ = a})
+scoreTimeA :: Accessor Score Seconds
+scoreTimeA = accessor scoreTime_ (\ a r -> r{scoreTime_ = a})
 
-scoreBatteryPower :: Accessor Score Integer
-scoreBatteryPower = accessor scoreBatteryPower_ (\ a r -> r{scoreBatteryPower_ = a})
+scoreBatteryPowerA :: Accessor Score Integer
+scoreBatteryPowerA = accessor scoreBatteryPower_ (\ a r -> r{scoreBatteryPower_ = a})
+
+toNewestScore :: Score -> Score
+toNewestScore (Score_0 time batteries) = Score_1_Passed time batteries
+toNewestScore x = x
+
 
 instance Binary.Binary Score where
     put (Score_0 a b) = do
         Binary.putWord8 0
         Binary.put a
         Binary.put b
-    get = do
+    put Score_1_Tried = Binary.putWord8 1
+    put (Score_1_Passed a b) = do
+        Binary.putWord8 2
+        Binary.put a
+        Binary.put b
+    get = toNewestScore <$> do
         i <- Binary.getWord8
         case i of
             0 -> Score_0 <$> Binary.get <*> Binary.get
+            1 -> return Score_1_Tried
+            2 -> Score_1_Passed <$> Binary.get <*> Binary.get
 
-mkScore :: Seconds -> Integer -> Score
-mkScore t = Score_0 (roundTime t)
+mkScore :: LevelResult -> Seconds -> Integer -> Score
+mkScore Passed t = Score_1_Passed (roundTime t)
   where
     roundTime :: Seconds -> Seconds
     roundTime =
@@ -391,6 +408,7 @@ mkScore t = Score_0 (roundTime t)
         ceiling >>>
         fromIntegral >>>
         (/ (10 ^ timeDigits))
+mkScore Failed _ = const Score_1_Tried
 
 
 -- * EditorScene types

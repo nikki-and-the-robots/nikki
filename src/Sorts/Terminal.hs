@@ -583,12 +583,14 @@ getCollectedBatteries scene episode =
     getHighScores >$> \ hs ->
         -- insert the actual collected batteries for the current level
     let file = levelFile scene
-        upToDateScore = alter alteration (levelUID file) $ fmap (^. scoreBatteryPower) hs
+        upToDateScore = alter alteration (levelUID file) $ fmap getScoreBatteryPower hs
+        getScoreBatteryPower Score_1_Tried = 0
+        getScoreBatteryPower (Score_1_Passed _ bp) = bp
         alteration :: Maybe Integer -> Maybe Integer
         alteration Nothing = Just $ (scene ^. batteryPower .> firstAStrict)
         alteration (Just s) = Just $ max (scene ^. batteryPower .> firstAStrict) s
     -- TODO: pretend, there are no batteries in the outro level for now
-    in collectedBatteries episode $ fmap (^. scoreBatteryPower) hs -- upToDateScore
+    in collectedBatteries episode $ fmap getScoreBatteryPower hs -- upToDateScore
 
 bootingAnimationTime = bootingFrameTime * fromIntegral bootingAnimationSteps
 

@@ -89,25 +89,32 @@ data Record
 
 -- | Checks, if the given score is a new record (time- or battery-wise)
 -- If yes, saves the new record.
--- Returns (newTimeRecord, newBatteryRecord
+-- Returns (Maybe oldHighScore, newTimeRecord, newBatteryRecord)
 saveScore :: LevelFile -> Score -> IO (Maybe Score, Record, Record)
 saveScore (levelUID -> uid) currentScore = do
     highScores <- getHighScores
-    case Map.lookup uid highScores of
-        Nothing -> do
+    let mHighScore = Map.lookup uid highScores
+    case (currentScore, mHighScore) of
+        (_, Nothing) -> do
             setHighScore uid currentScore
-            let batteryRecord = if currentScore ^. scoreBatteryPower == 0 then NoNewRecord else NewRecord
-            return (Nothing, NewRecord, batteryRecord)
-        Just highScore -> do
+            return (Nothing, NoNewRecord, NoNewRecord)
+        (Score_1_Tried, Just highScore) ->
+            return (Just highScore, NoNewRecord, NoNewRecord)
+        (Score_1_Passed scoreTime scoreBatteryPower, oldHighScore)
+            | oldHighScore `elem` [Nothing, Just Score_1_Tried] -> do
+                setHighScore uid currentScore
+                let batteryRecord = if scoreBatteryPower == 0 then NoNewRecord else NewRecord
+                return (Nothing, NewRecord, batteryRecord)
+        (Score_1_Passed scoreTime scoreBatteryPower, Just highScore@Score_1_Passed{}) -> do
             let newHighScore =
-                    updateRecord timeCompare scoreTime currentScore $
-                    updateRecord compare scoreBatteryPower currentScore $
+                    updateRecord timeCompare scoreTimeA currentScore $
+                    updateRecord compare scoreBatteryPowerA currentScore $
                     highScore
             when (newHighScore /= highScore) $
                 setHighScore uid newHighScore
             return (Just highScore,
-                record timeCompare scoreTime currentScore highScore,
-                record batteryCompare scoreBatteryPower currentScore highScore)
+                record timeCompare scoreTimeA currentScore highScore,
+                record batteryCompare scoreBatteryPowerA currentScore highScore)
   where
     timeCompare a b = swapOrdering $ compare a b
     batteryCompare 0 x = LT
@@ -155,12 +162,13 @@ setHighScore :: LevelUID -> Score -> IO ()
 setHighScore uid score = do
     setHighScores . insert uid score =<< getHighScores
 
-mkScoreString :: Maybe Int -> Score -> String
-mkScoreString (Just numberOfBatteries) (Score_0 t b) =
+mkScoreString :: Maybe Int -> Maybe Score -> String
+mkScoreString _ s = show s
+mkScoreString (Just numberOfBatteries) (Just (Score_0 t b)) =
     printf ("[ %s | %s/%s ]")
         (timeFormat t) (batteryFormat b)
         (batteryFormat $ fromIntegral numberOfBatteries)
-mkScoreString Nothing (Score_0 t b) =
+mkScoreString Nothing (Just (Score_0 t b)) =
     printf ("[ %s | %s ]") (timeFormat t) (batteryFormat b)
 
 -- | formats the time (MM:SS:MM)

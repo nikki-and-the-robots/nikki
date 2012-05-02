@@ -93,7 +93,6 @@ showLevelForMenu level = do
     let metaData = levelMetaData level
         name = meta_levelName metaData
     highScores <- getHighScores
-    return $ case Map.lookup (levelUID level) highScores of
-        Nothing -> pVerbatim name
-        Just highScore -> pVerbatim
-            (name ++ " " ++ mkScoreString (meta_numberOfBatteries metaData) highScore)
+    let mHighScore = Map.lookup (levelUID level) highScores
+    return $ pVerbatim
+        (name ++ " " ++ mkScoreString (meta_numberOfBatteries metaData) mHighScore)

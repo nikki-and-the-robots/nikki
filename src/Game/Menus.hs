@@ -83,9 +83,10 @@ failureMenu app parent sceneRenderState gameState =
         []
 
 -- | show a textual message and wait for a keypress
+-- PRE: score /= Score_1_Tried
 successMessage :: Application -> Parent -> RenderStateRefs -> GameState
     -> Score -> (Maybe Score, Record, Record) -> AppState
-successMessage app parent sceneRenderState gameState score
+successMessage app parent sceneRenderState gameState score@Score_1_Passed{}
   (mHighScore, timeRecord, batteryRecord) =
      AppStateLooped (renderable $ renderableInstance False) $ do
         ref <- io $ newIORef gameState
@@ -116,7 +117,7 @@ successMessage app parent sceneRenderState gameState score
     currentBattery :: [Glyph]
     currentBattery =
         pvdWhite $
-        (batteryChar : " " ++ batteryFormat (score ^. scoreBatteryPower))
+        (batteryChar : " " ++ batteryFormat (score ^. scoreBatteryPowerA))
     batteryRecordGlyphs :: [Glyph]
     batteryRecordGlyphs =
         bracket $
@@ -132,30 +133,26 @@ successMessage app parent sceneRenderState gameState score
                     (batteryHighScore mHighScore)
             RecordTied -> p "tie record"
     batteryHighScore :: Maybe Score -> Maybe Integer
-    batteryHighScore Nothing = Nothing
-    batteryHighScore (Just hs) =
-        case hs ^. scoreBatteryPower of
-            0 -> Nothing
-            n -> Just n
+    batteryHighScore (Just (Score_1_Passed _ bp)) | bp /= 0 = Just bp
+    batteryHighScore _ = Nothing
 
     timeLine :: [Glyph]
     timeLine =
         currentTime ++ timeRecordGlyphs
     currentTime =
         pvdWhite $
-        (watchChar : " " ++ timeFormat (score ^. scoreTime))
+        (watchChar : " " ++ timeFormat (score ^. scoreTimeA))
     timeRecordGlyphs =
         bracket $
         case timeRecord of
-            NoNewRecord ->
-                maybe (pv "") (\ hs ->
-                    p "record" ++ pv ": " ++ pvd (timeFormat (hs ^. scoreTime)))
-                    mHighScore
-            NewRecord ->
-                p "new record!" ++
-                maybe (pv "") (\ hs ->
-                    pv " " ++ p "before" ++ pv ": " ++ pvd (timeFormat (hs ^. scoreTime)))
-                    mHighScore
+            NoNewRecord -> case mHighScore of
+                Just (Score_1_Passed oldTime _) ->
+                    p "record" ++ pv ": " ++ pvd (timeFormat oldTime)
+                _ -> pv ""
+            NewRecord -> p "new record!" ++ case mHighScore of
+                Just (Score_1_Passed oldTime _) ->
+                    pv " " ++ p "before" ++ pv ": " ++ pvd (timeFormat oldTime)
+                _ -> pv ""
             RecordTied -> p "tie record"
 
 
