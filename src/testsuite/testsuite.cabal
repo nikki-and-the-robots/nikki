@@ -85,6 +85,7 @@ Executable testsuite
         , clocked
         , bifunctors
         , email-validate
+        , utf8-string == 0.3.*
 
 
     if os(linux)

@@ -30,7 +30,7 @@ import Top.Initialisation
 main = withQApplication $ \ qApp -> do
     let config = defaultConfiguration initial
     flip runReaderT config $ withAllSorts $ \ sortTree -> liftIO $ do
-        let allSorts = leafs sortTree
+        let allSorts = ftoList sortTree
         mapM_ (addBatteryCount allSorts) =<< getArgs
 
 addBatteryCount :: [Sort_] -> FilePath -> IO ()
