@@ -163,13 +163,21 @@ setHighScore uid score = do
     setHighScores . insert uid score =<< getHighScores
 
 mkScoreString :: Maybe Int -> Maybe Score -> String
-mkScoreString _ s = show s
-mkScoreString (Just numberOfBatteries) (Just (Score_0 t b)) =
-    printf ("[ %s | %s/%s ]")
-        (timeFormat t) (batteryFormat b)
-        (batteryFormat $ fromIntegral numberOfBatteries)
-mkScoreString Nothing (Just (Score_0 t b)) =
-    printf ("[ %s | %s ]") (timeFormat t) (batteryFormat b)
+mkScoreString _ Nothing =
+    -- unplayed levels
+    "[ --:--:-- | ---/--- ]"
+mkScoreString mBatteries (Just score) =
+    inner score
+  where
+    totalBatteryString :: String = maybe "---" (batteryFormat . fromIntegral) mBatteries
+    inner :: Score -> String
+    inner Score_1_Tried =
+        printf "[ --:--:-- | ---/%s ]" totalBatteryString
+    inner (Score_1_Passed time batteries) =
+        printf "[ %s | %s/%s ]"
+            (timeFormat time)
+            (batteryFormat batteries)
+            totalBatteryString
 
 -- | formats the time (MM:SS:MM)
 timeFormat :: Seconds -> String
