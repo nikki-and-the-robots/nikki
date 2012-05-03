@@ -166,5 +166,5 @@ searchNikki objects =
         _ -> error "not exactly one Nikki is in this scene. Please, use uniqueNikki!"
 
 getNikkiSort :: Application -> Sort_
-getNikkiSort app = case filter isNikki $ leafs $ allSorts app of
+getNikkiSort app = case filter isNikki $ ftoList $ allSorts app of
     (a : _) -> a

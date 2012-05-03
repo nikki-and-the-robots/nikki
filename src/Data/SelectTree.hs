@@ -13,7 +13,6 @@ module Data.SelectTree (
     selectNext,
     selectPrevious,
     selectFirstElement,
-    leafs,
     modifyLabelled,
     (-<),
     readDirectoryToSelectTree,
@@ -125,14 +124,8 @@ resetSelectedLast (Node label children _) =
     Node label (fmap resetSelectedLast children) (Index (I.length children - 1))
 
 
-leafs :: SelectTree a -> [a]
-leafs (Node _ ll _) = concatMap leafs (I.toList ll)
-leafs (Leaf _ a) = [a]
-leafs (EmptyNode l) = []
-
-
 selectFirstElement :: (e -> Bool) -> SelectTree e -> Maybe (SelectTree e)
-selectFirstElement f tree = inner (length $ leafs tree) tree
+selectFirstElement f tree = inner (length $ ftoList tree) tree
   where
     inner n _ | n <= 0 = Nothing
     inner n tree =

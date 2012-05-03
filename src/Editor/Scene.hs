@@ -80,7 +80,7 @@ initEditorScene sorts editorLevelFile (DiskLevel objects cachedTiles) =
 -- objects from the editor.
 -- (without rendering the respective levels unplayable)
 removeNonPublicSorts :: SelectTree Sort_ -> SelectTree Sort_
-removeNonPublicSorts = mkSortsSelectTree . filter isPublicSort . leafs
+removeNonPublicSorts = mkSortsSelectTree . filter isPublicSort . ftoList
 
 isPublicSort :: Sort_ -> Bool
 isPublicSort sort =

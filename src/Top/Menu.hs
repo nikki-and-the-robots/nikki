@@ -77,7 +77,7 @@ community app ps parent =
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
     levelFiles <- lookupPlayableLevels
-    return $ if null $ leafs levelFiles then
+    return $ if null $ ftoList levelFiles then
         message app [p "no levels found :("] parent
       else
         treeToMenu app parent (p "choose a level") showLevelTreeForMenu levelFiles (play app) 0
@@ -109,7 +109,7 @@ pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
 
 selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
     editableLevels <- lookupUserLevels "your levels"
-    return $ if null $ leafs editableLevels then
+    return $ if null $ ftoList editableLevels then
         message app [p "no levels found :("] parent
       else
         treeToMenu app parent (p "choose a level to edit") (return . pVerbatim . (^. labelA))
@@ -131,7 +131,7 @@ loadingEditorScene :: Application -> LevelFile -> AppState
     -> (EditorScene Sort_ -> AppState) -> AppState
 loadingEditorScene app file abortion follower =
     appState (busyMessage $ p "loading...") $ io $ do
-        eGrounds <- runErrorT $ loadByFilePath (leafs $ allSorts app) (getAbsoluteFilePath file)
+        eGrounds <- runErrorT $ loadByFilePath (ftoList $ allSorts app) (getAbsoluteFilePath file)
         case eGrounds of
             Right diskLevel ->
                 -- level successfully loaded
