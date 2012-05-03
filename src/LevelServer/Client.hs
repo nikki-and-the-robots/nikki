@@ -74,8 +74,8 @@ downloadNewLevels app follower =
         let dest = dir </> takeFileName url
         eContent <- downloadLazy url
         case eContent of
-            Left curlMsg ->
-                throwIO (CurlException url curlMsg)
+            Left errorMsg ->
+                throwIO (DownloadException url errorMsg)
             Right content ->
                 BSL.writeFile dest content
 

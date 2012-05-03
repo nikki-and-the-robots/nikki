@@ -24,7 +24,7 @@ networkTry app parent a =
         mk catchAll :
         mk errorCall :
         mk ioException :
-        mk curlException :
+        mk downloadException :
         mk timeout :
         []
     mk :: (Show exception, Exception exception) =>
@@ -48,16 +48,16 @@ timeout t =
     p "The connection timed out." :
     []
 
-data CurlException = CurlException String String
+data DownloadException = DownloadException String String
   deriving (Typeable, Show)
 
-instance Exception CurlException
+instance Exception DownloadException
 
-curlException :: CurlException -> [Prose]
-curlException e@(CurlException url curlMsg) =
+downloadException :: DownloadException -> [Prose]
+downloadException e@(DownloadException url errorMsg) =
     p "An error occurred while downloading:" :
     pv url :
-    pv ("(" ++ curlMsg ++ ")") :
+    pv ("(" ++ errorMsg ++ ")") :
     []
 
 ioException :: IOException -> [Prose]
