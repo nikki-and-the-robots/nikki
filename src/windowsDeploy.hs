@@ -96,7 +96,7 @@ deploymentFiles = (
     "data" :
 
     -- curl
-    "libcurl-4.dll" :
+--     "libcurl-4.dll" : -- shouldn't be needed anymore
 
     -- are sometimes statically linked
     "libzip.dll" :

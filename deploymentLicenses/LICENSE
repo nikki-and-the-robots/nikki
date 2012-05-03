@@ -60,11 +60,6 @@ clocked
     LGPL-3, see "LICENSES/lgpl-3.0.txt"
     https://patch-tag.com/r/shahn/clocked/home
 
-curl
-    Copyright (c) 1996 - 2010, Daniel Stenberg, <daniel@haxx.se>.
-    custom license, see "LICENSES/libcurl.txt"
-    http://curl.haxx.se
-
 libgcc
     GCC is Copyright (C) 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
     GPL-3, see "LICENSES/gpl-3.0.txt" with the "GCC Runtime Library Exception", see "LICENSES/gcc-runtime-exception-3.1.txt")

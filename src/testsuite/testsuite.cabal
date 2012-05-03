@@ -77,7 +77,7 @@ Executable testsuite
         , template
         , network == 2.*
         , binary-communicator
-        , download-curl
+        , HTTP == 4000.2.*
         , RSA
         , LibZip
         , temporary

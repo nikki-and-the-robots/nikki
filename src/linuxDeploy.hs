@@ -66,20 +66,9 @@ getDynamicDependencies :: IO (Set FilePath)
 getDynamicDependencies = do
     restarterDeps <- getDeps nikkiExe
     coreDeps <- getDeps coreExe
-    gnuTlsAssertion (union restarterDeps coreDeps)
     let allDeps = Data.Set.filter (not . isStandardLibrary) (union restarterDeps coreDeps)
-
     return allDeps
-  where
-    gnuTlsAssertion deps =
-        assertLabel "linked to libcurl-gnutls: please link against libcurl instead"
-            (noCurlGnuTlsLinked deps)
-    noCurlGnuTlsLinked :: Set FilePath -> Bool
-    noCurlGnuTlsLinked = not . any ("curl-gnutls" `isInfixOf`)
 
-    assertLabel :: String -> Bool -> IO ()
-    assertLabel msg False = error msg
-    assertLabel _ True = return ()
 
 -- | Tries to guess, if a library will be present on a standard linux system.
 -- The library is given with its full path on the current system.
@@ -101,7 +90,6 @@ nonStandardLibraries = fromList (
     "libaudio" :
     "libgmp" :
     "libpng" :
-    "libcurl" :
 
     [])
 
