@@ -730,9 +730,6 @@ data LevelFile
     | UnknownLevelType {levelFilePath :: FilePath}
   deriving (Show)
 
-guessName :: FilePath -> String
-guessName = takeBaseName
-
 
 type LevelUID = String
 

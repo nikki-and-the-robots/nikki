@@ -1,4 +1,4 @@
-{-# language OverloadedStrings #-}
+{-# language OverloadedStrings, ScopedTypeVariables #-}
 
 module Base.Types.LevelMetaData where
 
@@ -6,11 +6,16 @@ module Base.Types.LevelMetaData where
 import Data.ByteString.Lazy as BSL
 import Data.Aeson
 
+import Text.Logging
+
 import Control.Monad
 import Control.Applicative
 import Control.DeepSeq
 
 import System.FilePath
+import System.Directory
+
+import Utils
 
 
 -- * level meta data
@@ -47,9 +52,29 @@ instance FromJSON LevelMetaData where
             meta .:? "numberOfBatteries"
     parseJSON _ = mzero
 
+guessName :: FilePath -> String
+guessName = takeBaseName
+
+metaFile :: FilePath -> FilePath
+metaFile a = a <.> "meta"
+
 saveMetaData :: FilePath -- ^ level file (.nl)
     -> LevelMetaData -> IO ()
 saveMetaData levelFile meta = BSL.writeFile (metaFile levelFile) (encode meta)
 
-metaFile :: FilePath -> FilePath
-metaFile a = a <.> "meta"
+loadMetaData :: FilePath -- ^ level file (.nl)
+    -> IO LevelMetaData
+loadMetaData levelFile = do
+    exists <- doesFileExist (metaFile levelFile)
+    if not exists then do
+        logg Warning ("level meta data file does not exist: " ++ metaFile levelFile)
+        return $ LevelMetaData (guessName levelFile) Nothing Nothing Nothing
+      else do
+        metaDataJSON :: BSL.ByteString <- io $ BSL.readFile (metaFile levelFile)
+        BSL.length metaDataJSON `deepseq` return ()
+        let result :: Maybe LevelMetaData = decode' metaDataJSON
+        case result of
+            Nothing -> do
+                logg Warning ("meta data not parseable: " ++ levelFile)
+                return $ LevelMetaData (guessName levelFile) Nothing Nothing Nothing
+            Just x -> return x

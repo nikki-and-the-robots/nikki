@@ -28,8 +28,6 @@ import Utils
 
 import Base
 
-import Editor.Pickle.MetaData
-
 import StoryMode.Types
 
 
