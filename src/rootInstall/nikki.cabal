@@ -136,7 +136,7 @@ Executable nikki
         , strict >= 0.3.2
         , vector >= 0.9
         , RSA == 1.*
-        , aeson == 0.4.*
+        , aeson
         , attoparsec == 0.9.* || == 0.10.*
         , network == 2.*
         , binary-communicator >= 1.0.2
