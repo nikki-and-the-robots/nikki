@@ -1,6 +1,9 @@
 {-# language ScopedTypeVariables, DeriveDataTypeable #-}
 
-module Network.Client.Exceptions where
+module Network.Client.Exceptions (
+    networkTry,
+    DownloadException(..),
+  ) where
 
 
 import Prelude hiding (catch)
