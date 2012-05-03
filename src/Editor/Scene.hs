@@ -28,6 +28,8 @@ import Control.Monad.State
 
 import Graphics.Qt
 
+import Utils
+
 import Base
 
 import Object
