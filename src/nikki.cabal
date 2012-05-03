@@ -160,7 +160,7 @@ Executable core
         , clocked == 0.4.1.*
         , cmdargs >= 0.6.6
         , MonadCatchIO-transformers >= 0.2.2.2
-        , download-curl >= 0.1.3
+        , HTTP == 4000.2.*
         , temporary >= 1.1.1
         , bytestring >= 0.9.1.7
         , LibZip

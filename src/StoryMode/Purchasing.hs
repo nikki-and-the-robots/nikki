@@ -21,7 +21,7 @@ import System.Exit
 import System.FilePath
 import System.Directory
 
-import Network.Curl.Download.Lazy
+import Network.Download
 import Network.Client.Exceptions
 
 import Utils
@@ -38,7 +38,7 @@ import StoryMode.Configuration
 suggestPurchase :: Application -> AppState -> Parent -> Int -> AppState
 -- use this, once the story-mode is available
 suggestPurchase app storyModeMenu parent ps = NoGUIAppState $ io $ do
-    website <- openLazyURI purchasingUrl
+    website <- downloadLazy purchasingUrl
     return $ either
         (const $ comingSoon app parent)
         (const $ buyOrInstall app storyModeMenu parent ps)
@@ -125,7 +125,7 @@ maybeDeleteStoryMode logCommand = do
 
 downloadFile :: String -> FilePath -> IO ()
 downloadFile url destFile = do
-    eResult <- openLazyURI url
+    eResult <- downloadLazy url
     either (\ e -> throw $ DownloadError url e) (BSL.writeFile destFile) eResult
 
 writeEmailAndKey :: LoginData -> IO ()

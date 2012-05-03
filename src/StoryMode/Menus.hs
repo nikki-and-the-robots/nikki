@@ -12,7 +12,7 @@ import Data.Maybe
 import Control.Concurrent
 import Control.Concurrent.MVar
 
-import Network.Curl.Download.Lazy
+import Network.Download
 
 import Graphics.Qt
 
@@ -45,7 +45,7 @@ lookForStoryModeSite = do
         return Installed
       else
         either (const NotAvailable) (const Buyable) <$>
-        openLazyURI purchasingUrl
+        downloadLazy purchasingUrl
 
 storyModeMenuItem :: StoryModeMenuItem
 storyModeMenuItem = StoryModeMenuItem False

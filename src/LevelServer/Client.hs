@@ -16,7 +16,7 @@ import Control.Monad.Trans.Error
 import System.FilePath
 import System.Directory
 
-import Network.Curl.Download.Lazy
+import Network.Download
 import Network.Client
 import Network.Client.Exceptions
 
@@ -72,7 +72,7 @@ downloadNewLevels app follower =
     download dir url = do
         logg Info ("downloading " ++ url)
         let dest = dir </> takeFileName url
-        eContent <- openLazyURI url
+        eContent <- downloadLazy url
         case eContent of
             Left curlMsg ->
                 throwIO (CurlException url curlMsg)
