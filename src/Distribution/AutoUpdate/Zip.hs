@@ -18,7 +18,7 @@ import Utils
 
 
 -- | chunk size while unzipping
-chunkSize :: Int
+chunkSize :: Num n => n
 chunkSize = 1024
 
 -- | unzips a given archive into a given directory
