@@ -153,7 +153,7 @@ Executable core
         , safe
         , random
         , StateVar
-        , transformers
+        , transformers == 0.2.*
         , time
         , parsec == 3.*
         , FindBin >= 0.0.5
@@ -163,13 +163,13 @@ Executable core
         , HTTP == 4000.2.*
         , temporary >= 1.1.1
         , bytestring >= 0.9.1.7
-        , LibZip
+        , LibZip < 0.10
         , uniplate >= 1.6
         , data-accessor >= 0.2.1.7
         , data-accessor-mtl >= 0.2.0.2
         , strict >= 0.3.2
         , vector >= 0.9
-        , RSA == 1.*
+        , RSA == 1.* && < 1.2.1.0
         , aeson
         , attoparsec == 0.9.* || == 0.10.*
         , network == 2.*
