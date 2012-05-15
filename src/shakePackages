@@ -4,6 +4,7 @@ Hipmunk
 LibZip
 MonadCatchIO-transformers
 RSA
+crypto-pubkey-types
 StateVar
 aeson
 base
