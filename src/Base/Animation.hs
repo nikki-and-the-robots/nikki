@@ -18,7 +18,6 @@ import Safe
 
 import Data.Data
 import Data.Foldable (Foldable)
-import Data.List
 
 import Utils
 

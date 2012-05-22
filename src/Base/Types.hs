@@ -34,8 +34,6 @@ import Control.Monad.State.Strict
 import Control.Monad.CatchState
 import Control.Concurrent.MVar
 
-import System.FilePath
-
 import Physics.Chipmunk as CM
 
 import Graphics.Qt as Qt

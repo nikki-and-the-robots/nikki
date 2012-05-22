@@ -10,7 +10,6 @@ import Data.Map (Map, member)
 import Data.Maybe
 
 import Control.Concurrent
-import Control.Concurrent.MVar
 
 import Network.Download
 
@@ -33,7 +32,7 @@ import StoryMode.Purchasing
 newStoryModeAvailability :: Ptr MainWindow -> IO (MVar StoryModeAvailability)
 newStoryModeAvailability window = do
     ref <- newEmptyMVar
-    forkIO $ do
+    _ <- forkIO $ do
         lookForStoryModeSite >>= putMVar ref
         updateMainWindow window
     return ref

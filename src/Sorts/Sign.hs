@@ -14,7 +14,6 @@ import Safe
 import Data.Abelian
 import Data.Data
 import Data.Accessor
-import Data.Maybe
 import Data.StrictList
 
 import Control.Monad (join)

@@ -10,7 +10,6 @@ import Safe
 
 import Data.Abelian
 import Data.List (partition)
-import Data.Maybe
 import Data.Map (Map, empty, lookup, insert)
 
 import Control.Arrow

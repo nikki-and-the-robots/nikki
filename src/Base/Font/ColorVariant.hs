@@ -8,7 +8,7 @@ module Base.Font.ColorVariant (
 
 
 import qualified Data.Text as T
-import Data.Map (Map, fromList, lookup)
+import Data.Map (fromList, lookup)
 
 import Graphics.Qt
 

@@ -13,7 +13,6 @@ module Sorts.Robots.Eyes (
 import Data.Generics
 import Data.Map
 import Data.Abelian
-import Data.List
 
 import Text.Printf
 

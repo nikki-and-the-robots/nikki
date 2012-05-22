@@ -13,7 +13,6 @@ import Prelude hiding (lookup)
 
 import Data.Abelian
 import qualified Data.Indexable as I
-import Data.SelectTree
 
 import Graphics.Qt as Qt hiding (rotate, scale)
 

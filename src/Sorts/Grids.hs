@@ -5,7 +5,6 @@ module Sorts.Grids where
 
 import Data.Generics
 import Data.Abelian
-import Data.Maybe
 
 import System.FilePath
 
