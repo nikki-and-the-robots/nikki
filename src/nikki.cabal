@@ -169,7 +169,7 @@ Executable core
         , data-accessor-mtl >= 0.2.0.2
         , strict >= 0.3.2
         , vector >= 0.9
-        , RSA == 1.*
+        , RSA >= 1.2.1
         , crypto-pubkey-types == 0.1.*
         , aeson
         , attoparsec == 0.9.* || == 0.10.*
