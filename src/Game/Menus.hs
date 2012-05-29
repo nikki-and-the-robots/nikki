@@ -25,6 +25,7 @@ import Game.BackgroundScene as BackgroundScene
 
 freeGameState :: GameState -> AppState -> AppState
 freeGameState gameState follower = NoGUIAppState $ io $ do
+    stopGameBackgroundMusic
     postGUI $ fmapM_ freeObject (scene gameState ^. objects)
     freeSpace $ cmSpace gameState
     return follower

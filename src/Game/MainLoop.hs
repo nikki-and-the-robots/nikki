@@ -37,19 +37,12 @@ debugQtVersion = do
 gameAppState :: Application -> Parent -> Bool -> GameState -> AppState
 gameAppState app parent editorTestMode initialState = NoGUIAppState $ do
     renderState <- mkRenderState (Base.cameraStateRef initialState) (scene initialState)
+    rm2m $ startGameBackgroundMusic $ levelMetaData $ levelFile $ scene initialState
     return $ GameAppState
         (renderable renderState)
-        (wrapInBackgroundMusic $
-         gameLoop app parent editorTestMode renderState)
+        (gameLoop app parent editorTestMode renderState)
         initialState
-  where
-    -- starts background music before and stops it after executing the given command
-    wrapInBackgroundMusic :: GameMonad a -> GameMonad a
-    wrapInBackgroundMusic cmd =
-        bracket (lift $ rm2m startMusic) (const $ io stopMusic) (const cmd)
-    startMusic :: RM ()
-    startMusic =
-        Base.startMusic app (levelMetaData $ levelFile $ scene initialState)
+
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.
@@ -92,6 +85,7 @@ gameLoop app parent editorTestMode rsr@RenderStateRefs{sceneMVar} =
         case sc' ^. mode of
 
             LevelFinished score result -> do
+                io $ stopGameBackgroundMusic
                 records <- if editorTestMode then
                                 return (Nothing, NoNewRecord, NoNewRecord)
                              else
@@ -108,6 +102,7 @@ gameLoop app parent editorTestMode rsr@RenderStateRefs{sceneMVar} =
                   else do
                     -- saving a highscore of Score_1_Tried in case the level gets aborted
                     io $ saveScore (levelFile sc') Score_1_Tried
+                    io $ pauseGameBackgroundMusic
                     continueLevel <- gameAppState app parent editorTestMode <$> get
                     gameState <- get
                     return $ Just $ pauseMenu app parent continueLevel gameState 0

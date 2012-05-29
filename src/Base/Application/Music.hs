@@ -1,8 +1,9 @@
 {-# language ViewPatterns, ScopedTypeVariables #-}
 
 module Base.Application.Music (
-    startMusic,
-    stopMusic,
+    startGameBackgroundMusic,
+    stopGameBackgroundMusic,
+    pauseGameBackgroundMusic,
   ) where
 
 
@@ -23,9 +24,30 @@ import Base.Paths
 import StoryMode.Paths
 
 
-startMusic :: Application -> LevelMetaData -> RM ()
-startMusic app meta = do
-    mMusic :: Maybe FilePath <- selectMusic app meta
+-- | Selects the music to be played.
+-- Returns an absolute file path.
+selectMusic :: LevelMetaData -> RM (Maybe FilePath)
+selectMusic (meta_musicFile -> Just wantedMusic) = io $ do
+    allOggs <- getStoryModeDataFiles "music" (Just ".ogg")
+    case fmap (filter (takeBaseName >>> (== wantedMusic))) allOggs of
+         Just (x : _) -> return $ Just x
+         _ -> return Nothing
+selectMusic meta@(meta_musicFile -> Nothing) = do
+    -- choose a free music file pseudo-randomly with the level name as the seed.
+    allOggsFromPublic <- getDataFiles "music" (Just ".ogg")
+    return $ randomElement (mkStdGen (hash (meta_levelName meta))) allOggsFromPublic
+
+randomElement :: StdGen -> [a] -> Maybe a
+randomElement g [] = Nothing
+randomElement g list =
+    let i = fst (random g) `mod` length list
+    in Just (list !! i)
+
+
+-- | Starts the game background music. Restarts the music, if it is paused.
+startGameBackgroundMusic :: LevelMetaData -> RM ()
+startGameBackgroundMusic meta = do
+    mMusic :: Maybe FilePath <- selectMusic meta
     let noMusicMsg =
             maybe
             "no music found."
@@ -37,24 +59,8 @@ startMusic app meta = do
         (\ file -> io $ SFML.playMusicLooped file (Just 0.6))
         mMusic
 
-stopMusic :: IO ()
-stopMusic = SFML.stopMusic
+pauseGameBackgroundMusic :: IO ()
+pauseGameBackgroundMusic = SFML.pauseMusic
 
--- | Selects the music to be played.
--- Returns an absolute file path.
-selectMusic :: Application -> LevelMetaData -> RM (Maybe FilePath)
-selectMusic app (meta_musicFile -> Just wantedMusic) = io $ do
-    allOggs <- getStoryModeDataFiles "music" (Just ".ogg")
-    case fmap (filter (takeBaseName >>> (== wantedMusic))) allOggs of
-         Just (x : _) -> return $ Just x
-         _ -> return Nothing
-selectMusic app meta@(meta_musicFile -> Nothing) = do
-    -- choose a free music file pseudo-randomly with the level name as the seed.
-    allOggsFromPublic <- getDataFiles "music" (Just ".ogg")
-    return $ randomElement (mkStdGen (hash (meta_levelName meta))) allOggsFromPublic
-
-randomElement :: StdGen -> [a] -> Maybe a
-randomElement g [] = Nothing
-randomElement g list =
-    let i = fst (random g) `mod` length list
-    in Just (list !! i)
+stopGameBackgroundMusic :: IO ()
+stopGameBackgroundMusic = SFML.stopMusic
