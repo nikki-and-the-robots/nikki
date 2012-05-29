@@ -8,6 +8,7 @@ module Base (
     module Base.Font,
     module Base.Application,
     module Base.Application.Pixmaps,
+    module Base.Application.Music,
 
     module Base.Renderable,
 
@@ -37,6 +38,7 @@ import Base.Prose.Template
 import Base.Font
 import Base.Application
 import Base.Application.Pixmaps
+import Base.Application.Music
 
 import Base.Renderable
 

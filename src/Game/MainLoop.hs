@@ -12,6 +12,7 @@ module Game.MainLoop (
 import Text.Logging
 
 import Control.Monad.State hiding ((>=>))
+import Control.Monad.CatchIO (MonadCatchIO, bracket)
 import Control.Concurrent
 
 import Clocked
@@ -38,8 +39,17 @@ gameAppState app parent editorTestMode initialState = NoGUIAppState $ do
     renderState <- mkRenderState (Base.cameraStateRef initialState) (scene initialState)
     return $ GameAppState
         (renderable renderState)
-        (gameLoop app parent editorTestMode renderState)
+        (wrapInBackgroundMusic $
+         gameLoop app parent editorTestMode renderState)
         initialState
+  where
+    -- starts background music before and stops it after executing the given command
+    wrapInBackgroundMusic :: GameMonad a -> GameMonad a
+    wrapInBackgroundMusic cmd =
+        bracket (lift $ rm2m startMusic) (const $ io stopMusic) (const cmd)
+    startMusic :: RM ()
+    startMusic =
+        Base.startMusic app (levelMetaData $ levelFile $ scene initialState)
 
 -- | main loop for logic thread in gaming mode
 -- the sceneMVar has to be empty initially.

@@ -27,20 +27,22 @@ data LevelMetaData
         meta_levelName :: String,
         meta_author :: Maybe String,
         meta_basedOn :: Maybe String,
-        meta_numberOfBatteries :: Maybe Int
+        meta_numberOfBatteries :: Maybe Int,
+        meta_musicFile :: Maybe FilePath
       }
   deriving (Eq, Show)
 
 instance NFData LevelMetaData where
-    rnf (LevelMetaData a b c d) = rnf a `seq` rnf b `seq` rnf c `seq` rnf d
+    rnf (LevelMetaData a b c d e) = rnf a `seq` rnf b `seq` rnf c `seq` rnf d `seq` rnf e
 
 instance ToJSON LevelMetaData where
-    toJSON (LevelMetaData meta_levelName meta_author basedOn numberOfBatteries) =
+    toJSON (LevelMetaData meta_levelName meta_author basedOn numberOfBatteries musicFile) =
       object (
         "levelName" .= meta_levelName :
         "author" .= meta_author :
         "basedOn" .= basedOn :
         "numberOfBatteries" .= numberOfBatteries :
+        "musicFile" .= musicFile :
         [])
 
 instance FromJSON LevelMetaData where
@@ -49,7 +51,8 @@ instance FromJSON LevelMetaData where
             meta .: "levelName" <*>
             meta .:? "author" <*>
             meta .:? "basedOn" <*>
-            meta .:? "numberOfBatteries"
+            meta .:? "numberOfBatteries" <*>
+            meta .:? "musicFile"
     parseJSON _ = mzero
 
 guessName :: FilePath -> String
@@ -68,7 +71,7 @@ loadMetaData levelFile = do
     exists <- doesFileExist (metaFile levelFile)
     if not exists then do
         logg Warning ("level meta data file does not exist: " ++ metaFile levelFile)
-        return $ LevelMetaData (guessName levelFile) Nothing Nothing Nothing
+        return $ LevelMetaData (guessName levelFile) Nothing Nothing Nothing Nothing
       else do
         metaDataJSON :: BSL.ByteString <- io $ BSL.readFile (metaFile levelFile)
         BSL.length metaDataJSON `deepseq` return ()
@@ -76,5 +79,5 @@ loadMetaData levelFile = do
         case result of
             Nothing -> do
                 logg Warning ("meta data not parseable: " ++ levelFile)
-                return $ LevelMetaData (guessName levelFile) Nothing Nothing Nothing
+                return $ LevelMetaData (guessName levelFile) Nothing Nothing Nothing Nothing
             Just x -> return x

@@ -149,7 +149,7 @@ Executable core
         , mtl == 2.*
         , process
         , Hipmunk >= 5.2.0.6
-        , sfml-audio == 0.4.*
+        , sfml-audio == 0.6.*
         , safe
         , random
         , StateVar
@@ -182,6 +182,7 @@ Executable core
         , email-validate
         , bifunctors
         , utf8-string == 0.3.*
+        , hashable == 1.1.*
 
     if os(linux)
         extra-libraries:

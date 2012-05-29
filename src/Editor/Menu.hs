@@ -158,7 +158,7 @@ saveLevel app follower EditorScene{editorLevelFile, editorObjects_} parent
 saveLevel app follower scene@EditorScene{editorLevelFile, editorObjects_} parent
   | isTemplateLevel editorLevelFile =
     completeMetaData app parent editorObjects_ Nothing $
-    \ metaData@(LevelMetaData name _ _ _) ->
+    \ metaData@(LevelMetaData name _ _ _ _) ->
       NoGUIAppState $ io $ do
         levelDirectory <- getSaveLevelDirectory
         let levelFile = UserLevel levelDirectory "" (name <..> "nl") metaData
@@ -179,17 +179,17 @@ completeMetaData :: Sort s o => Application -> Parent
 completeMetaData a pa objects mMetaData f = case mMetaData of
     Nothing ->
         askString a pa (p "level name") $ \ name ->
-        completeAgain $ Just $ LevelMetaData name Nothing Nothing Nothing
-    Just (LevelMetaData name Nothing basedOn batteries) ->
+        completeAgain $ Just $ LevelMetaData name Nothing Nothing Nothing Nothing
+    Just (LevelMetaData name Nothing basedOn batteries musicFile) ->
         askString a pa (p "author name") $ \ author ->
-        completeAgain $ Just $ LevelMetaData name (Just author) basedOn batteries
-    Just (LevelMetaData name author basedOn Nothing) ->
+        completeAgain $ Just $ LevelMetaData name (Just author) basedOn batteries musicFile
+    Just (LevelMetaData name author basedOn Nothing musicFile) ->
         let numberOfBatteries = countBatteries $
                 fmap editorSort $
                 (objects ^. mainLayer .> content)
         in completeAgain $ Just $ LevelMetaData name author basedOn
-                (Just numberOfBatteries)
-    Just m@(LevelMetaData _ (Just _) _ (Just _)) ->
+                (Just numberOfBatteries) musicFile
+    Just m@(LevelMetaData _ (Just _) _ (Just _) _) ->
         f m
   where
     completeAgain metaData = completeMetaData a pa objects metaData f
