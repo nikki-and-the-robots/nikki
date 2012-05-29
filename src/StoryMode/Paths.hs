@@ -24,7 +24,7 @@ getStoryModeDataFileName :: FilePath -> IO (Maybe FilePath)
 getStoryModeDataFileName path =
     fmap (</> ("data" </> path)) <$> getStoryModePath
 
-getStoryModeDataFiles :: FilePath -> (Maybe String) -> IO (Maybe [FilePath])
+getStoryModeDataFiles :: FilePath -> Maybe String -> IO (Maybe [FilePath])
 getStoryModeDataFiles path_ extension = do
     mPath <- getStoryModeDataFileName path_
     case mPath of

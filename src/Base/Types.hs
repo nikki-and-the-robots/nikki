@@ -745,3 +745,15 @@ levelUID (TemplateLevel path) =
     "templateLevels" <//> path
 levelUID (UnknownLevelType path) =
     "unknownLevels" <//> path
+
+getAbsoluteFilePath :: LevelFile -> FilePath
+getAbsoluteFilePath (TemplateLevel p) = p
+getAbsoluteFilePath (UnknownLevelType p) = p
+getAbsoluteFilePath x = levelPath x </> levelPackage x </> levelFileName x
+
+levelMetaData :: LevelFile -> LevelMetaData
+levelMetaData StandardLevel{..} = levelMetaData_
+levelMetaData UserLevel{..} = levelMetaData_
+levelMetaData EpisodeLevel{..} = levelMetaData_
+levelMetaData file =
+    LevelMetaData (guessName $ getAbsoluteFilePath file) Nothing Nothing Nothing Nothing

@@ -62,12 +62,6 @@ mkLevelPath levelDir_ levelFile = do
 mkUnknownLevel :: FilePath -> IO LevelFile
 mkUnknownLevel = return . UnknownLevelType
 
-getAbsoluteFilePath :: LevelFile -> FilePath
-getAbsoluteFilePath (TemplateLevel p) = p
-getAbsoluteFilePath (UnknownLevelType p) = p
-getAbsoluteFilePath x = levelPath x </> levelPackage x </> levelFileName x
-
-
 isUserLevel :: LevelFile -> Bool
 isUserLevel UserLevel{} = True
 isUserLevel _ = False
@@ -75,12 +69,6 @@ isUserLevel _ = False
 isTemplateLevel :: LevelFile -> Bool
 isTemplateLevel TemplateLevel{} = True
 isTemplateLevel _ = False
-
-levelMetaData :: LevelFile -> LevelMetaData
-levelMetaData StandardLevel{..} = levelMetaData_
-levelMetaData UserLevel{..} = levelMetaData_
-levelMetaData EpisodeLevel{..} = levelMetaData_
-levelMetaData file = LevelMetaData (guessName $ getAbsoluteFilePath file) Nothing Nothing Nothing
 
 showLevelTreeForMenu :: SelectTree LevelFile -> IO Prose
 showLevelTreeForMenu (Leaf label level) = showLevelForMenu level
