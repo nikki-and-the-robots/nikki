@@ -46,7 +46,11 @@ import StoryMode.Paths
 getDataFiles :: FilePath -> (Maybe String) -> RM [FilePath]
 getDataFiles path_ extension = do
     path <- getDataFileName path_
-    map (path </>) <$> io (getFiles path extension)
+    pathExists <- io $ doesDirectoryExist path
+    if pathExists then do
+        map (path </>) <$> io (getFiles path extension)
+      else
+        return []
 
 
 -- * configuration
