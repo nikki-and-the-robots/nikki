@@ -11,3 +11,5 @@ sounds/game/jump.wav
 
 To view a copy of CC0 (Creative Commons Zero) http://creativecommons.org/publicdomain/zero/1.0/ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
 
+music/*
+    See respective license files in music/.
