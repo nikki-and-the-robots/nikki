@@ -58,6 +58,12 @@ timeDigits :: Int
 timeDigits = 2
 
 
+-- * sounds
+
+globalSoundVolume, globalMusicVolume :: Float
+globalSoundVolume = 0.7
+globalMusicVolume = 0.6
+
 -- * file directories
 
 soundDir :: FilePath

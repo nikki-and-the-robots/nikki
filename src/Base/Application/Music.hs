@@ -18,6 +18,7 @@ import qualified Sound.SFML as SFML
 
 import Utils
 
+import Base.Constants
 import Base.Types
 import Base.Paths
 
@@ -56,7 +57,7 @@ startGameBackgroundMusic meta = do
             (meta_musicFile meta)
     maybe
         (logg Error noMusicMsg)
-        (\ file -> io $ SFML.playMusicLooped file (Just 0.6))
+        (\ file -> io $ SFML.playMusicLooped file (Just globalMusicVolume))
         mMusic
 
 pauseGameBackgroundMusic :: IO ()

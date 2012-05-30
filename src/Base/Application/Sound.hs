@@ -51,7 +51,7 @@ loadSound name n = do
     io $ newPolySound file n
 
 triggerSound :: MonadIO m => PolySound -> m ()
-triggerSound s = io $ triggerPolySound s (Just 0.7)
+triggerSound s = io $ triggerPolySound s (Just globalSoundVolume)
 
 loadLoopedSound :: String -> RM LoopedSound
 loadLoopedSound name = do
