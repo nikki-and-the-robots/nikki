@@ -61,8 +61,8 @@ timeDigits = 2
 -- * sounds
 
 globalSoundVolume, globalMusicVolume :: Float
-globalSoundVolume = 0.7
-globalMusicVolume = 0.6
+globalSoundVolume = 7 / 13
+globalMusicVolume = 6 / 13
 
 -- * file directories
 
