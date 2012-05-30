@@ -101,7 +101,8 @@ gameLoop app parent editorTestMode rsr@RenderStateRefs{sceneMVar} =
                     return $ Just $ freeGameState gameState parent
                   else do
                     -- saving a highscore of Score_1_Tried in case the level gets aborted
-                    io $ saveScore (levelFile sc') Score_1_Tried
+                    _ <- io $ saveScore (levelFile sc') Score_1_Tried
+                    io $ pauseGameBackgroundMusic
                     continueLevel <- gameAppState app parent editorTestMode <$> get
                     gameState <- get
                     return $ Just $ pauseMenu app parent continueLevel gameState 0
