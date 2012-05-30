@@ -62,7 +62,7 @@ control now contacts (True, cd) nsort nikki = do
         -- =======
 
         -- The basic idea is, that normal jumps and walljumps should not be two different things,
-        -- but rather the same. This way we ensure, that things in the middle (e.g. jumping off 
+        -- but rather the same. This way we ensure, that things in the middle (e.g. jumping off
         -- 45 degree steep floors) get a sensible behaviour, too.
 
         -- vertical jumping is done with two components:
@@ -91,7 +91,7 @@ control now contacts (True, cd) nsort nikki = do
             modifyApplyOnlyForce chipmunk_ $
                 getJumpingForces now action_ ji
 
-            triggerSound Nothing (jumpSound nsort)
+            triggerSound (jumpSound nsort)
 
         State Airborne _ _ ji _ ->
             applyAirborneForces now chipmunk_ action_ ji

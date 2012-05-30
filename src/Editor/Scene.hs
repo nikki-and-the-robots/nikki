@@ -130,7 +130,7 @@ keyPress app b = do
     case newScene of
         (Left OEMNothing) -> return False
         (Left OEMError) -> do
-            triggerSound Nothing $ errorSound $ applicationSounds app
+            triggerSound $ errorSound $ applicationSounds app
             return True
         (Right newScene) -> do
             -- acted on key event

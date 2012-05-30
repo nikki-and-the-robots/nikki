@@ -126,16 +126,16 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
             Just e -> do
                 controls__ <- gets controls_
                 if isMenuUp controls__ e then do
-                    triggerSound Nothing $ menuSelectSound $ applicationSounds app
+                    triggerSound $ menuSelectSound $ applicationSounds app
                     return $ inner $ selectPrevious menu
                   else if isMenuDown controls__ e then do
-                    triggerSound Nothing $ menuSelectSound $ applicationSounds app
+                    triggerSound $ menuSelectSound $ applicationSounds app
                     return $ inner $ selectNext menu
                   else if isMenuConfirmation controls__ e then do
-                    triggerSound Nothing $ menuConfirmSound $ applicationSounds app
+                    triggerSound $ menuConfirmSound $ applicationSounds app
                     return $ snd $ selected menu
                   else if isMenuBack controls__ e then do
-                    triggerSound Nothing $ menuCancelSound $ applicationSounds app
+                    triggerSound $ menuCancelSound $ applicationSounds app
                     case mParent of
                         Just parent -> return parent
                         Nothing -> return $ inner menu
@@ -224,7 +224,7 @@ toLines (Menu _ _ before selected after _) =
 
 -- | adds a spacer before and after the menu
 addFrame :: [RenderableInstance] -> [RenderableInstance]
-addFrame ll = lineSpacer : ll +: lineSpacer 
+addFrame ll = lineSpacer : ll +: lineSpacer
 
 -- | Returns the scrolling.
 updateScrollingIO :: Application -> Size Double -> Menu -> IO Int
