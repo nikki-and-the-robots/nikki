@@ -17,7 +17,7 @@ import Base.Prose
 import Base.Types
 import Base.Font
 import Base.Monad
-import Base.Sound
+import Base.Application.Sound
 
 import Base.Configuration
 import Base.Configuration.Controls
