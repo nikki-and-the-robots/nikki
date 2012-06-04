@@ -381,6 +381,11 @@ toNewestScore :: Score -> Score
 toNewestScore (Score_0 time batteries) = Score_1_Passed time batteries
 toNewestScore x = x
 
+isPassedScore :: Score -> Bool
+isPassedScore Score_0{} = True
+isPassedScore Score_1_Tried{} = False
+isPassedScore Score_1_Passed{} = True
+
 
 instance Binary.Binary Score where
     put (Score_0 a b) = do
@@ -602,7 +607,7 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
         translate ptr (epToPosition (size sort) (editorObject ^. editorPosition))
         renderIconified sort ptr
 
-    -- if Nothing is passed as space, this should be an object 
+    -- if Nothing is passed as space, this should be an object
     -- that is not added to the chipmunk space (i.e. background tiles)
     initialize :: Application -> LevelFile -> Maybe Space
         -> sort -> EditorPosition -> Maybe OEMState -> CachedTiles -> RM object
@@ -662,7 +667,7 @@ data Sort_
 data Object_
     = forall sort object .
         (Sort sort object,
-            Show sort, Typeable sort, 
+            Show sort, Typeable sort,
             Show object, Typeable object) =>
                 Object_ sort object
   deriving (Typeable)

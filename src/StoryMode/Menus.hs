@@ -6,7 +6,7 @@ module StoryMode.Menus (
   ) where
 
 
-import Data.Map (Map, member)
+import Data.Map (Map, member, lookup)
 import Data.Maybe
 
 import Control.Concurrent
@@ -119,4 +119,6 @@ mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
     this = mkEpisodeMenu app play parent ep
 
 hasPassedIntro :: Map LevelUID Score -> Episode LevelFile -> Bool
-hasPassedIntro scores e = member (levelUID $ intro e) scores
+hasPassedIntro scores e =
+    maybe False isPassedScore $
+    Data.Map.lookup (levelUID $ intro e) scores
