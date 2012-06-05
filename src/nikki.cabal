@@ -19,35 +19,6 @@ Flag Devel
     Default:    False
 
 
--- Useful for declaring setup-script dependencies
--- (cabal will only resolve these automatically during "cabal install")
-Executable dummy
-    main-is:
-        -- this is meant:
-        -- Setup.hs
-        -- this is compiled, because cabal-install compiles the
-        -- the setup script on its own:
-        scripts/Nothing.hs
-
-    ghc-options:
-        -O0
-
-    build-depends:
-        base == 4.*
-
-    if os(darwin)
-        build-depends:
-            cabal-macosx == 0.2.*
-            , process
-            , filepath
-            , directory
-            , transformers
-            , mtl
-            , containers
-            , safe
-            , Cabal >= 1.8
-
-
 Executable  nikki
     main-is:
         Distribution/AutoUpdate/Restarter.hs
