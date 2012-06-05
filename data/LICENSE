@@ -11,5 +11,13 @@ sounds/game/jump.wav
 
 To view a copy of CC0 (Creative Commons Zero) http://creativecommons.org/publicdomain/zero/1.0/ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
 
+sounds/game/consoletext.wav
+  Based on OSD text 2 <http://www.freesound.org/people/jobro/sounds/33553/>
+  Recorded by jobro <http://www.freesound.org/people/jobro/>
+  Licensed under CC-BY 3.0
+  Edited (pitch up, cut and fade out) by Iwan Gabovitch
+
+To view a copy of CC-BY 3.0 (Creative Commons Attribution 3.0) http://creativecommons.org/licenses/by/3.0/ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
+
 music/*
     See respective license files in music/.
