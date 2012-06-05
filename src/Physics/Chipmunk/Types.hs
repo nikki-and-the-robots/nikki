@@ -337,7 +337,7 @@ vmap f (Vector a b) = Vector (f a) (f b)
 
 -- @mkRect p s@ creates a Polygon of a rectangle
 -- with @p@ as upper left corner and @s@ as size.
-mkRect :: Qt.Position CpFloat -> Qt.Size CpFloat  -> ShapeType
+mkRect :: Real n => Qt.Position n -> Qt.Size n -> ShapeType
 mkRect (fmap realToFrac -> Qt.Position x y) (fmap realToFrac -> Qt.Size width height) =
     assert (isClockwise points && isConvex points) $
     Polygon points

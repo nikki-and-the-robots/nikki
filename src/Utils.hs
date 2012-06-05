@@ -28,9 +28,10 @@ module Utils (
     (%=),
     (%:),
 
-    -- * other exports
+    -- * other re-exports
     on,
     Pair(..),
+    POSIXTime,
   ) where
 
 -- imports
@@ -536,8 +537,8 @@ third (_, _, x) = x
 -- * misc
 
 -- | Returns the current time in seconds.
-getTime :: IO Double
-getTime = realToFrac <$> getPOSIXTime
+getTime :: IO POSIXTime
+getTime = getPOSIXTime
 
 uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
 uncurry3 f (a, b, c) = f a b c

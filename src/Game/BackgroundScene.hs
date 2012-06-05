@@ -23,7 +23,7 @@ import Game.Scene
 -- | Advances the scene until a key that is validated by the given predicate is pressed,
 -- or the given timelimit is reached
 waitForPressedButtonBackgroundScene :: forall a . Application -> IORef GameState -> SceneMVar
-    -> (Button -> Bool) -> Maybe Seconds -> M (Maybe Button)
+    -> (Button -> Bool) -> Maybe POSIXTime -> M (Maybe Button)
 waitForPressedButtonBackgroundScene app gameStateRef sceneMVar buttonPred mTimeLimit = do
     startTime <- io $ getTime
     gameState <- io $ readIORef gameStateRef
@@ -32,7 +32,7 @@ waitForPressedButtonBackgroundScene app gameStateRef sceneMVar buttonPred mTimeL
     return button
   where
     -- | loops to perform supersteps
-    loopSuperStep :: Seconds -> Timer -> GameMonad (Maybe Button)
+    loopSuperStep :: POSIXTime -> Timer -> GameMonad (Maybe Button)
     loopSuperStep startTime timer = do
         performSubSteps timer subStepsPerSuperStep
         mEvent <- lift $ nextAppEvent app
@@ -49,7 +49,7 @@ waitForPressedButtonBackgroundScene app gameStateRef sceneMVar buttonPred mTimeL
                     else continue
 
     -- If waitForPressedButtonBackgroundScene exceeded the given time limit.
-    exceedsTimeLimit :: Seconds -> IO Bool
+    exceedsTimeLimit :: POSIXTime -> IO Bool
     exceedsTimeLimit startTime = case mTimeLimit of
         Nothing -> return False
         Just timeLimit -> do

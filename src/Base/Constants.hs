@@ -52,12 +52,12 @@ infinityDouble :: Double = 2**182473217387654
 gravity :: CpFloat = 1975
 
 -- there are multiple substeps (steps in chipmunk) per superstep.
-subStepQuantum :: CpFloat = 0.002
-superStepQuantum :: CpFloat = subStepQuantum * fromIntegral subStepsPerSuperStep
+subStepQuantum :: Seconds = 0.002
+superStepQuantum :: Seconds = subStepQuantum * fromIntegral subStepsPerSuperStep
 subStepsPerSuperStep :: Int = 8
 
 -- | updates take place once per subStep
-updateStepQuantum :: CpFloat = subStepQuantum
+updateStepQuantum :: Seconds = subStepQuantum
 
 timeFactor :: CpFloat = 1
 

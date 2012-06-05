@@ -19,10 +19,12 @@ import Safe
 import Data.Data
 import Data.Foldable (Foldable)
 
+import Physics.Hipmunk (CpFloat)
+
 import Utils
 
 
-type Seconds = Double
+type Seconds = CpFloat
 
 
 -- * pickAnimationFrame

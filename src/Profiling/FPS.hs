@@ -37,14 +37,15 @@ import Base.Renderable ()
 
 
 -- | returns the seconds since epoch start
-getNow = realToFrac <$> getPOSIXTime
+getNow :: IO POSIXTime
+getNow = getPOSIXTime
 
 -- State for this module (abstract type)
 data FpsState
     = FpsState {
         counter :: !Int,
-        averageSpan :: !(Maybe Double),
-        oldTime :: Maybe Double,
+        averageSpan :: !(Maybe POSIXTime),
+        oldTime :: Maybe POSIXTime,
         displayValue :: IORef Prose
     }
     | NotActivated
@@ -75,12 +76,12 @@ tickFPS app config ptr (FpsState counter avg (Just oldTime) displayValue) = do
         return r
   where
     handle x@(FpsState 10 (Just avg) qtime dv) = do
-        writeIORef dv (pVerbatim $ printf "FPS: %3.1f" (1 / avg))
+        writeIORef dv (pVerbatim $ printf "FPS: %3.1f" (1 / realToFrac avg :: Double))
         hPrint logHandle (1 / avg)
         return $ FpsState 0 Nothing qtime dv
     handle x = return x
 
-    calcAvg :: Int -> Maybe Double -> Double -> Double
+    calcAvg :: Int -> Maybe POSIXTime -> POSIXTime -> POSIXTime
     calcAvg 0 Nothing newValue = newValue
     calcAvg len (Just avg) newValue =
         (lenF * avg + newValue) / (lenF + 1)

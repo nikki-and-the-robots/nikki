@@ -135,6 +135,7 @@ baseOffset = size2position (robotSize -~ baseSize)
 pinOffset = vmap fromUber $ Vector 8 (- 16)
 
 -- | size of the upright barrel
+barrelSize :: Size CpFloat
 barrelSize = fmap fromUber $ Size 11 12
 
 barrelOffset = fmap fromUber $ Position 18 (- 24)
@@ -144,6 +145,7 @@ maxBarrelAngle = tau / 4
 eyesOffset = fmap fromUber $ Position 2 3
 
 -- | offset of newly created cannonballs relative to the barrel
+cannonballOffset :: Qt.Position CpFloat
 cannonballOffset =
     Position (fromUber 5.5) (height barrelSize - barrelChamfer - fromUber 3.5)
 
@@ -159,7 +161,7 @@ instance Sort CannonSort Cannon where
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
             base = ImmutableChipmunk position 0 baryCenterOffset []
-            barrelBaryCenterOffset = size2vector $ fmap (/ 2) $ barrelSize
+            barrelBaryCenterOffset = size2vector $ fmap (realToFrac . (/ 2)) $ barrelSize
             barrel = ImmutableChipmunk (position +~ barrelOffset) barrelInitialAngle barrelBaryCenterOffset []
             noopSetter _ = return ()
         return $ Cannon base barrel False Nothing barrelInitialAngle noopSetter []
@@ -195,7 +197,7 @@ instance Sort CannonSort Cannon where
         (basePosition, baseAngle) <- getRenderPositionAndAngle (base cannon)
         (barrelPosition, barrelAngle) <- getRenderPositionAndAngle $ barrel cannon
         let base = RenderPixmap (basePix sort)
-                    (basePosition -~ rotatePosition baseAngle baseOffset)
+                    (basePosition -~ rotatePosition (realToFrac baseAngle) baseOffset)
                     (Just baseAngle)
             barrel = RenderPixmap (barrelPix sort) barrelPosition (Just barrelAngle)
             eyes = renderRobotEyes (robotEyes sort) basePosition baseAngle eyesOffset
@@ -239,11 +241,11 @@ initBase space ep = do
     return (c, pin)
 
 initBarrel space ep = do
-    let baryCenterOffset = size2vector $ fmap (/ 2) barrelSize
+    let baryCenterOffset = size2vector $ fmap (realToFrac . (/ 2)) barrelSize
         start = negateAbelian baryCenterOffset
         shapeTypes = barrelShapeTypes start
         shapes = map (mkShapeDescription shapeAttributes) shapeTypes
-        pos = position2vector (epToPosition barrelSize ep)
+        pos = position2vector (epToPosition (fmap realToFrac barrelSize) ep)
                     +~ baryCenterOffset +~ position2vector barrelOffset
         attributes =
             inertia ^: (* 100) $
@@ -273,7 +275,7 @@ barrelShapeTypes start =
         [])
 
     wallThickness = fromUber 1
-    size@(Vector width height) = size2vector barrelSize
+    size@(Vector width height) = size2vector $ fmap realToFrac barrelSize
 
 barrelChamfer = fromUber 3
 
@@ -368,7 +370,8 @@ mkCannonball space cannon = do
         ballDesc = mkShapeDescription cannonballShapeAttributes ball
         baryCenterOffset = vmap fromUber (Vector 3.5 3.5)
         pos = position2vector
-            (barrelPosition +~ rotatePosition barrelAngle cannonballOffset)
+            (barrelPosition +~ rotatePosition (realToFrac barrelAngle)
+                                    (fmap realToFrac cannonballOffset))
         cannonballAttributes =
             mkMaterialBodyAttributes cannonballMaterialMass [ball] pos
         cMass = CM.mass cannonballAttributes

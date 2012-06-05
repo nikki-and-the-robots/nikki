@@ -1,3 +1,4 @@
+{-# language ViewPatterns #-}
 
 module Sorts.Nikki.JumpingForces where
 

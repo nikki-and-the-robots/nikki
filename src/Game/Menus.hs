@@ -62,7 +62,8 @@ failureMenu app parent sceneRenderState gameState =
     triggerSound config $ failureSound $ applicationSounds app
     gameStateRef <- io $ newIORef gameState
     ignore $ waitForPressedButtonBackgroundScene app gameStateRef
-                 (sceneMVar sceneRenderState) (const False) (Just afterLevelWaitTime)
+                 (sceneMVar sceneRenderState) (const False)
+                 (Just $ realToFrac afterLevelWaitTime)
     return $ menuAppStateSpecialized app (poller gameStateRef)
         (renderable backGround) AppStateLooped
         FailureMenu Nothing menuItems 0
@@ -95,7 +96,7 @@ successMessage app parent sceneRenderState gameState score@Score_1_Passed{}
   (mHighScore, timeRecord, batteryRecord) =
      AppStateLooped (renderable $ renderableInstance False) $ do
         ref <- io $ newIORef gameState
-        waitForEvent ref (const False) (Just afterLevelWaitTime)
+        waitForEvent ref (const False) (Just $ realToFrac afterLevelWaitTime)
         return $ AppStateLooped (renderable $ renderableInstance True) $ do
             waitForEvent ref (const True) Nothing
             return $ freeGameState gameState parent
