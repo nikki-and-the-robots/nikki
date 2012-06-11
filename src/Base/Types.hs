@@ -171,7 +171,8 @@ data ApplicationSounds = ApplicationSounds {
     menuSelectSound :: PolySound,
     menuConfirmSound :: PolySound,
     menuCancelSound :: PolySound,
-    errorSound :: PolySound
+    errorSound :: PolySound,
+    failureSound :: PolySound
   }
 
 

@@ -56,6 +56,7 @@ failureMenu :: Application -> Parent -> RenderStateRefs -> GameState
     -> AppState
 failureMenu app parent sceneRenderState gameState =
   AppStateLooped (renderable waitFailureScreen) $ do
+    triggerSound $ failureSound $ applicationSounds app
     gameStateRef <- io $ newIORef gameState
     ignore $ waitForPressedButtonBackgroundScene app gameStateRef
                  (sceneMVar sceneRenderState) (const False) (Just afterLevelWaitTime)
