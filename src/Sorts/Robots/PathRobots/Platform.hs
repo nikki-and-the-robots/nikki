@@ -104,7 +104,7 @@ instance Sort PSort Platform where
     isUpdating = const True
 
     updateNoSceneChange sort _ config _ mode now contacts cd =
-        control config cd >=>
+        control (config ^. controls) cd >=>
         return . updateLogic >=>
         passThrough applyPlatformForce
 

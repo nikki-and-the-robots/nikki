@@ -170,8 +170,8 @@ instance Sort SSort Sign where
 
     isUpdating = const True
 
-    updateNoSceneChange sort app controls _ scene now contacts (_, cd) sign =
-        return $ (monologue ^: (updateState app controls cd contacts sign)) sign
+    updateNoSceneChange sort app config _ scene now contacts (_, cd) sign =
+        return $ (monologue ^: (updateState app (config ^. controls) cd contacts sign)) sign
 
     renderObject app config sign sort ptr offset now =
         return $ renderSign app config offset sort sign

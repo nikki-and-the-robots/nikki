@@ -629,13 +629,13 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 
     isUpdating :: object -> Bool -- phantom type
 
-    update :: sort -> Application -> Controls -> Space -> Scene Object_ -> Seconds
+    update :: sort -> Application -> Configuration -> Space -> Scene Object_ -> Seconds
         -> Contacts -> (Bool, ControlData)
         -> Index -> object -> StateT (Scene Object_ -> Scene Object_) IO object
-    update sort app controls space scene now contacts cd i o =
-        io $ updateNoSceneChange sort app controls space scene now contacts cd o
+    update sort app config space scene now contacts cd i o =
+        io $ updateNoSceneChange sort app config space scene now contacts cd o
 
-    updateNoSceneChange :: sort -> Application -> Controls -> Space -> Scene Object_
+    updateNoSceneChange :: sort -> Application -> Configuration -> Space -> Scene Object_
         -> Seconds -> Contacts -> (Bool, ControlData)
         -> object -> IO object
     updateNoSceneChange _ _ _ _ _ _ _ _ o = return o

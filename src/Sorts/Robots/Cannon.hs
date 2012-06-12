@@ -177,17 +177,17 @@ instance Sort CannonSort Cannon where
 
     isUpdating = const True
 
-    updateNoSceneChange sort _ _ space _ now _ (False, _) =
+    updateNoSceneChange sort _ config space _ now _ (False, _) =
         return . (controlled ^= False) >=>
-        destroyCannonballs space now sort >=>
+        destroyCannonballs config space now sort >=>
 --         passThrough debug >=>
         return
     updateNoSceneChange sort _ config space scene now contacts (True, cd) =
         return . (controlled ^= True) >=>
-        return . updateAngleState config cd >=>
+        return . updateAngleState (config ^. controls) cd >=>
         passThrough setAngle >=>
-        destroyCannonballs space now sort >=>
-        shootCannonball space config now cd sort >=>
+        destroyCannonballs config space now sort >=>
+        shootCannonball config space now cd sort >=>
 --         passThrough debug >=>
         return
 
@@ -336,24 +336,24 @@ robotEyesState now cannon = case (cannon ^. controlled, cannon ^. shotTime) of
 -- * cannon balls
 
 -- | Removes cannonballs after their lifetime exceeded.
-destroyCannonballs :: Space -> Seconds -> CannonSort -> Cannon -> IO Cannon
-destroyCannonballs space now sort =
+destroyCannonballs :: Configuration -> Space -> Seconds -> CannonSort -> Cannon -> IO Cannon
+destroyCannonballs config space now sort =
     cannonballs ^^: (\ bs -> catMaybes <$> mapM inner bs)
   where
     inner :: Cannonball -> IO (Maybe Cannonball)
     inner cb@(time, chip) =
         if now - time > cannonballLifeSpan then do
             -- cannonball gets removed
-            playDisappearSound sort
+            playDisappearSound config sort
             removeChipmunk chip
             return Nothing
           else
             return $ Just cb
 
-shootCannonball :: Space -> Controls -> Seconds -> ControlData
+shootCannonball :: Configuration -> Space -> Seconds -> ControlData
     -> CannonSort -> Cannon -> IO Cannon
-shootCannonball space controls now cd sort cannon | isRobotActionPressed controls cd = do
-    playShootSound sort
+shootCannonball config space now cd sort cannon | isRobotActionPressed (config ^. controls) cd = do
+    playShootSound config sort
     ball <- mkCannonball space cannon
     return $
         shotTime ^= Just now $
@@ -407,8 +407,8 @@ cannonballFrameTimes = [specAngleRange]
 
 -- * Sounds
 
-playShootSound :: CannonSort -> IO ()
-playShootSound = triggerSound . shootSound
+playShootSound :: Configuration -> CannonSort -> IO ()
+playShootSound c = triggerSound c . shootSound
 
-playDisappearSound :: CannonSort -> IO ()
-playDisappearSound = triggerSound . disappearSound
+playDisappearSound :: Configuration -> CannonSort -> IO ()
+playDisappearSound c = triggerSound c . disappearSound

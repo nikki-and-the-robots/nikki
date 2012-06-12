@@ -60,7 +60,7 @@ import Sorts.LowerLimit
 stepScene :: Application -> Configuration -> Space -> ControlData
     -> Scene Object_ -> IO (Scene Object_)
 stepScene app configuration space controlData =
-    updateScene app space (configuration ^. controls) controlData >=>
+    updateScene app space configuration controlData >=>
     stepSpace space >=>
     maybeAbort configuration >=>
     transition (configuration ^. controls) controlData
@@ -215,9 +215,9 @@ maybeAbort config = case abort_level config of
 -- * object updating
 
 -- | updates every object
-updateScene :: Application -> Space -> Controls -> ControlData
+updateScene :: Application -> Space -> Configuration -> ControlData
     -> Scene Object_ -> IO (Scene Object_)
-updateScene app space controlsConfig cd scene = do
+updateScene app space config cd scene = do
     -- NOTE: Currently only the physics layer is updated
     let mainLayerUpdatingRange = gameMainLayerUpdatingRange (scene ^. objects)
     (physicsContent', sceneChange) <- updateMainLayer mainLayerUpdatingRange $ scene ^. objects ^. gameMainLayer
@@ -233,7 +233,7 @@ updateScene app space controlsConfig cd scene = do
     updateMainLayer mainLayerUpdatingRange ix = do
         StrictState.runStateT
             (Range.fmapMWithIndex mainLayerUpdatingRange (\ i o ->
-                update DummySort app controlsConfig space scene now (scene ^. contacts)
+                update DummySort app config space scene now (scene ^. contacts)
                     (Just i == controlled, cd) i o)
                 ix)
             id

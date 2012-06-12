@@ -11,6 +11,8 @@ import Data.Hashable
 
 import Text.Logging
 
+import Control.Monad.Reader (ask)
+
 import System.FilePath
 import System.Random
 
@@ -20,6 +22,7 @@ import Utils
 
 import Base.Constants
 import Base.Types
+import Base.Configuration
 import Base.Paths
 
 import StoryMode.Paths
@@ -48,6 +51,7 @@ randomElement g list =
 -- | Starts the game background music. Restarts the music, if it is paused.
 startGameBackgroundMusic :: LevelMetaData -> RM ()
 startGameBackgroundMusic meta = do
+    config <- ask
     mMusic :: Maybe FilePath <- selectMusic meta
     let noMusicMsg =
             maybe
@@ -57,7 +61,7 @@ startGameBackgroundMusic meta = do
             (meta_musicFile meta)
     maybe
         (logg Error noMusicMsg)
-        (\ file -> io $ SFML.playMusicLooped file (Just globalMusicVolume))
+        (\ file -> io $ SFML.playMusicLooped file (Just (globalMusicVolume * config ^. music_volume)))
         mMusic
 
 pauseGameBackgroundMusic :: IO ()

@@ -4,6 +4,8 @@ module Base.Options (
   ) where
 
 
+import Text.Printf
+
 import Utils
 
 import Base.Types
@@ -25,6 +27,7 @@ generalOptions app ps parent = NoGUIAppState $ do
             (p "controls", controlConfigurationMenu app 0 . this) :
             fullScreenMenuItem :
             showOSDMenuItems config this ++
+            volumeItems config this ++
             []
     return $ menuAppState app (NormalMenu (p "options") Nothing) (Just parent) menuItems ps
   where
@@ -50,3 +53,30 @@ showOSDMenuItems configuration parent =
     mkItem text acc =
         (text +> pVerbatim ": " +> toOnOff (configuration ^. acc),
          \ ps -> NoGUIAppState ((acc %: not) >> return (parent ps)))
+
+
+-- * volume
+
+toVolumePercentage :: Float -> Prose
+toVolumePercentage v =
+    pVerbatim $ printf "%3i%%" i
+  where
+    i :: Int
+    i = round (v * 4) * 25
+
+volumeItems :: Configuration -> (Int -> AppState) -> [(Prose, Int -> AppState)]
+volumeItems configuration parent =
+    mkItem (p "music volume") music_volume :
+    mkItem (p "sound volume") sound_volume :
+    []
+  where
+    mkItem :: Prose -> Accessor Configuration Float -> (Prose, Int -> AppState)
+    mkItem text acc = tuple
+        (text +> pVerbatim ": " +> toVolumePercentage (configuration ^. acc))
+        (\ ps -> NoGUIAppState ((acc %: changeVolume) >> return (parent ps)))
+    -- changes the volume in steps of 25 %. Wraps around
+    changeVolume x | x < 0.25 = 0.25
+    changeVolume x | x < 0.5  = 0.5
+    changeVolume x | x < 0.75 = 0.75
+    changeVolume x | x < 1    = 1
+    changeVolume x            = 0

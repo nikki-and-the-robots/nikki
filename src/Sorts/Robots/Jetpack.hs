@@ -137,7 +137,7 @@ instance Sort JSort Jetpack where
     isUpdating = const True
 
     updateNoSceneChange sort _ config _ mode now contacts (isControlled, cd) jetpack =
-        (return . jupdate config (isControlled, cd) >=>
+        (return . jupdate (config ^. controls) (isControlled, cd) >=>
         return . updateRenderState now isControlled >=>
         passThrough controlToChipmunk >=>
         passThrough (handleSounds sort oldBoost))

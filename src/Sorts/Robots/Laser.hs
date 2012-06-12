@@ -153,7 +153,7 @@ instance Sort LSort Laser where
     isUpdating = const True
 
     updateNoSceneChange _ _ config space _ _ _ (True, cd) laser =
-        if isRobotActionPressed config cd
+        if isRobotActionPressed (config ^. controls) cd
         then (passThrough (updateLaserActivation space))
              (active ^: not $ laser)
         else return laser

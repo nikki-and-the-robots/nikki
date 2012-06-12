@@ -10,6 +10,8 @@ module Base.Configuration (
     show_time_OSD,
     show_switch_OSD,
     show_keyhint_OSD,
+    music_volume,
+    sound_volume,
 
     defaultConfiguration,
     savedConfigurationToConfiguration,
@@ -62,6 +64,17 @@ data SavedConfiguration
     saved_show_switch_OSD :: Bool,
     saved_show_keyhints_OSD :: Bool
   }
+  | SavedConfiguration_3 {
+    saved_language :: Language,
+    saved_fullscreen :: Bool,
+    saved_controls :: Controls,
+    saved_show_battery_OSD :: Bool,
+    saved_show_time_OSD :: Bool,
+    saved_show_switch_OSD :: Bool,
+    saved_show_keyhints_OSD :: Bool,
+    saved_music_volume :: Float,
+    saved_sound_volume :: Float
+  }
     deriving (Show, Read)
 
 toLatestSavedConfiguration :: SavedConfiguration -> SavedConfiguration
@@ -72,7 +85,7 @@ toLatestSavedConfiguration
         saved_show_battery_OSD
         saved_show_time_OSD
         saved_show_switch_OSD) =
-    SavedConfiguration_2
+    SavedConfiguration_3
         (saved_language initial)
         saved_fullscreen
         saved_controls
@@ -80,6 +93,8 @@ toLatestSavedConfiguration
         saved_show_time_OSD
         saved_show_switch_OSD
         (saved_show_keyhints_OSD initial)
+        (saved_music_volume initial)
+        (saved_sound_volume initial)
 toLatestSavedConfiguration
     (SavedConfiguration_1
         saved_language
@@ -88,7 +103,7 @@ toLatestSavedConfiguration
         saved_show_battery_OSD
         saved_show_time_OSD
         saved_show_switch_OSD) =
-    SavedConfiguration_2
+    SavedConfiguration_3
         saved_language
         saved_fullscreen
         saved_controls
@@ -96,18 +111,41 @@ toLatestSavedConfiguration
         saved_show_time_OSD
         saved_show_switch_OSD
         (saved_show_keyhints_OSD initial)
-toLatestSavedConfiguration x@SavedConfiguration_2{} = x
+        (saved_music_volume initial)
+        (saved_sound_volume initial)
+toLatestSavedConfiguration
+    (SavedConfiguration_2
+        saved_language
+        saved_fullscreen
+        saved_controls
+        saved_show_battery_OSD
+        saved_show_time_OSD
+        saved_show_switch_OSD
+        saved_show_keyhints_OSD) =
+    SavedConfiguration_3
+        saved_language
+        saved_fullscreen
+        saved_controls
+        saved_show_battery_OSD
+        saved_show_time_OSD
+        saved_show_switch_OSD
+        saved_show_keyhints_OSD
+        (saved_music_volume initial)
+        (saved_sound_volume initial)
+toLatestSavedConfiguration x@SavedConfiguration_3{} = x
 
 -- | default configuration
 instance Initial SavedConfiguration where
-    initial = SavedConfiguration_2 {
+    initial = SavedConfiguration_3 {
         saved_language = English,
         saved_fullscreen = False,
         saved_controls = initial,
         saved_show_battery_OSD = True,
         saved_show_time_OSD = False,
         saved_show_switch_OSD = True,
-        saved_show_keyhints_OSD = True
+        saved_show_keyhints_OSD = True,
+        saved_music_volume = 1,
+        saved_sound_volume = 1
       }
 
 
@@ -137,7 +175,9 @@ data Configuration = Configuration {
     show_battery_OSD_ :: Bool,
     show_time_OSD_ :: Bool,
     show_switch_OSD_ :: Bool,
-    show_keyhint_OSD_ :: Bool
+    show_keyhint_OSD_ :: Bool,
+    music_volume_ :: Float,
+    sound_volume_ :: Float
   }
     deriving (Data, Typeable)
 
@@ -159,6 +199,10 @@ show_switch_OSD = accessor show_switch_OSD_ (\ a r -> r{show_switch_OSD_ = a})
 show_keyhint_OSD :: Accessor Configuration Bool
 show_keyhint_OSD = accessor show_keyhint_OSD_ (\ a r -> r{show_keyhint_OSD_ = a})
 
+music_volume, sound_volume :: Accessor Configuration Float
+music_volume = accessor music_volume_ (\ a r -> r{music_volume_ = a})
+sound_volume = accessor sound_volume_ (\ a r -> r{sound_volume_ = a})
+
 -- | Converts the configuration loaded from disk to a Configuration.
 -- Adds impure annotations needed for CmdArgs.
 savedConfigurationToConfiguration :: SavedConfiguration -> Configuration
@@ -172,7 +216,7 @@ savedConfigurationToConfiguration
 --         show_switch_OSD_ = saved_show_switch_OSD}
 
 defaultConfiguration :: SavedConfiguration -> Configuration
-defaultConfiguration (SavedConfiguration_2 saved_language saved_fullscreen saved_controls saved_show_battery_OSD saved_show_time_OSD saved_show_switch_OSD saved_show_keyhints_OSD) =
+defaultConfiguration (SavedConfiguration_3 saved_language saved_fullscreen saved_controls saved_show_battery_OSD saved_show_time_OSD saved_show_switch_OSD saved_show_keyhints_OSD saved_music_volume saved_sound_volume) =
     Configuration {
         play_level = Nothing
             &= help "play the specified level file"
@@ -223,6 +267,11 @@ defaultConfiguration (SavedConfiguration_2 saved_language saved_fullscreen saved
         show_switch_OSD_ = saved_show_switch_OSD
             &= CmdArgs.ignore,
         show_keyhint_OSD_ = saved_show_keyhints_OSD
+            &= CmdArgs.ignore,
+
+        music_volume_ = saved_music_volume
+            &= CmdArgs.ignore,
+        sound_volume_ = saved_sound_volume
             &= CmdArgs.ignore
       }
     &= program "nikki"
@@ -236,12 +285,14 @@ defaultConfiguration (SavedConfiguration_2 saved_language saved_fullscreen saved
         [])
 
 configurationToSavedConfiguration c =
-    SavedConfiguration_2 {
+    SavedConfiguration_3 {
         saved_language = c ^. language,
         saved_fullscreen = fullscreen c,
         saved_controls = c ^. controls,
         saved_show_battery_OSD = c ^. show_battery_OSD,
         saved_show_time_OSD = c ^. show_time_OSD,
         saved_show_switch_OSD = c ^. show_switch_OSD,
-        saved_show_keyhints_OSD = c ^. show_keyhint_OSD
+        saved_show_keyhints_OSD = c ^. show_keyhint_OSD,
+        saved_music_volume = c ^. music_volume,
+        saved_sound_volume = c ^. sound_volume
       }

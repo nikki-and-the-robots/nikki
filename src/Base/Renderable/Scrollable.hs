@@ -8,6 +8,7 @@ import Data.IORef
 import Data.List
 
 import Control.Concurrent
+import Control.Monad.State (get)
 
 import Graphics.Qt
 
@@ -50,7 +51,8 @@ scrollingAppState app text follower = NoGUIAppState $ io $ do
             io (send (subtract 1)) >>
             loop send
           else do
-            triggerSound $ menuConfirmSound $ applicationSounds app
+            config <- get
+            triggerSound config $ menuConfirmSound $ applicationSounds app
             return follower
 
 scrollable :: Application -> [Prose] -> IO (RenderableInstance, (Int -> Int) -> IO ())
@@ -82,7 +84,7 @@ instance Renderable Scrollable where
             fmapM (render ptr app config widgetSize) $
             addSpacer $ fmap spacerForNull $
             lines
-        scrollDown <- updateScrollDown (applicationSounds app)
+        scrollDown <- updateScrollDown (applicationSounds app) config
             (maximalScrollDown h lineRenders) chan scrollDownRef
         let action = forM_ (clipHeight h $ drop scrollDown lineRenders) $
                 \ (itemSize, itemAction) -> do
@@ -98,13 +100,13 @@ instance Renderable Scrollable where
 
 -- | Updates the scrollDown according to the widget size and events.
 -- Returns the current scrollDown.
-updateScrollDown :: ApplicationSounds -> Int -> Chan (Int -> Int) -> IORef Int -> IO Int
-updateScrollDown sounds maximalScrollDown chan ref = do
+updateScrollDown :: ApplicationSounds -> Configuration -> Int -> Chan (Int -> Int) -> IORef Int -> IO Int
+updateScrollDown sounds config maximalScrollDown chan ref = do
     events <- pollChannel chan
     old <- readIORef ref
     let new = min maximalScrollDown $ max 0 $ foldr (.) id events $ old
     when (not $ null events) $
-        triggerSound $ (if old == new then errorSound else menuSelectSound) sounds
+        triggerSound config $ (if old == new then errorSound else menuSelectSound) sounds
     writeIORef ref new
     readIORef ref
 

@@ -486,7 +486,7 @@ mkPolys size =
 
 update sort _ config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} =
     return $
-    updateShowingBubble config contacts cd $
+    updateShowingBubble (config ^. controls) contacts cd $
     updateUncontrolledStandby now $
     terminal
 update sort _ config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} =
@@ -504,7 +504,7 @@ update sort _ config _ scene now contacts (False, cd) terminal =
     (robots ^^: updateControllableStates scene) terminal
 update sort _ config _ scene now contacts (True, cd) terminal =
     (robots ^^: updateControllableStates scene) $
-    state ^= updateState config now cd (terminal ^. robots) (terminal ^. state) $
+    state ^= updateState (config ^. controls) now cd (terminal ^. robots) (terminal ^. state) $
     terminal
 
 -- | updates the gameMode if Nikki doesn't touch it anymore

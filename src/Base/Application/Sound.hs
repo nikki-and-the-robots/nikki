@@ -29,6 +29,7 @@ import Utils
 import Base.Types
 import Base.Paths
 import Base.Constants
+import Base.Configuration
 
 
 withApplicationSounds :: (ApplicationSounds -> RM a) -> RM a
@@ -51,8 +52,8 @@ loadSound name n = do
     file <- getDataFileName (soundDir </> name <.> "wav")
     io $ newPolySound file n
 
-triggerSound :: MonadIO m => PolySound -> m ()
-triggerSound s = io $ triggerPolySound s (Just globalSoundVolume)
+triggerSound :: MonadIO m => Configuration -> PolySound -> m ()
+triggerSound config s = io $ triggerPolySound s (Just (globalSoundVolume * config ^. sound_volume))
 
 loadLoopedSound :: String -> RM LoopedSound
 loadLoopedSound name = do

@@ -79,7 +79,8 @@ editorLoop app mvar scene = UnManagedAppState $ do
                     s
             _ -> do
                 -- other events are handled below (in Editor.Scene)
-                eventHandled <- updateEditorScene app event
+                config <- lift $ get
+                eventHandled <- updateEditorScene config app event
                 case (eventHandled, event) of
                     (False, Press _) -> do
                         -- unhandled press event -> help will be displayed

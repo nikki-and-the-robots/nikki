@@ -125,9 +125,9 @@ instance Sort NSort Nikki where
     updateNoSceneChange sort _ config _ scene now contacts cd nikki = inner nikki
       where
         inner =
-            updateState config (scene ^. mode) now contacts cd >=>
+            updateState (config ^. controls) (scene ^. mode) now contacts cd >=>
             return . updateStartTime now (state nikki) >=>
-            controlNikki now contacts cd sort
+            controlNikki config now contacts cd sort
 
     renderObject _ _ nikki sort _ _ now = do
         let pixmap = pickPixmap now sort nikki

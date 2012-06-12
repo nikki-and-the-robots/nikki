@@ -104,14 +104,14 @@ setNikkiPosition position =
 -- | Updates the editor scene for a given key press.
 -- Returns True in case the key was recognized and acted upon.
 updateEditorScene :: (MonadState (EditorScene Sort_) m, MonadIO m) =>
-    Application -> AppEvent -> m Bool
-updateEditorScene app (Press b@KeyboardButton{}) = do
-    acted <- keyPress app b
+    Configuration -> Application -> AppEvent -> m Bool
+updateEditorScene config app (Press b@KeyboardButton{}) = do
+    acted <- keyPress config app b
     when acted $ do
         modify updateSelected
         modify normalizeOEMStates
     return acted
-updateEditorScene _ _ = return False
+updateEditorScene _ _ _ = return False
 
 
 -- * gamepad buttons
@@ -120,8 +120,8 @@ updateEditorScene _ _ = return False
 -- | returns if the keyboard event was handled
 -- (either by updating the state or in case of an exception)
 keyPress :: (MonadState (EditorScene Sort_) m, MonadIO m) =>
-    Application -> Button -> m Bool
-keyPress app b = do
+    Configuration -> Application -> Button -> m Bool
+keyPress config app b = do
     scene <- get
     let newScene = case editorMode scene of
             NormalMode -> convert $ normalMode (key b) scene
@@ -130,7 +130,7 @@ keyPress app b = do
     case newScene of
         (Left OEMNothing) -> return False
         (Left OEMError) -> do
-            triggerSound $ errorSound $ applicationSounds app
+            triggerSound config $ errorSound $ applicationSounds app
             return True
         (Right newScene) -> do
             -- acted on key event

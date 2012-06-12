@@ -28,19 +28,19 @@ setNikkiSurfaceVelocity nikki surfaceVelocity =
         Strict.Just fs ->
             surfaceVel fs $= Vector surfaceVelocity 0
 
-controlNikki :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO Nikki
-controlNikki now contacts cd sort =
-    passThrough (control now contacts cd sort)
+controlNikki :: Configuration -> Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO Nikki
+controlNikki config now contacts cd sort =
+    passThrough (control config now contacts cd sort)
 
-control :: Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO ()
-control _ _ (False, _) _ nikki = do
+control :: Configuration -> Seconds -> Contacts -> (Bool, ControlData) -> NSort -> Nikki -> IO ()
+control _ _ _ (False, _) _ nikki = do
     setNikkiSurfaceVelocity nikki zero
     resetForces $ body $ chipmunk nikki
     case action $ state nikki of
         NikkiLevelFinished Failed ->
             moment (body (chipmunk nikki)) $= nikkiDeadMoment
         _ -> return ()
-control now contacts (True, cd) nsort nikki = do
+control config now contacts (True, cd) nsort nikki = do
     setNikkiSurfaceVelocity nikki (feetVelocity $ state $ nikki)
     let chipmunk_ = chipmunk nikki
         action_ = action $ state nikki
@@ -91,7 +91,7 @@ control now contacts (True, cd) nsort nikki = do
             modifyApplyOnlyForce chipmunk_ $
                 getJumpingForces now action_ ji
 
-            triggerSound (jumpSound nsort)
+            triggerSound config (jumpSound nsort)
 
         State Airborne _ _ ji _ ->
             applyAirborneForces now chipmunk_ action_ ji

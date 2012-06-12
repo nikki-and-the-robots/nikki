@@ -179,20 +179,20 @@ instance Sort SwitchSort Switch where
     isUpdating = const True
 
     update _ _ _ _ _ _ _ _ _ switch@StaticSwitch{} = return switch
-    update sort@SwitchSort{transient = True} _ controls _ scene now contacts cd index switch = do
+    update sort@SwitchSort{transient = True} _ config _ scene now contacts cd index switch = do
         let new = switch{triggered_ = triggerShape switch `member` triggers contacts}
             (sceneMod, mSound) = case (triggered_ switch, triggered_ new) of
                 (False, True) -> (switches ^: firstStrict succ, Just onSound)
                 (True, False) -> (switches ^: firstStrict pred, Just offSound)
                 _ -> (id, Nothing)
         forM_ mSound $ \ sound ->
-            triggerSound $ sound sort
+            triggerSound config $ sound sort
         pushSceneChange sceneMod
         return $ updateIfLast (sceneMod scene) now new
-    update sort _ controls _ scene now contacts cd index switch@Switch{triggered_ = False} =
+    update sort _ config _ scene now contacts cd index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
             -- triggered
-            triggerSound $ onSound sort
+            triggerSound config $ onSound sort
             let new = switch{triggered_ = True}
             io $ updateAntiGravity sort new
             pushSceneChange (switches ^: firstStrict succ)

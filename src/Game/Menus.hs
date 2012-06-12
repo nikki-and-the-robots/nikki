@@ -4,6 +4,8 @@ module Game.Menus where
 
 import Data.IORef
 
+import Control.Monad.State (get)
+
 import Physics.Chipmunk (freeSpace)
 
 import Graphics.Qt
@@ -56,7 +58,8 @@ failureMenu :: Application -> Parent -> RenderStateRefs -> GameState
     -> AppState
 failureMenu app parent sceneRenderState gameState =
   AppStateLooped (renderable waitFailureScreen) $ do
-    triggerSound $ failureSound $ applicationSounds app
+    config <- get
+    triggerSound config $ failureSound $ applicationSounds app
     gameStateRef <- io $ newIORef gameState
     ignore $ waitForPressedButtonBackgroundScene app gameStateRef
                  (sceneMVar sceneRenderState) (const False) (Just afterLevelWaitTime)

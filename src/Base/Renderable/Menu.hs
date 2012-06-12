@@ -13,6 +13,7 @@ import qualified Data.Indexable as I
 import Data.Version
 
 import Control.Concurrent.MVar
+import Control.Monad.State (get)
 
 import System.FilePath
 
@@ -125,17 +126,18 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
             Nothing -> return $ inner menu
             Just e -> do
                 controls__ <- gets controls_
+                config <- get
                 if isMenuUp controls__ e then do
-                    triggerSound $ menuSelectSound $ applicationSounds app
+                    triggerSound config $ menuSelectSound $ applicationSounds app
                     return $ inner $ selectPrevious menu
                   else if isMenuDown controls__ e then do
-                    triggerSound $ menuSelectSound $ applicationSounds app
+                    triggerSound config $ menuSelectSound $ applicationSounds app
                     return $ inner $ selectNext menu
                   else if isMenuConfirmation controls__ e then do
-                    triggerSound $ menuConfirmSound $ applicationSounds app
+                    triggerSound config $ menuConfirmSound $ applicationSounds app
                     return $ snd $ selected menu
                   else if isMenuBack controls__ e then do
-                    triggerSound $ menuCancelSound $ applicationSounds app
+                    triggerSound config $ menuCancelSound $ applicationSounds app
                     case mParent of
                         Just parent -> return parent
                         Nothing -> return $ inner menu
