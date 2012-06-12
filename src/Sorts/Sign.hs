@@ -224,7 +224,7 @@ renderSign :: Application -> Configuration -> Offset Double -> SSort -> Sign -> 
 renderSign app config offset sort (Sign (ImmutableChipmunk position _ _ _) _ state) =
     let sign = RenderPixmap (pixmap sort) position Nothing
         mState = renderState app config offset sort position state
-    in 
+    in
         sign :
         maybe [] Utils.singleton mState ++
         []

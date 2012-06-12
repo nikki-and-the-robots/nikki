@@ -283,7 +283,7 @@ controlTorque direction =
 
 springTorque :: Angle -> Bool -> Angle
 springTorque angle boost =
-    if boost && (abs angle > ε) then 
+    if boost && (abs angle > ε) then
         jetpackInertia * negate angle * torqueSpringFactor
       else 0
 

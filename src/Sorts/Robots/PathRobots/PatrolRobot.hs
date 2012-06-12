@@ -202,6 +202,6 @@ pickRobotPixmap now sort patrol =
 -- | Returns the state of the robots eyes dependent on the current Path
 robotEyesState :: Patrol -> RobotEyesState
 robotEyesState p =
-    if p ^. deadly then Active else Idle 
+    if p ^. deadly then Active else Idle
 
 eyesOffset = fmap fromUber $ Position 8 9

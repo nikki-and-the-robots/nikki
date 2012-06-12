@@ -125,7 +125,7 @@ instance Sort TSort FallingTile where
                     return fallingTile{status = GettingLoose now}
                   else
                     return fallingTile
-            GettingLoose t -> 
+            GettingLoose t ->
                 if now - t >= timeBeforeGettingLoose then do
                     modifyApplyOnlyForce (chipmunk fallingTile) zero
                     let b = body $ chipmunk fallingTile
@@ -166,10 +166,10 @@ mkShape sort =
   where
     box = Polygon [
         upperLeft +~ xUnit,
-        upperLeft +~ yUnit, 
-        lowerLeft -~ yUnit, 
+        upperLeft +~ yUnit,
+        lowerLeft -~ yUnit,
         lowerLeft +~ xUnit,
-        lowerRight -~ xUnit, 
+        lowerRight -~ xUnit,
         lowerRight -~ yUnit,
         upperRight +~ yUnit,
         upperRight -~ xUnit]

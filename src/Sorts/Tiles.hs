@@ -206,8 +206,8 @@ instance Sort TSort Tile where
       where
         pix = pickAnimationFrame (animation sort) now
 
--- before initializing the scene, all tiles in the physics scene are being merged 
--- (in Top.Initialisation), resulting in an AllTiles object. 
+-- before initializing the scene, all tiles in the physics scene are being merged
+-- (in Top.Initialisation), resulting in an AllTiles object.
 -- This is a workaround for merging tiles. It relies on the following things:
 -- 1. Tiles are static
 -- 2. Tiles are being rendered above everything else in the physics layer
