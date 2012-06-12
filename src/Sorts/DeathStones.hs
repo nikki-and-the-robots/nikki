@@ -109,6 +109,8 @@ instance Sort SSort Stone where
 
     chipmunks (Stone x) = singleton x
 
+    isUpdating = const False
+
     renderObject _ _ o sort ptr offset now = do
         (pos, _) <- getRenderPositionAndAngle (chipmunk o)
         let pixmap = pickAnimationFrame (animation sort) now

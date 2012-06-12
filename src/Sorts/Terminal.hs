@@ -451,6 +451,8 @@ instance Sort TSort Terminal where
         state ^= reset (now - blinkLength) (t ^. robots) (t ^. state) $
         t
 
+    isUpdating = const True
+
     updateNoSceneChange = update
 
     renderObject app config terminal sort ptr offset now = do

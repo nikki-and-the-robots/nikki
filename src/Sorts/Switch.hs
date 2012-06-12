@@ -176,7 +176,9 @@ instance Sort SwitchSort Switch where
 
     chipmunks (Switch a b c _ _ _) = [a, b, c]
 
-    update _ _ _ _ _ _ _ _ _ switch@StaticSwitch{} = return (id, switch)
+    isUpdating = const True
+
+    update _ _ _ _ _ _ _ _ _ switch@StaticSwitch{} = return switch
     update sort@SwitchSort{transient = True} _ controls _ scene now contacts cd index switch = do
         let new = switch{triggered_ = triggerShape switch `member` triggers contacts}
             (sceneMod, mSound) = case (triggered_ switch, triggered_ new) of
@@ -185,17 +187,19 @@ instance Sort SwitchSort Switch where
                 _ -> (id, Nothing)
         forM_ mSound $ \ sound ->
             triggerSound $ sound sort
-        return (sceneMod, updateIfLast (sceneMod scene) now new)
+        pushSceneChange sceneMod
+        return $ updateIfLast (sceneMod scene) now new
     update sort _ controls _ scene now contacts cd index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
             -- triggered
             triggerSound $ onSound sort
             let new = switch{triggered_ = True}
-            updateAntiGravity sort new
-            return (switches ^: firstStrict succ, new)
+            io $ updateAntiGravity sort new
+            pushSceneChange (switches ^: firstStrict succ)
+            return new
           else
-            return (id, updateIfLast scene now switch)
-    update s _ _ _ _ _ _ _ _ o = return (id, o)
+            return $ updateIfLast scene now switch
+    update s _ _ _ _ _ _ _ _ o = return o
 
     renderObject _ _ switch sort _ _ now = do
         (stampPos, stampAngle) <- getRenderPositionAndAngle (stampChipmunk switch)

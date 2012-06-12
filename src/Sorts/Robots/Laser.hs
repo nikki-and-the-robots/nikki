@@ -150,6 +150,8 @@ instance Sort LSort Laser where
 
     getControlledChipmunk _ o = chipmunk o
 
+    isUpdating = const True
+
     updateNoSceneChange _ _ config space _ _ _ (True, cd) laser =
         if isRobotActionPressed config cd
         then (passThrough (updateLaserActivation space))

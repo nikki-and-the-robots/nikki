@@ -8,9 +8,11 @@ import Safe
 
 import qualified Data.Indexable as I
 import Data.Indexable (Indexable, (>:))
+import Data.Indexable.Range (Range, calculateRange)
 import Data.Initial
 import Data.SelectTree
 import Data.Maybe
+import Data.List
 
 import Text.Logging
 
@@ -139,7 +141,7 @@ mkScene :: LevelFile -> Space -> Grounds Object_ -> IO (Scene Object_)
 mkScene levelFile space objects = do
     contactRef <- initContactRef space initial watchedContacts
     let nikki = Sorts.Nikki.searchNikki objects
-        optObjects = mkGameGrounds objects
+        optObjects = mkGameGrounds objects (mainLayerUpdatingRange objects)
         totalSwitches = Sorts.Switch.countSwitches (objects ^. mainLayer ^. content)
         totalBatteries =
             fromIntegral $
@@ -151,6 +153,10 @@ mkScene levelFile space objects = do
                 (0 :!: totalSwitches)
                 contactRef
         initial (NikkiMode nikki)
+
+mainLayerUpdatingRange :: Grounds Object_ -> Range
+mainLayerUpdatingRange gs =
+    calculateRange isUpdating (gs ^. mainLayer ^. content)
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =

@@ -116,6 +116,8 @@ instance Sort TSort FallingTile where
 
     chipmunks (FallingTile _ c _) = [c]
 
+    isUpdating = const True
+
     updateNoSceneChange sort _ config _ mode now contacts cd fallingTile =
         case status fallingTile of
             Static ->

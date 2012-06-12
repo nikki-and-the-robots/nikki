@@ -83,6 +83,8 @@ instance Sort LSort LowerLimit where
 
     chipmunks = removeError
 
+    isUpdating = const False
+
     renderObject = removeError
 
 removeError = error "Sort.LowerLimit: LowerLimits have to be removed"

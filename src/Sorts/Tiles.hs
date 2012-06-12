@@ -197,9 +197,10 @@ instance Sort TSort Tile where
     renderIconified sort ptr =
         renderPixmapSimple ptr $ head $ ftoList $ animation sort
 
-    initialize _ _ _ = es "immutableCopy: use AllTiles"
-    immutableCopy = es "immutableCopy: use AllTiles"
-    chipmunks     = es "chipmunks: use AllTiles"
+    initialize _ _ _ = es "initialize: use AllTiles"
+    immutableCopy    = es "immutableCopy: use AllTiles"
+    chipmunks        = es "chipmunks: use AllTiles"
+    isUpdating       = es "isUpdating: use AllTiles"
     renderObject _ _ (Tile (ImmutableChipmunk position _ _ _)) sort _ offset now = return $
         return $ RenderPixmap pix position Nothing
       where
@@ -267,6 +268,8 @@ instance Sort AllTilesSort AllTiles where
 
     chipmunks (AllPhysicTiles c _) = [c]
     chipmunks AllMultilayerTiles{} = []
+
+    isUpdating = const False
 
     renderObject _ _ allTiles sort _ _ now = return $
         fmap inner $ renderables allTiles

@@ -101,6 +101,8 @@ instance Sort PSort Platform where
     immutableCopy p@Platform{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
+    isUpdating = const True
+
     updateNoSceneChange sort _ config _ mode now contacts cd =
         control config cd >=>
         return . updateLogic >=>

@@ -175,6 +175,8 @@ instance Sort CannonSort Cannon where
 
     getControlledChipmunk _ c = base c -- fromMaybe (base c) (c ^. followedBall)
 
+    isUpdating = const True
+
     updateNoSceneChange sort _ _ space _ now _ (False, _) =
         return . (controlled ^= False) >=>
         destroyCannonballs space now sort >=>

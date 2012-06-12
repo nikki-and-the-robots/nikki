@@ -120,6 +120,8 @@ instance Sort GSort Grid where
 
     chipmunks = const []
 
+    isUpdating = const False
+
     renderObject _ _ o s ptr offset _ =
         renderGrid s offset (position o) <$> sizeQPainter ptr
 

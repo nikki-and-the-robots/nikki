@@ -1,7 +1,7 @@
 {-# language DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 module Base.GameGrounds (
-    GameGrounds(GameGrounds),
+    GameGrounds(GameGrounds, gameMainLayerUpdatingRange),
     gameBackgrounds,
     gameMainLayer,
     gameForegrounds,
@@ -12,6 +12,7 @@ module Base.GameGrounds (
 
 
 import Data.Indexable
+import Data.Indexable.Range
 import Data.Data
 import Data.Accessor
 import Data.Foldable (Foldable)
@@ -22,9 +23,10 @@ import Base.Grounds
 data GameGrounds a = GameGrounds {
     gameBackgrounds_ :: [GameLayer a],
     gameMainLayer_ :: Indexable a,
+    gameMainLayerUpdatingRange :: Range,
     gameForegrounds_ :: [GameLayer a]
   }
-    deriving (Show, Read, Foldable, Data, Typeable)
+    deriving (Show, Foldable, Data, Typeable)
 
 gameBackgrounds :: Accessor (GameGrounds a) [GameLayer a]
 gameBackgrounds = accessor gameBackgrounds_ (\ a r -> r{gameBackgrounds_ = a})
@@ -49,11 +51,12 @@ gameContent = accessor gameContent_ (\ a r -> r{gameContent_ = a})
 
 -- * creation
 
-mkGameGrounds :: Grounds a -> GameGrounds a
-mkGameGrounds (Grounds backgrounds mainLayer foregrounds) =
+mkGameGrounds :: Grounds o -> Range -> GameGrounds o
+mkGameGrounds (Grounds backgrounds mainLayer foregrounds) updatingRange =
     GameGrounds
         (multi backgrounds)
         (mainLayer ^. content)
+        updatingRange
         (multi foregrounds)
   where
     multi :: Indexable (Layer a) -> [GameLayer a]

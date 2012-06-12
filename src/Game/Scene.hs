@@ -13,6 +13,7 @@ module Game.Scene (
 import Prelude hiding (foldr)
 
 import Data.Indexable (Indexable(..), Index, findIndices, fmapMWithIndex, toList, indexA)
+import qualified Data.Indexable.Range as Range
 import qualified Data.Set as Set
 import Data.Foldable (foldr)
 import Data.Abelian
@@ -22,6 +23,7 @@ import Text.Printf
 
 import Control.Monad (join)
 import Control.Monad.State (StateT(..))
+import qualified Control.Monad.State.Strict as StrictState
 
 import Control.Concurrent.MVar
 
@@ -217,24 +219,24 @@ updateScene :: Application -> Space -> Controls -> ControlData
     -> Scene Object_ -> IO (Scene Object_)
 updateScene app space controlsConfig cd scene = do
     -- NOTE: Currently only the physics layer is updated
-    (sceneChange, physicsContent') <- updateMainLayer $ scene ^. objects ^. gameMainLayer
+    let mainLayerUpdatingRange = gameMainLayerUpdatingRange (scene ^. objects)
+    (physicsContent', sceneChange) <- updateMainLayer mainLayerUpdatingRange $ scene ^. objects ^. gameMainLayer
     return $ sceneChange $ objects .> gameMainLayer ^= physicsContent' $ scene
   where
     now = scene ^. spaceTime
     controlled = getControlledIndex scene
 
     -- update function for all objects in the mainLayer
-    updateMainLayer :: Indexable Object_
-        -> IO (Scene Object_ -> Scene Object_, Indexable Object_)
+    updateMainLayer :: Range.Range -> Indexable Object_
+        -> IO (Indexable Object_, Scene Object_ -> Scene Object_)
     -- each object has to know, if it's controlled
-    updateMainLayer ix = do
-        ix' <- fmapMWithIndex (\ i o ->
+    updateMainLayer mainLayerUpdatingRange ix = do
+        StrictState.runStateT
+            (Range.fmapMWithIndex mainLayerUpdatingRange (\ i o ->
                 update DummySort app controlsConfig space scene now (scene ^. contacts)
                     (Just i == controlled, cd) i o)
-                ix
-        let changes = foldr (.) id $ fmap fst ix'
-            ix'' = fmap snd ix'
-        return $ (changes, ix'')
+                ix)
+            id
 
 
 -- * rendering
@@ -344,7 +346,7 @@ develMode = False
 gameGroundsToRenderPixmaps :: Application -> Configuration
     -> Size Double -> Ptr QPainter -> Offset Double -> Seconds
     -> GameGrounds Object_ -> IO [RenderPixmap]
-gameGroundsToRenderPixmaps app config size ptr offset now (GameGrounds backgrounds mainLayer foregrounds) = do
+gameGroundsToRenderPixmaps app config size ptr offset now (GameGrounds backgrounds mainLayer _ foregrounds) = do
     bgs <- layersToRenderPixmaps app config size ptr offset now backgrounds
     ml <- mainLayerToRenderPixmaps app config ptr offset now mainLayer
     fgs <- layersToRenderPixmaps app config size ptr offset now foregrounds

@@ -70,6 +70,7 @@ instance Sort BSort Box where
         return $ Box $ ImmutableChipmunk position 0 baryCenterOffset []
     immutableCopy (Box x) = CM.immutableCopy x >>= return . Box
     chipmunks b = [chipmunk b]
+    isUpdating = const False
     renderObject _ _ o sort ptr offset now = do
         (pos, angle) <- getRenderPositionAndAngle (chipmunk o)
         return [RenderPixmap (boxPixmap sort) pos (Just angle)]

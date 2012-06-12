@@ -115,6 +115,8 @@ instance Sort PSort Patrol where
     immutableCopy p@Patrol{chipmunk} =
         CM.immutableCopy chipmunk >>= \ x -> return p{chipmunk = x}
 
+    isUpdating = const True
+
     updateNoSceneChange sort _ config _ mode now contacts cd =
         control config cd >=>
         return . updateLogic >=>

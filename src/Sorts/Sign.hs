@@ -168,6 +168,8 @@ instance Sort SSort Sign where
 
     chipmunks = return . chipmunk
 
+    isUpdating = const True
+
     updateNoSceneChange sort app controls _ scene now contacts (_, cd) sign =
         return $ (monologue ^: (updateState app controls cd contacts sign)) sign
 

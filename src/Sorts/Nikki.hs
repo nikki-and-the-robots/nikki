@@ -120,6 +120,8 @@ instance Sort NSort Nikki where
 
     getControlledChipmunk _ = chipmunk
 
+    isUpdating = const True
+
     updateNoSceneChange sort _ config _ scene now contacts cd nikki = inner nikki
       where
         inner =
