@@ -41,7 +41,7 @@ withApplicationSounds =
         <*> loadSound "menu/confirm" 2
         <*> loadSound "menu/cancel" 2
         <*> loadSound "menu/error" 2
-        <*> loadSound "game/deathzone" 2
+        <*> loadSound "game/failure" 2
     free (ApplicationSounds a b c d e) =
         forM_ [a, b, c, d, e] freePolySound
 
