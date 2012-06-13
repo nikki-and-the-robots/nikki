@@ -43,12 +43,12 @@ startAppState app = NoGUIAppState $ do
 mainMenu :: Application -> Int -> AppState
 mainMenu app ps =
     menuAppState app MainMenu Nothing (
-        (r $ storyModeMenuItem, storyMode app (play app) . this) :
-        (r $ p "community levels", community app 0 . this) :
-        (r $ p "options", generalOptions app 0 . this) :
-        (r autoUpdateMenuItem, autoUpdate app . this) :
-        (r $ p "credits", credits app . this) :
-        (r $ p "quit", const $ FinalAppState) :
+        MenuItem (r $ storyModeMenuItem) (storyMode app (play app) . this) :
+        MenuItem (r $ p "community levels") (community app 0 . this) :
+        MenuItem (r $ p "options") (generalOptions app 0 . this) :
+        MenuItem (r autoUpdateMenuItem) (autoUpdate app . this) :
+        MenuItem (r $ p "credits") (credits app . this) :
+        MenuItem (r $ p "quit") (const $ FinalAppState) :
         []) ps
   where
     r :: Renderable a => a -> RenderableInstance
@@ -66,9 +66,9 @@ credits app parent = NoGUIAppState $ do
 community :: Application -> Int -> Parent -> AppState
 community app ps parent =
     menuAppState app (NormalMenu (p "community levels") Nothing) (Just parent) (
-        (p "play levels", selectLevelPlay app . this) :
-        (p "download levels", downloadedLevels app (play app) 0 . this) :
-        (p "editor", selectLevelEdit app 0 . this) :
+        MenuItem (p "play levels") (selectLevelPlay app . this) :
+        MenuItem (p "download levels") (downloadedLevels app (play app) 0 . this) :
+        MenuItem (p "editor") (selectLevelEdit app 0 . this) :
         []) ps
   where
     this ps = community app ps parent
@@ -85,8 +85,8 @@ selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState
 selectLevelEdit app ps parent = menuAppState app menuType (Just parent) (
-    (p "new level", pickNewLevelEdit app . this) :
-    (p "edit existing level", selectExistingLevelEdit app . this) :
+    MenuItem (p "new level") (pickNewLevelEdit app . this) :
+    MenuItem (p "edit existing level") (selectExistingLevelEdit app . this) :
     []) ps
   where
     menuType = NormalMenu (p "editor") (Just $ p "create a new level or edit an existing one?")
@@ -99,13 +99,14 @@ pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
                           getDataFiles templateLevelsDir (Just ".nl")
     return $ menuAppState app menuType (Just parent) (
         map mkMenuItem templateLevelPaths ++
-        (p "empty level", const $ edit app parent (TemplateLevel pathToEmptyLevel)) :
+        MenuItem (p "empty level") (const $ edit app parent (TemplateLevel pathToEmptyLevel)) :
         []) 0
   where
     menuType = NormalMenu (p "new level") (Just $ p "choose a template to start from")
     mkMenuItem templatePath =
-        (pVerbatim $ takeBaseName templatePath,
-            const $ edit app parent (TemplateLevel templatePath))
+        MenuItem
+            (pVerbatim $ takeBaseName templatePath)
+            (const $ edit app parent (TemplateLevel templatePath))
 
 selectExistingLevelEdit app parent = NoGUIAppState $ io $ do
     editableLevels <- lookupUserLevels "your levels"

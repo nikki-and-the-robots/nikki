@@ -24,7 +24,7 @@ generalOptions app ps parent = NoGUIAppState $ do
     config <- getConfiguration
     fullScreenMenuItem <- mkFullScreen app this
     let menuItems =
-            (p "controls", controlConfigurationMenu app 0 . this) :
+            MenuItem (p "controls") (controlConfigurationMenu app 0 . this) :
             fullScreenMenuItem :
             showOSDMenuItems config this ++
             volumeItems config this ++
@@ -36,12 +36,12 @@ generalOptions app ps parent = NoGUIAppState $ do
 toOnOff :: Bool -> Prose
 toOnOff x = if x then p "on" else p "off"
 
-mkFullScreen :: Application -> (Int -> AppState) -> M (Prose, Int -> AppState)
+mkFullScreen :: Application -> (Int -> AppState) -> M MenuItem
 mkFullScreen app parent = do
     on <- gets fullscreen
     let switchText = toOnOff on
         text = p "fullscreen" <> pVerbatim ": " <> switchText
-    return (text, \ ps -> NoGUIAppState (swapFullScreen app >> return (parent ps)))
+    return $ MenuItem text (\ ps -> NoGUIAppState (swapFullScreen app >> return (parent ps)))
 
 showOSDMenuItems configuration parent =
     mkItem (p "show switch states") show_switch_OSD :
@@ -50,7 +50,7 @@ showOSDMenuItems configuration parent =
     mkItem (p "show key hints") show_keyhint_OSD :
     []
   where
-    mkItem text acc = tuple
+    mkItem text acc = MenuItem
         (text <> pVerbatim ": " <> toOnOff (configuration ^. acc))
         (\ ps -> NoGUIAppState ((acc %: not) >> return (parent ps)))
 
@@ -64,14 +64,14 @@ toVolumePercentage v =
     i :: Int
     i = round (v * 4) * 25
 
-volumeItems :: Configuration -> (Int -> AppState) -> [(Prose, Int -> AppState)]
+volumeItems :: Configuration -> (Int -> AppState) -> [MenuItem]
 volumeItems configuration parent =
     mkItem (p "music volume") music_volume :
     mkItem (p "sound volume") sound_volume :
     []
   where
-    mkItem :: Prose -> Accessor Configuration Float -> (Prose, Int -> AppState)
-    mkItem text acc = tuple
+    mkItem :: Prose -> Accessor Configuration Float -> MenuItem
+    mkItem text acc = MenuItem
         (text <> pVerbatim ": " <> toVolumePercentage (configuration ^. acc))
         (\ ps -> NoGUIAppState ((acc %: changeVolume) >> return (parent ps)))
     -- changes the volume in steps of 25 %. Wraps around

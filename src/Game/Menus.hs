@@ -36,12 +36,12 @@ freeGameState gameState follower = NoGUIAppState $ io $ do
 pauseMenu :: Application -> Parent -> AppState -> GameState -> Int -> AppState
 pauseMenu app parent continueLevel gameState =
   menuAppState app PauseMenu (Just continueLevel) (
-    (p "continue", const continueLevel) :
+    MenuItem (p "continue") (const continueLevel) :
 --     (p "rewind to last save point", todo) :
-    (p "retry from beginning", const $ freeGameState gameState (retryLevel gameState)) :
-    (p "options", generalOptions app 0 . this) :
-    (p "help", playHelp app . this) :
-    (p "quit level", const $ freeGameState gameState parent) :
+    MenuItem (p "retry from beginning") (const $ freeGameState gameState (retryLevel gameState)) :
+    MenuItem (p "options") (generalOptions app 0 . this) :
+    MenuItem (p "help") (playHelp app . this) :
+    MenuItem (p "quit level") (const $ freeGameState gameState parent) :
     [])
   where
     this = pauseMenu app parent continueLevel gameState
@@ -69,8 +69,8 @@ failureMenu app parent sceneRenderState gameState =
   where
     menuItems =
 --     (p "rewind to last savepoint", todo) :
-        (p "retry from beginning", const $ freeGameState gameState (retryLevel gameState)) :
-        (p "quit level", const $ freeGameState gameState parent) :
+        MenuItem (p "retry from beginning") (const $ freeGameState gameState (retryLevel gameState)) :
+        MenuItem (p "quit level") (const $ freeGameState gameState parent) :
         []
 
     poller gameStateRef =

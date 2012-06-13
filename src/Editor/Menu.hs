@@ -105,25 +105,27 @@ editorMenu app mvar scene ps =
               (
               lEnterOEM ++
               (
-                (p "select object", selectSort app mvar scene 0 . this) :
-                (p "edit layers", editLayers app mvar scene 0 . this) :
-                (p "activate selection mode (for copy, cut and paste)",
-                    const $ edit (toSelectionMode scene)) :
-                (p "try playing the level", const $ playLevel app (edit scene) True $
+                MenuItem (p "select object") (selectSort app mvar scene 0 . this) :
+                MenuItem (p "edit layers") (editLayers app mvar scene 0 . this) :
+                MenuItem
+                    (p "activate selection mode (for copy, cut and paste)")
+                    (const $ edit (toSelectionMode scene)) :
+                MenuItem (p "try playing the level") (const $ playLevel app (edit scene) True $
                         cachedTiles ^= Nothing $ scene) :
-                (p "save level", saveLevel app editWithFilePath scene . this) :
-                (p "save & upload", \ ps -> saveAndUpload app scene (this ps) editWithFilePath) :
-                (p "save level & exit editor",
-                    saveLevel app (const $ getMainMenu app) scene . this) :
-                (p "exit editor without saving", reallyExitEditor app . this) :
+                MenuItem (p "save level") (saveLevel app editWithFilePath scene . this) :
+                MenuItem (p "save & upload") (\ ps -> saveAndUpload app scene (this ps) editWithFilePath) :
+                MenuItem
+                    (p "save level & exit editor")
+                    (saveLevel app (const $ getMainMenu app) scene . this) :
+                MenuItem (p "exit editor without saving") (reallyExitEditor app . this) :
               [])) ps
         ObjectEditMode{} -> exitOEM app mvar scene
         SelectionMode{} ->
             menuAppState app (NormalMenu menuTitle $ Just menuSubTitle) (Just (edit scene)) (
-                (p "cut selected objects", const $ edit (cutSelection scene)) :
-                (p "copy selected objects", const $ edit (copySelection scene)) :
-                (p "delete selected objects", const $ edit (deleteSelection scene)) :
-                (p "exit selection mode", const $ edit scene{editorMode = NormalMode}) :
+                MenuItem (p "cut selected objects") (const $ edit (cutSelection scene)) :
+                MenuItem (p "copy selected objects") (const $ edit (copySelection scene)) :
+                MenuItem (p "delete selected objects") (const $ edit (deleteSelection scene)) :
+                MenuItem (p "exit selection mode") (const $ edit scene{editorMode = NormalMode}) :
                 []) ps
   where
     menuTitle = p "editor"
@@ -139,7 +141,7 @@ editorMenu app mvar scene ps =
 
     lEnterOEM = case enterOEM app mvar scene of
         Nothing -> []
-        Just x -> [(p "edit object", const x)]
+        Just x -> [MenuItem (p "edit object") (const x)]
 
 
 saveAndUpload app scene parent afterSaveFollower =
@@ -198,8 +200,8 @@ completeMetaData a pa objects mMetaData f = case mMetaData of
 
 fileExists app save path metaData objects =
     menuAppState app menuType (Just save) (
-        (p "no", const save) :
-        (p "yes", const writeAnyway) :
+        MenuItem (p "no") (const save) :
+        MenuItem (p "yes") (const writeAnyway) :
         []) 0
   where
     menuType = NormalMenu (p "saving level") (Just (pVerbatim path <> p " already exists"))
@@ -210,8 +212,8 @@ fileExists app save path metaData objects =
 reallyExitEditor :: Application -> Parent -> AppState
 reallyExitEditor app editor =
     menuAppState app menuType (Just editor) (
-        (p "no", const editor) :
-        (p "yes", const $ getMainMenu app) :
+        MenuItem (p "no") (const editor) :
+        MenuItem (p "yes") (const $ getMainMenu app) :
         []) 0
   where
     menuType = NormalMenu (p "saving level") (Just $ p "exit without saving?")
@@ -258,10 +260,10 @@ editLayers :: Application -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Int -> Parent -> AppState
 editLayers app mvar scene ps parent =
     menuAppState app (NormalMenu (p "edit layers") Nothing) (Just parent) (
-        (p "change layer distance", changeLayerDistance app mvar scene . this) :
-        (p "add on top of current layer", edit (addDefaultLayerOnTop scene)) :
-        (p "add behind current layer", edit (addDefaultLayerBehind scene)) :
-        (p "delete current layer", edit (updateSelected $ deleteCurrentLayer scene)) :
+        MenuItem (p "change layer distance") (changeLayerDistance app mvar scene . this) :
+        MenuItem (p "add on top of current layer") (edit (addDefaultLayerOnTop scene)) :
+        MenuItem (p "add behind current layer") (edit (addDefaultLayerBehind scene)) :
+        MenuItem (p "delete current layer") (edit (updateSelected $ deleteCurrentLayer scene)) :
         []) ps
   where
     edit s = const $ editorLoop app mvar s

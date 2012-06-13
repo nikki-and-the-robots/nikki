@@ -1,6 +1,7 @@
-{-# language ScopedTypeVariables #-}
+{-# language ScopedTypeVariables, GADTs #-}
 
 module Base.Renderable.Menu (
+    MenuItem(..),
     menuAppState,
     menuAppStateSpecialized,
     MenuHeader(..),
@@ -70,11 +71,18 @@ normalizeMenuHeader (NormalMenu t st) =
     nullToNothing Nothing = Nothing
 normalizeMenuHeader x = x
 
-mkMenu :: Renderable renderable => RenderableInstance -> MenuHeader
-    -> [(renderable, Int -> AppState)] -> Int -> IO Menu
+data MenuItem where
+    MenuItem :: Renderable r => r -> (Int -> AppState) -> MenuItem
+
+mkMenu :: RenderableInstance -> MenuHeader
+    -> [MenuItem] -> Int -> IO Menu
 mkMenu background menuHeader items =
-    inner $ zipWith (\ (label, appStateFun) n -> (renderable label, appStateFun n)) items [0..]
+    inner $ zipWith convert items [0..]
   where
+    convert :: MenuItem -> Int -> (RenderableInstance, AppState)
+    convert (MenuItem label appStateFun) n = (renderable label, appStateFun n)
+
+    inner :: [(RenderableInstance, AppState)] -> Int -> IO Menu
     inner items n =
         if n < 0 then
             inner items 0
@@ -100,8 +108,8 @@ selectPrevious m@(Menu bg typ [] selected after scrolling) =
     items = selected : after
 selectPrevious (Menu bg t b s a sc) = Menu bg t (init b) (last b) (s : a) sc
 
-menuAppState :: Renderable renderable => Application -> MenuHeader -> Maybe AppState
-    -> [(renderable, Int -> AppState)] -> Int -> AppState
+menuAppState :: Application -> MenuHeader -> Maybe AppState
+    -> [MenuItem] -> Int -> AppState
 menuAppState app =
     menuAppStateSpecialized app
     (Just <$> waitForPressedButton app)
@@ -112,9 +120,9 @@ menuAppState app =
 -- If a title is given, it will be displayed. If not, the main menu will be assumed.
 -- If a parent is given, the menu can be aborted to go to the parent state.
 -- The prechoice will determine the initially selected menu item.
-menuAppStateSpecialized :: Renderable renderable => Application
+menuAppStateSpecialized :: Application
     -> M (Maybe Button) -> RenderableInstance -> (RenderableInstance -> M AppState -> AppState)
-    -> MenuHeader -> Maybe AppState -> [(renderable, Int -> AppState)] -> Int -> AppState
+    -> MenuHeader -> Maybe AppState -> [MenuItem] -> Int -> AppState
 menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParent children preSelection =
     NoGUIAppState $ io $
         inner <$> mkMenu background menuHeader children preSelection
@@ -159,11 +167,11 @@ treeToMenu app parent title showAction (Node label children i) f preSelection = 
     return $ menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)
         items preSelection
   where
-    mkItem :: SelectTree a -> IO (Prose, Int -> AppState)
+    mkItem :: SelectTree a -> IO MenuItem
     mkItem t = do
         label <- showAction $ labelA ^: toItem $ t
         let follower ps = treeToMenu app (this ps) title showAction t f 0
-        return (label, follower)
+        return $ MenuItem label follower
 
     toItem p = case splitPath p of
         paths@(_ : _) -> last paths

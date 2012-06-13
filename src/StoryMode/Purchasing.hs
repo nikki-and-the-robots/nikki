@@ -48,8 +48,8 @@ buyOrInstall app storyModeMenu parent =
     menuAppState app
         (NormalMenu (p "story mode") (Just $ p "the story mode is not installed"))
         (Just parent)
-        ((p "buy the story mode", openUrl app purchasingUrl . this) :
-         (p "login and install the story mode", loginAsking app storyModeMenu . this) :
+        (MenuItem (p "buy the story mode") (openUrl app purchasingUrl . this) :
+         MenuItem (p "login and install the story mode") (loginAsking app storyModeMenu . this) :
          [])
   where
     this :: Int -> AppState

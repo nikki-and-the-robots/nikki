@@ -91,9 +91,9 @@ mkEpisodesMenu app play parent episodes =
     this = mkEpisodesMenu app play parent episodes
 
 mkMenuItem :: Application -> Play -> (Int -> Parent)
-    -> Episode LevelFile -> (Prose, Int -> AppState)
+    -> Episode LevelFile -> MenuItem
 mkMenuItem app play parent e =
-    (pv $ epTitle $ euid e, \ i -> mkEpisodeMenu app play (parent i) e 0)
+    MenuItem (pv $ epTitle $ euid e) (\ i -> mkEpisodeMenu app play (parent i) e 0)
 
 mkEpisodeMenu :: Application -> Play -> Parent
     -> Episode LevelFile -> Int -> AppState
@@ -115,7 +115,7 @@ mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
   where
     mkItem level = io $ do
         label <- showLevelForMenu level
-        return (label, \ i -> play (this i) level)
+        return $ MenuItem label (\ i -> play (this i) level)
     this = mkEpisodeMenu app play parent ep
 
 hasPassedIntro :: Map LevelUID Score -> Episode LevelFile -> Bool

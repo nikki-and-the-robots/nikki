@@ -93,8 +93,9 @@ autoUpdateRootInstall app follower = NoGUIAppState $ do
                                 ("A new version of Nikki and the Robots is available: $newVersion! " ++
                                 "Try using the software manager to get it or download it manually!"))
             return $ menuAppState app (typ gameNewVersion) (Just follower) (
-                (p "Download manually (opens browser)",
-                    const $ openUrl app downloadWebsite follower) :
+                MenuItem
+                    (p "Download manually (opens browser)")
+                    (const $ openUrl app downloadWebsite follower) :
                 []) 0
         Right uvs@(UpdateVersions Nothing (Just storyModeNewVersion)) ->
           return $ guiLog app $ \ logCommand -> io $ do

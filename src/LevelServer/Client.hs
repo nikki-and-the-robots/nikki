@@ -35,14 +35,14 @@ downloadedLevels app play ps parent = NoGUIAppState $ io $ do
     levels <- lookupDownloadedLevels
     levelItems <- mapM mkLevelItem levels
     return $ menuAppState app (NormalMenu (p "downloaded levels") Nothing) (Just parent) (
-        (p "download new levels", downloadNewLevels app . this) :
+        MenuItem (p "download new levels") (downloadNewLevels app . this) :
         levelItems ++
         []) ps
   where
     this ps = downloadedLevels app play ps parent
     mkLevelItem (file :: LevelFile) = do
         label <- showLevelForMenu file
-        return (label, \ ps -> play (this ps) file)
+        return $ MenuItem label (\ ps -> play (this ps) file)
 
 lookupDownloadedLevels :: IO [LevelFile]
 lookupDownloadedLevels = do
@@ -87,9 +87,9 @@ downloadNewLevels app follower =
 uploadLevel :: Application -> Parent -> LevelFile -> Int -> AppState
 uploadLevel app parent file =
     menuAppState app (NormalMenu (p "level license") (Just text)) (Just parent) (
-        (p "read the license (opens in browser)", openLicense app . this) :
-        (p "agree & upload", const $ justUploadLevel app parent file) :
-        (p "disagree & cancel", const $ parent) :
+        MenuItem (p "read the license (opens in browser)") (openLicense app . this) :
+        MenuItem (p "agree & upload") (const $ justUploadLevel app parent file) :
+        MenuItem (p "disagree & cancel") (const $ parent) :
         [])
   where
     text = p "By uploading the level you agree to license your level under Creative Commons Attribution license."
