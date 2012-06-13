@@ -1,4 +1,4 @@
-{-# language DeriveDataTypeable #-}
+{-# language DeriveDataTypeable, RecordWildCards #-}
 
 module Base.Configuration (
     SavedConfiguration,
@@ -208,15 +208,9 @@ sound_volume = accessor sound_volume_ (\ a r -> r{sound_volume_ = a})
 savedConfigurationToConfiguration :: SavedConfiguration -> Configuration
 savedConfigurationToConfiguration
   = defaultConfiguration . toLatestSavedConfiguration
---  {
---         fullscreen = saved_fullscreen,
---         controls_ = saved_controls,
---         show_battery_OSD_ = saved_show_battery_OSD,
---         show_time_OSD_ = saved_show_time_OSD,
---         show_switch_OSD_ = saved_show_switch_OSD}
 
 defaultConfiguration :: SavedConfiguration -> Configuration
-defaultConfiguration (SavedConfiguration_3 saved_language saved_fullscreen saved_controls saved_show_battery_OSD saved_show_time_OSD saved_show_switch_OSD saved_show_keyhints_OSD saved_music_volume saved_sound_volume) =
+defaultConfiguration SavedConfiguration_3{..} =
     Configuration {
         play_level = Nothing
             &= help "play the specified level file"
