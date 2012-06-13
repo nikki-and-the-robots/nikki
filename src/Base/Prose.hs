@@ -114,4 +114,4 @@ sumSignChar = chr 8721
 -- | put brackets around a string
 brackets :: Prose -> Prose
 brackets x =
-    pVerbatim "[" +> x +> pVerbatim "]"
+    pVerbatim "[" <> x <> pVerbatim "]"

@@ -36,5 +36,5 @@ instance Renderable Prose where
     select = colorizeProse white . proseSelect . capitalizeProse
       where
         proseSelect :: Prose -> Prose
-        proseSelect p = pVerbatim "⇨ " +> p +> pVerbatim " ⇦"
+        proseSelect p = pVerbatim "⇨ " <> p <> pVerbatim " ⇦"
     deselect = capitalizeProse

@@ -4,6 +4,7 @@
     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 module Utils (
+    (<>),
     (<$>),
     (<*>),
     (<|>),
@@ -182,9 +183,6 @@ fnull = Foldable.foldr (&&) True . fmap (const False)
 
 ftoList :: Foldable f => f a -> [a]
 ftoList = Foldable.toList
-
-(+>) :: Monoid m => m -> m -> m
-(+>) = mappend
 
 
 -- * function composition stuff

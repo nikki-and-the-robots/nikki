@@ -93,7 +93,7 @@ loginAndInstall app storyModeMenu loginData =
                     Left err -> message app (fmap pv $ lines err) storyModeMenu
                     Right () -> message app
                         (p "installation complete" :
-                         p "story-mode version: " +> pVerbatim (showVersion version) :
+                         p "story-mode version: " <> pVerbatim (showVersion version) :
                          p "restarting..." :
                          []) $ NoGUIAppState $ io $
                                 exitWith $ ExitFailure 143

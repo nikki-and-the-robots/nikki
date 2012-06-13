@@ -38,7 +38,7 @@ controlConfigurationMenu app ps parent = NoGUIAppState $ do
   where
     this ps = controlConfigurationMenu app ps parent
     mkItem controls (itemLabel, messageText, keyAcc) =
-        (itemLabel +> pv ": " +> p (snd (controls ^. keyAcc)),
+        (itemLabel <> pv ": " <> p (snd (controls ^. keyAcc)),
          configure app messageText keyAcc this)
 
 configure :: Application -> Prose -> Accessor Controls (Key, String) -> (Int -> Parent) -> Int -> AppState

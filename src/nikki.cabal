@@ -140,7 +140,7 @@ Executable core
             -headerpad_max_install_names
 
     build-depends:
-          base == 4.*
+          base == 4.5.*
         , binary
         , syb
         , containers

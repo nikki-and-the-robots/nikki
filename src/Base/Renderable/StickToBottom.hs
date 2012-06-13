@@ -54,7 +54,7 @@ formatKeys (KeysHint list) =
   where
     inner = mconcat $ intersperse separator $
             map formatFunction list
-    formatFunction (function, keys) = function +> pVerbatim ": " +> keys
+    formatFunction (function, keys) = function <> pVerbatim ": " <> keys
 
     separator = pVerbatim "]      ["
 formatKeys PressAnyKey =

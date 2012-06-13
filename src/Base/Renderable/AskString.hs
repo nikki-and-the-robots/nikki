@@ -60,7 +60,7 @@ mkAskStringWidget question answer =
   where
     text :: [Prose]
     text =
-        (question +> pVerbatim ": ") :
+        (question <> pVerbatim ": ") :
         pVerbatim answer :
         []
 

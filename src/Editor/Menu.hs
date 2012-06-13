@@ -202,7 +202,7 @@ fileExists app save path metaData objects =
         (p "yes", const writeAnyway) :
         []) 0
   where
-    menuType = NormalMenu (p "saving level") (Just (pVerbatim path +> p " already exists"))
+    menuType = NormalMenu (p "saving level") (Just (pVerbatim path <> p " already exists"))
     writeAnyway = appState (busyMessage $ p "saving level...") $ io $ do
         writeObjectsToDisk path metaData objects
         return $ getMainMenu app
@@ -277,7 +277,7 @@ changeLayerDistance app mvar scene parent =
                 (setYDistance y . setXDistance x) $ scene)
   where
     readEither :: String -> Either [Prose] Double
-    readEither s = maybe (Left [p "not an integer: " +> pv s]) Right (readMay s)
+    readEither s = maybe (Left [p "not an integer: " <> pv s]) Right (readMay s)
 
 -- | shows an editor help corresponding to the current editor mode
 showEditorHelp :: Application -> AppState -> EditorScene Sort_ -> AppState

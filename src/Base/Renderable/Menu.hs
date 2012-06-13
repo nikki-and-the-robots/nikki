@@ -189,7 +189,7 @@ instance Renderable Menu where
                 proseVersion = renderable $
                     tuple False $
                     capitalizeProse $
-                    pVerbatim "(" +> p "version" +>
+                    pVerbatim "(" <> p "version" <>
                     pVerbatim (" " ++ showVersion nikkiVersion ++ ")")
                 menuHeader = mainMenuPixmap : proseVersion : lineSpacer : []
                 lines = menuHeader ++ scroll (toLines menu)

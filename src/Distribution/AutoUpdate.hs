@@ -147,8 +147,8 @@ updateSuccessMessage (UpdateVersions mGame mStoryMode) =
     fmap sm mStoryMode :
     [])
   where
-    g v = p "new game version: " +> pVerbatim (showVersion v)
-    sm v = p "new storymode version: " +> pVerbatim (showVersion v)
+    g v = p "new game version: " <> pVerbatim (showVersion v)
+    sm v = p "new storymode version: " <> pVerbatim (showVersion v)
 
 
 -- | Looks for updates on the server.

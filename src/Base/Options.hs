@@ -40,7 +40,7 @@ mkFullScreen :: Application -> (Int -> AppState) -> M (Prose, Int -> AppState)
 mkFullScreen app parent = do
     on <- gets fullscreen
     let switchText = toOnOff on
-        text = p "fullscreen" +> pVerbatim ": " +> switchText
+        text = p "fullscreen" <> pVerbatim ": " <> switchText
     return (text, \ ps -> NoGUIAppState (swapFullScreen app >> return (parent ps)))
 
 showOSDMenuItems configuration parent =
@@ -72,7 +72,7 @@ volumeItems configuration parent =
   where
     mkItem :: Prose -> Accessor Configuration Float -> (Prose, Int -> AppState)
     mkItem text acc = tuple
-        (text +> pVerbatim ": " +> toVolumePercentage (configuration ^. acc))
+        (text <> pVerbatim ": " <> toVolumePercentage (configuration ^. acc))
         (\ ps -> NoGUIAppState ((acc %: changeVolume) >> return (parent ps)))
     -- changes the volume in steps of 25 %. Wraps around
     changeVolume x | x < 0.25 = 0.25
