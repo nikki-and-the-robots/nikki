@@ -34,6 +34,6 @@ fmapMWithIndex :: (Monad m, Functor m) => Range -> (Index -> a -> m a)
     -> Indexable a -> m (Indexable a)
 fmapMWithIndex (SimpleRange lower upper) cmd (Indexable values) = do
     let (prefix, rest) = V.splitAt lower values
-        (unprocessedMiddle, suffix) = V.splitAt (upper - lower) rest
+        (unprocessedMiddle, suffix) = V.splitAt (succ upper - lower) rest
     processedMiddle <- fmapM (\ (i, v) -> tuple i <$> cmd i v) unprocessedMiddle
     return $ Indexable (prefix V.++ processedMiddle V.++ suffix)
