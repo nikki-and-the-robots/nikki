@@ -149,7 +149,7 @@ Executable core
         , mtl == 2.*
         , process
         , Hipmunk >= 5.2.0.6
-        , sfml-audio == 0.6.*
+        , sfml-audio == 0.7.*
         , safe
         , random
         , StateVar

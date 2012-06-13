@@ -140,7 +140,7 @@ instance Sort JSort Jetpack where
         (return . jupdate (config ^. controls) (isControlled, cd) >=>
         return . updateRenderState now isControlled >=>
         passThrough controlToChipmunk >=>
-        passThrough (handleSounds sort oldBoost))
+        passThrough (handleSounds config sort oldBoost))
         jetpack
       where
         oldBoost = boost jetpack
@@ -297,9 +297,9 @@ frictionTorque angleVel =
 
 -- * sounds
 
-handleSounds :: JSort -> Bool -> Jetpack -> IO ()
-handleSounds sort oldBoost jetpack =
+handleSounds :: Configuration -> JSort -> Bool -> Jetpack -> IO ()
+handleSounds config sort oldBoost jetpack =
     case (oldBoost, boost jetpack) of
-        (False, True) -> startLoopedSound $ boostSound sort
+        (False, True) -> startLoopedSound config $ boostSound sort
         (True, False) -> stopLoopedSound $ boostSound sort
         _ -> return ()

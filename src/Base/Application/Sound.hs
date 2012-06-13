@@ -6,13 +6,13 @@ module Base.Application.Sound (
     withApplicationSounds,
     triggerSound,
     loadLoopedSound,
+    Base.Application.Sound.startLoopedSound,
 
     -- * re-exports
     Sound.SFML.PolySound,
     Sound.SFML.freePolySound,
     Sound.SFML.LoopedSound,
     freeLoopedSound,
-    startLoopedSound,
     stopLoopedSound,
   ) where
 
@@ -53,9 +53,17 @@ loadSound name n = do
     io $ newPolySound file n
 
 triggerSound :: MonadIO m => Configuration -> PolySound -> m ()
-triggerSound config s = io $ triggerPolySound s (Just (globalSoundVolume * config ^. sound_volume))
+triggerSound config s = io $ triggerPolySound s (mkSoundVolume config)
 
 loadLoopedSound :: String -> RM LoopedSound
 loadLoopedSound name = do
     file <- getDataFileName (soundDir </> name <.> "wav")
     io $ newLoopedSound file
+
+startLoopedSound :: Configuration -> LoopedSound -> IO ()
+startLoopedSound config ls =
+    Sound.SFML.startLoopedSound (mkSoundVolume config) ls
+
+
+mkSoundVolume :: Configuration -> Maybe Float
+mkSoundVolume config = Just (globalSoundVolume * config ^. sound_volume)
