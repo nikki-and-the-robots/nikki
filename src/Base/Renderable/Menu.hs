@@ -49,9 +49,9 @@ data Menu
     = Menu {
         menuBackgroundRenderable :: RenderableInstance,
         menuHeader :: MenuHeader,
-        before :: [(RenderableInstance, AppState)],
-        selected :: (RenderableInstance, AppState),
-        after :: [(RenderableInstance, AppState)],
+        before :: [(RenderableInstance, AppState, Maybe Configuration)],
+        selected :: (RenderableInstance, AppState, Maybe Configuration),
+        after :: [(RenderableInstance, AppState, Maybe Configuration)],
         scrolling :: MVar Int
       }
 
@@ -73,16 +73,23 @@ normalizeMenuHeader x = x
 
 data MenuItem where
     MenuItem :: Renderable r => r -> (Int -> AppState) -> MenuItem
+    -- New configuration will be used to determine the sound volume.
+    -- This is necessary, because if a menu item changes the sound volume it
+    -- is very inconvenient to have the menu selection sound being played at
+    -- the old volume.
+    MenuItemWithNewConfiguration :: Renderable r => r -> (Int -> AppState) -> Configuration -> MenuItem
 
 mkMenu :: RenderableInstance -> MenuHeader
     -> [MenuItem] -> Int -> IO Menu
 mkMenu background menuHeader items =
     inner $ zipWith convert items [0..]
   where
-    convert :: MenuItem -> Int -> (RenderableInstance, AppState)
-    convert (MenuItem label appStateFun) n = (renderable label, appStateFun n)
+    convert :: MenuItem -> Int -> (RenderableInstance, AppState, Maybe Configuration)
+    convert (MenuItem label appStateFun) n = (renderable label, appStateFun n, Nothing)
+    convert (MenuItemWithNewConfiguration label appStateFun config) n =
+        (renderable label, appStateFun n, Just config)
 
-    inner :: [(RenderableInstance, AppState)] -> Int -> IO Menu
+    inner :: [(RenderableInstance, AppState, Maybe Configuration)] -> Int -> IO Menu
     inner items n =
         if n < 0 then
             inner items 0
@@ -142,8 +149,11 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
                     triggerSound config $ menuSelectSound $ applicationSounds app
                     return $ inner $ selectNext menu
                   else if isMenuConfirmation controls__ e then do
-                    triggerSound config $ menuConfirmSound $ applicationSounds app
-                    return $ snd $ selected menu
+                    -- use the new configuration, if available
+                    let (_, follower, mNewConfig) = selected menu
+                        newConfig = maybe config id mNewConfig
+                    triggerSound newConfig $ menuConfirmSound $ applicationSounds app
+                    return follower
                   else if isMenuBack controls__ e then do
                     triggerSound config $ menuCancelSound $ applicationSounds app
                     case mParent of
@@ -228,9 +238,9 @@ instance Renderable Menu where
 -- | return the items (entries) of the menu
 toLines :: Menu -> [RenderableInstance]
 toLines (Menu _ _ before selected after _) =
-    map (deselect . fst) before ++
-    (select $ fst selected) :
-    map (deselect . fst) after
+    map (deselect . fst3) before ++
+    (select $ fst3 selected) :
+    map (deselect . fst3) after
 
 -- | adds a spacer before and after the menu
 addFrame :: [RenderableInstance] -> [RenderableInstance]

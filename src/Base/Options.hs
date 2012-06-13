@@ -71,9 +71,10 @@ volumeItems configuration parent =
     []
   where
     mkItem :: Prose -> Accessor Configuration Float -> MenuItem
-    mkItem text acc = MenuItem
+    mkItem text acc = MenuItemWithNewConfiguration
         (text <> pVerbatim ": " <> toVolumePercentage (configuration ^. acc))
         (\ ps -> NoGUIAppState ((acc %: changeVolume) >> return (parent ps)))
+        ((acc ^: changeVolume) configuration)
     -- changes the volume in steps of 25 %. Wraps around
     changeVolume x | x < 0.25 = 0.25
     changeVolume x | x < 0.5  = 0.5
