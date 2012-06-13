@@ -50,9 +50,9 @@ showOSDMenuItems configuration parent =
     mkItem (p "show key hints") show_keyhint_OSD :
     []
   where
-    mkItem text acc =
-        (text +> pVerbatim ": " +> toOnOff (configuration ^. acc),
-         \ ps -> NoGUIAppState ((acc %: not) >> return (parent ps)))
+    mkItem text acc = tuple
+        (text <> pVerbatim ": " <> toOnOff (configuration ^. acc))
+        (\ ps -> NoGUIAppState ((acc %: not) >> return (parent ps)))
 
 
 -- * volume
