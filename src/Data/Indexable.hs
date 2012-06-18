@@ -30,6 +30,7 @@ module Data.Indexable (
     insertBefore,
     insertAfter,
 
+    fmapWithIndex,
     fmapMWithIndex,
 
     deleteByIndex,
@@ -85,9 +86,11 @@ keysVector = fmap fst . values
 keys :: Indexable a -> [Index]
 keys = Vector.toList . keysVector
 
-
-
--- * instances
+{-# inline fmapWithIndex #-}
+fmapWithIndex :: (Index -> a -> b)
+    -> Indexable a -> Indexable b
+fmapWithIndex f (Indexable values) =
+    Indexable $ fmap (\ (i, v) -> (i, f i v)) values
 
 {-# inline fmapMWithIndex #-}
 fmapMWithIndex :: (Monad m, Functor m) => (Index -> a -> m b)

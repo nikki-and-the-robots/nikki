@@ -1,17 +1,23 @@
-{-# language MultiParamTypeClasses, DeriveDataTypeable, ViewPatterns, ScopedTypeVariables #-}
+{-# language MultiParamTypeClasses, DeriveDataTypeable, ViewPatterns, ScopedTypeVariables, NamedFieldPuns #-}
 
 module Sorts.Battery (
     sorts,
     countBatteries,
+    Battery(..),
+    unwrapBattery,
   ) where
 
 
 import Data.Data
 import Data.Abelian
-import Data.Set (member)
+import qualified Data.Set as Set
 import Data.Indexable as I
+import Data.Map (Map, (!))
+import Data.List
+import Data.IORef
 
 import Control.Arrow
+import Control.Monad.State (StateT)
 
 import System.FilePath
 
@@ -22,6 +28,8 @@ import Graphics.Qt
 import Utils
 
 import Base
+
+import qualified Sorts.Nikki.Types as Nikki
 
 
 -- * battery config
@@ -43,19 +51,16 @@ sorts :: [RM (Maybe Sort_)]
 sorts = singleton $ do
     pngFile <- getDataFileName (pngDir </> "battery/standard.png")
     pixmap <- io $ loadPixmap batteryOffset batterySize pngFile
-    collectSound <- loadSound "game/batteryCollect" 8
-    return $ Just $ Sort_ $ BSort pixmap collectSound
+    return $ Just $ Sort_ $ BSort pixmap
 
 data BSort
     = BSort {
-        batteryPixmap :: Pixmap,
-        collectSound :: PolySound
+        batteryPixmap :: Pixmap
     }
   deriving (Show, Typeable)
 
 data Battery
-    = Battery {chipmunk :: Chipmunk}
-    | Consumed {chipmunk :: Chipmunk}
+    = Battery {chipmunk :: Chipmunk, consumed :: Bool}
   deriving (Show, Typeable)
 
 
@@ -67,14 +72,14 @@ isBattery (cast -> Just _ :: Maybe BSort) = True
 isBattery (cast -> Just (Sort_ inner) :: Maybe Sort_) = isBattery inner
 isBattery _ = False
 
+unwrapBattery :: Object_ -> Maybe (BSort, Battery)
+unwrapBattery (Object_ sort o) = cast (sort, o)
+
 
 instance Sort BSort Battery where
     sortId _ = SortId "battery"
 
-    freeSort (BSort pix sound) =
-        freePolySound sound
-
-    size (BSort p _) = pixmapSize p
+    size (BSort p) = pixmapSize p
 
     renderIconified sort ptr =
         renderPixmapSimple ptr (batteryPixmap sort)
@@ -86,37 +91,26 @@ instance Sort BSort Battery where
                     +~ baryCenterOffset
             bodyAttributes = mkMaterialBodyAttributes batteryMaterialMass mkShapes pos
         chip <- initChipmunk space bodyAttributes shapes baryCenterOffset
-        return $ Battery chip
+        return $ Battery chip False
     initialize app _ Nothing sort ep Nothing _ = return $
         let baryCenterOffset = size2vector $ fmap (/2) batterySize
             position = epToPosition (size sort) ep
             chip = ImmutableChipmunk position 0 baryCenterOffset []
-        in Battery chip
+        in Battery chip False
 
     immutableCopy b =
         CM.immutableCopy (chipmunk b) >>= \ x -> return b{chipmunk = x}
 
     chipmunks = chipmunk >>> return
 
-    isUpdating = const True
+    isUpdating = const False
 
-    update sort _ config _ mode now contacts cd i o
-        | any (`member` batteries contacts) (shapes $ chipmunk o) = do
-            -- the battery is consumed by nikki
-            triggerSound config $ collectSound sort
-            io $ removeChipmunk $ chipmunk o
-            let sceneChange :: Scene o -> Scene o
-                sceneChange = (batteryPower .> firstAStrict ^: succ) . removeBattery
-                removeBattery = objects .> gameMainLayer ^: deleteByIndex i
-            pushSceneChange sceneChange
-            return $ Consumed $ chipmunk o
-    update sort _ config _ mode now contacts cd i o = return o -- no change
-
-    renderObject _ _ o@Battery{} sort ptr offset now = do
-        (pos, angle) <- getRenderPositionAndAngle (chipmunk o)
-        return $ [RenderPixmap (batteryPixmap sort) pos (Just angle)]
-    renderObject _ _ Consumed{} _ _ _ _ = return []
-
+    renderObject _ _ o@Battery{consumed} sort ptr offset now = do
+        if not consumed then do
+            (pos, angle) <- getRenderPositionAndAngle (chipmunk o)
+            return $ [RenderPixmap (batteryPixmap sort) pos (Just angle)]
+          else
+            return []
 
 
 shapeAttributes :: ShapeAttributes

@@ -207,6 +207,7 @@ data Scene object
         objects_ :: GameGrounds object,
         lowerLimit_ :: Maybe CpFloat,
         batteryPower_ :: !(Pair Integer Integer),  -- makes it possible to have REALLY BIG amounts of power :)
+        batteryMap :: Map Shape (Index, Chipmunk), -- saves the batteries for every battery shape (needed for removal)
         switches_ :: !(Pair Int Int),
         contactRef :: !(ContactRef Contacts),
         contacts_ :: !Contacts,

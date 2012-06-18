@@ -26,7 +26,8 @@ import Base
 
 data NSort = NSort {
     pixmaps :: Map String [Pixmap],
-    jumpSound :: PolySound
+    jumpSound :: PolySound,
+    batteryCollectSound :: PolySound
   }
     deriving (Show, Typeable)
 

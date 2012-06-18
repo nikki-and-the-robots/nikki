@@ -32,6 +32,7 @@ import qualified Editor.Scene.RenderOrdering as RenderOrdering
 import Sorts.Tiles (isTileSort)
 
 import qualified Sorts.Nikki
+import qualified Sorts.Nikki.Batteries
 import qualified Sorts.Terminal
 import qualified Sorts.Tiles
 import qualified Sorts.Sign
@@ -148,11 +149,18 @@ mkScene levelFile space objects = do
             Sorts.Battery.countBatteries $
             fmap sort_ $
             (objects ^. mainLayer ^. content)
-    return $ Scene levelFile 0 optObjects Nothing
-                (0 :!: totalBatteries)
-                (0 :!: totalSwitches)
-                contactRef
-        initial (NikkiMode nikki)
+    return $ Scene {
+        levelFile = levelFile,
+        spaceTime_ = 0,
+        objects_ = optObjects,
+        lowerLimit_ = Nothing,
+        batteryPower_ = 0 :!: totalBatteries,
+        batteryMap = Sorts.Nikki.Batteries.mkBatteryMap (optObjects ^. gameMainLayer),
+        switches_ = 0 :!: totalSwitches,
+        contactRef = contactRef,
+        contacts_ = initial,
+        mode_ = NikkiMode nikki
+      }
 
 mainLayerUpdatingRange :: Grounds Object_ -> Range
 mainLayerUpdatingRange gs =

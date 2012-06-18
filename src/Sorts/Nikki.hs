@@ -17,8 +17,12 @@ import Data.Map (Map, toList, fromList, (!), lookup)
 import Data.Abelian
 import Data.Generics
 import Data.Initial
-import Data.Indexable (indexA)
+import Data.Indexable (indexA, Indexable, Index)
 import qualified Data.Strict as Strict
+import Data.List (nubBy)
+import Data.IORef
+
+import Control.Monad.State.Strict (StateT)
 
 import System.FilePath
 
@@ -38,6 +42,7 @@ import Sorts.Nikki.Configuration
 import Sorts.Nikki.Initialisation
 import Sorts.Nikki.State
 import Sorts.Nikki.Control
+import Sorts.Nikki.Batteries
 
 
 sorts :: [RM (Maybe Sort_)]
@@ -45,7 +50,8 @@ sorts = singleton $ do
     pixmaps <- loadPixmaps
     psize <- io $ fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
     jumpSound <- loadSound "game/jump" 4
-    let r = NSort pixmaps jumpSound
+    batteryCollectSound <- loadSound "game/batteryCollect" 8
+    let r = NSort pixmaps jumpSound batteryCollectSound
     return $ Just $ Sort_ r
 
 loadPixmaps :: RM (Map String [Pixmap])
@@ -89,8 +95,9 @@ instance Sort NSort Nikki where
 
     sortId _ = SortId "nikki"
 
-    freeSort (NSort pixmaps sound) =
-        freePolySound sound
+    freeSort (NSort pixmaps jumpSound batteryCollectSound) =
+        freePolySound jumpSound >>
+        freePolySound batteryCollectSound
 
     size sort = nikkiSize
 
@@ -122,8 +129,11 @@ instance Sort NSort Nikki where
 
     isUpdating = const True
 
-    updateNoSceneChange sort _ config _ scene now contacts cd nikki = inner nikki
+    update sort _ config _ scene now contacts cd _ nikki = do
+        removeBatteries sort config contacts (batteryMap scene)
+        io $ inner nikki
       where
+        inner :: Nikki -> IO Nikki
         inner =
             updateState (config ^. controls) (scene ^. mode) now contacts cd >=>
             return . updateStartTime now (state nikki) >=>
