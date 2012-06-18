@@ -168,15 +168,9 @@ mainLayerUpdatingRange gs =
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =
-    (backgrounds ^: fmap (content ^: mergeEditorObjects)) .
-    (mainLayer .> content ^: mergeEditorObjects) .
-    (foregrounds ^: fmap (content ^: mergeEditorObjects))
-
-mergeEditorObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
-mergeEditorObjects ixs =
-    otherObjects >: Sorts.Tiles.mkAllTiles (I.toList ixs)
-  where
-    otherObjects = I.filter (not . isTileSort . editorSort) ixs
+    (backgrounds ^: fmap (content ^: Sorts.Tiles.mergeTiles)) .
+    (mainLayer .> content ^: Sorts.Tiles.mergeTiles) .
+    (foregrounds ^: fmap (content ^: Sorts.Tiles.mergeTiles))
 
 
 -- | Merge consecutive foreground and background layers

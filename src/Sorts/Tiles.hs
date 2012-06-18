@@ -5,7 +5,7 @@ module Sorts.Tiles (
     sorts,
     isTileSort,
     tileShapeAttributes,
-    mkAllTiles,
+    mergeTiles,
     cacheTiles,
   ) where
 
@@ -17,6 +17,7 @@ import Data.Generics
 import Data.List
 import Data.Maybe
 import qualified Data.Indexable as I
+import Data.Indexable ((>:))
 
 import Text.Parsec
 
@@ -234,6 +235,12 @@ data AllTiles
         renderables :: [(Animation Pixmap, Qt.Position Double)]
       }
   deriving (Show, Typeable)
+
+mergeTiles :: I.Indexable (EditorObject Sort_) -> I.Indexable (EditorObject Sort_)
+mergeTiles ixs =
+    otherObjects >: Sorts.Tiles.mkAllTiles (I.toList ixs)
+  where
+    otherObjects = I.filter (not . isTileSort . editorSort) ixs
 
 mkAllTiles :: [EditorObject Sort_] -> EditorObject Sort_
 mkAllTiles tiles =
