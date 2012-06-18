@@ -103,7 +103,7 @@ tweakValue file = System.IO.Unsafe.unsafePerformIO $ do
 a << f = trace (show $ f a) a
 
 -- | prints out an expression as a debugging message (unsafe side effect)
--- with a given message 
+-- with a given message
 (<<?) :: Show a => a -> String -> a
 a <<? msg = trace (msg ++ ": " ++ show a) a
 
@@ -241,7 +241,7 @@ modifyIORefM ref cmd =
     readIORef ref >>=
     cmd >>=
     writeIORef ref
-    
+
 
 -- * mvar stuff
 

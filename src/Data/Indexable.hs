@@ -1,7 +1,7 @@
 {-# language GeneralizedNewtypeDeriving, ViewPatterns,
     DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
--- | module for a Bag of indexed things. 
+-- | module for a Bag of indexed things.
 -- They have an order (can be converted to a list.)
 -- imports could look like this:
 --
@@ -95,7 +95,7 @@ fmapWithIndex f (Indexable values) =
 {-# inline fmapMWithIndex #-}
 fmapMWithIndex :: (Monad m, Functor m) => (Index -> a -> m b)
     -> Indexable a -> m (Indexable b)
-fmapMWithIndex cmd (Indexable values) = 
+fmapMWithIndex cmd (Indexable values) =
     Indexable <$> fmapM (\ (i, v) -> tuple i <$> cmd i v) values
 
 instance Initial (Indexable a) where
@@ -261,7 +261,7 @@ toHead i (Indexable values) =
 
 -- | Puts the indexed element last.
 -- Unsafe when Index not contained.
-toLast :: Index -> Indexable a -> Indexable a 
+toLast :: Index -> Indexable a -> Indexable a
 toLast i (Indexable values) =
     Indexable $ inner empty values
   where
@@ -290,7 +290,7 @@ optimizeMerge p =
     fixpoint :: (MergeVector a -> MergeVector a) -> MergeVector a -> MergeVector a
     fixpoint f vector =
         let r = f vector
-        in if Vector.length r == Vector.length vector then 
+        in if Vector.length r == Vector.length vector then
             vector
           else
             fixpoint f r

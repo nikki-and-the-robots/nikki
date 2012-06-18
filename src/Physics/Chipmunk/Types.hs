@@ -113,7 +113,7 @@ immutableCopy c = do
   where
     bcOffset :: Chipmunk -> Vector
     bcOffset Chipmunk{baryCenterOffset} = baryCenterOffset
-    bcOffset StaticChipmunk{chipmunkPosition, renderPosition} = 
+    bcOffset StaticChipmunk{chipmunkPosition, renderPosition} =
         chipmunkPosition -~ position2vector renderPosition
     bcOffset ImmutableChipmunk{baryCenterOffset} = baryCenterOffset
 
@@ -162,7 +162,7 @@ mkBody BodyAttributes{position, mass, inertia_} = do
     return body
 
 mkShape :: Body -> ShapeDescription -> IO Shape
-mkShape body ShapeDescription{shapeAttributes = (ShapeAttributes elasticity friction collisionType), 
+mkShape body ShapeDescription{shapeAttributes = (ShapeAttributes elasticity friction collisionType),
     shapeType, shapeOffset} = do
         shape <- newShape body shapeType shapeOffset
         H.elasticity shape $= elasticity
