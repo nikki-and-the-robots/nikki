@@ -53,8 +53,8 @@ tilesOrdering a b =
 -- NPCs
 -- (our beloved) Nikki
 -- Robots
--- Objects (e.g. Boxes)
 -- Switches
+-- Objects (e.g. Boxes)
 -- Falling Tiles
 -- Tiles
 -- Batteries
@@ -78,8 +78,8 @@ sortPreds = map isPrefixOf (
     "tutorial/sign" :
     "nikki" :
     "robots/" :
-    "objects/" :
     "switch/" :
+    "objects/" :
     "fallingTile/" :
     "tiles/" :
     "battery" :
