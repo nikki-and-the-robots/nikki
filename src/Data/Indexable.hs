@@ -283,7 +283,7 @@ type MergeVector a = Vector (Either (Index, a) a) -- left unmerged, right merged
 -- The old pair will be replaced with dummy elements.
 -- This function is idempotent. (if that's an english word)
 -- Note, that indices of optimized items are going to be invalidated.
-optimizeMerge :: Show a => (a -> a -> Maybe a) -> Indexable a -> Indexable a
+optimizeMerge :: (a -> a -> Maybe a) -> Indexable a -> Indexable a
 optimizeMerge p =
     convertToVector >>> fixpoint (mergeVectorSome p) >>> convertToIndexable
   where

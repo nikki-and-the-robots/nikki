@@ -36,10 +36,18 @@ fromKachel = (* 16) . fromUber
 toKachel :: Fractional n => n -> n
 toKachel = (/ 16) . toUber
 
--- * Physics
+
+-- * math
 
 tau :: Floating a => a
 tau = 2 * pi
+
+goldenRatio :: Double
+goldenRatio = (sqrt 5 + 1) / 2
+
+infinityDouble :: Double = 2**182473217387654
+
+-- * physics
 
 gravity :: CpFloat = 1975
 
@@ -64,6 +72,7 @@ globalSoundVolume, globalMusicVolume :: Float
 globalSoundVolume = 7 / 13
 globalMusicVolume = 6 / 13
 
+
 -- * file directories
 
 soundDir :: FilePath
@@ -86,9 +95,6 @@ swapInterval :: Int = 1
 
 windowTitle :: String
 windowTitle = "Nikki and the Robots"
-
-goldenRatio :: Double
-goldenRatio = (sqrt 5 + 1) / 2
 
 levelEndDuration :: Double = 10
 

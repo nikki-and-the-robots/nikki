@@ -3,6 +3,7 @@
 module Sorts.Tiles.Baking (
     bakeTiles,
     boundingBox, -- for testing
+    StaticPixmap(..),
     bakeStaticPixmaps, -- for laser baking
   ) where
 
@@ -52,10 +53,13 @@ mkGrouped (AnimationBakePixmap a p) = Single a p
 mkGrouped (NotOverlapping x) = Grouped [x]
 
 
+-- | @StaticPixmap position size pixmap offset overlappingWithAnimation@
 data StaticPixmap a
     = StaticPixmap (Position Double) (Size Double) (ForeignPtr QPixmap)
-            (Position Double) a
-            -- offset         -- overlaps fully with an animated area (Bool when used, () otherwise)
+            -- offset
+            (Position Double)
+            -- overlaps fully with an animated area (Bool when used, () otherwise)
+            a
   deriving (Show, Eq, Ord)
 
 bpSize :: StaticPixmap Bool -> Size Double

@@ -660,6 +660,10 @@ epToCenterPosition size ep = epToPosition size ep +~ fmap (/ 2) (size2position s
 epToCenterVector :: Size Double -> EditorPosition -> Vector
 epToCenterVector size = position2vector . epToCenterPosition size
 
+editorComponentWise :: (Double -> Double -> Double) -> EditorPosition -> EditorPosition -> EditorPosition
+editorComponentWise (#) (EditorPosition a b) (EditorPosition x y) =
+    EditorPosition (a # x) (b # y)
+
 
 -- * Sort class wrappers
 

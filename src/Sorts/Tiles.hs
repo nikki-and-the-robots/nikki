@@ -36,14 +36,14 @@ import Base
 import Sorts.Tiles.Baking
 import qualified Sorts.StoryMode
 
-import qualified Sorts.DeathStones (animationFrameTime)
+import qualified Sorts.DeathStones (laserAnimationFrameTime)
 
 
 -- * Tile configuration
 
 -- set to laser end pieces, is not individually configurable right now.
 -- (the only animated public tiles are laser end pieces)
-defaultFrameTime :: Seconds = Sorts.DeathStones.animationFrameTime
+defaultFrameTime :: Seconds = Sorts.DeathStones.laserAnimationFrameTime
 
 -- all loaded tiles with offset and size
 names :: [(String, Qt.Position Int, Size Double)]

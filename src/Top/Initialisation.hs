@@ -168,10 +168,12 @@ mainLayerUpdatingRange gs =
 
 groundsMergeTiles :: Grounds (EditorObject Sort_) -> Grounds (EditorObject Sort_)
 groundsMergeTiles =
-    (backgrounds ^: fmap (content ^: Sorts.Tiles.mergeTiles)) .
-    (mainLayer .> content ^: Sorts.Tiles.mergeTiles) .
-    (foregrounds ^: fmap (content ^: Sorts.Tiles.mergeTiles))
+    (backgrounds ^: fmap (content ^: mergeObjects)) .
+    (mainLayer .> content ^: mergeObjects) .
+    (foregrounds ^: fmap (content ^: mergeObjects))
 
+mergeObjects :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
+mergeObjects = Sorts.Tiles.mergeTiles >>> Sorts.DeathStones.mergeDeathStones
 
 -- | Merge consecutive foreground and background layers
 -- when it wouldn't change the rendering. Allows for more baking.
