@@ -71,7 +71,7 @@ main = do
         rdeps <- transitiveImports "Main.hs"
         let os = map (addShakeDir mode . (<.> "o")) ("Main.hs" : rdeps)
         need (qtWrapper mode : os)
-        let libFlags = ["-lqtwrapper", "-Lcpp/dist", "-lQtGui", "-lQtOpenGL"]
+        let libFlags = ["-lqtwrapper", "-lQtGui", "-lQtOpenGL"]
         putQuiet ("linking: " ++ core)
         ghc $ ["-o",core] ++ libFlags ++ os ++ ghcFlags ++ ghcLinkFlags
 
