@@ -85,6 +85,12 @@ templateLevelsDir :: FilePath
 templateLevelsDir = "templateLevels"
 
 
+-- * urls
+
+editorTutorialUrl :: String
+editorTutorialUrl = "http://tinyurl.com/natr-tutorial"
+
+
 -- * misc
 
 -- | initial window size, when not in fullscreen mode

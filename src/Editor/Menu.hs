@@ -112,6 +112,7 @@ editorMenu app mvar scene ps =
                     (const $ edit (toSelectionMode scene)) :
                 MenuItem (p "try playing the level") (const $ playLevel app (edit scene) True $
                         cachedTiles ^= Nothing $ scene) :
+                MenuItem (p "editor tutorial (opens browser)") (openUrl app editorTutorialUrl . this) :
                 MenuItem (p "save level") (saveLevel app editWithFilePath scene . this) :
                 MenuItem (p "save & upload") (\ ps -> saveAndUpload app scene (this ps) editWithFilePath) :
                 MenuItem
