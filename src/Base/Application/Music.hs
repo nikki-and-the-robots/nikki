@@ -14,6 +14,7 @@ import Text.Logging
 import Control.Monad.Reader (ask)
 
 import System.FilePath
+import System.Directory
 import System.Random
 
 import qualified Sound.SFML as SFML
@@ -32,10 +33,15 @@ import StoryMode.Paths
 -- Returns an absolute file path.
 selectMusic :: LevelMetaData -> RM (Maybe FilePath)
 selectMusic (meta_musicFile -> Just wantedMusic) = io $ do
-    allOggs <- getStoryModeDataFiles "music" (Just ".ogg")
-    case fmap (filter (takeBaseName >>> (== wantedMusic))) allOggs of
-         Just (x : _) -> return $ Just x
-         _ -> return Nothing
+    mOggFile <- getStoryModeDataFileName ("music" </> normalise wantedMusic <.> "ogg")
+    case mOggFile of
+        -- no story mode installed (shouldn't be happening)
+        Nothing -> return Nothing
+        Just oggFile -> do
+            exists <- doesFileExist oggFile
+            return $ if exists
+                then Just oggFile
+                else Nothing
 selectMusic meta@(meta_musicFile -> Nothing) = do
     -- choose a free music file pseudo-randomly with the level name as the seed.
     allOggsFromPublic <- getDataFiles "music" (Just ".ogg")
