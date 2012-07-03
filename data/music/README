@@ -1,0 +1,5 @@
+Just drop .ogg-files here, they will be used in the game.
+
+sfml2 seems to have a problem with normalized oggs. Use a normalization factor of 0.95, e.g.:
+
+$ sox -v 0.90 input.ogg output.ogg
