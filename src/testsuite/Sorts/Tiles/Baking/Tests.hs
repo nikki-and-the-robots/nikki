@@ -28,19 +28,17 @@ import Test.QuickCheck.Store
 
 
 tests =
-    withQApplication $ \ qApp ->
-    withMainWindow 1 500 500 $ \ window -> do
+    withQApplication $ \ _qApp ->
+    withMainWindow 1 500 500 $ \ _window -> do
         pixmaps <- loadSomePixmaps
-        let app = Application qApp window err err err err err err
-            err = error "uninitialised field in Application: Sorts.Tiles.Baking.Tests"
 
         quickCheckStoreWith stdArgs{maxSize = 13, maxSuccess = 500} "bakingEquality" $
-            bakingEquality app pixmaps
+            bakingEquality pixmaps
 
 -- | checks, if baking doesn't affect the rendered image.
-bakingEquality :: Application -> [Animation Pixmap]
+bakingEquality :: [Animation Pixmap]
     -> ([Maybe (Position (Fixed Int))], Positive Seconds) -> Property
-bakingEquality app somePixmaps (positions, Positive now) =
+bakingEquality somePixmaps (positions, Positive now) =
   morallyDubiousIOProperty $ do
     let paired :: [(Animation Pixmap, Position Double)]
         paired =
@@ -51,11 +49,11 @@ bakingEquality app somePixmaps (positions, Positive now) =
             fmap (fmap (fmap unFixed)) $
             positions
     expected <- renderToPixmap False now paired
-    baked <- renderToPixmap False now =<< bakeTiles app paired
+    baked <- renderToPixmap False now =<< bakeTiles paired
     r <- pixelEquality expected baked
-    return $ whenFail (saveFailed app now paired) r
+    return $ whenFail (saveFailed now paired) r
 
-saveFailed app now paired = do
+saveFailed now paired = do
     let save debugMode filename paired = do
             pix <- renderToPixmap debugMode now paired
             saveQPixmap pix filename 100
@@ -63,11 +61,11 @@ saveFailed app now paired = do
             forM_ (zip (tail $ inits paired) [1 :: Int ..]) $ \ (iterPaired, i) ->
                 save debugMode (printf filenamePattern i) iterPaired
     save False "A.png" paired
-    save False "B.png" =<< bakeTiles app paired
+    save False "B.png" =<< bakeTiles paired
 --     save True "debugA.png" paired
 --     save True "debugB.png" =<< bakeTiles app paired
     saveIter True "debugA-%03i.png" paired
-    baked <- bakeTiles app paired
+    baked <- bakeTiles paired
     saveIter True "debugB-%03i.png" baked
 
 

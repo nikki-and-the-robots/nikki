@@ -55,7 +55,7 @@ Executable testsuite
         , safe
         , transformers
         , StateVar
-        , QuickCheck == 2.4.*
+        , QuickCheck == 2.4.* || == 2.5.*
         , QuickCheckStore
         , random
         , process
@@ -86,6 +86,8 @@ Executable testsuite
         , bifunctors
         , email-validate
         , utf8-string == 0.3.*
+        , hashable == 1.1.*
+        , crypto-pubkey-types == 0.1.*
 
 
     if os(linux)
