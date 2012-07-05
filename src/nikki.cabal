@@ -124,7 +124,7 @@ Executable core
         , safe
         , random
         , StateVar
-        , transformers == 0.3.*
+        , transformers == 0.2.* || == 0.3.*
         , time
         , parsec == 3.*
         , FindBin >= 0.0.5
