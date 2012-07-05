@@ -9,6 +9,10 @@
 (^|/).shake
 _stub.h$
 ^src/nikki.app($|/)
+^src/testsuite/dist($|/)
+^src/level-server/dist($|/)
+.directImports$
+.transitiveImports$
 
 ### compiler and interpreter intermediate files
 # haskell (ghc) interfaces
