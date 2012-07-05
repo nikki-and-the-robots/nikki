@@ -59,6 +59,7 @@ import Data.Maybe
 
 import Control.Arrow
 import Control.DeepSeq
+import Control.Exception
 
 import Utils hiding (singleton)
 
@@ -300,14 +301,23 @@ optimizeMerge p =
     convertToVector ix = fmap Left $ values ix
     convertToIndexable :: MergeVector a -> Indexable a
     convertToIndexable list =
-        Indexable $ zipWith inner list newIndices
+        Indexable $ inner list newIndices
       where
-        newIndices :: Vector Index
-        newIndices = Vector.fromList $
+        newIndices :: [Index]
+        newIndices =
             if null allIndices then [0 ..] else [maximum allIndices + 1 ..]
         allIndices = fmap fst $ lefts list
-        inner (Left x) _ = x
-        inner (Right x) i = (i, x)
+        inner :: MergeVector a -> [Index] -> Vector (Index, a)
+        inner mv newIxs = unfoldr unfolder (mv, newIxs)
+        unfolder :: (Vector (Either (Index, a) a), [Index])
+            -> Maybe ((Index, a), (Vector (Either (Index, a) a), [Index]))
+        unfolder (mv, newIxs@(newIx : rIx)) =
+            if null mv
+            then Nothing
+            else Just $ case unsafeHead mv of
+                Left e -> (e, (unsafeTail mv, newIxs))
+                Right a ->
+                    ((newIx, a), (unsafeTail mv, rIx))
 
 -- OPT: This is probably not very Vector-like code.
 mergeVectorSome :: (a -> a -> Maybe a) -> MergeVector a -> MergeVector a
