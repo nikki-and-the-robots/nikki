@@ -174,14 +174,6 @@ merged elements =
     maxY = maximum ys
     xs = map editorX allCorners
     ys = map editorY allCorners
-    
-    -- ~ position      =
-    -- ~ 
-        -- ~ foldl (editorComponentWise min) (EditorPosition infinityDouble infinityDouble) allCorners
-    -- ~ maxUpperRight = foldl (editorComponentWise max) (EditorPosition (- infinityDouble) (- infinityDouble)) allCorners
-    -- ~ size_ = 
-        -- ~ let EditorPosition width height = maxUpperRight -~ position 
-        -- ~ in Size width height
 
     -- all lower left and upper right corners
     allCorners = concat $ map
@@ -205,8 +197,7 @@ maybeMerge a b
     = Just $ justMerge a b
 maybeMerge a b
     | sameWidth a b && sameX a b && verticallyAdjacent a b
-    = 
-        Just $ justMerge a b
+    = Just $ justMerge a b
 maybeMerge a b = Nothing
 
 -- | Just merges the two objects.
