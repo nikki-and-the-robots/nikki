@@ -35,6 +35,7 @@ macPostBuild args buildFlags packageDescription localBuildInfo =
         qtLibDir <- trim <$> readProcess "qmake" ["-query", "QT_INSTALL_LIBS"] ""
         qtNibDir <- lookupQtNibDir qtLibDir
         copyDirectory qtNibDir (macResourcesDir </> "qt_menu.nib")
+        touchQtConf
 
         -- build the app
         resources <- map (macResourcesDir </>) <$> getFilesRecursive macResourcesDir
@@ -100,6 +101,12 @@ lookupQtNibDir qtLibDir = do
         "QtGui.framework/Versions/4/Resources" :
         "resources" :
         [])
+
+-- | Creates an empty file qt.conf in macResources
+-- to prevent Qt from dynamically looking up plugins in
+-- hard-coded install paths.
+touchQtConf :: IO ()
+touchQtConf = writeFile (macResourcesDir </> "qt.conf") ""
 
 
 -- * utils
