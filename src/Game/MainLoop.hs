@@ -12,7 +12,6 @@ module Game.MainLoop (
 import Text.Logging
 
 import Control.Monad.State hiding ((>=>))
-import Control.Monad.CatchIO (MonadCatchIO, bracket)
 import Control.Concurrent
 
 import Clocked
@@ -95,7 +94,7 @@ gameLoop app parent editorTestMode rsr@RenderStateRefs{sceneMVar} =
                         failureMenu app parent rsr state
                     Passed ->
                         successMessage app parent rsr state score records
-            _ -> if isGameBackPressed (configuration ^. controls) controlData then 
+            _ -> if isGameBackPressed (configuration ^. controls) controlData then
                 if editorTestMode then do
                     gameState <- get
                     return $ Just $ freeGameState gameState parent

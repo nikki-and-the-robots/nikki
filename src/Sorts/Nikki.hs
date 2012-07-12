@@ -17,12 +17,8 @@ import Data.Map (Map, toList, fromList, (!), lookup)
 import Data.Abelian
 import Data.Generics
 import Data.Initial
-import Data.Indexable (indexA, Indexable, Index)
+import Data.Indexable (indexA)
 import qualified Data.Strict as Strict
-import Data.List (nubBy)
-import Data.IORef
-
-import Control.Monad.State.Strict (StateT)
 
 import System.FilePath
 

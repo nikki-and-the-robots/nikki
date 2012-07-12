@@ -10,14 +10,9 @@ module Sorts.Battery (
 
 import Data.Data
 import Data.Abelian
-import qualified Data.Set as Set
 import Data.Indexable as I
-import Data.Map (Map, (!))
-import Data.List
-import Data.IORef
 
 import Control.Arrow
-import Control.Monad.State (StateT)
 
 import System.FilePath
 
@@ -28,8 +23,6 @@ import Graphics.Qt
 import Utils
 
 import Base
-
-import qualified Sorts.Nikki.Types as Nikki
 
 
 -- * battery config

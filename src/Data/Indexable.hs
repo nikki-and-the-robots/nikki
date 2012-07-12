@@ -59,7 +59,6 @@ import Data.Maybe
 
 import Control.Arrow
 import Control.DeepSeq
-import Control.Exception
 
 import Utils hiding (singleton)
 

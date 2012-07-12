@@ -6,7 +6,7 @@ module StoryMode.Menus (
   ) where
 
 
-import Data.Map (Map, member, lookup)
+import Data.Map (Map, lookup)
 import Data.Maybe
 
 import Control.Concurrent

@@ -46,7 +46,6 @@ import Utils
 
 import Base.Constants
 import Base.Configuration
-import Base.Configuration.Controls
 import Base.Grounds
 import Base.GameGrounds
 import Base.Pixmap

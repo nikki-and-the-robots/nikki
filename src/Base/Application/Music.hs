@@ -26,8 +26,6 @@ import Base.Types
 import Base.Configuration
 import Base.Paths
 
-import StoryMode.Paths
-
 
 -- | Selects the music to be played.
 -- Returns an absolute file path.
