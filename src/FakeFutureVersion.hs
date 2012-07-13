@@ -6,6 +6,7 @@ module Version where
 import Data.Version
 
 
+{-# noinline nikkiVersion #-}
 nikkiVersion :: Version
 nikkiVersion = Version version tags
   where
