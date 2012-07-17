@@ -222,7 +222,7 @@ reallyExitEditor app editor =
 selectSort :: Application -> MVar (EditorScene Sort_)
     -> EditorScene Sort_ -> Int -> Parent -> AppState
 selectSort app mvar scene ps editorMenu =
-    treeToMenu app editorMenu (p "select object") (return . p . (^. labelA))
+    treeToMenu app editorMenu (p "select object") (p . (^. labelA))
         (fmap (sortId >>> getSortId) $ scene ^. availableSorts) (const select) ps
   where
     select :: String -> AppState
