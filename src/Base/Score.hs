@@ -9,6 +9,7 @@ module Base.Score (
     setScores,
     getHighScores,
     mkScoreString,
+    showScore,
     timeFormat,
     batteryFormat,
 
@@ -157,22 +158,28 @@ setHighScore :: LevelUID -> Score -> IO ()
 setHighScore uid score = do
     setHighScores . insert uid score =<< getHighScores
 
-mkScoreString :: Maybe Int -> Maybe Score -> String
+
+-- * pretty printing
+
+mkScoreString :: Maybe Integer -> Maybe Score -> String
 mkScoreString _ Nothing =
     -- unplayed levels
-    "[ --:--:-- | ---/--- ]"
+    showScore Nothing Nothing Nothing
 mkScoreString mBatteries (Just score) =
     inner score
   where
-    totalBatteryString :: String = maybe "---" (batteryFormat . fromIntegral) mBatteries
     inner :: Score -> String
     inner Score_1_Tried =
-        printf "[ --:--:-- | ---/%s ]" totalBatteryString
+        showScore Nothing Nothing mBatteries
     inner (Score_1_Passed time batteries) =
-        printf "[ %s | %s/%s ]"
-            (timeFormat time)
-            (batteryFormat batteries)
-            totalBatteryString
+        showScore (Just time) (Just batteries) mBatteries
+
+showScore :: Maybe Seconds -> Maybe Integer -> Maybe Integer -> String
+showScore mTime mCollected mTotal =
+    printf "[ %s | %s/%s ]"
+        (maybe "--:--:--" timeFormat mTime)
+        (maybe "---" batteryFormat mCollected)
+        (maybe "---" batteryFormat mTotal)
 
 -- | formats the time (MM:SS:MM)
 timeFormat :: Seconds -> String
@@ -187,6 +194,9 @@ timeFormat time =
 
 batteryFormat :: Integer -> String
 batteryFormat = printf "%03i"
+
+
+-- * file paths
 
 -- | Returns the filepath to the highscore file
 -- Initializes the file, if it doesn't exist.
