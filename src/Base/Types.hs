@@ -100,7 +100,7 @@ getMainMenu app = getMainMenu_ app app
 
 data UpdateVersions = UpdateVersions {
     gameNewVersion :: Maybe Version,
-    storyModeNewVersion :: Maybe Version
+    storyModeNewVersion :: Either String (Maybe Version)
   }
 
 data StoryModeAvailability
@@ -108,9 +108,10 @@ data StoryModeAvailability
     | Buyable
     | Installed
 
-
-hasUpdates (UpdateVersions Nothing Nothing) = False
-hasUpdates _ = True
+hasUpdates :: UpdateVersions -> Bool
+hasUpdates (UpdateVersions (Just _) _) = True
+hasUpdates (UpdateVersions _ (Right (Just _))) = True
+hasUpdates _ = False
 
 data AppState
     = AppState RenderableInstance (M AppState)

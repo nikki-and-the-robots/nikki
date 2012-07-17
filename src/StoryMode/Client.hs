@@ -167,8 +167,8 @@ askForStoryModeZip (LoginData email key) =
 -- | If the story-mode is already purchased, this function checks for a
 -- new version with the saved login data. If there is a new version available,
 -- this version is returned.
-askForNewVersion :: ErrorT String IO (Maybe Version)
-askForNewVersion = do
+askForNewVersion :: IO (Either String (Maybe Version))
+askForNewVersion = runErrorT $ do
     mInstalledVersion <- getInstalledVersion
     case mInstalledVersion of
       Nothing -> return Nothing

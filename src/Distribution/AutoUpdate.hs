@@ -5,6 +5,7 @@
 module Distribution.AutoUpdate (
     autoUpdate,
     getUpdateVersion,
+    noUpdatesAvailable,
     Repo(..),
   ) where
 
@@ -16,8 +17,11 @@ import Data.Monoid
 import Data.Version (Version, showVersion)
 import Data.Maybe
 
+import Control.Monad (join)
 import Control.Monad.Trans.Error
 import Control.Monad.CatchIO
+
+import Text.Logging
 
 import System.Environment.FindBin
 import System.FilePath
@@ -77,6 +81,15 @@ isDeployed = do
       else
         Nothing
 
+
+-- | String message indicating no available updates.
+-- Optionally includes an error message when the story mode update lookup failed.
+noUpdatesAvailable :: UpdateVersions -> [Prose]
+noUpdatesAvailable uvs =
+    p "no updates available" :
+    either (pure . pv) (const []) (storyModeNewVersion uvs) ++
+    []
+
 -- | gracefully fail, if the game is compiled to be installed as root.
 autoUpdateRootInstall :: Application -> AppState -> AppState
 autoUpdateRootInstall app follower = NoGUIAppState $ do
@@ -84,20 +97,20 @@ autoUpdateRootInstall app follower = NoGUIAppState $ do
     v <- io $ runErrorT $ getUpdateVersion repo
     case v of
         Left error -> return $ message app (map pv $ lines error) follower
-        Right (UpdateVersions Nothing Nothing) ->
+        Right updateVersions | not (hasUpdates updateVersions) ->
             -- no new version available
-            return $ message app [p "no updates available"] follower
+            return $ message app (noUpdatesAvailable updateVersions) follower
         Right (UpdateVersions (Just gameNewVersion) _) -> do
             let typ newVersion = NormalMenu (pv "new version") (Just $
                         substitute [("newVersion", showVersion newVersion)] $ p
                                 ("A new version of Nikki and the Robots is available: $newVersion! " ++
-                                "Try using the software manager to get it or download it manually!"))
+                                 "Try using the software manager to get it or download it manually!"))
             return $ menuAppState app (typ gameNewVersion) (Just follower) (
                 MenuItem
                     (p "Download manually (opens browser)")
                     (const $ openUrl app downloadWebsite follower) :
                 []) 0
-        Right uvs@(UpdateVersions Nothing (Just storyModeNewVersion)) ->
+        Right uvs@(UpdateVersions Nothing (Right (Just storyModeNewVersion))) ->
           return $ guiLog app $ \ logCommand -> io $ do
             -- update the story mode (although installed as root)
             result :: Either String () <- runErrorT $
@@ -129,8 +142,8 @@ autoUpdate app follower = guiLog app $ \ logCommand -> do
             case result of
                 (Left errorMessage) ->
                     return $ message app (map pv $ lines errorMessage) follower
-                (Right (UpdateVersions Nothing Nothing)) ->
-                    return $ message app [p "no updates available"] follower
+                Right updateVersions | not (hasUpdates updateVersions) ->
+                    return $ message app (noUpdatesAvailable updateVersions) follower
                 (Right uvs) -> do
                     return $ message app
                         (p "update complete" :
@@ -145,7 +158,7 @@ updateSuccessMessage :: UpdateVersions -> [Prose]
 updateSuccessMessage (UpdateVersions mGame mStoryMode) =
     catMaybes
     (fmap g mGame :
-    fmap sm mStoryMode :
+    (join $ hush $ fmap (fmap sm) mStoryMode) :
     [])
   where
     g v = p "new game version: " <> pVerbatim (showVersion v)
@@ -160,12 +173,11 @@ updateSuccessMessage (UpdateVersions mGame mStoryMode) =
 attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
     -> ErrorT String IO UpdateVersions
 attemptUpdate app logCommand repo deployPath = do
-    UpdateVersions mGameVersion mStoryModeVersion <- getUpdateVersion repo
+    uv@(UpdateVersions mGameVersion emStoryModeVersion) <- getUpdateVersion repo
     forM_ mGameVersion $ \ serverVersion -> do
         update app logCommand repo serverVersion deployPath
-    forM_ mStoryModeVersion $ \ storyModeVersion -> do
-        StoryMode.AutoUpdate.update app logCommand
-    return $ UpdateVersions mGameVersion mStoryModeVersion
+    fmapM_ (fmapM_ $ const $ StoryMode.AutoUpdate.update app logCommand) emStoryModeVersion
+    return uv
 
 -- | Returns (Just newVersion), if a newer version is available from the update server.
 getUpdateVersion :: Repo -> ErrorT String IO UpdateVersions
@@ -174,8 +186,9 @@ getUpdateVersion repo = catchSomeExceptionsErrorT show $ do
     let gameNewVersion = if serverVersion > Version.nikkiVersion
             then Just serverVersion
             else Nothing
-    storyModeNewVersion <- StoryMode.Client.askForNewVersion
-    return $ UpdateVersions gameNewVersion storyModeNewVersion
+    eStoryModeNewVersion <- io $ StoryMode.Client.askForNewVersion
+    either (logg Error) (const $ return ()) eStoryModeNewVersion
+    return $ UpdateVersions gameNewVersion eStoryModeNewVersion
 
 -- | the actual updating procedure
 update :: Application -> (Prose -> IO ()) -> Repo -> Version -> DeployPath

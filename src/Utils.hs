@@ -291,6 +291,12 @@ convertErrorT :: Functor m => (a -> b) -> ErrorT a m o -> ErrorT b m o
 convertErrorT f (ErrorT action) = ErrorT $
     (either (Left . f) Right <$> action)
 
+-- api stolen from the package 'errors'
+hush :: Either e a -> Maybe a
+hush = either (const Nothing) Just
+
+deriving instance Foldable (Either a)
+
 
 -- * either stuff
 
