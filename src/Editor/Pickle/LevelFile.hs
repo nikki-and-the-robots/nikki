@@ -70,15 +70,14 @@ isTemplateLevel :: LevelFile -> Bool
 isTemplateLevel TemplateLevel{} = True
 isTemplateLevel _ = False
 
-showLevelTreeForMenu :: SelectTree LevelFile -> IO Prose
-showLevelTreeForMenu (Leaf label level) = showLevelForMenu level
-showLevelTreeForMenu x = return $ pVerbatim (x ^. labelA)
+showLevelTreeForMenu :: Scores -> SelectTree LevelFile -> Prose
+showLevelTreeForMenu highScores (Leaf label level) = showLevelForMenu highScores level
+showLevelTreeForMenu highScores x = pVerbatim (x ^. labelA)
 
-showLevelForMenu :: LevelFile -> IO Prose
-showLevelForMenu level = do
+showLevelForMenu :: Scores -> LevelFile -> Prose
+showLevelForMenu highScores level =
     let metaData = levelMetaData level
         name = meta_levelName metaData
-    highScores <- getHighScores
-    let mHighScore = Map.lookup (levelUID level) highScores
-    return $ pVerbatim
+        mHighScore = Map.lookup (levelUID level) highScores
+    in pVerbatim
         (name ++ " " ++ mkScoreString (meta_numberOfBatteries metaData) mHighScore)

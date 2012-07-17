@@ -1,16 +1,18 @@
 {-# language ViewPatterns, ScopedTypeVariables #-}
 
 module Base.Score (
+    Scores,
     HighScoreFile(..),
     Record(..),
     saveScore,
     getScores,
     setScores,
     getHighScores,
-    collectedBatteries,
     mkScoreString,
     timeFormat,
     batteryFormat,
+
+    sumOfEpisodeBatteries,
   ) where
 
 
@@ -36,16 +38,18 @@ import Base.Types
 import StoryMode.Types
 
 
+type Scores = Map LevelUID Score
+
 -- | type representing the Map of HighScores,
 -- which will be written to file.
 -- HighScoreFile has versioned constructors.
 -- Serialisation uses the Binary class.
 data HighScoreFile
     = HighScoreFile_0 {
-        highScores :: Map LevelUID Score
+        highScores :: Scores
       }
     | HighScoreFile_1 {
-        highScores :: Map LevelUID Score,
+        highScores :: Scores,
         episodeScores :: Map EpisodeUID EpisodeScore
       }
   deriving Show
@@ -72,15 +76,6 @@ instance Binary HighScoreFile where
         case i of
             0 -> convertToNewest <$> HighScoreFile_0 <$> get
             1 -> HighScoreFile_1 <$> get <*> get
-
--- | returns all collected batteries for one episode
-collectedBatteries :: Episode LevelFile -> Map LevelUID Integer -> Integer
-collectedBatteries e m =
-    sum $ toList $ fmap (getBatteryNumber m) e
-  where
-    getBatteryNumber :: Map LevelUID Integer -> LevelFile -> Integer
-    getBatteryNumber m l =
-        fromMaybe 0 (Map.lookup (levelUID l) m)
 
 data Record
     = NoNewRecord
@@ -149,10 +144,10 @@ setScores scores = do
     filePath <- getHighScoreFilePath
     encodeFileStrict filePath scores
 
-getHighScores :: IO (Map LevelUID Score)
+getHighScores :: IO Scores
 getHighScores = highScores <$> getScores
 
-setHighScores :: Map LevelUID Score -> IO ()
+setHighScores :: Scores -> IO ()
 setHighScores m = do
     eps <- episodeScores <$> getScores
     let content :: HighScoreFile = HighScoreFile_1 m eps
@@ -205,3 +200,18 @@ getHighScoreFilePath = do
         let content :: HighScoreFile = initial
         encodeFileStrict highScoreFilePath content
     return highScoreFilePath
+
+
+-- * episodes
+
+-- | Adds up all collected batteries for one episode.
+-- Does not account for batteries in an currently played level.
+sumOfEpisodeBatteries :: Scores -> Episode LevelFile -> Integer
+sumOfEpisodeBatteries highscore episode =
+    sum $ ftoList $ fmap getBatteryPower episode
+  where
+    getBatteryPower :: LevelFile -> Integer
+    getBatteryPower lf = case Map.lookup (levelUID lf) highscore of
+        Nothing -> 0
+        Just Score_1_Tried -> 0
+        Just (Score_1_Passed _ bp) -> bp

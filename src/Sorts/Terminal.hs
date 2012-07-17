@@ -581,18 +581,17 @@ putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
         -- for testing in normal mode
         _ -> return $ batteryNumber ^= (scene ^. batteryPower .> firstAStrict) $ t
 
+getCollectedBatteries :: Scene o -> Episode LevelFile -> IO Integer
 getCollectedBatteries scene episode =
     getHighScores >$> \ hs ->
         -- insert the actual collected batteries for the current level
     let file = levelFile scene
-        upToDateScore = alter alteration (levelUID file) $ fmap getScoreBatteryPower hs
-        getScoreBatteryPower Score_1_Tried = 0
-        getScoreBatteryPower (Score_1_Passed _ bp) = bp
+        upToDateScore = error "not used" -- alter alteration (levelUID file) $ getEpisodeBatteries hs
         alteration :: Maybe Integer -> Maybe Integer
         alteration Nothing = Just $ (scene ^. batteryPower .> firstAStrict)
         alteration (Just s) = Just $ max (scene ^. batteryPower .> firstAStrict) s
     -- TODO: pretend, there are no batteries in the outro level for now
-    in collectedBatteries episode $ fmap getScoreBatteryPower hs -- upToDateScore
+    in sumOfEpisodeBatteries hs episode -- upToDateScore
 
 bootingAnimationTime = bootingFrameTime * fromIntegral bootingAnimationSteps
 

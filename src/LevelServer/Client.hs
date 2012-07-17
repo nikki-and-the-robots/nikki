@@ -33,16 +33,17 @@ import LevelServer.Configuration
 downloadedLevels :: Application -> Play -> Int -> Parent -> AppState
 downloadedLevels app play ps parent = NoGUIAppState $ io $ do
     levels <- lookupDownloadedLevels
-    levelItems <- mapM mkLevelItem levels
+    highScores <- getHighScores
     return $ menuAppState app (NormalMenu (p "downloaded levels") Nothing) (Just parent) (
         MenuItem (p "download new levels") (downloadNewLevels app . this) :
-        levelItems ++
+        map (mkLevelItem highScores) levels ++
         []) ps
   where
     this ps = downloadedLevels app play ps parent
-    mkLevelItem (file :: LevelFile) = do
-        label <- showLevelForMenu file
-        return $ MenuItem label (\ ps -> play (this ps) file)
+    mkLevelItem :: Scores -> LevelFile -> MenuItem
+    mkLevelItem highScores file =
+        let label = showLevelForMenu highScores file
+        in MenuItem label (\ ps -> play (this ps) file)
 
 lookupDownloadedLevels :: IO [LevelFile]
 lookupDownloadedLevels = do

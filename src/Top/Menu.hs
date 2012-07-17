@@ -77,10 +77,11 @@ community app ps parent =
 selectLevelPlay :: Application -> Parent -> AppState
 selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
     levelFiles <- lookupPlayableLevels
+    scores <- io $ getHighScores
     return $ if null $ ftoList levelFiles then
         message app [p "no levels found :("] parent
       else
-        treeToMenu app parent (p "choose a level") showLevelTreeForMenu levelFiles (play app) 0
+        treeToMenu app parent (p "choose a level") (return . showLevelTreeForMenu scores) levelFiles (play app) 0
 
 
 selectLevelEdit :: Application -> Int -> Parent -> AppState

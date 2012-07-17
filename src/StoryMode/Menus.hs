@@ -100,25 +100,26 @@ mkEpisodeMenu :: Application -> Play -> Parent
 mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
     scores <- io $ getHighScores
     let passedIntro = hasPassedIntro scores ep
-    introItem <- mkItem (intro ep)
-    restItems <- if not passedIntro then return [] else do
-        bodyItems <- mapM mkItem (body ep)
-        outroItem <- mkItem (outro ep)
-        return (bodyItems +: outroItem)
+        introItem = mkItem scores (intro ep)
+        restItems = if not passedIntro then [] else
+            let bodyItems = map (mkItem scores) (body ep)
+                outroItem = mkItem scores (outro ep)
+            in (bodyItems +: outroItem)
     return $ menuAppState app
         (NormalMenu (p "story mode") (Just $ p "choose a level"))
         (Just parent)
         (introItem :
-        restItems ++
-        [])
+         restItems ++
+         [])
         ps
   where
-    mkItem level = io $ do
-        label <- showLevelForMenu level
-        return $ MenuItem label (\ i -> play (this i) level)
+    mkItem :: Scores -> LevelFile -> MenuItem
+    mkItem highScores level = MenuItem
+        (showLevelForMenu highScores level)
+        (\ i -> play (this i) level)
     this = mkEpisodeMenu app play parent ep
 
-hasPassedIntro :: Map LevelUID Score -> Episode LevelFile -> Bool
+hasPassedIntro :: Scores -> Episode LevelFile -> Bool
 hasPassedIntro scores e =
     maybe False isPassedScore $
     Data.Map.lookup (levelUID $ intro e) scores
