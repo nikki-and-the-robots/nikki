@@ -6,8 +6,9 @@ module StoryMode.Menus (
   ) where
 
 
-import Data.Map (Map, lookup)
+import Data.Map (Map, lookup, findWithDefault)
 import Data.Maybe
+import Data.Initial
 
 import Control.Concurrent
 
@@ -98,12 +99,12 @@ mkMenuItem app play parent e =
 mkEpisodeMenu :: Application -> Play -> Parent
     -> Episode LevelFile -> Int -> AppState
 mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
-    scores <- io $ getHighScores
-    let passedIntro = hasPassedIntro scores ep
-        introItem = mkItem scores (intro ep)
+    scores <- io $ getScores
+    let passedIntro = hasPassedIntro (highScores scores) ep
+        introItem = mkItem scores False (intro ep)
         restItems = if not passedIntro then [] else
-            let bodyItems = map (mkItem scores) (body ep)
-                outroItem = mkItem scores (outro ep)
+            let bodyItems = map (mkItem scores False) (body ep)
+                outroItem = mkItem scores True (outro ep)
             in (bodyItems +: outroItem)
     return $ menuAppState app
         (NormalMenu (p "story mode") (Just $ p "choose a level"))
@@ -113,10 +114,15 @@ mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
          [])
         ps
   where
-    mkItem :: Scores -> LevelFile -> MenuItem
-    mkItem highScores level = MenuItem
-        (showLevelForMenu highScores level)
+    mkItem :: HighScoreFile -> Bool -> LevelFile -> MenuItem
+    mkItem scores isOutro level = MenuItem
+        (showLevel scores isOutro level)
         (\ i -> play (this i) level)
+    showLevel :: HighScoreFile -> Bool -> LevelFile -> Prose
+    showLevel scores isOutro = if isOutro
+        then showOutroLevelForMenu (highScores scores) ep
+                (findWithDefault initial (euid ep) (episodeScores scores))
+        else showLevelForMenu (highScores scores)
     this = mkEpisodeMenu app play parent ep
 
 hasPassedIntro :: Scores -> Episode LevelFile -> Bool

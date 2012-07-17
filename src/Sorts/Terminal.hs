@@ -51,6 +51,7 @@ import Editor.Scene.Rendering
 import Editor.Scene.Rendering.Helpers
 
 import StoryMode.Types
+import StoryMode.Configuration
 import StoryMode.Episode
 
 
@@ -69,8 +70,6 @@ beamBlinkingTime :: Seconds = blinkLength
 
 bootingFrameTime :: Seconds = 0.3
 bootingAnimationSteps :: Int = 3
-
-batteryNumberNeeded = 250
 
 -- * sort loading
 

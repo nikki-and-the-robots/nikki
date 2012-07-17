@@ -15,6 +15,7 @@ module Editor.Pickle.LevelFile (
     LevelMetaData(..),
     showLevelTreeForMenu,
     showLevelForMenu,
+    showOutroLevelForMenu,
   ) where
 
 
@@ -29,6 +30,7 @@ import Utils
 import Base
 
 import StoryMode.Types
+import StoryMode.Configuration
 
 
 mkStandardLevel :: FilePath -> FilePath -> IO LevelFile
@@ -76,8 +78,24 @@ showLevelTreeForMenu highScores x = pVerbatim (x ^. labelA)
 
 showLevelForMenu :: Scores -> LevelFile -> Prose
 showLevelForMenu highScores level =
-    let metaData = levelMetaData level
-        name = meta_levelName metaData
-        mHighScore = Map.lookup (levelUID level) highScores
-    in pVerbatim
-        (name ++ " " ++ mkScoreString (meta_numberOfBatteries metaData) mHighScore)
+    pVerbatim
+        (name ++ " " ++ mkScoreString (fmap fromIntegral $ meta_numberOfBatteries metaData) mHighScore)
+  where
+    metaData = levelMetaData level
+    name = meta_levelName metaData
+    mHighScore = Map.lookup (levelUID level) highScores
+
+showOutroLevelForMenu :: Scores -> Episode LevelFile -> EpisodeScore -> LevelFile -> Prose
+showOutroLevelForMenu highScores episode epScore lf =
+    pVerbatim
+        (name ++ " " ++ scoreString)
+  where
+    name = meta_levelName $ levelMetaData lf
+    scoreString = showScore mTime mCollected mTotal
+    mTime = case Map.lookup (levelUID lf) highScores of
+        Nothing -> Nothing
+        Just Score_1_Tried -> Nothing
+        Just Score_1_Passed{..} -> Just scoreTime_
+    (mCollected, mTotal) = if not (usedBatteryTerminal epScore)
+        then (Nothing, Nothing)
+        else (Just (sumOfEpisodeBatteries highScores episode), Just batteryNumberNeeded)

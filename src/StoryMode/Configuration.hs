@@ -34,3 +34,6 @@ epPathSnippet Episode_1 = "ep1"
 
 epTitle Episode_1 = "Episode 1"
 
+batteryNumberNeeded :: Integer
+batteryNumberNeeded = 250
+
