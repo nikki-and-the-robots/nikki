@@ -117,7 +117,7 @@ Executable core
         , containers
         , directory
         , filepath
-        , mtl == 2.*
+        , mtl >= 2.1.1 && < 2.2
         , process
         , Hipmunk >= 5.2.0.6
         , sfml-audio == 0.7.*

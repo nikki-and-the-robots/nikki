@@ -8,7 +8,6 @@ import Data.List as List
 import Text.Logging
 
 import Control.Monad.Error
-import Control.Monad.State
 
 import System.FilePath
 
@@ -35,9 +34,9 @@ import LevelServer.Client
 -- | top level application state
 startAppState :: Application -> AppState
 startAppState app = NoGUIAppState $ do
-    config <- get
-    put config{play_level = Nothing}
-    case play_level config of
+    mLevel <- gets play_level
+    play_levelA %= Nothing
+    case mLevel of
         Nothing -> return $ mainMenu app 0
         Just file -> io $ play app (mainMenu app 0) <$> mkUnknownLevel file
 
