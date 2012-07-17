@@ -106,20 +106,20 @@ Executable nikki
             -headerpad_max_install_names
 
     build-depends:
-          base == 4.*
+          base == 4.5.*
         , binary
         , syb
         , containers
         , directory
         , filepath
-        , mtl == 2.*
+        , mtl == 2.* && (< 2.1 || > 2.1)
         , process
         , Hipmunk >= 5.2.0.6
-        , sfml-audio == 0.4.*
+        , sfml-audio == 0.7.*
         , safe
         , random
         , StateVar
-        , transformers
+        , transformers == 0.2.* || == 0.3.*
         , time
         , parsec == 3.*
         , FindBin >= 0.0.5
@@ -129,13 +129,14 @@ Executable nikki
         , HTTP == 4000.2.*
         , temporary >= 1.1.1
         , bytestring >= 0.9.1.7
-        , LibZip == 0.2.*
+        , LibZip >= 0.2.0.4
         , uniplate >= 1.6
         , data-accessor >= 0.2.1.7
         , data-accessor-mtl >= 0.2.0.2
         , strict >= 0.3.2
         , vector >= 0.9
-        , RSA == 1.*
+        , RSA >= 1.2.1
+        , crypto-pubkey-types == 0.1.*
         , aeson
         , attoparsec == 0.9.* || == 0.10.*
         , network == 2.*
@@ -147,6 +148,7 @@ Executable nikki
         , email-validate
         , bifunctors
         , utf8-string == 0.3.*
+        , hashable == 1.1.*
 
     if os(linux)
         extra-libraries:
