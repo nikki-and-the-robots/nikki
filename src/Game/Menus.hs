@@ -95,6 +95,8 @@ successMessage :: Application -> Parent -> RenderStateRefs -> GameState
 successMessage app parent sceneRenderState gameState score@Score_1_Passed{}
   (mHighScore, timeRecord, batteryRecord) =
      AppStateLooped (renderable $ renderableInstance False) $ do
+        config <- get
+        triggerSound config $ successSound $ applicationSounds app
         ref <- io $ newIORef gameState
         waitForEvent ref (const False) (Just $ realToFrac afterLevelWaitTime)
         return $ AppStateLooped (renderable $ renderableInstance True) $ do
