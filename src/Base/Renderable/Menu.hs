@@ -167,27 +167,27 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
 -- | Converts a SelectTree to a menu.
 -- Uses pVerbatim (and unP) to convert to (and from) Prose.
 -- (Doesn't get translated therefore.)
-treeToMenu :: forall a . Application -> AppState -> Prose -> (SelectTree a -> Prose)
+treeToMenu :: forall a . Application -> AppState -> Prose -> (SelectTree a -> IO Prose)
     -> SelectTree a -> (Parent -> a -> AppState) -> Int -> AppState
-treeToMenu app parent title showFunction (EmptyNode label) f _ =
+treeToMenu app parent title showAction (EmptyNode label) f _ =
     message app [p "there is nothing here :(", p "MAKE SOME LEVELS!!!"] parent
-treeToMenu app parent title showFunction (Leaf _ n) f _ = f parent n
-treeToMenu app parent title showFunction (Node label children i) f preSelection = NoGUIAppState $ do
-    let items = fmap mkItem (I.toList children)
+treeToMenu app parent title showAction (Leaf _ n) f _ = f parent n
+treeToMenu app parent title showAction (Node label children i) f preSelection = NoGUIAppState $ do
+    items <- io $ fmapM mkItem (I.toList children)
     return $ menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)
         items preSelection
   where
-    mkItem :: SelectTree a -> MenuItem
-    mkItem t =
-        let label = showFunction $ labelA ^: toItem $ t
-            follower ps = treeToMenu app (this ps) title showFunction t f 0
-        in MenuItem label follower
+    mkItem :: SelectTree a -> IO MenuItem
+    mkItem t = do
+        label <- showAction $ labelA ^: toItem $ t
+        let follower ps = treeToMenu app (this ps) title showAction t f 0
+        return $ MenuItem label follower
 
     toItem p = case splitPath p of
         paths@(_ : _) -> last paths
         [] -> "???"
 
-    this = treeToMenu app parent title showFunction (Node label children i) f
+    this = treeToMenu app parent title showAction (Node label children i) f
 
 
 -- * rendering
