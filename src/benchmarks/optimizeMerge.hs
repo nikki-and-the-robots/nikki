@@ -13,13 +13,13 @@ import Criterion.Main
 main :: IO ()
 main = do
     ix <- testIndexable
-    -- ~ deepseq ix (return ())
+    deepseq ix (return ())
     test ix
-    
+
     -- This does not terminate, but why?
-    -- ~ defaultMain $ 
-        -- ~ (bench "optimizeMerge" $ print 42) :
-        -- ~ []
+    defaultMain $
+        (bench "optimizeMerge" $ nf (optimizeMerge mergeInts) ix) :
+        []
 
 testIndexable :: IO (Indexable Int)
 testIndexable = do
@@ -35,8 +35,8 @@ test :: Indexable Int -> IO ()
 test ix = do
     let merged = optimizeMerge mergeInts ix
     assert (pLength odd ix == pLength odd merged) (return ())
-    print (Ix.toList merged)
     assert (pLength even merged <= 1) (return ())
+    putStrLn "passed simple tests"
   where
     -- count the elements where (p element) == True
     pLength :: (a -> Bool) -> Indexable a -> Int
