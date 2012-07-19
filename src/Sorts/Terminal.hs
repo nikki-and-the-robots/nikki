@@ -27,7 +27,6 @@ import Data.Traversable
 import Data.Foldable (Foldable)
 import Data.Maybe
 import Data.Accessor
-import Data.Map (alter)
 import qualified Data.StrictList as SL
 
 import System.FilePath

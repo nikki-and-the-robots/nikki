@@ -6,7 +6,7 @@ module StoryMode.Menus (
   ) where
 
 
-import Data.Map (Map, lookup, findWithDefault)
+import Data.Map (lookup, findWithDefault)
 import Data.Maybe
 import Data.Initial
 

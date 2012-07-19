@@ -22,8 +22,6 @@ import Data.Binary
 import Data.Binary.Strict
 import Data.Initial
 import Data.Accessor
-import Data.Foldable (toList)
-import Data.Maybe
 
 import Text.Printf
 import Text.Logging
