@@ -49,7 +49,6 @@ instance (Arbitrary a) => Arbitrary (Indexable a) where
         keys <-
             take (length values) <$>
             randomPermutation (map Index [0 .. (length values * 5)])
-        error $ show $ sort keys
         return $ Indexable $ Vector.fromList $ zip keys values
     shrink =
         values >>> Vector.toList >>>
@@ -112,7 +111,7 @@ fmapM_Test =
     in r `seq` True
 
 fmapMTest :: Double -> Double -> Indexable Double -> Bool
-fmapMTest m c ix = 
+fmapMTest m c ix =
     case monad of
         Just True -> True
         _ -> False
