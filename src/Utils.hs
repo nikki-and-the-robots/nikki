@@ -90,7 +90,7 @@ todoError = error
 tweakValue :: Read a => FilePath -> a
 tweakValue file = System.IO.Unsafe.unsafePerformIO $ do
     value <- readFile file
-    logg Info (file ++ " = " ++ value)
+    logg Debug (file ++ " = " ++ value)
     return $ case readMay value of
         Nothing -> error ("cannot read: " ++ value)
         Just x -> x
