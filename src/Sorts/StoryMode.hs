@@ -19,7 +19,7 @@ signs =
     []
 
 -- padding refers to upper left corner
-    
+
 tiles :: [(String, Position Int, Size Double, Seconds, Maybe [Int])]
 tiles =
     ("tiles/black-blue/panel-standard", Position 1 1, Size 64 64, 1, Nothing) :
@@ -176,10 +176,6 @@ tiles =
     ("tiles/neon/skull", Position 1 1, Size 588 584, 0.35, Just [0, 1, 2, 3, 4, 5, 6, 7, 0, 7, 0, 7, 0, 7, 0]) :
     ("tiles/neon/beam-standard", Position 13 13, Size 52 52, 0.25, Just [0, 1]) :
 
-    -- test tiles for baking
-    ("devel-tests/baked-4x4", Position 1 1, Size 256 256, 1, Nothing) :
-    ("devel-tests/baked-8x8", Position 1 1, Size 512 512, 1, Nothing) :
-    ("devel-tests/baked-16x16", Position 1 1, Size 1024 1024, 1, Nothing) :
     []
 
 backgrounds :: [String]
