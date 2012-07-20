@@ -1,23 +1,9 @@
-Nikki and the Robots - game data by Joyride Laboratories GbR is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
+Unless otherwise noted, Nikki and the Robots game data by Joyride Laboratories GbR is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
 
 To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
 
-Exceptions to this rule are the following files:
+Exceptions are noted in FILENAME.license files in the same directories.
 
-sounds/game/jump.wav
-  Taken from Lips of Suna (hop-000)
-  Made by Ari Mustonen
-  Licensed under CC0
+On Linux and Mac OS X, you can view all licensing info by running thefollowing command:
 
-To view a copy of CC0 (Creative Commons Zero) http://creativecommons.org/publicdomain/zero/1.0/ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
-
-sounds/game/consoletext.wav
-  Based on OSD text 2 <http://www.freesound.org/people/jobro/sounds/33553/>
-  Recorded by jobro <http://www.freesound.org/people/jobro/>
-  Licensed under CC-BY 3.0
-  Edited (pitch up, cut and fade out) by Iwan Gabovitch
-
-To view a copy of CC-BY 3.0 (Creative Commons Attribution 3.0) http://creativecommons.org/licenses/by/3.0/ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
-
-music/*
-    See respective license files in music/.
+  find . -name "*license" -exec cat {} \; | less

@@ -2,6 +2,3 @@ SFML has problems with some wave file format.
 Converting with sox like this seems to work:
 
 sox $INPUTFILE -b 16 -e signed-integer $OUTPUTFILE
-
-success.wav created by sauer2
-    (http://opengameart.org/content/oldschool-win-and-die-jump-and-run-sounds)
