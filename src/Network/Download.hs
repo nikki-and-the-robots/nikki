@@ -6,11 +6,15 @@ module Network.Download (
   ) where
 
 
+import Prelude hiding (catch)
+
 import Data.ByteString.Lazy
+
+import Control.Exception
 
 import Network.HTTP
 import Network.URI
-import Network.Stream (Result)
+import Network.Stream (Result, ConnError(..))
 
 
 downloadStrict :: String -> IO (Either String String)
@@ -24,9 +28,16 @@ httpGet url =
     case parseURI url of
         Nothing -> return $ Left ("invalid url: " ++ url)
         Just uri -> do
-            result :: Result (Response s) <- simpleHTTP (mkRequest GET uri)
+            result :: Result (Response s) <- catchExceptions $ simpleHTTP (mkRequest GET uri)
             return $ case result of
                 Left err -> Left $ show err
                 Right response -> case rspCode response of
                     (2, 0, 0) -> Right $ rspBody response
                     _ -> Left ("http request failed: " ++ show (rspCode response))
+
+catchExceptions :: IO (Result a) -> IO (Result a)
+catchExceptions cmd =
+    catch cmd handler
+  where
+    handler :: SomeException -> IO (Result a)
+    handler e = return $ Left $ ErrorMisc (show e)
