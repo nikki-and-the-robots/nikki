@@ -1,7 +1,7 @@
 
 The executables of the game "Nikki and the Robots", namely "nikki" and "core" are licensed under the LGPL-3.0 (see "LICENSES/lgpl-3.0.txt").
 
-The resources contained in the "data" directory are licensed under the "Creative Commons Attribution-Share Alike 3.0 Germany License" (see "data/LICENSE").
+For author and licensing information of the resources contained in the "data" directory see "data/LICENSE".
 
 The libraries used in this distribution are as follows:
 (Some are contained as dynamically linked libraries in binary form in this distribution. Some are only used on certain platforms.)
