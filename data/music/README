@@ -1,5 +1,9 @@
-Just drop .ogg-files here, they will be used in the game.
+Just drop .ogg-files here, they will be used in the game. Which track
+will be used is decided pseudo-randomly with the level name as the seed.
+That means that the tracks will be chosen randomly, but they will always
+be the same for every level. Unless you add new tracks.
 
-sfml2 seems to have a problem with normalized oggs. Use a normalization factor of 0.95, e.g.:
+sfml2 seems to have a problem with normalized oggs. Use a normalization
+factor of 0.90, e.g.:
 
 $ sox -v 0.90 input.ogg output.ogg
