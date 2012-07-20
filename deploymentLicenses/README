@@ -3,9 +3,12 @@ Nikki and the Robots
 http://joyridelabs.de/
 
 
-The game Nikki and the Robots is a 2D platformer developed at Joyride Laboratories. This is an alpha release, so please bear with us.
+The game Nikki and the Robots is a 2D platformer developed at Joyride Laboratories. This is an beta release.
 
-Start the game by executing "nikki[.exe]".
+Start the game by
+* LINUX: executing "nikki.sh"
+* MAC: opening nikki[.app]
+* WINDOWS: starting nikki[.exe]
 
 
 Nikki-wiki:
