@@ -12,6 +12,8 @@ import Data.Initial
 
 import Control.Concurrent
 
+import System.FilePath
+
 import Network.Download
 
 import Graphics.Qt
@@ -82,6 +84,7 @@ storyMode app play parent = NoGUIAppState $ do
     this :: AppState
     this = storyMode app play parent
 
+-- | a menu showing all available episodes
 mkEpisodesMenu :: Application -> Play -> Parent -> [Episode LevelFile] -> Int -> AppState
 mkEpisodesMenu app play parent episodes =
     menuAppState app
@@ -96,6 +99,7 @@ mkMenuItem :: Application -> Play -> (Int -> Parent)
 mkMenuItem app play parent e =
     MenuItem (pv $ epTitle $ euid e) (\ i -> mkEpisodeMenu app play (parent i) e 0)
 
+-- | a menu for one episode.
 mkEpisodeMenu :: Application -> Play -> Parent
     -> Episode LevelFile -> Int -> AppState
 mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
@@ -106,11 +110,13 @@ mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
             let bodyItems = map (mkItem scores False) (body ep)
                 outroItem = mkItem scores True (outro ep)
             in (bodyItems +: outroItem)
+        creditsItem = MenuItem (renderable $ p "credits") (credits app . this)
     return $ menuAppState app
         (NormalMenu (p "story mode") (Just $ p "choose a level"))
         (Just parent)
         (introItem :
          restItems ++
+         creditsItem :
          [])
         ps
   where
@@ -129,3 +135,12 @@ hasPassedIntro :: Scores -> Episode LevelFile -> Bool
 hasPassedIntro scores e =
     maybe False isPassedScore $
     Data.Map.lookup (levelUID $ intro e) scores
+
+credits :: Application -> Parent -> AppState
+credits app parent = NoGUIAppState $ io $ do
+    mFile <- getStoryModeDataFileName ("manual" </> "credits" <.> "txt")
+    prose <- maybe
+                (return $ pure $ p "storymode not found")
+                pFile
+                mFile
+    return $ scrollingAppState app prose parent
