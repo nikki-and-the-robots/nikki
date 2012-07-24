@@ -42,7 +42,7 @@ instance ToJSON LevelMetaData where
         "author" .= meta_author :
         "basedOn" .= basedOn :
         "numberOfBatteries" .= numberOfBatteries :
-        "musicFile" .= musicFile :
+        maybe [] (pure . ("musicFile" .=)) musicFile ++
         [])
 
 instance FromJSON LevelMetaData where
