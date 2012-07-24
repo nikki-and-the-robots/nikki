@@ -65,6 +65,7 @@ names =
     ("tiles/pink-small", Position 1 1, Size 32 32) :
     ("tiles/red-small", Position 1 1, Size 32 32) :
     ("terminals/terminal-standard-bottom-end", Position 1 1, Size 192 32) :
+    ("tutorial/data-terminal-background", Position 1 1, Size 128 192) :
 
     ("deathstones/lasers/laser-up", split 1, fmap fromUber $ Size 15 4) :
     ("deathstones/lasers/laser-down", Position 1 5, fmap fromUber $ Size 15 4) :
