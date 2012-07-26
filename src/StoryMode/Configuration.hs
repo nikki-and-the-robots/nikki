@@ -29,6 +29,7 @@ episode_1 = Episode
         "10-greed" :
         [])
     "level-x"
+    "happy-end"
 
 epPathSnippet Episode_1 = "ep1"
 

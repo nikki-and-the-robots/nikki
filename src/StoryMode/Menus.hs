@@ -110,16 +110,25 @@ mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
             let bodyItems = map (mkItem scores False) (body ep)
                 outroItem = mkItem scores True (outro ep)
             in (bodyItems +: outroItem)
+        happyEndItem = if episodeCompleted scores
+            then pure $ mkItem scores False (happyEnd ep)
+            else []
         creditsItem = MenuItem (renderable $ p "credits") (credits app . this)
     return $ menuAppState app
         (NormalMenu (p "story mode") (Just $ p "choose a level"))
         (Just parent)
         (introItem :
          restItems ++
+         happyEndItem ++
          creditsItem :
          [])
         ps
   where
+    episodeCompleted :: HighScoreFile -> Bool
+    episodeCompleted hsf =
+        let outroScore = Data.Map.lookup (levelUID $ outro ep) (highScores hsf)
+        in maybe False isPassedScore outroScore
+
     mkItem :: HighScoreFile -> Bool -> LevelFile -> MenuItem
     mkItem scores isOutro level = MenuItem
         (showLevel scores isOutro level)

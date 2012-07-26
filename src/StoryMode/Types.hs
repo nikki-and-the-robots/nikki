@@ -50,6 +50,7 @@ data Episode a = Episode {
     euid :: EpisodeUID,
     intro :: a,
     body :: [a],
-    outro :: a
+    outro :: a,
+    happyEnd :: a
   }
     deriving (Show, Functor, Foldable, Traversable)
