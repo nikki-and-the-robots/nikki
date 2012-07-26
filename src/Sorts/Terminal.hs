@@ -154,7 +154,8 @@ batteryTerminalSort pngDir tsort = do
         loadPix 9 "beam-green" <*>
         loadPix 9 "light-green" <*>
         loadPix 9 "display_standby_00" <*>
-        (mkAnimation <$> fmapM (loadPix 9) bootingPix <*> pure [bootingFrameTime])
+        (mkAnimation <$> fmapM (loadPix 9) bootingPix <*> pure [bootingFrameTime]) <*>
+        loadSound ("game" </> "batteryTerminalBooting") 1
   where
     loadPix n name =
         loadSymmetricPixmap (Position n n) (mkPath name)
@@ -220,7 +221,8 @@ data TSort
     greenBeam :: Pixmap,
     greenTop :: Pixmap,
     bootingStandBy :: Pixmap,
-    bootingPixmaps :: Animation Pixmap
+    bootingPixmaps :: Animation Pixmap,
+    bootingSound :: PolySound
   }
     deriving (Show, Typeable)
 
@@ -494,8 +496,8 @@ update sort _ config _ scene now contacts (True, cd) terminal@StandbyBatteryTerm
         showingBubble ^= False $
         terminal
       else
-        updateOnTime now <$>
-        showingBubble ^= True <$>
+        updateOnTime config now sort .
+        (showingBubble ^= True) =<<
         putBatteriesInTerminal scene now terminal
 update sort _ config _ scene now contacts (False, cd) terminal =
     (state ^: updateGameMode contacts terminal) <$>
@@ -559,14 +561,14 @@ exitToNikki state = state{exitMode = ExitToNikki, robotIndex = 0}
 -- | initializes battery terminals
 mkBatteryTerminal :: LevelFile -> Chipmunk -> [RobotIndex] -> IO Terminal
 mkBatteryTerminal file chip robots =
-    updateUncontrolledStandby 0 <$>
-    updateOnTime (- bootingAnimationTime) <$>
-    case file of
+    updateUncontrolledStandby 0 <$> case file of
         (EpisodeLevel episode _ _ _ _) -> do
             batteries <- batteriesInTerminal <$> getEpisodeScore (euid episode)
-            return $ StandbyBatteryTerminal chip robots batteries False Nothing
+            let onTime = if batteries >= batteryNumberNeeded then Just (- bootingAnimationTime) else Nothing
+            return $ StandbyBatteryTerminal chip robots batteries False onTime
         -- not in story-mode (shouldn't happen at all, just for testing)
         _ -> return $ StandbyBatteryTerminal chip robots 0 False Nothing
+
 
 putBatteriesInTerminal :: Scene o -> Seconds -> Terminal -> IO Terminal
 putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
@@ -594,12 +596,14 @@ getCollectedBatteries scene episode =
 bootingAnimationTime = bootingFrameTime * fromIntegral bootingAnimationSteps
 
 -- | sets the onTime field if appropriate
-updateOnTime :: Seconds -> Terminal -> Terminal
-updateOnTime now t@StandbyBatteryTerminal{..} = case onTime of
+updateOnTime :: Configuration -> Seconds -> TSort -> Terminal -> IO Terminal
+updateOnTime config now BatteryTSort{bootingSound} t@StandbyBatteryTerminal{..} = case onTime of
     Nothing -> if batteryNumber_ >= batteryNumberNeeded
-        then t{onTime = Just now}
-        else t
-    Just x -> t
+        then do
+            triggerSound config bootingSound
+            return t{onTime = Just now}
+        else return t
+    Just x -> return t
 
 -- | changes from Standby to BatteryTerminal if appropriate
 updateUncontrolledStandby :: Seconds -> Terminal -> Terminal
