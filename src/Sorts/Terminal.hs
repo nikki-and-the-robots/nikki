@@ -155,6 +155,7 @@ batteryTerminalSort pngDir tsort = do
         loadPix 9 "light-green" <*>
         loadPix 9 "display_standby_00" <*>
         (mkAnimation <$> fmapM (loadPix 9) bootingPix <*> pure [bootingFrameTime]) <*>
+        loadSound ("game" </> "batteryTerminalInsert") 1 <*>
         loadSound ("game" </> "batteryTerminalBooting") 1
   where
     loadPix n name =
@@ -222,6 +223,7 @@ data TSort
     greenTop :: Pixmap,
     bootingStandBy :: Pixmap,
     bootingPixmaps :: Animation Pixmap,
+    insertionSound :: PolySound,
     bootingSound :: PolySound
   }
     deriving (Show, Typeable)
@@ -498,7 +500,7 @@ update sort _ config _ scene now contacts (True, cd) terminal@StandbyBatteryTerm
       else
         updateOnTime config now sort .
         (showingBubble ^= True) =<<
-        putBatteriesInTerminal scene now terminal
+        putBatteriesInTerminal config scene now sort terminal
 update sort _ config _ scene now contacts (False, cd) terminal =
     (state ^: updateGameMode contacts terminal) <$>
     (robots ^^: updateControllableStates scene) terminal
@@ -570,13 +572,15 @@ mkBatteryTerminal file chip robots =
         _ -> return $ StandbyBatteryTerminal chip robots 0 False Nothing
 
 
-putBatteriesInTerminal :: Scene o -> Seconds -> Terminal -> IO Terminal
-putBatteriesInTerminal scene now t@StandbyBatteryTerminal{} =
+putBatteriesInTerminal :: Configuration -> Scene o -> Seconds -> TSort -> Terminal -> IO Terminal
+putBatteriesInTerminal config scene now BatteryTSort{insertionSound} t@StandbyBatteryTerminal{} = do
     case levelFile scene of
         (EpisodeLevel episode _ _ _ _) -> do
             score <- getEpisodeScore $ euid episode
             batteries <- getCollectedBatteries scene episode
             setEpisodeScore (euid episode) (EpisodeScore_0 True batteries)
+            when (batteries < batteryNumberNeeded) $
+                triggerSound config insertionSound
             return $ batteryNumber ^= batteries $ t
         -- for testing in normal mode
         _ -> return $ batteryNumber ^= (scene ^. batteryPower .> firstAStrict) $ t
