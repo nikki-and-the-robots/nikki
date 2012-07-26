@@ -117,4 +117,5 @@ initialDebuggingSignals =
 
 -- * development
 
+{-# noinline useNonPublicSorts #-}
 useNonPublicSorts :: Bool = False
