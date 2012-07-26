@@ -46,10 +46,10 @@ suggestPurchase app storyModeMenu parent ps = NoGUIAppState $ io $ do
 
 buyOrInstall app storyModeMenu parent =
     menuAppState app
-        (NormalMenu (p "story mode") (Just $ p "the story mode is not installed"))
+        (NormalMenu (p "Story Episodes") (Just $ p "the Story Episodes are not installed"))
         (Just parent)
-        (MenuItem (p "buy the story mode") (openUrl app purchasingUrl . this) :
-         MenuItem (p "login and install the story mode") (loginAsking app storyModeMenu . this) :
+        (MenuItem (p "buy the Story Episodes") (openUrl app purchasingUrl . this) :
+         MenuItem (p "login and install the Story Episodes") (loginAsking app storyModeMenu . this) :
          [])
   where
     this :: Int -> AppState
@@ -104,7 +104,7 @@ installStoryMode app logCommand loginData version zipUrl =
   catchSomeExceptionsErrorT show $ io $ do
     logCommand $
         substitute [("version", showVersion version)] $
-        p "downloading story mode ($version)"
+        p "downloading Story Episodes ($version)"
     withSystemTempFile "storyModeDownload" $ \ tempZipFile handle -> do
         hClose handle
         downloadFile zipUrl tempZipFile
@@ -120,7 +120,7 @@ maybeDeleteStoryMode :: (Prose -> IO ()) -> IO ()
 maybeDeleteStoryMode logCommand = do
     mPath <- getStoryModePath
     flip (maybe (return ())) mPath $ \ path -> do
-        logCommand $ p "deleting old story mode"
+        logCommand $ p "deleting old Story Episodes"
         removeDirectoryRecursive path
 
 downloadFile :: String -> FilePath -> IO ()

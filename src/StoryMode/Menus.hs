@@ -58,11 +58,11 @@ instance Renderable StoryModeMenuItem where
     render ptr app config size (StoryModeMenuItem selected) = do
         available <- tryReadMVar $ storyModeAvailability app
         let prose = case available of
-                Nothing -> selMod $ p "story mode"
-                Just Installed -> selMod $ p "story mode"
-                Just NotAvailable -> selMod $ p "story mode (coming soon!)"
+                Nothing -> selMod $ p "Story Episodes"
+                Just Installed -> selMod $ p "Story Episodes"
+                Just NotAvailable -> selMod $ p "Story Episodes (coming soon!)"
                 Just Buyable -> colorizeProse yellow $ selMod $
-                    p "story mode (buy now!)"
+                    p "Story Episodes (buy now!)"
             selMod = if selected then select else deselect
         render ptr app config size prose
 
@@ -88,7 +88,7 @@ storyMode app play parent = NoGUIAppState $ do
 mkEpisodesMenu :: Application -> Play -> Parent -> [Episode LevelFile] -> Int -> AppState
 mkEpisodesMenu app play parent episodes =
     menuAppState app
-        (NormalMenu (p "story mode") (Just $ p "choose an episode"))
+        (NormalMenu (p "Story Episodes") (Just $ p "choose an episode"))
         (Just parent)
         (map (mkMenuItem app play this) episodes)
   where
@@ -115,7 +115,7 @@ mkEpisodeMenu app play parent ep ps = NoGUIAppState $ do
             else []
         creditsItem = MenuItem (renderable $ p "credits") (credits app . this)
     return $ menuAppState app
-        (NormalMenu (p "story mode") (Just $ p "choose a level"))
+        (NormalMenu (p "Story Episodes") (Just $ p "choose a level"))
         (Just parent)
         (introItem :
          restItems ++
