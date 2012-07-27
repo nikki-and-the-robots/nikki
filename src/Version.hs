@@ -10,5 +10,5 @@ import Data.Version
 nikkiVersion :: Version
 nikkiVersion = Version version tags
   where
-    version = 0 : 5 : 0 : 1 : []
+    version = 0 : 5 : 1 : 0 : []
     tags = ["samuel"]
