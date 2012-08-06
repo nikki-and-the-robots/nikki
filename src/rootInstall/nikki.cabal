@@ -14,59 +14,70 @@ Extra-source-files:
 Build-Type:     Simple
 Cabal-Version:  >= 1.8
 
-data-files:
-    LICENSE
-    README
-
-    manual/*.txt
-
-    monologues/tutorial/01
-    monologues/tutorial/02
-    monologues/tutorial/03
-    monologues/tutorial/04
-    monologues/tutorial/05
-    monologues/tutorial/06
-
-    png/backgrounds/blue/*.png
-    png/battery/*.png
-    png/deathstones/lasers/*.png
-    png/font/*.png
-    png/font/digits/*.png
-    png/multilayers/*.png
-    png/nikki/*.png
-    png/objects/*.png
-    png/osd/*.png
-    png/osd/background/*.png
-    png/osd/backgroundOverlay/*.png
-    png/robots/cannon/*.png
-    png/robots/conveyor/*.png
-    png/robots/eyes/*.png
-    png/robots/jetpack/*.png
-    png/robots/laser/*.png
-    png/robots/patrol/*.png
-    png/robots/platform/*.png
-    png/robots/train/*.png
-    png/sign/*.png
-    png/terminals/*.png
-    png/terminals/osd/*.png
-    png/tiles/*.png
-
-    sounds/game/*.wav
-    sounds/menu/*.wav
-
-    standardLevels/01-Tutorial/*.nl
-    standardLevels/01-Tutorial/*.nl.meta
-    standardLevels/02-QuickDemo/*.nl
-    standardLevels/02-QuickDemo/*.nl.meta
-    standardLevels/03-Contest1/*.nl
-    standardLevels/03-Contest1/*.nl.meta
-    standardLevels/03-Contest1/*.txt
-
-    templateLevels/*.nl
-
-
 data-dir:
     ../../data
+
+data-files:
+    LICENSE,
+    manual/*.txt,
+    menu/*.desktop,
+    monologues/tutorial/01,
+    monologues/tutorial/02,
+    monologues/tutorial/03,
+    monologues/tutorial/04,
+    monologues/tutorial/05,
+    monologues/tutorial/06,
+    music/*.ogg,
+    music/*.ogg.license,
+    music/README,
+    png/backgrounds/blue/*.png,
+    png/backgrounds/greynoise/*.png,
+    png/battery/*.png,
+    png/deathstones/lasers/*.png,
+    png/font/*.png,
+    png/font/digits/*.png,
+    png/font/README,
+    png/*.png,
+    png/*.icns,
+    png/multilayers/*.png,
+    png/nikki/*.png,
+    png/objects/*.png,
+    png/osd/background/*.png,
+    png/osd/backgroundOverlay/*.png,
+    png/osd/*.png,
+    png/robots/cannon/*.png,
+    png/robots/conveyor/*.png,
+    png/robots/eyes/*.png,
+    png/robots/jetpack/*.png,
+    png/robots/laser/*.png,
+    png/robots/patrol/*.png,
+    png/robots/platform/*.png,
+    png/robots/train/*.png,
+    png/sign/*.png,
+    png/terminals/*.png,
+    png/terminals/osd/*.png,
+    png/tiles/*.png,
+    png/tutorial/*.png,
+    README,
+    sounds/bfxr/*.bfxrsound,
+    sounds/game/*.wav,
+    sounds/game/*.bfxr,
+    sounds/game/*.wav.license,
+    sounds/menu/*.wav,
+    sounds/README,
+    standardLevels/01-Tutorial/*.nl,
+    standardLevels/01-Tutorial/*.nl.meta,
+    standardLevels/02-QuickDemo/*.nl,
+    standardLevels/02-QuickDemo/*.nl.meta,
+    standardLevels/03-Contest1/*.nl,
+    standardLevels/03-Contest1/*.nl.meta,
+    standardLevels/03-Contest1/*.txt,
+    standardLevels/03-Contest1/*.1.nl,
+    standardLevels/03-Contest1/*.1.nl.meta,
+    standardLevels/03-Contest1/*.1.txt,
+    svg/*.svg,
+    templateLevels/*.nl
+
 
 Flag Devel
     Description: No Optimizations and no executable stripping
