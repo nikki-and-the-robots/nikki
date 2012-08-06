@@ -10,7 +10,7 @@ module Sorts.Switch (
   ) where
 
 
-import Data.Generics
+import Data.Data
 import Data.Abelian
 import Data.Set (member)
 import qualified Data.Indexable as I

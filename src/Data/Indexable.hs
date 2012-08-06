@@ -54,7 +54,7 @@ import Data.Foldable (Foldable(..), toList)
 import Data.Initial
 import Data.Traversable (Traversable)
 import Data.Vector as Vector
-import Data.Generics (Typeable, Data)
+import Data.Data (Typeable, Data)
 import Data.Maybe
 
 import Control.Arrow

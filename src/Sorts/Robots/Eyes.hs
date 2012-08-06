@@ -10,7 +10,7 @@ module Sorts.Robots.Eyes (
   ) where
 
 
-import Data.Generics
+import Data.Data
 import Data.Map
 import Data.Abelian
 

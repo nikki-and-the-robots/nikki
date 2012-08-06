@@ -2,7 +2,7 @@
 
 -- | provides a data type for pixmaps that saves the size and the internal offset (padding)
 -- of the image.
--- Padding is the outer part of the image that should not be considered as part of 
+-- Padding is the outer part of the image that should not be considered as part of
 -- the physical object depictured by the image, e.g. an outer glow.
 
 module Base.Pixmap (
@@ -144,10 +144,11 @@ data RenderPixmap
     | RenderOnTop { -- to be rendered on top. (After all other RenderPixmaps)
         renderInnerPixmap :: RenderPixmap
       }
-  deriving (Show, Typeable, Data)
+  deriving (Show, Typeable)
 
 instance Show (Ptr QPainter -> IO ()) where
     show = const "<Ptr QPainter -> IO ()>"
+
 
 renderPosition :: Accessor RenderPixmap (Position Double)
 renderPosition = accessor getter setter

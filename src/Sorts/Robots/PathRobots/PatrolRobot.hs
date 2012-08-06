@@ -7,7 +7,7 @@ module Sorts.Robots.PathRobots.PatrolRobot where
 
 import Data.Typeable
 import Data.Abelian
-import Data.Generics
+import Data.Data
 import Data.Accessor
 
 import System.FilePath

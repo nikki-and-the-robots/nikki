@@ -6,7 +6,7 @@
 module Sorts.FallingTiles (sorts) where
 
 
-import Data.Generics
+import Data.Data
 import Data.Abelian
 import Data.Set (member)
 import Data.IORef

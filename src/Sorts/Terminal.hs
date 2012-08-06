@@ -22,7 +22,7 @@ import Safe
 
 import Data.Abelian
 import Data.Indexable (Index)
-import Data.Generics
+import Data.Data
 import Data.Traversable
 import Data.Foldable (Foldable)
 import Data.Maybe

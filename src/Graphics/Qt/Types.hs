@@ -2,7 +2,7 @@
 
 module Graphics.Qt.Types where
 
-import Data.Generics
+import Data.Data
 import Data.Binary
 import Data.Abelian
 import Data.Accessor

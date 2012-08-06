@@ -15,7 +15,7 @@ import Prelude hiding (lookup)
 
 import Data.Map (Map, toList, fromList, (!), lookup)
 import Data.Abelian
-import Data.Generics
+import Data.Data
 import Data.Initial
 import Data.Indexable (indexA)
 import qualified Data.Strict as Strict

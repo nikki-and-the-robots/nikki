@@ -7,7 +7,7 @@ module Sorts.Robots.PathRobots.Platform where
 
 import Data.Typeable
 import Data.Abelian
-import Data.Generics
+import Data.Data
 
 import System.FilePath
 

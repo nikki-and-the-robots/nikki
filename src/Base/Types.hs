@@ -20,7 +20,7 @@ import Data.Abelian
 import Data.SelectTree
 import Data.Typeable
 import Data.Map hiding (size)
-import Data.Generics
+import Data.Data
 import Data.Generics.Uniplate.Data
 import Data.Accessor
 import Data.IORef

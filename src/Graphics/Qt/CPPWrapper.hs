@@ -97,7 +97,7 @@ module Graphics.Qt.CPPWrapper (
   ) where
 
 
-import Data.Generics
+import Data.Data
 import Data.Abelian
 import Data.Set (Set)
 import Data.Maybe

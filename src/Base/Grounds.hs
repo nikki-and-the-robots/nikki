@@ -7,7 +7,7 @@ module Base.Grounds where
 import Safe
 
 import Data.Indexable as I
-import Data.Generics
+import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 import Data.Initial

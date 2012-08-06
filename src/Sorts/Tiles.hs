@@ -13,7 +13,7 @@ module Sorts.Tiles (
 import Safe
 
 import Data.Abelian
-import Data.Generics
+import Data.Data
 import Data.List
 import Data.Maybe
 import qualified Data.Indexable as I

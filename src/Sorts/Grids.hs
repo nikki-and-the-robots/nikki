@@ -3,7 +3,7 @@
 module Sorts.Grids where
 
 
-import Data.Generics
+import Data.Data
 import Data.Abelian
 
 import System.FilePath

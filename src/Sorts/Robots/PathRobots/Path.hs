@@ -7,7 +7,7 @@ import Safe
 
 import Data.Abelian
 import Data.Typeable
-import Data.Generics
+import Data.Data
 import Data.Accessor
 
 import Physics.Chipmunk hiding (start, end)

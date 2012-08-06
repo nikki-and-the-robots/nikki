@@ -5,7 +5,7 @@ module Sorts.Robots.Jetpack (sorts) where
 
 
 import Data.Abelian
-import Data.Generics
+import Data.Data
 import Data.Directions
 
 import System.FilePath

@@ -113,7 +113,6 @@ Executable core
     build-depends:
           base == 4.5.*
         , binary
-        , syb
         , containers
         , directory
         , filepath

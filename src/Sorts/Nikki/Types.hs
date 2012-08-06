@@ -6,7 +6,7 @@ module Sorts.Nikki.Types where
 import Prelude hiding (lookup)
 
 import Data.Map (Map)
-import Data.Generics
+import Data.Data
 import Data.Initial
 import Data.Abelian
 import Data.Directions
