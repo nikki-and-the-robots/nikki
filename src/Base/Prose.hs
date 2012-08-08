@@ -98,7 +98,7 @@ pFile :: FilePath -> IO [Prose]
 pFile file = do
     exists <- doesFileExist file
     if exists then
-        fmap (Prose . return . tuple standardFontColor) . Text.lines . pack <$> readFile file
+        fmap (Prose . return . tuple standardFontColor) . Text.lines <$> readUnicodeText file
       else do
         logg Error ("file not found: " <> file)
         return $ pure (p "file not found: " <> pv file)

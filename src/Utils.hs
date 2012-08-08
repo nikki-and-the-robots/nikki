@@ -56,6 +56,10 @@ import Data.Strict (Pair(..))
 import Data.Time.Clock.POSIX
 import qualified Data.Vector
 import Data.Data
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
+import qualified Data.Text.Encoding.Error as Text
+import qualified Data.ByteString as SBS
 
 import Text.Printf
 import Text.Logging
@@ -447,6 +451,11 @@ path <..> ext =
     if dotExt `isSuffixOf` path then path else path <.> ext
   where
     dotExt = if Just '.' == headMay ext then ext else '.' : ext
+
+-- | reads a Text from a file in forced unicode encoding
+readUnicodeText :: FilePath -> IO Text.Text
+readUnicodeText file =
+    Text.decodeUtf8With Text.lenientDecode <$> SBS.readFile file
 
 
 -- * Map stuff
