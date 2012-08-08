@@ -153,6 +153,7 @@ Executable core
         , bifunctors
         , utf8-string == 0.3.*
         , hashable == 1.1.*
+        , stickyKeysHotKey == 0.1.*
 
     if os(linux)
         extra-libraries:

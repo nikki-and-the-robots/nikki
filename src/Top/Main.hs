@@ -30,6 +30,7 @@ import Control.Exception
 
 import System.FilePath
 import System.Exit
+import System.Win32.StickyKeysHotKey
 
 import Graphics.Qt
 
@@ -49,7 +50,7 @@ import Top.Menu
 
 
 main :: IO ()
-main = do
+main = withHotKeyDeactivated $ do
     configuration <- loadConfiguration
     exitWith =<< forkThreads (renderThread configuration) (logicThread configuration)
 
