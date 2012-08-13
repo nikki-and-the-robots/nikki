@@ -24,7 +24,6 @@ import Sorts.Tiles.Baking (bakeTiles, boundingBox)
 
 import Test.QuickCheck
 import Test.QuickCheck.Property
-import Test.QuickCheck.Store
 
 
 tests =
@@ -32,7 +31,7 @@ tests =
     withMainWindow 1 500 500 $ \ _window -> do
         pixmaps <- loadSomePixmaps
 
-        quickCheckStoreWith stdArgs{maxSize = 13, maxSuccess = 500} "bakingEquality" $
+        quickCheckWith stdArgs{maxSize = 13, maxSuccess = 500} $
             bakingEquality pixmaps
 
 -- | checks, if baking doesn't affect the rendered image.

@@ -13,14 +13,13 @@ import Graphics.Qt.Events.Tests ()
 import Utils
 
 import Test.QuickCheck
-import Test.QuickCheck.Store
 import Test.QuickCheck.Property
 
 
 main = do
     ["--please-do-random-things-to-my-userdata"] <- getArgs
     changeWorkingDirectory ".."
-    quickCheckStore "doesntCrash" doesntCrash
+    quickCheck doesntCrash
 
 doesntCrash :: [Key] -> Property
 doesntCrash keys =

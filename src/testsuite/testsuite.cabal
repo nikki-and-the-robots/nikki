@@ -56,7 +56,6 @@ Executable testsuite
         , transformers
         , StateVar
         , QuickCheck == 2.4.* || == 2.5.*
-        , QuickCheckStore
         , random
         , process
         , MonadCatchIO-transformers >= 0.2.2.2
@@ -88,7 +87,7 @@ Executable testsuite
         , utf8-string == 0.3.*
         , hashable == 1.1.*
         , crypto-pubkey-types == 0.1.*
-
+        , stickyKeysHotKey == 0.1.*
 
     if os(linux)
         extra-libraries:
@@ -129,8 +128,7 @@ Executable searchCrashes
 
     build-depends:
         base >= 4 && < 5,
-        unix >= 2.4.0.2,
-        QuickCheckStore
+        unix >= 2.4.0.2
 
     extra-libraries:
         qtwrapper, QtOpenGL
