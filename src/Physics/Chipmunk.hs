@@ -136,6 +136,7 @@ initSpace :: CpFloat -> IO Space
 initSpace gravity = do
     H.initChipmunk
     space <- newSpace
+    resetShapeCounter
 
     -- space constants
 
