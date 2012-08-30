@@ -118,7 +118,6 @@ Executable nikki
 
     build-depends:
           aeson
-        , attoparsec == 0.9.* || == 0.10.*
         , base == 4.5.*
         , bifunctors
         , binary
@@ -142,7 +141,6 @@ Executable nikki
         , MonadCatchIO-transformers >= 0.2.2.2
         , mtl == 2.* && (< 2.1 || > 2.1)
         , network == 2.*
-        , old-locale
         , parsec == 3.*
         , process
         , random
@@ -151,6 +149,7 @@ Executable nikki
         , sfml-audio == 0.7.*
         , StateVar
         , strict >= 0.3.2
+        , stickyKeysHotKey == 0.1.*
         , template == 0.2.*
         , temporary >= 1.1.1
         , text
