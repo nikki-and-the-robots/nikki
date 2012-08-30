@@ -31,14 +31,19 @@ void error(QString msg);
 
 // * QApplication
 
-// Using a global variable since this has to be existent during the
-// whole run of the QApplication.
+// The QApplication-constructor expects argc and argv arguments.
+// Usually you would just pass through the arguments that the c-runtime
+// supplies as arguments to 'main'. We don't have a c-main-function (at
+// least not accessible), because our main function is in Haskell.
+// Therefore we need to create argc and argv to pass them to QApplication.
+// The c-runtime guarantees that these variables are available through
+// the whole run of the program, so we use global pointer variables.
+// (And we don't free them explicitly at program termination.)
 int* argcPtr = (int*) malloc(sizeof(int));
+char** argv = (char**) malloc(sizeof(char*) * 2);
 
 extern "C" QApplication* newQApplication(char* progName) {
     *argcPtr = 1;
-
-    char** argv = (char**) malloc(sizeof(char*) * 2);
     argv[0] = progName;
     // this null ending is probably not necessary,
     // but iirc the c-runtime honours this convention in its arguments to main.
