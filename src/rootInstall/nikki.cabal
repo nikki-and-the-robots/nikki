@@ -117,48 +117,48 @@ Executable nikki
             -headerpad_max_install_names
 
     build-depends:
-          base == 4.5.*
+          aeson
+        , attoparsec == 0.9.* || == 0.10.*
+        , base == 4.5.*
+        , bifunctors
         , binary
-        , containers
-        , directory
-        , filepath
-        , mtl == 2.* && (< 2.1 || > 2.1)
-        , process
-        , Hipmunk >= 5.2.0.6
-        , sfml-audio == 0.7.*
-        , safe
-        , random
-        , StateVar
-        , transformers == 0.2.* || == 0.3.*
-        , time
-        , parsec == 3.*
-        , FindBin >= 0.0.5
+        , binary-communicator >= 1.0.2
+        , bytestring >= 0.9.1.7
         , clocked == 0.4.1.*
         , cmdargs >= 0.6.6
-        , MonadCatchIO-transformers >= 0.2.2.2
-        , HTTP == 4000.2.*
-        , temporary >= 1.1.1
-        , bytestring >= 0.9.1.7
-        , LibZip >= 0.2.0.4
-        , uniplate >= 1.6
+        , containers
+        , crypto-pubkey-types == 0.1.*
         , data-accessor >= 0.2.1.7
         , data-accessor-mtl >= 0.2.0.2
-        , strict >= 0.3.2
-        , vector >= 0.9
-        , RSA >= 1.2.1
-        , crypto-pubkey-types == 0.1.*
-        , aeson
-        , attoparsec == 0.9.* || == 0.10.*
-        , network == 2.*
-        , binary-communicator >= 1.0.2
         , deepseq == 1.3.*
-        , old-locale
-        , text
-        , template == 0.2.*
+        , directory
         , email-validate
-        , bifunctors
-        , utf8-string == 0.3.*
+        , filepath
+        , FindBin >= 0.0.5
         , hashable == 1.1.*
+        , Hipmunk >= 5.2.0.6
+        , HTTP == 4000.2.*
+        , LibZip >= 0.2.0.4
+        , MonadCatchIO-transformers >= 0.2.2.2
+        , mtl == 2.* && (< 2.1 || > 2.1)
+        , network == 2.*
+        , old-locale
+        , parsec == 3.*
+        , process
+        , random
+        , RSA >= 1.2.1
+        , safe
+        , sfml-audio == 0.7.*
+        , StateVar
+        , strict >= 0.3.2
+        , template == 0.2.*
+        , temporary >= 1.1.1
+        , text
+        , time
+        , transformers == 0.2.* || == 0.3.*
+        , uniplate >= 1.6
+        , utf8-string == 0.3.*
+        , vector >= 0.9
 
     if os(linux)
         extra-libraries:
