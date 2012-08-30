@@ -31,15 +31,16 @@ void error(QString msg);
 
 // * QApplication
 
+// Using a global variable since this has to be existent during the
+// whole run of the QApplication.
+int* argcPtr = (int*) malloc(sizeof(int));
+
 extern "C" QApplication* newQApplication(char* progName) {
-    // Using *argcPtr makes sure it is a real C++-like reference
-    // and does not get deleted.
-    int* argcPtr = (int*) malloc(sizeof(int));
     *argcPtr = 1;
 
     char** argv = (char**) malloc(sizeof(char*) * 2);
     argv[0] = progName;
-    // this null ending is probably not necessary, 
+    // this null ending is probably not necessary,
     // but iirc the c-runtime honours this convention in its arguments to main.
     argv[1] = NULL;
 
@@ -195,7 +196,7 @@ extern "C" int heightQPainter(QPainter* painter) {
 // Rendering of one pixmap n times works like this:
 // 1. writePixmapFragmentArray n times with array indices [0 .. (n - 1)]
 // 2. drawPixmapFragments(painter, n, pixmap)
-// 
+//
 // None of this is re-entrant
 
 const int maxNumberOfPixmapFragments = 10;
