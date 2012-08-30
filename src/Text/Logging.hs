@@ -26,7 +26,7 @@ data LogLevel
     = Debug | Info | Warning | Error
   deriving (Eq, Ord, Show)
 
-printLogLevel = Info
+printLogLevel = Warning
 
 -- | Logs a message with the given log level.
 -- Prints to stdout on unix, uses a logFile on windows.
