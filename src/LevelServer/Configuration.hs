@@ -17,7 +17,7 @@ levelServerPort = case showVersion (protocolVersion (undefined :: ClientToServer
     "0.1" -> 8143
     "0.2" -> 8144
     "0.3" -> 8145
-    x -> error ("unkown version: " ++ x)
+    x -> error ("unknown version: " ++ x)
 
 levelServerLicenseUrl :: String
 levelServerLicenseUrl = "http://creativecommons.org/licenses/by/3.0/"
