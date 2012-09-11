@@ -43,15 +43,20 @@ int* argcPtr = (int*) malloc(sizeof(int));
 char** argv = (char**) malloc(sizeof(char*) * 2);
 
 extern "C" QApplication* newQApplication(char* progName) {
+    // setting Qt::AA_MacDontSwapCtrlAndMeta doesn't seem to work when the keys are not used as modifiers
+
     *argcPtr = 1;
     argv[0] = progName;
     // this null ending is probably not necessary,
     // but iirc the c-runtime honours this convention in its arguments to main.
     argv[1] = NULL;
 
-    // setting Qt::AA_MacDontSwapCtrlAndMeta doesn't seem to work when the keys are not used as modifiers
+    QApplication* app;
+    app = new QApplication(*argcPtr, argv, true);
 
-    return new QApplication(*argcPtr, argv, true);
+    app->setLibraryPaths(QStringList());
+
+    return app;
 };
 
 extern "C" void destroyQApplication(QApplication* ptr) {
