@@ -6,6 +6,8 @@ project(qtRendering)
 set(CMAKE_BUILD_TYPE "RELEASE") # -O3
 message(STATUS "build-type: " ${CMAKE_BUILD_TYPE})
 
+set(CMAKE_CXX_FLAGS "-Wall")
+
 set(ARCH i386)
 set(CMAKE_OSX_ARCHITECTURES i386)
 
