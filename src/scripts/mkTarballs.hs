@@ -1,6 +1,9 @@
 #!/usr/bin/env runhaskell
 
 
+-- This is a script to create tarballs for past tagged versions of the
+-- repo.
+
 import Safe
 
 import Control.Arrow
