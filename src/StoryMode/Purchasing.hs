@@ -14,6 +14,7 @@ import Text.Logging
 
 import Control.Exception
 import Control.Monad.Trans.Error
+import Control.Monad.State
 
 import System.IO
 import System.IO.Temp
@@ -74,10 +75,13 @@ loginAsking app storyModeMenu parent =
 
 loginAndInstall :: Application -> AppState -> LoginData -> AppState
 loginAndInstall app storyModeMenu loginData =
-    guiLog app $ \ logCommand -> io $
-    networkTry app storyModeMenu $ do
+    guiLog app $ \ logCommand -> do
+      config <- get
+      io $ networkTry app storyModeMenu $ do
         logCommand (p "asking server for authorization")
-        answer <- runErrorT $ Client.askForStoryModeZip loginData
+        answer <- runErrorT $ Client.askForStoryModeZip
+                    (story_mode_server_portnumber config)
+                    loginData
         case answer of
             Left err ->
                 return $ message app text storyModeMenu

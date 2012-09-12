@@ -12,6 +12,7 @@ module Base.Configuration (
     show_keyhint_OSD,
     music_volume,
     sound_volume,
+    story_mode_server_portnumber,
 
     defaultConfiguration,
     savedConfigurationToConfiguration,
@@ -28,6 +29,9 @@ import System.Console.CmdArgs
 import Physics.Chipmunk
 
 import Graphics.Qt
+
+import StoryMode.Client (storyModeServerDefaultPort)
+import Network.Socket (PortNumber)
 
 import Version
 
@@ -159,6 +163,7 @@ data Configuration = Configuration {
     -- development
     run_in_place :: Bool,
     update_repo :: String,
+    story_mode_server_port :: Maybe Int,
     stdout_on_windows :: Bool,
     graphics_profiling :: Bool,
     physics_profiling :: Bool,
@@ -203,6 +208,9 @@ music_volume, sound_volume :: Accessor Configuration Float
 music_volume = accessor music_volume_ (\ a r -> r{music_volume_ = a})
 sound_volume = accessor sound_volume_ (\ a r -> r{sound_volume_ = a})
 
+story_mode_server_portnumber :: Configuration -> Maybe PortNumber
+story_mode_server_portnumber = fmap fromIntegral . story_mode_server_port
+
 -- | Converts the configuration loaded from disk to a Configuration.
 -- Adds impure annotations needed for CmdArgs.
 savedConfigurationToConfiguration :: Bool -> SavedConfiguration -> Configuration
@@ -225,6 +233,9 @@ defaultConfiguration showDevelopmentOptions SavedConfiguration_3{..} =
         update_repo = devOption defaultRepo
             &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
             &= typ "REPOSITORY",
+        story_mode_server_port = devOption Nothing
+            &= help ("port to contact the story episodes server (default: " ++ show storyModeServerDefaultPort ++ ")")
+            &= typ "PORT",
         stdout_on_windows = devOption False
             &= help "On windows, log messages get written to the file \"nikkiLog\". Use this flag to switch to stdout.",
         graphics_profiling = devOption False

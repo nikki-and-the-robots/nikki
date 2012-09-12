@@ -42,7 +42,7 @@ mkUpdateVersionRef window config = do
 lookupUpdateVersion :: Configuration -> IO UpdateVersions
 lookupUpdateVersion config = do
     let repo = Repo $ update_repo config
-    v <- io $ runErrorT $ getUpdateVersion repo
+    v <- io $ runErrorT $ getUpdateVersion config repo
     case v of
         Left error -> do
             mapM_ (logg Error) $ lines error

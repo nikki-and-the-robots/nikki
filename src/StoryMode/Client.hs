@@ -6,7 +6,7 @@
 -- Gets imported by the server-code, so mustn't depend on Base, etc..
 
 module StoryMode.Client (
-    storyModeServerPort,
+    storyModeServerDefaultPort,
     ClientToServer(..),
     ServerToClient(..),
     LoginData(..),
@@ -30,6 +30,7 @@ import Control.Monad
 import Control.Monad.Trans.Error
 
 import Network.Client
+import Network.Socket (PortNumber)
 
 import Utils
 
@@ -40,8 +41,8 @@ import StoryMode.Paths
 
 storyModeServerHost = "joyridelabs.de"
 
-storyModeServerPort :: Num n => n
-storyModeServerPort = 8243
+storyModeServerDefaultPort :: Num n => n
+storyModeServerDefaultPort = 8243
 
 
 -- * protocol types
@@ -160,20 +161,20 @@ readLoginData = do
 
 -- ** communication with the server
 
-askForStoryModeZip :: LoginData -> ErrorT String IO ServerToClient
-askForStoryModeZip (LoginData email key) =
-    askStoryModeServer (StoryModeDownload email key)
+askForStoryModeZip :: Maybe PortNumber -> LoginData -> ErrorT String IO ServerToClient
+askForStoryModeZip mp (LoginData email key) =
+    askStoryModeServer mp (StoryModeDownload email key)
 
 -- | If the story-mode is already purchased, this function checks for a
 -- new version with the saved login data. If there is a new version available,
 -- this version is returned.
-askForNewVersion :: IO (Either String (Maybe Version))
-askForNewVersion = runErrorT $ do
+askForNewVersion :: Maybe PortNumber -> IO (Either String (Maybe Version))
+askForNewVersion mp = runErrorT $ do
     mInstalledVersion <- getInstalledVersion
     case mInstalledVersion of
       Nothing -> return Nothing
       Just installedVersion -> do
-        serverVersion <- getServerVersion
+        serverVersion <- getServerVersion mp
         return $ if serverVersion > installedVersion
             then Just serverVersion else Nothing
 
@@ -188,14 +189,15 @@ getInstalledVersion = do
 
 -- | Gets the story mode version from the server.
 -- PRE: The story mode is installed.
-getServerVersion :: ErrorT String IO Version
-getServerVersion = do
+getServerVersion :: Maybe PortNumber -> ErrorT String IO Version
+getServerVersion mp = do
     (LoginData email key) <- readLoginData
-    answer <- askStoryModeServer (StoryModeVersion email key)
+    answer <- askStoryModeServer mp (StoryModeVersion email key)
     case answer of
         (AuthorizedVersionInfo v) -> return v
         (Unauthorized errorMsg) -> throwError errorMsg
         x -> throwError ("wrong server response: " ++ show x)
 
-askStoryModeServer :: ClientToServer -> ErrorT String IO ServerToClient
-askStoryModeServer = askServer storyModeServerHost storyModeServerPort
+askStoryModeServer :: Maybe PortNumber -> ClientToServer -> ErrorT String IO ServerToClient
+askStoryModeServer mPort = askServer storyModeServerHost
+    (maybe storyModeServerDefaultPort id mPort)

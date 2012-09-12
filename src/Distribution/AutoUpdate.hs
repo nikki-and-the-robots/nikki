@@ -20,6 +20,7 @@ import Data.Maybe
 import Control.Monad (join)
 import Control.Monad.Trans.Error
 import Control.Monad.CatchIO
+import Control.Monad.State (get)
 
 import Text.Logging
 
@@ -93,8 +94,9 @@ noUpdatesAvailable uvs =
 -- | gracefully fail, if the game is compiled to be installed as root.
 autoUpdateRootInstall :: Application -> AppState -> AppState
 autoUpdateRootInstall app follower = NoGUIAppState $ do
+    config <- get
     repo <- Repo <$> gets update_repo
-    v <- io $ runErrorT $ getUpdateVersion repo
+    v <- io $ runErrorT $ getUpdateVersion config repo
     case v of
         Left error -> return $ message app (map pv $ lines error) follower
         Right updateVersions | not (hasUpdates updateVersions) ->
@@ -114,7 +116,7 @@ autoUpdateRootInstall app follower = NoGUIAppState $ do
           return $ guiLog app $ \ logCommand -> io $ do
             -- update the story mode (although installed as root)
             result :: Either String () <- runErrorT $
-                    StoryMode.AutoUpdate.update app logCommand
+                    StoryMode.AutoUpdate.update config app logCommand
             case result of
                 Left errorMessage ->
                     return $ message app (fmap pv $ lines errorMessage) follower
@@ -132,13 +134,14 @@ autoUpdate :: Application -> AppState -> AppState
 autoUpdate app follower = autoUpdateRootInstall app follower
 #else
 autoUpdate app follower = guiLog app $ \ logCommand -> do
+    config <- get
     repoString <- gets update_repo
     mDeployed <- io $ isDeployed
     case mDeployed of
         Nothing -> return $ message app [p "not deployed: updating disabled"] follower
         Just path@(DeployPath dp) -> do
             io $ logCommand (p "updating...")
-            result <- io $ runErrorT $ attemptUpdate app logCommand (Repo repoString) path
+            result <- io $ runErrorT $ attemptUpdate config app logCommand (Repo repoString) path
             case result of
                 (Left errorMessage) ->
                     return $ message app (map pv $ lines errorMessage) follower
@@ -170,23 +173,24 @@ updateSuccessMessage (UpdateVersions mGame mStoryMode) =
 -- Returns (Right newVersions) if an update was successfully installed,
 -- (Right (UpdateVersion Nothing Nothing)) if there is no newer version and
 -- (Left message) if an error occurs.
-attemptUpdate :: Application -> (Prose -> IO ()) -> Repo -> DeployPath
+attemptUpdate :: Configuration -> Application -> (Prose -> IO ()) -> Repo -> DeployPath
     -> ErrorT String IO UpdateVersions
-attemptUpdate app logCommand repo deployPath = do
-    uv@(UpdateVersions mGameVersion emStoryModeVersion) <- getUpdateVersion repo
+attemptUpdate config app logCommand repo deployPath = do
+    uv@(UpdateVersions mGameVersion emStoryModeVersion) <- getUpdateVersion config repo
     forM_ mGameVersion $ \ serverVersion -> do
         update app logCommand repo serverVersion deployPath
-    fmapM_ (fmapM_ $ const $ StoryMode.AutoUpdate.update app logCommand) emStoryModeVersion
+    fmapM_ (fmapM_ $ const $ StoryMode.AutoUpdate.update config app logCommand) emStoryModeVersion
     return uv
 
 -- | Returns (Just newVersion), if a newer version is available from the update server.
-getUpdateVersion :: Repo -> ErrorT String IO UpdateVersions
-getUpdateVersion repo = catchSomeExceptionsErrorT show $ do
+getUpdateVersion :: Configuration -> Repo -> ErrorT String IO UpdateVersions
+getUpdateVersion config repo = catchSomeExceptionsErrorT show $ do
     serverVersion <- (ErrorT . return . parseVersion) =<< downloadContent (mkUrl repo "version")
     let gameNewVersion = if serverVersion > Version.nikkiVersion
             then Just serverVersion
             else Nothing
     eStoryModeNewVersion <- io $ StoryMode.Client.askForNewVersion
+                                (story_mode_server_portnumber config)
     either (logg Error) (const $ return ()) eStoryModeNewVersion
     return $ UpdateVersions gameNewVersion eStoryModeNewVersion
 
