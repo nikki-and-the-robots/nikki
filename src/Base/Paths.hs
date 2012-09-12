@@ -20,6 +20,7 @@ import Safe
 
 import Data.List
 import Data.Initial
+import Data.Maybe
 
 import Text.Logging
 
@@ -75,17 +76,25 @@ loadConfiguration :: IO Configuration
 loadConfiguration = do
     filteredArgs <- filterUnwantedArgs <$> getArgs
     mLoadedSavedConfig <- loadConfigurationFromFile
+    showDevelopmentOptions <- shouldShowDevelopmentOptions
     let loadedSavedConfig = case mLoadedSavedConfig of
             Left (logLevel, msg) -> initial
             Right x -> x
-        loadedConfig = savedConfigurationToConfiguration loadedSavedConfig
+        loadedConfig = savedConfigurationToConfiguration showDevelopmentOptions loadedSavedConfig
     config <- cmdTheseArgs loadedConfig filteredArgs
     case mLoadedSavedConfig of
-        -- retain error messages till after execution of cmdArgs 
+        -- retain error messages till after execution of cmdArgs
         -- to prevent pollution of version or help output
         Left (logLevel, msg) -> logg logLevel msg
         _ -> return ()
     return config
+
+-- | Returns whether development options should be shown.
+-- This is the case when NIKKI_DEVELOPMENT is defined.
+shouldShowDevelopmentOptions :: IO Bool
+shouldShowDevelopmentOptions = do
+    v <- lookup "NIKKI_DEVELOPMENT" <$> getEnvironment
+    return $ isJust v
 
 -- | on OS X there is a default command line argument
 -- (-psn_SOMETHING_WITH_THE_PID) passed to the application

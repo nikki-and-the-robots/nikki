@@ -205,12 +205,12 @@ sound_volume = accessor sound_volume_ (\ a r -> r{sound_volume_ = a})
 
 -- | Converts the configuration loaded from disk to a Configuration.
 -- Adds impure annotations needed for CmdArgs.
-savedConfigurationToConfiguration :: SavedConfiguration -> Configuration
-savedConfigurationToConfiguration
-  = defaultConfiguration . toLatestSavedConfiguration
+savedConfigurationToConfiguration :: Bool -> SavedConfiguration -> Configuration
+savedConfigurationToConfiguration showDevelopmentOptions
+  = defaultConfiguration showDevelopmentOptions . toLatestSavedConfiguration
 
-defaultConfiguration :: SavedConfiguration -> Configuration
-defaultConfiguration SavedConfiguration_3{..} =
+defaultConfiguration :: Bool -> SavedConfiguration -> Configuration
+defaultConfiguration showDevelopmentOptions SavedConfiguration_3{..} =
     Configuration {
         play_level = Nothing
             &= help "play the specified level file"
@@ -222,30 +222,30 @@ defaultConfiguration SavedConfiguration_3{..} =
         -- debugging
         run_in_place = False
             &= groupname "Development flags",
-        update_repo = defaultRepo
+        update_repo = devOption defaultRepo
             &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
             &= typ "REPOSITORY",
-        stdout_on_windows = False
+        stdout_on_windows = devOption False
             &= help "On windows, log messages get written to the file \"nikkiLog\". Use this flag to switch to stdout.",
-        graphics_profiling = False
+        graphics_profiling = devOption False
             &= help "output FPS statistics for the rendering thread",
-        physics_profiling = False
+        physics_profiling = devOption False
             &= help "output information about performance of physics engine",
-        omit_pixmap_rendering = False
+        omit_pixmap_rendering = devOption False
             &= help "omit the normal pixmaps when rendering objects",
-        render_xy_cross = False
+        render_xy_cross = devOption False
             &= name "x"
             &= help "render x and y axis",
-        render_chipmunk_objects = False
+        render_chipmunk_objects = devOption False
             &= name "c"
             &= help "render red lines for physical objects",
-        abort_level = Nothing
+        abort_level = devOption Nothing
             &= help "abort levels after simulating N seconds"
             &= typ "N",
-        initial_events = []
+        initial_events = devOption []
             &= help "list of initial events sent to the application"
             &= typ "[Key]",
-        show_widget_frames = False
+        show_widget_frames = devOption False
             &= name "w"
             &= help "show colored frames for all displayed widgets",
 
@@ -277,6 +277,9 @@ defaultConfiguration SavedConfiguration_3{..} =
         "Nikki and the Robots is a 2D platformer from Joyride Laboratories." :
         "http://www.joyridelabs.de/" :
         [])
+  where
+    devOption :: Data val => val -> val
+    devOption = if showDevelopmentOptions then id else (&= ignore)
 
 configurationToSavedConfiguration c =
     SavedConfiguration_3 {
