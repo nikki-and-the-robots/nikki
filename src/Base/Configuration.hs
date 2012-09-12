@@ -23,7 +23,7 @@ import Data.Accessor
 import Data.Initial
 import Data.Version
 
-import System.Console.CmdArgs as CmdArgs
+import System.Console.CmdArgs
 
 import Physics.Chipmunk
 
@@ -251,22 +251,22 @@ defaultConfiguration SavedConfiguration_3{..} =
 
         -- not accessible from the command line
         language_ = saved_language
-            &= CmdArgs.ignore,
+            &= ignore,
         controls_ = saved_controls
-            &= CmdArgs.ignore,
+            &= ignore,
         show_battery_OSD_ = saved_show_battery_OSD
-            &= CmdArgs.ignore,
+            &= ignore,
         show_time_OSD_ = saved_show_time_OSD
-            &= CmdArgs.ignore,
+            &= ignore,
         show_switch_OSD_ = saved_show_switch_OSD
-            &= CmdArgs.ignore,
+            &= ignore,
         show_keyhint_OSD_ = saved_show_keyhints_OSD
-            &= CmdArgs.ignore,
+            &= ignore,
 
         music_volume_ = saved_music_volume
-            &= CmdArgs.ignore,
+            &= ignore,
         sound_volume_ = saved_sound_volume
-            &= CmdArgs.ignore
+            &= ignore
       }
     &= program "nikki"
     &= summary ("Nikki and the Robots (" ++ showVersion nikkiVersion ++ ")")
