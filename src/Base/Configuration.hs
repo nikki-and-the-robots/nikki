@@ -30,6 +30,7 @@ import Physics.Chipmunk
 
 import Graphics.Qt
 
+import StoryMode.Configuration (defaultPurchasingUrl)
 import StoryMode.Client (storyModeServerDefaultPort)
 import Network.Socket (PortNumber)
 
@@ -163,6 +164,7 @@ data Configuration = Configuration {
     -- development
     run_in_place :: Bool,
     update_repo :: String,
+    story_mode_purchasing_url :: Maybe String,
     story_mode_server_port :: Maybe Int,
     stdout_on_windows :: Bool,
     graphics_profiling :: Bool,
@@ -233,6 +235,9 @@ defaultConfiguration showDevelopmentOptions SavedConfiguration_3{..} =
         update_repo = devOption defaultRepo
             &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
             &= typ "REPOSITORY",
+        story_mode_purchasing_url = devOption Nothing
+            &= help ("url to look up, if the story mode is available (default: " ++ defaultPurchasingUrl ++ ")")
+            &= typ "URL",
         story_mode_server_port = devOption Nothing
             &= help ("port to contact the story episodes server (default: " ++ show storyModeServerDefaultPort ++ ")")
             &= typ "PORT",

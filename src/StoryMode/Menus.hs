@@ -32,22 +32,22 @@ import StoryMode.Purchasing
 
 -- * item in main menu
 
-newStoryModeAvailability :: Ptr MainWindow -> IO (MVar StoryModeAvailability)
-newStoryModeAvailability window = do
+newStoryModeAvailability :: Ptr MainWindow -> Configuration -> IO (MVar StoryModeAvailability)
+newStoryModeAvailability window config = do
     ref <- newEmptyMVar
     _ <- forkIO $ do
-        lookForStoryModeSite >>= putMVar ref
+        lookForStoryModeSite config >>= putMVar ref
         updateMainWindow window
     return ref
 
-lookForStoryModeSite :: IO StoryModeAvailability
-lookForStoryModeSite = do
+lookForStoryModeSite :: Configuration -> IO StoryModeAvailability
+lookForStoryModeSite config = do
     isInstalled <- isJust <$> loadEpisodes
     if isInstalled then
         return Installed
       else
         either (const NotAvailable) (const Buyable) <$>
-        downloadLazy purchasingUrl
+        downloadLazy (maybe defaultPurchasingUrl id (story_mode_purchasing_url config))
 
 storyModeMenuItem :: StoryModeMenuItem
 storyModeMenuItem = StoryModeMenuItem False

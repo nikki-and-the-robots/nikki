@@ -8,7 +8,7 @@
 --
 -- There are two threads:
 -- 1. The logic thread. This will do the physics simulation as well as game logic
--- 2. The rendering thread (which is also the bound main thread). 
+-- 2. The rendering thread (which is also the bound main thread).
 --    This will just render to the widget.
 --    Most of the states will use 'setDrawingCallbackMainWindow' to set the rendering function.
 --    This is the way, to let the rendering thread do stuff.
@@ -111,7 +111,7 @@ renderThread configuration appRef =
         withAllSorts $ \ sorts ->
            withApplicationSounds $ \ appSounds -> io $ do
               autoUpdateVersionRef <- mkUpdateVersionRef window configuration
-              storyModeAvailability <- newStoryModeAvailability window
+              storyModeAvailability <- newStoryModeAvailability window configuration
               -- put the initialised Application in the MVar
               let app :: Application
                   app = Application qApp window keyPoller

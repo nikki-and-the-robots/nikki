@@ -38,20 +38,22 @@ import StoryMode.Configuration
 -- | PRE: the story-mode is not installed.
 suggestPurchase :: Application -> AppState -> Parent -> Int -> AppState
 -- use this, once the story-mode is available
-suggestPurchase app storyModeMenu parent ps = NoGUIAppState $ io $ do
-    website <- downloadLazy purchasingUrl
+suggestPurchase app storyModeMenu parent ps = NoGUIAppState $ get >>= \ config -> io $ do
+    website <- downloadLazy (maybe defaultPurchasingUrl id (story_mode_purchasing_url config))
     return $ either
         (const $ comingSoon app parent)
         (const $ buyOrInstall app storyModeMenu parent ps)
         website
 
-buyOrInstall app storyModeMenu parent =
-    menuAppState app
+buyOrInstall app storyModeMenu parent ps = NoGUIAppState $ do
+    config <- get
+    let purchasingUrl = maybe defaultPurchasingUrl id (story_mode_purchasing_url config)
+    return $ menuAppState app
         (NormalMenu (p "Story Episodes") (Just $ p "the Story Episodes are not installed"))
         (Just parent)
         (MenuItem (p "buy the Story Episodes") (openUrl app purchasingUrl . this) :
          MenuItem (p "login and install the Story Episodes") (loginAsking app storyModeMenu . this) :
-         [])
+         []) ps
   where
     this :: Int -> AppState
     this = suggestPurchase app storyModeMenu parent
