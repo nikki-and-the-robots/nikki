@@ -47,7 +47,7 @@ lookForStoryModeSite config = do
         return Installed
       else
         either (const NotAvailable) (const Buyable) <$>
-        downloadLazy (maybe defaultPurchasingUrl id (story_mode_purchasing_url config))
+        downloadLazy (fromMaybe defaultPurchasingUrl (story_mode_purchasing_url config))
 
 storyModeMenuItem :: StoryModeMenuItem
 storyModeMenuItem = StoryModeMenuItem False

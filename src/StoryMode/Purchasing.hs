@@ -8,6 +8,7 @@ import qualified Data.ByteString.Lazy as BSL
 import Data.Typeable
 import Data.Bifunctor
 import Data.Aeson
+import Data.Maybe
 
 import Text.Email.Validate
 import Text.Logging
@@ -39,7 +40,7 @@ import StoryMode.Configuration
 suggestPurchase :: Application -> AppState -> Parent -> Int -> AppState
 -- use this, once the story-mode is available
 suggestPurchase app storyModeMenu parent ps = NoGUIAppState $ get >>= \ config -> io $ do
-    website <- downloadLazy (maybe defaultPurchasingUrl id (story_mode_purchasing_url config))
+    website <- downloadLazy (fromMaybe defaultPurchasingUrl (story_mode_purchasing_url config))
     return $ either
         (const $ comingSoon app parent)
         (const $ buyOrInstall app storyModeMenu parent ps)
@@ -47,7 +48,7 @@ suggestPurchase app storyModeMenu parent ps = NoGUIAppState $ get >>= \ config -
 
 buyOrInstall app storyModeMenu parent ps = NoGUIAppState $ do
     config <- get
-    let purchasingUrl = maybe defaultPurchasingUrl id (story_mode_purchasing_url config)
+    let purchasingUrl = fromMaybe defaultPurchasingUrl (story_mode_purchasing_url config)
     return $ menuAppState app
         (NormalMenu (p "Story Episodes") (Just $ p "the Story Episodes are not installed"))
         (Just parent)

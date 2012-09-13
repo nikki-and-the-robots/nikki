@@ -20,6 +20,7 @@ import Data.Version (Version(..))
 import Data.Binary hiding (decode)
 import Data.Aeson
 import Data.Text (pack, unpack)
+import Data.Maybe
 import qualified Data.ByteString.Lazy as BSL
 
 import Text.Email.Validate
@@ -200,4 +201,4 @@ getServerVersion mp = do
 
 askStoryModeServer :: Maybe PortNumber -> ClientToServer -> ErrorT String IO ServerToClient
 askStoryModeServer mPort = askServer storyModeServerHost
-    (maybe storyModeServerDefaultPort id mPort)
+    (fromMaybe storyModeServerDefaultPort mPort)

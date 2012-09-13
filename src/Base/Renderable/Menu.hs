@@ -12,6 +12,7 @@ module Base.Renderable.Menu (
 import Data.SelectTree (SelectTree(..), labelA)
 import qualified Data.Indexable as I
 import Data.Version
+import Data.Maybe
 
 import Control.Concurrent.MVar
 import Control.Monad.State (get)
@@ -151,7 +152,7 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
                   else if isMenuConfirmation controls__ e then do
                     -- use the new configuration, if available
                     let (_, follower, mNewConfig) = selected menu
-                        newConfig = maybe config id mNewConfig
+                        newConfig = fromMaybe config mNewConfig
                     triggerSound newConfig $ menuConfirmSound $ applicationSounds app
                     return follower
                   else if isMenuBack controls__ e then do
