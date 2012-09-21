@@ -268,6 +268,14 @@ extern "C" QPixmap* newQPixmap(char* file) {
     return result;
 };
 
+extern "C" QPixmap* newQPixmapFromPNGData(uchar* data, int len) {
+    QPixmap* result = new QPixmap();
+    result->loadFromData(data, len, "PNG");
+    if (result->isNull())
+        return NULL;
+    return result;
+};
+
 extern "C" QPixmap* newQPixmapEmpty(int width, int height) {
     QPixmap* r = new QPixmap(width, height);
     r->fill(QColor(0, 0, 0, 0));
