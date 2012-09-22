@@ -10,6 +10,8 @@ module Text.Logging (
 
 
 import Data.IORef
+import qualified Data.ByteString as SBS
+import qualified Data.ByteString.UTF8 as SBS
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -38,20 +40,21 @@ logg ll msg =
     inner msg = do
         mLogHandle <- readIORef _logHandle
         case mLogHandle of
-            Just logHandle -> hPutStrLn logHandle msg >> hFlush logHandle
+            Just logHandle -> SBS.hPutStr logHandle msg >> hFlush logHandle
             Nothing -> case System.Info.os of
                 "mingw32" -> windowsLogging msg
-                _ -> putStrLn msg >> hFlush stdout
+                _ -> SBS.putStr msg >> hFlush stdout
 
-mkMsg :: LogLevel -> String -> String
+mkMsg :: LogLevel -> String -> SBS.ByteString
 mkMsg ll msg =
-    show ll ++ ": " ++ msg
+   SBS.fromString
+   (show ll ++ ": " ++ msg ++ "\n")
 
-windowsLogging :: String -> IO ()
+windowsLogging :: SBS.ByteString -> IO ()
 windowsLogging msg = do
     progPath <- getProgPath
     progName <- getProgName
-    appendFile (progPath </> progName <.> "log") (msg ++ "\n")
+    SBS.appendFile (progPath </> progName <.> "log") msg
 
 
 loggUnsafe :: LogLevel -> String -> a -> a
@@ -70,3 +73,4 @@ setLogFile :: FilePath -> IO ()
 setLogFile logFile =
     openFile logFile AppendMode >>=
     writeIORef _logHandle . Just
+

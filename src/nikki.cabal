@@ -55,10 +55,12 @@ Executable  nikki
         , process
         , filepath
         , transformers
+        , bytestring >= 0.9.1.7
         , mtl
         , containers
         , safe
         , FindBin >= 0.0.5
+        , utf8-string == 0.3.*
     if os(linux)
         build-depends:
             -- for setting LD_LIBRARY_PATH
