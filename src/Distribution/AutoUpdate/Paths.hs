@@ -23,7 +23,7 @@ osError msg = error ("unsupported os for updates: " ++ System.Info.os ++ " (" ++
 -- The core executable has to reside in the same directory as the restarter (called "nikki")
 findCoreExecutable :: IO FilePath
 findCoreExecutable = do
-    path <- getProgPath
+    path <- getProgPathOrCurrentDirectory
     let executable = path </> mkExecutable "core"
     exists <- doesFileExist executable
     when (not exists) $

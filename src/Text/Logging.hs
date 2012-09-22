@@ -19,9 +19,10 @@ import Control.Monad.IO.Class
 import System.Info
 import System.FilePath
 import System.Environment
-import System.Environment.FindBin
 import System.IO
 import System.IO.Unsafe
+
+import Utils.Scripting
 
 
 data LogLevel
@@ -52,7 +53,7 @@ mkMsg ll msg =
 
 windowsLogging :: SBS.ByteString -> IO ()
 windowsLogging msg = do
-    progPath <- getProgPath
+    progPath <- getProgPathOrCurrentDirectory
     progName <- getProgName
     SBS.appendFile (progPath </> progName <.> "log") msg
 

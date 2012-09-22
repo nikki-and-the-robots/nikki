@@ -11,7 +11,6 @@ import Data.List
 import Data.Version
 import Data.Char
 
-import Text.Logging
 import Text.ParserCombinators.ReadP (readP_to_S)
 
 import Control.Arrow
@@ -25,6 +24,7 @@ import System.Directory
 import System.Exit
 import System.Process
 import System.IO
+import System.Environment.FindBin
 
 
 (<~>) :: String -> String -> String
@@ -68,6 +68,16 @@ trySystem cmd = do
     case exitcode of
         ExitSuccess -> return ()
         ExitFailure n -> exitWith $ ExitFailure n
+
+-- | Returns the program path or the current directory.
+getProgPathOrCurrentDirectory :: IO FilePath
+getProgPathOrCurrentDirectory = do
+    progPath <- getProgPath
+    exists <- doesDirectoryExist progPath
+    wd <- getCurrentDirectory
+    return $ if exists 
+        then progPath
+        else wd
 
 -- | changes the working directory temporarily.
 withCurrentDirectory :: FilePath -> IO () -> IO ()
@@ -119,8 +129,6 @@ removeIfExists :: FilePath -> IO ()
 removeIfExists f = liftIO $ do
     isFile <- doesFileExist f
     isDirectory <- doesDirectoryExist f
-    when (isFile || isDirectory) $
-        logg Info ("removing: " ++ f)
     if isFile then
         removeFile f
       else if isDirectory then
