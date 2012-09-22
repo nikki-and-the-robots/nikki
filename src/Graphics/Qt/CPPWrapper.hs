@@ -102,6 +102,7 @@ import Data.Abelian
 import Data.Set (Set)
 import Data.Maybe
 import qualified Data.ByteString as SBS
+import qualified Data.ByteString.Unsafe as SBS
 
 import Text.Logging
 import Text.Printf
@@ -114,7 +115,6 @@ import Foreign (Ptr, nullPtr, FunPtr, freeHaskellFunPtr)
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.ForeignPtr
-import Foreign.Marshal.Array (withArray)
 import qualified Foreign.Concurrent (newForeignPtr)
 
 import System.Directory
@@ -480,11 +480,9 @@ newQPixmap file_ = do
 
 newQPixmapFromPNGData :: FilePath -> IO (Ptr QPixmap)
 newQPixmapFromPNGData file = do
-    logg Debug file
-    bytes <- fmap fromIntegral <$> SBS.unpack <$> SBS.readFile file
-    logg Debug . show . take 100 . show $ bytes
-    withArray bytes $ \ arrayPtr -> do
-        cppNewQPixmapFromPNGData arrayPtr (length bytes)
+    bytes <- SBS.readFile file
+    SBS.unsafeUseAsCString bytes $ \ arrayPtr ->
+        cppNewQPixmapFromPNGData arrayPtr (SBS.length bytes)
 
 newQPixmapEmpty :: Size QtInt -> IO (ForeignPtr QPixmap)
 newQPixmapEmpty (Size x y) = do
@@ -504,7 +502,7 @@ foreign import ccall "newQPixmapEmpty" cppNewQPixmapEmpty ::
 
 foreign import ccall "newQPixmap" cppNewQPixmap :: CString -> IO (Ptr QPixmap)
 
-foreign import ccall "newQPixmapFromPNGData" cppNewQPixmapFromPNGData :: Ptr CUChar -> Int -> IO (Ptr QPixmap)
+foreign import ccall "newQPixmapFromPNGData" cppNewQPixmapFromPNGData :: Ptr CChar -> Int -> IO (Ptr QPixmap)
 
 foreign import ccall "destroyQPixmap" destroyQPixmap :: Ptr QPixmap -> IO ()
 
