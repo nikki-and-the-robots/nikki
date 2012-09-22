@@ -146,7 +146,7 @@ Executable nikki
         , random
         , RSA >= 1.2.1
         , safe
-        , sfml-audio == 0.7.*
+        , sfml-audio == 0.7.* && >= 0.7.1
         , StateVar
         , strict >= 0.3.2
         , stickyKeysHotKey == 0.1.*

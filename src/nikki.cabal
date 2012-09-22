@@ -142,7 +142,7 @@ Executable core
         , random
         , RSA >= 1.2.1
         , safe
-        , sfml-audio == 0.7.*
+        , sfml-audio == 0.7.* && >= 0.7.1
         , StateVar
         , stickyKeysHotKey == 0.1.*
         , strict >= 0.3.2
