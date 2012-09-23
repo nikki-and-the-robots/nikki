@@ -5,7 +5,6 @@ module Distribution.AutoUpdate.Paths where
 import Control.Monad
 
 import System.FilePath
-import System.Environment.FindBin
 import System.Directory
 import System.Info
 
