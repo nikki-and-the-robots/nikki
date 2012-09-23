@@ -12,6 +12,7 @@ import Data.Indexable.Range (Range, calculateRange)
 import Data.Initial
 import Data.SelectTree
 import Data.Maybe
+import Data.List
 
 import Text.Logging
 
