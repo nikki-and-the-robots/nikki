@@ -1,3 +1,9 @@
+1.0.1 (since 1.0)
+-----------------
+
+Fixed problems with special characters in filesystem paths on windows
+
+
 1.0 (since 0.5.1.2)
 -------------------
 
