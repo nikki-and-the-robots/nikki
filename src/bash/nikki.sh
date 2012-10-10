@@ -2,8 +2,9 @@
 
 # to abort in case of errors
 function error {
-echo aborted due to an error
-exit 1
+    local exit_status=${1:-$?}
+    echo aborted due to an error \($exit_status\)
+    exit $exit_status
 }
 trap error ERR
 
