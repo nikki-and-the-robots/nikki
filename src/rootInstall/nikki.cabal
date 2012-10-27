@@ -157,7 +157,7 @@ Executable nikki
         , transformers == 0.2.* || == 0.3.*
         , uniplate >= 1.6
         , utf8-string == 0.3.*
-        , vector >= 0.9
+        , vector == 0.10.*
 
     if os(linux)
         extra-libraries:

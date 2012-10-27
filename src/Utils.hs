@@ -676,9 +676,3 @@ firstAStrict = accessor (\ (a :!: _) -> a) (\ a (_ :!: b) -> (a :!: b))
 zipStrict :: [a] -> [b] -> [Pair a b]
 zipStrict (a : ra) (b : rb) = (a :!: b) : zipStrict ra rb
 zipStrict _ _ = []
-
-
--- * vectors
-
-instance NFData a => NFData (Data.Vector.Vector a) where
-  rnf v = Data.Vector.foldl' (\x y -> y `deepseq` x) () v
