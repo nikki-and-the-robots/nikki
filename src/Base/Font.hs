@@ -194,7 +194,8 @@ toColorVariants fontColors loadedVariant = do
         colorMapping foreground c =
             if c == qBlack then qTransparent else
             if c == qWhite then foreground else
-            error "font pixmaps should consist of black and white only."
+            error ("font pixmaps should consist of black and white only. (" ++
+                    show c ++ ")")
 
     colorVariants <- forM fontColors $ \ foreground -> do
         qForeground <- colorToQRgb foreground
