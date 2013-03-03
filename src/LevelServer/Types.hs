@@ -6,7 +6,6 @@ module LevelServer.Types where
 import Data.Binary
 import Data.Version
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString as BSS
 
 import Control.Applicative
 import Control.DeepSeq
@@ -34,11 +33,6 @@ instance Binary ClientToServer where
 instance NFData ClientToServer where
     rnf GetLevelList = ()
     rnf (UploadLevel a b) = rnf a `seq` rnf b
-
-instance NFData BSL.ByteString where
-    rnf = rnf . BSL.toChunks
-
-instance NFData BSS.ByteString
 
 data ServerToClient
     = LevelList [String]

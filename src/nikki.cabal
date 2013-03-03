@@ -55,7 +55,7 @@ Executable  nikki
         , process
         , filepath
         , transformers
-        , bytestring >= 0.9.1.7
+        , bytestring >= 0.10
         , mtl
         , containers
         , safe
@@ -118,7 +118,7 @@ Executable core
         , bifunctors
         , binary
         , binary-communicator >= 1.0.2
-        , bytestring >= 0.9.1.7
+        , bytestring >= 0.10
         , clocked == 0.4.1.*
         , cmdargs >= 0.6.6
         , containers
