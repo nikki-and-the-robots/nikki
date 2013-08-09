@@ -5,6 +5,7 @@ module StoryMode.Purchasing where
 
 import Data.Version
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Char8 as BSC
 import Data.Typeable
 import Data.Bifunctor
 import Data.Aeson
@@ -74,7 +75,7 @@ loginAsking app storyModeMenu parent =
     this = loginAsking app storyModeMenu parent
 
     parseEmail :: String -> Either [Prose] EmailAddress
-    parseEmail s = first (const [p "invalid email-address"]) $ validate s
+    parseEmail s = first (const [p "invalid email-address"]) $ validate (BSC.pack s)
 
 loginAndInstall :: Application -> AppState -> LoginData -> AppState
 loginAndInstall app storyModeMenu loginData =

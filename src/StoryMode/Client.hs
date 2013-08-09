@@ -22,8 +22,9 @@ import Data.Aeson
 import Data.Text (pack, unpack)
 import Data.Maybe
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Char8 as BSC
 
-import Text.Email.Validate
+import Text.Email.Validate as EV
 
 import Control.Applicative
 import Control.DeepSeq
@@ -65,12 +66,14 @@ instance Binary ClientToServer where
             1 -> StoryModeVersion <$> get <*> get
 
 instance Binary EmailAddress where
-    put (EmailAddress a b) =
-        putWord8 0 *> put a *> put b
+    put ea =
+        putWord8 0 *> put (localPart ea) *> put (domainPart ea)
     get = do
         c <- getWord8
         case c of
-            0 -> EmailAddress <$> get <*> get
+            0 -> do lp <- get
+                    dp <- get
+                    return $ fromJust $ EV.emailAddress (BSC.concat [lp, BSC.singleton '@', dp])
 
 instance NFData ClientToServer where
     rnf (StoryModeDownload a b) =
@@ -79,8 +82,8 @@ instance NFData ClientToServer where
         rnf a `seq` rnf b
 
 instance NFData EmailAddress where
-    rnf (EmailAddress a b) =
-        rnf a `seq` rnf b
+    rnf ea =
+        rnf (localPart ea) `seq` rnf (domainPart ea)
 
 instance Protocol ClientToServer where
     protocolVersion _ = Version [0, 2] []
@@ -144,7 +147,7 @@ instance FromJSON LoginData where
     parseJSON _ = mzero
 
 instance FromJSON EmailAddress where
-    parseJSON (String t) = case validate (unpack t) of
+    parseJSON (String t) = case validate (BSC.pack $ unpack t) of
         Left _ -> mzero
         Right x -> return x
 
