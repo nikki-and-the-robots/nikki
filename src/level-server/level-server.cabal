@@ -17,6 +17,7 @@ Executable level-server
         binary >= 0.5.0.2,
         network >= 2.3.0.5,
         binary-communicator >= 1.0.2.1,
+        text,
         process,
         directory,
         filepath,
@@ -27,7 +28,7 @@ Executable level-server
         time,
         old-locale,
         deepseq,
-        aeson == 0.6.*,
+        aeson >= 0.6,
         attoparsec,
         bytestring,
         strict,
@@ -35,5 +36,6 @@ Executable level-server
         containers,
         data-accessor-mtl,
         mtl,
-        MonadCatchIO-transformers == 0.2.*,
-        vector >= 0.9
+        MonadCatchIO-transformers >= 0.2,
+        vector >= 0.9,
+        string-conversions

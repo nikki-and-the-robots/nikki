@@ -11,7 +11,7 @@ module Text.Logging (
 
 import Data.IORef
 import qualified Data.ByteString as SBS
-import qualified Data.ByteString.UTF8 as SBS
+import Data.String.Conversions
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -48,8 +48,7 @@ logg ll msg =
 
 mkMsg :: LogLevel -> String -> SBS.ByteString
 mkMsg ll msg =
-   SBS.fromString
-   (show ll ++ ": " ++ msg ++ "\n")
+   cs (show ll ++ ": " ++ msg ++ "\n")
 
 windowsLogging :: SBS.ByteString -> IO ()
 windowsLogging msg = do

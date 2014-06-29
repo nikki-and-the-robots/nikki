@@ -299,8 +299,6 @@ convertErrorT f (ErrorT action) = ErrorT $
 hush :: Either e a -> Maybe a
 hush = either (const Nothing) Just
 
-deriving instance Foldable (Either a)
-
 
 -- * either stuff
 
