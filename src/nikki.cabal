@@ -115,6 +115,7 @@ Executable core
     build-depends:
           aeson
         , base == 4.*
+        , base-compat
         , bifunctors
         , binary
         , binary-communicator >= 1.0.2

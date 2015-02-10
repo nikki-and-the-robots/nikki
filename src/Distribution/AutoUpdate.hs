@@ -16,6 +16,7 @@ import Data.List
 import Data.Monoid
 import Data.Version (Version, showVersion)
 import Data.Maybe
+import Data.Foldable.Compat
 
 import Control.Monad (join)
 import Control.Monad.Trans.Error
