@@ -1,11 +1,6 @@
 #!/bin/bash
 
-# to abort in case of errors
-function error {
-echo aborted due to an error
-exit 1
-}
-trap error ERR
+set -o errexit
 
 # building c++-part (qt-bindings)
 cd cpp
