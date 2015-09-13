@@ -18,7 +18,7 @@ import Network.Download
 
 import Graphics.Qt
 
-import Utils
+import Utils hiding (tryReadMVar)
 
 import Base
 

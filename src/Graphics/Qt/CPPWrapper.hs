@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface,  EmptyDataDecls, NamedFieldPuns,
-    DeriveDataTypeable, FlexibleInstances, ScopedTypeVariables #-}
+    DeriveDataTypeable, FlexibleInstances, ScopedTypeVariables, StandaloneDeriving #-}
 
 module Graphics.Qt.CPPWrapper (
 
@@ -124,7 +124,7 @@ import System.IO.Unsafe
 import Graphics.Qt.Types
 import Graphics.Qt.Events
 
-import Utils
+import Utils hiding (tryReadMVar)
 
 
 -- ** Globals
@@ -464,6 +464,8 @@ foreign import ccall "setMatrix" setMatrix :: Ptr QPainter -> Ptr QTransform -> 
 
 data QPixmap
   deriving (Typeable)
+
+deriving instance Data QPixmap
 
 -- | loads a new pixmap. Canonicalizes the path first.
 newQPixmap :: FilePath -> IO (ForeignPtr QPixmap)

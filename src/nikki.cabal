@@ -137,7 +137,7 @@ Executable core
         , LibZip >= 0.2.0.4
         , MonadCatchIO-transformers >= 0.2.2.2
         , mtl == 2.* && (< 2.1 || > 2.1)
-        , network == 2.*
+        , network >= 2.6
         , parsec == 3.*
         , process
         , random

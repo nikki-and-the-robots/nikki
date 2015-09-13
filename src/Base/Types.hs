@@ -1,6 +1,6 @@
 {-# language ExistentialQuantification, FunctionalDependencies, RecordWildCards,
     NamedFieldPuns, FlexibleInstances, MultiParamTypeClasses,
-    DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+    DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable, ImpredicativeTypes #-}
 
 
 -- module for often used types (in one Base module, to avoid module import cycles.)

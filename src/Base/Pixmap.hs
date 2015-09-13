@@ -34,7 +34,7 @@ import Control.DeepSeq
 import System.IO.Unsafe
 
 import Foreign.Ptr (nullPtr)
-import Foreign.ForeignPtr (unsafeForeignPtrToPtr)
+import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 
 import Graphics.Qt
 import Physics.Chipmunk (Angle, rad2deg)

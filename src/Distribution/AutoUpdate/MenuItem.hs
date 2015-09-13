@@ -18,7 +18,7 @@ import Control.Concurrent
 
 import Graphics.Qt
 
-import Utils
+import Utils hiding (tryReadMVar)
 
 import Base
 
