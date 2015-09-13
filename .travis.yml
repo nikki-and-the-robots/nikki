@@ -5,4 +5,4 @@ ghc:
 
 install:
   - cd src
-  - cabal configure --enable-tests && cabal build && cabal test
+  - cabal install -j --only-dependencies && cabal configure --enable-tests && cabal build && cabal test
