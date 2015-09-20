@@ -17,6 +17,16 @@ following, then skip directly to the section "Running Nikki"_:
 $ sudo apt-get install haskell-platform g++ cmake pkg-config libzip-dev libopenal-dev libsndfile1-dev
 $ ./linuxCompile.sh --extra-include-dir=/usr/include/AL
 ```
+If the above fails out with a message about `libzip`, this is probably because
+you have a version of `libzip-dev` installed which is different from the version
+of the Haskell library `libzip` which gets pulled down. Re-run `linuxCompile.sh`
+with a constraint on the version of `libzip-dev` that is installed, leaving the
+patch version free. For example if version 0.10.2 is installed, then run the
+following:
+
+``` bash
+$ ./linuxCompile.sh --extra-include-dir=/usr/include/AL --constraint=libzip==0.10.*
+```
 
 First make sure you have the actual build tools necessary to build Nikki. 
 + Since Nikki is built with GHC Haskell, you will need GHC and `cabal`. The
