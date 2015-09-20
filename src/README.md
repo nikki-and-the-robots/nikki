@@ -14,7 +14,7 @@ _If you're on a Debian-based system and you don't want to read the rest, do the
 following, then skip directly to the section "Running Nikki"_:
 
 ``` bash
-$ sudo apt-get install haskell-platform g++ cmake pkg-config libopenal-dev libsndfile1-dev
+$ sudo apt-get install haskell-platform g++ cmake pkg-config libzip-dev libopenal-dev libsndfile1-dev
 $ ./linuxCompile.sh --extra-include-dir=/usr/include/AL
 ```
 

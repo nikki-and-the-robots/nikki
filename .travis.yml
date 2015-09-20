@@ -5,7 +5,7 @@ ghc:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get install haskell-platform g++ cmake pkg-config libopenal-dev libsndfile1-dev
+  - sudo apt-get install haskell-platform g++ cmake pkg-config libzip-dev libopenal-dev libsndfile1-dev
 
 install:
   - cd src
