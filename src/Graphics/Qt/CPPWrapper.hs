@@ -1,5 +1,5 @@
 {-# LANGUAGE ForeignFunctionInterface,  EmptyDataDecls, NamedFieldPuns,
-    DeriveDataTypeable, FlexibleInstances, ScopedTypeVariables, StandaloneDeriving #-}
+    DeriveDataTypeable, FlexibleInstances, ScopedTypeVariables, StandaloneDeriving, CPP #-}
 
 module Graphics.Qt.CPPWrapper (
 
@@ -124,7 +124,11 @@ import System.IO.Unsafe
 import Graphics.Qt.Types
 import Graphics.Qt.Events
 
+#if MIN_VERSION_base(4,7,0)
 import Utils hiding (tryReadMVar)
+#else
+import Utils
+#endif
 
 
 -- ** Globals

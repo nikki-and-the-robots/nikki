@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 
 module Distribution.AutoUpdate.MenuItem (
     autoUpdateMenuItem,
@@ -18,7 +19,11 @@ import Control.Concurrent
 
 import Graphics.Qt
 
+#if MIN_VERSION_base(4,7,0)
 import Utils hiding (tryReadMVar)
+#else
+import Utils
+#endif
 
 import Base
 

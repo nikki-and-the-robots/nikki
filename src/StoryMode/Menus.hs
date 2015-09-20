@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 
 module StoryMode.Menus (
     newStoryModeAvailability,
@@ -18,7 +19,11 @@ import Network.Download
 
 import Graphics.Qt
 
+#if MIN_VERSION_base(4,7,0)
 import Utils hiding (tryReadMVar)
+#else
+import Utils
+#endif
 
 import Base
 
