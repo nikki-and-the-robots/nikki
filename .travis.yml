@@ -3,6 +3,11 @@ language: haskell
 ghc:
   - 7.8
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install haskell-platform g++ cmake pkg-config libopenal-dev libsndfile1-dev
+
 install:
   - cd src
+  - ./linuxCompile.sh --extra-include-dir=/usr/include/AL
   - cabal install -j --only-dependencies && cabal configure --enable-tests && cabal build && cabal test
