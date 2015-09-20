@@ -5,6 +5,8 @@ module Data.StrictList where
 
 import Data.Monoid
 import Data.Foldable as F
+import Control.Applicative
+import Control.Monad (ap)
 
 
 data StrictList a
@@ -18,6 +20,10 @@ instance Monoid (StrictList a) where
     mempty = Empty
     mappend (a :! r) bs = a :! mappend r bs
     mappend Empty bs = bs
+
+instance Applicative StrictList where
+    (<*>) = ap
+    pure = return
 
 instance Monad StrictList where
     m >>= k = F.foldr (mappend . k) Empty m
