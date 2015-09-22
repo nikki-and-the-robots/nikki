@@ -1,10 +1,8 @@
-Installing and Running Nikki
-============================
+# Installing and Running Nikki
 
 This directory contains all source files for Nikki and the Robots. 
 
-Setup On Linux
---------------
+## Setup On Linux
 
 These directions are going to be tailored for a Debian-based Linux distro, but
 they should be adaptable to any Linux distro. The rationale for each step is
@@ -62,7 +60,9 @@ are required for a lot of its Haskell dependencies to compile.
   For Debian: `sudo apt-get install libopenal-dev libsndfile1-dev`.
 
 Once you have these dependencies installed, compile on Linux with where
-`LOCATION_OF_AL_HEADER` is the path to the folder containing the file `al.h` (as noted earlier `sfml` often looks for OpenAL in a non-standard place, usually missing the `AL` directory):
+`LOCATION_OF_AL_HEADER` is the path to the folder containing the file `al.h` (as
+noted earlier `sfml` often looks for OpenAL in a non-standard place, usually
+missing the `AL` directory):
 
 ``` bash
 $ ./linuxCompile.sh --extra-include-dir=LOCATION_OF_AL_HEADER
@@ -73,8 +73,7 @@ For example on most Debian-based distros, this is
 $ ./linuxCompile.sh --extra-include-dir=/usr/include/AL
 ```
 
-Running Nikki
--------------
+## Running Nikki
 
 Run the game with:
 
