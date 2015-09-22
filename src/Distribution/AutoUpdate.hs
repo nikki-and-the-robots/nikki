@@ -10,7 +10,8 @@ module Distribution.AutoUpdate (
   ) where
 
 
-import Prelude hiding (catch)
+import Prelude ()
+import Prelude.Compat
 
 import Data.List
 import Data.Monoid
@@ -52,19 +53,6 @@ import Distribution.AutoUpdate.VerifySignatures
 
 import qualified StoryMode.Client
 import qualified StoryMode.AutoUpdate
-
--- I know there's orphan instances here... upgrade GHC if you don't want these!
--- They are necessary for a later use of fmapM_
-#if MIN_VERSION_base(4,7,0)
-#else
--- Taken directly from the source of base version 4.8.0.0
-instance Foldable (Either a) where
-    foldMap _ (Left _) = mempty
-    foldMap f (Right y) = f y
-
-    foldr _ z (Left _) = z
-    foldr f z (Right y) = f y z
-#endif
 
 -- * introduced for more type safety
 
