@@ -116,6 +116,7 @@ Executable core
           aeson
         , base == 4.*
         , base-compat
+        , base-orphans
         , bifunctors
         , binary
         , binary-communicator >= 1.0.2
