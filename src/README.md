@@ -73,6 +73,13 @@ For example on most Debian-based distros, this is
 $ ./linuxCompile.sh --extra-include-dir=/usr/include/AL
 ```
 
+### Reference Cabal Freeze File
+
+For reference, there is a `cabal.config` file generated with `cabal freeze` for
+a particular GHC 7.8.3 build. It is currently suffixed with `.inactive` so that
+`cabal` doesn't use it by default since Nikki should build across several
+different GHC versions.
+
 ## Running Nikki
 
 Run the game with:
