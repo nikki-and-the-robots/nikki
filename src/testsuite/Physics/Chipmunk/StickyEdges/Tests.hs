@@ -10,7 +10,7 @@ import Data.List
 
 import Control.Exception
 
-import Test.QuickCheck
+import Test.QuickCheck hiding (scale)
 
 import Physics.Chipmunk
 import Physics.Chipmunk.StickyEdges

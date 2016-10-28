@@ -1,3 +1,4 @@
+{-# language FlexibleContexts #-}
 {-# language ViewPatterns #-}
 
 module Sorts.Tiles.Baking (

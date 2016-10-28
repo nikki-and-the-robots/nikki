@@ -1,38 +1,39 @@
 
 module Sorts.Tiles.Baking.Tests where
 
+import           Control.Arrow
+import           Control.Exception
+import           Data.Abelian
+import           Data.List
+import           Data.Maybe
+import           System.Environment
+import           System.FilePath
+import           System.IO
+import           Text.Printf
 
-import Data.List
-import Data.Maybe
-import Data.Abelian
+import           Base
+import           Graphics.Qt
+import           Sorts.Tiles.Baking (bakeTiles, boundingBox)
+import           Test.QuickCheck
+import           Test.QuickCheck.Property
+import           Utils
+import           Utils.Tests
 
-import Text.Printf
+tests :: IO ()
+tests = do
+    ci <- lookupEnv "DISPLAY"
+    case ci of
+        Nothing -> do
+            hPutStrLn stderr $
+              "not running tests that need an X server " ++
+              "(Sorts.Tiles.Baking.Tests)"
+        Just _ -> do
+            withQApplication $ \ _qApp ->
+                withMainWindow 1 500 500 $ \ _window -> do
+                    pixmaps <- loadSomePixmaps
 
-import Control.Arrow
-import Control.Exception
-
-import System.FilePath
-
-import Graphics.Qt
-
-import Utils
-import Utils.Tests
-
-import Base
-
-import Sorts.Tiles.Baking (bakeTiles, boundingBox)
-
-import Test.QuickCheck
-import Test.QuickCheck.Property
-
-
-tests =
-    withQApplication $ \ _qApp ->
-    withMainWindow 1 500 500 $ \ _window -> do
-        pixmaps <- loadSomePixmaps
-
-        quickCheckWith stdArgs{maxSize = 13, maxSuccess = 500} $
-            bakingEquality pixmaps
+                    quickCheckWith stdArgs{maxSize = 13, maxSuccess = 500} $
+                        bakingEquality pixmaps
 
 -- | checks, if baking doesn't affect the rendered image.
 bakingEquality :: [Animation Pixmap]

@@ -1,15 +1,31 @@
-language: haskell
+language: c
 
-ghc:
-  - 7.8
-  - 7.6
-  - 7.4
+addons:
+  apt:
+    packages:
+      - cmake
+      - g++
+      - libgmp-dev
+      - libopenal-dev
+      - libsndfile1-dev
+      - libzip-dev
+      - pkg-config
 
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install haskell-platform g++ cmake pkg-config libzip-dev libopenal-dev libsndfile1-dev
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - stack --version
 
-install:
+script:
   - cd src
-  - ./linuxCompile.sh --enable-tests --extra-include-dir=/usr/include/AL --constraint=bindings-libzip==0.10.*
-  - cabal test
+  - mkdir -p cpp/dist
+  - (cd cpp/dist && cmake .. && make)
+  - export STACK_YAML=$PWD/stack-libzip-0.10.yaml
+  - stack setup --no-terminal
+  - stack test --no-terminal
+  - (cd testsuite ; stack exec -- testsuite)
+
+cache:
+  directories:
+    - $HOME/.stack

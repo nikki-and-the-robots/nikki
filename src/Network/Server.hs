@@ -19,7 +19,7 @@ import Control.Concurrent
 import Control.Exception
 import Control.DeepSeq
 
-import System.Locale
+import System.Locale hiding (defaultTimeLocale)
 
 import Network.Fancy (streamServer, sleepForever, ServerSpec(..))
 import Network.Client

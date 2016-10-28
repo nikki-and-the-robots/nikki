@@ -50,7 +50,7 @@ import Safe
 
 import qualified Data.List as List
 import Data.Accessor
-import Data.Foldable (Foldable(..), toList)
+import Data.Foldable (Foldable(), toList)
 import Data.Initial
 import Data.Traversable (Traversable)
 import Data.Vector as Vector

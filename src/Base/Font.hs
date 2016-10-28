@@ -17,6 +17,7 @@ module Base.Font (
     searchGlyphs,
   ) where
 
+import Prelude hiding (Word)
 
 import Safe
 
