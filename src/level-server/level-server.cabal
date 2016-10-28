@@ -38,4 +38,6 @@ Executable level-server
         mtl,
         MonadCatchIO-transformers >= 0.2,
         vector >= 0.9,
-        string-conversions
+        string-conversions,
+        network,
+        network-uri

@@ -1,0 +1,29 @@
+flags: {}
+packages:
+- ./.
+- testsuite
+- scripts
+- level-server
+- location:
+    git: https://github.com/nikki-and-the-robots/sfml-audio
+    commit: 499eaf9
+  extra-dep: true
+extra-deps:
+- FindBin-0.0.5
+- Hipmunk-5.2.0.17
+- LibZip-1.0.1
+- RSA-1.2.1.0
+- base-compat-0.9.1
+- base-orphans-0.5.4
+- bifunctors-5.2
+- binary-communicator-1.0.2.2
+- bindings-libzip-1.0.1
+- clocked-0.4.1.3
+- crypto-pubkey-types-0.1.1
+- email-validate-1.0.0
+- network-fancy-0.2.4
+- network-uri-2.6.0.1
+- stickyKeysHotKey-0.1.0.2
+- string-conversions-0.3.0.3
+- utf8-string-0.3.8
+resolver: lts-3.22

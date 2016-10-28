@@ -44,6 +44,8 @@ Executable testsuite
 
     build-depends:
         base >= 4 && < 5
+        , base-compat
+        , base-orphans
         , filepath
         , directory
         , mtl
@@ -55,7 +57,7 @@ Executable testsuite
         , safe
         , transformers
         , StateVar
-        , QuickCheck == 2.4.* || == 2.5.*
+        , QuickCheck
         , random
         , process
         , MonadCatchIO-transformers >= 0.2.2.2
@@ -85,9 +87,11 @@ Executable testsuite
         , bifunctors
         , email-validate
         , utf8-string == 0.3.*
-        , hashable == 1.1.*
+        , hashable
         , crypto-pubkey-types == 0.1.*
         , stickyKeysHotKey == 0.1.*
+        , string-conversions
+        , network-uri
 
     if os(linux)
         extra-libraries:
@@ -131,7 +135,6 @@ Executable searchCrashes
         unix >= 2.4.0.2
 
     extra-libraries:
-        qtwrapper, QtOpenGL
+        qtwrapper, QtOpenGL, QtGui, QtCore
     extra-lib-dirs:
         ../cpp/dist
-

@@ -24,6 +24,11 @@ data CatchState state m a =
     CatchState {innerAction :: (MVar state -> m a)}
   deriving (Functor)
 
+instance Applicative m => Applicative (CatchState state m) where
+  pure a = CatchState $ const $ pure a
+  CatchState f <*> CatchState a = CatchState $ \ mvar ->
+    f mvar <*> a mvar
+
 instance Monad m => Monad (CatchState state m) where
     (CatchState a) >>= b =
         CatchState $ \ mvar -> do
