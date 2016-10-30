@@ -1,5 +1,7 @@
 {-# language ScopedTypeVariables #-}
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 -- | The game is made up of different 'AppState's (see Top.Application), but basically
 -- these are just IO-operations. They represent the top level menu, the loading stages and
 -- playing or editing a level.

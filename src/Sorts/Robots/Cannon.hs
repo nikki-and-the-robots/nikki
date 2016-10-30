@@ -2,29 +2,20 @@
 
 module Sorts.Robots.Cannon where
 
+import           Control.Arrow
+import           Data.Abelian
+import           Data.Accessor
+import           Data.Maybe
+import           Data.Typeable
+import           Physics.Chipmunk as CM
+import           Physics.Hipmunk as Hipmunk hiding (initChipmunk, body)
+import           System.FilePath
 
-import Data.Typeable
-import Data.Abelian
-import Data.Maybe
-import Data.Accessor
-
-import Control.Arrow
-import Control.Applicative
-
-import System.FilePath
-
-import Physics.Hipmunk as Hipmunk hiding (initChipmunk, body)
-import Physics.Chipmunk as CM
-
-import Graphics.Qt as Qt
-
-import Utils
-
-import Base
-
-import Sorts.Robots.Configuration
-import Sorts.Robots.Eyes
-
+import           Base
+import           Graphics.Qt as Qt
+import           Sorts.Robots.Configuration
+import           Sorts.Robots.Eyes
+import           Utils
 
 -- * configuration
 

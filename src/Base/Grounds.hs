@@ -3,20 +3,14 @@
 
 module Base.Grounds where
 
+import           Data.Accessor
+import           Data.Data
+import           Data.Indexable as I
+import           Data.Initial
+import           Safe
 
-import Safe
-
-import Data.Indexable as I
-import Data.Data
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import Data.Initial
-import Data.Accessor
-
-import Graphics.Qt
-
-import Utils
-
+import           Graphics.Qt
+import           Utils
 
 -- | Multiple backgrounds, one main Layer, multiple foregrounds
 -- if backgrounds (or foregrounds) have zero distance to the main layer,

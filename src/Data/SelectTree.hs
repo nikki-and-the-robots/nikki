@@ -18,19 +18,15 @@ module Data.SelectTree (
     readDirectoryToSelectTree,
   ) where
 
-import Utils
-
-import Data.Maybe
+import           Data.Accessor
 import qualified Data.Indexable as I
-import Data.Indexable hiding (length, toList, findIndices, fromList, catMaybes)
+import           Data.Indexable hiding (length, toList, findIndices, fromList, catMaybes)
+import           Data.Maybe
 import qualified Data.Tree as T
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable(..))
-import Data.Accessor
+import           System.Directory
+import           System.FilePath
 
-import System.Directory
-import System.FilePath
-
+import           Utils
 
 data SelectTree a
     -- Invariant: length [SelectTree a] > Index

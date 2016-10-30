@@ -1,5 +1,7 @@
 {-# language ScopedTypeVariables #-}
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 module Graphics.Qt (
     module Graphics.Qt,
     module Graphics.Qt.Types,

@@ -1,5 +1,7 @@
 {-# language DeriveDataTypeable #-}
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 module StoryMode.Purchasing where
 
 

@@ -1,17 +1,10 @@
 
 module Data.Binary.Strict where
 
-
-import Prelude hiding (catch)
-
-import Data.Binary
-import Data.ByteString.Lazy as Lazy
-import Data.ByteString as Strict
-
-import Control.Exception
-
-import Utils
-
+import           Control.Exception
+import           Data.Binary
+import           Data.ByteString as Strict
+import           Data.ByteString.Lazy as Lazy
 
 -- | returns Nothing, if the saved value cannot be serialised
 decodeFileStrict :: Binary a => FilePath -> IO (Maybe a)

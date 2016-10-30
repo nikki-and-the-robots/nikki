@@ -16,24 +16,16 @@
 
 module Sorts.Background (sorts) where
 
+import           Data.Abelian
+import           Data.List
+import           Data.Maybe
+import           Data.Typeable
+import           System.FilePath
 
-import Data.Typeable
-import Data.Abelian
-import Data.List
-import Data.Maybe
-
-import Control.Applicative
-
-import System.FilePath
-
-import Graphics.Qt
-
-import Utils
-
-import Base hiding (backgrounds)
-
+import           Base hiding (backgrounds)
+import           Graphics.Qt
 import qualified Sorts.StoryMode
-
+import           Utils
 
 backgrounds =
     "blue" :

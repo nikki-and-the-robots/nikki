@@ -2,16 +2,11 @@
 
 module LevelServer.Types where
 
-
-import Data.Binary
-import Data.Version
+import           Control.DeepSeq
+import           Data.Binary
 import qualified Data.ByteString.Lazy as BSL
-
-import Control.Applicative
-import Control.DeepSeq
-
-import Network.Client
-
+import           Data.Version
+import           Network.Client
 
 data ClientToServer
     = GetLevelList

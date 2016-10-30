@@ -1,34 +1,25 @@
 {-# language ScopedTypeVariables #-}
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 module LevelServer.Client where
 
-
-import Prelude hiding (catch)
-
+import           Control.Exception
+import           Control.Monad.Trans.Error
+import           Data.Aeson
 import qualified Data.ByteString.Lazy as BSL
-import Data.Aeson
+import           Network.Client
+import           Network.Client.Exceptions
+import           Network.Download
+import           System.Directory
+import           System.FilePath
+import           Text.Logging
 
-import Text.Logging
-
-import Control.Exception
-import Control.Monad.Trans.Error
-
-import System.FilePath
-import System.Directory
-
-import Network.Download
-import Network.Client
-import Network.Client.Exceptions
-
-import Utils
-
-import Base
-
-import Editor.Pickle.LevelFile
-
-import LevelServer.Types
-import LevelServer.Configuration
-
+import           Base
+import           Editor.Pickle.LevelFile
+import           LevelServer.Configuration
+import           LevelServer.Types
+import           Utils
 
 downloadedLevels :: Application -> Play -> Int -> Parent -> AppState
 downloadedLevels app play ps parent = NoGUIAppState $ io $ do

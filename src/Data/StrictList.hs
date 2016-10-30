@@ -2,12 +2,8 @@
 
 module Data.StrictList where
 
-
-import Data.Monoid
-import Data.Foldable as F
-import Control.Applicative
-import Control.Monad (ap)
-
+import           Control.Monad (ap)
+import           Data.Foldable as F
 
 data StrictList a
     = !a :! !(StrictList a)

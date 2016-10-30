@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 -- | convenient download functions
 
 module Distribution.AutoUpdate.Download where

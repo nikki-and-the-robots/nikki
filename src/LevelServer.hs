@@ -53,7 +53,6 @@ serve options (UploadLevel metaString level) = case decode metaString of
             writeFile path level
             saveMetaData path meta
             return UploadSucceeded
-serve _ x = error ("NYI: " ++ show x)
 
 -- * email logging
 

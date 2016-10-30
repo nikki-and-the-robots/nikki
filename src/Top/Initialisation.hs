@@ -2,53 +2,41 @@
 
 module Top.Initialisation where
 
-
-import Prelude hiding (catch)
-import Safe
-
+import           Control.Exception (IOException)
+import           Control.Monad
+import           Control.Monad.CatchIO
+import           Data.Indexable (Indexable)
 import qualified Data.Indexable as I
-import Data.Indexable (Indexable)
-import Data.Indexable.Range (Range, calculateRange)
-import Data.Initial
-import Data.SelectTree
-import Data.Maybe
-import Data.List
+import           Data.Indexable.Range (Range, calculateRange)
+import           Data.Initial
+import           Data.Maybe
+import           Data.SelectTree
+import           Safe
+import           Text.Logging
 
-import Text.Logging
-
-import Control.Monad
-import Control.Monad.CatchIO
-import Control.Exception (IOException)
-
-import Physics.Chipmunk
-
-import Utils
-
-import Base
-
-import Object
-
+import           Base
 import qualified Editor.Scene.RenderOrdering as RenderOrdering
-import Sorts.Tiles (isTileSort)
-
+import           Object
+import           Physics.Chipmunk
+import qualified Sorts.Background
+import qualified Sorts.Battery
+import qualified Sorts.Box
+import qualified Sorts.DeathStones
+import qualified Sorts.FallingTiles
+import qualified Sorts.Grids
+import qualified Sorts.LowerLimit
 import qualified Sorts.Nikki
 import qualified Sorts.Nikki.Batteries
+import qualified Sorts.Robots.Cannon
+import qualified Sorts.Robots.Jetpack
+import qualified Sorts.Robots.Laser
+import qualified Sorts.Robots.PathRobots
+import qualified Sorts.Sign
+import qualified Sorts.Switch
 import qualified Sorts.Terminal
 import qualified Sorts.Tiles
-import qualified Sorts.Sign
-import qualified Sorts.FallingTiles
-import qualified Sorts.DeathStones
-import qualified Sorts.Box
-import qualified Sorts.Battery
-import qualified Sorts.Grids
-import qualified Sorts.Switch
-import qualified Sorts.Background
-import qualified Sorts.LowerLimit
-
-import qualified Sorts.Robots.Jetpack
-import qualified Sorts.Robots.PathRobots
-import qualified Sorts.Robots.Cannon
-import qualified Sorts.Robots.Laser
+import           Sorts.Tiles (isTileSort)
+import           Utils
 
 -- import qualified Sorts.DebugObject
 

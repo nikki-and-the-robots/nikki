@@ -1,5 +1,7 @@
 {-# language ScopedTypeVariables, MultiParamTypeClasses, OverloadedStrings #-}
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 -- | Module for configuration, types and the client-side of the
 -- client-server-communication for the story-mode.
 
@@ -15,29 +17,22 @@ module StoryMode.Client (
     askForNewVersion,
   ) where
 
-
-import Data.Version (Version(..))
-import Data.Binary hiding (decode)
-import Data.Aeson
-import Data.Text (pack, unpack)
-import Data.Maybe
-import qualified Data.ByteString.Lazy as BSL
+import           Control.DeepSeq
+import           Control.Monad
+import           Control.Monad.Trans.Error
+import           Data.Aeson
+import           Data.Binary hiding (decode)
 import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.Lazy as BSL
+import           Data.Maybe
+import           Data.Text (pack, unpack)
+import           Data.Version (Version(..))
+import           Network.Client
+import           Network.Socket (PortNumber)
+import           Text.Email.Validate as EV
 
-import Text.Email.Validate as EV
-
-import Control.Applicative
-import Control.DeepSeq
-import Control.Monad
-import Control.Monad.Trans.Error
-
-import Network.Client
-import Network.Socket (PortNumber)
-
-import Utils
-
-import StoryMode.Paths
-
+import           StoryMode.Paths
+import           Utils
 
 -- * configuration
 

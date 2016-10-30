@@ -17,42 +17,30 @@ module Sorts.Terminal (
     roundToBars, -- for testing
   ) where
 
-
-import Safe
-
-import Data.Abelian
-import Data.Indexable (Index)
-import Data.Data
-import Data.Traversable
-import Data.Foldable (Foldable)
-import Data.Maybe
-import Data.Accessor
+import           Data.Abelian
+import           Data.Accessor
+import           Data.Data
+import           Data.Indexable (Index)
+import           Data.Maybe
 import qualified Data.StrictList as SL
+import           Safe
+import           System.FilePath
 
-import System.FilePath
-
-import Physics.Chipmunk as CM
-
-import Graphics.Qt hiding (red, blue, green, yellow)
-import qualified Graphics.Qt as Qt
-
-import Utils
-
-import Base hiding (Mode(..), update)
 import qualified Base
-
-import Sorts.Nikki.Configuration (nikkiSize)
-import Sorts.LowerLimit (isBelowLowerLimit)
-import Sorts.Sign (renderSpeechBubble, bubbleTextWidths)
-
-import Editor.Scene.Types
-import Editor.Scene.Rendering
-import Editor.Scene.Rendering.Helpers
-
-import StoryMode.Types
-import StoryMode.Configuration
-import StoryMode.Episode
-
+import           Base hiding (Mode(..), update)
+import           Editor.Scene.Rendering
+import           Editor.Scene.Rendering.Helpers
+import           Editor.Scene.Types
+import qualified Graphics.Qt as Qt
+import           Graphics.Qt hiding (red, blue, green, yellow)
+import           Physics.Chipmunk as CM
+import           Sorts.LowerLimit (isBelowLowerLimit)
+import           Sorts.Nikki.Configuration (nikkiSize)
+import           Sorts.Sign (renderSpeechBubble, bubbleTextWidths)
+import           StoryMode.Configuration
+import           StoryMode.Episode
+import           StoryMode.Types
+import           Utils
 
 -- * terminal configuration
 

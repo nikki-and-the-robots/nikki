@@ -1,5 +1,7 @@
 {-# language CPP, ViewPatterns, ScopedTypeVariables #-}
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 -- | auto-updating for Nikki
 
 module Distribution.AutoUpdate (
@@ -9,50 +11,41 @@ module Distribution.AutoUpdate (
     Repo(..),
   ) where
 
-
-import Prelude hiding (catch)
-
-import Data.List
-import Data.Monoid
-import Data.Version (Version, showVersion)
-import Data.Maybe
-import Data.Foldable.Compat
-import Data.Orphans ()
-
-import Control.Monad (join)
-import Control.Monad.Trans.Error
-import Control.Monad.CatchIO
-import Control.Monad.State (get)
-
-import Text.Logging
-
-import System.Environment.FindBin
-import System.FilePath
-import System.Directory
-import System.Exit
-import System.IO.Temp (createTempDirectory)
+import           Control.Monad (join)
+import           Control.Monad.CatchIO
+import           Control.Monad.State (get)
+import           Control.Monad.Trans.Error
+import           Data.Foldable.Compat
+import           Data.List
+import           Data.Maybe
+import           Data.Monoid
+import           Data.Orphans ()
+import           Data.Version (Version, showVersion)
+import           System.Directory
+import           System.Environment.FindBin
+import           System.Exit
+import           System.FilePath
+import           System.IO.Temp (createTempDirectory)
 import qualified System.Info
+import           Text.Logging
 
-import Version
-import Utils
-
-import Base.Types hiding (update)
-import Base.Prose
-import Base.Prose.Template
-import Base.Monad
-import Base.Configuration
-import Base.Renderable.GUILog
-import Base.Renderable.Message
-import Base.Renderable.Menu
-import Base.Renderable.OpenUrl
-
-import Distribution.AutoUpdate.Paths
-import Distribution.AutoUpdate.Download
-import Distribution.AutoUpdate.Zip
-import Distribution.AutoUpdate.VerifySignatures
-
-import qualified StoryMode.Client
+import           Base.Configuration
+import           Base.Monad
+import           Base.Prose
+import           Base.Prose.Template
+import           Base.Renderable.GUILog
+import           Base.Renderable.Menu
+import           Base.Renderable.Message
+import           Base.Renderable.OpenUrl
+import           Base.Types hiding (update)
+import           Distribution.AutoUpdate.Download
+import           Distribution.AutoUpdate.Paths
+import           Distribution.AutoUpdate.VerifySignatures
+import           Distribution.AutoUpdate.Zip
 import qualified StoryMode.AutoUpdate
+import qualified StoryMode.Client
+import           Utils
+import           Version
 
 -- * introduced for more type safety
 

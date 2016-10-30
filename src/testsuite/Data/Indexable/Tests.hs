@@ -131,14 +131,14 @@ foldTest list =
 
 deleteTest :: Indexable Double -> Property
 deleteTest ix =
-    printTestCase "deleteByIndex" $
+    counterexample "deleteByIndex" $
     not (null (keys ix)) ==>
     forAll (elements (keys ix)) $ \ i ->
     not (i `isIndexOf` (deleteByIndex i ix))
 
 traverseTest :: Indexable Double -> Property
 traverseTest ix =
-    printTestCase "traverse" $
+    counterexample "traverse" $
     expected == traverseList
   where
     expected = toList ix
@@ -165,7 +165,7 @@ mergeFunction _ _ = Nothing
 
 mergeTest :: Indexable [Int] -> Property
 mergeTest ix =
-    printTestCase "mergeTest"
+    counterexample "mergeTest"
     (length (filter (all odd) mergedList) <= 1 &&
     filter (not . all odd) mergedList == filter (not . all odd) originalList)
   where
