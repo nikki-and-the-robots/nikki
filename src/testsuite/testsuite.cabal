@@ -86,7 +86,7 @@ Executable testsuite
         , clocked
         , bifunctors
         , email-validate
-        , utf8-string == 0.3.*
+        , utf8-string
         , hashable
         , crypto-pubkey-types == 0.1.*
         , stickyKeysHotKey == 0.1.*
