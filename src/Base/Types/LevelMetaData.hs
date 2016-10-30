@@ -2,21 +2,15 @@
 
 module Base.Types.LevelMetaData where
 
+import           Control.DeepSeq
+import           Control.Monad
+import           Data.Aeson
+import           Data.ByteString.Lazy as BSL
+import           System.Directory
+import           System.FilePath
+import           Text.Logging
 
-import Data.ByteString.Lazy as BSL
-import Data.Aeson
-
-import Text.Logging
-
-import Control.Monad
-import Control.Applicative
-import Control.DeepSeq
-
-import System.FilePath
-import System.Directory
-
-import Utils
-
+import           Utils
 
 -- * level meta data
 

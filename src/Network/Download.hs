@@ -5,17 +5,11 @@ module Network.Download (
     downloadLazy,
   ) where
 
-
-import Prelude hiding (catch)
-
-import Data.ByteString.Lazy
-
-import Control.Exception
-
-import Network.HTTP
-import Network.URI
-import Network.Stream (Result, ConnError(..))
-
+import           Control.Exception
+import           Data.ByteString.Lazy
+import           Network.HTTP
+import           Network.Stream (Result, ConnError(..))
+import           Network.URI
 
 downloadStrict :: String -> IO (Either String String)
 downloadStrict = httpGet

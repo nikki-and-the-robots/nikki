@@ -45,23 +45,19 @@ module Data.Indexable (
     optimizeMerge,
   ) where
 
-import Prelude hiding ((++), filter, reverse, elem, maximum, zip, zipWith, null, length, head, tail, concatMap)
-import Safe
-
+import           Control.Arrow
+import           Control.DeepSeq
+import           Data.Accessor
+import           Data.Data (Typeable, Data)
+import           Data.Foldable (toList)
+import           Data.Initial
 import qualified Data.List as List
-import Data.Accessor
-import Data.Foldable (Foldable(), toList)
-import Data.Initial
-import Data.Traversable (Traversable)
-import Data.Vector as Vector
-import Data.Data (Typeable, Data)
-import Data.Maybe
+import           Data.Maybe
+import           Data.Vector as Vector
+import           Prelude hiding ((++), filter, reverse, elem, maximum, zip, zipWith, null, length, head, tail, concatMap)
+import           Safe
 
-import Control.Arrow
-import Control.DeepSeq
-
-import Utils hiding (singleton)
-
+import           Utils hiding (singleton)
 
 newtype Index = Index {index :: Int}
   deriving (Show, Read, Enum, Num, Eq, Integral, Real, Ord, Data, Typeable, NFData)

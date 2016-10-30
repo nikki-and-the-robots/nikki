@@ -9,6 +9,7 @@ import           Data.Maybe
 import           System.Environment
 import           System.FilePath
 import           System.IO
+import           Test.QuickCheck
 import           Text.Printf
 
 import           Base
@@ -39,7 +40,7 @@ tests = do
 bakingEquality :: [Animation Pixmap]
     -> ([Maybe (Position (Fixed Int))], Positive Seconds) -> Property
 bakingEquality somePixmaps (positions, Positive now) =
-  morallyDubiousIOProperty $ do
+  ioProperty $ do
     let paired :: [(Animation Pixmap, Position Double)]
         paired =
             fmap (second (fmap fromIntegral)) $

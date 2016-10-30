@@ -2,25 +2,16 @@
 
 module Top.Main.Tests where
 
+import           Control.Applicative
+import           Control.Concurrent
+import           Control.Exception
+import           Data.Typeable
+import           Prelude hiding (catch)
+import           System.Exit
+import           Test.QuickCheck.Property
 
-import Prelude hiding (catch)
-
-import Data.Typeable
-
-import Control.Applicative
-import Control.Concurrent
-import Control.Exception
-
-import System.Exit
-
-import Top.Main
-
-
-import Test.QuickCheck.Property
-
-import Utils.Tests
-
-
+import           Top.Main
+import           Utils.Tests
 
 tests = do
     quickCheckOnce exceptionByLogicThread
@@ -62,13 +53,13 @@ wait seconds =
     threadDelay $ round (seconds * 10 ^ 6)
 
 assertException :: forall a . (Exception a, Eq a) => a -> IO () -> Property
-assertException e cmd = morallyDubiousIOProperty $ do
+assertException e cmd = ioProperty $ do
     (cmd *> notThrown) `catch` handle
   where
-    notThrown = return $ printTestCase ("not thrown: " ++ show e) False
+    notThrown = return $ counterexample ("not thrown: " ++ show e) False
 
     handle :: a -> IO Property
     handle thrown = return $
-        printTestCase (show e ++ "\n/=\n" ++ show thrown) $
+        counterexample (show e ++ "\n/=\n" ++ show thrown) $
         (thrown == e)
 

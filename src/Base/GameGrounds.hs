@@ -10,15 +10,12 @@ module Base.GameGrounds (
     mkGameGrounds,
   ) where
 
+import           Data.Accessor
+import           Data.Data
+import           Data.Indexable
+import           Data.Indexable.Range
 
-import Data.Indexable
-import Data.Indexable.Range
-import Data.Data
-import Data.Accessor
-import Data.Foldable (Foldable)
-
-import Base.Grounds
-
+import           Base.Grounds
 
 data GameGrounds a = GameGrounds {
     gameBackgrounds_ :: [GameLayer a],

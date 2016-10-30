@@ -13,19 +13,13 @@ module Base.Animation (
     pickLimitedAnimationFrame,
   ) where
 
+import           Data.Data
+import           Physics.Hipmunk (CpFloat)
+import           Safe
 
-import Safe
-
-import Data.Data
-import Data.Foldable (Foldable)
-
-import Physics.Hipmunk (CpFloat)
-
-import Utils
-
+import           Utils
 
 type Seconds = CpFloat
-
 
 -- * pickAnimationFrame
 

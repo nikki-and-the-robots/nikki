@@ -1,22 +1,15 @@
 
 module Base.Monologue (Monologue, readSignMonologue) where
 
-
-import Prelude hiding (catch)
-
+import           Control.Monad
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
+import           System.FilePath
 
-import Control.Monad
-
-import System.FilePath
-
-import Utils
-
-import Base.Prose
-import Base.Paths
-import Base.Types
-
+import           Base.Paths
+import           Base.Prose
+import           Base.Types
+import           Utils
 
 monologueDir = "monologues"
 

@@ -1,28 +1,24 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable, ScopedTypeVariables #-}
 
-module Network.Client where
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
 
+module Network.Client where
 
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!11!!!
 -- this module is used by the level server and
 -- shouldn't import Utils or Base or anything similar.
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!11!!!
 
-import Data.Version
-import Data.BinaryCom
-import Data.Typeable
-import Data.Binary
-
-import Text.Logging
-
-import Control.Applicative
-import Control.Monad.Trans.Error
-import Control.DeepSeq
-import Control.Exception
-
-import System.Timeout
-
-import Network
+import           Control.DeepSeq
+import           Control.Exception
+import           Control.Monad.Trans.Error
+import           Data.Binary
+import           Data.BinaryCom
+import           Data.Typeable
+import           Data.Version
+import           Network
+import           System.Timeout
+import           Text.Logging
 
 -- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!11!!!
 -- this module is used by the level server and

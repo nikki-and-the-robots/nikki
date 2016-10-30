@@ -1,5 +1,7 @@
 {-# LANGUAGE CPP #-}
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 module Distribution.AutoUpdate.MenuItem (
     autoUpdateMenuItem,
     mkUpdateVersionRef,

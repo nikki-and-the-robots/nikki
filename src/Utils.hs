@@ -3,6 +3,8 @@
     StandaloneDeriving, DeriveDataTypeable,
     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 module Utils (
     (<>),
     (<$>),
@@ -34,51 +36,40 @@ module Utils (
     POSIXTime,
   ) where
 
--- imports
-
-import Prelude hiding (catch)
-
-import Safe
-
-import Data.List
-import Data.Map (Map, fromList, member, (!), findWithDefault, toList)
-import Data.Foldable (Foldable, mapM_, forM_, any, sum)
+import           "MonadCatchIO-transformers" Control.Monad.CatchIO
+import           "mtl" Control.Monad.State hiding (forM_)
+import           "transformers" Control.Monad.Trans.Error (ErrorT(..))
+import           Control.Applicative ((<|>), Alternative(..))
+import           Control.Arrow ((>>>))
+import           Control.Concurrent
+import           Control.DeepSeq
+import           Control.Exception
+import           Data.Accessor (Accessor, accessor, (^.), (^=), (^:), (.>))
+import           Data.Accessor.Monad.MTL.State ((%=), (%:))
+import qualified Data.ByteString as SBS
+import           Data.Data
+import           Data.Foldable (Foldable, mapM_, forM_, any, sum)
 import qualified Data.Foldable as Foldable
-import Data.Traversable (Traversable, mapM)
-import Data.IORef
+import           Data.Function
+import           Data.IORef
+import           Data.List
+import           Data.Map (Map, fromList, member, (!), findWithDefault, toList)
+import           Data.Monoid
 import qualified Data.Set as Set
-import Data.Accessor (Accessor, accessor, (^.), (^=), (^:), (.>))
-import Data.Accessor.Monad.MTL.State ((%=), (%:))
-import Data.Monoid
-import Data.Function
+import           Data.Strict (Pair(..))
 import qualified Data.Strict as Strict
-import Data.Strict (Pair(..))
-import Data.Time.Clock.POSIX
-import qualified Data.Vector
-import Data.Data
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Encoding.Error as Text
-import qualified Data.ByteString as SBS
+import           Data.Time.Clock.POSIX
+import           Data.Traversable (Traversable, mapM)
+import           Safe
+import           System.FilePath
+import           System.IO.Unsafe
+import           Text.Logging
+import           Text.Printf
 
-import Text.Printf
-import Text.Logging
-
-import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), pure, Alternative(..), Applicative)
-import "mtl" Control.Monad.State hiding (forM_)
-import "transformers" Control.Monad.Trans.Error (ErrorT(..))
-                                                -- and Monad (Either e)
-import "MonadCatchIO-transformers" Control.Monad.CatchIO
-import Control.Arrow ((>>>))
-import Control.Concurrent
-import Control.Exception
-import Control.DeepSeq
-
-import System.IO.Unsafe
-import System.FilePath
-
-import Utils.Scripting
-
+import           Utils.Scripting
 
 -- * debugging stuff
 

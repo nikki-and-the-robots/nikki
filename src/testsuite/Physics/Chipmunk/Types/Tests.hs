@@ -31,7 +31,7 @@ shapeTest :: Gen (ShapeType, Mass) -> Property
 shapeTest shapeGen =
     forAll shapeGen $ \ (shape, expectedArea) ->
     let result = areaForShape shape
-    in printTestCase (show (expectedArea, result))
+    in counterexample (show (expectedArea, result))
         (result =~ expectedArea)
 
 a =~ b = abs (a - b) < eps
@@ -83,25 +83,25 @@ testComponent = do
     quickCheck $ componentUpAngleSameAngle
 
 toUpAngleZero =
-    printTestCase "toUpAngleZero" $
+    counterexample "toUpAngleZero" $
     (toUpAngle zero == 0 &&
      toUpAngle (Vector 0 (- 0)) == 0)
 
 componentUpAngleSameAngle angle vector =
-    printTestCase "componentUpAngleSameAngle" $
+    counterexample "componentUpAngleSameAngle" $
     let expected = foldAngle angle
         result = foldAngle (toUpAngle (componentUpAngle angle vector))
-    in printTestCase (show expected ++ " /~%= " ++ show result) $
+    in counterexample (show expected ++ " /~%= " ++ show result) $
         (expected ~~= result ||
         (expected + (deg2rad 180)) ~~= result)
   where
     (~~=) = on (~=) foldAngle
 
 componentSameAngle angle vector =
-    printTestCase "componentSameAngle" $
+    counterexample "componentSameAngle" $
     let expected = foldAngle angle
         result = foldAngle (toAngle (component angle vector))
-    in printTestCase (show expected ++ " /~%= " ++ show result) $
+    in counterexample (show expected ++ " /~%= " ++ show result) $
         (expected ~~= result ||
         (expected + (deg2rad 180)) ~~= result)
   where

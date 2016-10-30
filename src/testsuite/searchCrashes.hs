@@ -1,20 +1,14 @@
 
+import           Data.Char
+import           System.Environment
+import           System.Exit
+import           System.Posix.Directory
+import           System.Process
+import           Test.QuickCheck
 
-import Data.Char
-
-import System.Environment
-import System.Process
-import System.Exit
-import System.Posix.Directory
-
-import Graphics.Qt
-import Graphics.Qt.Events.Tests ()
-
-import Utils
-
-import Test.QuickCheck
-import Test.QuickCheck.Property
-
+import           Graphics.Qt
+import           Graphics.Qt.Events.Tests ()
+import           Utils
 
 main = do
     ["--please-do-random-things-to-my-userdata"] <- getArgs
@@ -23,7 +17,7 @@ main = do
 
 doesntCrash :: [Key] -> Property
 doesntCrash keys =
-    morallyDubiousIOProperty $ do
+    ioProperty $ do
         putStrLn ""
         print keys
         startNikki (keys +: CloseWindowKey)

@@ -2,13 +2,9 @@
 
 module Graphics.Qt.Colors where
 
+import           System.Random
 
-import System.Random
-
-import Graphics.Qt.Types
-
-import Utils
-
+import           Graphics.Qt.Types
 
 black :: Color = opaqueColor 0 0 0
 white :: Color = opaqueColor 1 1 1

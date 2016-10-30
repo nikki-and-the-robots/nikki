@@ -2,14 +2,8 @@
 
 module StoryMode.Types where
 
-
-import Data.Binary
-import Data.Foldable
-import Data.Traversable
-import Data.Initial
-
-import Utils
-
+import           Data.Binary
+import           Data.Initial
 
 -- | Versioned!
 -- Saves the state of an episode.

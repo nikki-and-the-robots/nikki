@@ -73,7 +73,7 @@ testExamples msg p examples =
 
 testEquals :: (Show e, Eq e) => e -> e -> Property
 testEquals a b =
-    printTestCase (show a ++ " /= " ++ show b) $
+    counterexample (show a ++ " /= " ++ show b) $
     a == b
 
 (?=) :: (Show e, Eq e) => e -> e -> Property
@@ -81,7 +81,7 @@ testEquals a b =
 
 (?~=) :: (Show e, Ord e, Fractional e) => e -> e -> Property
 a ?~= b =
-    printTestCase (show a ++ " /~= " ++ show b) $
+    counterexample (show a ++ " /~= " ++ show b) $
     a ~= b
 
 unFixed :: Fixed a -> a

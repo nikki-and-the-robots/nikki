@@ -4,28 +4,21 @@
 
 module Utils.Scripting where
 
-
-import Safe
-
-import Data.List
-import Data.Version
-import Data.Char
-
-import Text.ParserCombinators.ReadP (readP_to_S)
-
-import Control.Arrow
-import Control.Applicative
-import Control.Monad
-import Control.Monad.IO.Class
-import Control.Exception
-
-import System.FilePath
-import System.Directory
-import System.Exit
-import System.Process
-import System.IO
-import System.Environment.FindBin
-
+import           Control.Arrow
+import           Control.Exception
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Data.Char
+import           Data.List
+import           Data.Version
+import           Safe
+import           System.Directory
+import           System.Environment.FindBin
+import           System.Exit
+import           System.FilePath
+import           System.IO
+import           System.Process
+import           Text.ParserCombinators.ReadP (readP_to_S)
 
 (<~>) :: String -> String -> String
 a <~> b = a ++ " " ++ b

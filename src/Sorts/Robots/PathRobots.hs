@@ -5,15 +5,9 @@
 
 module Sorts.Robots.PathRobots where
 
-
-import Utils
-
-import Base
-
-import qualified Sorts.Robots.PathRobots.Platform as Platform
+import           Base
 import qualified Sorts.Robots.PathRobots.PatrolRobot as PatrolRobot
-
-
+import qualified Sorts.Robots.PathRobots.Platform as Platform
 
 -- * loading
 

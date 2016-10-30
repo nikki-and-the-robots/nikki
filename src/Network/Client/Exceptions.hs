@@ -5,19 +5,12 @@ module Network.Client.Exceptions (
     DownloadException(..),
   ) where
 
+import           Control.Exception
+import           Data.Typeable
+import           Network.Client
+import           Text.Logging
 
-import Prelude hiding (catch)
-
-import Data.Typeable
-
-import Text.Logging
-
-import Control.Exception
-
-import Network.Client
-
-import Base
-
+import           Base
 
 networkTry :: Application -> Parent -> IO AppState -> IO AppState
 networkTry app parent a =

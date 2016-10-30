@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+
 module Distribution.AutoUpdate.VerifySignatures (verifyUpdate, verifyUpdateIO) where
 
 
