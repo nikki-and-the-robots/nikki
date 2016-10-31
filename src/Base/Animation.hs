@@ -59,7 +59,7 @@ isStatic _ = False
 
 -- | Returns the first element of the Animation.
 animationHead :: Animation a -> a
-animationHead (Animation (a : r) _ _ _ _) = a
+animationHead (Animation (a : _) _ _ _ _) = a
 animationHead (Static x) = x
 
 -- | converts a list if timespans to a list of absolute times, starting with (head l).
@@ -78,7 +78,7 @@ pickAnimationFrame (Static x) _ = x
 pickAnimationFrame (Animation list listLen absoluteTimes sum timesLen) now =
     inner (drop toDrop $ cycle list) absoluteTimes timeInList
   where
-    inner (a : r) (t : tr) now | now <= t = a
+    inner (a : _) (t : _) now | now <= t = a
     inner (_ : r) (_ : tr) now = inner r tr now
 
     -- this is an optimization

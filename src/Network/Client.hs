@@ -28,9 +28,12 @@ import           Text.Logging
 
 
 class (Binary p, NFData p) => Protocol p where
-    protocolVersion :: p -> Version -- phantom values
+    protocolVersion :: Proxy p -> Version -- phantom values
     -- | useful for anonymized logging
     showAnonymized :: p -> String
+
+toProxy :: a -> Proxy a
+toProxy _ = Proxy
 
 instance Binary Version where
     put (Version a b) = putWord8 143 >> put a >> put b
@@ -46,7 +49,7 @@ askServer host port msg = ErrorT $ do
     h <- connectTo host (PortNumber port)
     bc <- binaryCom h
     flushAfter bc $ \ bc -> do
-        send bc $ protocolVersion msg
+        send bc $ protocolVersion (toProxy msg)
         send bc msg
     logg Debug ("sent: " ++ show msg ++ " on port " ++ show port)
     answer <- deepseqIOId =<< receiveTO bc

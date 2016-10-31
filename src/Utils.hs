@@ -266,7 +266,7 @@ io = liftIO
 
 -- applies a given monadic operation n times
 applyTimesM :: Monad m => Int -> (a -> m a) -> a -> m a
-applyTimesM 0 m = return
+applyTimesM 0 _ = return
 applyTimesM n m =
     m >=> applyTimesM (pred n) m
 
@@ -324,7 +324,7 @@ dropPrefixMay prefix list =
 
 
 chunks :: Int -> [a] -> [[a]]
-chunks n [] = []
+chunks _ [] = []
 chunks n l =
     let (a, b) = splitAt n l
     in a : chunks n b

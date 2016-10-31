@@ -1,19 +1,17 @@
 
 module LevelServer.Configuration where
 
+import           Data.Proxy
+import           Data.Version
+import           Network.Client
 
-import Data.Version
-
-import Network.Client
-
-import LevelServer.Types
-
+import           LevelServer.Types
 
 levelServerHost :: String
 levelServerHost = "joyridelabs.de"
 
 levelServerPort :: Num n => n
-levelServerPort = case showVersion (protocolVersion (undefined :: ClientToServer)) of
+levelServerPort = case showVersion (protocolVersion (Proxy :: Proxy ClientToServer)) of
     "0.1" -> 8143
     "0.2" -> 8144
     "0.3" -> 8145
