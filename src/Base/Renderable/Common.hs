@@ -1,5 +1,7 @@
 {-# language FlexibleInstances #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- | Things used in multiple Widgets.
 
 module Base.Renderable.Common where

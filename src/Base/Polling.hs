@@ -59,7 +59,7 @@ waitForAppEvent app = do
             unpollAppEvents r
             return a
         [] -> do
-            io $ threadDelay (round (0.01 * 10 ^ 6))
+            io $ threadDelay (round ((0.01 :: Double) * 10 ^ (6 :: Int)))
             waitForAppEvent app
 
 -- | returns the next AppEvent, if it was already received

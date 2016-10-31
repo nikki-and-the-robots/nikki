@@ -53,7 +53,7 @@ lookupUpdateVersion config = do
     case v of
         Left error -> do
             mapM_ (logg Error) $ lines error
-            io $ forever (threadDelay (1 * 10 ^ 6))
+            io $ forever (threadDelay (1 * 10 ^ (6 :: Int)))
         Right x -> return x
 
 

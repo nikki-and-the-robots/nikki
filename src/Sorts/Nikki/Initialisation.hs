@@ -61,6 +61,7 @@ mkPolys =
     (surfaceVelocityShape, otherShapes, baryCenterOffset)
 
 -- tuning variables for polygons
+eps :: Int
 eps = 1
 pawThickness = fromUber 3
 

@@ -264,7 +264,7 @@ renderSpeechBubble app config offset signPos signSize glyphs =
 bubblePosition :: Size Double -> Offset Double
     -> Qt.Position Double -> Size Double -> Qt.Position Double
 bubblePosition windowSize offset signPos signSize =
-    fmap (fromIntegral . round) $ Position x y
+    fmap (fromIntegral . (round :: Double -> Int)) $ Position x y
   where
     x = (width windowSize - width bubbleSize) / 2
     frameHeight = height windowSize - (osdPadding + osdHeight)

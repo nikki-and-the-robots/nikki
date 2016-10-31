@@ -4,6 +4,7 @@
     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 {-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Utils (
     (<>),
@@ -152,7 +153,7 @@ everyRef = unsafePerformIO $ newIORef 0
 
 -- | @wait n@ waits for n seconds
 wait :: MonadIO m => Double -> m ()
-wait n = io $ threadDelay $ round (n * 10 ^ 6)
+wait n = io $ threadDelay $ round (n * 10 ^ (6 :: Int))
 
 
 -- * re-named re-exports

@@ -91,7 +91,7 @@ transformation ptr (EditorPosition x y) (Size cw ch) = do
         halfCursor = Position (- (cw / 2)) (ch / 2)
         pos = Position x y
 
-    return $ fmap (fromIntegral . truncate)
+    return $ fmap (fromIntegral . (truncate :: Double -> Int))
         (viewMiddle +~ negateAbelian pos +~ halfCursor)
 
 -- draws the icon of the selected sort (lower left corner of the screen)
@@ -131,7 +131,7 @@ renderCursorPositionOSD app config ptr (EditorPosition x y) = do
     (Size w h) <- sizeQPainter ptr
     translate ptr (Position 80 (h - fromUber 1 - fontHeight))
     snd =<< render ptr app config zero
-        (pv ("Cursor: " ++ show (fmap truncate (x, y))))
+        (pv ("Cursor: " ++ show (fmap (truncate :: Double -> Int) (x, y))))
 
 renderCursorStepSize :: Application -> Configuration -> Ptr QPainter
     -> EditorPosition -> IO ()

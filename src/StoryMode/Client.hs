@@ -1,6 +1,7 @@
 {-# language ScopedTypeVariables, MultiParamTypeClasses, OverloadedStrings #-}
 
 {-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Module for configuration, types and the client-side of the
 -- client-server-communication for the story-mode.

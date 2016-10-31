@@ -342,7 +342,7 @@ blinkenLightsState now robots state =
     mapRobots (Just (Uncontrollable _)) = Defunct
     mapRobots Nothing = Off
 
-    blinkingOut = blinkingMode && even (floor ((now - changedTime state) / blinkLength))
+    blinkingOut = blinkingMode && even (floor ((now - changedTime state) / blinkLength) :: Int)
     blinkingMode = case state ^. gameMode of
         NikkiMode -> False
         _ -> True
@@ -724,7 +724,7 @@ roundToBars numberOfBeams batteryNumberNeeded n | n <= 0 =
     0
 roundToBars numberOfBeams batteryNumberNeeded n =
     succ $ floor
-        (fromIntegral (pred n * pred numberOfBeams) / fromIntegral (pred batteryNumberNeeded))
+        ((fromIntegral (pred n * pred numberOfBeams) / fromIntegral (pred batteryNumberNeeded)) :: Double)
 
 renderGreenBeams BatteryTSort{..} (n :: Integer) p =
     map inner [1 .. n]

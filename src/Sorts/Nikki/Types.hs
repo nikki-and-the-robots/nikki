@@ -81,6 +81,7 @@ data Action
 
 wallSlide angles = seq (foldr seq () angles) $ WallSlide_ angles
 
+toActionNumber :: Action -> Int
 toActionNumber Wait{}               = 0
 toActionNumber Walk{}               = 1
 toActionNumber JumpImpulse{}        = 2

@@ -1,6 +1,7 @@
 {-# language MultiParamTypeClasses, DeriveDataTypeable, ScopedTypeVariables #-}
 
 {-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Network.Client where
 
@@ -57,10 +58,11 @@ deepseqIOId r = deepseq r () `seq` return r
 
 
 -- | in seconds
+receiveTimeout :: Int
 receiveTimeout = 10
 
 receiveTO bc = do
-    mr <- timeout (receiveTimeout * 10 ^ 6) $ deepseqIOId =<< receive bc
+    mr <- timeout (receiveTimeout * 10 ^ (6 :: Int)) $ deepseqIOId =<< receive bc
     maybe (throwIO Timeout) return mr
 
 data Timeout = Timeout

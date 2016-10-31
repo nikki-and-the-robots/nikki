@@ -90,5 +90,5 @@ instance Sort BSort () where
         windowSize <- sizeQPainter ptr
         let mPix = pickWholeScreenPixmap windowSize $ pixmaps s
             pix = fromMaybe (last $ pixmaps s) mPix
-            pos = size2position $ fmap (fromIntegral . round . (/ 2)) (windowSize -~ pixmapSize pix)
+            pos = size2position $ fmap (fromIntegral . (round :: Double -> Int) . (/ 2)) (windowSize -~ pixmapSize pix)
         return [RenderPixmap pix (pos -~ offset) Nothing]

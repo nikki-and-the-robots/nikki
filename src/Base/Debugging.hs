@@ -1,5 +1,7 @@
 {-# language TypeSynonymInstances, FlexibleInstances #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Base.Debugging (
     DebuggingCommand,
     resetDebugging,

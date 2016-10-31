@@ -498,7 +498,7 @@ newQPixmapEmpty (Size x y) = do
     ptr <- cppNewQPixmapEmpty x y
     newForeignQPixmap ptr
   where
-    veryBig = bytes > 8 * 1024 ^ 2
+    veryBig = bytes > 8 * 1024 ^ (2 :: Int)
     bytes :: QtInt
     bytes = x * y * 4
     kb :: Double = fromIntegral bytes / 1024

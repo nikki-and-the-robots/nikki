@@ -56,6 +56,8 @@ longJumpAntiGravity t = negate $
     then q_a * t ^ 2 + s_a * t + c_a
     else 0
   where
+    (^) :: CpFloat -> Int -> CpFloat
+    (^) = (Prelude.^)
 
     h = maximalJumpingHeight
     c_vi = jumpingImpulseLength / nikkiMass
@@ -82,6 +84,4 @@ longJumpAntiGravity t = negate $
                            *(256*c_vi*g^3*h^3+160*c_vi^3*g^2*h^2+24*c_vi^5*g*h
                                              +c_vi^7)-1024*c_vi^2*g^3*h^3
                           -320*c_vi^4*g^2*h^2-32*c_vi^6*g*h-c_vi^8)
-    c_v = c_vi
-    c_p = 0
     t_s = (sqrt(16*g*h+c_vi^2)-c_vi)/(2*g)

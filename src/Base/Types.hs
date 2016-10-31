@@ -413,7 +413,7 @@ mkScore Passed t = Score_1_Passed (roundTime t)
     roundTime :: Seconds -> Seconds
     roundTime =
         (* (10 ^ timeDigits)) >>>
-        ceiling >>>
+        (ceiling :: Double -> Int) >>>
         fromIntegral >>>
         (/ (10 ^ timeDigits))
 mkScore Failed _ = const Score_1_Tried

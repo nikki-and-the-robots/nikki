@@ -38,7 +38,7 @@ singleton = (:! Empty)
 
 (!) :: StrictList a -> Int -> a
 l ! n = case (l, n) of
-    ((a :! r), 0) -> a
+    ((a :! _), 0) -> a
     ((_ :! r), i) -> r ! pred i
     (Empty, _) -> error "(!): index out of bounds"
 
@@ -46,19 +46,6 @@ slFilter :: (a -> Bool) -> StrictList a -> StrictList a
 slFilter p (a :! r) =
     (if p a then (a :!) else id) (slFilter p r)
 slFilter _ Empty = Empty
-
-filterM :: Monad m => (a -> m Bool) -> StrictList a -> m (StrictList a)
-filterM pred (a :! r) = do
-    c <- pred a
-    r' <- filterM pred r
-    if c then do
-        r' <- filterM pred r
-        return (a :! r')
-      else do
-        r' <- filterM pred r
-        return r'
-filterM pred Empty = return Empty
-
 
 -- | PRE: SL a is sorted.
 -- Inserts an element to a list. The returned list will be sorted.
@@ -78,4 +65,4 @@ delete x (a :! r) =
     if x == a
     then r
     else a :! delete x r
-delete x Empty = Empty
+delete _ Empty = Empty

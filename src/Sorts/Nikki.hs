@@ -44,7 +44,6 @@ import Sorts.Nikki.Batteries
 sorts :: [RM (Maybe Sort_)]
 sorts = singleton $ do
     pixmaps <- loadPixmaps
-    psize <- io $ fmap fromIntegral <$> sizeQPixmap (pixmap $ defaultPixmap pixmaps)
     jumpSound <- loadSound "game/jump" 4
     batteryCollectSound <- loadSound "game/batteryCollect" 8
     let r = NSort pixmaps jumpSound batteryCollectSound

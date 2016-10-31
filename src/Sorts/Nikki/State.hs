@@ -326,6 +326,7 @@ jumpCollision collisions =
 
     -- | sorting collisions: legs, ghost, head
     sortLegsCollisions = sortBy (compare `on` (nikkiCollisionType >>> toNumber))
+    toNumber :: MyCollisionType -> Int
     toNumber NikkiLegsCT    = 1
     toNumber NikkiGhostCT   = 2
     toNumber NikkiHeadCT    = 3

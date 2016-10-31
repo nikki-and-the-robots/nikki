@@ -1,5 +1,7 @@
 {-# language FlexibleInstances, DeriveDataTypeable #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- | provides a data type for pixmaps that saves the size and the internal offset (padding)
 -- of the image.
 -- Padding is the outer part of the image that should not be considered as part of

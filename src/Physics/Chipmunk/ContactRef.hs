@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- | module for the detection and saving of collisions while chipmunk simulation
 
 module Physics.Chipmunk.ContactRef (

@@ -16,7 +16,7 @@ decodeMaybe s =
     catch (Just <$> evaluate (decode s)) handler
   where
     handler :: ErrorCall -> IO (Maybe a)
-    handler e = return Nothing
+    handler _e = return Nothing
 
 
 encodeFileStrict :: Binary a => FilePath -> a -> IO ()

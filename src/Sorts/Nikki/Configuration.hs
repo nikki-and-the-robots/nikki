@@ -118,6 +118,7 @@ verticalEarChamfer :: CpFloat = fromUber 0.5
 
 -- * animation times
 
+touchdownDuration :: Double
 touchdownDuration = 0.1
 
 frameTimes :: State -> (String, [(Int, Seconds)])

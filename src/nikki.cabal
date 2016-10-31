@@ -86,24 +86,18 @@ Executable core
             -O2
             -optl-s
 
-    if impl(ghc >= 7)
-       cpp-options:     -DGHC7
-
     ghc-options:
         -threaded
---         -eventlog
---         -prof -auto-all
 
-        -Wwarn
-        -fwarn-missing-methods
-        -fwarn-missing-fields
-        -fwarn-dodgy-imports
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-imports
-
+        -Wall
         -fno-warn-overlapping-patterns
         -fno-warn-missing-signatures
+        -fno-warn-name-shadowing
+        -fno-warn-unused-binds
+        -fno-warn-unused-matches
+        -fno-warn-incomplete-patterns
+        -fno-warn-orphans
+        -fno-warn-type-defaults
 
     if os(darwin)
         cc-options:

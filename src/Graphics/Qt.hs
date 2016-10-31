@@ -135,11 +135,11 @@ waitForEvent (KeyPoller c) = readChan c
 -- | This is for development
 sendInitialSignals :: Chan QtEvent -> [Key] -> IO ()
 sendInitialSignals c signals = ignore $ forkOS $ do
-    threadDelay (5 * 10 ^ 6)
+    threadDelay (5 * 10 ^ (6 :: Int))
     mapM_ worker signals
   where
     worker k = do
-        threadDelay $ round (0.8 * 10 ^ 6)
+        threadDelay $ round ((0.8 :: Double) * 10 ^ (6 :: Int))
         writeChan c (KeyPress k (text k) empty)
         writeChan c (KeyRelease k (text k) empty)
     text K0 = "0"

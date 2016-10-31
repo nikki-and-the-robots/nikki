@@ -1,5 +1,7 @@
 {-# language ExistentialQuantification, ViewPatterns, NamedFieldPuns, StandaloneDeriving, DeriveDataTypeable #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Physics.Chipmunk.Types where
 
 import Data.Abelian

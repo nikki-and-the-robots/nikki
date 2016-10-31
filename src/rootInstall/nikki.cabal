@@ -101,9 +101,6 @@ Executable nikki
             -O2
             -optl-s
 
-    if impl(ghc >= 7)
-        cpp-options:     -DGHC7
-
     cpp-options: -DRootInstall
 
     ghc-options:
