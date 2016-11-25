@@ -1,181 +1,185 @@
-Name:           nikki
+-- This file has been generated from package.yaml by hpack version 0.14.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           nikki
 version:        1.0.1
-Category:       Game
-Author:         Florian Hofer, Sönke Hahn, Nikolaus Muxfeldt, qubodup
-Maintainer:     shahn@joyridelabs.de
+category:       Game
+author:         Florian Hofer, Sönke Hahn, Nikolaus Muxfeldt, qubodup
+maintainer:     shahn@joyridelabs.de
+license:        UnspecifiedLicense
+build-type:     Simple
+cabal-version:  >= 1.10
 
-Extra-source-files:
-    LICENSE
-    README
-    data/LICENSE
-    data/README
-    data/manual/editor.txt
+flag devel
+  description: No Optimizations and no executable stripping
+  manual: False
+  default: False
 
-Build-Type:     Custom
-Cabal-Version:  >= 1.8
+executable core
+  main-is: Main.hs
+  ghc-options: -fwarn-missing-fields -fwarn-dodgy-imports -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -fwarn-unused-imports -fno-warn-overlapping-patterns -fno-warn-missing-signatures -threaded -Wall -fno-warn-overlapping-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-incomplete-patterns -fno-warn-orphans -fno-warn-type-defaults
+  build-depends:
+      base ==4.*
+    , directory
+    , process
+    , filepath
+    , transformers
+    , bytestring >=0.10
+    , mtl
+    , containers
+    , safe
+    , FindBin >=0.0.5
+    , utf8-string
+    , aeson
+    , base ==4.*
+    , base-compat
+    , base-orphans
+    , bifunctors
+    , binary
+    , binary-communicator >=1.0.2
+    , bytestring >=0.10
+    , clocked ==0.4.1.*
+    , cmdargs >=0.6.6
+    , containers
+    , crypto-pubkey-types >=0.1 && <0.5
+    , data-accessor >=0.2.1.7
+    , data-accessor-mtl >=0.2.0.2
+    , deepseq ==1.3.* || ==1.4.*
+    , directory
+    , email-validate
+    , filepath
+    , FindBin >=0.0.5
+    , hashable
+    , Hipmunk >=5.2.0.6
+    , HTTP ==4000.2.*
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , mtl ==2.* && ((<2.1 || >2.1))
+    , network >=2.6
+    , parsec ==3.*
+    , process
+    , random
+    , RSA >=1.2.1
+    , safe
+    , sfml-audio ==0.7.* && >=0.7.1
+    , StateVar
+    , stickyKeysHotKey ==0.1.*
+    , strict >=0.3.2
+    , template ==0.2.*
+    , temporary >=1.1.1
+    , text
+    , time
+    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , uniplate >=1.6
+    , utf8-string
+    , vector ==0.10.*
+    , string-conversions
+    , network-uri
+  if flag(devel)
+    ghc-options: -O0
+  else
+    ghc-options: -O2 -optl-s
+  if os(osx)
+    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+    ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -headerpad_max_install_names
+  if os(linux)
+    extra-lib-dirs:
+        cpp/dist
+    extra-libraries:
+        qtwrapper
+        QtOpenGL
+        QtGui
+        QtCore
+  if os(windows)
+    ghc-options: -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
+    extra-lib-dirs:
+        cpp/dist/
+        C:/Qt/2010.02.1/qt/lib/
+    extra-libraries:
+        qtwrapper
+        QtOpenGL4
+        QtGui4
+        QtCore4
+        stdc++
+    ld-options: -mwindows
+  if os(osx)
+    extra-lib-dirs:
+        cpp/dist/
+    extra-libraries:
+        qtwrapper
+  default-language: Haskell2010
 
-Flag Devel
-    Description: No Optimizations and no executable stripping
-    Default:    False
-
-
-Executable  nikki
-    main-is:
-        Distribution/AutoUpdate/Restarter.hs
-
-    if flag(Devel)
-        ghc-options:
-            -O0
-    else
-        ghc-options:
-            -O1
-            -optl-s
-
-    ghc-options:
-        -- -Werror
-        -fwarn-missing-fields
-        -fwarn-dodgy-imports
-        -fwarn-missing-methods
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-imports
-        -fno-warn-overlapping-patterns
-        -fno-warn-missing-signatures
-
-    if os(darwin)
-        cc-options:
-            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
-        ld-options:
-            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
-            -headerpad_max_install_names
-
+executable nikki
+  main-is: Distribution/AutoUpdate/Restarter.hs
+  ghc-options: -fwarn-missing-fields -fwarn-dodgy-imports -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -fwarn-unused-imports -fno-warn-overlapping-patterns -fno-warn-missing-signatures -threaded -Wall -fno-warn-overlapping-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-incomplete-patterns -fno-warn-orphans -fno-warn-type-defaults
+  build-depends:
+      base ==4.*
+    , directory
+    , process
+    , filepath
+    , transformers
+    , bytestring >=0.10
+    , mtl
+    , containers
+    , safe
+    , FindBin >=0.0.5
+    , utf8-string
+    , aeson
+    , base ==4.*
+    , base-compat
+    , base-orphans
+    , bifunctors
+    , binary
+    , binary-communicator >=1.0.2
+    , bytestring >=0.10
+    , clocked ==0.4.1.*
+    , cmdargs >=0.6.6
+    , containers
+    , crypto-pubkey-types >=0.1 && <0.5
+    , data-accessor >=0.2.1.7
+    , data-accessor-mtl >=0.2.0.2
+    , deepseq ==1.3.* || ==1.4.*
+    , directory
+    , email-validate
+    , filepath
+    , FindBin >=0.0.5
+    , hashable
+    , Hipmunk >=5.2.0.6
+    , HTTP ==4000.2.*
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , mtl ==2.* && ((<2.1 || >2.1))
+    , network >=2.6
+    , parsec ==3.*
+    , process
+    , random
+    , RSA >=1.2.1
+    , safe
+    , sfml-audio ==0.7.* && >=0.7.1
+    , StateVar
+    , stickyKeysHotKey ==0.1.*
+    , strict >=0.3.2
+    , template ==0.2.*
+    , temporary >=1.1.1
+    , text
+    , time
+    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , uniplate >=1.6
+    , utf8-string
+    , vector ==0.10.*
+    , string-conversions
+    , network-uri
+  if flag(devel)
+    ghc-options: -O0
+  else
+    ghc-options: -O1 -optl-s
+  if os(osx)
+    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+    ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -headerpad_max_install_names
+  if os(linux)
     build-depends:
-        base == 4.*
-        , directory
-        , process
-        , filepath
-        , transformers
-        , bytestring >= 0.10
-        , mtl
-        , containers
-        , safe
-        , FindBin >= 0.0.5
-        , utf8-string
-    if os(linux)
-        build-depends:
-            -- for setting LD_LIBRARY_PATH
-            unix == 2.*
-
-    if os(mingw32)
-        ld-options:
-            -- omit the console on windows. You can't use stdout without causing errors then...
-            -mwindows
-
-
-Executable core
-    main-is:
-        Main.hs
-    other-modules:
-        Paths_nikki
-
-    if flag(Devel)
-        ghc-options:
-            -O0
-    else
-        ghc-options:
-            -O2
-            -optl-s
-
-    ghc-options:
-        -threaded
-
-        -Wall
-        -fno-warn-overlapping-patterns
-        -fno-warn-missing-signatures
-        -fno-warn-name-shadowing
-        -fno-warn-unused-binds
-        -fno-warn-unused-matches
-        -fno-warn-incomplete-patterns
-        -fno-warn-orphans
-        -fno-warn-type-defaults
-
-    if os(darwin)
-        cc-options:
-            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
-        ld-options:
-            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
-            -headerpad_max_install_names
-
-    build-depends:
-          aeson
-        , base == 4.*
-        , base-compat
-        , base-orphans
-        , bifunctors
-        , binary
-        , binary-communicator >= 1.0.2
-        , bytestring >= 0.10
-        , clocked == 0.4.1.*
-        , cmdargs >= 0.6.6
-        , containers
-        , crypto-pubkey-types >= 0.1 && < 0.5
-        , data-accessor >= 0.2.1.7
-        , data-accessor-mtl >= 0.2.0.2
-        , deepseq == 1.3.* || == 1.4.*
-        , directory
-        , email-validate
-        , filepath
-        , FindBin >= 0.0.5
-        , hashable
-        , Hipmunk >= 5.2.0.6
-        , HTTP == 4000.2.*
-        , LibZip >= 0.2.0.4
-        , MonadCatchIO-transformers >= 0.2.2.2
-        , mtl == 2.* && (< 2.1 || > 2.1)
-        , network >= 2.6
-        , parsec == 3.*
-        , process
-        , random
-        , RSA >= 1.2.1
-        , safe
-        , sfml-audio == 0.7.* && >= 0.7.1
-        , StateVar
-        , stickyKeysHotKey == 0.1.*
-        , strict >= 0.3.2
-        , template == 0.2.*
-        , temporary >= 1.1.1
-        , text
-        , time
-        , transformers == 0.2.* || == 0.3.* || == 0.4.*
-        , uniplate >= 1.6
-        , utf8-string
-        , vector == 0.10.*
-        , string-conversions
-        , network-uri
-
-    if os(linux)
-        extra-libraries:
-            qtwrapper, QtOpenGL, QtGui, QtCore
-        extra-lib-dirs:
-            cpp/dist
-
-    -- * windows linking :(
-    if os(mingw32)
-        ld-options:
-            -- omit the console on windows. You can't use stdout without causing errors then...
-            -mwindows
-        ghc-options:
-            -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
-        extra-libraries:
-            qtwrapper, QtOpenGL4, QtGui4, QtCore4, stdc++
-        extra-lib-dirs:
-            cpp/dist/,
-            C:/Qt/2010.02.1/qt/lib/
-
-    if os(darwin)
-        extra-libraries:
-            qtwrapper
-        extra-lib-dirs:
-            cpp/dist/
-        frameworks:
-            QtOpenGL, QtGui, QtCore
+        unix ==2.*
+  if os(windows)
+    ld-options: -mwindows
+  default-language: Haskell2010

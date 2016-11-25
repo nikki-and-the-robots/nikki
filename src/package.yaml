@@ -1,0 +1,169 @@
+name: nikki
+version: '1.0.1'
+category: Game
+author: Florian Hofer, Sönke Hahn, Nikolaus Muxfeldt, qubodup
+maintainer: shahn@joyridelabs.de
+license: UnspecifiedLicense
+extra-source-files:
+- LICENSE
+- README
+- data/LICENSE
+- data/README
+- data/manual/editor.txt
+ghc-options:
+- -fwarn-missing-fields
+- -fwarn-dodgy-imports
+- -fwarn-missing-methods
+- -fwarn-tabs
+- -fwarn-unused-do-bind
+- -fwarn-unused-imports
+- -fno-warn-overlapping-patterns
+- -fno-warn-missing-signatures
+- -threaded
+- -Wall
+- -fno-warn-overlapping-patterns
+- -fno-warn-missing-signatures
+- -fno-warn-name-shadowing
+- -fno-warn-unused-binds
+- -fno-warn-unused-matches
+- -fno-warn-incomplete-patterns
+- -fno-warn-orphans
+- -fno-warn-type-defaults
+dependencies:
+- base ==4.*
+- directory
+- process
+- filepath
+- transformers
+- bytestring >=0.10
+- mtl
+- containers
+- safe
+- FindBin >=0.0.5
+- utf8-string
+- aeson
+- base ==4.*
+- base-compat
+- base-orphans
+- bifunctors
+- binary
+- binary-communicator >=1.0.2
+- bytestring >=0.10
+- clocked ==0.4.1.*
+- cmdargs >=0.6.6
+- containers
+- crypto-pubkey-types >=0.1 && <0.5
+- data-accessor >=0.2.1.7
+- data-accessor-mtl >=0.2.0.2
+- deepseq ==1.3.* || ==1.4.*
+- directory
+- email-validate
+- filepath
+- FindBin >=0.0.5
+- hashable
+- Hipmunk >=5.2.0.6
+- HTTP ==4000.2.*
+- LibZip >=0.2.0.4
+- MonadCatchIO-transformers >=0.2.2.2
+- mtl ==2.* && ((<2.1 || >2.1))
+- network >=2.6
+- parsec ==3.*
+- process
+- random
+- RSA >=1.2.1
+- safe
+- sfml-audio ==0.7.* && >=0.7.1
+- StateVar
+- stickyKeysHotKey ==0.1.*
+- strict >=0.3.2
+- template ==0.2.*
+- temporary >=1.1.1
+- text
+- time
+- transformers ==0.2.* || ==0.3.* || ==0.4.*
+- uniplate >=1.6
+- utf8-string
+- vector ==0.10.*
+- string-conversions
+- network-uri
+executables:
+  nikki:
+    main: Distribution/AutoUpdate/Restarter.hs
+    when:
+    - condition: flag(devel)
+      then:
+        ghc-options: -O0
+      else:
+        ghc-options:
+        - -O1
+        - -optl-s
+    - condition: os(osx)
+      cc-options:
+      - -isysroot
+      - /Developer/SDKs/MacOSX10.5.sdk
+      - -mmacosx-version-min=10.5
+      ld-options:
+      - -isysroot
+      - /Developer/SDKs/MacOSX10.5.sdk
+      - -mmacosx-version-min=10.5
+      - -headerpad_max_install_names
+    - condition: os(linux)
+      dependencies:
+      - unix ==2.*
+    - condition: os(windows)
+      ld-options: -mwindows
+  core:
+    main: Main.hs
+    when:
+    - condition: flag(devel)
+      then:
+        ghc-options: -O0
+      else:
+        ghc-options:
+        - -O2
+        - -optl-s
+    - condition: os(osx)
+      cc-options:
+      - -isysroot
+      - /Developer/SDKs/MacOSX10.5.sdk
+      - -mmacosx-version-min=10.5
+      ld-options:
+      - -isysroot
+      - /Developer/SDKs/MacOSX10.5.sdk
+      - -mmacosx-version-min=10.5
+      - -headerpad_max_install_names
+    - condition: os(linux)
+      extra-lib-dirs: cpp/dist
+      extra-libraries:
+      - qtwrapper
+      - QtOpenGL
+      - QtGui
+      - QtCore
+    - condition: os(windows)
+      ghc-options:
+      - -pgma
+      - gcc
+      - -pgmc
+      - gcc
+      - -pgml
+      - gcc
+      - -pgmwindres
+      - windres
+      ld-options: -mwindows
+      extra-lib-dirs:
+      - cpp/dist/
+      - C:/Qt/2010.02.1/qt/lib/
+      extra-libraries:
+      - qtwrapper
+      - QtOpenGL4
+      - QtGui4
+      - QtCore4
+      - stdc++
+    - condition: os(osx)
+      extra-lib-dirs: cpp/dist/
+      extra-libraries: qtwrapper
+flags:
+  devel:
+    description: No Optimizations and no executable stripping
+    manual: false
+    default: false
