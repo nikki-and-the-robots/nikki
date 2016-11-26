@@ -26,10 +26,10 @@ import Utils
 -- * external instances
 
 instance Show Body where
-    show x = "<Body>"
+    show _ = "<Body>"
 
 instance Show Shape where
-    show x = "<Shape>"
+    show _ = "<Shape>"
 
 deriving instance Read ShapeType
 
@@ -174,7 +174,7 @@ mkShape body ShapeDescription{shapeAttributes = (ShapeAttributes elasticity fric
 
 -- | initially adds shapes to a Chipmunk
 addInitShape :: Chipmunk -> [ShapeDescription] -> IO Chipmunk
-addInitShape (Chipmunk space body shapes shapeTypes baryCenterOffset) newShapeTypes = do
+addInitShape (Chipmunk space body _shapes shapeTypes baryCenterOffset) newShapeTypes = do
     newShapes <- mapM (mkShape body) newShapeTypes
     mapM_ (spaceAdd space) newShapes
 
@@ -265,10 +265,10 @@ vector2size (Vector x y) = fmap realToFrac $ Qt.Size x y
 -- * missing
 
 vectorX :: Vector -> CpFloat
-vectorX (Vector x y) = x
+vectorX (Vector x _) = x
 
 vectorY :: Vector -> CpFloat
-vectorY (Vector x y) = y
+vectorY (Vector _ y) = y
 
 rad2deg :: Angle -> Double
 rad2deg x = realToFrac ((x * 360) / (pi * 2))
@@ -332,7 +332,7 @@ translateVector ptr v = translate ptr $ vector2position v
 mapVectors :: (Vector -> Vector) -> ShapeType -> ShapeType
 mapVectors f (LineSegment a b t) = LineSegment (f a) (f b) t
 mapVectors f (Polygon list) = Polygon (map f list)
-mapVectors f x = es " mo" x
+mapVectors _ x = es " mo" x
 
 vmap :: (CpFloat -> CpFloat) -> Vector -> Vector
 vmap f (Vector a b) = Vector (f a) (f b)

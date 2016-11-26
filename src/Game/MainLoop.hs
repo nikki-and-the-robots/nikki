@@ -63,7 +63,7 @@ gameLoop app parent editorTestMode rsr@RenderStateRefs{sceneMVar} =
     -- | performs n substeps. Aborts in case of level end. Returns (Just AppState) in
     -- that case. Nothing means, the game should continue.
     performSubSteps :: Timer -> Int -> GameMonad (Maybe AppState)
-    performSubSteps timer 0 = return Nothing
+    performSubSteps _timer 0 = return Nothing
     performSubSteps timer n = do
         io $ resetDebugging
 

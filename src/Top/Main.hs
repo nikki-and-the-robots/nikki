@@ -65,7 +65,7 @@ forkThreads renderThread logicThread = do
     logicExceptionRef <- newEmptyMVar
     waitRef <- newEmptyMVar
     renderTID <- myThreadId
-    logicTID <- forkOS $ flip finally (putMVar waitRef ()) $ do
+    _ <- forkOS $ flip finally (putMVar waitRef ()) $ do
         a <- takeMVar aRef
         (logicThread a >> noException logicExceptionRef)
              `Control.Exception.catch` handleLogicException renderTID logicExceptionRef

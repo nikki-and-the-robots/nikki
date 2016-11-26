@@ -35,7 +35,7 @@ relativeDeployPath = case System.Info.os of
     "linux" -> "."
     "mingw32" -> "."
     "darwin" -> "../.."
-    x -> osError "relativeDeployPath"
+    _ -> osError "relativeDeployPath"
 
 -- | relative path from the root of the deployed directory to the directory that
 -- contains the executables
@@ -44,7 +44,7 @@ deployRootToExecutables = case System.Info.os of
     "linux" -> "."
     "mingw32" -> "."
     "darwin" -> "Contents/MacOS"
-    x -> osError "deployRootToExecutables"
+    _ -> osError "deployRootToExecutables"
 
 restarterExecutable = mkExecutable "nikki"
 linuxStartScript = "nikki.sh"
@@ -57,12 +57,12 @@ mkExecutable = case System.Info.os of
     "linux" -> id
     "mingw32" -> (<.> "exe")
     "darwin" -> id
-    x -> osError "mkExecutable"
+    _ -> osError "mkExecutable"
 
 mkDeployedFolder :: String -> String
 mkDeployedFolder = case System.Info.os of
     "darwin" -> (<.> "app")
-    x -> id
+    _ -> id
 
 data Repo = Repo String
 

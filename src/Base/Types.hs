@@ -510,7 +510,7 @@ editorOEMState = accessor editorOEMState_ (\ a r -> r{editorOEMState_ = a})
 -- | modifies all EditorPositions of the OEMState of EditorObjects
 modifyOEMEditorPositions :: (EditorPosition -> EditorPosition)
     -> EditorObject s -> EditorObject s
-modifyOEMEditorPositions f o@EditorObject{editorOEMState_ = Nothing} = o
+modifyOEMEditorPositions _ o@EditorObject{editorOEMState_ = Nothing} = o
 modifyOEMEditorPositions f o@EditorObject{editorOEMState_ = Just (OEMState state)} =
     editorOEMState ^= (Just $ OEMState $ transformBi f state) $ o
 
@@ -624,17 +624,17 @@ class (Show sort, Typeable sort, Show object, Typeable object) =>
 
     -- | only implemented in Nikki and robots
     getControlledChipmunk :: Scene Object_ -> object -> Chipmunk
-    getControlledChipmunk scene o = error ("please implement getControlledChipmunk in: " ++ show o)
+    getControlledChipmunk _scene o = error ("please implement getControlledChipmunk in: " ++ show o)
 
     startControl :: Seconds -> object -> object
-    startControl now = id
+    startControl _now = id
 
     isUpdating :: object -> Bool -- phantom type
 
     update :: sort -> Application -> Configuration -> Space -> Scene Object_ -> Seconds
         -> Contacts -> (Bool, ControlData)
         -> Index -> object -> StateT (Scene Object_ -> Scene Object_) IO object
-    update sort app config space scene now contacts cd i o =
+    update sort app config space scene now contacts cd _i o =
         io $ updateNoSceneChange sort app config space scene now contacts cd o
 
     updateNoSceneChange :: sort -> Application -> Configuration -> Space -> Scene Object_
@@ -685,7 +685,7 @@ data Object_
   deriving (Typeable)
 
 instance Show Object_ where
-    show (Object_ s o) = "Object_ (" ++ show o ++ ")"
+    show (Object_ _s o) = "Object_ (" ++ show o ++ ")"
 
 instance Show Sort_ where
     show (Sort_ s) = "Sort_ (" ++ show s ++ ")"
@@ -752,11 +752,11 @@ type LevelUID = String
 
 -- | unique  ID of a level
 levelUID :: LevelFile -> LevelUID
-levelUID (StandardLevel dir package file meta) =
+levelUID (StandardLevel _dir package file _meta) =
     "standardLevels" <//> package <//> file
-levelUID (UserLevel dir package file meta) =
+levelUID (UserLevel _dir package file _meta) =
     "userLevels" <//> package <//> file
-levelUID (EpisodeLevel _ dir package file meta) =
+levelUID (EpisodeLevel _ _dir package file _meta) =
     "storyModeLevels" <//> package <//> file
 levelUID (TemplateLevel path) =
     "templateLevels" <//> path

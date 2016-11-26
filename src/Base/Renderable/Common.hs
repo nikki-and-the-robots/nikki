@@ -71,7 +71,7 @@ instance Renderable () where
     render _ _ _ s () = return (s, return ())
 
 instance Renderable Pixmap where
-    render ptr app _ size pix = return $ tuple (pixmapSize pix) $ do
+    render ptr _app _ _size pix = return $ tuple (pixmapSize pix) $ do
         translate ptr (pix ^. pixmapOffset)
         drawPixmap ptr zero (pixmap pix)
     label = const "Pixmap"
@@ -79,8 +79,8 @@ instance Renderable Pixmap where
 -- | used for rendering one line of text
 -- (all other text rendering is implemented in terms of this)
 instance (Functor t, Foldable t) => Renderable (t Glyph) where
-    render ptr app config parentSize glyphs | fnull glyphs = return (zero, return ())
-    render ptr app config parentSize glyphs =
+    render _ptr _app _config _parentSize glyphs | fnull glyphs = return (zero, return ())
+    render ptr app config _parentSize glyphs =
         return (size, action)
       where
         size = Size

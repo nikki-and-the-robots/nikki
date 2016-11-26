@@ -109,7 +109,7 @@ import Text.Printf
 
 import Control.Monad.CatchIO
 import Control.Monad.State (evalStateT, get, put)
-import Control.Concurrent.MVar
+import Control.Concurrent
 
 import Foreign (Ptr, nullPtr, FunPtr, freeHaskellFunPtr)
 import Foreign.C.String
@@ -672,14 +672,21 @@ foreign import ccall "textQClipboard" cppTextQClipboard :: IO (Ptr QByteArray)
 -- * Execute IO-operations in the GUI-thread
 
 -- | Non-blocking operation, that gets the gui thread to perform the given action.
--- (cpp has to call 'freePostGUIFunPtr' after performing the action.)
 postGUI :: IO () -> IO ()
 postGUI action = do
     mm <- tryReadMVar _mainWindowRef
     case mm of
         Nothing -> error "initialize _mainWindowRef before calling postGUI or postGUIBlocking!"
-        Just window ->
-            cppPostGUI window =<< wrapGuiAction action
+        Just window -> do
+            mvar <- newEmptyMVar
+            wrapped <- wrapGuiAction $ do
+              action
+              putMVar mvar ()
+            cppPostGUI window wrapped
+            _ <- forkIO $ do
+              takeMVar mvar
+              freeHaskellFunPtr wrapped
+            return ()
 
 {-# noinline _mainWindowRef #-}
 _mainWindowRef :: MVar (Ptr MainWindow)
@@ -697,7 +704,3 @@ postGUIBlocking a = do
     ref <- newEmptyMVar
     postGUI (a >>= putMVar ref)
     takeMVar ref
-
-foreign export ccall freePostGUIFunPtr :: FunPtr (IO ()) -> IO ()
-freePostGUIFunPtr :: FunPtr (IO ()) -> IO ()
-freePostGUIFunPtr = freeHaskellFunPtr

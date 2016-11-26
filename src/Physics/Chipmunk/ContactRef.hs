@@ -150,7 +150,7 @@ resetContactRef (ContactRef empty ref) = do
 
 -- | returns the actual state of the contacts
 readContactRef :: ContactRef x -> IO x
-readContactRef (ContactRef empty ref) =
+readContactRef (ContactRef _ ref) =
     readIORef ref
 
 

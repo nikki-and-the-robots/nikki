@@ -1,5 +1,7 @@
 {-# language FlexibleInstances #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Base.Renderable.Prose where
 
 

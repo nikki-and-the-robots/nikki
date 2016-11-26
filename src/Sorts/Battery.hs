@@ -77,7 +77,7 @@ instance Sort BSort Battery where
     renderIconified sort ptr =
         renderPixmapSimple ptr (batteryPixmap sort)
 
-    initialize app _ (Just space) sort ep Nothing _ = io $ do
+    initialize _app _ (Just space) sort ep Nothing _ = io $ do
         let baryCenterOffset = size2vector $ fmap (/2) batterySize
             shapes = fmap (mkShapeDescription shapeAttributes) mkShapes
             pos = position2vector (epToPosition (size sort) ep)
@@ -85,7 +85,7 @@ instance Sort BSort Battery where
             bodyAttributes = mkMaterialBodyAttributes batteryMaterialMass mkShapes pos
         chip <- initChipmunk space bodyAttributes shapes baryCenterOffset
         return $ Battery chip False
-    initialize app _ Nothing sort ep Nothing _ = return $
+    initialize _app _ Nothing sort ep Nothing _ = return $
         let baryCenterOffset = size2vector $ fmap (/2) batterySize
             position = epToPosition (size sort) ep
             chip = ImmutableChipmunk position 0 baryCenterOffset []
@@ -98,7 +98,7 @@ instance Sort BSort Battery where
 
     isUpdating = const False
 
-    renderObject _ _ o@Battery{consumed} sort ptr offset now = do
+    renderObject _ _ o@Battery{consumed} sort _ptr _offset _now = do
         if not consumed then do
             (pos, angle) <- getRenderPositionAndAngle (chipmunk o)
             return $ [RenderPixmap (batteryPixmap sort) pos (Just angle)]

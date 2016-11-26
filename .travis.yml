@@ -23,8 +23,7 @@ script:
   - (cd cpp/dist && cmake .. && make)
   - export STACK_YAML=$PWD/stack-libzip-0.10.yaml
   - stack setup --no-terminal
-  - stack test --no-terminal
-  - (cd testsuite ; stack exec -- testsuite)
+  - stack test --no-terminal --ghc-options=-Werror
 
 cache:
   directories:

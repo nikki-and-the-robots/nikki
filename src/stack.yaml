@@ -1,7 +1,8 @@
-flags: {}
+flags:
+  nikki:
+    devel: true
 packages:
 - ./.
-- testsuite
 - scripts
 - level-server
 - location:

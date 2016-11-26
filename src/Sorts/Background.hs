@@ -1,5 +1,7 @@
 {-# language ViewPatterns, MultiParamTypeClasses, DeriveDataTypeable #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- | backgrounds are rendered statically centered on the screen,
 -- no matter which layer they are in. Every background consists of multiple
 -- pixmaps in different sizes. When rendered (in editor mode
@@ -78,11 +80,11 @@ instance Sort BSort () where
                                            -- (except for the cursor and iconified rendering)
     renderIconified sort ptr =
         renderPixmapSimple ptr (head $ pixmaps sort)
-    renderEditorObject ptr offset eo = do
+    renderEditorObject ptr _offset eo = do
         resetMatrix ptr
         windowSize <- sizeQPainter ptr
         renderWholeScreenPixmap ptr windowSize (pixmaps $ editorSort eo)
-    initialize app _ mSpace sort ep Nothing _ = return ()
+    initialize _app _ _mSpace _sort _ep Nothing _ = return ()
     immutableCopy = return
     chipmunks = const []
     isUpdating = const False

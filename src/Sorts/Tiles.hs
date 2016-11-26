@@ -132,7 +132,7 @@ getFrameFileNames storyMode name = do
     parsePath :: String -> (String, Maybe Int, FilePath)
     parsePath path = case parse parseTileName "" path of
         Right (a, b) -> (a, b, path)
-        x -> error ("unparseable filename: " ++ path)
+        _ -> error ("unparseable filename: " ++ path)
     parseTileName :: Parsec String () (String, Maybe Int)
     parseTileName = do
         n <- parseName
@@ -203,7 +203,7 @@ instance Sort TSort Tile where
     immutableCopy    = es "immutableCopy: use AllTiles"
     chipmunks        = es "chipmunks: use AllTiles"
     isUpdating       = es "isUpdating: use AllTiles"
-    renderObject _ _ (Tile (ImmutableChipmunk position _ _ _)) sort _ offset now = return $
+    renderObject _ _ (Tile (ImmutableChipmunk position _ _ _)) sort _ _offset now = return $
         return $ RenderPixmap pix position Nothing
       where
         pix = pickAnimationFrame (animation sort) now
@@ -256,14 +256,14 @@ instance Sort AllTilesSort AllTiles where
     size = error "size: not in use for AllTiles"
     renderIconified = error "renderIconified: not in use for AllTiles"
 
-    initialize app _ Nothing (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing _ =
+    initialize _app _ Nothing (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing _ =
         io $ AllMultilayerTiles <$>
             bakeTiles (map toAnimation editorObjects)
       where
         toAnimation (EditorObject sort ep Nothing) =
             (animation sort, epToPosition (size sort) ep)
 
-    initialize app _ (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
+    initialize _app _ (Just space) (AllTilesSort editorObjects) (EditorPosition 0 0) Nothing
       cachedTiles = io $ do
         renderables <- bakeTiles $ map mkRenderable editorObjects
         chipmunks <- initChipmunks space cachedTiles editorObjects
@@ -279,7 +279,7 @@ instance Sort AllTilesSort AllTiles where
 
     isUpdating = const False
 
-    renderObject _ _ allTiles sort _ _ now = return $
+    renderObject _ _ allTiles _sort _ _ now = return $
         fmap inner $ renderables allTiles
       where
         inner (animation, pos) = RenderPixmap

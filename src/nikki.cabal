@@ -1,181 +1,727 @@
-Name:           nikki
+-- This file has been generated from package.yaml by hpack version 0.15.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           nikki
 version:        1.0.1
-Category:       Game
-Author:         Florian Hofer, Sönke Hahn, Nikolaus Muxfeldt, qubodup
-Maintainer:     shahn@joyridelabs.de
+category:       Game
+author:         Florian Hofer, Sönke Hahn, Nikolaus Muxfeldt, qubodup
+maintainer:     shahn@joyridelabs.de
+license:        UnspecifiedLicense
+build-type:     Simple
+cabal-version:  >= 1.10
 
-Extra-source-files:
-    LICENSE
-    README
-    data/LICENSE
-    data/README
-    data/manual/editor.txt
+flag devel
+  description: No Optimizations and no executable stripping
+  manual: False
+  default: False
 
-Build-Type:     Custom
-Cabal-Version:  >= 1.8
+executable core
+  main-is: Main.hs
+  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded
+  build-depends:
+      base ==4.*
+    , directory
+    , process
+    , filepath
+    , transformers
+    , bytestring >=0.10
+    , mtl
+    , containers
+    , safe
+    , FindBin >=0.0.5
+    , utf8-string
+    , aeson
+    , base ==4.*
+    , base-compat
+    , base-orphans
+    , bifunctors
+    , binary
+    , binary-communicator >=1.0.2
+    , bytestring >=0.10
+    , clocked ==0.4.1.*
+    , cmdargs >=0.6.6
+    , containers
+    , crypto-pubkey-types >=0.1 && <0.5
+    , data-accessor >=0.2.1.7
+    , data-accessor-mtl >=0.2.0.2
+    , deepseq ==1.3.* || ==1.4.*
+    , directory
+    , email-validate
+    , filepath
+    , FindBin >=0.0.5
+    , hashable
+    , Hipmunk >=5.2.0.6
+    , HTTP ==4000.2.*
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , mtl ==2.* && ((<2.1 || >2.1))
+    , network >=2.6
+    , parsec ==3.*
+    , process
+    , random
+    , RSA >=1.2.1
+    , safe
+    , sfml-audio ==0.7.* && >=0.7.1
+    , StateVar
+    , stickyKeysHotKey ==0.1.*
+    , strict >=0.3.2
+    , template ==0.2.*
+    , temporary >=1.1.1
+    , text
+    , time
+    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , uniplate >=1.6
+    , utf8-string
+    , vector ==0.10.*
+    , string-conversions
+    , network-uri
+  if flag(devel)
+    ghc-options: -O0
+  else
+    ghc-options: -O2 -optl-s
+  if os(osx)
+    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+    ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -headerpad_max_install_names
+  if os(linux)
+    extra-lib-dirs:
+        cpp/dist
+    extra-libraries:
+        qtwrapper
+        QtOpenGL
+        QtGui
+        QtCore
+  if os(windows)
+    ghc-options: -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
+    extra-lib-dirs:
+        cpp/dist/
+        C:/Qt/2010.02.1/qt/lib/
+    extra-libraries:
+        qtwrapper
+        QtOpenGL4
+        QtGui4
+        QtCore4
+        stdc++
+    ld-options: -mwindows
+  if os(osx)
+    extra-lib-dirs:
+        cpp/dist/
+    extra-libraries:
+        qtwrapper
+  default-language: Haskell2010
 
-Flag Devel
-    Description: No Optimizations and no executable stripping
-    Default:    False
-
-
-Executable  nikki
-    main-is:
-        Distribution/AutoUpdate/Restarter.hs
-
-    if flag(Devel)
-        ghc-options:
-            -O0
-    else
-        ghc-options:
-            -O1
-            -optl-s
-
-    ghc-options:
-        -- -Werror
-        -fwarn-missing-fields
-        -fwarn-dodgy-imports
-        -fwarn-missing-methods
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-imports
-        -fno-warn-overlapping-patterns
-        -fno-warn-missing-signatures
-
-    if os(darwin)
-        cc-options:
-            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
-        ld-options:
-            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
-            -headerpad_max_install_names
-
+executable nikki
+  main-is: Distribution/AutoUpdate/Restarter.hs
+  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded
+  build-depends:
+      base ==4.*
+    , directory
+    , process
+    , filepath
+    , transformers
+    , bytestring >=0.10
+    , mtl
+    , containers
+    , safe
+    , FindBin >=0.0.5
+    , utf8-string
+    , aeson
+    , base ==4.*
+    , base-compat
+    , base-orphans
+    , bifunctors
+    , binary
+    , binary-communicator >=1.0.2
+    , bytestring >=0.10
+    , clocked ==0.4.1.*
+    , cmdargs >=0.6.6
+    , containers
+    , crypto-pubkey-types >=0.1 && <0.5
+    , data-accessor >=0.2.1.7
+    , data-accessor-mtl >=0.2.0.2
+    , deepseq ==1.3.* || ==1.4.*
+    , directory
+    , email-validate
+    , filepath
+    , FindBin >=0.0.5
+    , hashable
+    , Hipmunk >=5.2.0.6
+    , HTTP ==4000.2.*
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , mtl ==2.* && ((<2.1 || >2.1))
+    , network >=2.6
+    , parsec ==3.*
+    , process
+    , random
+    , RSA >=1.2.1
+    , safe
+    , sfml-audio ==0.7.* && >=0.7.1
+    , StateVar
+    , stickyKeysHotKey ==0.1.*
+    , strict >=0.3.2
+    , template ==0.2.*
+    , temporary >=1.1.1
+    , text
+    , time
+    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , uniplate >=1.6
+    , utf8-string
+    , vector ==0.10.*
+    , string-conversions
+    , network-uri
+  if flag(devel)
+    ghc-options: -O0
+  else
+    ghc-options: -O1 -optl-s
+  if os(osx)
+    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+    ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -headerpad_max_install_names
+  if os(linux)
     build-depends:
-        base == 4.*
-        , directory
-        , process
-        , filepath
-        , transformers
-        , bytestring >= 0.10
-        , mtl
-        , containers
-        , safe
-        , FindBin >= 0.0.5
-        , utf8-string
-    if os(linux)
-        build-depends:
-            -- for setting LD_LIBRARY_PATH
-            unix == 2.*
+        unix ==2.*
+  if os(windows)
+    ld-options: -mwindows
+  default-language: Haskell2010
 
-    if os(mingw32)
-        ld-options:
-            -- omit the console on windows. You can't use stdout without causing errors then...
-            -mwindows
+test-suite slow
+  type: exitcode-stdio-1.0
+  main-is: slow.hs
+  hs-source-dirs:
+      test
+    , ./.
+  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds
+  build-depends:
+      base ==4.*
+    , directory
+    , process
+    , filepath
+    , transformers
+    , bytestring >=0.10
+    , mtl
+    , containers
+    , safe
+    , FindBin >=0.0.5
+    , utf8-string
+    , aeson
+    , base ==4.*
+    , base-compat
+    , base-orphans
+    , bifunctors
+    , binary
+    , binary-communicator >=1.0.2
+    , bytestring >=0.10
+    , clocked ==0.4.1.*
+    , cmdargs >=0.6.6
+    , containers
+    , crypto-pubkey-types >=0.1 && <0.5
+    , data-accessor >=0.2.1.7
+    , data-accessor-mtl >=0.2.0.2
+    , deepseq ==1.3.* || ==1.4.*
+    , directory
+    , email-validate
+    , filepath
+    , FindBin >=0.0.5
+    , hashable
+    , Hipmunk >=5.2.0.6
+    , HTTP ==4000.2.*
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , mtl ==2.* && ((<2.1 || >2.1))
+    , network >=2.6
+    , parsec ==3.*
+    , process
+    , random
+    , RSA >=1.2.1
+    , safe
+    , sfml-audio ==0.7.* && >=0.7.1
+    , StateVar
+    , stickyKeysHotKey ==0.1.*
+    , strict >=0.3.2
+    , template ==0.2.*
+    , temporary >=1.1.1
+    , text
+    , time
+    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , uniplate >=1.6
+    , utf8-string
+    , vector ==0.10.*
+    , string-conversions
+    , network-uri
+    , QuickCheck
+  if os(linux)
+    extra-lib-dirs:
+        cpp/dist
+    extra-libraries:
+        qtwrapper
+        QtOpenGL
+        QtGui
+        QtCore
+  if os(windows)
+    ghc-options: -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
+    extra-lib-dirs:
+        cpp/dist/
+        C:/Qt/2010.02.1/qt/lib/
+    extra-libraries:
+        qtwrapper
+        QtOpenGL4
+        QtGui4
+        QtCore4
+        stdc++
+    ld-options: -mwindows
+  if os(osx)
+    extra-lib-dirs:
+        cpp/dist/
+    extra-libraries:
+        qtwrapper
+  other-modules:
+      Data.Indexable.Tests
+      Graphics.Qt.Events.Tests
+      Physics.Chipmunk.StickyEdges.Tests
+      Physics.Chipmunk.StickyEdges.Tests.Properties
+      Physics.Chipmunk.StickyEdges.Tests.Rendering
+      Physics.Chipmunk.Tests
+      Physics.Chipmunk.Types.Tests
+      Sorts.Terminal.Tests
+      Sorts.Tiles.Baking.Tests
+      Spec
+      TestsuiteSpec
+      Top.MainSpec
+      Utils.Tests
+      Base
+      Base.Animation
+      Base.Application
+      Base.Application.Music
+      Base.Application.Pixmaps
+      Base.Application.Sound
+      Base.Configuration
+      Base.Configuration.Controls
+      Base.Constants
+      Base.Debugging
+      Base.Font
+      Base.Font.ColorVariant
+      Base.GameGrounds
+      Base.GlobalShortcuts
+      Base.Grounds
+      Base.Language
+      Base.Monad
+      Base.Monologue
+      Base.Options
+      Base.Options.Controls
+      Base.Paths
+      Base.Paths.GetDataFileName
+      Base.Pixmap
+      Base.Polling
+      Base.Prose
+      Base.Prose.Template
+      Base.Renderable
+      Base.Renderable.AskString
+      Base.Renderable.BusyMessage
+      Base.Renderable.Centered
+      Base.Renderable.CenterHorizontally
+      Base.Renderable.Common
+      Base.Renderable.GameOSD
+      Base.Renderable.GUILog
+      Base.Renderable.HBox
+      Base.Renderable.Header
+      Base.Renderable.Layered
+      Base.Renderable.Menu
+      Base.Renderable.Message
+      Base.Renderable.OpenUrl
+      Base.Renderable.Prose
+      Base.Renderable.Scrollable
+      Base.Renderable.Spacer
+      Base.Renderable.StickToBottom
+      Base.Renderable.VBox
+      Base.Renderable.WholeScreenPixmap
+      Base.Score
+      Base.Types
+      Base.Types.Events
+      Base.Types.LevelMetaData
+      Control.Monad.CatchState
+      Data.Abelian
+      Data.Binary.Strict
+      Data.Convertable
+      Data.Directions
+      Data.Indexable
+      Data.Indexable.Range
+      Data.Initial
+      Data.SelectTree
+      Data.StrictList
+      Distribution.AutoUpdate
+      Distribution.AutoUpdate.Download
+      Distribution.AutoUpdate.MenuItem
+      Distribution.AutoUpdate.Paths
+      Distribution.AutoUpdate.Restarter
+      Distribution.AutoUpdate.VerifySignatures
+      Distribution.AutoUpdate.Zip
+      Distribution.Setup.Darwin
+      Editor.Menu
+      Editor.Pickle
+      Editor.Pickle.LevelFile
+      Editor.Pickle.LevelLoading
+      Editor.Pickle.Types
+      Editor.Scene
+      Editor.Scene.Rendering
+      Editor.Scene.Rendering.Helpers
+      Editor.Scene.RenderOrdering
+      Editor.Scene.Types
+      FakeFutureVersion
+      Game.BackgroundScene
+      Game.MainLoop
+      Game.Menus
+      Game.Scene
+      Game.Scene.Camera
+      Game.Scene.OptimizeRenderPixmaps
+      Graphics.Qt
+      Graphics.Qt.Colors
+      Graphics.Qt.CPPWrapper
+      Graphics.Qt.Dimension
+      Graphics.Qt.Events
+      Graphics.Qt.Types
+      Legacy.Old1
+      Legacy.Old2
+      LevelServer
+      LevelServer.Client
+      LevelServer.Configuration
+      LevelServer.SendMail
+      LevelServer.Types
+      Main
+      Network.Client
+      Network.Client.Exceptions
+      Network.Download
+      Network.Server
+      Object
+      Object.Contacts
+      Object.Types
+      Physics.Chipmunk
+      Physics.Chipmunk.ContactRef
+      Physics.Chipmunk.DebugGrid
+      Physics.Chipmunk.StickyEdges
+      Physics.Chipmunk.Types
+      Profiling.FPS
+      Profiling.Physics
+      Sorts.Background
+      Sorts.Battery
+      Sorts.Box
+      Sorts.DeathStones
+      Sorts.DebugObject
+      Sorts.FallingTiles
+      Sorts.Grids
+      Sorts.LowerLimit
+      Sorts.Nikki
+      Sorts.Nikki.Batteries
+      Sorts.Nikki.Configuration
+      Sorts.Nikki.Control
+      Sorts.Nikki.Dust
+      Sorts.Nikki.Initialisation
+      Sorts.Nikki.JumpingForces
+      Sorts.Nikki.JumpingImpulse
+      Sorts.Nikki.State
+      Sorts.Nikki.Types
+      Sorts.Robots
+      Sorts.Robots.Cannon
+      Sorts.Robots.Configuration
+      Sorts.Robots.Eyes
+      Sorts.Robots.Jetpack
+      Sorts.Robots.Laser
+      Sorts.Robots.PathRobots
+      Sorts.Robots.PathRobots.Configuration
+      Sorts.Robots.PathRobots.Path
+      Sorts.Robots.PathRobots.PatrolRobot
+      Sorts.Robots.PathRobots.Platform
+      Sorts.Sign
+      Sorts.StoryMode
+      Sorts.Switch
+      Sorts.Terminal
+      Sorts.Tiles
+      Sorts.Tiles.Baking
+      StoryMode.AutoUpdate
+      StoryMode.Client
+      StoryMode.Configuration
+      StoryMode.Episode
+      StoryMode.Menus
+      StoryMode.Paths
+      StoryMode.Purchasing
+      StoryMode.Types
+      System.Console.CmdArgs.Missing
+      Text.Logging
+      Top.Game
+      Top.Initialisation
+      Top.Main
+      Top.Menu
+      Utils
+      Utils.Scripting
+      Version
+  default-language: Haskell2010
 
-
-Executable core
-    main-is:
-        Main.hs
-    other-modules:
-        Paths_nikki
-
-    if flag(Devel)
-        ghc-options:
-            -O0
-    else
-        ghc-options:
-            -O2
-            -optl-s
-
-    ghc-options:
-        -threaded
-
-        -Wall
-        -fno-warn-overlapping-patterns
-        -fno-warn-missing-signatures
-        -fno-warn-name-shadowing
-        -fno-warn-unused-binds
-        -fno-warn-unused-matches
-        -fno-warn-incomplete-patterns
-        -fno-warn-orphans
-        -fno-warn-type-defaults
-
-    if os(darwin)
-        cc-options:
-            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
-        ld-options:
-            -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
-            -headerpad_max_install_names
-
-    build-depends:
-          aeson
-        , base == 4.*
-        , base-compat
-        , base-orphans
-        , bifunctors
-        , binary
-        , binary-communicator >= 1.0.2
-        , bytestring >= 0.10
-        , clocked == 0.4.1.*
-        , cmdargs >= 0.6.6
-        , containers
-        , crypto-pubkey-types >= 0.1 && < 0.5
-        , data-accessor >= 0.2.1.7
-        , data-accessor-mtl >= 0.2.0.2
-        , deepseq == 1.3.* || == 1.4.*
-        , directory
-        , email-validate
-        , filepath
-        , FindBin >= 0.0.5
-        , hashable
-        , Hipmunk >= 5.2.0.6
-        , HTTP == 4000.2.*
-        , LibZip >= 0.2.0.4
-        , MonadCatchIO-transformers >= 0.2.2.2
-        , mtl == 2.* && (< 2.1 || > 2.1)
-        , network >= 2.6
-        , parsec == 3.*
-        , process
-        , random
-        , RSA >= 1.2.1
-        , safe
-        , sfml-audio == 0.7.* && >= 0.7.1
-        , StateVar
-        , stickyKeysHotKey == 0.1.*
-        , strict >= 0.3.2
-        , template == 0.2.*
-        , temporary >= 1.1.1
-        , text
-        , time
-        , transformers == 0.2.* || == 0.3.* || == 0.4.*
-        , uniplate >= 1.6
-        , utf8-string
-        , vector == 0.10.*
-        , string-conversions
-        , network-uri
-
-    if os(linux)
-        extra-libraries:
-            qtwrapper, QtOpenGL, QtGui, QtCore
-        extra-lib-dirs:
-            cpp/dist
-
-    -- * windows linking :(
-    if os(mingw32)
-        ld-options:
-            -- omit the console on windows. You can't use stdout without causing errors then...
-            -mwindows
-        ghc-options:
-            -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
-        extra-libraries:
-            qtwrapper, QtOpenGL4, QtGui4, QtCore4, stdc++
-        extra-lib-dirs:
-            cpp/dist/,
-            C:/Qt/2010.02.1/qt/lib/
-
-    if os(darwin)
-        extra-libraries:
-            qtwrapper
-        extra-lib-dirs:
-            cpp/dist/
-        frameworks:
-            QtOpenGL, QtGui, QtCore
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      test
+    , ./.
+  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds
+  build-depends:
+      base ==4.*
+    , directory
+    , process
+    , filepath
+    , transformers
+    , bytestring >=0.10
+    , mtl
+    , containers
+    , safe
+    , FindBin >=0.0.5
+    , utf8-string
+    , aeson
+    , base ==4.*
+    , base-compat
+    , base-orphans
+    , bifunctors
+    , binary
+    , binary-communicator >=1.0.2
+    , bytestring >=0.10
+    , clocked ==0.4.1.*
+    , cmdargs >=0.6.6
+    , containers
+    , crypto-pubkey-types >=0.1 && <0.5
+    , data-accessor >=0.2.1.7
+    , data-accessor-mtl >=0.2.0.2
+    , deepseq ==1.3.* || ==1.4.*
+    , directory
+    , email-validate
+    , filepath
+    , FindBin >=0.0.5
+    , hashable
+    , Hipmunk >=5.2.0.6
+    , HTTP ==4000.2.*
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , mtl ==2.* && ((<2.1 || >2.1))
+    , network >=2.6
+    , parsec ==3.*
+    , process
+    , random
+    , RSA >=1.2.1
+    , safe
+    , sfml-audio ==0.7.* && >=0.7.1
+    , StateVar
+    , stickyKeysHotKey ==0.1.*
+    , strict >=0.3.2
+    , template ==0.2.*
+    , temporary >=1.1.1
+    , text
+    , time
+    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , uniplate >=1.6
+    , utf8-string
+    , vector ==0.10.*
+    , string-conversions
+    , network-uri
+    , QuickCheck
+    , hspec
+  if os(linux)
+    extra-lib-dirs:
+        cpp/dist
+    extra-libraries:
+        qtwrapper
+        QtOpenGL
+        QtGui
+        QtCore
+  if os(windows)
+    ghc-options: -pgma gcc -pgmc gcc -pgml gcc -pgmwindres windres
+    extra-lib-dirs:
+        cpp/dist/
+        C:/Qt/2010.02.1/qt/lib/
+    extra-libraries:
+        qtwrapper
+        QtOpenGL4
+        QtGui4
+        QtCore4
+        stdc++
+    ld-options: -mwindows
+  if os(osx)
+    extra-lib-dirs:
+        cpp/dist/
+    extra-libraries:
+        qtwrapper
+  other-modules:
+      Data.Indexable.Tests
+      Graphics.Qt.Events.Tests
+      Physics.Chipmunk.StickyEdges.Tests
+      Physics.Chipmunk.StickyEdges.Tests.Properties
+      Physics.Chipmunk.StickyEdges.Tests.Rendering
+      Physics.Chipmunk.Tests
+      Physics.Chipmunk.Types.Tests
+      Sorts.Terminal.Tests
+      Sorts.Tiles.Baking.Tests
+      TestsuiteSpec
+      Top.MainSpec
+      Utils.Tests
+      Base
+      Base.Animation
+      Base.Application
+      Base.Application.Music
+      Base.Application.Pixmaps
+      Base.Application.Sound
+      Base.Configuration
+      Base.Configuration.Controls
+      Base.Constants
+      Base.Debugging
+      Base.Font
+      Base.Font.ColorVariant
+      Base.GameGrounds
+      Base.GlobalShortcuts
+      Base.Grounds
+      Base.Language
+      Base.Monad
+      Base.Monologue
+      Base.Options
+      Base.Options.Controls
+      Base.Paths
+      Base.Paths.GetDataFileName
+      Base.Pixmap
+      Base.Polling
+      Base.Prose
+      Base.Prose.Template
+      Base.Renderable
+      Base.Renderable.AskString
+      Base.Renderable.BusyMessage
+      Base.Renderable.Centered
+      Base.Renderable.CenterHorizontally
+      Base.Renderable.Common
+      Base.Renderable.GameOSD
+      Base.Renderable.GUILog
+      Base.Renderable.HBox
+      Base.Renderable.Header
+      Base.Renderable.Layered
+      Base.Renderable.Menu
+      Base.Renderable.Message
+      Base.Renderable.OpenUrl
+      Base.Renderable.Prose
+      Base.Renderable.Scrollable
+      Base.Renderable.Spacer
+      Base.Renderable.StickToBottom
+      Base.Renderable.VBox
+      Base.Renderable.WholeScreenPixmap
+      Base.Score
+      Base.Types
+      Base.Types.Events
+      Base.Types.LevelMetaData
+      Control.Monad.CatchState
+      Data.Abelian
+      Data.Binary.Strict
+      Data.Convertable
+      Data.Directions
+      Data.Indexable
+      Data.Indexable.Range
+      Data.Initial
+      Data.SelectTree
+      Data.StrictList
+      Distribution.AutoUpdate
+      Distribution.AutoUpdate.Download
+      Distribution.AutoUpdate.MenuItem
+      Distribution.AutoUpdate.Paths
+      Distribution.AutoUpdate.Restarter
+      Distribution.AutoUpdate.VerifySignatures
+      Distribution.AutoUpdate.Zip
+      Distribution.Setup.Darwin
+      Editor.Menu
+      Editor.Pickle
+      Editor.Pickle.LevelFile
+      Editor.Pickle.LevelLoading
+      Editor.Pickle.Types
+      Editor.Scene
+      Editor.Scene.Rendering
+      Editor.Scene.Rendering.Helpers
+      Editor.Scene.RenderOrdering
+      Editor.Scene.Types
+      FakeFutureVersion
+      Game.BackgroundScene
+      Game.MainLoop
+      Game.Menus
+      Game.Scene
+      Game.Scene.Camera
+      Game.Scene.OptimizeRenderPixmaps
+      Graphics.Qt
+      Graphics.Qt.Colors
+      Graphics.Qt.CPPWrapper
+      Graphics.Qt.Dimension
+      Graphics.Qt.Events
+      Graphics.Qt.Types
+      Legacy.Old1
+      Legacy.Old2
+      LevelServer
+      LevelServer.Client
+      LevelServer.Configuration
+      LevelServer.SendMail
+      LevelServer.Types
+      Main
+      Network.Client
+      Network.Client.Exceptions
+      Network.Download
+      Network.Server
+      Object
+      Object.Contacts
+      Object.Types
+      Physics.Chipmunk
+      Physics.Chipmunk.ContactRef
+      Physics.Chipmunk.DebugGrid
+      Physics.Chipmunk.StickyEdges
+      Physics.Chipmunk.Types
+      Profiling.FPS
+      Profiling.Physics
+      Sorts.Background
+      Sorts.Battery
+      Sorts.Box
+      Sorts.DeathStones
+      Sorts.DebugObject
+      Sorts.FallingTiles
+      Sorts.Grids
+      Sorts.LowerLimit
+      Sorts.Nikki
+      Sorts.Nikki.Batteries
+      Sorts.Nikki.Configuration
+      Sorts.Nikki.Control
+      Sorts.Nikki.Dust
+      Sorts.Nikki.Initialisation
+      Sorts.Nikki.JumpingForces
+      Sorts.Nikki.JumpingImpulse
+      Sorts.Nikki.State
+      Sorts.Nikki.Types
+      Sorts.Robots
+      Sorts.Robots.Cannon
+      Sorts.Robots.Configuration
+      Sorts.Robots.Eyes
+      Sorts.Robots.Jetpack
+      Sorts.Robots.Laser
+      Sorts.Robots.PathRobots
+      Sorts.Robots.PathRobots.Configuration
+      Sorts.Robots.PathRobots.Path
+      Sorts.Robots.PathRobots.PatrolRobot
+      Sorts.Robots.PathRobots.Platform
+      Sorts.Sign
+      Sorts.StoryMode
+      Sorts.Switch
+      Sorts.Terminal
+      Sorts.Tiles
+      Sorts.Tiles.Baking
+      StoryMode.AutoUpdate
+      StoryMode.Client
+      StoryMode.Configuration
+      StoryMode.Episode
+      StoryMode.Menus
+      StoryMode.Paths
+      StoryMode.Purchasing
+      StoryMode.Types
+      System.Console.CmdArgs.Missing
+      Text.Logging
+      Top.Game
+      Top.Initialisation
+      Top.Main
+      Top.Menu
+      Utils
+      Utils.Scripting
+      Version
+  default-language: Haskell2010

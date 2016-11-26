@@ -105,13 +105,13 @@ data Jetpack = Jetpack {
 
 instance Sort JSort Jetpack where
     sortId = const $ SortId "robots/jetpack"
-    freeSort (JSort p ps boostSound eyes) =
+    freeSort (JSort _ _ps boostSound _eyes) =
         freeLoopedSound boostSound
     size = const jetpackSize
     renderIconified sort ptr =
         renderPixmapSimple ptr (standardPixmap sort)
 
-    initialize app _ (Just space) sort ep Nothing _ = io $ do
+    initialize _app _ (Just space) sort ep Nothing _ = io $ do
         let
             pos = position2vector (epToPosition (size sort) ep)
                     +~ baryCenterOffset
@@ -121,7 +121,7 @@ instance Sort JSort Jetpack where
 
         chip <- initChipmunk space bodyAttributes shapesAndPolys baryCenterOffset
         return $ Jetpack chip False Nothing Idle 0
-    initialize app _ Nothing sort ep Nothing _ = do
+    initialize _app _ Nothing sort ep Nothing _ = do
         let (_, baryCenterOffset) = mkPolys
             position = epToPosition (size sort) ep
             chip = ImmutableChipmunk position 0 baryCenterOffset []
@@ -136,7 +136,7 @@ instance Sort JSort Jetpack where
 
     isUpdating = const True
 
-    updateNoSceneChange sort _ config _ mode now contacts (isControlled, cd) jetpack =
+    updateNoSceneChange sort _ config _ _mode now _contacts (isControlled, cd) jetpack =
         (return . jupdate (config ^. controls) (isControlled, cd) >=>
         return . updateRenderState now isControlled >=>
         passThrough controlToChipmunk >=>
@@ -178,7 +178,7 @@ mkPolys =
 -- * logick
 
 jupdate :: Controls -> (Bool, ControlData) -> Jetpack -> Jetpack
-jupdate config (False, _) (Jetpack chip _ _ renderState times)  =
+jupdate _config (False, _) (Jetpack chip _ _ renderState times)  =
     Jetpack chip False Nothing renderState times
 jupdate config (True, cd) (Jetpack chip _ _ renderState times) =
     Jetpack chip boost direction renderState times
@@ -217,7 +217,7 @@ updateRenderState now controlled j =
             Wait
 
 
-renderJetpack j sort ptr offset now = do
+renderJetpack j sort _ptr _offset now = do
     (pos, angle) <- getRenderPositionAndAngle $ chipmunk j
     let pixmap = pickPixmap now j sort
         background = RenderPixmap pixmap pos (Just angle)
@@ -245,7 +245,7 @@ pickPixmap now j sort =
 jetpackGravity = gravity * jetpackGravityFactor
 
 controlToChipmunk :: Jetpack -> IO ()
-controlToChipmunk object@Jetpack{chipmunk, boost, direction} = do
+controlToChipmunk Jetpack{chipmunk, boost, direction} = do
     angle <- normalizeAngle $ body chipmunk
     angleVel <- CM.get $ angVel $ body chipmunk
 
@@ -265,7 +265,7 @@ antiGravity =
   where
     v = (- gravity) + jetpackGravity
 
-hover False angle = zero
+hover False _angle = zero
 hover True angle =
     rotateVector angle (Vector 0 (- force))
   where

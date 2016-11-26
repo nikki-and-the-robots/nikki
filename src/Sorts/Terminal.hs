@@ -262,7 +262,7 @@ showingBubble :: Accessor Terminal Bool
 showingBubble = accessor showingBubble_ (\ a r -> r{showingBubble_ = a})
 
 unwrapTerminal :: Object_ -> Maybe Terminal
-unwrapTerminal (Object_ sort o) = cast o
+unwrapTerminal (Object_ _sort o) = cast o
 
 unwrapTerminalSort :: Sort_ -> Maybe TSort
 unwrapTerminalSort (Sort_ sort) = cast sort
@@ -332,7 +332,7 @@ blinkenLightsState now robots state =
     zipRobotsSelected :: Maybe RobotIndex -> Bool -> LightState
     zipRobotsSelected (Just (Controllable _)) selected =
         if not selected || not blinkingOut then On else Off
-    zipRobotsSelected (Just (Uncontrollable _)) selected =
+    zipRobotsSelected (Just (Uncontrollable _)) _selected =
         Defunct
     zipRobotsSelected Nothing _ =
         Off
@@ -397,7 +397,7 @@ instance Sort TSort Terminal where
 
     objectEditMode _ = Just oemMethods
 
-    initialize app file (Just space) sort editorPosition (Just (OEMState oemState_)) _ = io $ do
+    initialize _app file (Just space) sort editorPosition (Just (OEMState oemState_)) _ = io $ do
         let Just oemState :: Maybe TerminalOEMState = cast oemState_
             attached = fmap Controllable $ case oemState of
                 NoRobots -> []
@@ -419,7 +419,7 @@ instance Sort TSort Terminal where
         case sort of
             TSort{} -> return $ Terminal chip attached (initialMenuState 0)
             BatteryTSort{} -> mkBatteryTerminal file chip attached
-    initialize app _ Nothing sort@TSort{} editorPosition _ _ = do
+    initialize _app _ Nothing sort@TSort{} editorPosition _ _ = do
         let position = epToPosition (size sort) editorPosition
             (_, baryCenterOffset) = mkPolys $ size sort
             chip = ImmutableChipmunk position 0 baryCenterOffset []
@@ -436,7 +436,7 @@ instance Sort TSort Terminal where
 
     chipmunks = chipmunk >>> return
 
-    startControl now t@StandbyBatteryTerminal{} = t
+    startControl _now t@StandbyBatteryTerminal{} = t
     startControl now t =
         state ^= reset (now - blinkLength) (t ^. robots) (t ^. state) $
         t
@@ -445,7 +445,7 @@ instance Sort TSort Terminal where
 
     updateNoSceneChange = update
 
-    renderObject app config terminal sort ptr offset now = do
+    renderObject app config terminal sort _ptr offset now = do
         pos <- fst <$> getRenderPositionAndAngle (chipmunk terminal)
         return $ renderTerminal app config sort offset now terminal pos
 
@@ -474,12 +474,12 @@ mkPolys size =
 
 -- * controlling
 
-update sort _ config _ scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} =
+update _sort _ config _ _scene now contacts (False, cd) terminal@StandbyBatteryTerminal{} =
     return $
     updateShowingBubble (config ^. controls) contacts cd $
     updateUncontrolledStandby now $
     terminal
-update sort _ config _ scene now contacts (True, cd) terminal@StandbyBatteryTerminal{} =
+update sort _ config _ scene now _contacts (True, _cd) terminal@StandbyBatteryTerminal{} =
     if terminal ^. showingBubble then
         -- already showing the bubble
         return $
@@ -489,10 +489,10 @@ update sort _ config _ scene now contacts (True, cd) terminal@StandbyBatteryTerm
         updateOnTime config now sort .
         (showingBubble ^= True) =<<
         putBatteriesInTerminal config scene now sort terminal
-update sort _ config _ scene now contacts (False, cd) terminal =
+update _sort _ _config _ scene _now contacts (False, _cd) terminal =
     (state ^: updateGameMode contacts terminal) <$>
     (robots ^^: updateControllableStates scene) terminal
-update sort _ config _ scene now contacts (True, cd) terminal =
+update _sort _ config _ scene now _contacts (True, cd) terminal =
     (robots ^^: updateControllableStates scene) $
     state ^= updateState (config ^. controls) now cd (terminal ^. robots) (terminal ^. state) $
     terminal
@@ -521,12 +521,12 @@ updateControllableState scene (unwrapRobotIndex -> i) = do
 
 -- | controls the terminal in terminal mode
 updateState :: Controls -> Seconds -> ControlData -> [RobotIndex] -> State -> State
-updateState config now cd robots state | isTerminalConfirmationPressed config cd =
+updateState config _now cd robots state | isTerminalConfirmationPressed config cd =
   case row state of
     NikkiState -> exitToNikki state
     RobotState -> case (robots !! robotIndex state) of
         Controllable i -> state{exitMode = ExitToRobot i}
-        Uncontrollable i -> state -- TODO: sound
+        Uncontrollable _i -> state -- TODO: sound
 updateState config now cd robots state@State{row = RobotState}
     | (isGameRightPressed config cd) && not (null robots) =
         -- go right in robot list
@@ -561,10 +561,10 @@ mkBatteryTerminal file chip robots =
 
 
 putBatteriesInTerminal :: Configuration -> Scene o -> Seconds -> TSort -> Terminal -> IO Terminal
-putBatteriesInTerminal config scene now BatteryTSort{insertionSound} t@StandbyBatteryTerminal{} = do
+putBatteriesInTerminal config scene _now BatteryTSort{insertionSound} t@StandbyBatteryTerminal{} = do
     case levelFile scene of
         (EpisodeLevel episode _ _ _ _) -> do
-            score <- getEpisodeScore $ euid episode
+            _score <- getEpisodeScore $ euid episode
             batteries <- getCollectedBatteries scene episode
             setEpisodeScore (euid episode) (EpisodeScore_0 True batteries)
             when (batteries < batteryNumberNeeded) $
@@ -595,7 +595,7 @@ updateOnTime config now BatteryTSort{bootingSound} t@StandbyBatteryTerminal{..} 
             triggerSound config bootingSound
             return t{onTime = Just now}
         else return t
-    Just x -> return t
+    Just _x -> return t
 
 -- | changes from Standby to BatteryTerminal if appropriate
 updateUncontrolledStandby :: Seconds -> Terminal -> Terminal
@@ -607,7 +607,7 @@ updateUncontrolledStandby now t@StandbyBatteryTerminal{..} = case onTime of
         else t
 
 updateShowingBubble :: Controls -> Contacts -> ControlData -> Terminal -> Terminal
-updateShowingBubble config contacts cd terminal =
+updateShowingBubble _config contacts _cd terminal =
     if stillTouching then
         -- touching -> do nothing
         terminal
@@ -708,19 +708,19 @@ numberOfBeams = 9
 
 beamBlinkingAnimation = mkAnimation [True, False] [beamBlinkingTime]
 
-renderBatteryBar sort@BatteryTSort{..} now t@StandbyBatteryTerminal{batteryNumber_} p =
+renderBatteryBar sort@BatteryTSort{..} now StandbyBatteryTerminal{batteryNumber_} p =
     case roundToBars numberOfBeams batteryNumberNeeded batteryNumber_ of
         0 -> if pickAnimationFrame beamBlinkingAnimation now
              then singleton $ RenderPixmap whiteBeam (p +~ firstBeamOffset) Nothing
              else []
         n -> renderGreenBeams sort n p
-renderBatteryBar sort@BatteryTSort{..} now t@BatteryTerminal{} p =
+renderBatteryBar sort@BatteryTSort{..} _now BatteryTerminal{} p =
     renderGreenBeams sort numberOfBeams p
 
 roundToBars :: Integer -> Integer -> Integer -> Integer
 roundToBars numberOfBeams batteryNumberNeeded n | n >= batteryNumberNeeded =
     numberOfBeams
-roundToBars numberOfBeams batteryNumberNeeded n | n <= 0 =
+roundToBars _numberOfBeams _batteryNumberNeeded n | n <= 0 =
     0
 roundToBars numberOfBeams batteryNumberNeeded n =
     succ $ floor
@@ -750,7 +750,7 @@ renderBootingAnimation BatteryTSort{..} StandbyBatteryTerminal{onTime} now p = c
     Just onTime ->
         let pix = pickAnimationFrame bootingPixmaps (now - onTime)
         in singleton $ RenderPixmap pix (p +~ colorBarOffset) Nothing
-renderBootingAnimation BatteryTSort{..} BatteryTerminal{} now p =
+renderBootingAnimation BatteryTSort{..} BatteryTerminal{} _now p =
     singleton $ RenderPixmap (colorBar $ pixmaps tsort) (p +~ colorBarOffset) Nothing
 
 renderTerminalSpeechBubble app config offset sort terminalPos
@@ -781,7 +781,7 @@ renderTerminalOSD ptr now scene@Scene{mode_ = mode@Base.TerminalMode{}} =
         object = scene ^. mainLayerObjectA terminal
         sort = sort_ object
     in case (unwrapTerminalSort sort, unwrapTerminal object) of
-        (Just sort, Just terminal@StandbyBatteryTerminal{}) ->
+        (Just _sort, Just StandbyBatteryTerminal{}) ->
             return ()
         (Just sort, Just terminal) -> do
             clearScreen ptr $ alpha ^= 0.6 $ black
@@ -840,7 +840,7 @@ osdFrameOffsets =
 osdCenterOffsets :: ColorLights (Qt.Position Double)
 osdCenterOffsets = fmap (+~ fmap fromUber (Position 2 2)) osdFrameOffsets
 
-renderOsdExit ptr offset now pixmaps state exitState = do
+renderOsdExit ptr offset _now pixmaps state exitState = do
     when (row state == NikkiState) $
         renderPixmap ptr offset exitFrameOffset Nothing (osdExitFrame pixmaps)
     when exitState $
@@ -895,7 +895,7 @@ editorUpdate _ (KeyboardButton key _ _) NoRobots | key `elem` keys = return NoRo
   where
     keys = (RightArrow : LeftArrow : Return : Enter : [])
 editorUpdate _ _ NoRobots = oemNothing
-editorUpdate scene (KeyboardButton key _ _) state@(Robots available selected attached) =
+editorUpdate _scene (KeyboardButton key _ _) state@(Robots available selected attached) =
   case key of
     RightArrow -> return state{selectedRobot = searchNext selected available}
     LeftArrow -> return state{selectedRobot = searchNext selected (reverse available)}
@@ -923,7 +923,7 @@ swapIsElem needle list = list +: needle
 -- | removes the attached robots from the terminal, that have been deleted
 removeDeletedRobots :: Sort sort o => EditorScene sort
     -> TerminalOEMState -> TerminalOEMState
-removeDeletedRobots scene NoRobots = NoRobots
+removeDeletedRobots _scene NoRobots = NoRobots
 removeDeletedRobots scene (Robots a b attached) =
     Robots a b (filter (`elem` getRobotIndices scene) attached)
 
@@ -938,12 +938,12 @@ oemRender_ ptr scene state = do
 
 oemCursor :: Sort sort o => EditorScene sort -> TerminalOEMState -> EditorPosition
 oemCursor scene NoRobots = cursor scene
-oemCursor scene (Robots available selected _) =
+oemCursor scene (Robots _available selected _) =
     getMainLayerEditorObject scene selected ^. editorPosition
 
 renderOEMOSDs :: Sort sort o => Ptr QPainter -> Offset Double -> EditorScene sort -> TerminalOEMState
     -> IO ()
-renderOEMOSDs ptr offset scene NoRobots = return ()
+renderOEMOSDs _ptr _offset _scene NoRobots = return ()
 renderOEMOSDs ptr offset scene (Robots _ selected attached) = do
     renderRobotBox (alpha ^= 0.5 $ orange) (getMainLayerEditorObject scene selected)
     mapM_ (renderRobotBox (alpha ^= 0.3 $ Qt.yellow)) $ map (getMainLayerEditorObject scene) $

@@ -78,7 +78,7 @@ loadConfiguration = do
     mLoadedSavedConfig <- loadConfigurationFromFile
     showDevelopmentOptions <- shouldShowDevelopmentOptions
     let loadedSavedConfig = case mLoadedSavedConfig of
-            Left (logLevel, msg) -> initial
+            Left _ -> initial
             Right x -> x
         loadedConfig = savedConfigurationToConfiguration showDevelopmentOptions loadedSavedConfig
     config <- cmdTheseArgs loadedConfig filteredArgs

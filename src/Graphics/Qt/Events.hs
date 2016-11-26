@@ -169,7 +169,7 @@ keyDescription k text = case k of
     CloseWindowKey -> error "keyDescription: CloseWindowKey? Really?"
     UnknownKey  -> "unknown key"
 
-    k -> text
+    _ -> text
 
 
 -- | modifies the contents of a text field

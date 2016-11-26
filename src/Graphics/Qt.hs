@@ -117,7 +117,7 @@ newKeyPoller widget signals = do
     return $ KeyPoller chan
 
 pollEvents :: KeyPoller -> IO [QtEvent]
-pollEvents kp@(KeyPoller chan) =
+pollEvents (KeyPoller chan) =
     inner
   where
     inner = do

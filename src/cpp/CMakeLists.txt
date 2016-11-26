@@ -19,7 +19,10 @@ include(${QT_USE_FILE})
 set(CLASS_HEADERS MainWindow.h GLContext.h FallbackContext.h)
 qt4_wrap_cpp(MOCFILES ${CLASS_HEADERS})
 set(SRCS utils.cpp MainWindow.cpp GLContext.cpp FallbackContext.cpp qtwrapper.cpp ${MOCFILES})
-add_library(qtwrapper ${SRCS})
+add_library(qtwrapper STATIC ${SRCS})
+
+add_library(qtwrapperShared SHARED ${SRCS})
+target_link_libraries(qtwrapperShared QtCore QtGui QtOpenGL)
 
 add_custom_command(TARGET qtwrapper POST_BUILD
                    COMMAND touch

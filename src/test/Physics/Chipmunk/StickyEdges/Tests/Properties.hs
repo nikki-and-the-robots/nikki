@@ -5,20 +5,13 @@
 
 module Physics.Chipmunk.StickyEdges.Tests.Properties where
 
+import           Control.Exception
+import           Data.Abelian
+import           Data.Typeable
+import           Test.QuickCheck
 
-import Prelude hiding (catch)
-
-import Data.Abelian
-import Data.Typeable
-
-import Control.Exception
-
-import Test.QuickCheck
-
-import Physics.Chipmunk
-
-import Utils
-
+import           Physics.Chipmunk
+import           Utils
 
 -- representation of edges
 
@@ -106,7 +99,7 @@ stickyEdgesRemovable = not . hasStickyEdges . removeStickyEdges testEpsilon . fr
 
 -- | tests if the result of removeStickyEdges misses some areas that the input had
 missesArea :: TestPolygons -> Bool
-missesArea testPolys@(fromTestPolygons -> polys) =
+missesArea (fromTestPolygons -> polys) =
     null offenders
   where
     offenders = filter (not . treatedEqually) points

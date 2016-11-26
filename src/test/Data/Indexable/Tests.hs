@@ -1,5 +1,7 @@
 {-# language ScopedTypeVariables #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Data.Indexable.Tests where
 
 

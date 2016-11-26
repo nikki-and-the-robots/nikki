@@ -109,11 +109,11 @@ instance Sort SSort Stone where
     renderIconified sort ptr =
         renderPixmapSimple ptr $ head $ pixmaps sort
 
-    initialize app _ Nothing sort editorPosition Nothing _ = io $ do
+    initialize _app _ Nothing sort editorPosition Nothing _ = io $ do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             position = epToPosition (size sort) editorPosition
         return $ Stone $ ImmutableChipmunk position 0 baryCenterOffset []
-    initialize app _ (Just space) sort editorPosition Nothing _ = io $ do
+    initialize _app _ (Just space) sort editorPosition Nothing _ = io $ do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
             position = position2vector (epToPosition (size sort) editorPosition)
@@ -128,7 +128,7 @@ instance Sort SSort Stone where
 
     isUpdating = const False
 
-    renderObject _ _ o sort ptr offset now = do
+    renderObject _ _ o sort _ptr _offset now = do
         (pos, _) <- getRenderPositionAndAngle (chipmunk o)
         let pixmap = pickAnimationFrame (animation sort) now
         return $ singleton $ RenderPixmap pixmap pos Nothing
@@ -198,12 +198,12 @@ maybeMerge a b
 maybeMerge a b
     | sameWidth a b && sameX a b && verticallyAdjacent a b
     = Just $ justMerge a b
-maybeMerge a b = Nothing
+maybeMerge _ _ = Nothing
 
 -- | Just merges the two objects.
 -- PRE: no OtherObjects.
 justMerge :: Merging -> Merging -> Merging
-justMerge a b = 
+justMerge a b =
     merged (elements a ++ elements b)
   where
     elements (SimpleLaser x) = [x]
@@ -274,7 +274,7 @@ bakeMergedLasers anchor merged = do
     return $ mkAnimation offsetPixmaps [laserAnimationFrameTime]
   where
     convert :: (EditorObject SSort, Pixmap) -> StaticPixmap ()
-    convert (eo, Pixmap{pixmap, pixmapSize, pixmapImageSize}) =
+    convert (eo, Pixmap{pixmap, pixmapImageSize}) =
         StaticPixmap ep pixmapImageSize pixmap zero ()
       where
         ep = epToPosition size_ (eo ^. editorPosition -~ anchor)
@@ -286,16 +286,16 @@ instance Sort MergedLasersSort MergedLasers where
 
     size (MergedLasersSort _ _ size) = size
 
-    renderIconified sort ptr =
+    renderIconified _sort _ptr =
         error "renderIconified: use unmerged lasers"
 
-    initialize app _ Nothing sort editorPosition Nothing _ = io $ do
+    initialize _app _ Nothing sort editorPosition Nothing _ = io $ do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             position = epToPosition (size sort) editorPosition
             chip = ImmutableChipmunk position 0 baryCenterOffset []
         pix <- bakeMergedLasers editorPosition (mergedLasers sort)
         return $ MergedLasers chip pix
-    initialize app _ (Just space) sort editorPosition Nothing _ = io $ do
+    initialize _app _ (Just space) sort editorPosition Nothing _ = io $ do
         let (shapes, baryCenterOffset) = mkShapes $ size sort
             shapesWithAttributes = map (mkShapeDescription shapeAttributes) shapes
             position = position2vector (epToPosition (size sort) editorPosition)
@@ -312,7 +312,7 @@ instance Sort MergedLasersSort MergedLasers where
 
     isUpdating = const False
 
-    renderObject _ _ o sort ptr offset now = do
+    renderObject _ _ o _sort _ptr _offset now = do
         (pos, _) <- getRenderPositionAndAngle (mlChipmunk o)
         let pixmap = pickAnimationFrame (mlPixmap o) now
         return $ singleton $ RenderPixmap pixmap pos Nothing

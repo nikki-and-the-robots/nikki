@@ -48,7 +48,7 @@ runAppState app (UnManagedAppState cmd) = do
     io $ postGUI $ setRenderingLooped (window app) False
     io $ postGUI $ setArrowAutoRepeat (window app) True
     cmd >>= runAppState app
-runAppState app FinalAppState = return ()
+runAppState _app FinalAppState = return ()
 
 setRenderable app config renderable = do
     setDrawingCallbackMainWindow (window app) (Just renderCallback)

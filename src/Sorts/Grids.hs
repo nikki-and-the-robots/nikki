@@ -112,7 +112,7 @@ instance Sort GSort Grid where
             translate ptr (negateAbelian p)
 
 
-    initialize app _ mSpace sort ep Nothing _ = do
+    initialize _app _ _mSpace sort ep Nothing _ = do
         let pos = epToPosition (size sort) ep
         return $ Grid (size sort) pos
 

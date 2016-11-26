@@ -1,5 +1,7 @@
 {-# language NamedFieldPuns #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Object.Contacts (
     MyCollisionType(..),
     watchedContacts,
@@ -152,7 +154,7 @@ terminalSolidCallback solidCT =
 -- contact with nikki and falling tiles
 nikkiFallingTilesCallbacks nct =
     Callback (FullWatch FallingTileCT nct
-        (\ a b v -> addFallingTileContact a . addNikkiContacts a nct v)) (nikkiPermeability nct)
+        (\ a _ v -> addFallingTileContact a . addNikkiContacts a nct v)) (nikkiPermeability nct)
 
 
 -- * signs

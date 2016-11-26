@@ -1,33 +1,24 @@
 {-# language ViewPatterns #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Physics.Chipmunk.StickyEdges.Tests where
 
+import           Control.Exception
+import           Data.Abelian
+import           Data.List
+import           Test.QuickCheck hiding (scale)
 
-import Prelude hiding (catch)
-
-import Data.Abelian
-import Data.List
-
-import Control.Exception
-
-import Test.QuickCheck hiding (scale)
-
-import Physics.Chipmunk
-import Physics.Chipmunk.StickyEdges
-
-import Utils
-
-import Utils.Tests
-
-import Physics.Chipmunk.StickyEdges.Tests.Properties
-import Physics.Chipmunk.StickyEdges.Tests.Rendering
-
-import Physics.Chipmunk.Tests ()
-
+import           Physics.Chipmunk
+import           Physics.Chipmunk.StickyEdges
+import           Physics.Chipmunk.StickyEdges.Tests.Properties
+import           Physics.Chipmunk.StickyEdges.Tests.Rendering
+import           Physics.Chipmunk.Tests ()
+import           Utils
+import           Utils.Tests
 
 instance Arbitrary Rectangle where
     arbitrary = Rectangle <$> arbitrary <*> arbitrary <*> arbitrary
-
 
 tests :: IO ()
 tests = do

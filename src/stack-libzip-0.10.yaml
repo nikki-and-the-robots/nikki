@@ -1,7 +1,6 @@
 flags: {}
 packages:
 - ./.
-- testsuite
 - scripts
 - level-server
 - location:

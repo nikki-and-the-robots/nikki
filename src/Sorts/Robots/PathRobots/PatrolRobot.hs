@@ -86,7 +86,7 @@ instance Sort PSort Patrol where
                 let pix = if oemActive oemPath then redPix sort else offPix sort
                 renderPixmapSimple ptr pix
 
-    initialize app _ (Just space) sort ep (Just (OEMState oemState_)) _ = io $ do
+    initialize _app _ (Just space) sort ep (Just (OEMState oemState_)) _ = io $ do
         let Just oemState = cast oemState_
             baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
 
@@ -100,7 +100,7 @@ instance Sort PSort Patrol where
 
         let path = toPath (size sort) oemState
         return $ Patrol (size sort) chip path deadly
-    initialize app _ Nothing sort ep _ _ = do
+    initialize _app _ Nothing sort ep _ _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
             vector = position2vector position +~ baryCenterOffset
@@ -117,12 +117,12 @@ instance Sort PSort Patrol where
 
     isUpdating = const True
 
-    updateNoSceneChange sort _ config _ mode now contacts cd =
+    updateNoSceneChange _sort _ config _ _mode _now _contacts cd =
         control (config ^. controls) cd >=>
         return . updateLogic >=>
         passThrough applyPatrolForce
 
-    renderObject _ _ patrol sort ptr offset now = do
+    renderObject _ _ patrol sort _ptr _offset now = do
         (position, rad) <- getRenderPositionAndAngle $ chipmunk patrol
         let renderPosition = position +~ physicsPadding
             robot = RenderPixmap (pickRobotPixmap now sort patrol) renderPosition Nothing
@@ -147,7 +147,7 @@ mkPoly sort = mkRect
     size_@(Size width height) = fmap realToFrac $ size sort
 
 bodyAttributes :: PSort -> Vector -> BodyAttributes
-bodyAttributes sort pos =
+bodyAttributes _sort pos =
     BodyAttributes pos patrolMass infinity
 
 -- | tile friction to allow better walking
@@ -162,7 +162,7 @@ shapeAttributes deadly =
 
 -- | reads an OEMPath and returns the path for the game
 toPath :: Size Double -> OEMPath -> Path
-toPath size (OEMPath _ _ cursor path _) =
+toPath size (OEMPath _ _ _cursor path _) =
     mkPath True $ map (epToCenterVector size) (getPathList path)
 
 -- * controlling

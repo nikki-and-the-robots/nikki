@@ -72,7 +72,7 @@ getChildren (Node _ x _) = I.toList x
 getChildren _ = []
 
 getSelected :: SelectTree a -> a
-getSelected (Node sn cs i) = getSelected (cs !!! i)
+getSelected (Node _ cs i) = getSelected (cs !!! i)
 getSelected (Leaf _ a) = a
 
 -- | selects the previous item in the tree.
@@ -107,7 +107,7 @@ selectOther updateSelected reset tree =
             -- child could be updated: must be inserted in list
             Just child ->
                 Just $ Node label (indexA selected ^: const child $ children) selected
-    selectNextNotWrapping (Leaf _ a) = Nothing
+    selectNextNotWrapping (Leaf _ _) = Nothing
 
 -- resets the tree to select the first item in it and every child.
 resetSelectedsFirst :: SelectTree a -> SelectTree a

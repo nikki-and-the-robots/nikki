@@ -73,7 +73,7 @@ setOverlappingAnimation x (StaticPixmap p s pix o _) =
     StaticPixmap p s pix o x
 
 normalStaticPixmap :: (Pixmap, Position Double) -> StaticPixmap Bool
-normalStaticPixmap a@(pix, pos) =
+normalStaticPixmap a@(pix, _pos) =
     let (Rect pos size) = pixmapToRect a
     in StaticPixmap pos size (pixmap pix) zero False
 
@@ -144,7 +144,7 @@ mkBakePixmap animatedRects (animation, position) =
 cutOff :: StaticPixmap Bool -> Rect -> Maybe (StaticPixmap Bool, [StaticPixmap Bool])
 
 cutOff pixmap rect | not (overlap (bakePixmapToRect pixmap) rect) = Nothing
-cutOff p@(StaticPixmap _ _ _ _ True) rect = Nothing
+cutOff (StaticPixmap _ _ _ _ True) _rect = Nothing
 
 cutOff (StaticPixmap pos size pix offset False) (Rect aPos aSize) =
     Just (center, filter positiveSize $ map clipToBaked [top, left, right, base])
@@ -289,7 +289,7 @@ extend d (Grouped grouped) r =
     -- (possibly cut) StaticPixmaps in correct rendering order.
     cutMarked :: Rect -> [StaticPixmap Bool] -> ([StaticPixmap Bool], [StaticPixmap Bool])
     cutMarked = cutMarkedH ([], [])
-    cutMarkedH (extendedsAkk, othersAkk) extendedRect [] =
+    cutMarkedH (extendedsAkk, othersAkk) _extendedRect [] =
         (reverse extendedsAkk, reverse othersAkk)
     cutMarkedH (extendedsAkk, othersAkk) extendedRect (other : r) =
         case cutOff other extendedRect of
@@ -318,7 +318,7 @@ searchExtenders d p l list =
   where
     inner :: [StaticPixmap Bool] -> Position Double -> Double -> [StaticPixmap Bool]
         -> Maybe [StaticPixmap Bool]
-    inner akk searched lowerLimit l | searched ^. y_ >= lowerLimit =
+    inner akk searched lowerLimit _l | searched ^. y_ >= lowerLimit =
         Just (reverse akk)
     inner akk searched lowerLimit l =
         case headMay $ filter (isExtender searched) l of
@@ -418,8 +418,7 @@ boundingBox pixmaps =
   where
     minX = minimum $ map positionX upperLefts
     minY = minimum $ map positionY upperLefts
-    upperLefts = map upperLeft pixmaps
-    upperLeft (position, size) = position
+    upperLefts = map fst pixmaps
 
     maxX = maximum $ map positionX lowerRights
     maxY = maximum $ map positionY lowerRights

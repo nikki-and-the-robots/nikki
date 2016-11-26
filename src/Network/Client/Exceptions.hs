@@ -40,7 +40,7 @@ catchAll :: SomeException -> [Prose]
 catchAll (SomeException x) = [pv (show (typeOf x))]
 
 timeout :: Timeout -> [Prose]
-timeout t =
+timeout _ =
     p "The connection timed out." :
     []
 
@@ -50,7 +50,7 @@ data DownloadException = DownloadException String String
 instance Exception DownloadException
 
 downloadException :: DownloadException -> [Prose]
-downloadException e@(DownloadException url errorMsg) =
+downloadException (DownloadException url errorMsg) =
     p "An error occurred while downloading:" :
     pv url :
     pv ("(" ++ errorMsg ++ ")") :

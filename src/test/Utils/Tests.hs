@@ -1,4 +1,7 @@
 {-# language ViewPatterns #-}
+
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- | This module is both the place for testing the Utils module
 -- and for providing utility functions for the testsuite
 -- (which is admittedly unelegant)
@@ -31,7 +34,7 @@ testMergePairs = mapM_ (quickCheckWith stdArgs{maxSuccess = 1000}) [
    ]
 
 testPredicate :: Int -> Int -> Maybe [Int]
-testPredicate a b | a == 0 = Nothing
+testPredicate a _ | a == 0 = Nothing
 testPredicate a b = if b `mod` a == 0 then Just [a] else Nothing
 
 testDuplicates = do

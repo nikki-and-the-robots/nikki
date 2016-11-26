@@ -1,5 +1,7 @@
 {-# language ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances, DeriveDataTypeable #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Sorts.Robots.Cannon where
 
 import           Control.Arrow
@@ -143,12 +145,12 @@ cannonballOffset =
 
 instance Sort CannonSort Cannon where
     sortId _ = SortId "robots/cannon"
-    freeSort (CannonSort a b c d e f) =
+    freeSort (CannonSort _ _ _ _ e f) =
         fmapM_ freePolySound [e, f]
     size _ = robotSize
     renderIconified sort ptr =
         renderPixmapSimple ptr (basePix sort)
-    initialize app _ Nothing sort ep Nothing _ = do
+    initialize _app _ Nothing sort ep Nothing _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
             base = ImmutableChipmunk position 0 baryCenterOffset []
@@ -156,7 +158,7 @@ instance Sort CannonSort Cannon where
             barrel = ImmutableChipmunk (position +~ barrelOffset) barrelInitialAngle barrelBaryCenterOffset []
             noopSetter _ = return ()
         return $ Cannon base barrel False Nothing barrelInitialAngle noopSetter []
-    initialize app _ (Just space) sort ep Nothing _ = io $ do
+    initialize _app _ (Just space) _sort ep Nothing _ = io $ do
         (base, pin) <- initBase space ep
         barrel <- initBarrel space ep
         angleSetter <- initConstraint space pin base barrel
@@ -175,7 +177,7 @@ instance Sort CannonSort Cannon where
         destroyCannonballs config space now sort >=>
 --         passThrough debug >=>
         return
-    updateNoSceneChange sort _ config space scene now contacts (True, cd) =
+    updateNoSceneChange sort _ config space _scene now _contacts (True, cd) =
         return . (controlled ^= True) >=>
         return . updateAngleState (config ^. controls) cd >=>
         passThrough setAngle >=>
@@ -184,7 +186,7 @@ instance Sort CannonSort Cannon where
 --         passThrough debug >=>
         return
 
-    renderObject _ _ cannon sort ptr offset now = do
+    renderObject _ _ cannon sort _ptr _offset now = do
         (basePosition, baseAngle) <- getRenderPositionAndAngle (base cannon)
         (barrelPosition, barrelAngle) <- getRenderPositionAndAngle $ barrel cannon
         let base = RenderPixmap (basePix sort)
@@ -330,7 +332,7 @@ robotEyesState now cannon = case (cannon ^. controlled, cannon ^. shotTime) of
 
 -- | Removes cannonballs after their lifetime exceeded.
 destroyCannonballs :: Configuration -> Space -> Seconds -> CannonSort -> Cannon -> IO Cannon
-destroyCannonballs config space now sort =
+destroyCannonballs config _space now sort =
     cannonballs ^^: (\ bs -> catMaybes <$> mapM inner bs)
   where
     inner :: Cannonball -> IO (Maybe Cannonball)

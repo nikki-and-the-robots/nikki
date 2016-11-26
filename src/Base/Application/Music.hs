@@ -46,7 +46,7 @@ selectMusic meta@(meta_musicFile -> Nothing) = do
     return $ randomElement (mkStdGen (hash (meta_levelName meta))) allOggsFromPublic
 
 randomElement :: StdGen -> [a] -> Maybe a
-randomElement g [] = Nothing
+randomElement _ [] = Nothing
 randomElement g list =
     let i = fst (random g) `mod` length list
     in Just (list !! i)

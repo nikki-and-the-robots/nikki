@@ -80,4 +80,4 @@ volumeItems configuration parent =
     changeVolume x | x < 0.5  = 0.5
     changeVolume x | x < 0.75 = 0.75
     changeVolume x | x < 1    = 1
-    changeVolume x            = 0
+    changeVolume _            = 0

@@ -143,7 +143,7 @@ instance Sort SSort Sign where
 
     objectEditMode _ = Just oemMethods
 
-    initialize app _ (Just space) sort editorPosition (Just (OEMState oemState_)) _ = do
+    initialize _app _ (Just space) sort editorPosition (Just (OEMState oemState_)) _ = do
         let Just oemState :: Maybe SignOEMState = cast oemState_
         monologue <- readSignMonologue $ oemFile oemState
         let pos = position2vector
@@ -170,10 +170,10 @@ instance Sort SSort Sign where
 
     isUpdating = const True
 
-    updateNoSceneChange sort app config _ scene now contacts (_, cd) sign =
+    updateNoSceneChange _sort app config _ _scene _now contacts (_, cd) sign =
         return $ (monologue ^: (updateState app (config ^. controls) cd contacts sign)) sign
 
-    renderObject app config sign sort ptr offset now =
+    renderObject app config sign sort _ptr offset _now =
         return $ renderSign app config offset sort sign
 
 mkPolys :: Size Double -> ([ShapeType], Vector)
@@ -326,7 +326,7 @@ instance IsOEMState SignOEMState where
 question = p "text for the sign"
 
 updateOEM :: Button -> SignOEMState -> OEMUpdateMonad SignOEMState
-updateOEM (KeyboardButton F1 string _) _ = oemNothing
+updateOEM (KeyboardButton F1 _string _) _ = oemNothing
 updateOEM (KeyboardButton key string _) (SignOEMState text) =
     return $ SignOEMState $ modifyTextField key string text
 updateOEM _ _ = oemNothing

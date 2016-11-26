@@ -133,9 +133,9 @@ uniqueNikki :: Application -> Grounds (EditorObject Sort_) -> Grounds (EditorObj
 uniqueNikki app objects =
     let nikkiIndices = I.findIndices (isNikki . editorSort) $ mainLayerIndexable objects
     in case nikkiIndices of
-        [a] -> objects
+        [_] -> objects
         [] -> addNikki objects
-        (a : r) -> ((mainLayer .> content) ^: deleteDuplicateNikkis r) objects
+        (_ : r) -> ((mainLayer .> content) ^: deleteDuplicateNikkis r) objects
   where
 
     -- adds Nikki at (0, 0)

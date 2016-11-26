@@ -40,7 +40,7 @@ renderShapeType ptr ShapeDescription{shapeType, shapeOffset} =
     case (shapeType, shapeOffset) of
         (Polygon{vertices}, offset) ->
             mapM_ (uncurry (renderVectorLine ptr)) (adjacentCyclic $ map (offset +~) vertices)
-        (LineSegment start end thickness, offset) ->
+        (LineSegment start end _thickness, offset) ->
             renderVectorLine ptr (start +~ offset) (end +~ offset)
         (Circle radius, vec) ->
             drawCircle ptr (vector2position vec) (realToFrac radius)

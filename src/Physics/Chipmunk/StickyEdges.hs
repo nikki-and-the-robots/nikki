@@ -123,7 +123,7 @@ moveRightSide a b |
         w = (on max (x . end) a b) - x s
         h = height a
 
-moveRightSide a b = Nothing
+moveRightSide _ _ = Nothing
 
 
 -- | moves two points (by distance of epsilon) in L-shaped combinations of two shapes to avoid sticky edges
@@ -133,7 +133,7 @@ removeWedges epsilon =
         foldr1 (>>>) $ replicate 4 (mergePairs moveUpperLeftCorner >>> map rotatePolygon90)
   where
     moveUpperLeftCorner :: [Modified Vector] -> [Modified Vector] -> Maybe [[Modified Vector]]
-    moveUpperLeftCorner [Same a, b, c, d] other@[p, q, r, s] =
+    moveUpperLeftCorner [Same a, b, c, d] other@[p, q, _, s] =
         let b_ = unwrap b
             p_ = unwrap p
             q_ = unwrap q

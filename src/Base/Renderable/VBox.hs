@@ -22,7 +22,7 @@ vBox n = VBox n . map RenderableInstance
 
 instance Renderable VBox where
     label = const "VBox"
-    render ptr app config parentSize vBox@(VBox minimalItems items) = do
+    render ptr app config parentSize _vBox@(VBox minimalItems items) = do
         itemRenders <- inner minimalItems (height parentSize) items
         return (vBoxSize (fmap fst itemRenders), renderVBox itemRenders)
       where
@@ -36,7 +36,7 @@ instance Renderable VBox where
 
         inner :: Int -> Double -> [RenderableInstance] -> IO [(Size Double, IO ())]
         inner minimalItems h (a : r) = do
-            t@(itemSize, action) <- render ptr app config (Size (width parentSize) h) a
+            t@(itemSize, _action) <- render ptr app config (Size (width parentSize) h) a
             if (h >= height itemSize) || minimalItems > 0 then do
                 rest <- inner (pred minimalItems) (h - height itemSize) r
                 return (t : rest)

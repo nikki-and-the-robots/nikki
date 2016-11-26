@@ -44,7 +44,7 @@ data WholeScreenPixmap
   deriving Show
 
 instance Renderable WholeScreenPixmap where
-    render ptr app config size typ = return $ tuple size $
+    render ptr app _config size typ = return $ tuple size $
         renderWholeScreenPixmap ptr size (typPixmaps app typ)
     label = show
 
