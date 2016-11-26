@@ -1,14 +1,18 @@
 
+module TestsuiteSpec where
+
+import           Test.Hspec
+
 import           Data.Indexable.Tests
 import           Physics.Chipmunk.Types.Tests
 import           Sorts.Terminal.Tests
-import           Top.Main.Tests
+import           Top.MainSpec
 import           Utils.Tests
 
 
-main :: IO ()
-main = do
-    Top.Main.Tests.tests
+spec :: Spec
+spec = do
+  it "quickcheck tests" $ do
     Data.Indexable.Tests.tests
     Sorts.Terminal.Tests.tests
     Utils.Tests.tests

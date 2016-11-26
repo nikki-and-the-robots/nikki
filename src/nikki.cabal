@@ -284,7 +284,9 @@ test-suite slow
       Physics.Chipmunk.Types.Tests
       Sorts.Terminal.Tests
       Sorts.Tiles.Baking.Tests
-      Top.Main.Tests
+      Spec
+      TestsuiteSpec
+      Top.MainSpec
       Utils.Tests
       Base
       Base.Animation
@@ -453,9 +455,9 @@ test-suite slow
       Version
   default-language: Haskell2010
 
-test-suite testsuite
+test-suite spec
   type: exitcode-stdio-1.0
-  main-is: testsuite.hs
+  main-is: Spec.hs
   hs-source-dirs:
       test
     , ./.
@@ -518,6 +520,7 @@ test-suite testsuite
     , string-conversions
     , network-uri
     , QuickCheck
+    , hspec
   if os(linux)
     extra-lib-dirs:
         cpp/dist
@@ -553,7 +556,8 @@ test-suite testsuite
       Physics.Chipmunk.Types.Tests
       Sorts.Terminal.Tests
       Sorts.Tiles.Baking.Tests
-      Top.Main.Tests
+      TestsuiteSpec
+      Top.MainSpec
       Utils.Tests
       Base
       Base.Animation

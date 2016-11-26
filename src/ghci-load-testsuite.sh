@@ -3,4 +3,6 @@
 set -eux
 
 ./build-qtwrapper.sh
-stack exec -- ghci test/testsuite.hs
+hpack
+stack test --only-dependencies
+stack exec -- ghci test/Spec.hs
