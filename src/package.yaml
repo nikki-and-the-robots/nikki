@@ -162,6 +162,47 @@ executables:
     - condition: os(osx)
       extra-lib-dirs: cpp/dist/
       extra-libraries: qtwrapper
+
+tests:
+  testsuite:
+    main: testsuite.hs
+    source-dirs:
+    - testsuite
+    - ./.
+    dependencies:
+    - QuickCheck
+    when:
+    - condition: os(linux)
+      extra-lib-dirs: cpp/dist
+      extra-libraries:
+      - qtwrapper
+      - QtOpenGL
+      - QtGui
+      - QtCore
+    - condition: os(windows)
+      ghc-options:
+      - -pgma
+      - gcc
+      - -pgmc
+      - gcc
+      - -pgml
+      - gcc
+      - -pgmwindres
+      - windres
+      ld-options: -mwindows
+      extra-lib-dirs:
+      - cpp/dist/
+      - C:/Qt/2010.02.1/qt/lib/
+      extra-libraries:
+      - qtwrapper
+      - QtOpenGL4
+      - QtGui4
+      - QtCore4
+      - stdc++
+    - condition: os(osx)
+      extra-lib-dirs: cpp/dist/
+      extra-libraries: qtwrapper
+
 flags:
   devel:
     description: No Optimizations and no executable stripping

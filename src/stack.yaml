@@ -1,4 +1,6 @@
-flags: {}
+flags:
+  nikki:
+    devel: true
 packages:
 - ./.
 - testsuite
