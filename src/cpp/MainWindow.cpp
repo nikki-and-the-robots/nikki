@@ -171,12 +171,6 @@ void MainWindow::postGUI(guiAction* action) {
     emit postGUISignal(action);
 };
 
-// cpp has to call this on every guiAction function pointer
-// that gets passed to postGUI to let haskell release the retained memory.
-// (After performing the given action, of course.)
-extern "C" void freePostGUIFunPtr(guiAction* action);
-
 void MainWindow::postGUISlot(guiAction* action) {
     action();
-    freePostGUIFunPtr(action);
 };

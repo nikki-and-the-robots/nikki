@@ -6,5 +6,5 @@ cd cpp
 mkdir -p dist
 cd dist
 cmake ..
-make
+make -j5
 cd ../..
