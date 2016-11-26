@@ -76,7 +76,7 @@ loadSomePixmaps = do
     pngs <- fmap (pngDir </>) <$> getFiles pngDir (Just ".png")
     load pngs
   where
-    pngDir = (".." </> ".." </> "data" </> "png" </> "objects")
+    pngDir = (".." </> "data" </> "png" </> "objects")
 
     load :: [FilePath] -> IO [Animation Pixmap]
     load =
