@@ -2,3 +2,4 @@
 :set -itest
 :set -optP-include -optP.stack-work/dist/x86_64-linux/Cabal-1.22.4.0/build/autogen/cabal_macros.h
 :set -lqtwrapperShared -Lcpp/dist
+:set -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-overlapping-patterns -fno-warn-type-defaults -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-dodgy-imports -fno-warn-incomplete-record-updates -fno-warn-incomplete-uni-patterns -fno-warn-missing-fields -fno-warn-missing-methods -fno-warn-tabs -fno-warn-unused-do-bind -fwarn-unused-imports

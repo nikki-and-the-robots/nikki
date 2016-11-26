@@ -18,7 +18,7 @@ flag devel
 
 executable core
   main-is: Main.hs
-  ghc-options: -fwarn-missing-fields -fwarn-dodgy-imports -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -fwarn-unused-imports -fno-warn-overlapping-patterns -fno-warn-missing-signatures -threaded -Wall -fno-warn-overlapping-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-incomplete-patterns -fno-warn-orphans -fno-warn-type-defaults
+  ghc-options: -Wall -fno-warn-dodgy-imports -fno-warn-incomplete-patterns -fno-warn-incomplete-record-updates -fno-warn-incomplete-uni-patterns -fno-warn-missing-fields -fno-warn-missing-methods -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-overlapping-patterns -fno-warn-tabs -fno-warn-type-defaults -fno-warn-unused-binds -fno-warn-unused-do-bind -fwarn-unused-imports -fno-warn-unused-matches -fwarn-dodgy-imports -fwarn-missing-fields -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -threaded
   build-depends:
       base ==4.*
     , directory
@@ -112,7 +112,7 @@ executable core
 
 executable nikki
   main-is: Distribution/AutoUpdate/Restarter.hs
-  ghc-options: -fwarn-missing-fields -fwarn-dodgy-imports -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -fwarn-unused-imports -fno-warn-overlapping-patterns -fno-warn-missing-signatures -threaded -Wall -fno-warn-overlapping-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-incomplete-patterns -fno-warn-orphans -fno-warn-type-defaults
+  ghc-options: -Wall -fno-warn-dodgy-imports -fno-warn-incomplete-patterns -fno-warn-incomplete-record-updates -fno-warn-incomplete-uni-patterns -fno-warn-missing-fields -fno-warn-missing-methods -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-overlapping-patterns -fno-warn-tabs -fno-warn-type-defaults -fno-warn-unused-binds -fno-warn-unused-do-bind -fwarn-unused-imports -fno-warn-unused-matches -fwarn-dodgy-imports -fwarn-missing-fields -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -threaded
   build-depends:
       base ==4.*
     , directory
@@ -190,7 +190,7 @@ test-suite slow
   hs-source-dirs:
       test
     , ./.
-  ghc-options: -fwarn-missing-fields -fwarn-dodgy-imports -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -fwarn-unused-imports -fno-warn-overlapping-patterns -fno-warn-missing-signatures -threaded -Wall -fno-warn-overlapping-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-incomplete-patterns -fno-warn-orphans -fno-warn-type-defaults
+  ghc-options: -Wall -fno-warn-dodgy-imports -fno-warn-incomplete-patterns -fno-warn-incomplete-record-updates -fno-warn-incomplete-uni-patterns -fno-warn-missing-fields -fno-warn-missing-methods -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-overlapping-patterns -fno-warn-tabs -fno-warn-type-defaults -fno-warn-unused-binds -fno-warn-unused-do-bind -fwarn-unused-imports -fno-warn-unused-matches -fwarn-dodgy-imports -fwarn-missing-fields -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -threaded -Wall -fno-warn-dodgy-imports -fno-warn-dodgy-imports -fno-warn-incomplete-patterns -fno-warn-incomplete-record-updates -fno-warn-incomplete-uni-patterns -fno-warn-missing-fields -fno-warn-missing-fields -fno-warn-missing-methods -fno-warn-missing-methods -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-overlapping-patterns -fno-warn-tabs -fno-warn-tabs -fno-warn-type-defaults -fno-warn-unused-binds -fno-warn-unused-do-bind -fno-warn-unused-do-bind -fwarn-unused-imports -fno-warn-unused-matches
   build-depends:
       base ==4.*
     , directory
@@ -461,7 +461,7 @@ test-suite spec
   hs-source-dirs:
       test
     , ./.
-  ghc-options: -fwarn-missing-fields -fwarn-dodgy-imports -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -fwarn-unused-imports -fno-warn-overlapping-patterns -fno-warn-missing-signatures -threaded -Wall -fno-warn-overlapping-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-incomplete-patterns -fno-warn-orphans -fno-warn-type-defaults
+  ghc-options: -Wall -fno-warn-dodgy-imports -fno-warn-incomplete-patterns -fno-warn-incomplete-record-updates -fno-warn-incomplete-uni-patterns -fno-warn-missing-fields -fno-warn-missing-methods -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-overlapping-patterns -fno-warn-tabs -fno-warn-type-defaults -fno-warn-unused-binds -fno-warn-unused-do-bind -fwarn-unused-imports -fno-warn-unused-matches -fwarn-dodgy-imports -fwarn-missing-fields -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -threaded -Wall -fno-warn-dodgy-imports -fno-warn-incomplete-patterns -fno-warn-incomplete-record-updates -fno-warn-incomplete-uni-patterns -fno-warn-missing-fields -fno-warn-missing-fields -fno-warn-missing-methods -fno-warn-missing-methods -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-orphans -fno-warn-overlapping-patterns -fno-warn-tabs -fno-warn-type-defaults -fno-warn-unused-binds -fno-warn-unused-do-bind -fwarn-unused-imports -fno-warn-unused-matches
   build-depends:
       base ==4.*
     , directory

@@ -15,8 +15,6 @@ import           Text.Printf
 import           Base
 import           Graphics.Qt
 import           Sorts.Tiles.Baking (bakeTiles, boundingBox)
-import           Test.QuickCheck
-import           Test.QuickCheck.Property
 import           Utils
 import           Utils.Tests
 

@@ -11,24 +11,29 @@ extra-source-files:
 - data/README
 - data/manual/editor.txt
 ghc-options:
-- -fwarn-missing-fields
+- -Wall
+- -fno-warn-dodgy-imports
+- -fno-warn-incomplete-patterns
+- -fno-warn-incomplete-record-updates
+- -fno-warn-incomplete-uni-patterns
+- -fno-warn-missing-fields
+- -fno-warn-missing-methods
+- -fno-warn-missing-signatures
+- -fno-warn-name-shadowing
+- -fno-warn-orphans
+- -fno-warn-overlapping-patterns
+- -fno-warn-tabs
+- -fno-warn-type-defaults
+- -fno-warn-unused-binds
+- -fno-warn-unused-do-bind
+- -fwarn-unused-imports
+- -fno-warn-unused-matches
 - -fwarn-dodgy-imports
+- -fwarn-missing-fields
 - -fwarn-missing-methods
 - -fwarn-tabs
 - -fwarn-unused-do-bind
-- -fwarn-unused-imports
-- -fno-warn-overlapping-patterns
-- -fno-warn-missing-signatures
 - -threaded
-- -Wall
-- -fno-warn-overlapping-patterns
-- -fno-warn-missing-signatures
-- -fno-warn-name-shadowing
-- -fno-warn-unused-binds
-- -fno-warn-unused-matches
-- -fno-warn-incomplete-patterns
-- -fno-warn-orphans
-- -fno-warn-type-defaults
 dependencies:
 - base ==4.*
 - directory
@@ -172,6 +177,26 @@ tests:
     dependencies:
     - QuickCheck
     - hspec
+    ghc-options:
+    - -Wall
+    - -fno-warn-dodgy-imports
+    - -fno-warn-incomplete-patterns
+    - -fno-warn-incomplete-record-updates
+    - -fno-warn-incomplete-uni-patterns
+    - -fno-warn-missing-fields
+    - -fno-warn-missing-fields
+    - -fno-warn-missing-methods
+    - -fno-warn-missing-methods
+    - -fno-warn-missing-signatures
+    - -fno-warn-name-shadowing
+    - -fno-warn-orphans
+    - -fno-warn-overlapping-patterns
+    - -fno-warn-tabs
+    - -fno-warn-type-defaults
+    - -fno-warn-unused-binds
+    - -fno-warn-unused-do-bind
+    - -fwarn-unused-imports
+    - -fno-warn-unused-matches
     when:
     - condition: os(linux)
       extra-lib-dirs: cpp/dist
@@ -210,6 +235,29 @@ tests:
     - ./.
     dependencies:
     - QuickCheck
+    ghc-options:
+    - -Wall
+    - -fno-warn-dodgy-imports
+    - -fno-warn-dodgy-imports
+    - -fno-warn-incomplete-patterns
+    - -fno-warn-incomplete-record-updates
+    - -fno-warn-incomplete-uni-patterns
+    - -fno-warn-missing-fields
+    - -fno-warn-missing-fields
+    - -fno-warn-missing-methods
+    - -fno-warn-missing-methods
+    - -fno-warn-missing-signatures
+    - -fno-warn-name-shadowing
+    - -fno-warn-orphans
+    - -fno-warn-overlapping-patterns
+    - -fno-warn-tabs
+    - -fno-warn-tabs
+    - -fno-warn-type-defaults
+    - -fno-warn-unused-binds
+    - -fno-warn-unused-do-bind
+    - -fno-warn-unused-do-bind
+    - -fwarn-unused-imports
+    - -fno-warn-unused-matches
     when:
     - condition: os(linux)
       extra-lib-dirs: cpp/dist
