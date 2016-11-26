@@ -24,7 +24,6 @@ script:
   - export STACK_YAML=$PWD/stack-libzip-0.10.yaml
   - stack setup --no-terminal
   - stack test --no-terminal
-  - (cd testsuite ; stack exec -- testsuite)
 
 cache:
   directories:

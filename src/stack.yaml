@@ -3,7 +3,6 @@ flags:
     devel: true
 packages:
 - ./.
-- testsuite
 - scripts
 - level-server
 - location:
