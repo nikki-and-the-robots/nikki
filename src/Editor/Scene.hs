@@ -210,7 +210,7 @@ normalMode V s = Just $ pasteClipboard s
 
 normalMode Space s = Just $ toSelectionMode s
 
-normalMode _ scene = Nothing
+normalMode _ _scene = Nothing
 
 
 -- * object edit mode
@@ -244,7 +244,7 @@ selectionMode C scene = Just $ copySelection scene
 selectionMode key scene | isEditorB key || Delete == key = Just $ deleteSelection scene
 selectionMode key scene | key `elem` [W, S] = Just $ changeCursorStepSize key scene
 
-selectionMode _ scene = Nothing
+selectionMode _ _scene = Nothing
 
 -- | changes the cursor's step size with W and S
 changeCursorStepSize :: Key -> EditorScene Sort_ -> EditorScene Sort_

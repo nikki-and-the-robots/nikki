@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Physics.Chipmunk.Tests where
 
 import Physics.Chipmunk

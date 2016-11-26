@@ -64,7 +64,7 @@ scrollable app children = do
     let r = MenuBackground |:>
             (addKeysHint scrollableKeysHint $
             centered $
-            parentSpacer (\ (Size w h) -> Size textWidth h) $
+            parentSpacer (\ (Size _w h) -> Size textWidth h) $
             Scrollable children chan scrollDownRef)
         send fun = do
             writeChan chan fun
@@ -124,7 +124,7 @@ pollChannel chan = do
 
 -- | Returns the maximal scrollDown for a given height and child sizes (and actions).
 maximalScrollDown :: Double -> [(Size Double, IO ())] -> Int
-maximalScrollDown h [] = 0
+maximalScrollDown _ [] = 0
 maximalScrollDown h widgets =
     length widgets - numberOfItemsWhenScrolledDown
   where
@@ -134,7 +134,7 @@ maximalScrollDown h widgets =
 
 -- | Removes the widgets at the end of the list that don't fit.
 clipHeight :: Double -> [(Size Double, IO ())] -> [(Size Double, IO ())]
-clipHeight h [] = []
+clipHeight _ [] = []
 clipHeight h (a : r) =
     if itemHeight > h then [] else a : clipHeight (h - itemHeight) r
   where

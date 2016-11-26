@@ -2,21 +2,13 @@
 
 module Physics.Chipmunk.StickyEdges.Tests.Rendering where
 
-
-import Prelude hiding (catch)
-
 import Data.Abelian
-
 import Control.Exception
-
 import System.Random
 
 import Graphics.Qt hiding (scale)
-
 import Physics.Chipmunk
-
 import Utils
-
 import Physics.Chipmunk.StickyEdges.Tests.Properties
 
 
@@ -41,12 +33,11 @@ drawOffender (fromTestPolygons -> offender) = do
     print $ map vertices offender
     withQApplication $ \ qApp ->
       withMainWindow 0 1000 500 $ \ window -> do
-        keyPoller <- newKeyPoller window []
         randoms <- generateRandoms
         setDrawingCallbackMainWindow window $ Just (render (cycle randoms))
         setWindowSize window $ Windowed (Size 1000 500)
         showMainWindow window
-        execQApplication qApp
+        _ <- execQApplication qApp
         return ()
   where
     traversed = removeStickyEdges testEpsilon offender

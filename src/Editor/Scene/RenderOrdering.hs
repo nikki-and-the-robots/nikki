@@ -94,4 +94,4 @@ fromPredList (pred : r) a b =
         (True, False) -> LT
         (False, True) -> GT
         _ -> fromPredList r a b
-fromPredList [] a b = EQ
+fromPredList [] _ _ = EQ

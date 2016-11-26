@@ -73,8 +73,8 @@ isTemplateLevel TemplateLevel{} = True
 isTemplateLevel _ = False
 
 showLevelTreeForMenu :: Scores -> SelectTree LevelFile -> Prose
-showLevelTreeForMenu highScores (Leaf label level) = showLevelForMenu highScores level
-showLevelTreeForMenu highScores x = pVerbatim (x ^. labelA)
+showLevelTreeForMenu highScores (Leaf _label level) = showLevelForMenu highScores level
+showLevelTreeForMenu _highScores x = pVerbatim (x ^. labelA)
 
 showLevelForMenu :: Scores -> LevelFile -> Prose
 showLevelForMenu highScores level =

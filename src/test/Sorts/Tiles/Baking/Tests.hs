@@ -88,7 +88,7 @@ loadSomePixmaps = do
 -- | renders the given pixmaps to a new QPixmap.
 renderToPixmap :: Bool -> Seconds -> [(Animation Pixmap, Position Double)]
     -> IO (ForeignPtr QPixmap)
-renderToPixmap _ now [] =
+renderToPixmap _ _now [] =
     newQPixmapEmpty $ Size 0 0
 renderToPixmap debugMode now animations = do
     let pixmaps = map (first (flip pickAnimationFrame now)) animations
@@ -99,7 +99,7 @@ renderToPixmap debugMode now animations = do
     painter <- newQPainter result
     resetMatrix painter
     translate painter (negateAbelian upperLeft)
-    forM_ (zip pixmaps [1 ..]) $ \ ((pix, pos), i) -> do
+    forM_ (zip pixmaps [1 ..]) $ \ ((pix, pos), _) -> do
         let areaPos = pos +~ pix ^. pixmapOffset
             areaSize = pixmapImageSize pix
         drawPixmap painter areaPos (pixmap pix)
@@ -138,4 +138,4 @@ pixelEqualityQImage a b = do
             putStrLn ("pixels not equal at " ++ show pos ++ ": " ++ pp (ap, bp))
             return False
           else check a b r
-    check a n [] = return True
+    check _ _ [] = return True

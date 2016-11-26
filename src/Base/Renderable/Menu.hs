@@ -104,13 +104,13 @@ mkMenu background menuHeader items =
 
 selectNext :: Menu -> Menu
 selectNext (Menu bg t b s (a : r) sc) = Menu bg t (b +: s) a r sc
-selectNext m@(Menu bg typ before selected [] scrolling) =
+selectNext (Menu bg typ before selected [] scrolling) =
     Menu bg typ [] a r scrolling
   where
     (a : r) = before +: selected
 
 selectPrevious :: Menu -> Menu
-selectPrevious m@(Menu bg typ [] selected after scrolling) =
+selectPrevious (Menu bg typ [] selected after scrolling) =
     Menu bg typ (init items) (last items) [] scrolling
   where
     items = selected : after
@@ -170,9 +170,9 @@ menuAppStateSpecialized app yourPoller background appStateCons menuHeader mParen
 -- (Doesn't get translated therefore.)
 treeToMenu :: forall a . Application -> AppState -> Prose -> (SelectTree a -> IO Prose)
     -> SelectTree a -> (Parent -> a -> AppState) -> Int -> AppState
-treeToMenu app parent title showAction (EmptyNode label) f _ =
+treeToMenu app parent _title _showAction (EmptyNode _label) _f _ =
     message app [p "there is nothing here :(", p "MAKE SOME LEVELS!!!"] parent
-treeToMenu app parent title showAction (Leaf _ n) f _ = f parent n
+treeToMenu _app parent _title _showAction (Leaf _ n) f _ = f parent n
 treeToMenu app parent title showAction (Node label children i) f preSelection = NoGUIAppState $ do
     items <- io $ fmapM mkItem (I.toList children)
     return $ menuAppState app (NormalMenu title (Just (pVerbatim label))) (Just parent)

@@ -30,7 +30,7 @@ import Sorts.Nikki.Dust
 
 updateState :: Controls -> Mode -> Seconds -> Contacts -> (Bool, ControlData)
     -> Nikki -> IO Nikki
-updateState config mode now _ (False, _) nikki = do
+updateState _config mode now _ (False, _) nikki = do
     let action = case mode of
             TerminalMode{} -> UsingTerminal
             RobotMode{} -> UsingTerminal
@@ -39,7 +39,7 @@ updateState config mode now _ (False, _) nikki = do
         State{direction} = state nikki
         newState = State action direction 0 jumpInformation' initial
     addDustClouds now nikki{state = newState}
-updateState config mode now contacts (True, controlData) nikki = do
+updateState config _mode now contacts (True, controlData) nikki = do
     velocity_ <- get $ velocity $ body $ chipmunk nikki
     nikkiPos <- getPosition $ chipmunk nikki
     let newState_ = nextState config now contacts controlData nikki nikkiPos velocity_
@@ -146,7 +146,7 @@ nextAction config oldState controlData nothingHeld buttonDirection contacts ghos
               else case buttonDirection of
                 -- no direction -> Wait
                 Strict.Nothing -> Wait collision True
-                Strict.Just buttonDirection -> Walk afterAirborne collision True
+                Strict.Just _buttonDirection -> Walk afterAirborne collision True
           Strict.Nothing ->
             -- nikki cannot jump
             case legsCollisions of
@@ -278,7 +278,7 @@ nextFeetVelocity oldState collisions velocity action direction = case action of
 
 
 -- if a given collision is with nikki's head
-isHeadCollision (NikkiCollision _ normal _ NikkiHeadCT) = True
+isHeadCollision (NikkiCollision _ _normal _ NikkiHeadCT) = True
 isHeadCollision _ = False
 
 -- if a given collision is with nikki's legs

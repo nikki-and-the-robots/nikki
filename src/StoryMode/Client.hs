@@ -83,9 +83,9 @@ instance NFData EmailAddress where
 
 instance Protocol ClientToServer where
     protocolVersion _ = Version [0, 2] []
-    showAnonymized (StoryModeDownload email key) =
+    showAnonymized (StoryModeDownload _email key) =
         "(StoryModeDownload <EMAIL> " ++ show key ++ ")"
-    showAnonymized (StoryModeVersion email key) =
+    showAnonymized (StoryModeVersion _email key) =
         "(StoryModeVersion <EMAIL> " ++ show key ++ ")"
 
 data ServerToClient

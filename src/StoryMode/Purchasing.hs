@@ -110,7 +110,7 @@ loginAndInstall app storyModeMenu loginData =
 
 installStoryMode :: Application -> (Prose -> IO ()) -> LoginData -> Version -> String
     -> ErrorT String IO ()
-installStoryMode app logCommand loginData version zipUrl =
+installStoryMode _app logCommand loginData version zipUrl =
   catchSomeExceptionsErrorT show $ io $ do
     logCommand $
         substitute [("version", showVersion version)] $

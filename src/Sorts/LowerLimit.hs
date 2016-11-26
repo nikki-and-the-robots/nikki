@@ -54,7 +54,7 @@ isLowerLimit (cast -> Just (Sort_ inner) :: Maybe Sort_) = isLowerLimit inner
 isLowerLimit _ = False
 
 unwrapLowerLimit :: Object_ -> Maybe LowerLimit
-unwrapLowerLimit (Object_ sort o) = cast o
+unwrapLowerLimit (Object_ _ort o) = cast o
 
 data LowerLimit =
     LowerLimit {limit :: CM.CpFloat}
@@ -67,7 +67,7 @@ instance Sort LSort LowerLimit where
 
     size = const $ fmap fromKachel $ Size 1 1
 
-    renderIconified sort ptr = do
+    renderIconified _sort ptr = do
         fillRect ptr (fmap fromKachel $ Position 0 0.5)
                 (fmap fromKachel $ Size 1 0.5) limitEditorColor
     renderEditorObject ptr offset eo = do
@@ -76,7 +76,7 @@ instance Sort LSort LowerLimit where
         resetMatrix ptr
         fillRect ptr (Position 0 startHeight) (Size (width window) (height window - startHeight)) limitEditorColor
 
-    initialize app _ mSpace sort ep Nothing _ =
+    initialize _app _ _mSpace _sort ep Nothing _ =
         return $ LowerLimit $ realToFrac $ editorY ep
 
     immutableCopy = removeError
@@ -120,7 +120,7 @@ removeLowerLimits =
 
 
 lowerLimitHandler :: Scene Object_ -> Maybe CM.Position -> Maybe (Scene Object_)
-lowerLimitHandler scene Nothing = Nothing
+lowerLimitHandler _scene Nothing = Nothing
 lowerLimitHandler scene (Just p) =
     if isBelowLowerLimit scene p then
         case scene ^. mode of

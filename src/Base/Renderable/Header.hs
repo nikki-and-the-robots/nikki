@@ -27,7 +27,7 @@ header app =
     colorizeProse headerFontColor >>>
     capitalizeProse >>>
     proseToGlyphs (standardFont app) >>>
-    fmap (glyphToHeaderCube app) >>>
+    fmap glyphToHeaderCube >>>
     addStartAndEndCube app >>>
     hBox >>>
     renderable
@@ -40,8 +40,8 @@ data HeaderCube
   deriving Show
 
 -- | converts a glyph into a renderable cube for headers
-glyphToHeaderCube :: Application -> Glyph -> HeaderCube
-glyphToHeaderCube app glyph =
+glyphToHeaderCube :: Glyph -> HeaderCube
+glyphToHeaderCube glyph =
     if equalsSpace glyph then SpaceCube else StandardCube glyph
 
 equalsSpace :: Glyph -> Bool

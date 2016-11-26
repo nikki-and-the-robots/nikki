@@ -5,7 +5,6 @@ module Top.MainSpec where
 import           Control.Concurrent
 import           Control.Exception
 import           Data.Typeable
-import           Prelude hiding (catch)
 import           System.Exit
 import           Test.Hspec
 

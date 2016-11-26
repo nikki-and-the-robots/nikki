@@ -63,7 +63,7 @@ initialFPSState = do
 
 -- does the actual work. Must be called for every frame
 tickFPS :: Application -> Configuration -> Ptr QPainter -> FpsState -> IO FpsState
-tickFPS _ config ptr (FpsState counter avg Nothing displayValue) = do
+tickFPS _ _config _ptr (FpsState counter avg Nothing displayValue) = do
     -- first time: QTime has to be constructed
     now <- getNow
     return $ FpsState counter avg (Just now) displayValue
@@ -75,7 +75,7 @@ tickFPS app config ptr (FpsState counter avg (Just oldTime) displayValue) = do
         io (renderFPS app config ptr =<< readIORef displayValue)
         return r
   where
-    handle x@(FpsState 10 (Just avg) qtime dv) = do
+    handle (FpsState 10 (Just avg) qtime dv) = do
         writeIORef dv (pVerbatim $ printf "FPS: %3.1f" (1 / realToFrac avg :: Double))
         hPrint logHandle (1 / avg)
         return $ FpsState 0 Nothing qtime dv

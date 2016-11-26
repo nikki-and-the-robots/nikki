@@ -118,7 +118,6 @@ renderLayerOSD :: Application -> Configuration -> Ptr QPainter
     -> Grounds a -> GroundsIndex -> IO ()
 renderLayerOSD app config ptr gs i = do
     resetMatrix ptr
-    (Size w h) <- sizeQPainter ptr
     translate ptr (Position (fromUber 3) (fromUber 1))
     snd =<< render ptr app config zero
         (pv ("Layer: " ++ describeLayer gs i))
@@ -128,7 +127,7 @@ renderCursorPositionOSD :: Application -> Configuration -> Ptr QPainter
     -> EditorPosition -> IO ()
 renderCursorPositionOSD app config ptr (EditorPosition x y) = do
     resetMatrix ptr
-    (Size w h) <- sizeQPainter ptr
+    (Size _ h) <- sizeQPainter ptr
     translate ptr (Position 80 (h - fromUber 1 - fontHeight))
     snd =<< render ptr app config zero
         (pv ("Cursor: " ++ show (fmap (truncate :: Double -> Int) (x, y))))
@@ -137,7 +136,7 @@ renderCursorStepSize :: Application -> Configuration -> Ptr QPainter
     -> EditorPosition -> IO ()
 renderCursorStepSize app config ptr (EditorPosition x y) = do
     resetMatrix ptr
-    (Size w h) <- sizeQPainter ptr
+    (Size _ h) <- sizeQPainter ptr
     translate ptr (Position 550 (h - fromUber 1 - fontHeight))
     snd =<< render ptr app config zero
         (pv ("Step: " ++ show (x, y)))
@@ -146,7 +145,7 @@ renderCursorStepSize app config ptr (EditorPosition x y) = do
 -- * copy selection
 
 renderCopySelection app config ptr scene endPosition@(EditorPosition x2 y2) = do
-    Size w h <- sizeQPainter ptr
+    Size w _ <- sizeQPainter ptr
     let EditorPosition x1 y1 = cursor scene
         x = max x1 x2
         y = min y1 y2

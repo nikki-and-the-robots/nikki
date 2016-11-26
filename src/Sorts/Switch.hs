@@ -104,7 +104,7 @@ triggered StaticSwitch{} = False
 triggered switch = triggered_ switch
 
 unwrapSwitch :: Object_ -> Maybe Switch
-unwrapSwitch (Object_ sort o) = cast o
+unwrapSwitch (Object_ _sort o) = cast o
 
 isSwitch :: Sort sort o => sort -> Bool
 isSwitch (cast -> Just _ :: Maybe SwitchSort) = True
@@ -123,7 +123,7 @@ instance Sort SwitchSort Switch where
             SortId "switch/levelExit"
           else
             SortId "switch/levelExitTransient"
-    freeSort (SwitchSort a b c d e _ f g _) =
+    freeSort (SwitchSort _ _ _ _ _ _ f g _) =
         fmapM_ freePolySound (f : g : [])
     size _ = fmap realToFrac boxSize +~ Size 0 (fromUber 7)
                 +~ fmap ((* 2) . abs) (vector2size editorPadding)
@@ -134,7 +134,7 @@ instance Sort SwitchSort Switch where
         translate ptr (Position 0 (fromUber 7))
         renderPixmapSimple ptr (getBoxPix sort)
 
-    initialize app _ (Just space) sort ep Nothing _ = io $ do
+    initialize _app _ (Just space) sort ep Nothing _ = io $ do
         let ex = realToFrac (editorX ep) + vectorX editorPadding
             ey = realToFrac (editorY ep) + vectorY editorPadding
             ((boxShapes, boxBaryCenterOffset), triggerShapes, (stampShapes, stampBaryCenterOffset)) =
@@ -156,7 +156,7 @@ instance Sort SwitchSort Switch where
         updateAntiGravity sort switch
 
         return switch
-    initialize app _ Nothing sort ep Nothing _ = do
+    initialize _app _ Nothing _sort ep Nothing _ = do
         let ex = realToFrac (editorX ep) + vectorX editorPadding
             ey = realToFrac (editorY ep) + vectorY editorPadding
             ((_, boxBaryCenterOffset), _, (_, stampBaryCenterOffset)) = switchShapes
@@ -179,7 +179,7 @@ instance Sort SwitchSort Switch where
     isUpdating = const True
 
     update _ _ _ _ _ _ _ _ _ switch@StaticSwitch{} = return switch
-    update sort@SwitchSort{transient = True} _ config _ scene now contacts cd index switch = do
+    update sort@SwitchSort{transient = True} _ config _ scene now contacts _cd _index switch = do
         let new = switch{triggered_ = triggerShape switch `member` triggers contacts}
             (sceneMod, mSound) = case (triggered_ switch, triggered_ new) of
                 (False, True) -> (switches ^: firstStrict succ, Just onSound)
@@ -189,7 +189,7 @@ instance Sort SwitchSort Switch where
             triggerSound config $ sound sort
         pushSceneChange sceneMod
         return $ updateIfLast (sceneMod scene) now new
-    update sort _ config _ scene now contacts cd index switch@Switch{triggered_ = False} =
+    update sort _ config _ scene now contacts _cd _index switch@Switch{triggered_ = False} =
         if triggerShape switch `member` triggers contacts then do
             -- triggered
             triggerSound config $ onSound sort
@@ -199,7 +199,7 @@ instance Sort SwitchSort Switch where
             return new
           else
             return $ updateIfLast scene now switch
-    update s _ _ _ _ _ _ _ _ o = return o
+    update _ _ _ _ _ _ _ _ _ o = return o
 
     renderObject _ _ switch sort _ _ now = do
         (stampPos, stampAngle) <- getRenderPositionAndAngle (stampChipmunk switch)

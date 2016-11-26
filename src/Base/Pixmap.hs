@@ -95,7 +95,6 @@ copyPixmap (Pixmap pix size offset imageSize) = do
 mapColors :: (QRgb -> QRgb) -> Pixmap -> IO Pixmap
 mapColors f (Pixmap pix size offset realSize) = do
     image <- toImageQPixmap pix True
-    imageSize <- sizeQImage image
 
     colorN <- colorCountQImage image
     forM_ [0 .. pred colorN] $ \ i ->
@@ -186,7 +185,7 @@ doRenderPixmap ptr (RenderCommand position command) = do
     translate ptr position
     command ptr
     return Nothing
-doRenderPixmap ptr r@(RenderOnTop x) = do
+doRenderPixmap _ptr (RenderOnTop x) = do
     return $ Just x
 
 
@@ -196,7 +195,7 @@ debugMode = False
 
 debugPixmaps :: Ptr QPainter -> Pixmap -> Position Double -> Maybe Angle -> IO ()
 -- rotated Pixmaps aren't displayed
-debugPixmaps ptr pix position (Just _) = return ()
+debugPixmaps _ptr _pix _position (Just _) = return ()
 debugPixmaps ptr pix position Nothing = do
     key <- uniqueKey (pixmap pix)
     let upperLeft = position +~ (pix ^. pixmapOffset)

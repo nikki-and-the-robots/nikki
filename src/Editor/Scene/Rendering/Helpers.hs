@@ -11,7 +11,7 @@ import Base
 
 -- draw a box at the given position with the given size
 drawBox :: Ptr QPainter -> Position Double -> Size Double -> Double -> IO ()
-drawBox ptr (Position x y) (Size w h) 0 = return ()
+drawBox _ptr (Position _ _) (Size _ _) 0 = return ()
 drawBox ptr (Position x y) (Size w h) thickness = do
     resetMatrix ptr
     drawRect ptr (Position (x - 1) (y - 1)) (Size (w + 1) (h + 1))

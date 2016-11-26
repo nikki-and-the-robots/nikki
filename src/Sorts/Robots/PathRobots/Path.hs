@@ -294,7 +294,7 @@ updateOEMPath _ _ = oemNothing
 renderOEMState :: Sort sort a => Application -> Configuration -> Ptr QPainter
     -> EditorScene sort -> OEMPath -> IO ()
 renderOEMState app config ptr scene
-  (OEMPath robotSize stepSize cursor pathPositions oemActive) = do
+  (OEMPath robotSize stepSize cursor _pathPositions _oemActive) = do
     offset <- transformation ptr cursor robotSize
     renderScene offset
     renderCursor offset
@@ -308,7 +308,7 @@ renderOEMState app config ptr scene
 
 renderOEMPath :: Size Double -> Ptr QPainter -> Offset Double -> [EditorPosition]
     -> IO ()
-renderOEMPath size ptr offset paths = do
+renderOEMPath size ptr _offset paths = do
     setPenColor ptr green 4
     mapM_ (renderLine size ptr) (adjacentCyclic paths)
     mapM_ (drawPathNode size ptr) paths

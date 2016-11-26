@@ -29,7 +29,7 @@ downloadContent url = do
 -- | Tries to download the file with the given path into a given file on disc.
 -- Uses mkUrl.
 downloadFile :: Application -> (Prose -> IO ()) -> String -> FilePath -> ErrorT String IO ()
-downloadFile app logCommand url destFile = do
+downloadFile _app logCommand url destFile = do
     io $ logCommand (p "downloading " <> pVerbatim (takeFileName url))
     content <- ErrorT $ annotateError url $ downloadLazy url
     io $ BS.writeFile destFile content

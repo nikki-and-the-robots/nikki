@@ -1,6 +1,7 @@
 {-# language ViewPatterns, ScopedTypeVariables #-}
 
 {-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Editor.Pickle (
     module Editor.Pickle,

@@ -48,7 +48,7 @@ getDataFileName p = do
             "darwin" ->
                 -- works if the application is bundled in an app
                 return (progPath </> ".." </> "Resources" </> p)
-            x -> error ("unsupported os: " ++ os)
+            _ -> error ("unsupported os: " ++ os)
 
 -- RootInstall
 #endif

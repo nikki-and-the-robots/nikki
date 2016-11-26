@@ -1,5 +1,7 @@
 {-# language ViewPatterns, ScopedTypeVariables, FlexibleInstances, DeriveDataTypeable #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Sorts.Nikki.Types where
 
 
@@ -46,7 +48,7 @@ data Nikki
   deriving (Show, Typeable)
 
 unwrapNikki :: Object_ -> Maybe Nikki
-unwrapNikki (Object_ sort o) = cast o
+unwrapNikki (Object_ _sort o) = cast o
 
 instance Show (Ptr QPainter -> Offset Double -> IO ()) where
     show _ = "<Ptr QPainter -> Offset Double -> IO ()>"

@@ -1,5 +1,7 @@
 {-# language ViewPatterns, NamedFieldPuns, MultiParamTypeClasses #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Sorts.Nikki (
     sorts,
     isNikki,
@@ -90,16 +92,16 @@ instance Sort NSort Nikki where
 
     sortId _ = SortId "nikki"
 
-    freeSort (NSort pixmaps jumpSound batteryCollectSound) =
+    freeSort (NSort _pixmaps jumpSound batteryCollectSound) =
         freePolySound jumpSound >>
         freePolySound batteryCollectSound
 
-    size sort = nikkiSize
+    size _sort = nikkiSize
 
     renderIconified sort ptr =
         renderPixmapSimple ptr (defaultPixmap $ pixmaps sort)
 
-    initialize app _ (Just space) sort editorPosition Nothing _ = io $ do
+    initialize _app _ (Just space) sort editorPosition Nothing _ = io $ do
         let (surfaceVelocityShapeType, otherShapes, baryCenterOffset) = mkPolys
             pos = position2vector (epToPosition (size sort) editorPosition)
                     +~ baryCenterOffset
@@ -110,7 +112,7 @@ instance Sort NSort Nikki where
         let surfaceVelocityShape = head $ shapes chip
 
         return $ Nikki chip (Strict.Just surfaceVelocityShape) initial 0
-    initialize app _ Nothing sort editorPosition Nothing _ = do
+    initialize _app _ Nothing sort editorPosition Nothing _ = do
         let (_, _, baryCenterOffset) = mkPolys
             position = epToPosition (size sort) editorPosition
             chip = ImmutableChipmunk position 0 baryCenterOffset []

@@ -1,6 +1,8 @@
 {-# language ScopedTypeVariables, DeriveDataTypeable, NamedFieldPuns, MultiParamTypeClasses,
     FlexibleInstances #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- | objects that seem like tiles, but move when Nikki touches them
 
 module Sorts.FallingTiles (sorts) where
@@ -100,11 +102,11 @@ instance Sort TSort FallingTile where
         drawLine ptr zero (Position w h)
         drawLine ptr (Position w 0) (Position 0 h)
 
-    initialize app _ (Just space) sort@TSort{} editorPosition Nothing _ = io $ do
+    initialize _app _ (Just space) sort@TSort{} editorPosition Nothing _ = io $ do
         (chip, attributes) <- initializeBox space sort editorPosition
         modifyApplyForce chip (CM.scale (Vector 0 (- gravity)) staticMass)
         return $ FallingTile attributes chip Static
-    initialize app _ Nothing sort editorPosition Nothing _ = io $ do
+    initialize _app _ Nothing sort editorPosition Nothing _ = io $ do
         let (_, baryCenterOffset) = mkShape sort
             position = epToPosition (size sort) editorPosition
             vector = position2vector position +~ baryCenterOffset
@@ -118,7 +120,7 @@ instance Sort TSort FallingTile where
 
     isUpdating = const True
 
-    updateNoSceneChange sort _ config _ mode now contacts cd fallingTile =
+    updateNoSceneChange sort _ _config _ _mode now contacts _cd fallingTile =
         case status fallingTile of
             Static ->
                 if any (`member` fallingTiles contacts) (shapes (chipmunk fallingTile)) then
@@ -139,7 +141,7 @@ instance Sort TSort FallingTile where
             Loose ->
                 return fallingTile
 
-    renderObject _ _ t@FallingTile{chipmunk = ImmutableChipmunk{}} sort@TSort{tilePixmap} ptr offset _now = do
+    renderObject _ _ t@FallingTile{chipmunk = ImmutableChipmunk{}} TSort{tilePixmap} _ptr _offset _now = do
         (position, rad) <- getRenderPositionAndAngle $ chipmunk t
         return [RenderPixmap tilePixmap position (Just rad)]
 

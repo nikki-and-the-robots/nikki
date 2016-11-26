@@ -125,7 +125,7 @@ instance Sort LSort Laser where
                   (statics ++ pickAnimationFrame laserRPs 0)
         doRenderPixmaps ptr rps
 
-    initialize app _ (Just space) sort ep (Just (OEMState arm_)) _ = io $ do
+    initialize _app _ (Just space) sort ep (Just (OEMState arm_)) _ = io $ do
         let Just arm :: Maybe LaserOEMState = cast arm_
             position = epToPosition baseSize ep
             baryCenterOffset = position2vector $ size2position (fmap (/ 2) baseSize)
@@ -159,7 +159,7 @@ instance Sort LSort Laser where
         else return laser
     updateNoSceneChange _ _ _ _ _ _ _ _ l = return l
 
-    renderObject app config object sort ptr offset now = do
+    renderObject _app _config object sort _ptr _offset now = do
         renderPosition <- fst <$> getRenderPositionAndAngle (chipmunk object)
         return $ renderLasers sort object renderPosition now
 
@@ -206,7 +206,7 @@ laserShapeAttributes = ShapeAttributes {
 -- * updating
 
 updateLaserActivation :: Space -> Laser -> IO ()
-updateLaserActivation space laser = do
+updateLaserActivation _space laser = do
     let ct = if laser ^. active then DeadlyPermeableCT else PermeableCT
     setMyCollisionType ct (laserShape laser)
 

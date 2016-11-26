@@ -73,7 +73,7 @@ instance Sort PSort Platform where
                 doRenderPixmaps ptr $ singleton $ renderRobotEyes (robotEyes sort)
                     (renderPosition +~ offset) 0 eyesOffset eyesState 0
 
-    initialize app _ (Just space) sort ep (Just (OEMState oemState_)) _ = io $ do
+    initialize _app _ (Just space) sort ep (Just (OEMState oemState_)) _ = io $ do
         let Just oemState = cast oemState_
             baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
 
@@ -86,7 +86,7 @@ instance Sort PSort Platform where
 
         let path = toPath (size sort) oemState
         return $ Platform (size sort) chip path
-    initialize app _ Nothing sort ep _ _ = do
+    initialize _app _ Nothing sort ep _ _ = do
         let baryCenterOffset = size2vector $ fmap (/ 2) $ size sort
             position = epToPosition (size sort) ep
             vector = position2vector position +~ baryCenterOffset
@@ -103,12 +103,12 @@ instance Sort PSort Platform where
 
     isUpdating = const True
 
-    updateNoSceneChange sort _ config _ mode now contacts cd =
+    updateNoSceneChange _sort _ config _ _mode _now _contacts cd =
         control (config ^. controls) cd >=>
         return . updateLogic >=>
         passThrough applyPlatformForce
 
-    renderObject _ _ platform sort ptr offset now = do
+    renderObject _ _ platform sort _ptr _offset now = do
         (position, rad) <- getRenderPositionAndAngle $ chipmunk platform
         let renderPosition = position +~ physicsPadding
             robot = RenderPixmap (pix sort) renderPosition Nothing
@@ -141,7 +141,7 @@ mkPoly sort = mkRect
     size_@(Size width height) = fmap realToFrac $ size sort
 
 bodyAttributes :: PSort -> Vector -> BodyAttributes
-bodyAttributes sort pos =
+bodyAttributes _sort pos =
     BodyAttributes pos platformMass infinity
 
 -- | tile friction to allow better walking
@@ -149,7 +149,7 @@ shapeAttributes = robotShapeAttributes{friction = platformFriction}
 
 -- | reads an OEMPath and returns the path for the game
 toPath :: Size Double -> OEMPath -> Path
-toPath size (OEMPath _ _ cursor path active) =
+toPath size (OEMPath _ _ _cursor path active) =
     mkPath active $ map (epToCenterVector size) (getPathList path)
 
 
@@ -162,8 +162,8 @@ control config (True, cd) platform | isRobotActionPressed config cd = do
 control _ _ platform = return platform
 
 swapOnOffState :: Chipmunk -> Path -> IO Path
-swapOnOffState c p@(SingleNode n Nothing) = return p
-swapOnOffState c (SingleNode _ (Just p)) = return p
+swapOnOffState _ p@(SingleNode _ Nothing) = return p
+swapOnOffState _ (SingleNode _ (Just p)) = return p
 swapOnOffState c path@Path{} = do
     position <- getPosition c
     return $ SingleNode position (Just path)

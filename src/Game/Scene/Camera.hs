@@ -71,7 +71,7 @@ getCameraPosition ptr scene =
 
 -- | Ensures, the camera stays above the (possible) lower limit of the scene.
 aboveLowerLimit :: MonadIO m => Qt.Ptr Qt.QPainter -> Maybe CpFloat -> Position -> m Position
-aboveLowerLimit ptr Nothing p = return p
+aboveLowerLimit _ptr Nothing p = return p
 aboveLowerLimit ptr (Just lowerLimit) (Vector x y) = io $ do
     size <- fmap realToFrac <$> Qt.sizeQPainter ptr
     let newY = min (lowerLimit - Qt.height size / 2) y

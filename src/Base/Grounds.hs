@@ -104,7 +104,7 @@ belowSelected index grounds =
 -- place in the Grounds-value, including the render number (which is not the
 -- same as the index).
 describeLayer :: Grounds a -> GroundsIndex -> String
-describeLayer (Grounds bgs ml fgs) gi = case gi of
+describeLayer (Grounds bgs _ml fgs) gi = case gi of
     Backgrounds i -> "background " ++
         show (succ $ indexableNumber bgs i)
     MainLayer -> "mainlayer"

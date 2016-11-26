@@ -65,7 +65,7 @@ convertToNewest x = x
 -- This instance has to work with the versioned
 -- constructors!!!
 instance Binary HighScoreFile where
-    put s@(HighScoreFile_0 x) = put $ convertToNewest s
+    put s@(HighScoreFile_0 _) = put $ convertToNewest s
     put (HighScoreFile_1 lhs ehs) = do
         putWord8 1
         put lhs
@@ -94,12 +94,12 @@ saveScore (levelUID -> uid) currentScore = do
             return (Nothing, NoNewRecord, NoNewRecord)
         (Score_1_Tried, Just highScore) ->
             return (Just highScore, NoNewRecord, NoNewRecord)
-        (Score_1_Passed scoreTime scoreBatteryPower, oldHighScore)
+        (Score_1_Passed _scoreTime scoreBatteryPower, oldHighScore)
             | oldHighScore `elem` [Nothing, Just Score_1_Tried] -> do
                 setHighScore uid currentScore
                 let batteryRecord = if scoreBatteryPower == 0 then NoNewRecord else NewRecord
                 return (Nothing, NewRecord, batteryRecord)
-        (Score_1_Passed scoreTime scoreBatteryPower, Just highScore@Score_1_Passed{}) -> do
+        (Score_1_Passed _scoreTime _scoreBatteryPower, Just highScore@Score_1_Passed{}) -> do
             let newHighScore =
                     updateRecord timeCompare scoreTimeA currentScore $
                     updateRecord compare scoreBatteryPowerA currentScore $
@@ -111,7 +111,7 @@ saveScore (levelUID -> uid) currentScore = do
                 record batteryCompare scoreBatteryPowerA currentScore highScore)
   where
     timeCompare a b = swapOrdering $ compare a b
-    batteryCompare 0 x = LT
+    batteryCompare 0 _ = LT
     batteryCompare a b = compare a b
 
     updateRecord :: Compare a -> Accessor Score a -> Score -> Score -> Score
