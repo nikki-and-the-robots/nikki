@@ -167,7 +167,7 @@ tests:
   testsuite:
     main: testsuite.hs
     source-dirs:
-    - testsuite
+    - test
     - ./.
     dependencies:
     - QuickCheck

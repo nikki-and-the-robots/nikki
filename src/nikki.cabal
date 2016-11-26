@@ -188,7 +188,7 @@ test-suite testsuite
   type: exitcode-stdio-1.0
   main-is: testsuite.hs
   hs-source-dirs:
-      testsuite
+      test
     , ./.
   ghc-options: -fwarn-missing-fields -fwarn-dodgy-imports -fwarn-missing-methods -fwarn-tabs -fwarn-unused-do-bind -fwarn-unused-imports -fno-warn-overlapping-patterns -fno-warn-missing-signatures -threaded -Wall -fno-warn-overlapping-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-incomplete-patterns -fno-warn-orphans -fno-warn-type-defaults
   build-depends:

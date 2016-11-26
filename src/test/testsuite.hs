@@ -22,6 +22,3 @@ main = do
     Physics.Chipmunk.Types.Tests.tests
     Physics.Chipmunk.StickyEdges.Tests.tests
     Sorts.Tiles.Baking.Tests.tests
-
-i :: Monad m => a -> m ()
-i = const $ return ()
