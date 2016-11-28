@@ -1,0 +1,63 @@
+name: scripts
+version: '0.1'
+synopsis: helper scripts for various things
+category: scripts
+author: Sönke Hahn
+maintainer: shahn@joyridelabs.de
+license: LGPL-3
+homepage: joyridelabs.de
+source-dirs:
+- ./.
+- '..'
+extra-libraries:
+- qtwrapper
+- QtOpenGL
+- QtGui
+- QtCore
+dependencies:
+- base >=4 && <5
+- binary
+- syb
+- containers
+- directory
+- filepath
+- mtl >=2
+- process
+- Hipmunk >=5.2.0.2
+- sfml-audio
+- safe
+- random
+- StateVar
+- transformers
+- time
+- parsec ==3.*
+- FindBin
+- clocked
+- cmdargs >=0.6.6
+- MonadCatchIO-transformers >=0.2.2.2
+- HTTP ==4000.2.*
+- temporary >=1.1.1
+- bytestring >=0.9.1.7
+- LibZip >=0.2.0.1
+- uniplate >=1.6
+- data-accessor >=0.2.1.7
+- data-accessor-mtl
+- vector
+- strict
+- attoparsec
+- aeson
+- deepseq
+- text
+- template
+- utf8-string
+- bifunctors
+- hashable
+- network
+- binary-communicator
+- email-validate
+- string-conversions
+executables:
+  writeEmptyTemplateLevel:
+    main: writeEmptyTemplateLevel.hs
+    ghc-options: -O0
+    extra-lib-dirs: ../cpp/dist
