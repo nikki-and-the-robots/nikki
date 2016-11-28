@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.15.0.
+-- This file has been generated from package.yaml by hpack version 0.14.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -83,7 +83,6 @@ executable core
   else
     ghc-options: -O2 -optl-s
   if os(osx)
-    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
     ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -headerpad_max_install_names
   if os(linux)
     extra-lib-dirs:
@@ -344,7 +343,6 @@ executable nikki
   else
     ghc-options: -O1 -optl-s
   if os(osx)
-    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
     ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -headerpad_max_install_names
   if os(linux)
     build-depends:
