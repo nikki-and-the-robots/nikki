@@ -5,3 +5,4 @@
 /src/dist
 /src/cpp/dist
 /src/cpp/.stack-work/
+/src/Graphics/Qt/CPPWrapper_stub.h
