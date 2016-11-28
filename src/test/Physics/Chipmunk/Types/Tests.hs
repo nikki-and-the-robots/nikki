@@ -3,16 +3,13 @@
 module Physics.Chipmunk.Types.Tests where
 
 
-import Data.Abelian
+import           Data.Abelian
+import           Test.QuickCheck
 
-import Test.QuickCheck
-
-import Physics.Chipmunk
-import Physics.Chipmunk.Tests ()
-
-import Utils
-
-import Utils.Tests
+import           Physics.Chipmunk
+import           Physics.Chipmunk.Tests ()
+import           Utils
+import           UtilsSpec
 
 
 tests :: IO ()

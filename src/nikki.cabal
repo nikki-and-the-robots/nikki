@@ -619,7 +619,7 @@ test-suite slow
       Spec
       TestsuiteSpec
       Top.MainSpec
-      Utils.Tests
+      UtilsSpec
       Base
       Base.Animation
       Base.Application
@@ -890,7 +890,7 @@ test-suite spec
       Sorts.Tiles.Baking.Tests
       TestsuiteSpec
       Top.MainSpec
-      Utils.Tests
+      UtilsSpec
       Base
       Base.Animation
       Base.Application
