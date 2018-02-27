@@ -2,7 +2,7 @@ name: nikki
 version: '1.0.1'
 category: Game
 author: Florian Hofer, Sönke Hahn, Nikolaus Muxfeldt, qubodup
-maintainer: shahn@joyridelabs.de
+maintainer: soenkehahn@gmail.com
 license: LGPL-3
 ghc-options:
 - -Wall
