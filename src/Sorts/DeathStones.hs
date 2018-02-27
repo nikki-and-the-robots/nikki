@@ -110,7 +110,7 @@ instance Sort SSort Stone where
         renderPixmapSimple ptr $ head $ pixmaps sort
 
     initialize _app _ Nothing sort editorPosition Nothing _ = io $ do
-        let (shapes, baryCenterOffset) = mkShapes $ size sort
+        let (_shapes, baryCenterOffset) = mkShapes $ size sort
             position = epToPosition (size sort) editorPosition
         return $ Stone $ ImmutableChipmunk position 0 baryCenterOffset []
     initialize _app _ (Just space) sort editorPosition Nothing _ = io $ do
@@ -137,7 +137,7 @@ instance Sort SSort Stone where
 -- * merging
 
 mergeDeathStones :: Indexable (EditorObject Sort_) -> Indexable (EditorObject Sort_)
-mergeDeathStones ixs = 
+mergeDeathStones ixs =
     append otherObjects (ftoList $ inner deathStones)
   where
     otherObjects = I.filter (isNothing . unwrapLaser . editorSort) ixs
@@ -177,7 +177,7 @@ merged elements =
 
     -- all lower left and upper right corners
     allCorners = concat $ map
-        (\ eo -> 
+        (\ eo ->
             (eo ^. editorPosition) :
             upperRight eo :
             [])
@@ -290,7 +290,7 @@ instance Sort MergedLasersSort MergedLasers where
         error "renderIconified: use unmerged lasers"
 
     initialize _app _ Nothing sort editorPosition Nothing _ = io $ do
-        let (shapes, baryCenterOffset) = mkShapes $ size sort
+        let (_shapes, baryCenterOffset) = mkShapes $ size sort
             position = epToPosition (size sort) editorPosition
             chip = ImmutableChipmunk position 0 baryCenterOffset []
         pix <- bakeMergedLasers editorPosition (mergedLasers sort)

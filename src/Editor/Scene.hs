@@ -146,16 +146,16 @@ keyPress config app b = do
 -- arrow keys
 normalMode :: Key -> EditorScene Sort_ -> Maybe (EditorScene Sort_)
 normalMode LeftArrow scene@EditorScene{cursor = (EditorPosition x y)} =
-    let (EditorPosition sx sy) = getCursorStep scene
+    let (EditorPosition sx _sy) = getCursorStep scene
     in Just scene{cursor = (EditorPosition (x - sx) y)}
 normalMode RightArrow scene@EditorScene{cursor = (EditorPosition x y)} =
-    let (EditorPosition sx sy) = getCursorStep scene
+    let (EditorPosition sx _sy) = getCursorStep scene
     in Just scene{cursor = (EditorPosition (x + sx) y)}
 normalMode UpArrow scene@EditorScene{cursor = (EditorPosition x y)} =
-    let (EditorPosition sx sy) = getCursorStep scene
+    let (EditorPosition _sx sy) = getCursorStep scene
     in Just scene{cursor = (EditorPosition x (y - sy))}
 normalMode DownArrow scene@EditorScene{cursor = (EditorPosition x y)} =
-    let (EditorPosition sx sy) = getCursorStep scene
+    let (EditorPosition _sx sy) = getCursorStep scene
     in Just scene{cursor = (EditorPosition x (y + sy))}
 
 -- add object

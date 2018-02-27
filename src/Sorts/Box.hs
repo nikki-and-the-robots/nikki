@@ -65,7 +65,7 @@ instance Sort BSort Box where
                     shapesWithAttributes baryCenterOffset
         return $ Box chip
     initialize _app _ Nothing sort editorPosition Nothing _ = io $ do
-        let (shapes, baryCenterOffset) = mkShapes $ size sort
+        let (_shapes, baryCenterOffset) = mkShapes $ size sort
             position = epToPosition (size sort) editorPosition
         return $ Box $ ImmutableChipmunk position 0 baryCenterOffset []
     immutableCopy (Box x) = CM.immutableCopy x >>= return . Box

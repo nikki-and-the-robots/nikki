@@ -28,7 +28,7 @@ header app =
     capitalizeProse >>>
     proseToGlyphs (standardFont app) >>>
     fmap glyphToHeaderCube >>>
-    addStartAndEndCube app >>>
+    addStartAndEndCube >>>
     hBox >>>
     renderable
 
@@ -49,14 +49,12 @@ equalsSpace (Glyph c _) = " " == c
 equalsSpace ErrorGlyph{} = False
 
 -- | Adds one cube before and one cube after the header.
-addStartAndEndCube :: Application -> [HeaderCube] -> [HeaderCube]
-addStartAndEndCube app inner =
+addStartAndEndCube :: [HeaderCube] -> [HeaderCube]
+addStartAndEndCube inner =
     StartCube :
     inner ++
     EndCube :
     []
-  where
-    pixmaps = headerCubePixmaps $ applicationPixmaps app
 
 instance Renderable HeaderCube where
     label = const "HeaderCube"

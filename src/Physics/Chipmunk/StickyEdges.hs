@@ -16,7 +16,6 @@ module Physics.Chipmunk.StickyEdges (removeStickyEdges, Rectangle(..), rotateRec
 import Prelude hiding (Left, Right)
 
 import Data.Abelian
-import Data.Directions
 
 import Control.Arrow
 
@@ -168,9 +167,3 @@ rotatePolygon90 v = map (fmap rotateVector90) (tail v +: head v)
 
 rotateVector90 :: Vector -> Vector
 rotateVector90 (Vector x y) = Vector (- y) x
-
-rotateDirection :: Direction -> Direction
-rotateDirection DLeft = DUp
-rotateDirection DUp = DRight
-rotateDirection DRight = DDown
-rotateDirection DDown = DLeft

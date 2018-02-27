@@ -63,11 +63,6 @@ data StaticPixmap a
             a
   deriving (Show, Eq, Ord)
 
-bpSize :: StaticPixmap Bool -> Size Double
-bpSize (StaticPixmap _ s _ _ _) = s
-
-bpPixmap (StaticPixmap _ _ p _ _) = p
-
 setOverlappingAnimation :: a -> StaticPixmap b -> StaticPixmap a
 setOverlappingAnimation x (StaticPixmap p s pix o _) =
     StaticPixmap p s pix o x
@@ -302,10 +297,8 @@ extend d (Grouped grouped) r =
     -- overwriting the dimensional accessors
     x_ = posThis d
     y_ = posOther d
-    width = (^. sizeThis d)
     height = (^. sizeOther d)
     width_ = sizeThis d
-    height_ = sizeOther d
 
 
 -- | Searches the BPs to extend the currently handled BP.
@@ -336,12 +329,7 @@ searchExtenders d p l list =
         (componentWise (>) (lowerRight bp) searched == split True)
 
     -- overwriting the dimensional accessors
-    x_ = posThis d
     y_ = posOther d
-    width = (^. sizeThis d)
-    height = (^. sizeOther d)
-    width_ = sizeThis d
-    height_ = sizeOther d
 
 
 -- | Returns if a point is on a given Rect (including edges).

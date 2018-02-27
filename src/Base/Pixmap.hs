@@ -217,4 +217,3 @@ uniqueKey x = do
 {-# noinline _uniqueKeys #-}
 _uniqueKeys :: IORef (Map (ForeignPtr QPixmap) String, [Int])
 _uniqueKeys = unsafePerformIO $ newIORef (empty, [0 ..])
-

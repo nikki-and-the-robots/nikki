@@ -98,21 +98,6 @@ renderFPS app config ptr fps = do
     translate ptr $ Position (fromUber 1) (height size - height renderSize)
     action
 
-writeDistribution :: FilePath -> FilePath -> IO ()
-writeDistribution srcFile destFile = do
-    readFile srcFile >>= (writeFile destFile . inner)
-  where
-    inner :: String -> String
-    inner =
-        lines >>> map read >>>
-        calculateDistribution >>>
-        map (\ (a, b) -> show a ++ " " ++ show b) >>> unlines
-
-calculateDistribution :: [Int] -> [(Int, Int)]
-calculateDistribution list =
-    map (\ n -> (n, length (filter (== n) list))) [minimum list .. maximum list]
-
-
 -- * logHandle
 
 {-# NOINLINE logHandle #-}

@@ -152,6 +152,3 @@ resetContactRef (ContactRef empty ref) = do
 readContactRef :: ContactRef x -> IO x
 readContactRef (ContactRef _ ref) =
     readIORef ref
-
-
-

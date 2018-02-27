@@ -9,14 +9,10 @@ module Game.MainLoop (
   ) where
 
 
-import Text.Logging
-
 import Control.Monad.State hiding ((>=>))
 import Control.Concurrent
 
 import Clocked
-
-import Graphics.Qt
 
 import Utils
 
@@ -25,12 +21,6 @@ import Base
 import Game.Scene
 import Game.Menus
 
-
--- prints the version number of qt and exits
-debugQtVersion :: IO ()
-debugQtVersion = do
-    v <- qtVersion
-    logg Info ("Qt-Version: " ++ v)
 
 -- | create AppState for game mode
 gameAppState :: Application -> Parent -> Bool -> GameState -> AppState
