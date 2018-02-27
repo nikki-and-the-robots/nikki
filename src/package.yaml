@@ -9,7 +9,6 @@ ghc-options:
 - -fno-warn-incomplete-patterns
 - -fno-warn-missing-signatures
 - -fno-warn-name-shadowing
-- -fno-warn-type-defaults
 - -fno-warn-unused-binds
 - -threaded
 dependencies:
@@ -159,13 +158,6 @@ tests:
     dependencies:
     - QuickCheck
     - hspec
-    ghc-options:
-    - -Wall
-    - -fno-warn-incomplete-patterns
-    - -fno-warn-missing-signatures
-    - -fno-warn-name-shadowing
-    - -fno-warn-type-defaults
-    - -fno-warn-unused-binds
     when:
     - condition: os(linux)
       extra-lib-dirs: cpp/dist
@@ -204,13 +196,6 @@ tests:
     - ./.
     dependencies:
     - QuickCheck
-    ghc-options:
-    - -Wall
-    - -fno-warn-incomplete-patterns
-    - -fno-warn-missing-signatures
-    - -fno-warn-name-shadowing
-    - -fno-warn-type-defaults
-    - -fno-warn-unused-binds
     when:
     - condition: os(linux)
       extra-lib-dirs: cpp/dist

@@ -307,7 +307,8 @@ renderScene app config ptr scene debugging = do
         size <- sizeQPainter ptr
         let Size width height :: Size CpFloat = fmap realToFrac size
             offsetVector = - (center - Vector (width / 2) (height / 2))
-            offset = fmap (fromIntegral . truncate) $ vector2position offsetVector
+            offset = fmap (fromIntegral . truncateInteger) $
+              vector2position offsetVector
 
         clearScreen ptr black
 
@@ -322,7 +323,6 @@ renderScene app config ptr scene debugging = do
             fmapM_ (renderObjectGrid ptr offset) $ scene ^. objects ^. gameMainLayer
         io $ debugging ptr offset
         Profiling.Physics.render app config ptr now
-
 
 renderObjects app config windowSize ptr offset now gameGrounds | not develMode =
     when (not $ omit_pixmap_rendering config) $ do
@@ -404,7 +404,7 @@ renderBatteryOSD ptr app configuration windowSize scene = do
 renderGameTime ptr app configuration windowSize now = do
     let text = pv $ (watchChar : zeroSpaceChar : timeFormat now)
     renderOSD ptr app configuration windowSize text $ \ osdSize ->
-        fmap (fromIntegral . floor) $
+        fmap (fromIntegral . floorInteger) $
         Position ((width windowSize - width osdSize) / 2) osdPadding
 
 renderSwitchesOSD ptr app configuration windowSize scene = do

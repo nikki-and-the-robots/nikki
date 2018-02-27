@@ -666,3 +666,9 @@ firstAStrict = accessor (\ (a :!: _) -> a) (\ a (_ :!: b) -> (a :!: b))
 zipStrict :: [a] -> [b] -> [Pair a b]
 zipStrict (a : ra) (b : rb) = (a :!: b) : zipStrict ra rb
 zipStrict _ _ = []
+
+floorInteger :: Double -> Integer
+floorInteger = floor
+
+truncateInteger :: (RealFrac a) => a -> Integer
+truncateInteger = truncate

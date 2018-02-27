@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 226e96635ea4d7e0e1193e4e5adab40d342cbe796d37c43c31f1bae1c94481ad
+-- hash: f31c448a850e5403cb7a2e102cdb56f373ff11336d724d4acc87b5be229ee72b
 
 name:           nikki
 version:        1.0.1
@@ -22,7 +22,7 @@ executable core
   main-is: Main.hs
   hs-source-dirs:
       ./.
-  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded
+  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -threaded
   build-depends:
       FindBin >=0.0.5
     , HTTP ==4000.2.*
@@ -273,7 +273,7 @@ executable nikki
   main-is: Distribution/AutoUpdate/Restarter.hs
   hs-source-dirs:
       ./.
-  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded
+  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -threaded
   build-depends:
       FindBin >=0.0.5
     , HTTP ==4000.2.*
@@ -506,7 +506,7 @@ test-suite slow
   hs-source-dirs:
       test
       ./.
-  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds
+  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -threaded
   build-depends:
       FindBin >=0.0.5
     , HTTP ==4000.2.*
@@ -767,7 +767,7 @@ test-suite spec
   hs-source-dirs:
       test
       ./.
-  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds
+  ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-unused-binds -threaded
   build-depends:
       FindBin >=0.0.5
     , HTTP ==4000.2.*

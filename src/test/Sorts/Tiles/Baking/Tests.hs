@@ -99,7 +99,7 @@ renderToPixmap debugMode now animations = do
     painter <- newQPainter result
     resetMatrix painter
     translate painter (negateAbelian upperLeft)
-    forM_ (zip pixmaps [1 ..]) $ \ ((pix, pos), _) -> do
+    forM_ (zip pixmaps [1 :: Integer ..]) $ \ ((pix, pos), _) -> do
         let areaPos = pos +~ pix ^. pixmapOffset
             areaSize = pixmapImageSize pix
         drawPixmap painter areaPos (pixmap pix)

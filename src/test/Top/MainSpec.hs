@@ -36,5 +36,6 @@ spec = do
             exitWith $ ExitFailure 42
       forkThreads render logic `shouldThrow` (== (ExitFailure 42))
 
+wait :: Double -> IO ()
 wait seconds =
-    threadDelay $ round (seconds * 10 ^ 6)
+    threadDelay $ round (seconds * 10 ^ (6 :: Int))
