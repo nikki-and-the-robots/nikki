@@ -168,8 +168,6 @@ touchesDeadlyHandler :: Scene Object_ -> Maybe (Scene Object_)
 touchesDeadlyHandler scene | isGameOver =
     Just $ mode ^= (mkLevelFinished scene Failed) $ scene
   where
-    now = scene ^. spaceTime
-    batteries = scene ^. batteryPower
     isGameOver =
         isGameMode (scene ^. mode)
         && nikkiTouchesDeadly (scene ^. contacts)
@@ -184,8 +182,6 @@ levelPassed scene =
   where
     allTriggered = pressed >= total && total > 0
     (pressed :!: total) = scene ^. switches
-    now = scene ^. spaceTime
-    batteries = scene ^. batteryPower
 
 
 -- * chipmunk stepping

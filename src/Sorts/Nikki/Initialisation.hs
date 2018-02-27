@@ -61,8 +61,6 @@ mkPolys =
     (surfaceVelocityShape, otherShapes, baryCenterOffset)
 
 -- tuning variables for polygons
-eps :: Int
-eps = 1
 pawThickness = fromUber 3
 
 -- the ones where surface velocity (for walking) is applied
@@ -143,7 +141,7 @@ uniqueNikki app objects =
     addNikki objects =
         newObjects
       where
-        (newIndex, newScene) = I.insert nikki (objects ^. mainLayer .> content)
+        (_newIndex, newScene) = I.insert nikki (objects ^. mainLayer .> content)
         newObjects = mainLayer .> content ^= newScene $ objects
         nikki :: EditorObject Sort_
         nikki = EditorObject nikkiSort (EditorPosition 0 0) Nothing

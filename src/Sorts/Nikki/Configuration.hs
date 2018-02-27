@@ -87,7 +87,7 @@ walljumpHorizontalFactor :: CpFloat = 0.69
 -- Must be >= 1.
 -- 1      - the downwards velocity is eliminated while jumping
 -- bigger - the downwards velocity has more and more influence
--- No matter how high the value, the downwards velocity gets always clipped, 
+-- No matter how high the value, the downwards velocity gets always clipped,
 -- to avoid wall jumps that point downwards.
 correctionSteepness :: CpFloat = 1.0004 -- 1.005
 
@@ -153,8 +153,6 @@ frameTimes state = case (action state, direction state) of
     airborne = zip
        (0 : repeat 1)
        (0.6 : repeat 10)
-    terminal = singleFrame
-    grip = singleFrame
     singleFrame = repeat (0, 10)
 
 

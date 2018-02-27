@@ -119,7 +119,6 @@ instance Sort LSort Laser where
     renderEditorObject ptr offset (EditorObject sort ep (Just (OEMState arm_))) = do
         let Just arm :: Maybe LaserOEMState = cast arm_
             pos = epToPosition baseSize ep
-            laserPixmap = head (laser (lasers sort ! oemDirection arm))
             (statics, laserRPs) = mkLaserRenderPixmaps sort pos arm
             rps = map (renderPosition ^: (+~ offset))
                   (statics ++ pickAnimationFrame laserRPs 0)
@@ -132,7 +131,7 @@ instance Sort LSort Laser where
             vector = position2vector position +~ baryCenterOffset
             mbc = mapVectors (-~ baryCenterOffset)
             solidShapes = map (mkShapeDescription solidShapeAttributes . mbc) $
-                          mkSolidShapes sort arm
+                          mkSolidShapes arm
             laserShape = mkShapeDescription laserShapeAttributes $ mbc $ mkLaserShape arm
             (staticRPs, laserRPs) = mkLaserRenderPixmaps sort position arm
             robotShapes = solidShapes +: laserShape
@@ -166,14 +165,13 @@ instance Sort LSort Laser where
 
 -- * shapes
 
-mkSolidShapes :: LSort -> LaserOEMState -> [ShapeType]
-mkSolidShapes sort arm =
+mkSolidShapes :: LaserOEMState -> [ShapeType]
+mkSolidShapes arm =
     baseS :
     endS :
     []
   where
     offsets = laserOffsets ! oemDirection arm
-    armPixmaps = lasers sort ! oemDirection arm
 
     baseS = mkRect (baseStartOffset offsets) (baseStartSize offsets)
     endS = mkRect endPosition endSize

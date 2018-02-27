@@ -109,9 +109,9 @@ initialDebuggingSignals =
 --     play 1 ++
     []
   where
-    edit n = DownArrow : DownArrow : DownArrow : Ctrl :
+    _edit n = DownArrow : DownArrow : DownArrow : Ctrl :
              replicate n DownArrow ++ Ctrl : []
-    play n = DownArrow : Ctrl : Ctrl :
+    _play n = DownArrow : Ctrl : Ctrl :
              replicate (n - 1) DownArrow ++ Ctrl : []
 
 

@@ -268,7 +268,7 @@ barrelShapeTypes start =
         [])
 
     wallThickness = fromUber 1
-    size@(Vector width height) = size2vector $ fmap realToFrac barrelSize
+    Vector width height = size2vector $ fmap realToFrac barrelSize
 
 barrelChamfer = fromUber 3
 

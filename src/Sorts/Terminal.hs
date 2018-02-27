@@ -164,12 +164,6 @@ data ColorLights a = ColorLights {
 allSelectors :: [forall a . (ColorLights a -> a)]
 allSelectors = [red_, blue_, green_, yellow_]
 
-toList :: ColorLights a -> [a]
-toList (ColorLights a b c d) = [a, b, c, d]
-
-fromList :: [a] -> ColorLights a
-fromList [a, b, c, d] = ColorLights a b c d
-
 fzipWith :: (a -> b -> c) -> ColorLights a -> ColorLights b -> ColorLights c
 fzipWith f (ColorLights a b c d) (ColorLights p q r s) =
     ColorLights (f a p) (f b q) (f c r) (f d s)
@@ -223,11 +217,6 @@ pixmaps BatteryTSort{tsort} = pixmaps tsort
 getOsdPixmaps :: TSort -> OsdPixmaps
 getOsdPixmaps TSort{..} = osdPixmaps
 getOsdPixmaps BatteryTSort{..} = getOsdPixmaps tsort
-
-isTerminal :: Sort sort o => sort -> Bool
-isTerminal (cast -> Just _ :: Maybe TSort) = True
-isTerminal (cast -> Just (Sort_ inner) :: Maybe Sort_) = isTerminal inner
-isTerminal _ = False
 
 data Terminal
   = Terminal {
@@ -297,10 +286,6 @@ data MenuState = NikkiState | RobotState
 
 initialMenuState :: Seconds -> State
 initialMenuState now = State NikkiMode RobotState 0 now DontExit
-
-isNikkiSelected :: State -> Bool
-isNikkiSelected (State _ NikkiState _ _ _) = True
-isNikkiSelected (State _ RobotState _ _ _) = False
 
 -- | resets the terminal state, when it is started to be used.
 reset :: Seconds -> [RobotIndex] -> State -> State
@@ -565,7 +550,7 @@ putBatteriesInTerminal config scene _now BatteryTSort{insertionSound} t@StandbyB
     case levelFile scene of
         (EpisodeLevel episode _ _ _ _) -> do
             _score <- getEpisodeScore $ euid episode
-            batteries <- getCollectedBatteries scene episode
+            batteries <- getCollectedBatteries episode
             setEpisodeScore (euid episode) (EpisodeScore_0 True batteries)
             when (batteries < batteryNumberNeeded) $
                 triggerSound config insertionSound
@@ -573,17 +558,12 @@ putBatteriesInTerminal config scene _now BatteryTSort{insertionSound} t@StandbyB
         -- for testing in normal mode
         _ -> return $ batteryNumber ^= (scene ^. batteryPower .> firstAStrict) $ t
 
-getCollectedBatteries :: Scene o -> Episode LevelFile -> IO Integer
-getCollectedBatteries scene episode =
+getCollectedBatteries :: Episode LevelFile -> IO Integer
+getCollectedBatteries episode =
     getHighScores >$> \ hs ->
         -- insert the actual collected batteries for the current level
-    let file = levelFile scene
-        upToDateScore = error "not used" -- alter alteration (levelUID file) $ getEpisodeBatteries hs
-        alteration :: Maybe Integer -> Maybe Integer
-        alteration Nothing = Just $ (scene ^. batteryPower .> firstAStrict)
-        alteration (Just s) = Just $ max (scene ^. batteryPower .> firstAStrict) s
     -- TODO: pretend, there are no batteries in the outro level for now
-    in sumOfEpisodeBatteries hs episode -- upToDateScore
+    sumOfEpisodeBatteries hs episode
 
 bootingAnimationTime = bootingFrameTime * fromIntegral bootingAnimationSteps
 
