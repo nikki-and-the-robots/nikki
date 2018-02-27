@@ -164,10 +164,12 @@ mkPolys =
         rightEngine :
         [])
     bodyRect = mkRect (fmap fromUber $ Position 6 0) robotBodySize
-    legsRect = mkRect (fmap fromUber $ Position 7 15) (fmap fromUber $ Size 13 6)
+    legsRect = mkRect
+      (fmap fromUber (Position 7 15 :: Qt.Position Integer))
+      (fmap fromUber $ Size 13 6)
     leftEngine = mkRect (fmap fromUber $ Position 0 5) engineSize
     rightEngine = mkRect (fmap fromUber $ Position 21 5) engineSize
-    engineSize = fmap fromUber $ Size 6 12
+    engineSize = fmap fromUber (Size 6 12 :: Size Integer)
 
     wh = w / 2
     hh = h / 2

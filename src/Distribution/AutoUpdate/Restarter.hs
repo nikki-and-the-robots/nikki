@@ -17,6 +17,7 @@ main = do
     args <- getArgs
     loop 5 $ rawSystem executable args
   where
+    loop :: Int -> IO ExitCode -> IO ()
     loop 0 _ = error "restarted 5 times: aborting"
     loop n action = do
         exitCode <- action

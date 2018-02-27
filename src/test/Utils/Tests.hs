@@ -72,7 +72,7 @@ testExamples msg p examples =
     mapM_ (\ (i, example) -> quickCheckOnce $
         putTestCase (msg ++ " element no.: " ++ show i) $
         p example)
-        (zip [0..] examples)
+        (zip [0 :: Integer ..] examples)
 
 testEquals :: (Show e, Eq e) => e -> e -> Property
 testEquals a b =

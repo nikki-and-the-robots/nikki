@@ -56,7 +56,7 @@ drawOffender (fromTestPolygons -> offender) = do
 
 generateRandoms :: IO [(Int, Int, Int)]
 generateRandoms =
-    mapM (const inner) [1 .. 1000]
+    mapM (const inner) [1 :: Integer .. 1000]
   where
     inner = do
         let rand = randomRIO (0, 255)
