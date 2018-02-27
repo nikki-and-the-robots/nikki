@@ -2,14 +2,14 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cfc9fea6f24514d66fd0b5587438f2559091ee4d12f76a255fd64f8528316f31
+-- hash: 0304c1adaa91d5e57007f5c4aa8701c4ea2fc571a02e1ad9f83a9d7f13495c95
 
 name:           nikki
 version:        1.0.1
 category:       Game
 author:         Florian Hofer, Sönke Hahn, Nikolaus Muxfeldt, qubodup
 maintainer:     shahn@joyridelabs.de
-license:        UnspecifiedLicense
+license:        LGPL-3
 build-type:     Simple
 cabal-version:  >= 1.10
 
