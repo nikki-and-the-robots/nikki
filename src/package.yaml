@@ -3,13 +3,7 @@ version: '1.0.1'
 category: Game
 author: Florian Hofer, Sönke Hahn, Nikolaus Muxfeldt, qubodup
 maintainer: shahn@joyridelabs.de
-license: UnspecifiedLicense
-extra-source-files:
-- LICENSE
-- README
-- data/LICENSE
-- data/README
-- data/manual/editor.txt
+license: LGPL-3
 ghc-options:
 - -Wall
 - -fno-warn-incomplete-patterns
