@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.14.0.
+-- This file has been generated from package.yaml by hpack version 0.20.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: cfc9fea6f24514d66fd0b5587438f2559091ee4d12f76a255fd64f8528316f31
 
 name:           nikki
 version:        1.0.1
@@ -22,17 +24,13 @@ executable core
       ./.
   ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded
   build-depends:
-      base ==4.*
-    , directory
-    , process
-    , filepath
-    , transformers
-    , bytestring >=0.10
-    , mtl
-    , containers
-    , safe
-    , FindBin >=0.0.5
-    , utf8-string
+      FindBin >=0.0.5
+    , HTTP ==4000.2.*
+    , Hipmunk >=5.2.0.6
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , RSA >=1.2.1
+    , StateVar
     , aeson
     , base ==4.*
     , base-compat
@@ -51,23 +49,18 @@ executable core
     , directory
     , email-validate
     , filepath
-    , FindBin >=0.0.5
     , hashable
-    , Hipmunk >=5.2.0.6
-    , HTTP ==4000.2.*
-    , LibZip >=0.2.0.4
-    , MonadCatchIO-transformers >=0.2.2.2
     , mtl ==2.* && ((<2.1 || >2.1))
     , network >=2.6
+    , network-uri
     , parsec ==3.*
     , process
     , random
-    , RSA >=1.2.1
     , safe
     , sfml-audio ==0.7.* && >=0.7.1
-    , StateVar
     , stickyKeysHotKey ==0.1.*
     , strict >=0.3.2
+    , string-conversions
     , template ==0.2.*
     , temporary >=1.1.1
     , text
@@ -76,13 +69,12 @@ executable core
     , uniplate >=1.6
     , utf8-string
     , vector ==0.10.*
-    , string-conversions
-    , network-uri
   if flag(devel)
     ghc-options: -O0
   else
     ghc-options: -O2 -optl-s
   if os(osx)
+    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
     ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -headerpad_max_install_names
   if os(linux)
     extra-lib-dirs:
@@ -274,6 +266,7 @@ executable core
       Utils
       Utils.Scripting
       Version
+      Paths_nikki
   default-language: Haskell2010
 
 executable nikki
@@ -282,17 +275,13 @@ executable nikki
       ./.
   ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded
   build-depends:
-      base ==4.*
-    , directory
-    , process
-    , filepath
-    , transformers
-    , bytestring >=0.10
-    , mtl
-    , containers
-    , safe
-    , FindBin >=0.0.5
-    , utf8-string
+      FindBin >=0.0.5
+    , HTTP ==4000.2.*
+    , Hipmunk >=5.2.0.6
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , RSA >=1.2.1
+    , StateVar
     , aeson
     , base ==4.*
     , base-compat
@@ -311,23 +300,18 @@ executable nikki
     , directory
     , email-validate
     , filepath
-    , FindBin >=0.0.5
     , hashable
-    , Hipmunk >=5.2.0.6
-    , HTTP ==4000.2.*
-    , LibZip >=0.2.0.4
-    , MonadCatchIO-transformers >=0.2.2.2
     , mtl ==2.* && ((<2.1 || >2.1))
     , network >=2.6
+    , network-uri
     , parsec ==3.*
     , process
     , random
-    , RSA >=1.2.1
     , safe
     , sfml-audio ==0.7.* && >=0.7.1
-    , StateVar
     , stickyKeysHotKey ==0.1.*
     , strict >=0.3.2
+    , string-conversions
     , template ==0.2.*
     , temporary >=1.1.1
     , text
@@ -336,13 +320,12 @@ executable nikki
     , uniplate >=1.6
     , utf8-string
     , vector ==0.10.*
-    , string-conversions
-    , network-uri
   if flag(devel)
     ghc-options: -O0
   else
     ghc-options: -O1 -optl-s
   if os(osx)
+    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
     ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -headerpad_max_install_names
   if os(linux)
     build-depends:
@@ -514,6 +497,7 @@ executable nikki
       Utils
       Utils.Scripting
       Version
+      Paths_nikki
   default-language: Haskell2010
 
 test-suite slow
@@ -521,20 +505,17 @@ test-suite slow
   main-is: slow.hs
   hs-source-dirs:
       test
-    , ./.
+      ./.
   ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds
   build-depends:
-      base ==4.*
-    , directory
-    , process
-    , filepath
-    , transformers
-    , bytestring >=0.10
-    , mtl
-    , containers
-    , safe
-    , FindBin >=0.0.5
-    , utf8-string
+      FindBin >=0.0.5
+    , HTTP ==4000.2.*
+    , Hipmunk >=5.2.0.6
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , QuickCheck
+    , RSA >=1.2.1
+    , StateVar
     , aeson
     , base ==4.*
     , base-compat
@@ -553,23 +534,18 @@ test-suite slow
     , directory
     , email-validate
     , filepath
-    , FindBin >=0.0.5
     , hashable
-    , Hipmunk >=5.2.0.6
-    , HTTP ==4000.2.*
-    , LibZip >=0.2.0.4
-    , MonadCatchIO-transformers >=0.2.2.2
     , mtl ==2.* && ((<2.1 || >2.1))
     , network >=2.6
+    , network-uri
     , parsec ==3.*
     , process
     , random
-    , RSA >=1.2.1
     , safe
     , sfml-audio ==0.7.* && >=0.7.1
-    , StateVar
     , stickyKeysHotKey ==0.1.*
     , strict >=0.3.2
+    , string-conversions
     , template ==0.2.*
     , temporary >=1.1.1
     , text
@@ -578,9 +554,6 @@ test-suite slow
     , uniplate >=1.6
     , utf8-string
     , vector ==0.10.*
-    , string-conversions
-    , network-uri
-    , QuickCheck
   if os(linux)
     extra-lib-dirs:
         cpp/dist
@@ -785,6 +758,7 @@ test-suite slow
       Utils
       Utils.Scripting
       Version
+      Paths_nikki
   default-language: Haskell2010
 
 test-suite spec
@@ -792,20 +766,17 @@ test-suite spec
   main-is: Spec.hs
   hs-source-dirs:
       test
-    , ./.
+      ./.
   ghc-options: -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds -threaded -Wall -fno-warn-incomplete-patterns -fno-warn-missing-signatures -fno-warn-name-shadowing -fno-warn-type-defaults -fno-warn-unused-binds
   build-depends:
-      base ==4.*
-    , directory
-    , process
-    , filepath
-    , transformers
-    , bytestring >=0.10
-    , mtl
-    , containers
-    , safe
-    , FindBin >=0.0.5
-    , utf8-string
+      FindBin >=0.0.5
+    , HTTP ==4000.2.*
+    , Hipmunk >=5.2.0.6
+    , LibZip >=0.2.0.4
+    , MonadCatchIO-transformers >=0.2.2.2
+    , QuickCheck
+    , RSA >=1.2.1
+    , StateVar
     , aeson
     , base ==4.*
     , base-compat
@@ -824,23 +795,19 @@ test-suite spec
     , directory
     , email-validate
     , filepath
-    , FindBin >=0.0.5
     , hashable
-    , Hipmunk >=5.2.0.6
-    , HTTP ==4000.2.*
-    , LibZip >=0.2.0.4
-    , MonadCatchIO-transformers >=0.2.2.2
+    , hspec
     , mtl ==2.* && ((<2.1 || >2.1))
     , network >=2.6
+    , network-uri
     , parsec ==3.*
     , process
     , random
-    , RSA >=1.2.1
     , safe
     , sfml-audio ==0.7.* && >=0.7.1
-    , StateVar
     , stickyKeysHotKey ==0.1.*
     , strict >=0.3.2
+    , string-conversions
     , template ==0.2.*
     , temporary >=1.1.1
     , text
@@ -849,10 +816,6 @@ test-suite spec
     , uniplate >=1.6
     , utf8-string
     , vector ==0.10.*
-    , string-conversions
-    , network-uri
-    , QuickCheck
-    , hspec
   if os(linux)
     extra-lib-dirs:
         cpp/dist
@@ -1056,4 +1019,5 @@ test-suite spec
       Utils
       Utils.Scripting
       Version
+      Paths_nikki
   default-language: Haskell2010

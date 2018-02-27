@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.14.0.
+-- This file has been generated from package.yaml by hpack version 0.20.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 840b272487a38ca5ab20f09c9daf55fec7b3ac21f95df6d9daa4a204b82f4272
 
 name:           scripts
 version:        0.1
@@ -17,7 +19,7 @@ executable writeEmptyTemplateLevel
   main-is: writeEmptyTemplateLevel.hs
   hs-source-dirs:
       ./.
-    , ..
+      ..
   ghc-options: -O0
   extra-lib-dirs:
       ../cpp/dist
@@ -27,47 +29,47 @@ executable writeEmptyTemplateLevel
       QtGui
       QtCore
   build-depends:
-      base >=4 && <5
-    , binary
-    , syb
-    , containers
-    , directory
-    , filepath
-    , mtl >=2
-    , process
+      FindBin
+    , HTTP ==4000.2.*
     , Hipmunk >=5.2.0.2
-    , sfml-audio
-    , safe
-    , random
+    , LibZip >=0.2.0.1
+    , MonadCatchIO-transformers >=0.2.2.2
     , StateVar
-    , transformers
-    , time
-    , parsec ==3.*
-    , FindBin
+    , aeson
+    , attoparsec
+    , base >=4 && <5
+    , bifunctors
+    , binary
+    , binary-communicator
+    , bytestring >=0.9.1.7
     , clocked
     , cmdargs >=0.6.6
-    , MonadCatchIO-transformers >=0.2.2.2
-    , HTTP ==4000.2.*
-    , temporary >=1.1.1
-    , bytestring >=0.9.1.7
-    , LibZip >=0.2.0.1
-    , uniplate >=1.6
+    , containers
     , data-accessor >=0.2.1.7
     , data-accessor-mtl
-    , vector
-    , strict
-    , attoparsec
-    , aeson
     , deepseq
-    , text
-    , template
-    , utf8-string
-    , bifunctors
-    , hashable
-    , network
-    , binary-communicator
+    , directory
     , email-validate
+    , filepath
+    , hashable
+    , mtl >=2
+    , network
+    , parsec ==3.*
+    , process
+    , random
+    , safe
+    , sfml-audio
+    , strict
     , string-conversions
+    , syb
+    , template
+    , temporary >=1.1.1
+    , text
+    , time
+    , transformers
+    , uniplate >=1.6
+    , utf8-string
+    , vector
   other-modules:
       Nothing
       Base
@@ -236,4 +238,5 @@ executable writeEmptyTemplateLevel
       Utils
       Utils.Scripting
       Version
+      Paths_scripts
   default-language: Haskell2010
