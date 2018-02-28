@@ -27,7 +27,6 @@ import Text.Logging
 
 import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.Reader
 import Control.Exception
 
 import System.FilePath
@@ -91,42 +90,39 @@ renderThread configuration appRef =
     withMainWindow swapInterval (width defaultWindowSize) (height defaultWindowSize) $ \ window -> do
       paintEngine <- paintEngineTypeMainWindow window
       logg Debug ("paint engine: " ++ show paintEngine)
-      flip runReaderT configuration $ withNikkiIcon window $ do
-        keyPoller <- io $ newKeyPoller window
+      withNikkiIcon window $ do
+        keyPoller <- newKeyPoller window
             (initial_events configuration ++ initialDebuggingSignals)
         -- loading the gui pixmaps
-        appPixmaps <- io loadApplicationPixmaps
+        appPixmaps <- loadApplicationPixmaps
         -- showing main window
-        io $ do
-          let windowMode = if fullscreen configuration
-                then FullScreen
-                else Windowed defaultWindowSize
-          setWindowTitle window "Nikki and the Robots"
-          setWindowSize window windowMode
-          showLoadingScreen qApp window appPixmaps configuration
-          showMainWindow window
-          processEventsQApplication qApp
-
-        -- sort loading (pixmaps and sounds)
+        let windowMode = if fullscreen configuration
+              then FullScreen
+              else Windowed defaultWindowSize
+        setWindowTitle window "Nikki and the Robots"
+        setWindowSize window windowMode
+        showLoadingScreen qApp window appPixmaps configuration
+        showMainWindow window
+        processEventsQApplication qApp
         withAllSorts $ \ sorts ->
-           withApplicationSounds $ \ appSounds -> io $ do
-              storyModeAvailability <- newStoryModeAvailability window configuration
-              -- put the initialised Application in the MVar
-              let app :: Application
-                  app = Application qApp window keyPoller
-                            storyModeAvailability
-                            startAppState appPixmaps
-                          appSounds sorts
-              putMVar appRef app
-              -- will be quit by the logick thread
-              exitCode <- execQApplication qApp
-              when (exitCode /= 0) $
-                  logg Error ("error exit code from execQApplication: " ++ show exitCode)
+          withApplicationSounds $ \ appSounds -> do
+            storyModeAvailability <- newStoryModeAvailability window configuration
+            -- put the initialised Application in the MVar
+            let app :: Application
+                app = Application qApp window keyPoller
+                          storyModeAvailability
+                          startAppState appPixmaps
+                        appSounds sorts
+            putMVar appRef app
+            -- will be quit by the logick thread
+            exitCode <- execQApplication qApp
+            when (exitCode /= 0) $
+                logg Error ("error exit code from execQApplication: " ++ show exitCode)
 
-withNikkiIcon :: Ptr MainWindow -> RM a -> RM a
+withNikkiIcon :: Ptr MainWindow -> IO a -> IO a
 withNikkiIcon qWidget action = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
-        io (getDataFiles pngDir (Just ".png"))
+        getDataFiles pngDir (Just ".png")
     withApplicationIcon qWidget iconPaths action
 
 -- showLoadingScreen :: Application -> Configuration -> IO ()
