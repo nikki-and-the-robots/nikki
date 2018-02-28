@@ -1,0 +1,20 @@
+CREDITS
+
+Joyride Labs:
+* Florian Hofer
+* Sönke Hahn
+* Nikolaus Muxfeldt
+* Iwan Gabovitch
+
+Graphics and Programming by:
+* Joyride Labs
+
+Music by:
+* Cerror (cerror.bandcamp.com)
+
+Levels by:
+* Joyride Labs
+
+Initial levels design credits:
+* Julian Fiebach (Greed)
+* sauer2 (lootninja, hanoi, powergrid)

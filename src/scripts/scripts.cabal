@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a627d5a8390493881af9f12ffa8cfc151aec1e86c14258b932e3f109390d07b0
+-- hash: 2d86b3bdc8a445923ea68b8e10ca6853f534553dc645d8d918fc09bde30d012e
 
 name:           scripts
 version:        0.1
@@ -214,14 +214,11 @@ executable writeEmptyTemplateLevel
       Sorts.Terminal
       Sorts.Tiles
       Sorts.Tiles.Baking
-      StoryMode.Client
       StoryMode.Configuration
       StoryMode.Episode
       StoryMode.Menus
       StoryMode.Paths
-      StoryMode.Purchasing
       StoryMode.Types
-      StoryMode.Zip
       System.Console.CmdArgs.Missing
       Text.Logging
       Top.Game

@@ -42,8 +42,6 @@ import Base
 import Profiling.Physics
 import Profiling.FPS
 
-import StoryMode.Menus
-
 import Top.Initialisation
 import Top.Menu
 
@@ -106,11 +104,8 @@ renderThread configuration appRef =
         processEventsQApplication qApp
         withAllSorts $ \ sorts ->
           withApplicationSounds $ \ appSounds -> do
-            storyModeAvailability <- newStoryModeAvailability window configuration
-            -- put the initialised Application in the MVar
             let app :: Application
                 app = Application qApp window keyPoller
-                          storyModeAvailability
                           startAppState appPixmaps
                         appSounds sorts
             putMVar appRef app
@@ -127,7 +122,7 @@ withNikkiIcon qWidget action = do
 
 -- showLoadingScreen :: Application -> Configuration -> IO ()
 showLoadingScreen qApp window applicationPixmaps config = do
-    let app = Application qApp window err err err applicationPixmaps err err
+    let app = Application qApp window err err applicationPixmaps err err
         err = error "uninitialised field in Application: showLoadingScreen"
     postGUI $ setRenderingLooped window False
     io $ setRenderable app config (busyMessage (p "loading..."))

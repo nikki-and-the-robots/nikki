@@ -1,44 +1,33 @@
 
 module StoryMode.Paths where
 
+import Control.Exception
 
 import System.Directory
 import System.FilePath
 
+import Base.Paths.GetDataFileName
+
 import Utils
 
 
-getStoryModePath :: IO (Maybe FilePath)
+getStoryModePath :: IO FilePath
 getStoryModePath = do
-    dir <- getAppUserDataDirectory "nikki-story-mode"
+    dir <- getDataFileName "story-mode"
     exists <- doesDirectoryExist dir
-    return $ if exists then Just dir else Nothing
+    if exists
+      then return dir
+      else throwIO (ErrorCall "can't find 'nikki-story-mode' directory")
 
-createStoryModePath :: IO FilePath
-createStoryModePath = do
-    dir <- getAppUserDataDirectory "nikki-story-mode"
-    createDirectory dir
-    return dir
-
-getStoryModeDataFileName :: FilePath -> IO (Maybe FilePath)
+getStoryModeDataFileName :: FilePath -> IO FilePath
 getStoryModeDataFileName path =
-    fmap (</> ("data" </> path)) <$> getStoryModePath
+    (</> ("data" </> path)) <$> getStoryModePath
 
-getStoryModeDataFiles :: FilePath -> Maybe String -> IO (Maybe [FilePath])
+getStoryModeDataFiles :: FilePath -> Maybe String -> IO [FilePath]
 getStoryModeDataFiles path_ extension = do
-    mPath <- getStoryModeDataFileName path_
-    case mPath of
-        Nothing -> return Nothing
-        Just path -> Just <$> map (path </>) <$> io (getFiles path extension)
+    path <- getStoryModeDataFileName path_
+    map (path </>) <$> io (getFiles path extension)
 
-getStoryModeLevelsPath :: IO (Maybe FilePath)
+getStoryModeLevelsPath :: IO FilePath
 getStoryModeLevelsPath =
-    fmap (</> "levels") <$> getStoryModePath
-
-getStoryModeLoginDataFile :: IO (Maybe FilePath)
-getStoryModeLoginDataFile =
-    fmap (</> "loginData") <$> getStoryModePath
-
-getStoryModeVersionFile :: IO (Maybe FilePath)
-getStoryModeVersionFile =
-    fmap (</> "version") <$> getStoryModePath
+    (</> "levels") <$> getStoryModePath

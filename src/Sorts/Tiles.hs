@@ -81,29 +81,26 @@ tileMergingEpsilon = 1
 -- * Tile loading
 
 sorts :: [IO (Maybe Sort_)]
-sorts = mkFreeSorts ++ mkStoryModeSorts
+sorts = map (fmap Just) (mkFreeSorts ++ mkStoryModeSorts)
 
-mkFreeSorts :: [IO (Maybe Sort_)]
+mkFreeSorts :: [IO Sort_]
 mkFreeSorts = map (\ (a, b, c) -> mkSort False a b c defaultFrameTime Nothing) names
 
-mkStoryModeSorts :: [IO (Maybe Sort_)]
+mkStoryModeSorts :: [IO Sort_]
 mkStoryModeSorts =
     map (\ (a, b, c, frameTime, frameOrder) ->
         mkSort True a b c frameTime frameOrder) Sorts.StoryMode.tiles
 
 -- | returns Nothing if a story mode tile is not available
 mkSort :: Bool -> String -> Offset Int -> Size Double -> Seconds -> Maybe [Int]
-    -> IO (Maybe Sort_)
+    -> IO Sort_
 mkSort storyMode name offset size frameDuration frameOrder = do
-    mPngFiles <- getFrameFileNames storyMode name
-    case mPngFiles of
-        Nothing -> return Nothing
-        Just pngFiles -> do
-            when (null pngFiles) $
-                fail ("no png files found for tile: " ++ name)
-            let sortID = if storyMode then ("story-mode/" ++ name) else name
-            frames <- reorderFrames <$> mapM mkTilePixmap pngFiles
-            return $ Just $ Sort_ $ TSort sortID (mkAnimation frames [frameDuration])
+    pngFiles <- getFrameFileNames storyMode name
+    when (null pngFiles) $
+        fail ("no png files found for tile: " ++ name)
+    let sortID = if storyMode then ("story-mode/" ++ name) else name
+    frames <- reorderFrames <$> mapM mkTilePixmap pngFiles
+    return $ Sort_ $ TSort sortID (mkAnimation frames [frameDuration])
   where
     mkTilePixmap file = loadPixmap (fmap fromIntegral offset) size file
 
@@ -114,22 +111,18 @@ mkSort storyMode name offset size frameDuration frameOrder = do
 
 -- | Returns the list of filenames for all the frames with the given name
 -- Returns Nothing in case a story mode tile is not available.
-getFrameFileNames :: Bool -> String -> IO (Maybe [FilePath])
+getFrameFileNames :: Bool -> String -> IO [FilePath]
 getFrameFileNames storyMode name = do
     -- paths of all pngs in the corresponding directory
-    mAbsolutePaths <- getPngFiles storyMode name
-    case mAbsolutePaths of
-        Nothing -> return Nothing
-        Just absolutePaths -> do
-            -- making them relative again
-            let relativePaths = map ((takeDirectory name </>) . takeFileName) absolutePaths
-            files <- mapM (getPngFileName storyMode) $
-                    map (pngDir </>) $
-                    map third $
-                    sortBy (compare `on` snd3) $
-                    filter (\ (candidateName, _, _) -> on (==) splitDirectories name candidateName) $
-                    map parsePath relativePaths
-            return $ Just $ catMaybes files
+    absolutePaths <- getPngFiles storyMode name
+    -- making them relative again
+    let relativePaths = map ((takeDirectory name </>) . takeFileName) absolutePaths
+    mapM (getPngFileName storyMode) $
+      map (pngDir </>) $
+      map third $
+      sortBy (compare `on` snd3) $
+      filter (\ (candidateName, _, _) -> on (==) splitDirectories name candidateName) $
+      map parsePath relativePaths
   where
     parsePath :: String -> (String, Maybe Int, FilePath)
     parsePath path = case parse parseTileName "" path of
@@ -161,16 +154,14 @@ getFrameFileNames storyMode name = do
         s <- many1 digit
         return $ readNote "frameNumber" s
 
--- | returns all png files in the directory where the tile pngs should be.
--- Returns Nothing in case a storymode tile is loaded, but the story mode is not available.
-getPngFiles :: Bool -> String -> IO (Maybe [FilePath])
+getPngFiles :: Bool -> String -> IO [FilePath]
 getPngFiles False name =
-    Just <$> getDataFiles (pngDir </> takeDirectory name) (Just ".png")
+    getDataFiles (pngDir </> takeDirectory name) (Just ".png")
 getPngFiles True name =
     getStoryModeDataFiles (pngDir </> takeDirectory name) (Just ".png")
 
-getPngFileName :: Bool -> FilePath -> IO (Maybe FilePath)
-getPngFileName False file = Just <$> getDataFileName file
+getPngFileName :: Bool -> FilePath -> IO FilePath
+getPngFileName False file = getDataFileName file
 getPngFileName True file = getStoryModeDataFileName file
 
 

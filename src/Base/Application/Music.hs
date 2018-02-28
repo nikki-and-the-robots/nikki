@@ -31,15 +31,11 @@ import Base.Paths
 -- Returns an absolute file path.
 selectMusic :: LevelMetaData -> IO (Maybe FilePath)
 selectMusic (meta_musicFile -> Just wantedMusic) = do
-    mOggFile <- getStoryModeDataFileName ("music" </> normalise wantedMusic <.> "ogg")
-    case mOggFile of
-        -- no story mode installed (shouldn't be happening)
-        Nothing -> return Nothing
-        Just oggFile -> do
-            exists <- doesFileExist oggFile
-            return $ if exists
-                then Just oggFile
-                else Nothing
+    oggFile <- getStoryModeDataFileName ("music" </> normalise wantedMusic <.> "ogg")
+    exists <- doesFileExist oggFile
+    return $ if exists
+        then Just oggFile
+        else Nothing
 selectMusic meta@(meta_musicFile -> Nothing) = do
     -- choose a free music file pseudo-randomly with the level name as the seed.
     allOggsFromPublic <- getDataFiles "music" (Just ".ogg")

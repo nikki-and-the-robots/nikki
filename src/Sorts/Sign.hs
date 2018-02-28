@@ -16,8 +16,6 @@ import Data.Data
 import Data.Accessor
 import Data.StrictList
 
-import Control.Monad (join)
-
 import Text.Logging
 
 import System.FilePath
@@ -84,7 +82,7 @@ signSortsSorts sortIdSnippet names =
 getSignDataFile :: FilePath -> IO (Maybe FilePath)
 getSignDataFile dataPath = do
     publicPath <- maybeExists =<< getDataFileName dataPath
-    storyModePath <- join <$> (fmapM maybeExists =<< getStoryModeDataFileName dataPath)
+    storyModePath <- maybeExists =<< getStoryModeDataFileName dataPath
     return (publicPath <|> storyModePath)
 
 data SSort =

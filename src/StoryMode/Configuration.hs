@@ -1,12 +1,6 @@
-
 module StoryMode.Configuration where
 
-
 import StoryMode.Types
-
-
-defaultPurchasingUrl :: String
-defaultPurchasingUrl = "http://buy.joyridelabs.de/"
 
 episodes :: [Episode FilePath]
 episodes =
@@ -37,4 +31,3 @@ epTitle Episode_1 = "Episode 1"
 
 batteryNumberNeeded :: Integer
 batteryNumberNeeded = 250
-
