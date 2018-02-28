@@ -6,14 +6,14 @@ before_test:
 - curl -sS -ostack.zip -L --insecure http://www.stackage.org/stack/windows-i386
 - 7z x stack.zip stack.exe
 
-clone_folder: "c:\\stack"
+clone_folder: "c:\\nikki"
 environment:
   global:
     STACK_ROOT: "c:\\sr"
 
 test_script:
 - cd src
-- windowsCompile.sh
+- stack windowsCompile.hs
 - ..\\stack setup > nul
 - echo "" | ..\\stack --no-terminal test --jobs 1
 
