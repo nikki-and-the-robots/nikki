@@ -64,10 +64,10 @@ sortLoaders =
 --     Sorts.DebugObject.sorts :
     []
 
-withAllSorts :: (SelectTree Sort_ -> RM a) -> RM a
+withAllSorts :: (SelectTree Sort_ -> IO a) -> IO a
 withAllSorts cmd = do
-    sorts <- io $ getAllSorts
-    cmd sorts `finally` (io $ freeAllSorts sorts)
+    sorts <- getAllSorts
+    cmd sorts `finally` freeAllSorts sorts
 
 -- | returns all sorts in a nicely sorted SelectTree
 getAllSorts :: IO (SelectTree Sort_)

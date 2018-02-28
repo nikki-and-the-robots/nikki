@@ -32,9 +32,9 @@ import Base.Constants
 import Base.Configuration
 
 
-withApplicationSounds :: (ApplicationSounds -> RM a) -> RM a
+withApplicationSounds :: (ApplicationSounds -> IO a) -> IO a
 withApplicationSounds =
-    bracket (io load) (io . free)
+    bracket load free
   where
     load :: IO ApplicationSounds
     load = ApplicationSounds
