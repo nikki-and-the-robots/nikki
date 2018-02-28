@@ -15,8 +15,8 @@ test_script:
 - cd src
 - ..\\stack setup > nul
 - ..\\stack windowsCompile.hs
-- bark
-- echo "" | ..\\stack --no-terminal test --jobs 1
+# - bark
+# - echo "" | ..\\stack --no-terminal test --jobs 1
 
 cache:
 - "c:\\sr"
