@@ -41,7 +41,7 @@ baseSize :: Size Double = Size 60 60
 
 sorts :: [RM (Maybe Sort_)]
 sorts =
-    singleton ((Just . Sort_) <$>
+    singleton $ io ((Just . Sort_) <$>
     (LSort <$>
         loadPix "base" <*>
         loadRobotEyesPixmaps <*>
@@ -74,7 +74,7 @@ loadArm horizontal vertical dir = case dir of
             loadPix ("endpiece-" ++ name ++ "-standard")
 
 -- | load a pixmap by name from the laser directory with 1 padding pixel
-loadPix :: String -> RM Pixmap
+loadPix :: String -> IO Pixmap
 loadPix name =
     getDataFileName (pngDir </> "robots" </> "laser" </> name <.> "png") >>=
     loadSymmetricPixmap (split 1)

@@ -295,6 +295,6 @@ showEditorHelp app parent scene = case editorMode scene of
   where
     showHelpFile :: AppState
     showHelpFile = appState (busyMessage (p "showHelpFile (editor)")) $ do
-        file <- rm2m $ getDataFileName "manual/editor.txt"
+        file <- rm2m $ io $ getDataFileName "manual/editor.txt"
         text <- io $ pFile file
         return $ scrollingAppState app text parent

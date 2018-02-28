@@ -44,7 +44,7 @@ eyesClosedTime :: Seconds = 0.3
 
 sorts :: [RM (Maybe Sort_)]
 sorts =
-    singleton $ Just <$> Sort_ <$>
+    singleton $ io $ Just <$> Sort_ <$>
     (CannonSort <$>
         (loadPix "base-standard_00") <*>
         (loadPix "cannon-standard_00") <*>
@@ -60,7 +60,7 @@ sorts =
         (loadSound ("game" </> "cannonball_disappear") 8)
       )
   where
-    loadPix :: String -> RM Pixmap
+    loadPix :: String -> IO Pixmap
     loadPix name = do
         path <- getDataFileName (pngDir </> "robots" </> "cannon" </> name <.> "png")
         loadSymmetricPixmap (Position 1 1) path

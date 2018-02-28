@@ -28,7 +28,7 @@ import Sorts.Robots.PathRobots.Path
 
 
 sort :: RM Sort_
-sort = do
+sort = io $ do
     off <- load "standard-off"
     red <- load "standard-on_00"
     blue <- load "standard-on_01"
@@ -36,7 +36,7 @@ sort = do
     robotEyes <- loadRobotEyesPixmaps
     return $ Sort_ $ PSort off red blue animation robotEyes
   where
-    load :: String -> RM Pixmap
+    load :: String -> IO Pixmap
     load name = do
         path <- getDataFileName (pngDir </> "robots" </> "patrol" </> name <.> "png")
         loadSymmetricPixmap (Position 21 21) path

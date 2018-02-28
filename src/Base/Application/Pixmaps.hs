@@ -13,8 +13,6 @@ import System.FilePath
 
 import Graphics.Qt
 
-import Utils
-
 import Base.Paths
 import Base.Types
 import Base.Constants
@@ -22,7 +20,7 @@ import Base.Pixmap
 import Base.Font
 
 
-loadApplicationPixmaps :: RM ApplicationPixmaps
+loadApplicationPixmaps :: IO ApplicationPixmaps
 loadApplicationPixmaps =
     ApplicationPixmaps <$>
         (loadBackground "background") <*>
@@ -39,7 +37,7 @@ loadBackground name =
     mapM (loadSymmetricPixmap zero) =<<
         getDataFiles (osdDir </> name) (Just ".png")
 
-loadHeaderCubePixmaps :: RM HeaderCubePixmaps
+loadHeaderCubePixmaps :: IO HeaderCubePixmaps
 loadHeaderCubePixmaps = do
     start <- loadOsd (Position 31 31) (Size 48 44) "box-left"
     standard <- loadOsd (Position 1 31) (Size 48 44) "box-standard"
@@ -47,7 +45,7 @@ loadHeaderCubePixmaps = do
     end <- loadOsd (Position 1 31) (Size 44 44) "box-right"
     return $ HeaderCubePixmaps start standard space end
 
-loadOsd :: Position Double -> Size Double -> String -> RM Pixmap
-loadOsd offset size name = io . loadPixmap offset size =<< getDataFileName (osdDir </> name <.> "png")
+loadOsd :: Position Double -> Size Double -> String -> IO Pixmap
+loadOsd offset size name = loadPixmap offset size =<< getDataFileName (osdDir </> name <.> "png")
 
 osdDir = pngDir </> "osd"

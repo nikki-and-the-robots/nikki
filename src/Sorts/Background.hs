@@ -40,17 +40,17 @@ sorts =
     public ++ storyMode
   where
     public :: [RM (Maybe Sort_)]
-    public = map ((Just <$>) . (Sort_ <$>) . mkSort) backgrounds
+    public = map ((Just <$>) . (Sort_ <$>) . io . mkSort) backgrounds
     storyMode = map ((fmap Sort_ <$>) . mkStoryModeSort) Sorts.StoryMode.backgrounds
 
-mkSort :: String -> RM BSort
+mkSort :: String -> IO BSort
 mkSort name = do
                                 -- zeropadding :)
     pixmaps <- mapM (loadSymmetricPixmap zero) =<< getPngPaths name
     let sortId = SortId ("background/" ++ name)
     return $ BSort sortId (sortByResolution pixmaps)
   where
-    getPngPaths :: String -> RM [FilePath]
+    getPngPaths :: String -> IO [FilePath]
     getPngPaths n =
         getDataFiles (pngDir </> "backgrounds" </> n) (Just ".png")
 

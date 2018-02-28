@@ -50,9 +50,9 @@ fallingTilesMaterialMass = 0.5
 
 sorts :: [RM (Maybe Sort_)]
 sorts =
-    map ((Just <$>) . (\ (a, b, c) -> mkSort a b c)) names
+    map ((Just <$>) . (\ (a, b, c) -> io $ mkSort a b c)) names
 
-mkSort :: String -> Offset Int -> Size Double -> RM Sort_
+mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do
     pngFile <- getDataFileName (pngDir </> name <.> "png")
     Sort_ <$> (TSort name <$> loadPixmap (fmap fromIntegral offset) size pngFile
