@@ -15,8 +15,8 @@ test_script:
 - dir
 - cd src
 - dir
-- ../stack setup > nul
-- echo "" | ../stack --no-terminal test --jobs 1
+- ..\\stack setup > nul
+- echo "" | ..\\stack --no-terminal test --jobs 1
 
 
 cache:
