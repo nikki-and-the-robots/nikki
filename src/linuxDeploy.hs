@@ -1,4 +1,14 @@
-#!/usr/bin/env runghc
+#!/usr/bin/env stack
+{- stack script --resolver=lts-10.2
+--package safe
+--package directory
+--package FindBin
+--package process
+--package filepath
+--package containers
+--package parsec
+--package unix
+-}
 
 {-# language PackageImports #-}
 
@@ -26,12 +36,11 @@ import System.Posix.Env
 import Utils.Scripting
 
 
-executables = "dist" </> "build"
+executables = ".stack-work/dist/x86_64-linux-nopie/Cabal-1.22.4.0" </> "build"
 
 deploymentDir = "nikki"
 
 nikkiExe = executables </> "nikki" </> "nikki"
-coreExe = executables </> "core" </> "core"
 
 
 main = do
@@ -39,7 +48,6 @@ main = do
 
     prepareDeploymentDir
     copy nikkiExe
-    copy coreExe
     copy (".." </> "data")
     Foldable.mapM_ copy =<< getDynamicDependencies
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
@@ -64,9 +72,8 @@ prepareDeploymentDir = do
 -- | return all dynamically linked dependencies for both executables
 getDynamicDependencies :: IO (Set FilePath)
 getDynamicDependencies = do
-    restarterDeps <- getDeps nikkiExe
-    coreDeps <- getDeps coreExe
-    let allDeps = Data.Set.filter (not . isStandardLibrary) (union restarterDeps coreDeps)
+    nikkiDeps <- getDeps nikkiExe
+    let allDeps = Data.Set.filter (not . isStandardLibrary) nikkiDeps
     return allDeps
 
 
