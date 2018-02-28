@@ -13,7 +13,7 @@ import Development.Shake
 main :: IO ()
 main = do
   -- unit $ cmd "mkdir -p cpp/dist"
-  unit $ cmd (Cwd "cpp/dist") "cmake -G" ["MSYS Makefiles"] ".."
+  unit $ cmd (Cwd "cpp/dist") "cmake -G" ["'MSYS Makefiles'"] ".."
 --
 -- # building c++-part (qt-bindings)
 -- cd cpp
