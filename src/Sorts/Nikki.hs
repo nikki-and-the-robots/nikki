@@ -43,8 +43,8 @@ import Sorts.Nikki.Control
 import Sorts.Nikki.Batteries
 
 
-sorts :: [RM (Maybe Sort_)]
-sorts = singleton $ io $ do -- fixme: do we need this at all?
+sorts :: [IO (Maybe Sort_)]
+sorts = singleton $ do -- fixme: do we need this at all?
     pixmaps <- loadPixmaps
     jumpSound <- loadSound "game/jump" 4
     batteryCollectSound <- loadSound "game/batteryCollect" 8

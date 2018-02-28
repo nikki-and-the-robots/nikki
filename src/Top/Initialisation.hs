@@ -43,48 +43,40 @@ import           Utils
 -- sort loaders are given individually to be able
 -- to surround every single loader with an exception
 -- handler.
-sortLoaders :: [RM (Maybe Sort_)]
+sortLoaders :: [IO (Maybe Sort_)]
 sortLoaders =
-
     Sorts.Tiles.sorts ++
-
     Sorts.Robots.Jetpack.sorts ++
     Sorts.Robots.PathRobots.sorts ++
     Sorts.Robots.Cannon.sorts ++
     Sorts.Robots.Laser.sorts ++
-
     Sorts.Terminal.sorts ++
-
     Sorts.Battery.sorts ++
-
     Sorts.Switch.sorts ++
-
     Sorts.Sign.sorts ++
     Sorts.Box.sorts ++
     Sorts.FallingTiles.sorts ++
     Sorts.DeathStones.sorts ++
     Sorts.LowerLimit.sorts ++
-
     Sorts.Background.sorts ++
     Sorts.Grids.sorts ++
-
     Sorts.Nikki.sorts ++
 --     Sorts.DebugObject.sorts :
     []
 
 withAllSorts :: (SelectTree Sort_ -> RM a) -> RM a
 withAllSorts cmd = do
-    sorts <- getAllSorts
+    sorts <- io $ getAllSorts
     cmd sorts `finally` (io $ freeAllSorts sorts)
 
 -- | returns all sorts in a nicely sorted SelectTree
-getAllSorts :: RM (SelectTree Sort_)
+getAllSorts :: IO (SelectTree Sort_)
 getAllSorts = do
     sorts <- catMaybes <$> mapM catchExceptions sortLoaders
-    io $ checkUniqueSortIds sorts
+    checkUniqueSortIds sorts
     return $ mkSortsSelectTree sorts
   where
-    catchExceptions :: RM (Maybe a) -> RM (Maybe a)
+    catchExceptions :: IO (Maybe a) -> IO (Maybe a)
     catchExceptions action =
         catch action $ \ (e :: IOException) -> io $ do
             logg Error ("cannot load all sorts: " ++ show e)

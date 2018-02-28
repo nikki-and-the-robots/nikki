@@ -27,8 +27,8 @@ import Sorts.Robots.PathRobots.Configuration
 import Sorts.Robots.PathRobots.Path
 
 
-sort :: RM Sort_
-sort = io $ do
+sort :: IO Sort_
+sort = do
     off <- load "standard-off"
     red <- load "standard-on_00"
     blue <- load "standard-on_01"

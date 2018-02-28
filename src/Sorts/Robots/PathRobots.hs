@@ -11,7 +11,7 @@ import qualified Sorts.Robots.PathRobots.Platform as Platform
 
 -- * loading
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
     (Just <$> Platform.sort) :
     (Just <$> PatrolRobot.sort) :

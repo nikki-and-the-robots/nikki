@@ -26,8 +26,8 @@ import Sorts.Robots.PathRobots.Configuration
 import Sorts.Robots.PathRobots.Path
 
 
-sort :: RM Sort_
-sort = io $ do
+sort :: IO Sort_
+sort = do
     path <- getDataFileName (pngDir </> "robots" </> "platform" </> "horizontal-standard_standard_00" <.> "png")
     pix <- loadSymmetricPixmap (Position 1 1) path
     robotEyes <- loadRobotEyesPixmaps

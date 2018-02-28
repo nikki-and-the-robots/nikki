@@ -59,14 +59,14 @@ zonePadding :: CpFloat = fromKachel 0.5
 
 signDir = pngDir </> "sign"
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
     signSortsSorts "tutorial" ["data-terminal"] ++
     signSortsSorts "story-mode" StoryMode.signs
 
-signSortsSorts :: String -> [String] -> [RM (Maybe Sort_)]
+signSortsSorts :: String -> [String] -> [IO (Maybe Sort_)]
 signSortsSorts sortIdSnippet names =
-    (flip map) names $ \ name -> io $ do
+    (flip map) names $ \ name -> do
         let dataPath = signDir </> name <.> "png"
         mFile <- getSignDataFile dataPath
         case mFile of

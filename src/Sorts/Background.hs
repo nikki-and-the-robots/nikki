@@ -35,12 +35,12 @@ backgrounds =
     []
 
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
     public ++ storyMode
   where
-    public :: [RM (Maybe Sort_)]
-    public = map ((Just <$>) . (Sort_ <$>) . io . mkSort) backgrounds
+    public :: [IO (Maybe Sort_)]
+    public = map ((Just <$>) . (Sort_ <$>) . mkSort) backgrounds
     storyMode = map ((fmap Sort_ <$>) . mkStoryModeSort) Sorts.StoryMode.backgrounds
 
 mkSort :: String -> IO BSort
@@ -54,7 +54,7 @@ mkSort name = do
     getPngPaths n =
         getDataFiles (pngDir </> "backgrounds" </> n) (Just ".png")
 
-mkStoryModeSort :: String -> RM (Maybe BSort)
+mkStoryModeSort :: String -> IO (Maybe BSort)
 mkStoryModeSort name = do
     mPngs <- io $ getStoryModeDataFiles (pngDir </> "backgrounds" </> name) (Just ".png")
     case mPngs of

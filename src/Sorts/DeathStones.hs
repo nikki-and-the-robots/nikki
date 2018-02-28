@@ -72,8 +72,8 @@ laserAnimationFrameTime :: Seconds = 0.1
 
 -- * loading
 
-sorts :: [RM (Maybe Sort_)]
-sorts = map ((Just <$>) . io . loadStone) stones
+sorts :: [IO (Maybe Sort_)]
+sorts = map ((Just <$>) . loadStone) stones
 
 loadStone :: StoneDescription -> IO Sort_
 loadStone (sortId, imageNames, offset, size) = do

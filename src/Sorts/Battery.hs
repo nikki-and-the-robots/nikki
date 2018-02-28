@@ -40,8 +40,8 @@ contactWidth = fromUber 3
 
 -- * loading
 
-sorts :: [RM (Maybe Sort_)]
-sorts = singleton $ io $ do
+sorts :: [IO (Maybe Sort_)]
+sorts = singleton $ do
     pngFile <- getDataFileName (pngDir </> "battery/standard.png")
     pixmap <- loadPixmap batteryOffset batterySize pngFile
     return $ Just $ Sort_ $ BSort pixmap

@@ -48,9 +48,9 @@ fallingTilesMaterialMass = 0.5
 
 -- * loading
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
-    map ((Just <$>) . (\ (a, b, c) -> io $ mkSort a b c)) names
+    map ((Just <$>) . (\ (a, b, c) -> mkSort a b c)) names
 
 mkSort :: String -> Offset Int -> Size Double -> IO Sort_
 mkSort name offset size = do

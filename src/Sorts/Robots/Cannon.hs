@@ -42,9 +42,9 @@ eyesClosedTime :: Seconds = 0.3
 
 -- * sort loading
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
-    singleton $ io $ Just <$> Sort_ <$>
+    singleton $ Just <$> Sort_ <$>
     (CannonSort <$>
         (loadPix "base-standard_00") <*>
         (loadPix "cannon-standard_00") <*>
