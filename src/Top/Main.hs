@@ -95,7 +95,7 @@ renderThread configuration appRef =
         keyPoller <- io $ newKeyPoller window
             (initial_events configuration ++ initialDebuggingSignals)
         -- loading the gui pixmaps
-        appPixmaps <- loadApplicationPixmaps
+        appPixmaps <- io loadApplicationPixmaps
         -- showing main window
         io $ do
           let windowMode = if fullscreen configuration
@@ -126,7 +126,7 @@ renderThread configuration appRef =
 withNikkiIcon :: Ptr MainWindow -> RM a -> RM a
 withNikkiIcon qWidget action = do
     iconPaths <- filter (("icon" `isPrefixOf`) . takeFileName) <$>
-        getDataFiles pngDir (Just ".png")
+        io (getDataFiles pngDir (Just ".png"))
     withApplicationIcon qWidget iconPaths action
 
 -- showLoadingScreen :: Application -> Configuration -> IO ()

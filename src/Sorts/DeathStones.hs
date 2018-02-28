@@ -73,14 +73,14 @@ laserAnimationFrameTime :: Seconds = 0.1
 -- * loading
 
 sorts :: [RM (Maybe Sort_)]
-sorts = map ((Just <$>) . loadStone) stones
+sorts = map ((Just <$>) . io . loadStone) stones
 
-loadStone :: StoneDescription -> RM Sort_
+loadStone :: StoneDescription -> IO Sort_
 loadStone (sortId, imageNames, offset, size) = do
     images <- mapM (loadPixmap offset size) =<< mapM mkPngFile imageNames
     return $ Sort_ $ SSort sortId images (mkAnimation images [laserAnimationFrameTime])
   where
-    mkPngFile :: String -> RM FilePath
+    mkPngFile :: String -> IO FilePath
     mkPngFile imageName = getDataFileName (pngDir </> imageName <.> "png")
 
 data SSort = SSort {

@@ -22,14 +22,14 @@ import Editor.Pickle.LevelFile
 
 -- | Returns all files that can be played.
 -- Looks in the freeLevelsDirectory and in data/standardLevels
-lookupPlayableLevels :: RM (SelectTree LevelFile)
+lookupPlayableLevels :: IO (SelectTree LevelFile)
 lookupPlayableLevels = do
     standardLevelsDir <- getDataFileName "standardLevels"
     standardLevels :: SelectTree LevelFile <-
-        io $ (fmapM (mkStandardLevel standardLevelsDir) =<<
+        (fmapM (mkStandardLevel standardLevelsDir) =<<
         dirToLevels "standard levels" standardLevelsDir)
 --     downloadedLevels <- lookupDownloadedLevels
-    ownedLevels <- io $ lookupUserLevels "your levels"
+    ownedLevels <- lookupUserLevels "your levels"
     return $
         addChild ownedLevels $
         addChild standardLevels $

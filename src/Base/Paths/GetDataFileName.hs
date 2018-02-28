@@ -23,21 +23,18 @@ getDataFileName = io . Paths_nikki.getDataFileName
 
 import System.Info
 import System.FilePath
+import System.Directory
 
 import Utils
 
-import Base.Types
-import Base.Monad
-import Base.Configuration
 
-
-getDataFileName :: FilePath -> RM FilePath
+getDataFileName :: FilePath -> IO FilePath
 getDataFileName p = do
-    inPlace <- asks run_in_place
-    if inPlace then
+    cabalFileExists <- doesFileExist "nikki.cabal" -- fixme: remove reader
+    if cabalFileExists then
         return (".." </> "data" </> p)
       else do
-        progPath <- io getProgPathOrCurrentDirectory
+        progPath <- getProgPathOrCurrentDirectory
         case os of
             "linux" ->
                 -- works if the application is deployed in one folder

@@ -81,17 +81,19 @@ tileMergingEpsilon = 1
 -- * Tile loading
 
 sorts :: [RM (Maybe Sort_)]
-sorts = mkFreeSorts ++ mkStoryModeSorts
+sorts = map io (mkFreeSorts ++ mkStoryModeSorts)
 
+mkFreeSorts :: [IO (Maybe Sort_)]
 mkFreeSorts = map (\ (a, b, c) -> mkSort False a b c defaultFrameTime Nothing) names
 
+mkStoryModeSorts :: [IO (Maybe Sort_)]
 mkStoryModeSorts =
     map (\ (a, b, c, frameTime, frameOrder) ->
         mkSort True a b c frameTime frameOrder) Sorts.StoryMode.tiles
 
 -- | returns Nothing if a story mode tile is not available
 mkSort :: Bool -> String -> Offset Int -> Size Double -> Seconds -> Maybe [Int]
-    -> RM (Maybe Sort_)
+    -> IO (Maybe Sort_)
 mkSort storyMode name offset size frameDuration frameOrder = do
     mPngFiles <- getFrameFileNames storyMode name
     case mPngFiles of
@@ -112,7 +114,7 @@ mkSort storyMode name offset size frameDuration frameOrder = do
 
 -- | Returns the list of filenames for all the frames with the given name
 -- Returns Nothing in case a story mode tile is not available.
-getFrameFileNames :: Bool -> String -> RM (Maybe [FilePath])
+getFrameFileNames :: Bool -> String -> IO (Maybe [FilePath])
 getFrameFileNames storyMode name = do
     -- paths of all pngs in the corresponding directory
     mAbsolutePaths <- getPngFiles storyMode name
@@ -161,15 +163,15 @@ getFrameFileNames storyMode name = do
 
 -- | returns all png files in the directory where the tile pngs should be.
 -- Returns Nothing in case a storymode tile is loaded, but the story mode is not available.
-getPngFiles :: Bool -> String -> RM (Maybe [FilePath])
+getPngFiles :: Bool -> String -> IO (Maybe [FilePath])
 getPngFiles False name =
     Just <$> getDataFiles (pngDir </> takeDirectory name) (Just ".png")
 getPngFiles True name =
-    io $ getStoryModeDataFiles (pngDir </> takeDirectory name) (Just ".png")
+    getStoryModeDataFiles (pngDir </> takeDirectory name) (Just ".png")
 
-getPngFileName :: Bool -> FilePath -> RM (Maybe FilePath)
+getPngFileName :: Bool -> FilePath -> IO (Maybe FilePath)
 getPngFileName False file = Just <$> getDataFileName file
-getPngFileName True file = io $ getStoryModeDataFileName file
+getPngFileName True file = getStoryModeDataFileName file
 
 
 data TSort

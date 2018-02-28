@@ -29,8 +29,8 @@ import Base.Paths
 
 -- | Selects the music to be played.
 -- Returns an absolute file path.
-selectMusic :: LevelMetaData -> RM (Maybe FilePath)
-selectMusic (meta_musicFile -> Just wantedMusic) = io $ do
+selectMusic :: LevelMetaData -> IO (Maybe FilePath)
+selectMusic (meta_musicFile -> Just wantedMusic) = do
     mOggFile <- getStoryModeDataFileName ("music" </> normalise wantedMusic <.> "ogg")
     case mOggFile of
         -- no story mode installed (shouldn't be happening)
@@ -56,7 +56,7 @@ randomElement g list =
 startGameBackgroundMusic :: LevelMetaData -> RM ()
 startGameBackgroundMusic meta = do
     config <- ask
-    mMusic :: Maybe FilePath <- selectMusic meta
+    mMusic :: Maybe FilePath <- io $ selectMusic meta
     let noMusicMsg =
             maybe
             "no music found."

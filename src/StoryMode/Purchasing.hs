@@ -63,7 +63,7 @@ buyOrInstall app storyModeMenu parent ps = NoGUIAppState $ do
     this = suggestPurchase app storyModeMenu parent
 
 comingSoon app parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName ("manual" </> "storyModeIntroduction" <.> "txt")
+    file <- rm2m $ io $ getDataFileName ("manual" </> "storyModeIntroduction" <.> "txt")
     prose <- io $ pFile file
     return $ scrollingAppState app prose parent
 

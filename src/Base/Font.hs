@@ -165,11 +165,11 @@ loadFont fontColors dir = do
     io $ toFont fontColors =<< mapM loadLetter letterFiles
 
 -- | loads the standard variable-width font
-loadAlphaNumericFont :: RM Font
+loadAlphaNumericFont :: IO Font
 loadAlphaNumericFont = loadFont alphaNumericFontColors standardFontDir
 
 -- | loads the digits-only font
-loadDigitFont :: RM Font = loadFont digitFontColors digitFontDir
+loadDigitFont :: IO Font = loadFont digitFontColors digitFontDir
 
 -- | Converts loaded pixmaps to a font.
 -- Also sorts the letter pixmaps (longest keys first).

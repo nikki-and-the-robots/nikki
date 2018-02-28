@@ -43,7 +43,7 @@ animationFrameTimes = fromList (
 type RobotEyesPixmaps = Map RobotEyesState (Animation Pixmap)
 
 -- | will be called by every robot sort, but sharing takes place on Qt's side.
-loadRobotEyesPixmaps :: RM RobotEyesPixmaps
+loadRobotEyesPixmaps :: IO RobotEyesPixmaps
 loadRobotEyesPixmaps = do
     actives <- loadImages "active" 2
     idles <- loadImages "idle" 4
@@ -58,7 +58,7 @@ loadRobotEyesPixmaps = do
   where
     -- load n images with the given name
     -- e.g. "png/robots/eyes/idle_00.png" to "...idle_01.png"
-    loadImages :: String -> Int -> RM [Pixmap]
+    loadImages :: String -> Int -> IO [Pixmap]
     loadImages name n =
         forM [0 .. n - 1] $ \ i -> do
             path <- getDataFileName

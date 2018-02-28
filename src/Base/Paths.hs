@@ -44,12 +44,12 @@ import StoryMode.Paths
 
 
 -- | returns unhidden files with a given extension in a given data directory.
-getDataFiles :: FilePath -> (Maybe String) -> RM [FilePath]
+getDataFiles :: FilePath -> (Maybe String) -> IO [FilePath]
 getDataFiles path_ extension = do
     path <- getDataFileName path_
-    pathExists <- io $ doesDirectoryExist path
+    pathExists <- doesDirectoryExist path
     if pathExists then do
-        map (path </>) <$> io (getFiles path extension)
+        map (path </>) <$> getFiles path extension
       else
         return []
 

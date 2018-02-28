@@ -31,7 +31,7 @@ sorts =
     map ((Just <$>) . uncurry mkSort_) names
   where
     mkSortId name = SortId ("objects/" ++ name)
-    mkSort_ name mass = do
+    mkSort_ name mass = io $ do
         pngFile <- getDataFileName $ mkPath name
         pix <- loadSymmetricPixmap (Position 1 1) pngFile
         return $ Sort_ $ BSort (mkSortId name) mass pix

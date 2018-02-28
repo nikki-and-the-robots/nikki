@@ -34,9 +34,9 @@ import Base.Configuration
 
 withApplicationSounds :: (ApplicationSounds -> RM a) -> RM a
 withApplicationSounds =
-    bracket load (io . free)
+    bracket (io load) (io . free)
   where
-    load :: RM ApplicationSounds
+    load :: IO ApplicationSounds
     load = ApplicationSounds
         <$> loadSound "menu/select" 2
         <*> loadSound "menu/confirm" 2
@@ -48,18 +48,18 @@ withApplicationSounds =
         forM_ [a, b, c, d, e, f] freePolySound
 
 
-loadSound :: String -> Int -> RM PolySound
+loadSound :: String -> Int -> IO PolySound
 loadSound name n = do
     file <- getDataFileName (soundDir </> name <.> "wav")
-    io $ newPolySound file n
+    newPolySound file n
 
 triggerSound :: MonadIO m => Configuration -> PolySound -> m ()
 triggerSound config s = io $ triggerPolySound s (mkSoundVolume config)
 
-loadLoopedSound :: String -> RM LoopedSound
+loadLoopedSound :: String -> IO LoopedSound
 loadLoopedSound name = do
     file <- getDataFileName (soundDir </> name <.> "wav")
-    io $ newLoopedSound file
+    newLoopedSound file
 
 startLoopedSound :: Configuration -> LoopedSound -> IO ()
 startLoopedSound config ls =

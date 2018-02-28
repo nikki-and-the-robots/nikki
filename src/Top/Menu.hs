@@ -57,7 +57,7 @@ mainMenu app ps =
 
 credits :: Application -> Parent -> AppState
 credits app parent = NoGUIAppState $ do
-    file <- rm2m $ getDataFileName ("manual" </> "credits" <.> "txt")
+    file <- rm2m $ io $ getDataFileName ("manual" </> "credits" <.> "txt")
     prose <- io $ pFile file
     return $ scrollingAppState app prose parent
 
@@ -73,7 +73,7 @@ community app ps parent =
 
 -- | select a saved level.
 selectLevelPlay :: Application -> Parent -> AppState
-selectLevelPlay app parent = NoGUIAppState $ rm2m $ do
+selectLevelPlay app parent = NoGUIAppState $ rm2m $ io $ do
     levelFiles <- lookupPlayableLevels
     return $ if null $ ftoList levelFiles then
         message app [p "no levels found :("] parent
@@ -93,7 +93,7 @@ selectLevelEdit app ps parent = menuAppState app menuType (Just parent) (
     this ps = selectLevelEdit app ps parent
 
 pickNewLevelEdit :: Application -> AppState -> AppState
-pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ do
+pickNewLevelEdit app parent = NoGUIAppState $ rm2m $ io $ do
     pathToEmptyLevel <- getDataFileName (templateLevelsDir </> "empty.nl")
     templateLevelPaths <- filter (not . ("empty.nl" `List.isSuffixOf`)) <$>
                           getDataFiles templateLevelsDir (Just ".nl")

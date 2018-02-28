@@ -55,7 +55,7 @@ jetpackRotationalFriction = 60 -- tweakValue "jetpackRotationalFriction"
 -- * loading
 
 sorts :: [RM (Maybe Sort_)]
-sorts = singleton $ do
+sorts = singleton $ io $ do
     standardPixmap <- loadJetpackPng "standard_00"
     boostPixmaps <- mapM loadJetpackPng ["boost_00", "boost_01"]
     boostSound <- loadLoopedSound ("game" </> "boost")
@@ -64,7 +64,7 @@ sorts = singleton $ do
         JSort standardPixmap (mkAnimation boostPixmaps boostFrameTimes)
             boostSound robotEyes
   where
-    loadJetpackPng :: String -> RM Pixmap
+    loadJetpackPng :: String -> IO Pixmap
     loadJetpackPng =
         return . mkJetpackPngPath >=>
         getDataFileName >=>

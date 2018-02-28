@@ -62,6 +62,7 @@ bootingAnimationSteps :: Int = 3
 
 sorts :: [RM (Maybe Sort_)]
 sorts =
+    map io $
     -- normal
     (Just <$> Sort_ <$> terminalSort False) :
     -- transparent
@@ -69,7 +70,7 @@ sorts =
     (fmap Sort_ <$> mkBatteryTerminalSort) :
     []
 
-terminalSort :: Bool -> RM TSort
+terminalSort :: Bool -> IO TSort
 terminalSort transparent = do
     let nameToPixmap =
             return . toPngPath >=>
@@ -96,17 +97,17 @@ terminalSort transparent = do
 
 toPngPath name = pngDir </> "terminals" </> name <.> "png"
 
-readColorLights :: (String -> FilePath) -> RM (ColorLights Pixmap)
+readColorLights :: (String -> FilePath) -> IO (ColorLights Pixmap)
 readColorLights f =
     fmapM (return . f >=> getDataFileName >=> loadSymmetricPixmap (Position 13 13)) $
         ColorLights "red" "blue" "green" "yellow"
 
-loadOsdPixmaps :: RM OsdPixmaps
+loadOsdPixmaps :: IO OsdPixmaps
 loadOsdPixmaps = do
     background <- removeUberPixelShadow <$>
                     (loadSymmetricPixmap (Position 1 1) =<< toOsdPath "background")
     let colors = ColorLights "red" "blue" "green" "yellow"
-        load :: Double ->  String -> RM Pixmap
+        load :: Double ->  String -> IO Pixmap
         load offset = toOsdPath >=> loadSymmetricPixmap (Position offset offset)
     centers <- fmapM (load 40) $ fmap (++ "-center") colors
     defunctCenters <- fmapM (load 40) $ fmap (++ "-center-defunct") colors
@@ -116,7 +117,7 @@ loadOsdPixmaps = do
     return $ OsdPixmaps background centers defunctCenters frames exitCenter exitFrame
   where
     osdPath = pngDir </> "terminals" </> "osd"
-    toOsdPath :: String -> RM FilePath
+    toOsdPath :: String -> IO FilePath
     toOsdPath name = getDataFileName (osdPath </> name <.> "png")
     -- removes the shadow to the right and bottom
     -- by decreasing the size
@@ -125,7 +126,7 @@ loadOsdPixmaps = do
         p{pixmapSize = pixmapSize -~ fmap fromUber (Size 1 1)}
 
 
-mkBatteryTerminalSort :: RM (Maybe TSort)
+mkBatteryTerminalSort :: IO (Maybe TSort)
 mkBatteryTerminalSort = do
     mPngDir <- io $ getStoryModeDataFileName "png"
     tsort <- terminalSort False
@@ -135,7 +136,7 @@ mkBatteryTerminalSort = do
             b <- batteryTerminalSort pngDir tsort
             return $ Just b
 
-batteryTerminalSort :: FilePath -> TSort -> RM TSort
+batteryTerminalSort :: FilePath -> TSort -> IO TSort
 batteryTerminalSort pngDir tsort = do
     BatteryTSort tsort <$>
         loadPix 9 "beam-white" <*>

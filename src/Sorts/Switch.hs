@@ -41,9 +41,9 @@ lastLightBlinkTime :: Seconds = 0.425
 
 sorts :: [RM (Maybe Sort_)]
 sorts =
-    map ((Just <$>) . mkSort) (False : True : [])
+    map ((Just <$>) . io . mkSort) (False : True : [])
   where
-    mkSort :: Bool -> RM Sort_
+    mkSort :: Bool -> IO Sort_
     mkSort transient =
         Sort_ <$> (SwitchSort <$>
             loadPix 0 "switch-standard-base" <*>
@@ -61,7 +61,7 @@ sorts =
         loadSymmetricPixmap (Position 1 1 +~
             fmap fromUber (Position offsetUberPixel offsetUberPixel))
 
-mkPath :: String -> RM FilePath
+mkPath :: String -> IO FilePath
 mkPath name = getDataFileName (pngDir </> "objects" </> name <.> "png")
 
 

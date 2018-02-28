@@ -66,7 +66,7 @@ sorts =
 
 signSortsSorts :: String -> [String] -> [RM (Maybe Sort_)]
 signSortsSorts sortIdSnippet names =
-    (flip map) names $ \ name -> do
+    (flip map) names $ \ name -> io $ do
         let dataPath = signDir </> name <.> "png"
         mFile <- getSignDataFile dataPath
         case mFile of
@@ -77,14 +77,14 @@ signSortsSorts sortIdSnippet names =
                 let sortid = sortIdSnippet ++ "/sign/" ++ name
                 return $ Just $ Sort_ $ SSort sortid pix speechIcon
             Nothing -> do
-                io $ logg Debug ("sign-file not found: " ++ (signDir </> name <.> "png"))
+                logg Debug ("sign-file not found: " ++ (signDir </> name <.> "png"))
                 return Nothing
 
 -- | Looks for the given data file in the public and in the story-mode data directory.
-getSignDataFile :: FilePath -> RM (Maybe FilePath)
+getSignDataFile :: FilePath -> IO (Maybe FilePath)
 getSignDataFile dataPath = do
-    publicPath <- io . maybeExists =<< getDataFileName dataPath
-    storyModePath <- join <$> io (fmapM maybeExists =<< getStoryModeDataFileName dataPath)
+    publicPath <- maybeExists =<< getDataFileName dataPath
+    storyModePath <- join <$> (fmapM maybeExists =<< getStoryModeDataFileName dataPath)
     return (publicPath <|> storyModePath)
 
 data SSort =
@@ -145,7 +145,7 @@ instance Sort SSort Sign where
 
     initialize _app _ (Just space) sort editorPosition (Just (OEMState oemState_)) _ = do
         let Just oemState :: Maybe SignOEMState = cast oemState_
-        monologue <- readSignMonologue $ oemFile oemState
+        monologue <- io $ readSignMonologue $ oemFile oemState
         let pos = position2vector
                 (epToPosition (size sort) editorPosition)
                 +~ baryCenterOffset
