@@ -1,3 +1,4 @@
+#!/usr/bin/env stack
 {- stack script --resolver=lts-3.22 -}
 
 -- This script attempts to build the game on windows.
