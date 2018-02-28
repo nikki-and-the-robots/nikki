@@ -1,4 +1,4 @@
-{- stack script --lts-3.22 -}
+{- stack script --resolver=lts-3.22 -}
 
 -- This script attempts to build the game on windows.
 -- It invokes cabal configure with a lot of options to convince it
