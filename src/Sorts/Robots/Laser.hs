@@ -39,9 +39,9 @@ baseSize :: Size Double = Size 60 60
 
 -- * loading
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
-    singleton $ io ((Just . Sort_) <$>
+    singleton ((Just . Sort_) <$>
     (LSort <$>
         loadPix "base" <*>
         loadRobotEyesPixmaps <*>

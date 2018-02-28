@@ -60,9 +60,8 @@ bootingAnimationSteps :: Int = 3
 
 -- * sort loading
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
-    map io $
     -- normal
     (Just <$> Sort_ <$> terminalSort False) :
     -- transparent

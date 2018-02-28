@@ -34,9 +34,9 @@ storyModeGrids =
     []
 
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
-    map ((Just <$>) . io . mkSort) grids ++
+    map ((Just <$>) . mkSort) grids ++
     map mkStoryModeSort storyModeGrids
 
 mkSort :: (String, GridType) -> IO Sort_
@@ -45,9 +45,9 @@ mkSort (name, typ) = do
     pixmap <- loadSymmetricPixmap (Position 1 1) path
     return $ Sort_ $ GSort typ (SortId ("grid/" ++ name)) pixmap
 
-mkStoryModeSort :: (String, GridType) -> RM (Maybe Sort_)
+mkStoryModeSort :: (String, GridType) -> IO (Maybe Sort_)
 mkStoryModeSort (name, typ) = do
-    mPath <- io $ getStoryModeDataFileName (pngDir </> name <.> "png")
+    mPath <- getStoryModeDataFileName (pngDir </> name <.> "png")
     case mPath of
         Nothing -> return Nothing
         Just path -> do

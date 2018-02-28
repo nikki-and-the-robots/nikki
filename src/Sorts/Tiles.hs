@@ -80,8 +80,8 @@ tileMergingEpsilon = 1
 
 -- * Tile loading
 
-sorts :: [RM (Maybe Sort_)]
-sorts = map io (mkFreeSorts ++ mkStoryModeSorts)
+sorts :: [IO (Maybe Sort_)]
+sorts = mkFreeSorts ++ mkStoryModeSorts
 
 mkFreeSorts :: [IO (Maybe Sort_)]
 mkFreeSorts = map (\ (a, b, c) -> mkSort False a b c defaultFrameTime Nothing) names

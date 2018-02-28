@@ -39,9 +39,9 @@ lastLightBlinkTime :: Seconds = 0.425
 
 -- * loading
 
-sorts :: [RM (Maybe Sort_)]
+sorts :: [IO (Maybe Sort_)]
 sorts =
-    map ((Just <$>) . io . mkSort) (False : True : [])
+    map ((Just <$>) . mkSort) (False : True : [])
   where
     mkSort :: Bool -> IO Sort_
     mkSort transient =
