@@ -33,10 +33,10 @@ import Utils
 
 import Base
 
-import Distribution.AutoUpdate.Zip
 
 import StoryMode.Client as Client
 import StoryMode.Configuration
+import StoryMode.Zip
 
 
 -- | PRE: the story-mode is not installed.

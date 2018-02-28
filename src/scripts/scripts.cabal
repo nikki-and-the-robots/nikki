@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 840b272487a38ca5ab20f09c9daf55fec7b3ac21f95df6d9daa4a204b82f4272
+-- hash: 740d1e07524d5be225a44dcf127126f60266a9238ea0faec99ba70e3ad3a4d16
 
 name:           scripts
 version:        0.1
@@ -132,13 +132,6 @@ executable writeEmptyTemplateLevel
       Data.Initial
       Data.SelectTree
       Data.StrictList
-      Distribution.AutoUpdate
-      Distribution.AutoUpdate.Download
-      Distribution.AutoUpdate.MenuItem
-      Distribution.AutoUpdate.Paths
-      Distribution.AutoUpdate.Restarter
-      Distribution.AutoUpdate.VerifySignatures
-      Distribution.AutoUpdate.Zip
       Distribution.Setup.Darwin
       Editor.Menu
       Editor.Pickle
@@ -229,6 +222,7 @@ executable writeEmptyTemplateLevel
       StoryMode.Paths
       StoryMode.Purchasing
       StoryMode.Types
+      StoryMode.Zip
       System.Console.CmdArgs.Missing
       Text.Logging
       Top.Game

@@ -70,33 +70,6 @@ dependencies:
 - network-uri
 executables:
   nikki:
-    main: Distribution/AutoUpdate/Restarter.hs
-    source-dirs:
-    - ./.
-    when:
-    - condition: flag(devel)
-      then:
-        ghc-options: -O0
-      else:
-        ghc-options:
-        - -O1
-        - -optl-s
-    - condition: os(osx)
-      cc-options:
-      - -isysroot
-      - /Developer/SDKs/MacOSX10.5.sdk
-      - -mmacosx-version-min=10.5
-      ld-options:
-      - -isysroot
-      - /Developer/SDKs/MacOSX10.5.sdk
-      - -mmacosx-version-min=10.5
-      - -headerpad_max_install_names
-    - condition: os(linux)
-      dependencies:
-      - unix ==2.*
-    - condition: os(windows)
-      ld-options: -mwindows
-  core:
     main: Main.hs
     source-dirs:
     - ./.

@@ -7,4 +7,4 @@ exit 1
 }
 trap error ERR
 
-stack exec -- core --run-in-place "$@"
+stack exec -- nikki --run-in-place "$@"

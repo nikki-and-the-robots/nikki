@@ -1,6 +1,6 @@
 {-# language ScopedTypeVariables #-}
 
-module Distribution.AutoUpdate.Zip (unzipArchive) where
+module StoryMode.Zip (unzipArchive) where
 
 
 import qualified Data.ByteString as BS

@@ -87,7 +87,6 @@ data Application
         application :: Ptr QApplication,
         window :: Ptr MainWindow,
         keyPoller :: KeyPoller,
-        autoUpdateVersion :: MVar UpdateVersions,
         storyModeAvailability :: MVar StoryModeAvailability,
         getMainMenu_ :: Application -> AppState,
         applicationPixmaps :: ApplicationPixmaps,
