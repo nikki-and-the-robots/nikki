@@ -12,5 +12,6 @@ environment:
     STACK_ROOT: "c:\\sr"
 
 test_script:
+- cd src
 - stack setup > nul
 - echo "" | stack --no-terminal test
