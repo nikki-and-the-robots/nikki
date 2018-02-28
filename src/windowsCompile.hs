@@ -13,6 +13,8 @@ import Development.Shake
 main :: IO ()
 main = do
   -- unit $ cmd "mkdir -p cpp/dist"
+  unit $ cmd "choco install cmake"
+  unit $ cmd "cmake --version"
   unit $ cmd (Cwd "cpp/dist") "cmake -G" ["'MSYS Makefiles'"] ".."
 --
 -- # building c++-part (qt-bindings)
