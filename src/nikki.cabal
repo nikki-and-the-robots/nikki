@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a32c90f012b538ad02f49068bc01aad8a7e2cb26bc0bddb64c87c9cd5cbd47cb
+-- hash: 048f123cbc7bee6eb211aa2fbad949445d1b92aab59361aa2a56e523ab2de404
 
 name:           nikki
 version:        1.0.1
@@ -237,13 +237,11 @@ executable nikki
       Sorts.Terminal
       Sorts.Tiles
       Sorts.Tiles.Baking
-      StoryMode.Client
       StoryMode.Configuration
       StoryMode.Episode
       StoryMode.Menus
       StoryMode.Paths
       StoryMode.Types
-      StoryMode.Zip
       System.Console.CmdArgs.Missing
       Text.Logging
       Top.Game
@@ -485,13 +483,11 @@ test-suite slow
       Sorts.Terminal
       Sorts.Tiles
       Sorts.Tiles.Baking
-      StoryMode.Client
       StoryMode.Configuration
       StoryMode.Episode
       StoryMode.Menus
       StoryMode.Paths
       StoryMode.Types
-      StoryMode.Zip
       System.Console.CmdArgs.Missing
       Text.Logging
       Top.Game
@@ -733,13 +729,11 @@ test-suite spec
       Sorts.Terminal
       Sorts.Tiles
       Sorts.Tiles.Baking
-      StoryMode.Client
       StoryMode.Configuration
       StoryMode.Episode
       StoryMode.Menus
       StoryMode.Paths
       StoryMode.Types
-      StoryMode.Zip
       System.Console.CmdArgs.Missing
       Text.Logging
       Top.Game

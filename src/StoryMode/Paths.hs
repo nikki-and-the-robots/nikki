@@ -19,12 +19,6 @@ getStoryModePath = do
       then return dir
       else throwIO (ErrorCall "can't find 'nikki-story-mode' directory")
 
-createStoryModePath :: IO FilePath
-createStoryModePath = do
-    dir <- getAppUserDataDirectory "nikki-story-mode"
-    createDirectory dir
-    return dir
-
 getStoryModeDataFileName :: FilePath -> IO FilePath
 getStoryModeDataFileName path =
     (</> ("data" </> path)) <$> getStoryModePath
@@ -37,11 +31,3 @@ getStoryModeDataFiles path_ extension = do
 getStoryModeLevelsPath :: IO FilePath
 getStoryModeLevelsPath =
     (</> "levels") <$> getStoryModePath
-
-getStoryModeLoginDataFile :: IO FilePath
-getStoryModeLoginDataFile =
-    (</> "loginData") <$> getStoryModePath
-
-getStoryModeVersionFile :: IO FilePath
-getStoryModeVersionFile =
-    (</> "version") <$> getStoryModePath

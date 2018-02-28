@@ -1,6 +1,4 @@
-
 module StoryMode.Episode where
-
 
 import Data.Maybe
 import Data.Initial
@@ -16,8 +14,6 @@ import Editor.Pickle.LevelFile
 
 import StoryMode.Types
 import StoryMode.Configuration
-
-
 
 loadEpisodes :: IO [Episode LevelFile]
 loadEpisodes = do

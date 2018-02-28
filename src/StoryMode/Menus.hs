@@ -25,9 +25,6 @@ storyMode :: Application -> Play -> Parent -> AppState
 storyMode app play parent = NoGUIAppState $ io $ do
     episodes <- loadEpisodes
     return $ mkEpisodesMenu app play parent episodes 0
-  where
-    this :: AppState
-    this = storyMode app play parent
 
 -- | a menu showing all available episodes
 mkEpisodesMenu :: Application -> Play -> Parent -> [Episode LevelFile] -> Int -> AppState
