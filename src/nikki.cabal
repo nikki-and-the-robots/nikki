@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ae31afc732ed8df3c702a119248a40389c70431cc69409f4750555ae371dd9a6
+-- hash: 7bbe03ecb5b2af5ed8963bd20bae0b9b7f72bc71cce7d9aa7d282f61ce68bc8e
 
 name:           nikki
 version:        1.0.1
@@ -29,20 +29,15 @@ executable nikki
     , Hipmunk >=5.2.0.6
     , LibZip >=0.2.0.4
     , MonadCatchIO-transformers >=0.2.2.2
-    , RSA >=1.2.1
     , StateVar
     , aeson
     , base ==4.*
-    , base-compat
-    , base-orphans
-    , bifunctors
     , binary
     , binary-communicator >=1.0.2
     , bytestring >=0.10
     , clocked ==0.4.1.*
     , cmdargs >=0.6.6
     , containers
-    , crypto-pubkey-types >=0.1 && <0.5
     , data-accessor >=0.2.1.7
     , data-accessor-mtl >=0.2.0.2
     , deepseq ==1.3.* || ==1.4.*
@@ -65,7 +60,7 @@ executable nikki
     , temporary >=1.1.1
     , text
     , time
-    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , transformers
     , uniplate >=1.6
     , utf8-string
     , vector ==0.10.*
@@ -277,20 +272,15 @@ test-suite slow
     , LibZip >=0.2.0.4
     , MonadCatchIO-transformers >=0.2.2.2
     , QuickCheck
-    , RSA >=1.2.1
     , StateVar
     , aeson
     , base ==4.*
-    , base-compat
-    , base-orphans
-    , bifunctors
     , binary
     , binary-communicator >=1.0.2
     , bytestring >=0.10
     , clocked ==0.4.1.*
     , cmdargs >=0.6.6
     , containers
-    , crypto-pubkey-types >=0.1 && <0.5
     , data-accessor >=0.2.1.7
     , data-accessor-mtl >=0.2.0.2
     , deepseq ==1.3.* || ==1.4.*
@@ -313,7 +303,7 @@ test-suite slow
     , temporary >=1.1.1
     , text
     , time
-    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , transformers
     , uniplate >=1.6
     , utf8-string
     , vector ==0.10.*
@@ -532,20 +522,15 @@ test-suite spec
     , LibZip >=0.2.0.4
     , MonadCatchIO-transformers >=0.2.2.2
     , QuickCheck
-    , RSA >=1.2.1
     , StateVar
     , aeson
     , base ==4.*
-    , base-compat
-    , base-orphans
-    , bifunctors
     , binary
     , binary-communicator >=1.0.2
     , bytestring >=0.10
     , clocked ==0.4.1.*
     , cmdargs >=0.6.6
     , containers
-    , crypto-pubkey-types >=0.1 && <0.5
     , data-accessor >=0.2.1.7
     , data-accessor-mtl >=0.2.0.2
     , deepseq ==1.3.* || ==1.4.*
@@ -569,7 +554,7 @@ test-suite spec
     , temporary >=1.1.1
     , text
     , time
-    , transformers ==0.2.* || ==0.3.* || ==0.4.*
+    , transformers
     , uniplate >=1.6
     , utf8-string
     , vector ==0.10.*
