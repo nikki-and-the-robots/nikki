@@ -25,9 +25,6 @@ import Editor.Pickle.LevelLoading
 
 import Top.Game (playLevel)
 
-import Distribution.AutoUpdate
-import Distribution.AutoUpdate.MenuItem
-
 import StoryMode.Menus
 
 import LevelServer.Client
@@ -48,7 +45,6 @@ mainMenu app ps =
         MenuItem (r $ storyModeMenuItem) (storyMode app (play app) . this) :
         MenuItem (r $ p "community levels") (community app 0 . this) :
         MenuItem (r $ p "options") (generalOptions app 0 . this) :
-        MenuItem (r autoUpdateMenuItem) (autoUpdate app . this) :
         MenuItem (r $ p "credits") (credits app . this) :
         MenuItem (r $ p "quit") (const $ FinalAppState) :
         []) ps

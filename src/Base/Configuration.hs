@@ -36,8 +36,6 @@ import Network.Socket (PortNumber)
 
 import Version
 
-import Distribution.AutoUpdate.Paths
-
 import Base.Configuration.Controls
 import Base.Language
 
@@ -163,7 +161,6 @@ data Configuration = Configuration {
 
     -- development
     run_in_place :: Bool,
-    update_repo :: String,
     story_mode_purchasing_url :: Maybe String,
     story_mode_server_port :: Maybe Int,
     stdout_on_windows :: Bool,
@@ -232,9 +229,6 @@ defaultConfiguration showDevelopmentOptions SavedConfiguration_3{..} =
         -- debugging
         run_in_place = False
             &= groupname "Development flags",
-        update_repo = devOption defaultRepo
-            &= help ("set another repository for updates (default: " ++ defaultRepo ++ ")")
-            &= typ "REPOSITORY",
         story_mode_purchasing_url = devOption Nothing
             &= help ("url to look up, if the story mode is available (default: " ++ defaultPurchasingUrl ++ ")")
             &= typ "URL",
