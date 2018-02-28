@@ -13,7 +13,7 @@ environment:
 
 test_script:
 - cd src
-- stack windowsCompile.hs
+- ..\\stack windowsCompile.hs
 - ..\\stack setup > nul
 - echo "" | ..\\stack --no-terminal test --jobs 1
 
