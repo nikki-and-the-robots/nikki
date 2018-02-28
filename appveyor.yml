@@ -1,2 +1,16 @@
-build:
-  - echo huhu
+build: off
+
+before_test:
+- set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
+
+- curl -sS -ostack.zip -L --insecure http://www.stackage.org/stack/windows-i386
+- 7z x stack.zip stack.exe
+
+clone_folder: "c:\\stack"
+environment:
+  global:
+    STACK_ROOT: "c:\\sr"
+
+test_script:
+- stack setup > nul
+- echo "" | stack --no-terminal test
