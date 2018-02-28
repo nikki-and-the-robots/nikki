@@ -8,16 +8,12 @@
 -- -- cabal dependencies must be installed using the same compiler, e.g.:
 -- cabal install --with-ar=ar --with-gcc=gcc --with-ld=ld --ghc-options=" -pgmc gcc -pgml gcc -pgma gcc -pgmwindres windres -pgmP \"gcc -E -undef -traditional\"" package
 
+import Development.Shake
+
 main :: IO ()
-main = print 42
--- echo This script will pass any command line options to "cabal configure".
---
--- # to abort in case of errors
--- function error {
--- echo aborted due to an error
--- exit 1
--- }
--- trap error ERR
+main = do
+  -- unit $ cmd "mkdir -p cpp/dist"
+  unit $ cmd (Cwd "cpp/dist") "cmake -G" ["MSYS Makefiles"] ".."
 --
 -- # building c++-part (qt-bindings)
 -- cd cpp
