@@ -13,9 +13,7 @@ module StoryMode.Client (
     ClientToServer(..),
     ServerToClient(..),
     LoginData(..),
-    readLoginData,
     askForStoryModeZip,
-    askForNewVersion,
   ) where
 
 import           Control.DeepSeq
@@ -24,16 +22,12 @@ import           Control.Monad.Trans.Error
 import           Data.Aeson
 import           Data.Binary hiding (decode)
 import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.Lazy as BSL
 import           Data.Maybe
 import           Data.Text (pack, unpack)
 import           Data.Version (Version(..))
 import           Network.Client
 import           Network.Socket (PortNumber)
 import           Text.Email.Validate as EV
-
-import           StoryMode.Paths
-import           Utils
 
 -- * configuration
 
@@ -147,56 +141,11 @@ instance FromJSON EmailAddress where
         Left _ -> mzero
         Right x -> return x
 
--- | Reads the login data.
--- PRE: The story mode is installed.
-readLoginData :: ErrorT String IO LoginData
-readLoginData = do
-    mLoginDataFile <- io $ getStoryModeLoginDataFile
-    loginDataFile <- maybe (throwError "readLoginData: story mode is not installed")
-                        return mLoginDataFile
-    mLoginData :: Maybe LoginData <- decode <$> (io $ BSL.readFile loginDataFile)
-    maybe (throwError "error while decoding login data JSON")
-        return mLoginData
-
-
 -- ** communication with the server
 
 askForStoryModeZip :: Maybe PortNumber -> LoginData -> ErrorT String IO ServerToClient
 askForStoryModeZip mp (LoginData email key) =
     askStoryModeServer mp (StoryModeDownload email key)
-
--- | If the story-mode is already purchased, this function checks for a
--- new version with the saved login data. If there is a new version available,
--- this version is returned.
-askForNewVersion :: Maybe PortNumber -> IO (Either String (Maybe Version))
-askForNewVersion mp = runErrorT $ do
-    mInstalledVersion <- getInstalledVersion
-    case mInstalledVersion of
-      Nothing -> return Nothing
-      Just installedVersion -> do
-        serverVersion <- getServerVersion mp
-        return $ if serverVersion > installedVersion
-            then Just serverVersion else Nothing
-
-getInstalledVersion :: ErrorT String IO (Maybe Version)
-getInstalledVersion = do
-    mFile <- io $ getStoryModeVersionFile
-    case mFile of
-        Nothing -> return Nothing
-        Just file -> do
-            c <- io $ readFile file
-            Just <$> (ErrorT $ return $ parseVersion c)
-
--- | Gets the story mode version from the server.
--- PRE: The story mode is installed.
-getServerVersion :: Maybe PortNumber -> ErrorT String IO Version
-getServerVersion mp = do
-    (LoginData email key) <- readLoginData
-    answer <- askStoryModeServer mp (StoryModeVersion email key)
-    case answer of
-        (AuthorizedVersionInfo v) -> return v
-        (Unauthorized errorMsg) -> throwError errorMsg
-        x -> throwError ("wrong server response: " ++ show x)
 
 askStoryModeServer :: Maybe PortNumber -> ClientToServer -> ErrorT String IO ServerToClient
 askStoryModeServer mPort = askServer storyModeServerHost

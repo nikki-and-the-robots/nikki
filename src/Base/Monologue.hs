@@ -1,7 +1,6 @@
 
 module Base.Monologue (Monologue, readSignMonologue) where
 
-import           Control.Monad
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import           System.FilePath
@@ -18,7 +17,7 @@ readSignMonologue :: FilePath -> IO Monologue
 readSignMonologue name = do
     let dataPath = monologueDir </> name
     mPublicFile <- maybeExists =<< getDataFileName dataPath
-    mStoryModeFile <- join <$> (fmapM maybeExists =<< getStoryModeDataFileName dataPath)
+    mStoryModeFile <- maybeExists =<< getStoryModeDataFileName dataPath
 
     case mPublicFile <|> mStoryModeFile of
         Just file -> parseMonologue <$> BS.toString <$> BS.readFile file

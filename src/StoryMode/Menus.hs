@@ -1,29 +1,14 @@
-{-# LANGUAGE CPP #-}
-
 module StoryMode.Menus (
-    newStoryModeAvailability,
-    storyModeMenuItem,
     storyMode,
   ) where
 
 
 import Data.Map (lookup, findWithDefault)
-import Data.Maybe
 import Data.Initial
-
-import Control.Concurrent
 
 import System.FilePath
 
-import Network.Download
-
-import Graphics.Qt
-
-#if MIN_VERSION_base(4,7,0)
 import Utils hiding (tryReadMVar)
-#else
-import Utils
-#endif
 
 import Base
 
@@ -32,59 +17,14 @@ import Editor.Pickle.LevelFile
 import StoryMode.Types
 import StoryMode.Configuration
 import StoryMode.Episode
-import StoryMode.Purchasing
-
-
--- * item in main menu
-
-newStoryModeAvailability :: Ptr MainWindow -> Configuration -> IO (MVar StoryModeAvailability)
-newStoryModeAvailability window config = do
-    ref <- newEmptyMVar
-    _ <- forkIO $ do
-        lookForStoryModeSite config >>= putMVar ref
-        updateMainWindow window
-    return ref
-
-lookForStoryModeSite :: Configuration -> IO StoryModeAvailability
-lookForStoryModeSite config = do
-    isInstalled <- isJust <$> loadEpisodes
-    if isInstalled then
-        return Installed
-      else
-        either (const NotAvailable) (const Buyable) <$>
-        downloadLazy (fromMaybe defaultPurchasingUrl (story_mode_purchasing_url config))
-
-storyModeMenuItem :: StoryModeMenuItem
-storyModeMenuItem = StoryModeMenuItem False
-
-data StoryModeMenuItem = StoryModeMenuItem {selected :: Bool}
-
-instance Renderable StoryModeMenuItem where
-    render ptr app config size (StoryModeMenuItem selected) = do
-        available <- tryReadMVar $ storyModeAvailability app
-        let prose = case available of
-                Nothing -> selMod $ p "Story Episodes"
-                Just Installed -> selMod $ p "Story Episodes"
-                Just NotAvailable -> selMod $ p "Story Episodes (coming soon!)"
-                Just Buyable -> colorizeProse yellow $ selMod $
-                    p "Story Episodes (buy now!)"
-            selMod = if selected then select else deselect
-        render ptr app config size prose
-
-    label = const "StoryModeMenuItem"
-    select = const $ StoryModeMenuItem True
-    deselect = const $ StoryModeMenuItem False
-
 
 -- * story mode menu itself
 
 -- | Menu for the story mode
 storyMode :: Application -> Play -> Parent -> AppState
-storyMode app play parent = NoGUIAppState $ do
-    mEpisodes <- io $ loadEpisodes
-    case mEpisodes of
-        Nothing -> return $ suggestPurchase app this parent 0
-        Just episodes -> return $ mkEpisodesMenu app play parent episodes 0
+storyMode app play parent = NoGUIAppState $ io $ do
+    episodes <- loadEpisodes
+    return $ mkEpisodesMenu app play parent episodes 0
   where
     this :: AppState
     this = storyMode app play parent
@@ -152,9 +92,6 @@ hasPassedIntro scores e =
 
 credits :: Application -> Parent -> AppState
 credits app parent = NoGUIAppState $ io $ do
-    mFile <- getStoryModeDataFileName ("manual" </> "credits" <.> "txt")
-    prose <- maybe
-                (return $ pure $ p "storymode not found")
-                pFile
-                mFile
+    file <- getStoryModeDataFileName ("manual" </> "credits" <.> "txt")
+    prose <- pFile file
     return $ scrollingAppState app prose parent

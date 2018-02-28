@@ -19,13 +19,10 @@ import StoryMode.Configuration
 
 
 
-loadEpisodes :: IO (Maybe [Episode LevelFile])
+loadEpisodes :: IO [Episode LevelFile]
 loadEpisodes = do
-    mEpPath <- getStoryModeLevelsPath
-    case mEpPath of
-        Nothing -> return Nothing
-        Just epPath ->
-            Just <$> fmapM (loadEpisode epPath) episodes
+    epPath <- getStoryModeLevelsPath
+    fmapM (loadEpisode epPath) episodes
   where
     loadEpisode :: FilePath -> Episode String -> IO (Episode LevelFile)
     loadEpisode epPath e = do

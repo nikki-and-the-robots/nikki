@@ -47,13 +47,10 @@ mkSort (name, typ) = do
 
 mkStoryModeSort :: (String, GridType) -> IO (Maybe Sort_)
 mkStoryModeSort (name, typ) = do
-    mPath <- getStoryModeDataFileName (pngDir </> name <.> "png")
-    case mPath of
-        Nothing -> return Nothing
-        Just path -> do
-            pixmap <- loadSymmetricPixmap (Position 1 1) path
-            return $ Just $ Sort_ $
-                GSort typ (SortId ("story-mode/grid/" ++ name)) pixmap
+    path <- getStoryModeDataFileName (pngDir </> name <.> "png")
+    pixmap <- loadSymmetricPixmap (Position 1 1) path
+    return $ Just $ Sort_ $
+        GSort typ (SortId ("story-mode/grid/" ++ name)) pixmap
 
 data GSort = GSort {
     gridType :: GridType,

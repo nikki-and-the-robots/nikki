@@ -117,19 +117,16 @@ mkSort storyMode name offset size frameDuration frameOrder = do
 getFrameFileNames :: Bool -> String -> IO (Maybe [FilePath])
 getFrameFileNames storyMode name = do
     -- paths of all pngs in the corresponding directory
-    mAbsolutePaths <- getPngFiles storyMode name
-    case mAbsolutePaths of
-        Nothing -> return Nothing
-        Just absolutePaths -> do
-            -- making them relative again
-            let relativePaths = map ((takeDirectory name </>) . takeFileName) absolutePaths
-            files <- mapM (getPngFileName storyMode) $
-                    map (pngDir </>) $
-                    map third $
-                    sortBy (compare `on` snd3) $
-                    filter (\ (candidateName, _, _) -> on (==) splitDirectories name candidateName) $
-                    map parsePath relativePaths
-            return $ Just $ catMaybes files
+    absolutePaths <- getPngFiles storyMode name
+    -- making them relative again
+    let relativePaths = map ((takeDirectory name </>) . takeFileName) absolutePaths
+    files <- mapM (getPngFileName storyMode) $
+            map (pngDir </>) $
+            map third $
+            sortBy (compare `on` snd3) $
+            filter (\ (candidateName, _, _) -> on (==) splitDirectories name candidateName) $
+            map parsePath relativePaths
+    return $ Just files
   where
     parsePath :: String -> (String, Maybe Int, FilePath)
     parsePath path = case parse parseTileName "" path of
@@ -161,16 +158,14 @@ getFrameFileNames storyMode name = do
         s <- many1 digit
         return $ readNote "frameNumber" s
 
--- | returns all png files in the directory where the tile pngs should be.
--- Returns Nothing in case a storymode tile is loaded, but the story mode is not available.
-getPngFiles :: Bool -> String -> IO (Maybe [FilePath])
+getPngFiles :: Bool -> String -> IO [FilePath]
 getPngFiles False name =
-    Just <$> getDataFiles (pngDir </> takeDirectory name) (Just ".png")
+    getDataFiles (pngDir </> takeDirectory name) (Just ".png")
 getPngFiles True name =
     getStoryModeDataFiles (pngDir </> takeDirectory name) (Just ".png")
 
-getPngFileName :: Bool -> FilePath -> IO (Maybe FilePath)
-getPngFileName False file = Just <$> getDataFileName file
+getPngFileName :: Bool -> FilePath -> IO FilePath
+getPngFileName False file = getDataFileName file
 getPngFileName True file = getStoryModeDataFileName file
 
 
