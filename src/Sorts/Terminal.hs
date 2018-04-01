@@ -127,13 +127,10 @@ loadOsdPixmaps = do
 
 mkBatteryTerminalSort :: IO (Maybe TSort)
 mkBatteryTerminalSort = do
-    mPngDir <- io $ getStoryModeDataFileName "png"
+    pngDir <- getStoryModeDataFileName "png"
     tsort <- terminalSort False
-    case mPngDir of
-        Nothing -> return Nothing
-        Just pngDir -> do
-            b <- batteryTerminalSort pngDir tsort
-            return $ Just b
+    b <- batteryTerminalSort pngDir tsort
+    return $ Just b
 
 batteryTerminalSort :: FilePath -> TSort -> IO TSort
 batteryTerminalSort pngDir tsort = do

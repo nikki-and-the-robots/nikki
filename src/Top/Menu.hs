@@ -42,7 +42,7 @@ startAppState app = NoGUIAppState $ do
 mainMenu :: Application -> Int -> AppState
 mainMenu app ps =
     menuAppState app MainMenu Nothing (
-        MenuItem (r $ storyModeMenuItem) (storyMode app (play app) . this) :
+        MenuItem (r $ p "story mode") (storyMode app (play app) . this) :
         MenuItem (r $ p "community levels") (community app 0 . this) :
         MenuItem (r $ p "options") (generalOptions app 0 . this) :
         MenuItem (r $ p "credits") (credits app . this) :

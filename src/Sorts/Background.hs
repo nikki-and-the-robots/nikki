@@ -56,13 +56,10 @@ mkSort name = do
 
 mkStoryModeSort :: String -> IO (Maybe BSort)
 mkStoryModeSort name = do
-    mPngs <- io $ getStoryModeDataFiles (pngDir </> "backgrounds" </> name) (Just ".png")
-    case mPngs of
-        Nothing -> return Nothing
-        Just pngs -> do
-            pixmaps <- mapM (loadSymmetricPixmap zero) pngs
-            let sortId = SortId ("story-mode/background/" ++ name)
-            return $ Just $ BSort sortId (sortByResolution pixmaps)
+    pngs <- getStoryModeDataFiles (pngDir </> "backgrounds" </> name) (Just ".png")
+    pixmaps <- mapM (loadSymmetricPixmap zero) pngs
+    let sortId = SortId ("story-mode/background/" ++ name)
+    return $ Just $ BSort sortId (sortByResolution pixmaps)
 
 sortByResolution :: [Pixmap] -> [Pixmap]
 sortByResolution = sortBy (compare `on` (width . pixmapSize))

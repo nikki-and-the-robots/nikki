@@ -12,7 +12,7 @@ _If you're on a Debian-based system and you don't want to read the rest, do the
 following, then skip directly to the section "Running Nikki"_:
 
 ``` bash
-$ sudo apt-get install g++ cmake pkg-config libzip-dev libopenal-dev libsndfile1-dev
+$ sudo apt-get install g++ cmake pkg-config libzip-dev libopenal-dev libsndfile1-dev libqt4-dev
 $ ./build-qtwrapper.sh
 $ stack setup
 $ stack build
