@@ -36,20 +36,22 @@ import System.Posix.Env
 import Utils.Scripting
 
 
-executables = ".stack-work/dist/x86_64-linux-nopie/Cabal-1.22.4.0" </> "build"
+executablesDir distDir = distDir </> "build"
 
 deploymentDir = "nikki"
 
-nikkiExe = executables </> "nikki" </> "nikki"
+nikkiExe distDir =
+  executablesDir distDir </> "nikki" </> "nikki"
 
 
 main = do
     setLibraryPath
 
     prepareDeploymentDir
-    copy nikkiExe
+    distDir <- getDistDir
+    copy $ nikkiExe distDir
     copy (".." </> "data")
-    Foldable.mapM_ copy =<< getDynamicDependencies
+    Foldable.mapM_ copy =<< getDynamicDependencies distDir
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
     copyDeploymentLicenses
     fiddleInStartScript
@@ -62,6 +64,10 @@ setLibraryPath = do
     maybe (return ()) (const $ error "LD_LIBRARY_PATH already set") v
     setEnv "LD_LIBRARY_PATH" "/usr/local/lib" False
 
+getDistDir :: IO FilePath
+getDistDir = do
+  strip <$> readProcess "stack" ["path", "--dist-dir"] ""
+
 -- | ensure that an empty deploymentDir exists
 prepareDeploymentDir = do
     e <- doesDirectoryExist deploymentDir
@@ -70,9 +76,9 @@ prepareDeploymentDir = do
     createDirectory deploymentDir
 
 -- | return all dynamically linked dependencies for both executables
-getDynamicDependencies :: IO (Set FilePath)
-getDynamicDependencies = do
-    nikkiDeps <- getDeps nikkiExe
+getDynamicDependencies :: FilePath -> IO (Set FilePath)
+getDynamicDependencies distDir = do
+    nikkiDeps <- getDeps $ nikkiExe distDir
     let allDeps = Data.Set.filter (not . isStandardLibrary) nikkiDeps
     return allDeps
 
@@ -233,3 +239,6 @@ copyStartScript = do
     name = "nikki.sh"
     src = "bash" </> name
     dest = deploymentDir </> name
+
+strip :: String -> String
+strip = reverse . dropWhile isSpace . reverse . dropWhile isSpace
