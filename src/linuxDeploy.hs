@@ -8,32 +8,29 @@
 --package containers
 --package parsec
 --package unix
+--package getopt-generics
 -}
 
-{-# language PackageImports #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 
-import Prelude hiding (any)
-
-import Data.Char
-import Data.Maybe
-import Data.Set
-import Data.List (isInfixOf, isPrefixOf)
-import Data.Foldable as Foldable (any, mapM_, forM_)
-
-import Text.Parsec
-import Text.Printf
-
-import Control.Monad (when)
 import Control.Applicative ((<$>))
 import Control.Exception
-
-import System.FilePath
+import Control.Monad (when)
+import Data.Char
+import Data.Foldable as Foldable (any, mapM_, forM_)
+import Data.List (isInfixOf, isPrefixOf)
+import Data.Maybe
+import Data.Set
+import Prelude hiding (any)
 import System.Directory
-import System.Process
+import System.FilePath
 import System.Posix.Env
-
+import System.Process
+import Text.Parsec
+import Text.Printf
 import Utils.Scripting
+import WithCli
 
 
 executablesDir distDir = distDir </> "build"
@@ -44,14 +41,22 @@ nikkiExe distDir =
   executablesDir distDir </> "nikki" </> "nikki"
 
 
-main = do
+data Args = Args {
+  noCopySharedObjects :: Bool
+} deriving (Generic)
+
+instance HasArguments Args
+
+main :: IO ()
+main = withCli $ \ args -> do
     setLibraryPath
 
     prepareDeploymentDir
     distDir <- getDistDir
     copy $ nikkiExe distDir
     copy (".." </> "data")
-    Foldable.mapM_ copy =<< getDynamicDependencies distDir
+    when (not (noCopySharedObjects args)) $ do
+      Foldable.mapM_ copy =<< getDynamicDependencies distDir
     let deploymentIndicator = deploymentDir </> "yes_nikki_is_deployed"
     copyDeploymentLicenses
     fiddleInStartScript
