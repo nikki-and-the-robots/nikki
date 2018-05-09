@@ -49,7 +49,8 @@ instance HasArguments Args
 
 main :: IO ()
 main = withCli $ \ args -> do
-    setLibraryPath
+    when (not (noCopySharedObjects args)) $ do
+      setLibraryPath
 
     prepareDeploymentDir
     distDir <- getDistDir
