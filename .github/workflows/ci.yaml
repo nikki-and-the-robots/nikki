@@ -26,7 +26,7 @@ jobs:
         with:
           path: |
             ~/.stack
-            .stack-work
+            src/.stack-work
           key: ${{ env.CACHE_KEY }}-${{ runner.os }}
 
       - name: info
