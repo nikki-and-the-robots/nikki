@@ -105,6 +105,7 @@ nonStandardLibraries =
       "libaudio" :
       "libgmp" :
       "libpng" :
+      "libsndio" :
       []
     )
 
@@ -181,21 +182,14 @@ lddParser = do
   eof
   return r
   where
-    dep = spaces >> (absoluteDep <|> relativeDep)
-
-    absoluteDep = do
-      lookAhead (char '/')
-      path <- token
-      hex
-      return $ LDDDep path Nothing
-
-    relativeDep = do
-      lookAhead (noneOf ['/'])
+    dep = do
+      spaces
       path <- token
       spaces
-      string "=>"
-      spaces
-      loc <- location
+      loc <- option Nothing $ do
+        string "=>"
+        spaces
+        location
       hex
       return $ LDDDep path loc
 
