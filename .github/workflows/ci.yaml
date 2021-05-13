@@ -11,12 +11,12 @@ on:
       - master
 
 env:
-  CACHE_KEY: 0
+  CACHE_KEY: 1
 
 jobs:
   all:
     name: all
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
 
     steps:
       - uses: actions/checkout@v2
@@ -36,7 +36,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get remove libzip4
-          sudo apt-get install -t xenial libzip-dev
+          sudo apt-get install -t bionic libzip-dev
           sudo apt-get install \
             cmake curl g++ libopenal-dev libqt4-dev libsndfile1-dev pkg-config
 
