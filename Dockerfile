@@ -12,6 +12,8 @@ RUN stack update --resolver=lts-3.22
 # install haskell dependencies
 WORKDIR /root/nikki/src/
 ADD src/stack.yaml src/package.yaml /root/nikki/src/
+ADD src/scripts /root/nikki/src/scripts
+ADD src/level-server /root/nikki/src/level-server
 RUN stack build --test --only-dependencies
 ADD src/linuxDeploy.hs /root/nikki/src/
 RUN ./linuxDeploy.hs --help ; true
