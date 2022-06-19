@@ -1,0 +1,22 @@
+build: off
+
+before_test:
+- set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
+
+- curl -sS -ostack.zip -L --insecure http://www.stackage.org/stack/windows-i386
+- 7z x stack.zip stack.exe
+
+clone_folder: "c:\\nikki"
+environment:
+  global:
+    STACK_ROOT: "c:\\sr"
+
+test_script:
+- cd src
+- ..\\stack setup > nul
+- ..\\stack windowsCompile.hs
+# - bark
+# - echo "" | ..\\stack --no-terminal test --jobs 1
+
+cache:
+- "c:\\sr"
